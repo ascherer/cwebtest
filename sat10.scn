@@ -1,0 +1,74 @@
+\I\X34:Allocate the main arrays\X
+\U33.
+\I\X48:Backtrack to the most recent unforced move\X
+\U40.
+\I\X38:Check consistency\X
+\U33.
+\I\X46:Clear the watch list for \PB{\\{ll}} that starts at \PB{\|c}\X
+\U45.
+\I\X39:Copy all the clauses to \PB{\\{out\_file}}\X
+\U33.
+\I\X35:Copy all the temporary cells to the \PB{\\{mem}} and \PB{\\{cmem}}
+arrays in proper format\X
+\U33.
+\I\X37:Copy all the temporary variable nodes to the \PB{\\{vmem}} array in
+proper format\X
+\U33.
+\I\X42:Decide what to do next, going either to \PB{\\{branch}} or \PB{%
+\\{forcedmove}} or \PB{\\{backup}} or \PB{\\{satisfied}}\X
+\U40.
+\I\X17:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash table at \PB{\|p}\X
+\U12.
+\I\X3, 7, 27:Global variables\X
+\U2.
+\I\X18:Handle a duplicate literal\X
+\U12.
+\I\X8, 15:Initialize everything\X
+\U2.
+\I\X41:Initialize the active ring\X
+\U40.
+\I\X11:Input the clause in \PB{\\{buf}}\X
+\Us9\ET10.
+\I\X9:Input the clauses\X
+\U2.
+\I\X10:Input the primary variables\X
+\U9.
+\I\X36:Insert the cells for the literals of clause \PB{\|c}\X
+\U35.
+\I\X14:Install a new \PB{\&{chunk}}\X
+\U12.
+\I\X13:Install a new \PB{\&{vchunk}}\X
+\U12.
+\I\X20:Move \PB{\\{cur\_cell}} backward to the previous cell\X
+\Us19\ET36.
+\I\X21:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary variable\X
+\U37.
+\I\X49:Print the solution found\X
+\U48.
+\I\X4:Process the command line\X
+\U2.
+\I\X16:Put the variable name beginning at \PB{\\{buf}[\|j]} in \PB{$\\{cur\_tmp%
+\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X
+\U12.
+\I\X47:Put \PB{\|c} into the watch list of \PB{\|l}\X
+\U46.
+\I\X19:Remove all variables of the current clause\X
+\Us10\ET11.
+\I\X22:Report the successful completion of the input phase\X
+\U2.
+\I\X12:Scan and record a variable; negate it if \PB{$\|i\E\T{1}$}\X
+\U11.
+\I\X33:Set up the main data structures\X
+\U2.
+\I\X44:Set \PB{$\\{force}\MRL{+{\K}}\T{2}$} if variable \PB{\|v} must be false\X
+\U42.
+\I\X43:Set \PB{$\\{force}\K\T{1}$} if variable \PB{\|v} must be true\X
+\U42.
+\I\X45:Set \PB{\|v} and update the watch lists for its new value\X
+\U40.
+\I\X40:Solve the problem\X
+\U2.
+\I\X28, 29, 30, 31, 32:Subroutines\X
+\U2.
+\I\X5, 6, 24, 25, 26:Type definitions\X
+\U2.

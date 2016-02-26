@@ -1,0 +1,26 @@
+\I\X3:Check the zap trick\X
+\U1.
+\I\X16:Consider pivoting at $(i,j)$\X
+\U15.
+\I\X18:Do floating-point pivoting\X
+\U17.
+\I\X20:Do integer pivoting\X
+\U17.
+\I\X2:Include tricky code for zapping\X
+\U1.
+\I\X17:Pivot at $(l,j)$\X
+\U15.
+\I\X22:Print out the current state\X
+\Us13, 15\ETs18.
+\I\X4:Read the input matrix\X
+\U1.
+\I\X19:Really do floating-point pivoting\X
+\U18.
+\I\X23:Report the answers\X
+\U13.
+\I\X14:Set up the initial tableaux\X
+\U13.
+\I\X13:Solve the problem\X
+\U1.
+\I\X15:Try to pivot in column $j$\X
+\U13.

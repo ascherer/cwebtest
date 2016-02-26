@@ -1,0 +1,18 @@
+\I\X7:Find convex hull of \PB{\|g}\X
+\U1.
+\I\X2, 4:Global variables\X
+\U1.
+\I\X9:Go around the current hull; \PB{\&{continue}} if \PB{\\{vv}} is inside it%
+\X
+\U7.
+\I\X5:Initialize the data structures\X
+\U7.
+\I\X6:Local variables\X
+\U1.
+\I\X8:Print the convex hull\X
+\U7.
+\I\X11:Procedures\X
+\U1.
+\I\X10:Update the convex hull, knowing that \PB{\\{vv}} lies outside the
+consecutive hull vertices \PB{\|u} and \PB{\|v}\X
+\U7.

@@ -1,0 +1,4645 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. This program is the fourteenth in a series of exploratory
+studies by
+which I'm attempting to gain first-hand experience with OBDD structures, as I
+prepare Section 7.1.4 of {\sl The Art of Computer Programming}.
+It's basically the same as {\mc BDD11}, but extended to include some
+rudimentary methods for changing and ``sifting'' the order of variables.
+
+In this program I try to implement simplified versions of the basic routines
+that are needed in a ``large'' BDD package.
+
+\def\<#1>{\hbox{$\langle\,$#1$\,\rangle$}}
+\chardef\ttv='174 % vertical line
+\chardef\tta='046 % ampersand
+\chardef\tth='136 % hat
+\chardef\ttt='176 % tilde
+The computation is governed by primitive commands in a language called BDDL;
+these commands can either be
+read from a file or typed online (or both).
+BDDL commands have the following simple syntax, where \<number> denotes
+a nonnegative decimal integer:
+$$\eqalign{
+&\<const>\gets\.{c0}\mid\.{c1}\cr
+&\<var>\gets\.x\<number>\cr
+&\<func>\gets\.f\<number>\cr
+&\<atom>\gets\<const>\mid\<var>\mid\<func>\cr
+&\<expr>\gets\<unop>\<atom>\mid
+\<atom>\<binop>\<atom>\mid
+\<atom>\.{[y]}\mid\cr
+&\hskip15em \<atom>\<ternop>\<atom>\<ternop>\<atom>\cr
+&\<command>\gets\<special>\mid\<func>\.=\<expr>\mid\<func>\.{=.}\mid
+\.y\<number>\.=\<atom>\mid\.y\<number>\.{=.}\cr}$$
+The special commands \<special>,
+the unary operators \<unop>, the binary operators \<binop>, and the
+ternary operators \<ternop> are explained below. One short example
+will give the general flavor: After the commands
+$$\halign{\qquad\tt#\hfil\cr
+f1=x1{\tth}x2\cr
+f2=x3{\ttv}x4\cr
+f1=f1{\tta}f2\cr
+f2={\ttt}f1\cr}$$
+the function $f_1$ will be
+$(x_1\oplus x_2)\land(x_3\lor x_4)$,
+and $f_2$ will be $\lnot f_1$.
+Then `\.{f1=.}' will undefine~$f_1$.
+
+If the command line specifies an input file, all commands are taken
+from that file and standard input is ignored. Otherwise the user is
+prompted for commands.
+
+For simplicity, I do my own memory allocation in a big array
+called \PB{\\{mem}}. The bottom part of that array is devoted to
+BDD nodes, which each occupy two octabytes. The upper part
+is divided into dynamically allocated pages of a fixed size
+(usually 4096 bytes). The cache of computed results, and
+the hash tables for each variable, are kept in arrays whose elements
+appear in the upper pages. These elements
+need not be consecutive, because the $k$th byte of each dynamic array
+is kept in location \PB{$\\{mem}[\|b[\|k\GG\T{12}]+(\|k\AND\T{\^fff})]$}, for
+some array~\PB{\|b} of base
+addresses.
+
+Each node of the BDD base is responsible for roughly 28 bytes in \PB{\\{mem}},
+assuming 16 bytes for the node itself, plus about 8 for its entry in
+a hash table, plus about 4 for its entry in a cache. (I could reduce
+the storage cost from 28 to 21 by choosing algorithms that run slower; but I
+decided to give up some space in the interests of time. For example,
+I'm devoting four bytes to each reference count, so that there's no
+need to consider saturation. And this program uses linear probing for
+its hash tables, at the expense of about 3 bytes per node, because
+I like the sequential memory accesses of linear probing.)
+
+Many compile-time parameters affect the sizes of various tables and the
+heuristic strategies of various methods adopted here.
+To browse through them all, see the entry ``Tweakable parameters''
+in the index at the end.
+
+\fi
+
+\M{2}Here's the overall program structure:
+
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\8\#\&{include} \.{<ctype.h>}\6
+\8\#\&{include} \.{"gb\_flip.h"}\C{ random number generator }\6
+\8\#\&{define} \\{verbose} \5\\{Verbose}\C{ because `\PB{\\{verbose}}' is \PB{%
+\&{long}} in libgb }\6
+\X10:Type definitions\X\6
+\X4:Global variables\X\6
+\X25:Templates for subroutines\X\6
+\X7:Subroutines\X\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\X19:Local variables\X;\7
+\X3:Check the command line\X;\6
+\X5:Initialize everything\X;\6
+\&{while} (\T{1})\1\5
+\X110:Read a command and obey it; \PB{\&{goto} \\{alldone}} if done\X;\2\6
+\4\\{alldone}:\5
+\X6:Print statistics about this run\X;\6
+\\{exit}(\T{0});\C{ normal termination }\6
+\4${}\}{}$\2\par
+\fi
+
+\M{3}\B\D$\\{file\_given}$ \5
+$(\\{argc}\E\T{2}{}$)\par
+\Y\B\4\X3:Check the command line\X${}\E{}$\6
+\&{if} ${}(\\{argc}>\T{2}\V(\\{file\_given}\W\R(\\{infile}\K\\{fopen}(\\{argv}[%
+\T{1}],\39\.{"r"})))){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ [commandf}\)\.{ile]\\n"},\39%
+\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{4}\B\X4:Global variables\X${}\E{}$\6
+\&{FILE} ${}{*}\\{infile}{}$;\C{ input file containing commands }\6
+\&{int} \\{verbose}${}\K{-}\T{1}{}$;\C{ master control for debugging output;
+$-1$ gives all }\par
+\As8, 13, 22, 30, 40, 42, 51, 59, 101, 112, 132, 136, 154, 158\ETs161.
+\U2.\fi
+
+\M{5}\B\X5:Initialize everything\X${}\E{}$\6
+\\{gb\_init\_rand}(\T{0});\C{ initialize the random number generator }\par
+\As9, 12, 23, 44\ETs62.
+\U2.\fi
+
+\M{6}One of the main things I hope to learn with this program is the total
+number of \PB{\\{mems}} that the computation needs, namely the total number of
+memory references to octabytes.
+
+I'm not sure how many mems to charge for recursion overhead. A machine
+like \.{MMIX} needs to use memory only when the depth gets sufficiently
+deep that 256 registers aren't enough; then it needs two mems for
+each saved item (one to push it and another to pop it). Most
+of \.{MMIX}'s recursive activity takes place in the deepest levels, whose
+parameters never need to descend to memory. So I'm making a separate
+count of \PB{\\{rmems}}, the number of entries to recursive subroutines.
+
+Some of the mems are classified as \PB{\\{zmems}}, because they arise only when
+zeroing out pages of memory during initializations.
+
+\Y\B\4\D$\|o$ \5
+$\\{mems}\PP{}$\C{ a convenient macro for instrumenting a memory access }\par
+\B\4\D$\\{oo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{2}\par
+\B\4\D$\\{ooo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{3}\par
+\B\4\D$\\{oooo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{4}\par
+\Y\B\4\X6:Print statistics about this run\X${}\E{}$\6
+\\{printf}(\.{"Job\ stats:\\n"});\6
+${}\\{printf}(\.{"\ \ \%llu\ mems\ plus\ \%l}\)\.{lu\ rmems\ plus\ \%llu\ z}\)%
+\.{mems\\n"},\39\\{mems},\39\\{rmems},\39\\{zmems});{}$\6
+\X18:Print total memory usage\X;\par
+\Us2\ET159.\fi
+
+\M{7}\B\X7:Subroutines\X${}\E{}$\6
+\&{void} \\{show\_stats}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+${}\\{printf}(\.{"stats:\ \%d/\%d\ nodes,}\)\.{\ \%d\ dead,\ \%d\ pages,"},\39%
+\\{totalnodes},\39\\{nodeptr}-\\{botsink},\39\\{deadnodes},\39\\{topofmem}-%
+\\{pageptr});{}$\6
+${}\\{printf}(\.{"\ \%llu\ mems,\ \%llu\ rm}\)\.{ems,\ \%llu\ zmems\\n"},\39%
+\\{mems},\39\\{rmems},\39\\{zmems});{}$\6
+\4${}\}{}$\2\par
+\As14, 15, 16, 24, 26, 35, 41, 43, 45, 46, 49, 52, 53, 54, 55, 56, 58, 67, 71,
+72, 73, 75, 77, 79, 82, 84, 86, 88, 91, 93, 95, 97, 104, 106, 108, 109, 131,
+137, 138, 141, 145, 148, 151, 156, 159\ETs162.
+\U2.\fi
+
+\M{8}This program uses `\PB{\&{long} \&{long}}' to refer to 64-bit integers,
+because a single `\PB{\&{long}}' isn't treated consistently by the
+\CEE/~compilers available to me. (When I first learned~\CEE/,
+`\PB{\&{int}}' was traditionally `\PB{\&{short}}', so I was obliged
+to say `\PB{\&{long}}' when I wanted 32-bit integers. Consequently
+the programs of the Stanford GraphBase, written in the 90s,
+now get 64-bit integers---contrary to my original intent.
+C'est tragique; c'est la vie.)
+
+\Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{unsigned} \&{long} \&{long} \\{mems}${},{}$ \\{rmems}${},{}$ \\{zmems};\C{
+mem counters }\par
+\fi
+
+\M{9}\B\X5:Initialize everything\X${}\mathrel+\E{}$\6
+\&{if} (\&{sizeof}(\&{long} \&{long})${}\I\T{8}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ I\ assume\ tha}\)\.{t\ sizeof(long\
+long)\ }\)\.{is\ 8!\\n"});{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{10}Speaking of compilers, the one I use at present insists that
+pointers occupy 64 bits. As a result, I need to pack and unpack
+pointer data, in all the key data structures of this program;
+otherwise I would basically be giving up half of my memory and half
+of the hardware cache.
+
+I could solve this problem by using arrays with integer subscripts.
+Indeed, that approach would be simple and clean.
+
+But I anticipate doing some fairly long calculations, and
+speed is also important to me. So I've chosen a slightly more
+complex (and slightly dirtier) approach, equivalent to using
+short pointers; I wrap such pointers up with syntax that doesn't
+offend my compiler. The use of this scheme allows me to use
+the convenient syntax of~\CEE/ for fields within structures.
+
+Namely, data is stored here with a type called \PB{\\{addr}}, which is simply
+an unsigned 32-bit integer. An \PB{\\{addr}} contains
+all the information of a pointer, since I'm not planning to use
+this program with more than $2^{32}$ bytes of memory.
+It has a special name only to indicate its pointerly nature.
+
+With this approach the program goes fast, as with usual pointers,
+because it doesn't have to shift left by 4~bits and add the base
+address of~\PB{\\{mem}} whenever addressing the memory. But I do limit
+myself to BDD bases of at most about 30 million nodes.
+
+(At the cost of shift-left-four each time, I could extend this
+scheme to handling a 35-bit address space, if I ever get a
+computer with 32 gigabytes of RAM. I~still would want to keep
+32-bit pointers in memory, in order to double the effective cache size.)
+
+The \PB{\\{addr\_}} macro converts an arbitrary pointer to an \PB{\\{addr}}.
+
+\Y\B\4\D$\\{addr\_}(\|p)$ \5
+((\\{addr})(\&{size\_t})(\|p))\par
+\Y\B\4\X10:Type definitions\X${}\E{}$\6
+\&{typedef} \&{unsigned} \&{int} \&{addr};\par
+\As11, 20\ETs39.
+\U2.\fi
+
+\N{1}{11}Dynamic arrays. Before I get into the BDD stuff, I might as well
+give myself some infrastructure to work with.
+
+The giant \PB{\\{mem}} array mentioned earlier has nodes at the bottom,
+in locations \PB{\\{mem}} through \PB{$\\{nodeptr}-\T{1}$}. It has pages at the
+top,
+in locations \PB{\\{pageptr}} through \PB{$\\{mem}+\\{memsize}-\T{1}$}. We must
+therefore keep
+\PB{$\\{nodeptr}\Z\\{pageptr}$}.
+
+A node has four fields, called \PB{\\{lo}}, \PB{\\{hi}}, \PB{\\{xref}}, and %
+\PB{\\{index}}.
+I shall explain their significance eventually,
+when I {\it do\/} ``get into the BDD stuff.''
+
+A page is basically unstructured, although we will eventually fill
+it either with hash-table data or cache memos.
+
+The \PB{\\{node\_}} and \PB{\\{page\_}} macros are provided to make pointers
+from stored items of type \PB{\&{addr}}.
+
+\Y\B\4\D$\\{logpagesize}$ \5
+\T{12}\C{ must be at least 4 }\par
+\B\4\D$\\{memsize}$ \5
+$(\T{1}\LL\T{29}{}$)\C{ bytes in \PB{\\{mem}}, must be a multiple of \PB{%
+\\{pagesize}} }\Y\par
+\B\4\D$\\{pagesize}$ \5
+$(\T{1}\LL\\{logpagesize}{}$)\C{ the number of bytes per page }\par
+\B\4\D$\\{pagemask}$ \5
+$(\\{pagesize}-\T{1}{}$)\par
+\B\4\D$\\{pageints}$ \5
+$(\\{pagesize}/\&{sizeof}(\&{int}){}$)\par
+\B\4\D$\\{node\_}(\|a)$ \5
+((\&{node} ${}{*})(\&{size\_t})(\|a){}$)\par
+\B\4\D$\\{page\_}(\|a)$ \5
+((\&{page} ${}{*})(\&{size\_t})(\|a){}$)\par
+\Y\B\4\X10:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} \&{node\_struct} ${}\{{}$\1\6
+\&{addr} \\{lo}${},{}$ \\{hi};\6
+\&{int} \\{xref};\C{ reference count minus one }\6
+\&{unsigned} \&{int} \\{index};\C{ variable ID followed by random bits }\2\6
+${}\}{}$ \&{node};\6
+\&{typedef} \&{struct} \&{page\_struct} ${}\{{}$\1\6
+\&{addr} \\{dat}[\\{pageints}];\2\6
+${}\}{}$ \&{page};\par
+\fi
+
+\M{12}Here's how we launch the dynamic memory setup.
+
+Incidentally, I tried to initialize \PB{\\{mem}} by declaring it to be
+a variable of type \PB{\&{void} ${}{*}$}, then saying `\PB{$\\{mem}\K%
+\\{malloc}(\\{memsize})$}'.
+But that failed spectacularly, because the geniuses who developed
+the standard library for my 64-bit version of Linux decided in their
+great wisdom to make \PB{\\{malloc}} return a huge pointer like
+\PB{\T{\^2adaf3739010}}, even when the program could fit comfortably in
+a 30-bit address space. D'oh.
+
+\Y\B\4\D$\\{topofmem}$ \5
+((\&{page} ${}{*}){}$ ${}{\AND}\\{mem}[\\{memsize}]{}$)\par
+\Y\B\4\X5:Initialize everything\X${}\mathrel+\E{}$\6
+$\\{botsink}\K{}$(\&{node} ${}{*}){}$ \\{mem};\C{ this is the sink node for the
+all-zero function }\6
+${}\\{topsink}\K\\{botsink}+\T{1}{}$;\C{ this is the sink node for the all-one
+function }\6
+${}\|o,\39\\{botsink}\MG\\{lo}\K\\{botsink}\MG\\{hi}\K\\{addr\_}(%
+\\{botsink});{}$\6
+${}\|o,\39\\{topsink}\MG\\{lo}\K\\{topsink}\MG\\{hi}\K\\{addr\_}(%
+\\{topsink});{}$\6
+${}\\{oo},\39\\{botsink}\MG\\{xref}\K\\{topsink}\MG\\{xref}\K\T{0};{}$\6
+${}\\{oooo},\39\\{botsink}\MG\\{index}\K\\{gb\_next\_rand}(\,);{}$\6
+${}\\{oooo},\39\\{topsink}\MG\\{index}\K\\{gb\_next\_rand}(\,);{}$\6
+${}\\{totalnodes}\K\T{2};{}$\6
+${}\\{nodeptr}\K\\{topsink}+\T{1};{}$\6
+${}\\{pageptr}\K\\{topofmem}{}$;\par
+\fi
+
+\M{13}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \\{mem}[\\{memsize}];\C{ where we store most of the stuff }\6
+\&{node} ${}{*}\\{nodeptr}{}$;\C{ the smallest unused node in \PB{\\{mem}} }\6
+\&{page} ${}{*}\\{pageptr}{}$;\C{ the smallest used page in \PB{\\{mem}} }\6
+\&{node} ${}{*}\\{nodeavail}{}$;\C{ stack of nodes available for reuse }\6
+\&{page} ${}{*}\\{pageavail}{}$;\C{ stack of pages available for reuse }\6
+\&{node} ${}{*}\\{botsink},{}$ ${}{*}\\{topsink}{}$;\C{ the sink nodes, which
+never go away }\6
+\&{int} \\{totalnodes};\C{ this many nodes are currently in use }\6
+\&{int} \\{deadnodes};\C{ and this many of them currently have \PB{$\\{xref}<%
+\T{0}$} }\6
+\&{int} \\{leasesonlife}${}\K\T{10}{}$;\par
+\fi
+
+\M{14}Here's how we get a fresh (but uninitialized) node.
+The \PB{\\{nodeavail}} stack is linked by its \PB{\\{xref}} fields.
+
+If memory is completely full, \PB{$\NULL$} is returned. In such cases
+we need not abandon all hope; a garbage collection may be able
+to reclaim enough memory to continue. (I've tried to write this
+entire program in such a way that such temporary failures are harmless.)
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}\\{reserve\_node}(\&{void}){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|r\K\\{nodeavail};{}$\7
+\&{if} (\|r)\1\5
+${}\|o,\39\\{nodeavail}\K\\{node\_}(\\{nodeavail}\MG\\{xref});{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|r\K\\{nodeptr};{}$\6
+\&{if} ${}(\|r<{}$(\&{node} ${}{*}){}$ \\{pageptr})\1\5
+${}\\{nodeptr}\PP;{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{leasesonlife}\MM;{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"NULL\ node\ forced\ (\%}\)\.{d\ pages,\ \%d\
+nodes,\ \%}\)\.{d\ dead)\\n"},\39\\{topofmem}-\\{pageptr},\39\\{nodeptr}-%
+\\{botsink},\39\\{deadnodes});{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"(I\ will\ try\ \%d\ more}\)\.{\ times)\\n"},%
+\39\\{leasesonlife});{}$\6
+\&{if} ${}(\\{leasesonlife}\E\T{0}){}$\5
+${}\{{}$\1\6
+\\{show\_stats}(\,);\5
+${}\\{exit}({-}\T{98}){}$;\C{ sigh }\6
+\4${}\}{}$\2\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\\{totalnodes}\PP;{}$\6
+\&{return} \|r;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{15}Conversely, nodes can always be recycled. In such cases, there
+had better not be any other nodes pointing to them.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{free\_node}(\&{register} \&{node} ${}{*}\|p){}$\1\1\2\2\6
+${}\{{}$\1\6
+${}\|o,\39\|p\MG\\{xref}\K\\{addr\_}(\\{nodeavail});{}$\6
+${}\\{nodeavail}\K\|p;{}$\6
+${}\\{totalnodes}\MM;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{16}Occupation and liberation of pages is similar, but it takes place
+at the top of \PB{\\{mem}}.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{page} ${}{*}\\{reserve\_page}(\&{void}){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{page} ${}{*}\|r\K\\{pageavail};{}$\7
+\&{if} (\|r)\1\5
+${}\|o,\39\\{pageavail}\K\\{page\_}(\\{pageavail}\MG\\{dat}[\T{0}]);{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|r\K\\{pageptr}-\T{1};{}$\6
+\&{if} ((\&{node} ${}{*}){}$ \|r${}\G\\{nodeptr}){}$\1\5
+${}\\{pageptr}\K\|r;{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{leasesonlife}\MM;{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"NULL\ page\ forced\ (\%}\)\.{d\ pages,\ \%d\
+nodes,\ \%}\)\.{d\ dead)\\n"},\39\\{topofmem}-\\{pageptr},\39\\{nodeptr}-%
+\\{botsink},\39\\{deadnodes});{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"(I\ will\ try\ \%d\ more}\)\.{\ times)\\n"},%
+\39\\{leasesonlife});{}$\6
+\&{if} ${}(\\{leasesonlife}\E\T{0}){}$\5
+${}\{{}$\1\6
+\\{show\_stats}(\,);\5
+${}\\{exit}({-}\T{97}){}$;\C{ sigh }\6
+\4${}\}{}$\2\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{return} \|r;\6
+\4${}\}{}$\2\7
+\&{void} \\{free\_page}(\&{register} \&{page} ${}{*}\|p){}$\1\1\2\2\6
+${}\{{}$\1\6
+${}\|o,\39\|p\MG\\{dat}[\T{0}]\K\\{addr\_}(\\{pageavail});{}$\6
+${}\\{pageavail}\K\|p;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{17}\B\X17:If there are at least three free pages and at least three free
+nodes, \PB{\&{break}}\X${}\E{}$\6
+$\|j\K{}$(\&{node} ${}{*})(\\{pageptr}-\T{3})-\\{nodeptr};{}$\6
+\&{if} ${}(\|j\G\T{0}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|p\K\\{nodeavail};{}$ ${}\|p\W\|j<\T{3};{}$ \|o${},\39\|p\K(%
+\\{node\_}(\|p\MG\\{xref}))){}$\1\5
+${}\|j\PP;{}$\2\6
+\&{if} ${}(\|j\G\T{3}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\par
+\U111.\fi
+
+\M{18}\B\X18:Print total memory usage\X${}\E{}$\6
+$\|j\K\\{nodeptr}-{}$(\&{node} ${}{*}){}$ \\{mem};\6
+${}\|k\K\\{topofmem}-\\{pageptr};{}$\6
+${}\\{printf}(\.{"\ \ \%llu\ bytes\ of\ mem}\)\.{ory\ (\%d\ nodes,\ \%d\ pa}\)%
+\.{ges)\\n"},\39{}$((\&{long} \&{long}) \|j)${}*\&{sizeof}(\&{node})+{}$((%
+\&{long} \&{long}) \|k)${}*\&{sizeof}(\&{page}),\39\|j,\39\|k){}$;\par
+\U6.\fi
+
+\M{19}\B\X19:Local variables\X${}\E{}$\6
+\&{register} \&{int} \|j${},{}$ \|k;\par
+\A115.
+\U2.\fi
+
+\N{1}{20}Variables and hash tables. Our BDD base represents functions
+on the variables $x_v$ for $0\le v<\PB{\\{varsize}}$, where \PB{\\{varsize}}
+is a power of~2.
+
+When $x_v$ is first mentioned, we create a \PB{\\{var}} record for it,
+from which it is possible to find all the nodes that branch on
+this variable. The list of all such nodes is implicitly present
+in a hash table, which contains a pointer to node $(v,l,h)$
+near the hash address of the pair $(l,h)$. This hash table is
+called the {\it unique table\/} for~$v$, because of the BDD property
+that no two nodes have the same triple of values $(v,l,h)$.
+
+When there are $n$ nodes that branch on $x_v$, the unique table
+for~$v$ has size $m$, where $m$ is a power of~2 such that
+$n$ lies between $m/8$ and $3m/4$, inclusive. Thus at least
+one of every eight table slots is occupied, and
+at least one of every four is unoccupied, on the average.
+If $n=25$, for example, we might have $m=64$ or $m=128$; but $m=256$ would make
+the table too sparse.
+
+Each unique table has a maximum size, which must be small enough
+that we don't need too many base addresses for its pages, yet large
+enough that we can accommodate big BDDs. If, for example,
+\PB{$\\{logmaxhashsize}\K\T{19}$} and \PB{$\\{logpagesize}\K\T{12}$}, a unique
+table might contain as
+many as $2^{19}$ \PB{\&{addr}}s, filling $2^9$ pages. Then we must make room
+for
+512 base addresses in each \PB{\\{var}} record, and we can handle up to
+$2^{19}-2^{17}=393216$ nodes that branch on any particular variable.
+
+\Y\B\4\D$\\{logmaxhashsize}$ \5
+\T{21}\par
+\B\4\D$\\{slotsperpage}$ \5
+$(\\{pagesize}/\&{sizeof}(\&{addr}){}$)\par
+\B\4\D$\\{maxhashpages}$ \5
+$(((\T{1}\LL\\{logmaxhashsize})+\\{slotsperpage}-\T{1})/\\{slotsperpage}{}$)\par
+\Y\B\4\X10:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} \&{var\_struct} ${}\{{}$\1\6
+\&{addr} \\{proj};\C{ address of the projection function $x_v$ }\6
+\&{addr} \\{repl};\C{ address of the replacement function $y_v$ }\6
+\&{int} \\{free};\C{ the number of unused slots in the unique table for $v$ }\6
+\&{int} \\{mask};\C{ the number of slots in that unique table, times 4, minus 1
+}\6
+\&{addr} \\{base}[\\{maxhashpages}];\C{ base addresses for its pages }\6
+\&{int} \\{name};\C{ the user's name (subscript) for this variable }\6
+\&{unsigned} \&{int} \\{timestamp};\C{ time stamp for composition }\6
+\&{int} \\{aux};\C{ flag used by \PB{\\{math\_print}} or the sifting algorithm
+}\6
+\&{struct} \&{var\_struct} ${}{*}\\{up},{}$ ${}{*}\\{down}{}$;\C{ the
+neighboring active variables }\2\6
+${}\}{}$ \&{var};\par
+\fi
+
+\M{21}Every node \PB{\|p} that branches on $x_v$ in the BDD has a field \PB{$%
+\|p\MG\\{index}$},
+whose leftmost \PB{\\{logvarsize}} bits contain the index~$v$. The rightmost
+\PB{$\T{32}-\\{logvarsize}$} bits of \PB{$\|p\MG\\{index}$} are chosen
+randomly, in order to
+provide convenient hash coding.
+
+The SGB random-number generator used here makes four memory references
+per number generated.
+
+N.B.: The hashing scheme will fail dramatically unless
+\PB{$\\{logvarsize}+\\{logmaxhashsize}\Z\T{32}$}.
+
+\Y\B\4\D$\\{logvarsize}$ \5
+\T{10}\par
+\B\4\D$\\{varsize}$ \5
+$(\T{1}\LL\\{logvarsize}{}$)\C{ the number of permissible variables }\par
+\B\4\D$\\{varpart}(\|x)$ \5
+$((\|x)\GG(\T{32}-\\{logvarsize}){}$)\par
+\B\4\D$\\{initnewnode}(\|p,\|v,\|l,\|h)$ \5
+$\\{oo},\39\|p\MG\\{lo}\K\\{addr\_}(\|l),\39\|p\MG\\{hi}\K\\{addr\_}(\|h),\39%
+\|p\MG\\{xref}\K\T{0},\3{-1}\39\\{oooo},\39\|p\MG\\{index}\K((\|v)\LL(\T{32}-%
+\\{logvarsize}))+(\\{gb\_next\_rand}(\,)\GG(\\{logvarsize}-\T{1}){}$)\par
+\fi
+
+\M{22}Variable $x_v$ in this documentation means the variable whose information
+record is \PB{\\{varhead}[\|v]}. But the user's variable `\.{x5}' might not be
+represented by \PB{\\{varhead}[\T{5}]}, because the ordering of variables can
+change
+as a program runs. If \.{x5} is really the variable in \PB{\\{varhead}[%
+\T{13}]}, say, we
+will have \PB{$\\{varmap}[\T{5}]\K\T{13}$} and \PB{$\\{varhead}[\T{13}].%
+\\{name}\K\T{5}$}.
+
+\Y\B\4\D$\\{topofvars}$ \5
+${\AND}\\{varhead}{}$[\\{varsize}]\par
+\Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{var} \\{varhead}[\\{varsize}];\C{ basic info about each variable }\6
+\&{var} ${}{*}\\{tvar}\K\\{topofvars}{}$;\C{ threshold for verbose printouts }\6
+\&{int} \\{varmap}[\\{varsize}];\C{ the variable that has a given name }\par
+\fi
+
+\M{23}\B\X5:Initialize everything\X${}\mathrel+\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{varsize};{}$ ${}\|k\PP){}$\1\5
+${}\\{varmap}[\|k]\K\|k{}$;\2\par
+\fi
+
+\M{24}The simplest nonconstant Boolean expression is a projection function,
+$x_v$.
+We access it with the following subroutine, creating it from scratch
+if necessary.
+
+(The calling routine will have ensured that at least one free page
+and at least one free node exist when \PB{\\{projection}} is invoked.)
+
+Beware: Garbage collection might occur when \PB{\\{unique\_find}} is called
+here.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{projection}(\&{int} \|v)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|p;{}$\6
+\&{register} \&{var} ${}{*}\\{hv}\K{\AND}\\{varhead}[\|v];{}$\7
+${}\|o,\39\|p\K\\{node\_}(\\{hv}\MG\\{proj});{}$\6
+\&{if} (\|p)\1\5
+\&{return} \|p;\C{ the projection function has already been created }\2\6
+${}\|o,\39\\{hv}\MG\\{base}[\T{0}]\K\\{addr\_}(\\{reserve\_page}(\,)){}$;\C{ it
+won't be \PB{$\NULL$} }\6
+\X28:Create a unique table for variable \PB{\\{hv}} with size 2\X;\6
+${}\|p\K\\{unique\_find}({\AND}\\{varhead}[\|v],\39\\{botsink},\39%
+\\{topsink}){}$;\C{ see below }\6
+${}\\{oooo},\39\\{botsink}\MG\\{xref}\PP,\39\\{topsink}\MG\\{xref}\PP;{}$\6
+${}\|o,\39\\{hv}\MG\\{proj}\K\\{addr\_}(\|p){}$;\C{ \PB{\|p} won't be \PB{$%
+\NULL$} either }\6
+\&{if} ${}(\\{verbose}\AND\T{2}){}$\1\5
+${}\\{printf}(\.{"\ \%x=x\%d\\n"},\39\\{id}(\|p),\39\|v);{}$\2\6
+${}\|o,\39\\{hv}\MG\\{name}\K\|v;{}$\6
+\&{return} \|p;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{25}I sometimes like to use a subroutine before I'm in the mood to write
+its innards. In such cases, a pre-specification
+like the one given here allows me to procrastinate.
+
+\Y\B\4\X25:Templates for subroutines\X${}\E{}$\6
+\&{node} ${}{*}{}$\\{unique\_find}(\&{var} ${}{*}\|v,\39{}$\&{node} ${}{*}\|l,%
+\39{}$\&{node} ${}{*}\|h){}$;\par
+\As27, 90\ETs107.
+\U2.\fi
+
+\M{26}Now, however, I'm ready to tackle the subroutine just named, \PB{%
+\\{unique\_find}},
+which is one of the most crucial in the entire program.
+Given a variable~\PB{\|v}, together with node pointers \PB{\|l} and~\PB{\|h},
+we often
+want to see if the BDD base contains a node $(v,l,h)$---namely, a branch
+on~$x_v$ with {\mc LO} pointer~\PB{\|l} and {\mc HI} pointer~\PB{\|h}.
+If no such node exists, we want to create it. The subroutine should return a
+pointer to that (unique) node. Furthermore,
+the reference counts of \PB{\|l} and \PB{\|h} should be decreased afterwards.
+
+To do this task, we look for $(l,h)$ in the unique table for $v$,
+using the hash code
+$$\hbox{\PB{$(\|l\MG\\{index}\LL\T{3})\XOR(\|h\MG\\{index}\LL\T{2})$}}.$$
+(This hash code is a multiple of~4,
+the size of each entry in the unique table.)
+
+Several technicalities should be noted. First, no branch is needed
+when $l=h$. Second, we consider that a
+new reference is being made to the node returned, as well as to nodes
+\PB{\|l} and~\PB{\|h} if a new node is created;
+the \PB{\\{xref}} fields (reference counts) must be adjusted accordingly.
+Third, we might discover that the node exists, but it is dead;
+in other words, all prior links to it might have gone away, but we haven't
+discarded it yet. In such a case we should bring it back to life.
+Fourth, \PB{\|l} and \PB{\|h} will not become dead
+when their reference counts decrease, because the calling routine knows them.
+And finally, in the worst case we won't have room for a new node, so we'll
+have to return \PB{$\NULL$}. The calling routine must be prepared to cope with
+such failures (which we hope are only temporary).
+
+The following inscrutable macros try to make my homegrown dynamic array
+addressing palatable. I have to admit that I didn't get them right
+the first time. Or even the second time. Or even \dots~.
+
+\Y\B\4\D$\\{hashcode}(\|l,\|h)$ \5
+((\&{addr} ${}{*})(\&{size\_t})(\\{oo},\39((\|l)\MG\\{index}\LL\T{3})\XOR((\|h)%
+\MG\\{index}\LL\T{2})){}$)\par
+\B\4\D$\\{hashedcode}(\|p)$ \5
+$\\{hashcode}(\\{node\_}(\|p\MG\\{lo}),\39\\{node\_}(\|p\MG\\{hi}){}$)\par
+\B\4\D$\\{addr\_\_}(\|x)$ \5
+$({*}{}$((\&{addr} ${}{*})(\&{size\_t})(\|x)){}$)\par
+\B\4\D$\\{fetchnode}(\|v,\|k)$ \5
+$\\{node\_}(\\{addr\_\_}(\|v\MG\\{base}[(\|k)\GG\\{logpagesize}]+((\|k)\AND%
+\\{pagemask})){}$)\par
+\B\4\D$\\{storenode}(\|v,\|k,\|p)$ \5
+$\|o,\39\\{addr\_\_}(\|v\MG\\{base}[(\|k)\GG\\{logpagesize}]+((\|k)\AND%
+\\{pagemask}))\K\\{addr\_}{}$(\|p)\par
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{unique\_find}(\&{var} ${}{*}\|v,\39{}$\&{node} ${}{*}\|l,%
+\39{}$\&{node} ${}{*}\|h){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \\{mask}${},{}$ \\{free};\6
+\&{register} \&{addr} ${}{*}\\{hash};{}$\6
+\&{register} \&{node} ${}{*}\|p,{}$ ${}{*}\|r;{}$\7
+\&{if} ${}(\|l\E\|h){}$\5
+${}\{{}$\C{ easy case }\1\6
+\&{return} \\{oo}${},\39\|l\MG\\{xref}\MM,\39\|l{}$;\C{ \PB{$\|l\MG\\{xref}$}
+will still be $\ge0$ }\6
+\4${}\}{}$\2\6
+\4\\{restart}:\5
+${}\|o,\39\\{mask}\K\|v\MG\\{mask},\39\\{free}\K\|v\MG\\{free};{}$\6
+\&{for} ${}(\\{hash}\K\\{hashcode}(\|l,\39\|h);{}$  ; ${}\\{hash}\PP){}$\5
+${}\{{}$\C{ ye olde linear probing }\1\6
+${}\|k\K\\{addr\_}(\\{hash})\AND\\{mask};{}$\6
+${}\\{oo},\39\|p\K\\{fetchnode}(\|v,\39\|k);{}$\6
+\&{if} ${}(\R\|p){}$\1\5
+\&{goto} \\{newnode};\2\6
+\&{if} ${}(\\{node\_}(\|p\MG\\{lo})\E\|l\W\\{node\_}(\|p\MG\\{hi})\E\|h){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|o,\39\|p\MG\\{xref}<\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{deadnodes}\MM,\39\|o,\39\|p\MG\\{xref}\K\T{0}{}$;\C{ a lucky hit; its
+children are alive }\6
+\&{return} \|p;\6
+\4${}\}{}$\2\6
+${}\\{oooo},\39\|l\MG\\{xref}\MM,\39\|h\MG\\{xref}\MM;{}$\6
+\&{return} \|o${},\39\|p\MG\\{xref}\PP,\39\|p;{}$\6
+\4\\{newnode}:\5
+\X29:Periodically try to conserve space\X;\6
+\X31:Create a new node and return it\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{27}\B\X25:Templates for subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{recursively\_revive}(\&{node} ${}{*}\|p){}$;\C{ recursive
+resuscitation }\6
+\&{void} \\{recursively\_kill}(\&{node} ${}{*}\|p){}$;\C{ recursive
+euthanization }\6
+\&{void} \\{collect\_garbage}(\&{int} \\{level});\C{ invocation of the recycler
+}\par
+\fi
+
+\M{28}Before we can call \PB{\\{unique\_find}}, we need a hash table to work
+with.
+We start small.
+
+\Y\B\4\D$\\{storenulls}(\|k)$ \5
+${*}{}$(\&{long} \&{long} ${}{*})(\&{size\_t})(\|k)\K\T{0\$L\$L}{}$;\par
+\Y\B\4\X28:Create a unique table for variable \PB{\\{hv}} with size 2\X${}\E{}$%
+\6
+$\|o,\39\\{hv}\MG\\{free}\K\T{2},\39\\{hv}\MG\\{mask}\K\T{7};{}$\6
+${}\\{storenulls}(\\{hv}\MG\\{base}[\T{0}]){}$;\C{ both slots start out \PB{$%
+\NULL$} }\6
+${}\\{zmems}\PP{}$;\par
+\U24.\fi
+
+\M{29}A little timer starts ticking at the beginning of this program,
+and it advances whenever we reach the present point.
+Whenever the timer reaches a multiple of \PB{\\{timerinterval}}, we pause to
+examine the memory situation, in an attempt to keep node growth under
+control.
+
+Memory can be conserved in two ways. First, we can recycle all the dead
+nodes. That's a somewhat expensive proposition; but it's worthwhile
+if the number of such nodes is more than, say, 1/8 of the total
+number of nodes allocated. Second, we can try to change the ordering
+of the variables. The present program includes Rudell's
+``sifting algorithm'' for dynamically improving the variable order; but
+it invokes that algorithm only under user control. Perhaps I will have
+time someday to make reordering more automatic.
+
+\Y\B\4\D$\\{timerinterval}$ \5
+\T{1024}\par
+\B\4\D$\\{deadfraction}$ \5
+\T{8}\par
+\Y\B\4\X29:Periodically try to conserve space\X${}\E{}$\6
+\&{if} ${}((\PP\\{timer}\MOD\\{timerinterval})\E\T{0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{deadnodes}>\\{totalnodes}/\\{deadfraction}){}$\5
+${}\{{}$\1\6
+\\{collect\_garbage}(\T{0});\6
+\&{goto} \\{restart};\C{ the hash table might now be different }\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U26.\fi
+
+\M{30}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{unsigned} \&{long} \&{long} \\{timer};\par
+\fi
+
+\M{31}Brand-new nodes enter the fray here.
+
+\Y\B\4\X31:Create a new node and return it\X${}\E{}$\6
+$\|p\K\\{reserve\_node}(\,);{}$\6
+\&{if} ${}(\R\|p){}$\1\5
+\&{goto} \\{cramped};\C{ sorry, there ain't no more room }\2\6
+\&{if} ${}(\MM\\{free}\Z\\{mask}\GG\T{4}){}$\5
+${}\{{}$\1\6
+\\{free\_node}(\|p);\6
+\X32:Double the table size and \PB{\&{goto} \\{restart}}\X;\6
+\4${}\}{}$\2\6
+${}\\{storenode}(\|v,\39\|k,\39\|p){}$;\5
+${}\|o,\39\|v\MG\\{free}\K\\{free};{}$\6
+${}\\{initnewnode}(\|p,\39\|v-\\{varhead},\39\|l,\39\|h);{}$\6
+\&{return} \|p;\6
+\4\\{cramped}:\C{ after failure, we need to keep the xrefs tidy }\6
+\\{deref}(\|l);\C{ decrease \PB{$\|l\MG\\{xref}$}, and recurse if it becomes
+dead }\6
+\\{deref}(\|h);\C{ ditto for \PB{\|h} }\6
+\&{return} ${}\NULL{}$;\par
+\U26.\fi
+
+\M{32}We get to this part of the code when the table has become too dense.
+The density will now decrease from 3/4 to 3/8.
+
+\Y\B\4\X32:Double the table size and \PB{\&{goto} \\{restart}}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \\{newmask}${}\K\\{mask}+\\{mask}+\T{1},{}$ \\{kk}${}\K%
+\\{newmask}\GG\\{logpagesize};{}$\7
+\&{if} ${}(\\{verbose}\AND\T{256}){}$\1\5
+${}\\{printf}(\.{"doubling\ the\ hash\ t}\)\.{able\ for\ level\ \%d(x\%}\)\.{d)%
+\ (\%d\ slots)\\n"},\39\|v-\\{varhead},\39\|v\MG\\{name},\39(\\{newmask}+%
+\T{1})/\&{sizeof}(\&{addr}));{}$\2\6
+\&{if} (\\{kk})\1\5
+\X33:Reserve new all-\PB{$\NULL$} pages for the bigger table\X\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\|v\MG\\{base}[\T{0}]+\\{mask}+\T{1};{}$ ${}\|k<\|v\MG%
+\\{base}[\T{0}]+\\{newmask};{}$ ${}\|k\MRL{+{\K}}{}$\&{sizeof}(\&{long} %
+\&{long}))\1\5
+\\{storenulls}(\|k);\2\6
+${}\\{zmems}\MRL{+{\K}}(\\{newmask}-\\{mask})/{}$\&{sizeof}(\&{long} \&{long});%
+\6
+\4${}\}{}$\2\6
+\X34:Rehash everything in the low half\X;\6
+${}\|v\MG\\{mask}\K\\{newmask}{}$;\C{ mems are counted after restarting }\6
+${}\|v\MG\\{free}\K\\{free}+\T{1}+(\\{newmask}-\\{mask})/\&{sizeof}(%
+\&{addr});{}$\6
+\&{goto} \\{restart};\6
+\4${}\}{}$\2\par
+\Us31, 138\ETs142.\fi
+
+\M{33}\B\D$\\{maxmask}$ \5
+$((\T{1}\LL\\{logmaxhashsize})*\&{sizeof}(\&{addr})-\T{1}{}$)\C{ the biggest
+possible \PB{\\{mask}} }\par
+\Y\B\4\X33:Reserve new all-\PB{$\NULL$} pages for the bigger table\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{newmask}>\\{maxmask}){}$\5
+${}\{{}$\C{ too big: can't go there }\1\6
+\&{if} ${}(\\{verbose}\AND(\T{2}+\T{256}+\T{512})){}$\1\5
+${}\\{printf}(\.{"profile\ limit\ reach}\)\.{ed\ for\ level\ \%d(x\%d)}\)\.{%
+\\n"},\39\|v-\\{varhead},\39\|v\MG\\{name});{}$\2\6
+\&{goto} \\{cramped};\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|k\K(\\{mask}\GG\\{logpagesize})+\T{1};{}$ ${}\|k\Z\\{kk};{}$ ${}%
+\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|v\MG\\{base}[\|k]\K\\{addr\_}(\\{reserve\_page}(\,));{}$\6
+\&{if} ${}(\R\|v\MG\\{base}[\|k]){}$\5
+${}\{{}$\C{ oops, we're out of space }\1\6
+\&{for} ${}(\|k\MM;{}$ ${}\|k>\\{mask}\GG\\{logpagesize};{}$ ${}\|k\MM){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{free\_page}(\\{page\_}(\|v\MG\\{base}[\|k]));{}$\6
+\4${}\}{}$\2\6
+\&{goto} \\{cramped};\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\|v\MG\\{base}[\|k];{}$ ${}\|j<\|v\MG\\{base}[\|k]+%
+\\{pagesize};{}$ ${}\|j\MRL{+{\K}}{}$\&{sizeof}(\&{long} \&{long}))\1\5
+\\{storenulls}(\|j);\2\6
+${}\\{zmems}\MRL{+{\K}}\\{pagesize}/{}$\&{sizeof}(\&{long} \&{long});\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U32.\fi
+
+\M{34}Some subtle cases can arise at this point.
+For example, consider the hash table
+{\let\\=\Lambda $(a,\\,\\,b)$, with hash$(a)=3$ and hash$(b)=7$; when
+doubling the size, we need to rehash $a$ twice, going from
+the doubled-up table
+$(a,\\,\\,b,\\,\\,\\,\\)$ to
+$(\\,\\,\\,b,a,\\,\\,\\)$ to
+$(\\,\\,\\,\\,a,\\,\\,b)$ to
+$(\\,\\,\\,a,\\,\\,\\,b)$.}
+
+I learned this interesting algorithm from Rick Rudell.
+
+\Y\B\4\X34:Rehash everything in the low half\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{newmask};{}$ ${}\|k\MRL{+{\K}}\&{sizeof}(%
+\&{addr})){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39\|r\K\\{fetchnode}(\|v,\39\|k);{}$\6
+\&{if} (\|r)\5
+${}\{{}$\1\6
+${}\\{storenode}(\|v,\39\|k,\39\NULL){}$;\C{ prevent propagation past this slot
+}\6
+\&{for} ${}(\|o,\39\\{hash}\K\\{hashedcode}(\|r);{}$  ; ${}\\{hash}\PP){}$\5
+${}\{{}$\1\6
+${}\|j\K\\{addr\_}(\\{hash})\AND\\{newmask};{}$\6
+${}\\{oo},\39\|p\K\\{fetchnode}(\|v,\39\|j);{}$\6
+\&{if} ${}(\R\|p){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+${}\\{storenode}(\|v,\39\|j,\39\|r);{}$\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\|k>\\{mask}){}$\1\5
+\&{break};\C{ see the example above }\2\6
+\4${}\}{}$\2\par
+\U32.\fi
+
+\M{35}While I've got linear probing firmly in mind, I might as well
+write a subroutine that will be needed later for garbage collection.
+The \PB{\\{table\_purge}} routine deletes all dead nodes that branch
+on a given variable~$x_v$.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{table\_purge}(\&{var} ${}{*}\|v){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \\{free}${},{}$ \|i${},{}$ \|j${},{}$ \\{jj}${},{}$ %
+\|k${},{}$ \\{kk}${},{}$ \\{mask}${},{}$ \\{newmask}${},{}$ \\{oldtotal};\6
+\&{register} \&{node} ${}{*}\|p,{}$ ${}{*}\|r;{}$\6
+\&{register} \&{addr} ${}{*}\\{hash};{}$\7
+${}\|o,\39\\{mask}\K\|v\MG\\{mask},\39\\{free}\K\|v\MG\\{free};{}$\6
+\&{if} ${}(\|o,\39\|v\MG\\{proj}){}$\5
+${}\{{}$\C{ \PB{$\|v\MG\\{proj}\I\T{0}$} if and only if $x_v$ exists }\1\6
+${}\\{oldtotal}\K\\{totalnodes};{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{mask};{}$ ${}\|k\MRL{+{\K}}\&{sizeof}(%
+\&{addr})){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39\|p\K\\{fetchnode}(\|v,\39\|k);{}$\6
+\&{if} ${}(\|p\W\|p\MG\\{xref}<\T{0}){}$\5
+${}\{{}$\1\6
+\\{free\_node}(\|p);\6
+\X36:Remove entry \PB{\|k} from the hash table\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\\{deadnodes}\MRL{-{\K}}\\{oldtotal}-\\{totalnodes},\39\\{free}\MRL{+{\K}}%
+\\{oldtotal}-\\{totalnodes};{}$\6
+\X37:Downsize the table if only a few entries are left\X;\6
+${}\|o,\39\|v\MG\\{free}\K\\{free};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{36}Deletion from a linearly probed hash table is tricky, as noted in
+Algorithm 6.4R of TAOCP. Here I can speed that algorithm up slightly,
+because there's no need to move dead entries that will be deleted later.
+
+Furthermore, if I do meet a dead entry, I can take a slightly tricky
+shortcut and continue the removals.
+
+\Y\B\4\X36:Remove entry \PB{\|k} from the hash table\X${}\E{}$\6
+\&{do}\5
+${}\{{}$\1\6
+\&{for} ${}(\\{kk}\K\|k,\39\|j\K\|k+\&{sizeof}(\&{addr}),\39\|k\K\T{0};{}$  ;
+${}\|j\MRL{+{\K}}\&{sizeof}(\&{addr})){}$\5
+${}\{{}$\1\6
+${}\\{jj}\K\|j\AND\\{mask};{}$\6
+${}\\{oo},\39\|p\K\\{fetchnode}(\|v,\39\\{jj});{}$\6
+\&{if} ${}(\R\|p){}$\1\5
+\&{break};\2\6
+\&{if} ${}(\|p\MG\\{xref}\G\T{0}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|i\K\\{addr\_}(\\{hashedcode}(\|p))\AND\\{mask};{}$\6
+\&{if} ${}((\|i\Z\\{kk})+(\\{jj}<\|i)+(\\{kk}<\\{jj})>\T{1}){}$\1\5
+${}\\{storenode}(\|v,\39\\{kk},\39\|p),\39\\{kk}\K\\{jj};{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\R\|k){}$\1\5
+${}\|k\K\|j,\39\\{free\_node}(\|p){}$;\C{ shortcut }\2\6
+\4${}\}{}$\2\6
+${}\\{storenode}(\|v,\39\\{kk},\39\NULL);{}$\6
+\4${}\}{}$\2\5
+\&{while} (\|k);\6
+${}\|k\K\|j{}$;\C{ the last run through that loop saw no dead nodes }\par
+\U35.\fi
+
+\M{37}At least one node, \PB{$\|v\MG\\{proj}$}, branches on $x_v$ at this
+point.
+
+\Y\B\4\X37:Downsize the table if only a few entries are left\X${}\E{}$\6
+$\|k\K(\\{mask}\GG\T{2})+\T{1}-\\{free}{}$;\C{ this many nodes still branch on
+$x_v$ }\6
+\&{for} ${}(\\{newmask}\K\\{mask};{}$ ${}(\\{newmask}\GG\T{5})\G\|k;{}$ ${}%
+\\{newmask}\MRL{{\GG}{\K}}\T{1}){}$\1\5
+;\2\6
+\&{if} ${}(\\{newmask}\I\\{mask}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{verbose}\AND\T{256}){}$\1\5
+${}\\{printf}(\.{"downsizing\ the\ hash}\)\.{\ table\ for\ level\ \%d(}\)\.{x%
+\%d)\ (\%d\ slots)\\n"},\39\|v-\\{varhead},\39\|v\MG\\{name},\39(\\{newmask}+%
+\T{1})/\&{sizeof}(\&{addr}));{}$\2\6
+${}\\{free}\MRL{-{\K}}(\\{mask}-\\{newmask})\GG\T{2};{}$\6
+\X38:Rehash everything in the upper half\X;\6
+\&{for} ${}(\|k\K\\{mask}\GG\\{logpagesize};{}$ ${}\|k>\\{newmask}\GG%
+\\{logpagesize};{}$ ${}\|k\MM){}$\1\5
+${}\|o,\39\\{free\_page}(\\{page\_}(\|v\MG\\{base}[\|k]));{}$\2\6
+${}\|v\MG\\{mask}\K\\{newmask};{}$\6
+\4${}\}{}$\2\par
+\U35.\fi
+
+\M{38}Finally, another algorithm learned from Rudell. To prove its correctness,
+one can verify the following fact:
+Any entries that wrapped around from the upper half to
+the bottom in the original table will still wrap around in the smaller table.
+
+\Y\B\4\X38:Rehash everything in the upper half\X${}\E{}$\6
+\&{for} ${}(\|k\K\\{newmask}+\T{1};{}$ ${}\|k<\\{mask};{}$ ${}\|k\MRL{+{\K}}%
+\&{sizeof}(\&{addr})){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39\|r\K\\{fetchnode}(\|v,\39\|k);{}$\6
+\&{if} (\|r)\5
+${}\{{}$\1\6
+\&{for} ${}(\|o,\39\\{hash}\K\\{hashedcode}(\|r);{}$  ; ${}\\{hash}\PP){}$\5
+${}\{{}$\1\6
+${}\|j\K\\{addr\_}(\\{hash})\AND\\{newmask};{}$\6
+${}\\{oo},\39\|p\K\\{fetchnode}(\|v,\39\|j);{}$\6
+\&{if} ${}(\R\|p){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+${}\\{storenode}(\|v,\39\|j,\39\|r);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U37.\fi
+
+\N{1}{39}The cache. The other principal data structure we need, besides the BDD
+base
+itself, is a software cache that helps us avoid repeating the calculations
+that we've already done. If, for example, $f$ and $g$ are nodes of the BDD for
+which we've already computed $h=f\land g$, the cache should contain the
+information that $f\land g$ is known to be node~$h$.
+
+But that description is only approximately correct, because
+the cost of forgetting the value of $f\land g$ is less than the cost of
+building a fancy data structure that is able to remember every result.
+(If we forget only a few things, we need to do only a few recomputations.)
+Therefore we adopt a simple scheme that is designed to be reliable most of
+the time, yet not perfect: We look for $f\land g$ in only one position
+within the cache, based on a hash code. If two or more results happen
+to hash to the same cache slot, we remember only the most recent one.
+
+Every entry of the cache consists of four tetrabytes, called
+$f$, $g$, $h$, and~$r$. The last of these, $r$, is nonzero if and only if the
+cache entry is meaningful; in that case $r$ points to a BDD node, the result
+of an operation encoded by $f$, $g$, and~$h$.
+This $(f,g,h)$ encoding has several variants:
+
+\smallskip\textindent{$\bullet$} If $h$ is 0, then $g$ is
+a ``time stamp,'' and $f$ points to a BDD node. This case is used for
+functional composition, when we want to
+invalidate a block of cache entries quickly by simply changing an
+external time stamp; items with a stale time stamp won't match any further
+cache lookups.
+
+\smallskip\textindent{$\bullet$} If $0<h\le\PB{\\{maxbinop}}$, then $h$
+denotes a binary operation on the BDD nodes $f$ and~$g$.
+For example, $h=1$ stands for $\land$. The binary operations currently
+implemented are:
+and~(1),
+but-not~(2),
+not-but~(4),
+xor~(6),
+or~(7),
+constrain~(8),
+all-quantifier~(9),
+no-quantifier~(10),
+yes-quantifier~(12),
+diff-quantifier~(14),
+exists-quantifier~(15).
+
+\smallskip\textindent{$\bullet$} Otherwise $(f,g,h)$ encodes a ternary
+operation on the three BDD nodes $f$, $g$, \PB{$\|h\AND{-}\T{16}$}. The four
+least-significant
+bits of~$h$ are used to identify the ternary operation involved:
+if-then-else~(0),
+median~(1),
+and-and~(2),
+and-exist~(3),
+not-yet-implemented~(4--15).
+
+\Y\B\4\D$\\{memo\_}(\|a)$ \5
+((\&{memo} ${}{*})(\&{size\_t})(\|a){}$)\par
+\Y\B\4\X10:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} \&{memo\_struct} ${}\{{}$\1\6
+\&{addr} \|f;\C{ first operand }\6
+\&{addr} \|g;\C{ second operand, or time stamp }\6
+\&{addr} \|h;\C{ third operand and/or operation code }\6
+\&{addr} \|r;\C{ result }\2\6
+${}\}{}$ \&{memo};\par
+\fi
+
+\M{40}The cache always occupies $2^e$ pages of the dynamic memory,
+for some integer $e\ge0$. If we have leisure to choose this size, we pick
+the smallest $e\ge0$ such that the cache has at least $\max(4m,n/4)$ slots,
+where $m$ is the number of nonempty items in the cache and $n$ is
+the number of live nodes in the BDD. Furthermore, the cache size
+will double whenever the number of cache insertions reaches a
+given threshold.
+
+\Y\B\4\D$\\{logmaxcachepages}$ \5
+\T{15}\C{ shouldn't be large if \PB{\\{logvarsize}} is large }\par
+\B\4\D$\\{maxcachepages}$ \5
+$(\T{1}\LL\\{logmaxcachepages}{}$)\par
+\B\4\D$\\{cacheslotsperpage}$ \5
+$(\\{pagesize}/\&{sizeof}(\&{memo}){}$)\par
+\B\4\D$\\{maxbinop}$ \5
+\T{15}\par
+\Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{addr} \\{cachepage}[\\{maxcachepages}];\C{ base addresses for the cache }\6
+\&{int} \\{cachepages};\C{ the current number of pages in the cache }\6
+\&{int} \\{cacheinserts};\C{ the number of times we've inserted a memo }\6
+\&{int} \\{threshold};\C{ the number of inserts that trigger cache doubling }\6
+\&{int} \\{cachemask};\C{ index of the first slot following the cache, minus 1
+}\par
+\fi
+
+\M{41}The following subroutines, useful for debugging, print out the
+cache contents in symbolic form.
+
+If \PB{\|p} points to a node, \PB{\\{id}(\|p)} is \PB{$\|p-\\{botsink}$}.
+
+\Y\B\4\D$\\{id}(\|a)$ \5
+$(((\&{size\_t})(\|a)-{}$(\&{size\_t}) \\{mem})${}/\&{sizeof}(\&{node}){}$)\C{
+node number in \PB{\\{mem}} }\par
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_memo}(\&{memo} ${}{*}\|m){}$\1\1\2\2\6
+${}\{{}$\1\6
+${}\\{printf}(\.{"\%x"},\39\\{id}(\|m\MG\|f));{}$\6
+\&{if} ${}(\|m\MG\|h\E\T{0}){}$\1\5
+${}\\{printf}(\.{"[\%d]"},\39\|m\MG\|g){}$;\C{ time stamp }\2\6
+\&{else} \&{if} ${}(\|m\MG\|h\Z\\{maxbinop}){}$\1\5
+${}\\{printf}(\.{"\%s\%x"},\39\\{binopname}[\|m\MG\|h],\39\\{id}(\|m\MG%
+\|g));{}$\2\6
+\&{else}\1\5
+${}\\{printf}(\.{"\%s\%x\%s\%x"},\39\\{ternopname1}[\|m\MG\|h\AND\T{\^f}],\39%
+\\{id}(\|m\MG\|g),\39\\{ternopname2}[\|m\MG\|h\AND\T{\^f}],\39\\{id}(\|m\MG%
+\|h));{}$\2\6
+${}\\{printf}(\.{"=\%x\\n"},\39\\{id}(\|m\MG\|r));{}$\6
+\4${}\}{}$\2\7
+\&{void} \\{print\_cache}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k;\6
+\&{register} \&{memo} ${}{*}\|m;{}$\7
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{cachepages};{}$ ${}\|k\PP){}$\1\6
+\&{for} ${}(\|m\K\\{memo\_}(\\{cachepage}[\|k]);{}$ ${}\|m<\\{memo\_}(%
+\\{cachepage}[\|k])+\\{cacheslotsperpage};{}$ ${}\|m\PP){}$\1\6
+\&{if} ${}(\|m\MG\|r){}$\1\5
+\\{print\_memo}(\|m);\2\2\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{42}Many of the symbolic names here are presently unused. I've filled them
+in just to facilitate extensions to this program.
+
+\Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{char} ${}{*}\\{binopname}[\,]\K\{\.{""},\39\.{"\&"},\39\.{">"},\39\.{"!"},%
+\39\.{"<"},\39\.{"@"},\39\.{"\^"},\39\.{"|"},\39\.{"\_"},\39\.{"A"},\39\.{"N"},%
+\39\.{"\#"},\39\.{"Y"},\39\.{"\$"},\39\.{"D"},\39\.{"E"}\};{}$\6
+\&{char} ${}{*}\\{ternopname1}[\,]\K\{\.{"?"},\39\.{"."},\39\.{"\&"},\39\.{"%
+\&"},\39\.{"@"},\39\.{"\#"},\39\.{"\$"},\39\.{"\%"},\39\.{"*"},\39\.{"<"},\39%
+\.{"-"},\39\.{"+"},\39\.{"|"},\39\.{"/"},\39\.{"\\\\"},\39\.{"\~"}\};{}$\6
+\&{char} ${}{*}\\{ternopname2}[\,]\K\{\.{":"},\39\.{"."},\39\.{"\&"},\39%
+\.{"E"},\39\.{"@"},\39\.{"\#"},\39\.{"\$"},\39\.{"\%"},\39\.{"*"},\39\.{"<"},%
+\39\.{"-"},\39\.{"+"},\39\.{"|"},\39\.{"/"},\39\.{"\\\\"},\39\.{"\~"}\}{}$;\par
+\fi
+
+\M{43}The threshold is set to half the total number of cache slots,
+because this many random insertions will keep about $e^{-1/2}\approx
+61$\% of the cache slots unclobbered. (If $p$ denotes this probability,
+a random large binary tree will need about $E$ steps to recalculate a
+lost result, where $E=p\cdot1+(1-p)\cdot(1+2E)$; hence we want
+$p>1/2$ to avoid blowup, and $E=1/(2p-1)$.)
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{choose\_cache\_size}(\&{int} \\{items})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k${},{}$ \\{slots};\7
+${}\|k\K\T{1},\39\\{slots}\K\\{cacheslotsperpage};{}$\6
+\&{while} ${}(\T{4}*\\{slots}<\\{totalnodes}-\\{deadnodes}\W\|k<%
+\\{maxcachepages}){}$\1\5
+${}\|k\MRL{{\LL}{\K}}\T{1},\39\\{slots}\MRL{{\LL}{\K}}\T{1};{}$\2\6
+\&{while} ${}(\\{slots}<\T{4}*\\{items}\W\|k<\\{maxcachepages}){}$\1\5
+${}\|k\MRL{{\LL}{\K}}\T{1},\39\\{slots}\MRL{{\LL}{\K}}\T{1};{}$\2\6
+\&{return} \|k;\6
+\4${}\}{}$\2\7
+\&{void} \\{cache\_init}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k;\6
+\&{register} \&{memo} ${}{*}\|m;{}$\7
+${}\\{cachepages}\K\\{choose\_cache\_size}(\T{0});{}$\6
+\&{if} ${}(\\{verbose}\AND(\T{8}+\T{16}+\T{32}+\T{512})){}$\1\5
+${}\\{printf}(\.{"initializing\ the\ ca}\)\.{che\ (\%d\ page\%s)\\n"},\39%
+\\{cachepages},\39\\{cachepages}\E\T{1}\?\.{""}:\.{"s"});{}$\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{cachepages};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{cachepage}[\|k]\K\\{addr\_}(\\{reserve\_page}(\,));{}$\6
+\&{if} ${}(\R\\{cachepage}[\|k]){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"(trouble\ allocating}\)\.{\ cache\ pages!)%
+\\n"});{}$\6
+\&{for} ${}(\|k\MM;{}$ ${}(\|k+\T{1})\AND\|k;{}$ ${}\|k\MM){}$\1\5
+${}\|o,\39\\{free\_page}(\\{page\_}(\\{cachepage}[\|k]));{}$\2\6
+${}\\{cachepages}\K\|k+\T{1};{}$\6
+\&{break};\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|m\K\\{memo\_}(\\{cachepage}[\|k]);{}$ ${}\|m<\\{memo\_}(%
+\\{cachepage}[\|k])+\\{cacheslotsperpage};{}$ ${}\|m\PP){}$\1\5
+${}\|m\MG\|r\K\T{0};{}$\2\6
+${}\\{zmems}\MRL{+{\K}}\\{cacheslotsperpage};{}$\6
+\4${}\}{}$\2\6
+${}\\{cachemask}\K(\\{cachepages}\LL\\{logpagesize})-\T{1};{}$\6
+${}\\{cacheinserts}\K\T{0};{}$\6
+${}\\{threshold}\K\T{1}+(\\{cachepages}*\\{cacheslotsperpage})/\T{2};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{44}\B\X5:Initialize everything\X${}\mathrel+\E{}$\6
+\\{cache\_init}(\,);\par
+\fi
+
+\M{45}Here's how we look for a memo in the cache. Memos might point to dead
+nodes, as long as those nodes still exist.
+
+A simple hash function is adequate for caching, because no clustering
+can occur.
+
+No mems are charged for computing \PB{\\{cachehash}}, because we assume that
+the calling routine has taken responsibility for accessing \PB{$\|f\MG%
+\\{index}$}
+and \PB{$\|g\MG\\{index}$}.
+
+\Y\B\4\D$\\{cachehash}(\|f,\|g,\|h)$ \5
+$((\|f)\MG\\{index}\LL\T{4})\XOR(((\|h)\?(\|g)\MG\\{index}:\\{addr\_}(\|g))\LL%
+\T{5})\XOR(\\{addr\_}(\|h)\LL\T{6}{}$)\par
+\B\4\D$\\{thememo}(\|s)$ \5
+$\\{memo\_}(\\{cachepage}[((\|s)\AND\\{cachemask})\GG\\{logpagesize}]+((\|s)%
+\AND\\{pagemask}){}$)\par
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{cache\_lookup}(\&{node} ${}{*}\|f,\39{}$\&{node} ${}{*}%
+\|g,\39{}$\&{node} ${}{*}\|h){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|r;{}$\6
+\&{register} \&{memo} ${}{*}\|m;{}$\6
+\&{register} \&{addr} \\{slot}${}\K\\{cachehash}(\|f,\39\|g,\39\|h);{}$\7
+${}\|o,\39\|m\K\\{thememo}(\\{slot});{}$\6
+${}\|o,\39\|r\K\\{node\_}(\|m\MG\|r);{}$\6
+\&{if} ${}(\R\|r){}$\1\5
+\&{return} ${}\NULL;{}$\2\6
+\&{if} ${}(\|o,\39\\{node\_}(\|m\MG\|f)\E\|f\W\\{node\_}(\|m\MG\|g)\E\|g\W%
+\\{node\_}(\|m\MG\|h)\E\|h){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{verbose}\AND\T{8}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"hit\ \%x:\ "},\39(\\{slot}\AND\\{cachemask})/\&{sizeof}(%
+\&{memo}));{}$\6
+\\{print\_memo}(\|m);\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|o,\39\|r\MG\\{xref}<\T{0}){}$\5
+${}\{{}$\1\6
+\\{recursively\_revive}(\|r);\6
+\&{return} \|r;\6
+\4${}\}{}$\2\6
+\&{return} \|o${},\39\|r\MG\\{xref}\PP,\39\|r;{}$\6
+\4${}\}{}$\2\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{46}Insertion into the cache is even easier, except that we might
+want to double the cache size while we're at it.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{cache\_insert}(\&{node} ${}{*}\|f,\39{}$\&{node} ${}{*}\|g,\39{}$%
+\&{node} ${}{*}\|h,\39{}$\&{node} ${}{*}\|r){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{memo} ${}{*}\|m,{}$ ${}{*}\\{mm};{}$\6
+\&{register} \&{int} \|k;\6
+\&{register} \&{int} \\{slot}${}\K\\{cachehash}(\|f,\39\|g,\39\|h);{}$\7
+\&{if} (\|h)\1\5
+\\{oo};\5
+\2\&{else}\1\5
+\|o;\C{ mems for computing \PB{\\{cachehash}} }\2\6
+\&{if} ${}(\PP\\{cacheinserts}\G\\{threshold}){}$\1\5
+\X47:Double the cache size\X;\2\6
+${}\|o,\39\|m\K\\{thememo}(\\{slot});{}$\6
+\&{if} ${}((\\{verbose}\AND\T{16})\W\|m\MG\|r){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"lose\ \%x:\ "},\39(\\{slot}\AND\\{cachemask})/\&{sizeof}(%
+\&{memo}));{}$\6
+\\{print\_memo}(\|m);\6
+\4${}\}{}$\2\6
+${}\\{oo},\39\|m\MG\|f\K\\{addr\_}(\|f),\39\|m\MG\|g\K\\{addr\_}(\|g),\39\|m\MG%
+\|h\K\\{addr\_}(\|h),\39\|m\MG\|r\K\\{addr\_}(\|r);{}$\6
+\&{if} ${}(\\{verbose}\AND\T{32}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"set\ \%x:\ "},\39(\\{slot}\AND\\{cachemask})/\&{sizeof}(%
+\&{memo}));{}$\6
+\\{print\_memo}(\|m);\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{47}\B\X47:Double the cache size\X${}\E{}$\6
+\&{if} ${}(\\{cachepages}<\\{maxcachepages}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{verbose}\AND(\T{8}+\T{16}+\T{32}+\T{512})){}$\1\5
+${}\\{printf}(\.{"doubling\ the\ cache\ }\)\.{(\%d\ pages)\\n"},\39%
+\\{cachepages}\LL\T{1});{}$\2\6
+\&{for} ${}(\|k\K\\{cachepages};{}$ ${}\|k<\\{cachepages}+\\{cachepages};{}$
+${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{cachepage}[\|k]\K\\{addr\_}(\\{reserve\_page}(\,));{}$\6
+\&{if} ${}(\R\\{cachepage}[\|k]){}$\5
+${}\{{}$\C{ sorry, we can't double the cache after all }\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"(trouble\ doubling\ c}\)\.{ache\ pages!)%
+\\n"});{}$\6
+\&{for} ${}(\|k\MM;{}$ ${}\|k\G\\{cachepages};{}$ ${}\|k\MM){}$\1\5
+${}\|o,\39\\{free\_page}(\\{page\_}(\\{cachepage}[\|k]));{}$\2\6
+\&{goto} \\{done};\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|m\K\\{memo\_}(\\{cachepage}[\|k]);{}$ ${}\|m<\\{memo\_}(%
+\\{cachepage}[\|k])+\\{cacheslotsperpage};{}$ ${}\|m\PP){}$\1\5
+${}\|m\MG\|r\K\T{0};{}$\2\6
+${}\\{zmems}\MRL{+{\K}}\\{cacheslotsperpage};{}$\6
+\4${}\}{}$\2\6
+${}\\{cachepages}\MRL{{\LL}{\K}}\T{1};{}$\6
+${}\\{cachemask}\MRL{+{\K}}\\{cachemask}+\T{1};{}$\6
+${}\\{threshold}\K\T{1}+(\\{cachepages}*\\{cacheslotsperpage})/\T{2};{}$\6
+\X48:Recache the items in the bottom half\X;\6
+\4${}\}{}$\2\6
+\4\\{done}:\par
+\U46.\fi
+
+\M{48}\B\X48:Recache the items in the bottom half\X${}\E{}$\6
+\&{for} ${}(\|k\K\\{cachepages}\GG\T{1};{}$ ${}\|k<\\{cachepages};{}$ ${}\|k%
+\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|o,\39\|m\K\\{memo\_}(\\{cachepage}[\|k]);{}$ ${}\|m<\\{memo\_}(%
+\\{cachepage}[\|k])+\\{cacheslotsperpage};{}$ ${}\|m\PP){}$\1\6
+\&{if} ${}(\|o,\39\|m\MG\|r){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|m\MG\|h){}$\1\5
+\\{oo};\5
+\2\&{else}\1\5
+\|o;\C{ mems for computing \PB{\\{cachehash}} }\2\6
+${}\\{oo},\39\\{mm}\K\\{thememo}(\\{cachehash}(\\{node\_}(\|m\MG\|f),\39\\{node%
+\_}(\|m\MG\|g),\39\\{node\_}(\|m\MG\|h)));{}$\6
+\&{if} ${}(\|m\I\\{mm}){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39{*}\\{mm}\K{*}\|m;{}$\6
+${}\|o,\39\|m\MG\|r\K\T{0};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\par
+\U47.\fi
+
+\M{49}Before we purge elements from the unique tables, we need to purge all
+references to dead nodes from the cache. At the same time, we might as
+well purge items whose time stamp has expired.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{cache\_purge}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k${},{}$ \\{items}${},{}$ \\{newcachepages};\6
+\&{register} \&{memo} ${}{*}\|m,{}$ ${}{*}\\{mm};{}$\7
+\&{for} ${}(\|k\K\\{items}\K\T{0};{}$ ${}\|k<\\{cachepages};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|m\K\\{memo\_}(\\{cachepage}[\|k]);{}$ ${}\|m<\\{memo\_}(%
+\\{cachepage}[\|k])+\\{cacheslotsperpage};{}$ ${}\|m\PP){}$\1\6
+\&{if} ${}(\|o,\39\|m\MG\|r){}$\5
+${}\{{}$\1\6
+\&{if} ${}((\|o,\39\\{node\_}(\|m\MG\|r)\MG\\{xref}<\T{0})\V(\\{oo},\39\\{node%
+\_}(\|m\MG\|f)\MG\\{xref}<\T{0})){}$\1\5
+\&{goto} \\{purge};\2\6
+\&{if} ${}(\|m\MG\|h\E\T{0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|m\MG\|g\I\\{thevar}(\\{node\_}(\|m\MG\|f))\MG\\{timestamp}){}$\1\5
+\&{goto} \\{purge};\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\\{node\_}(\|m\MG\|g)\MG\\{xref}<\T{0}){}$\1\5
+\&{goto} \\{purge};\2\6
+\&{if} ${}(\|m\MG\|h>\\{maxbinop}\W(\|o,\39\\{node\_}(\|m\MG\|h\AND{-}\T{\^10})%
+\MG\\{xref}<\T{0})){}$\1\5
+\&{goto} \\{purge};\2\6
+\4${}\}{}$\2\6
+${}\\{items}\PP{}$;\5
+\&{continue};\6
+\4\\{purge}:\5
+${}\|o,\39\|m\MG\|r\K\T{0};{}$\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{verbose}\AND(\T{8}+\T{16}+\T{32}+\T{512})){}$\1\5
+${}\\{printf}(\.{"purging\ the\ cache\ (}\)\.{\%d\ items\ left)\\n"},\39%
+\\{items});{}$\2\6
+\X50:Downsize the cache if it has now become too sparse\X;\6
+${}\\{cacheinserts}\K\\{items};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{50}\B\X50:Downsize the cache if it has now become too sparse\X${}\E{}$\6
+$\\{newcachepages}\K\\{choose\_cache\_size}(\\{items});{}$\6
+\&{if} ${}(\\{newcachepages}<\\{cachepages}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{verbose}\AND(\T{8}+\T{16}+\T{32}+\T{512})){}$\1\5
+${}\\{printf}(\.{"downsizing\ the\ cach}\)\.{e\ (\%d\ page\%s)\\n"},\39%
+\\{newcachepages},\39\\{newcachepages}\E\T{1}\?\.{""}:\.{"s"});{}$\2\6
+${}\\{cachemask}\K(\\{newcachepages}\LL\\{logpagesize})-\T{1};{}$\6
+\&{for} ${}(\|k\K\\{newcachepages};{}$ ${}\|k<\\{cachepages};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|o,\39\|m\K\\{memo\_}(\\{cachepage}[\|k]);{}$ ${}\|m<\\{memo\_}(%
+\\{cachepage}[\|k])+\\{cacheslotsperpage};{}$ ${}\|m\PP){}$\1\6
+\&{if} ${}(\|o,\39\|m\MG\|r){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|m\MG\|h){}$\1\5
+\\{oo};\5
+\2\&{else}\1\5
+\|o;\C{ mems for computing \PB{\\{cachehash}} }\2\6
+${}\\{oo},\39\\{mm}\K\\{thememo}(\\{cachehash}(\\{node\_}(\|m\MG\|f),\39\\{node%
+\_}(\|m\MG\|g),\39\\{node\_}(\|m\MG\|h)));{}$\6
+\&{if} ${}(\|m\I\\{mm}){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39{*}\\{mm}\K{*}\|m;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\6
+\\{free\_page}(\\{page\_}(\\{cachepage}[\|k]));\6
+\4${}\}{}$\2\6
+${}\\{cachepages}\K\\{newcachepages};{}$\6
+${}\\{threshold}\K\T{1}+(\\{cachepages}*\\{cacheslotsperpage})/\T{2};{}$\6
+\4${}\}{}$\2\par
+\U49.\fi
+
+\N{1}{51}BDD structure. The reader of this program ought to be familiar with
+the basics of BDDs, namely the facts that a BDD base consists of
+two sink nodes together with an unlimited number of branch nodes,
+where each branch node $(v,l,h)$ names a variable $x_v$ and points
+to other nodes $l\ne h$ that correspond to the cases where $x_v=0$
+and $x_v=1$. The variables on every path have increasing rank~$v$, and no
+two nodes have the same $(v,l,h)$.
+
+Besides the nodes of the BDD, this program deals with external pointers $f_j$
+for $0\le j<\PB{\\{extsize}}$. Each $f_j$ is either \PB{$\NULL$} or points to a
+BDD node.
+
+\Y\B\4\D$\\{extsize}$ \5
+\T{1000}\par
+\Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}\|f[\\{extsize}]{}$;\C{ external pointers to functions in the
+BDD base }\par
+\fi
+
+\M{52}Sometimes we want to mark the nodes of a subfunction temporarily.
+The following routine sets the leading bit of the \PB{\\{xref}} field
+in all nodes reachable from~\PB{\|p}.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{mark}(\&{node} ${}{*}\|p){}$\1\1\2\2\6
+${}\{{}$\1\6
+${}\\{rmems}\PP{}$;\C{ track recursion overhead }\6
+\4\\{restart}:\5
+\&{if} ${}(\|o,\39\|p\MG\\{xref}\G\T{0}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|p\MG\\{xref}\MRL{{\XOR}{\K}}\T{\^80000000};{}$\6
+${}\\{ooo},\39\\{mark}(\\{node\_}(\|p\MG\\{lo})){}$;\C{ two extra mems to save
+and restore \PB{\|p} }\6
+${}\|o,\39\|p\K\\{node\_}(\|p\MG\\{hi});{}$\6
+\&{goto} \\{restart};\C{ tail recursion }\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{53}We need to remove those marks soon after \PB{\\{mark}} has been called,
+because the \PB{\\{xref}} field is really supposed to count references.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{unmark}(\&{node} ${}{*}\|p){}$\1\1\2\2\6
+${}\{{}$\1\6
+${}\\{rmems}\PP{}$;\C{ track recursion overhead }\6
+\4\\{restart}:\5
+\&{if} ${}(\|o,\39\|p\MG\\{xref}<\T{0}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|p\MG\\{xref}\MRL{{\XOR}{\K}}\T{\^80000000};{}$\6
+${}\\{ooo},\39\\{unmark}(\\{node\_}(\|p\MG\\{lo})){}$;\C{ two extra mems to
+save and restore \PB{\|p} }\6
+${}\|o,\39\|p\K\\{node\_}(\|p\MG\\{hi});{}$\6
+\&{goto} \\{restart};\C{ tail recursion }\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{54}Here's a simple routine that prints out the current BDDs, in order
+of the variables in branch nodes. If the \PB{\\{marked}} parameter is nonzero,
+the output is restricted to branch nodes whose \PB{\\{xref}} field is
+marked. Otherwise all nodes are shown, with nonzero \PB{\\{xref}}s in
+parentheses.
+
+\Y\B\4\D$\\{thevar}(\|p)$ \5
+$({\AND}\\{varhead}[\\{varpart}((\|p)\MG\\{index})]{}$)\par
+\B\4\D$\\{print\_node}(\|p)$ \5
+$\\{printf}(\.{"\%x:\ (\~\%d?\%x:\%x)"},\39\\{id}(\|p),\39\\{thevar}(\|p)\MG%
+\\{name},\39\\{id}((\|p)\MG\\{lo}),\39\\{id}((\|p)\MG\\{hi}){}$)\par
+\B\4\D$\\{print\_node\_unmapped}(\|p)$ \5
+$\\{printf}(\.{"\%x:\ (\~\%d?\%x:\%x)"},\39\\{id}(\|p),\39\\{thevar}(\|p)-%
+\\{varhead},\39\\{id}((\|p)\MG\\{lo}),\39\\{id}((\|p)\MG\\{hi}){}$)\par
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_base}(\&{int} \\{marked}${},\39{}$\&{int} \\{unmapped})\1\1%
+\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k;\6
+\&{register} \&{node} ${}{*}\|p;{}$\6
+\&{register} \&{var} ${}{*}\|v;{}$\7
+\&{for} ${}(\|v\K\\{varhead};{}$ ${}\|v<\\{topofvars};{}$ ${}\|v\PP){}$\1\6
+\&{if} ${}(\|v\MG\\{proj}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|v\MG\\{mask};{}$ ${}\|k\MRL{+{\K}}%
+\&{sizeof}(\&{addr})){}$\5
+${}\{{}$\1\6
+${}\|p\K\\{fetchnode}(\|v,\39\|k);{}$\6
+\&{if} ${}(\|p\W(\R\\{marked}\V(\|p\MG\\{xref}+\T{1})<\T{0})){}$\5
+${}\{{}$\1\6
+\&{if} (\\{unmapped})\1\5
+\\{print\_node\_unmapped}(\|p);\5
+\2\&{else}\1\5
+\\{print\_node}(\|p);\2\6
+\&{if} ${}(\\{marked}\V\|p\MG\\{xref}\E\T{0}){}$\1\5
+\\{printf}(\.{"\\n"});\2\6
+\&{else}\1\5
+${}\\{printf}(\.{"\ (\%d)\\n"},\39\|p\MG\\{xref});{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\R\\{marked}\W\|v\MG\\{repl}){}$\1\5
+${}\\{printf}(\.{"y\%d=\%x\\n"},\39\|v\MG\\{name},\39\\{id}(\|v\MG%
+\\{repl}));{}$\2\6
+\4${}\}{}$\2\2\6
+\&{if} ${}(\R\\{marked}){}$\5
+${}\{{}$\C{ we also print the external functions }\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{extsize};{}$ ${}\|j\PP){}$\1\6
+\&{if} (\|f[\|j])\1\5
+${}\\{printf}(\.{"f\%d=\%x\\n"},\39\|j,\39\\{id}(\|f[\|j]));{}$\2\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{55}The marking feature is useful when we want to print out only a single
+BDD.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_function}(\&{node} ${}{*}\|p,\39{}$\&{int} \\{unmapped})\1\1%
+\2\2\6
+${}\{{}$\1\6
+\&{unsigned} \&{long} \&{long} \\{savemems}${}\K\\{mems},{}$ \\{savermems}${}\K%
+\\{rmems}{}$;\C{ mems aren't counted while printing }\7
+\&{if} ${}(\|p\E\\{botsink}\V\|p\E\\{topsink}){}$\1\5
+${}\\{printf}(\.{"\%d\\n"},\39\|p-\\{botsink});{}$\2\6
+\&{else} \&{if} (\|p)\5
+${}\{{}$\1\6
+\\{mark}(\|p);\6
+${}\\{print\_base}(\T{1},\39\\{unmapped});{}$\6
+\\{unmark}(\|p);\6
+\4${}\}{}$\2\6
+${}\\{mems}\K\\{savemems},\39\\{rmems}\K\\{savermems};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{56}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_profile}(\&{node} ${}{*}\|p){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{unsigned} \&{long} \&{long} \\{savemems}${}\K\\{mems},{}$ \\{savermems}${}\K%
+\\{rmems};{}$\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \\{tot};\6
+\&{register} \&{var} ${}{*}\|v;{}$\7
+\&{if} ${}(\R\|p){}$\1\5
+\\{printf}(\.{"\ 0\\n"});\C{ vacuous }\2\6
+\&{else} \&{if} ${}(\|p\Z\\{topsink}){}$\1\5
+\\{printf}(\.{"\ 1\\n"});\C{ constant }\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{tot}\K\T{0};{}$\6
+\\{mark}(\|p);\6
+\&{for} ${}(\|v\K\\{varhead};{}$ ${}\|v<\\{topofvars};{}$ ${}\|v\PP){}$\1\6
+\&{if} ${}(\|v\MG\\{proj}){}$\5
+${}\{{}$\1\6
+\X57:Print the number of marked nodes that branch on \PB{\|v}\X;\6
+\4${}\}{}$\2\2\6
+\\{unmark}(\|p);\6
+${}\\{printf}(\.{"\ 2\ (total\ \%d)\\n"},\39\\{tot}+\T{2}){}$;\C{ the sinks }\6
+\4${}\}{}$\2\6
+${}\\{mems}\K\\{savemems},\39\\{rmems}\K\\{savermems};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{57}\B\X57:Print the number of marked nodes that branch on \PB{\|v}\X${}\E{}$%
+\6
+\&{for} ${}(\|j\K\|k\K\T{0};{}$ ${}\|k<\|v\MG\\{mask};{}$ ${}\|k\MRL{+{\K}}%
+\&{sizeof}(\&{addr})){}$\5
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|q\K\\{fetchnode}(\|v,\39\|k);{}$\7
+\&{if} ${}(\|q\W(\|q\MG\\{xref}+\T{1})<\T{0}){}$\1\5
+${}\|j\PP;{}$\2\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"\ \%d"},\39\|j);{}$\6
+${}\\{tot}\MRL{+{\K}}\|j{}$;\par
+\U56.\fi
+
+\M{58}In order to deal efficiently with large BDDs, we've introduced highly
+redundant data structures, including things like hash tables and the cache.
+Furthermore, we assume that every BDD node~\PB{\|p} has a redundant field
+\PB{$\|p\MG\\{xref}$}, which counts the total number of branch nodes, external
+nodes,
+replacement functions, and projection functions that point to~\PB{\|p},
+minus~1.
+
+Bugs in this program might easily corrupt the data structure by putting it
+into an inconsistent state. Yet the inconsistency might not show up at the
+time of the error; the computer might go on to execute millions of
+instructions before the anomalies lead to disaster.
+
+Therefore I've written a \PB{\\{sanity\_check}} routine, which laboriously
+checks the
+integrity of all the data structures. This routine should help me to pinpoint
+problems readily whenever I make mistakes. And besides, the \PB{\\{sanity%
+\_check}}
+calculations document the structures in a way that should be especially
+helpful when I reread this program a year from now.
+
+Even today, I think that the very experience of writing \PB{\\{sanity\_check}}
+has
+made me much more familiar with the structures themselves. This reinforced
+knowledge will surely be valuable as I write the rest of the code.
+
+\Y\B\4\D$\\{includesanity}$ \5
+\T{1}\par
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\8\#\&{if} \\{includesanity}\6
+\&{unsigned} \&{int} \\{sanitycount};\C{ how many sanity checks have been
+started? }\7
+\&{void} \\{sanity\_check}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|p,{}$ ${}{*}\|q;{}$\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \\{count}${},{}$ \\{extra};\6
+\&{register} \&{var} ${}{*}\|v;{}$\6
+\&{unsigned} \&{long} \&{long} \\{savemems}${}\K\\{mems};{}$\7
+${}\\{sanitycount}\PP;{}$\6
+\X60:Build the shadow memory\X;\6
+\X66:Check the reference counts\X;\6
+\X68:Check the unique tables\X;\6
+\X69:Check the cache\X;\6
+\X70:Check the list of free pages\X;\6
+${}\\{mems}\K\\{savemems};{}$\6
+\4${}\}{}$\2\6
+\8\#\&{endif}\par
+\fi
+
+\M{59}Sanity checking is done with a ``shadow memory'' \PB{\\{smem}}, which is
+just
+as big as~\PB{\\{mem}}. If \PB{\|p} points to a node in \PB{\\{mem}}, there's a
+corresponding
+``ghost'' in \PB{\\{smem}}, pointed to by \PB{$\|q\K\\{ghost}(\|p)$}. The ghost
+nodes have four
+fields \PB{\\{lo}}, \PB{\\{hi}}, \PB{\\{xref}}, and \PB{\\{index}}, just like
+ordinary nodes do; but the
+meanings of those fields are quite different: \PB{$\|q\MG\\{xref}$} is $-1$ if
+node~\PB{\|p}
+is in the free list, otherwise \PB{$\|q\MG\\{xref}$} is a backpointer to a
+field
+that points to~\PB{\|p}. If \PB{$\|p\MG\\{lo}$} points to~\PB{\|r}, then \PB{$%
+\|q\MG\\{lo}$} will be
+a backpointer that continues the list of pointers to~\PB{\|r} that began
+with the \PB{\\{xref}} field in \PB{\|r}'s ghost; and there's a similar
+relationship
+between \PB{$\|p\MG\\{hi}$} and \PB{$\|q\MG\\{hi}$}. (Thus we can find all
+nodes that point to~\PB{\|p}.)
+Finally, \PB{$\|q\MG\\{index}$} counts the number of references to~\PB{\|p}
+from external
+pointers, projection functions, and replacement functions.
+
+\Y\B\4\D$\\{ghost}(\|p)$ \5
+$\\{node\_}((\&{size\_t})(\|p)-{}$(\&{size\_t}) \\{mem}${}+{}$(\&{size\_t}) %
+\\{smem})\par
+\Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
+\8\#\&{if} \\{includesanity}\6
+\&{char} \\{smem}[\\{memsize}];\C{ the shadow memory }\6
+\8\#\&{endif}\par
+\fi
+
+\M{60}\B\D$\\{complain}(\\{complaint})$ \6
+${}\{{}$\5
+\1${}\\{printf}(\.{"!\ \%s\ in\ node\ "},\39\\{complaint}){}$;\5
+\\{print\_node}(\|p);\5
+\\{printf}(\.{"\\n"});\5
+${}\}{}$\2\par
+\B\4\D$\\{legit}(\|p)$ \5
+$(((\&{size\_t})(\|p)\AND(\&{sizeof}(\&{node})-\T{1}))\E\T{0}\W(\|p)<%
+\\{nodeptr}\W(\|p)\G\\{botsink}\W\\{ghost}(\|p)\MG\\{xref}\I{-}\T{1}{}$)\par
+\B\4\D$\\{superlegit}(\|p)$ \5
+$(((\&{size\_t})(\|p)\AND(\&{sizeof}(\&{node})-\T{1}))\E\T{0}\W(\|p)<%
+\\{nodeptr}\W(\|p)>\\{topsink}\W\\{ghost}(\|p)\MG\\{xref}\I{-}\T{1}{}$)\par
+\Y\B\4\X60:Build the shadow memory\X${}\E{}$\6
+\&{for} ${}(\|p\K\\{botsink};{}$ ${}\|p<\\{nodeptr};{}$ ${}\|p\PP){}$\1\5
+${}\\{ghost}(\|p)\MG\\{xref}\K\T{0},\39\\{ghost}(\|p)\MG\\{index}\K{-}\T{1};{}$%
+\2\6
+\X64:Check the list of free nodes\X;\6
+\X65:Compute the ghost index fields\X;\6
+\&{for} ${}(\\{count}\K\T{2},\39\|p\K\\{topsink}+\T{1};{}$ ${}\|p<%
+\\{nodeptr};{}$ ${}\|p\PP){}$\1\6
+\&{if} ${}(\\{ghost}(\|p)\MG\\{xref}\I{-}\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{count}\PP;{}$\6
+\&{if} ${}(\R\\{legit}(\\{node\_}(\|p\MG\\{lo}))\V\R\\{legit}(\\{node\_}(\|p\MG%
+\\{hi}))){}$\1\5
+\\{complain}(\.{"bad\ pointer"})\2\6
+\&{else} \&{if} ${}(\\{node\_}(\\{thevar}(\|p)\MG\\{proj})\E\NULL){}$\1\5
+\\{complain}(\.{"bad\ var"})\2\6
+\&{else} \&{if} ${}(\|p\MG\\{lo}\E\|p\MG\\{hi}){}$\1\5
+\\{complain}(\.{"lo=hi"})\2\6
+\&{else}\5
+${}\{{}$\1\6
+\X63:Check that \PB{\|p} is findable in the unique table\X;\6
+\&{if} ${}(\\{node\_}(\|p\MG\\{lo})>\\{topsink}\W\\{thevar}(\|p)\G\\{thevar}(%
+\\{node\_}(\|p\MG\\{lo}))){}$\1\5
+\\{complain}(\.{"bad\ lo\ rank"});\2\6
+\&{if} ${}(\\{node\_}(\|p\MG\\{hi})>\\{topsink}\W\\{thevar}(\|p)\G\\{thevar}(%
+\\{node\_}(\|p\MG\\{hi}))){}$\1\5
+\\{complain}(\.{"bad\ hi\ rank"});\2\6
+\&{if} ${}(\|p\MG\\{xref}\G\T{0}){}$\5
+${}\{{}$\C{ dead nodes don't point }\1\6
+${}\|q\K\\{ghost}(\|p);{}$\6
+${}\|q\MG\\{lo}\K\\{ghost}(\|p\MG\\{lo})\MG\\{xref},\39\\{ghost}(\|p\MG\\{lo})%
+\MG\\{xref}\K\\{addr\_}({\AND}(\|p\MG\\{lo}));{}$\6
+${}\|q\MG\\{hi}\K\\{ghost}(\|p\MG\\{hi})\MG\\{xref},\39\\{ghost}(\|p\MG\\{hi})%
+\MG\\{xref}\K\\{addr\_}({\AND}(\|p\MG\\{hi}));{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\6
+\&{if} ${}(\\{count}\I\\{totalnodes}){}$\1\5
+${}\\{printf}(\.{"!\ totalnodes\ should}\)\.{\ be\ \%d,\ not\ \%d\\n"},\39%
+\\{count},\39\\{totalnodes});{}$\2\6
+\&{if} ${}(\\{extra}\I\\{totalnodes}){}$\1\5
+${}\\{printf}(\.{"!\ \%d\ nodes\ have\ lea}\)\.{ked\\n"},\39\\{extra}-%
+\\{totalnodes}){}$;\2\par
+\U58.\fi
+
+\M{61}The macros above and the \PB{\\{who\_points\_to}} routine below rely on
+the fact that
+\PB{$\&{sizeof}(\&{node})\K\T{16}$}.
+
+\fi
+
+\M{62}\B\X5:Initialize everything\X${}\mathrel+\E{}$\6
+\&{if} ${}(\&{sizeof}(\&{node})\I\T{16}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ I\ assume\ tha}\)\.{t\ sizeof(node)\
+is\ 16}\)\.{!\\n"});{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{63}\B\X63:Check that \PB{\|p} is findable in the unique table\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{addr} ${}{*}\\{hash};{}$\6
+\&{register} \&{var} ${}{*}\|v\K\\{thevar}(\|p);{}$\7
+${}\|j\K\|v\MG\\{mask};{}$\6
+\&{for} ${}(\\{hash}\K\\{hashcode}(\\{node\_}(\|p\MG\\{lo}),\39\\{node\_}(\|p%
+\MG\\{hi}));{}$  ; ${}\\{hash}\PP){}$\5
+${}\{{}$\1\6
+${}\|k\K\\{addr\_}(\\{hash})\AND\|j;{}$\6
+${}\|q\K\\{fetchnode}(\|v,\39\|k);{}$\6
+\&{if} ${}(\R\|q){}$\1\5
+\&{break};\2\6
+\&{if} ${}(\|q\MG\\{lo}\E\|p\MG\\{lo}\W\|q\MG\\{hi}\E\|p\MG\\{hi}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|q\I\|p){}$\1\5
+\\{complain}(\.{"unfindable\ (lo,hi)"});\2\6
+${}\\{addr\_\_}((\&{size\_t})(\|v\MG\\{base}[\|k\GG\\{logpagesize}]+(\|k\AND%
+\\{pagemask}))-{}$(\&{size\_t}) \\{mem}${}+{}$(\&{size\_t}) \\{smem})${}\K%
+\\{sanitycount};{}$\6
+\4${}\}{}$\2\par
+\U60.\fi
+
+\M{64}\B\X64:Check the list of free nodes\X${}\E{}$\6
+$\\{extra}\K\\{nodeptr}-\\{botsink};{}$\6
+\&{for} ${}(\|p\K\\{nodeavail};{}$ \|p; ${}\|p\K\\{node\_}(\|p\MG\\{xref})){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{superlegit}(\|p)){}$\1\5
+${}\\{printf}(\.{"!\ illegal\ node\ \%x\ i}\)\.{n\ the\ list\ of\ free\ n}\)%
+\.{odes\\n"},\39\\{id}(\|p));{}$\2\6
+\&{else}\1\5
+${}\\{extra}\MM,\39\\{ghost}(\|p)\MG\\{xref}\K{-}\T{1};{}$\2\6
+\4${}\}{}$\2\par
+\U60.\fi
+
+\M{65}\B\X65:Compute the ghost index fields\X${}\E{}$\6
+$\\{ghost}(\\{botsink})\MG\\{index}\K\\{ghost}(\\{topsink})\MG\\{index}\K%
+\T{0};{}$\6
+\&{for} ${}(\|v\K\\{varhead};{}$ ${}\|v<\\{topofvars};{}$ ${}\|v\PP){}$\1\6
+\&{if} ${}(\|v\MG\\{proj}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{superlegit}(\\{node\_}(\|v\MG\\{proj}))){}$\1\5
+${}\\{printf}(\.{"!\ illegal\ projectio}\)\.{n\ function\ for\ level}\)\.{\ \%d%
+\\n"},\39\|v-\\{varhead});{}$\2\6
+\&{else}\1\5
+${}\\{ghost}(\|v\MG\\{proj})\MG\\{index}\PP;{}$\2\6
+\&{if} ${}(\|v\MG\\{repl}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{legit}(\\{node\_}(\|v\MG\\{repl}))){}$\1\5
+${}\\{printf}(\.{"!\ illegal\ replaceme}\)\.{nt\ function\ for\ leve}\)\.{l\ %
+\%d\\n"},\39\|v-\\{varhead});{}$\2\6
+\&{else}\1\5
+${}\\{ghost}(\|v\MG\\{repl})\MG\\{index}\PP;{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{extsize};{}$ ${}\|j\PP){}$\1\6
+\&{if} (\|f[\|j])\5
+${}\{{}$\1\6
+\&{if} ${}(\|f[\|j]>\\{topsink}\W\R\\{superlegit}(\|f[\|j])){}$\1\5
+${}\\{printf}(\.{"!\ illegal\ external\ }\)\.{pointer\ f\%d\\n"},\39\|j);{}$\2\6
+\&{else}\1\5
+${}\\{ghost}(\|f[\|j])\MG\\{index}\PP;{}$\2\6
+\4${}\}{}$\2\2\par
+\U60.\fi
+
+\M{66}\B\X66:Check the reference counts\X${}\E{}$\6
+\&{for} ${}(\|p\K\\{botsink},\39\\{count}\K\T{0};{}$ ${}\|p<\\{nodeptr};{}$ ${}%
+\|p\PP){}$\5
+${}\{{}$\1\6
+${}\|q\K\\{ghost}(\|p);{}$\6
+\&{if} ${}(\|q\MG\\{xref}\E{-}\T{1}){}$\1\5
+\&{continue};\C{ \PB{\|p} is free }\2\6
+\&{for} ${}(\|k\K\|q\MG\\{index},\39\|q\K\\{node\_}(\|q\MG\\{xref});{}$ \|q;
+${}\|q\K\\{node\_}(\\{addr\_\_}(\\{ghost}(\|q)))){}$\1\5
+${}\|k\PP;{}$\2\6
+\&{if} ${}(\|p\MG\\{xref}\I\|k){}$\1\5
+${}\\{printf}(\.{"!\ \%x->xref\ should\ b}\)\.{e\ \%d,\ not\ \%d\\n"},\39%
+\\{id}(\|p),\39\|k,\39\|p\MG\\{xref});{}$\2\6
+\&{if} ${}(\|k<\T{0}){}$\1\5
+${}\\{count}\PP{}$;\C{ \PB{\|p} is dead }\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{count}\I\\{deadnodes}){}$\1\5
+${}\\{printf}(\.{"!\ deadnodes\ should\ }\)\.{be\ \%d,\ not\ \%d\\n"},\39%
+\\{count},\39\\{deadnodes}){}$;\2\par
+\U58.\fi
+
+\M{67}If a reference count turns out to be wrong, I'll probably want to know
+why.
+The following subroutine provides additional clues.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\8\#\&{if} \\{includesanity}\6
+\&{void} \\{who\_points\_to}(\&{node} ${}{*}\|p){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{addr} \|q;\C{ the address of a \PB{\\{lo}} or \PB{\\{hi}} field
+in a node }\7
+\&{for} ${}(\|q\K\\{addr\_}(\\{ghost}(\|p)\MG\\{xref});{}$ \|q; ${}\|q\K\\{addr%
+\_\_}(\\{ghost}(\|q))){}$\5
+${}\{{}$\1\6
+${}\\{print\_node}(\\{node\_}(\|q\AND{-}\&{sizeof}(\&{node})));{}$\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\8\#\&{endif}\par
+\fi
+
+\M{68}We've seen that every superlegimate node is findable in the
+proper unique table. Conversely, we want to check that everything
+is those tables is superlegitimate, and found.
+
+\Y\B\4\D$\\{badpage}(\|p)$ \5
+$((\|p)<\\{pageptr}\V(\|p)\G\\{topofmem}{}$)\par
+\Y\B\4\X68:Check the unique tables\X${}\E{}$\6
+$\\{extra}\K\\{topofmem}-\\{pageptr}{}$;\C{ this many pages allocated }\6
+\&{for} ${}(\|v\K\\{varhead};{}$ ${}\|v<\\{topofvars};{}$ ${}\|v\PP){}$\1\6
+\&{if} ${}(\|v\MG\\{proj}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\|v\MG\\{mask}\GG\\{logpagesize};{}$ ${}\|k%
+\PP){}$\1\6
+\&{if} ${}(\\{badpage}(\\{page\_}(\|v\MG\\{base}[\|k]))){}$\1\5
+${}\\{printf}(\.{"!\ bad\ page\ base\ \%x\ }\)\.{in\ unique\ table\ for\ }\)%
+\.{level\ \%d\\n"},\39\\{id}(\|v\MG\\{base}[\|k]),\39\|v-\\{varhead});{}$\2\2\6
+${}\\{extra}\MRL{-{\K}}\T{1}+(\|v\MG\\{mask}\GG\\{logpagesize});{}$\6
+\&{for} ${}(\|k\K\\{count}\K\T{0};{}$ ${}\|k<\|v\MG\\{mask};{}$ ${}\|k\MRL{+{%
+\K}}\&{sizeof}(\&{addr})){}$\5
+${}\{{}$\1\6
+${}\|p\K\\{fetchnode}(\|v,\39\|k);{}$\6
+\&{if} ${}(\R\|p){}$\1\5
+${}\\{count}\PP;{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\\{addr\_\_}((\&{size\_t})(\|v\MG\\{base}[\|k\GG\\{logpagesize}]+(%
+\|k\AND\\{pagemask}))-{}$(\&{size\_t}) \\{mem}${}+{}$(\&{size\_t}) \\{smem})${}%
+\I\\{sanitycount}){}$\1\5
+${}\\{printf}(\.{"!\ extra\ node\ \%x\ in\ }\)\.{unique\ table\ for\ lev}\)%
+\.{el\ \%d\\n"},\39\\{id}(\|p),\39\|v-\\{varhead});{}$\2\6
+\&{if} ${}(\R\\{superlegit}(\|p)){}$\1\5
+${}\\{printf}(\.{"!\ illegal\ node\ \%x\ i}\)\.{n\ unique\ table\ for\ l}\)%
+\.{evel\ \%d\\n"},\39\\{id}(\|p),\39\|v-\\{varhead});{}$\2\6
+\&{else} \&{if} ${}(\\{varpart}(\|p\MG\\{index})\I\|v-\\{varhead}){}$\1\5
+\\{complain}(\.{"wrong\ var"});\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{count}\I\|v\MG\\{free}){}$\1\5
+${}\\{printf}(\.{"!\ unique\ table\ \%d\ h}\)\.{as\ \%d\ free\ slots,\ no}\)%
+\.{t\ \%d\\n"},\39\|v-\\{varhead},\39\\{count},\39\|v\MG\\{free});{}$\2\6
+\4${}\}{}$\2\2\par
+\U58.\fi
+
+\M{69}The fields in cache memos that refer to nodes should refer to
+legitimate nodes.
+
+\Y\B\4\X69:Check the cache\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{memo} ${}{*}\|m;{}$\7
+${}\\{extra}\MRL{-{\K}}\T{1}+(\\{cachemask}\GG\\{logpagesize});{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{cachepages};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{if} (\\{badpage}(\\{page\_}(\\{cachepage}[\|k])))\1\5
+${}\\{printf}(\.{"!\ bad\ page\ base\ \%x\ }\)\.{in\ the\ cache\\n"},\39\\{id}(%
+\\{cachepage}[\|k]));{}$\2\6
+\&{for} ${}(\|m\K\\{memo\_}(\\{cachepage}[\|k]);{}$ ${}\|m<\\{memo\_}(%
+\\{cachepage}[\|k])+\\{cacheslotsperpage};{}$ ${}\|m\PP){}$\1\6
+\&{if} ${}(\|m\MG\|r){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{legit}(\\{node\_}(\|m\MG\|r))){}$\1\5
+\&{goto} \\{nogood};\2\6
+\&{if} ${}(\R\\{legit}(\\{node\_}(\|m\MG\|f))){}$\1\5
+\&{goto} \\{nogood};\2\6
+\&{if} ${}(\|m\MG\|h>\T{0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{legit}(\\{node\_}(\|m\MG\|g))){}$\1\5
+\&{goto} \\{nogood};\2\6
+\&{if} ${}(\|m\MG\|h>\\{maxbinop}\W\R\\{legit}(\\{node\_}(\|m\MG\|h\AND{-}\T{%
+\^10}))){}$\1\5
+\&{goto} \\{nogood};\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\6
+\&{continue};\6
+\4\\{nogood}:\5
+\\{printf}(\.{"!\ bad\ node\ in\ cache}\)\.{\ entry\ "});\5
+\\{print\_memo}(\|m);\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U58.\fi
+
+\M{70}Finally, \PB{\\{sanity\_check}} ensures that we haven't forgotten to free
+unused
+pages, nor have we freed a page that was already free.
+
+\Y\B\4\X70:Check the list of free pages\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{page} ${}{*}\|p\K\\{pageavail};{}$\7
+\&{while} ${}(\|p\W\\{extra}>\T{0}){}$\5
+${}\{{}$\1\6
+\&{if} (\\{badpage}(\|p))\1\5
+${}\\{printf}(\.{"!\ bad\ free\ page\ \%x\\}\)\.{n"},\39\\{id}(\|p));{}$\2\6
+${}\|p\K\\{page\_}(\|p\MG\\{dat}[\T{0}]),\39\\{extra}\MM;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{extra}>\T{0}){}$\1\5
+${}\\{printf}(\.{"!\ \%d\ pages\ have\ lea}\)\.{ked\\n"},\39\\{extra});{}$\2\6
+\&{else} \&{if} (\|p)\1\5
+\\{printf}(\.{"!\ the\ free\ pages\ fo}\)\.{rm\ a\ loop\\n"});\2\6
+\4${}\}{}$\2\par
+\U58.\fi
+
+\M{71}The following routine brings a dead node back to life.
+It also increases the reference counts of the node's children,
+and resuscitates them if they were dead.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{recursively\_revive}(\&{node} ${}{*}\|p){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|q;{}$\7
+${}\\{rmems}\PP{}$;\C{ track recursion overhead }\6
+\4\\{restart}:\5
+\&{if} ${}(\\{verbose}\AND\T{4}){}$\1\5
+${}\\{printf}(\.{"reviving\ \%x\\n"},\39\\{id}(\|p));{}$\2\6
+${}\|o,\39\|p\MG\\{xref}\K\T{0};{}$\6
+${}\\{deadnodes}\MM;{}$\6
+${}\|q\K\\{node\_}(\|p\MG\\{lo});{}$\6
+\&{if} ${}(\|o,\39\|q\MG\\{xref}<\T{0}){}$\1\5
+${}\\{oooo},\39\\{recursively\_revive}(\|q);{}$\2\6
+\&{else}\1\5
+${}\|o,\39\|q\MG\\{xref}\PP;{}$\2\6
+${}\|p\K\\{node\_}(\|p\MG\\{hi});{}$\6
+\&{if} ${}(\|o,\39\|p\MG\\{xref}<\T{0}){}$\1\5
+\&{goto} \\{restart};\C{ tail recursion }\2\6
+\&{else}\1\5
+${}\|o,\39\|p\MG\\{xref}\PP;{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{72}Conversely, we sometimes must go the other way, with as much dignity
+as we can muster.
+
+\Y\B\4\D$\\{deref}(\|p)$ \6
+\&{if} ${}(\|o,\39(\|p)\MG\\{xref}\E\T{0}){}$\1\5
+\\{recursively\_kill}(\|p);\5
+\2\&{else} $\|o,\39(\|p)\MG\\{xref}\MM{}$\par
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{recursively\_kill}(\&{node} ${}{*}\|p){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|q;{}$\7
+${}\\{rmems}\PP{}$;\C{ track recursion overhead }\6
+\4\\{restart}:\5
+\&{if} ${}(\\{verbose}\AND\T{4}){}$\1\5
+${}\\{printf}(\.{"burying\ \%x\\n"},\39\\{id}(\|p));{}$\2\6
+${}\|o,\39\|p\MG\\{xref}\K{-}\T{1};{}$\6
+${}\\{deadnodes}\PP;{}$\6
+${}\|q\K\\{node\_}(\|p\MG\\{lo});{}$\6
+\&{if} ${}(\|o,\39\|q\MG\\{xref}\E\T{0}){}$\1\5
+${}\\{oooo},\39\\{recursively\_kill}(\|q);{}$\2\6
+\&{else}\1\5
+${}\|o,\39\|q\MG\\{xref}\MM;{}$\2\6
+${}\|p\K\\{node\_}(\|p\MG\\{hi});{}$\6
+\&{if} ${}(\|o,\39\|p\MG\\{xref}\E\T{0}){}$\1\5
+\&{goto} \\{restart};\C{ tail recursion }\2\6
+\&{else}\1\5
+${}\|o,\39\|p\MG\\{xref}\MM;{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{73}Binary operations. OK, now we've got a bunch of powerful routines for
+making
+and maintaining BDDs, and it's time to have fun. Let's start with a typical
+synthesis routine, which constructs the BDD for $f\land g$ from the BDDs for
+$f$ and~$g$.
+
+The general pattern is to have a top-level subroutine and a recursive
+subroutine. The top-level one updates overall status variables and
+invokes the recursive one; and it keeps trying, if temporary setbacks arise.
+
+The recursive routine exits quickly if given a simple case.
+Otherwise it checks the cache, and calls itself if necessary.
+I write the recursive routine first, since it embodies the guts
+of the computation. % and since C wants me to
+
+The top-level routines are rather boring, so I'll defer them till later.
+
+Incidentally, I learned the \CEE/ language long ago, and didn't know
+until recently that it's now legal to modify the formal parameters
+to a function. (Wow!)
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{and\_rec}(\&{node} ${}{*}\|f,\39{}$\&{node} ${}{*}\|g){}$%
+\1\1\2\2\6
+${}\{{}$\1\6
+\&{var} ${}{*}\|v,{}$ ${}{*}\\{vf},{}$ ${}{*}\\{vg};{}$\6
+\&{node} ${}{*}\|r,{}$ ${}{*}\\{r0},{}$ ${}{*}\\{r1};{}$\7
+\&{if} ${}(\|f\E\|g){}$\1\5
+\&{return} \\{oo}${},\39\|f\MG\\{xref}\PP,\39\|f{}$;\C{ $f\land f=f$ }\2\6
+\&{if} ${}(\|f>\|g){}$\1\5
+${}\|r\K\|f,\39\|f\K\|g,\39\|g\K\|r{}$;\C{ wow }\2\6
+\&{if} ${}(\|f\Z\\{topsink}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|f\E\\{topsink}){}$\1\5
+\&{return} \\{oo}${},\39\|g\MG\\{xref}\PP,\39\|g{}$;\C{ $1\land g=g$ }\2\6
+\&{return} \\{oo}${},\39\\{botsink}\MG\\{xref}\PP,\39\\{botsink}{}$;\C{ $0\land
+g=0$ }\6
+\4${}\}{}$\2\6
+${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{1})){}$;\C{ two
+mems for \PB{$\|f\MG\\{index}$}, \PB{$\|g\MG\\{index}$} }\6
+\&{if} (\|r)\1\5
+\&{return} \|r;\2\6
+\X74:Find $f\land g$ recursively\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{74}I assume that \PB{$\|f\MG\\{lo}$} and \PB{$\|f\MG\\{hi}$} belong to the
+same octabyte.
+
+The \PB{\\{rmems}} counter is incremented only after we've checked for
+special terminal cases. When none of the simplifications apply,
+we must prepare to plunge in to deeper waters.
+
+\Y\B\4\X74:Find $f\land g$ recursively\X${}\E{}$\6
+$\\{rmems}\PP{}$;\C{ track recursion overhead }\6
+${}\\{vf}\K\\{thevar}(\|f){}$;\C{ \PB{$\|f\MG\\{index}$} has already been
+fetched }\6
+${}\\{vg}\K\\{thevar}(\|g){}$;\C{ \PB{$\|g\MG\\{index}$} has already been
+fetched }\6
+\&{if} ${}(\\{vf}<\\{vg}){}$\1\5
+${}\|v\K\\{vf};{}$\2\6
+\&{else}\1\5
+${}\|v\K\\{vg}{}$;\C{ choose the top variable, \PB{\|v} }\2\6
+${}\\{r0}\K\\{and\_rec}((\\{vf}\E\|v\?\|o,\39\\{node\_}(\|f\MG\\{lo}):\|f),\39(%
+\\{vg}\E\|v\?\|o,\39\\{node\_}(\|g\MG\\{lo}):\|g));{}$\6
+\&{if} ${}(\R\\{r0}){}$\1\5
+\&{return} ${}\NULL{}$;\C{ oops, trouble }\2\6
+${}\\{r1}\K\\{and\_rec}((\\{vf}\E\|v\?\\{node\_}(\|f\MG\\{hi}):\|f),\39(\\{vg}%
+\E\|v\?\\{node\_}(\|g\MG\\{hi}):\|g));{}$\6
+\&{if} ${}(\R\\{r1}){}$\5
+${}\{{}$\1\6
+\\{deref}(\\{r0});\C{ too bad, but we have to abort in midstream }\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\6
+${}\|r\K\\{unique\_find}(\|v,\39\\{r0},\39\\{r1});{}$\6
+\&{if} (\|r)\5
+${}\{{}$\1\6
+\&{if} ${}((\\{verbose}\AND\T{128})\W(\|v<\\{tvar})){}$\1\5
+${}\\{printf}(\.{"\ \ \ \%x=\%x\&\%x\ (level\ }\)\.{\%d)\\n"},\39\\{id}(\|r),%
+\39\\{id}(\|f),\39\\{id}(\|g),\39\|v-\\{varhead});{}$\2\6
+${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{1}),\39\|r);{}$\6
+\4${}\}{}$\2\6
+\&{return} \|r;\par
+\U73.\fi
+
+\M{75}Of course $f\lor g$ is dual to $f\land g$. I could have combined
+the two routines into one, but what the heck; a long program is more
+impressive.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{or\_rec}(\&{node} ${}{*}\|f,\39{}$\&{node} ${}{*}\|g){}$\1%
+\1\2\2\6
+${}\{{}$\1\6
+\&{var} ${}{*}\|v,{}$ ${}{*}\\{vf},{}$ ${}{*}\\{vg};{}$\6
+\&{node} ${}{*}\|r,{}$ ${}{*}\\{r0},{}$ ${}{*}\\{r1};{}$\7
+\&{if} ${}(\|f\E\|g){}$\1\5
+\&{return} \\{oo}${},\39\|f\MG\\{xref}\PP,\39\|f{}$;\C{ $f\lor f=f$ }\2\6
+\&{if} ${}(\|f>\|g){}$\1\5
+${}\|r\K\|f,\39\|f\K\|g,\39\|g\K\|r{}$;\C{ wow }\2\6
+\&{if} ${}(\|f\Z\\{topsink}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|f\E\\{topsink}){}$\1\5
+\&{return} \\{oo}${},\39\\{topsink}\MG\\{xref}\PP,\39\\{topsink}{}$;\C{ $1\lor
+g=1$ }\2\6
+\&{return} \\{oo}${},\39\|g\MG\\{xref}\PP,\39\|g{}$;\C{ $0\lor g=g$ }\6
+\4${}\}{}$\2\6
+${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{7}));{}$\6
+\&{if} (\|r)\1\5
+\&{return} \|r;\2\6
+\X76:Find $f\lor g$ recursively\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{76}\B\X76:Find $f\lor g$ recursively\X${}\E{}$\6
+$\\{rmems}\PP{}$;\C{ track recursion overhead }\6
+${}\\{vf}\K\\{thevar}(\|f);{}$\6
+${}\\{vg}\K\\{thevar}(\|g);{}$\6
+\&{if} ${}(\\{vf}<\\{vg}){}$\1\5
+${}\|v\K\\{vf};{}$\2\6
+\&{else}\1\5
+${}\|v\K\\{vg}{}$;\C{ choose the top variable, \PB{\|v} }\2\6
+${}\\{r0}\K\\{or\_rec}((\\{vf}\E\|v\?\|o,\39\\{node\_}(\|f\MG\\{lo}):\|f),\39(%
+\\{vg}\E\|v\?\|o,\39\\{node\_}(\|g\MG\\{lo}):\|g));{}$\6
+\&{if} ${}(\R\\{r0}){}$\1\5
+\&{return} ${}\NULL{}$;\C{ oops, trouble }\2\6
+${}\\{r1}\K\\{or\_rec}((\\{vf}\E\|v\?\\{node\_}(\|f\MG\\{hi}):\|f),\39(\\{vg}\E%
+\|v\?\\{node\_}(\|g\MG\\{hi}):\|g));{}$\6
+\&{if} ${}(\R\\{r1}){}$\5
+${}\{{}$\1\6
+\\{deref}(\\{r0});\C{ too bad, but we have to abort in midstream }\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\6
+${}\|r\K\\{unique\_find}(\|v,\39\\{r0},\39\\{r1});{}$\6
+\&{if} (\|r)\5
+${}\{{}$\1\6
+\&{if} ${}((\\{verbose}\AND\T{128})\W(\|v<\\{tvar})){}$\1\5
+${}\\{printf}(\.{"\ \ \ \%x=\%x|\%x\ (level\ }\)\.{\%d)\\n"},\39\\{id}(\|r),\39%
+\\{id}(\|f),\39\\{id}(\|g),\39\|v-\\{varhead});{}$\2\6
+${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{7}),\39\|r);{}$\6
+\4${}\}{}$\2\6
+\&{return} \|r;\par
+\U75.\fi
+
+\M{77}Exclusive or is much the same.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{xor\_rec}(\&{node} ${}{*}\|f,\39{}$\&{node} ${}{*}\|g){}$%
+\1\1\2\2\6
+${}\{{}$\1\6
+\&{var} ${}{*}\|v,{}$ ${}{*}\\{vf},{}$ ${}{*}\\{vg};{}$\6
+\&{node} ${}{*}\|r,{}$ ${}{*}\\{r0},{}$ ${}{*}\\{r1};{}$\7
+\&{if} ${}(\|f\E\|g){}$\1\5
+\&{return} \\{oo}${},\39\\{botsink}\MG\\{xref}\PP,\39\\{botsink}{}$;\C{ $f%
+\oplus f=0$ }\2\6
+\&{if} ${}(\|f>\|g){}$\1\5
+${}\|r\K\|f,\39\|f\K\|g,\39\|g\K\|r{}$;\C{ wow }\2\6
+\&{if} ${}(\|f\E\\{botsink}){}$\1\5
+\&{return} \\{oo}${},\39\|g\MG\\{xref}\PP,\39\|g{}$;\C{ $0\oplus g=g$ }\2\6
+${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{6}));{}$\6
+\&{if} (\|r)\1\5
+\&{return} \|r;\2\6
+\X78:Find $f\oplus g$ recursively\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{78}After discovering that $f\oplus g=r$, we could also put $f\oplus r=g$ and
+$g\oplus r=f$ into the cache. I tried that, in the first draft of this code.
+Unfortunately it cost more than it saved.
+
+\Y\B\4\X78:Find $f\oplus g$ recursively\X${}\E{}$\6
+$\\{rmems}\PP{}$;\C{ track recursion overhead }\6
+\&{if} ${}(\|f\E\\{topsink}){}$\1\5
+${}\\{vf}\K\T{0},\39\|v\K\\{vg}\K\\{thevar}(\|g);{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{vf}\K\\{thevar}(\|f),\39\\{vg}\K\\{thevar}(\|g);{}$\6
+\&{if} ${}(\\{vf}<\\{vg}){}$\1\5
+${}\|v\K\\{vf};{}$\2\6
+\&{else}\1\5
+${}\|v\K\\{vg}{}$;\C{ choose the top variable, \PB{\|v} }\2\6
+\4${}\}{}$\2\6
+${}\\{r0}\K\\{xor\_rec}((\\{vf}\E\|v\?\|o,\39\\{node\_}(\|f\MG\\{lo}):\|f),\39(%
+\\{vg}\E\|v\?\|o,\39\\{node\_}(\|g\MG\\{lo}):\|g));{}$\6
+\&{if} ${}(\R\\{r0}){}$\1\5
+\&{return} ${}\NULL{}$;\C{ oops, trouble }\2\6
+${}\\{r1}\K\\{xor\_rec}((\\{vf}\E\|v\?\\{node\_}(\|f\MG\\{hi}):\|f),\39(\\{vg}%
+\E\|v\?\\{node\_}(\|g\MG\\{hi}):\|g));{}$\6
+\&{if} ${}(\R\\{r1}){}$\5
+${}\{{}$\1\6
+\\{deref}(\\{r0});\C{ too bad, but we have to abort in midstream }\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\6
+${}\|r\K\\{unique\_find}(\|v,\39\\{r0},\39\\{r1});{}$\6
+\&{if} (\|r)\5
+${}\{{}$\1\6
+\&{if} ${}((\\{verbose}\AND\T{128})\W(\|v<\\{tvar})){}$\1\5
+${}\\{printf}(\.{"\ \ \ \%x=\%x\^\%x\ (level\ }\)\.{\%d)\\n"},\39\\{id}(\|r),%
+\39\\{id}(\|f),\39\\{id}(\|g),\39\|v-\\{varhead});{}$\2\6
+${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{6}),\39\|r);{}$\6
+\4${}\}{}$\2\6
+\&{return} \|r;\par
+\U77.\fi
+
+\M{79}Now for variety, let's do the ``constrain'' operator of Coudert and
+Madre.
+The function $f\downarrow g$ returned by this routine depends on the
+current variable ordering. In brief, $f\downarrow g=0$ if $g$ is
+identically zero; otherwise $(f\downarrow g)(x)=f(y)$ when $y$ is the
+first element of the sequence $x$, $x\oplus1$, $x\oplus2$, \dots\
+such that $g(y)=1$. (This definition treats $x=(x_0\ldots x_n)_2$ and
+$y=(y_0\ldots y_n)_2$ as binary numbers.)
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{constrain\_rec}(\&{node} ${}{*}\|f,\39{}$\&{node} ${}{*}%
+\|g){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{var} ${}{*}\|v,{}$ ${}{*}\\{vf},{}$ ${}{*}\\{vg};{}$\6
+\&{node} ${}{*}\|r,{}$ ${}{*}\\{r0},{}$ ${}{*}\\{r1};{}$\7
+\&{if} ${}(\|g\E\\{botsink}){}$\1\5
+\&{return} \\{oo}${},\39\\{botsink}\MG\\{xref}\PP,\39\\{botsink}{}$;\C{ $f%
+\downarrow 0=0$ }\2\6
+\&{if} ${}(\|g\E\\{topsink}\V\|f\Z\\{topsink}){}$\1\5
+\&{return} \\{oo}${},\39\|f\MG\\{xref}\PP,\39\|f{}$;\C{ $f\downarrow1=f$, $0%
+\downarrow g=0$; also $1\downarrow g=1$ if $g\ne0$ }\2\6
+\&{if} ${}(\|f\E\|g){}$\1\5
+\&{return} \\{oo}${},\39\\{topsink}\MG\\{xref}\PP,\39\\{topsink}{}$;\C{ $f%
+\downarrow f=1$ }\2\6
+${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{8}));{}$\6
+\&{if} (\|r)\1\5
+\&{return} \|r;\2\6
+\X80:Find $f\downarrow g$ recursively\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{80}\B\X80:Find $f\downarrow g$ recursively\X${}\E{}$\6
+$\\{rmems}\PP{}$;\C{ track recursion overhead }\6
+${}\\{vf}\K\\{thevar}(\|f);{}$\6
+${}\\{vg}\K\\{thevar}(\|g);{}$\6
+\&{if} ${}(\\{vf}<\\{vg}){}$\1\5
+${}\|v\K\\{vf};{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|v\K\\{vg}{}$;\C{ choose the top variable, \PB{\|v} }\6
+\&{if} ${}(\|o,\39\\{node\_}(\|g\MG\\{lo})\E\\{botsink}){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39\|r\K\\{constrain\_rec}((\\{vf}\E\|v\?\|o,\39\\{node\_}(\|f\MG%
+\\{hi}):\|f),\39\\{node\_}(\|g\MG\\{hi}));{}$\6
+\&{goto} \\{shortcut};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|o,\39\\{node\_}(\|g\MG\\{hi})\E\\{botsink}){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39\|r\K\\{constrain\_rec}((\\{vf}\E\|v\?\|o,\39\\{node\_}(\|f\MG%
+\\{lo}):\|f),\39\\{node\_}(\|g\MG\\{lo}));{}$\6
+\&{goto} \\{shortcut};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\\{r0}\K\\{constrain\_rec}((\\{vf}\E\|v\?\|o,\39\\{node\_}(\|f\MG\\{lo}):%
+\|f),\39(\\{vg}\E\|v\?\|o,\39\\{node\_}(\|g\MG\\{lo}):\|g));{}$\6
+\&{if} ${}(\R\\{r0}){}$\1\5
+\&{return} ${}\NULL{}$;\C{ oops, trouble }\2\6
+${}\\{r1}\K\\{constrain\_rec}((\\{vf}\E\|v\?\\{node\_}(\|f\MG\\{hi}):\|f),\39(%
+\\{vg}\E\|v\?\\{node\_}(\|g\MG\\{hi}):\|g));{}$\6
+\&{if} ${}(\R\\{r1}){}$\5
+${}\{{}$\1\6
+\\{deref}(\\{r0});\C{ too bad, but we have to abort in midstream }\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\6
+${}\|r\K\\{unique\_find}(\|v,\39\\{r0},\39\\{r1});{}$\6
+\4\\{shortcut}:\5
+\&{if} (\|r)\5
+${}\{{}$\1\6
+\&{if} ${}((\\{verbose}\AND\T{128})\W(\|v<\\{tvar})){}$\1\5
+${}\\{printf}(\.{"\ \ \ \%x=\%x\_\%x\ (level\ }\)\.{\%d)\\n"},\39\\{id}(\|r),%
+\39\\{id}(\|f),\39\\{id}(\|g),\39\|v-\\{varhead});{}$\2\6
+${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{8}),\39\|r);{}$\6
+\4${}\}{}$\2\6
+\&{return} \|r;\par
+\U79.\fi
+
+\N{1}{81}Quantifiers. Are we having fun yet? Sure, and quantifiers are even
+funner.
+
+In each of the following routines, the second operand \PB{\|g} is supposed
+to be a conjunction of positive literals, like $x_2\land x_4\land x_5$. Then,
+\def\(#1){\mathbin{\rm#1}}
+for example, $f\(A)g$ stands for
+$\forall x_2\,\forall x_4\,\forall x_5\,f(x_1,\ldots,x_n)$.
+
+The program doesn't actually bother to check that \PB{\|g} has this form.
+But if \PB{\|g} is a general function, the meaning is dependent on the ordering
+of variables; consider, for instance, the case $g=\bar x_1\lor x_2$.
+The user who tries general functions had better be aware (or beware)
+of this fact.
+
+If $g$ is a conjunction of $k$ literals, and if they all have the
+highest possible rank (so that they occur at the bottom of the BDDs),
+quantification takes linear time in the size of the BDD for~\PB{\|f}.
+But if the literals have low rank and occur near the top, the running
+time can be as bad as the $2^k$th power of that BDD size(!).
+
+\fi
+
+\M{82}The first case, existential quantification ($f\(E)g$), is typical.
+Notice that we don't use the cache unless there are multiple references
+to~\PB{\|f}. The number of references to~\PB{\|g} is immaterial here, since
+we're
+treating \PB{\|g} as a one-dimensional list of literals.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{exist\_rec}(\&{node} ${}{*}\|f,\39{}$\&{node} ${}{*}%
+\|g){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{var} ${}{*}\|v,{}$ ${}{*}\\{vg};{}$\6
+\&{node} ${}{*}\|r,{}$ ${}{*}\\{r0},{}$ ${}{*}\\{r1};{}$\7
+\4\\{restart}:\5
+\&{if} ${}(\|g\Z\\{topsink}){}$\1\5
+\&{return} \\{oo}${},\39\|f\MG\\{xref}\PP,\39\|f{}$;\C{ $f\(E)1=f$ }\2\6
+\&{if} ${}(\|f\Z\\{topsink}){}$\1\5
+\&{return} \\{oo}${},\39\|f\MG\\{xref}\PP,\39\|f{}$;\C{ $0\(E)g=0$, $1\(E)g=1$
+}\2\6
+${}\|v\K\\{thevar}(\|f);{}$\6
+${}\\{vg}\K\\{thevar}(\|g);{}$\6
+\&{if} ${}(\|v>\\{vg}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|g\K\\{node\_}(\|g\MG\\{hi}){}$;\5
+\&{goto} \\{restart};\C{ \PB{\|f} doesn't depend on \PB{\\{vg}} }\6
+\4${}\}{}$\2\6
+${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{15}));{}$\6
+\&{if} (\|r)\1\5
+\&{return} \|r;\2\6
+\X83:Find $f\(E)g$ recursively\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{83}When the top variable of \PB{\|g} is the same as the top variable of~\PB{%
+\|f},
+we always descend to the \PB{\\{hi}} branch below node~\PB{\|g}, since \PB{\|g}
+is
+supposed to be a conjunction.
+
+\Y\B\4\X83:Find $f\(E)g$ recursively\X${}\E{}$\6
+$\\{rmems}\PP{}$;\C{ track recursion overhead }\6
+${}\|o,\39\\{r0}\K\\{exist\_rec}(\\{node\_}(\|f\MG\\{lo}),\39(\\{vg}\E\|v\?\|o,%
+\39\\{node\_}(\|g\MG\\{hi}):\|g));{}$\6
+\&{if} ${}(\R\\{r0}){}$\1\5
+\&{return} ${}\NULL{}$;\C{ oops, trouble }\2\6
+\&{if} ${}(\\{r0}\E\\{topsink}\W\\{vg}\E\|v){}$\5
+${}\{{}$\1\6
+${}\|r\K\\{r0};{}$\6
+\&{goto} \\{gotr};\6
+\4${}\}{}$\2\6
+${}\\{r1}\K\\{exist\_rec}(\\{node\_}(\|f\MG\\{hi}),\39(\\{vg}\E\|v\?\\{node\_}(%
+\|g\MG\\{hi}):\|g));{}$\6
+\&{if} ${}(\R\\{r1}){}$\5
+${}\{{}$\1\6
+\\{deref}(\\{r0});\C{ too bad, but we have to abort in midstream }\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{vg}>\|v){}$\1\5
+${}\|r\K\\{unique\_find}(\|v,\39\\{r0},\39\\{r1});{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|r\K\\{or\_rec}(\\{r0},\39\\{r1}){}$;\C{ existential quantification happens
+here }\6
+\\{deref}(\\{r0});\5
+\\{deref}(\\{r1});\C{ we're done with \PB{\\{r0}} and \PB{\\{r1}} }\6
+\4${}\}{}$\2\6
+\4\\{gotr}:\5
+\&{if} (\|r)\5
+${}\{{}$\1\6
+\&{if} ${}((\\{verbose}\AND\T{128})\W(\|v<\\{tvar})){}$\1\5
+${}\\{printf}(\.{"\ \ \ \%x=\%xE\%x\ (level\ }\)\.{\%d)\\n"},\39\\{id}(\|r),\39%
+\\{id}(\|f),\39\\{id}(\|g),\39\|v-\\{varhead});{}$\2\6
+${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{15}),\39\|r);{}$\6
+\4${}\}{}$\2\6
+\&{return} \|r;\par
+\U82.\fi
+
+\M{84}The code for universal quantification ($\forall$) is almost line-for-line
+identical to the code for existential quantification.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{all\_rec}(\&{node} ${}{*}\|f,\39{}$\&{node} ${}{*}\|g){}$%
+\1\1\2\2\6
+${}\{{}$\1\6
+\&{var} ${}{*}\|v,{}$ ${}{*}\\{vg};{}$\6
+\&{node} ${}{*}\|r,{}$ ${}{*}\\{r0},{}$ ${}{*}\\{r1};{}$\7
+\4\\{restart}:\5
+\&{if} ${}(\|g\Z\\{topsink}){}$\1\5
+\&{return} \\{oo}${},\39\|f\MG\\{xref}\PP,\39\|f{}$;\C{ $f\(A)1=f$ }\2\6
+\&{if} ${}(\|f\Z\\{topsink}){}$\1\5
+\&{return} \\{oo}${},\39\|f\MG\\{xref}\PP,\39\|f{}$;\C{ $0\(A)g=0$, $1\(A)g=1$
+}\2\6
+${}\|v\K\\{thevar}(\|f);{}$\6
+${}\\{vg}\K\\{thevar}(\|g);{}$\6
+\&{if} ${}(\|v>\\{vg}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|g\K\\{node\_}(\|g\MG\\{hi}){}$;\5
+\&{goto} \\{restart};\C{ \PB{\|f} doesn't depend on \PB{\\{vg}} }\6
+\4${}\}{}$\2\6
+${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{9}));{}$\6
+\&{if} (\|r)\1\5
+\&{return} \|r;\2\6
+\X85:Find $f\(A)g$ recursively\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{85}\B\X85:Find $f\(A)g$ recursively\X${}\E{}$\6
+$\\{rmems}\PP{}$;\C{ track recursion overhead }\6
+${}\|o,\39\\{r0}\K\\{all\_rec}(\\{node\_}(\|f\MG\\{lo}),\39(\\{vg}\E\|v\?\|o,%
+\39\\{node\_}(\|g\MG\\{hi}):\|g));{}$\6
+\&{if} ${}(\R\\{r0}){}$\1\5
+\&{return} ${}\NULL{}$;\C{ oops, trouble }\2\6
+\&{if} ${}(\\{r0}\E\\{botsink}\W\\{vg}\E\|v){}$\5
+${}\{{}$\1\6
+${}\|r\K\\{r0};{}$\6
+\&{goto} \\{gotr};\6
+\4${}\}{}$\2\6
+${}\\{r1}\K\\{all\_rec}(\\{node\_}(\|f\MG\\{hi}),\39(\\{vg}\E\|v\?\\{node\_}(%
+\|g\MG\\{hi}):\|g));{}$\6
+\&{if} ${}(\R\\{r1}){}$\5
+${}\{{}$\1\6
+\\{deref}(\\{r0});\C{ too bad, but we have to abort in midstream }\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{vg}>\|v){}$\1\5
+${}\|r\K\\{unique\_find}(\|v,\39\\{r0},\39\\{r1});{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|r\K\\{and\_rec}(\\{r0},\39\\{r1}){}$;\C{ universal quantification happens
+here }\6
+\\{deref}(\\{r0});\5
+\\{deref}(\\{r1});\C{ we're done with \PB{\\{r0}} and \PB{\\{r1}} }\6
+\4${}\}{}$\2\6
+\4\\{gotr}:\5
+\&{if} (\|r)\5
+${}\{{}$\1\6
+\&{if} ${}((\\{verbose}\AND\T{128})\W(\|v<\\{tvar})){}$\1\5
+${}\\{printf}(\.{"\ \ \ \%x=\%xA\%x\ (level\ }\)\.{\%d)\\n"},\39\\{id}(\|r),\39%
+\\{id}(\|f),\39\\{id}(\|g),\39\|v-\\{varhead});{}$\2\6
+${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{9}),\39\|r);{}$\6
+\4${}\}{}$\2\6
+\&{return} \|r;\par
+\U84.\fi
+
+\M{86}The Boolean difference, $f\(D)g$, is easier, because $f\oplus f=0$.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{diff\_rec}(\&{node} ${}{*}\|f,\39{}$\&{node} ${}{*}\|g){}$%
+\1\1\2\2\6
+${}\{{}$\1\6
+\&{var} ${}{*}\|v,{}$ ${}{*}\\{vg};{}$\6
+\&{node} ${}{*}\|r,{}$ ${}{*}\\{r0},{}$ ${}{*}\\{r1};{}$\7
+\&{if} ${}(\|g\Z\\{topsink}){}$\1\5
+\&{return} \\{oo}${},\39\|f\MG\\{xref}\PP,\39\|f{}$;\C{ $f\(D)1=f$ }\2\6
+\&{if} ${}(\|f\Z\\{topsink}){}$\1\5
+\&{return} \\{oo}${},\39\\{botsink}\MG\\{xref}\PP,\39\\{botsink}{}$;\C{ $0%
+\(D)g=1\(D)g=0$ when \PB{\|g} isn't constant }\2\6
+${}\|v\K\\{thevar}(\|f);{}$\6
+${}\\{vg}\K\\{thevar}(\|g);{}$\6
+\&{if} ${}(\|v>\\{vg}){}$\1\5
+\&{return} \\{oo}${},\39\\{botsink}\MG\\{xref}\PP,\39\\{botsink}{}$;\C{ \PB{%
+\|f} doesn't depend on \PB{\\{vg}} }\2\6
+${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{14}));{}$\6
+\&{if} (\|r)\1\5
+\&{return} \|r;\2\6
+\X87:Find $f\(D)g$ recursively\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{87}\B\X87:Find $f\(D)g$ recursively\X${}\E{}$\6
+$\\{rmems}\PP{}$;\C{ track recursion overhead }\6
+${}\|o,\39\\{r0}\K\\{diff\_rec}(\\{node\_}(\|f\MG\\{lo}),\39(\\{vg}\E\|v\?\|o,%
+\39\\{node\_}(\|g\MG\\{hi}):\|g));{}$\6
+\&{if} ${}(\R\\{r0}){}$\1\5
+\&{return} ${}\NULL{}$;\C{ oops, trouble }\2\6
+${}\\{r1}\K\\{diff\_rec}(\\{node\_}(\|f\MG\\{hi}),\39(\\{vg}\E\|v\?\\{node\_}(%
+\|g\MG\\{hi}):\|g));{}$\6
+\&{if} ${}(\R\\{r1}){}$\5
+${}\{{}$\1\6
+\\{deref}(\\{r0});\C{ too bad, but we have to abort in midstream }\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{vg}>\|v){}$\1\5
+${}\|r\K\\{unique\_find}(\|v,\39\\{r0},\39\\{r1});{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|r\K\\{xor\_rec}(\\{r0},\39\\{r1}){}$;\C{ differencing happens here }\6
+\\{deref}(\\{r0});\5
+\\{deref}(\\{r1});\C{ we're done with \PB{\\{r0}} and \PB{\\{r1}} }\6
+\4${}\}{}$\2\6
+\&{if} (\|r)\5
+${}\{{}$\1\6
+\&{if} ${}((\\{verbose}\AND\T{128})\W(\|v<\\{tvar})){}$\1\5
+${}\\{printf}(\.{"\ \ \ \%x=\%xD\%x\ (level\ }\)\.{\%d)\\n"},\39\\{id}(\|r),\39%
+\\{id}(\|f),\39\\{id}(\|g),\39\|v-\\{varhead});{}$\2\6
+${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{14}),\39\|r);{}$\6
+\4${}\}{}$\2\6
+\&{return} \|r;\par
+\U86.\fi
+
+\M{88}The other two quantifiers are unusual; in fact, I haven't seen
+them in any books, although I haven't read all possible books.
+Still, the concept is natural enough, when \PB{\|g} is a {\it single\/}
+variable $x_v$. In that case, $f\(Y)x_v$ is the function of the remaining
+variables such that $f(x_1,\ldots,x_n)=x_v$; and $f\(N)x_v$
+is the similar function that makes $f(x_1,\ldots,x_n)=\bar x_v$.
+
+For example, the function $f(x_1,\ldots,x_n)$ is monotonic if and only if
+$f\(N)x_v=0$ for $1\le v\le n$.
+
+On the other hand, these yes-no quantifiers make little sense when
+\PB{\|g} involves more than one literal, because the result depends
+on the variable ordering. It's best to forget that general case---don't
+even {\it think\/} about it. Just enjoy the case that works.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{yes\_no\_rec}(\&{int} \\{curop}${},\39{}$\&{node} ${}{*}%
+\|f,\39{}$\&{node} ${}{*}\|g){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{var} ${}{*}\|v,{}$ ${}{*}\\{vg};{}$\6
+\&{node} ${}{*}\|r,{}$ ${}{*}\\{r0},{}$ ${}{*}\\{r1};{}$\7
+\&{if} ${}(\|g\Z\\{topsink}){}$\1\5
+\&{return} \\{oo}${},\39\|f\MG\\{xref}\PP,\39\|f{}$;\C{ $f\(Y)1=f\(N)1=f$ }\2\6
+\&{if} ${}(\|f\Z\\{topsink}){}$\1\5
+\&{return} \\{oo}${},\39\\{botsink}\MG\\{xref}\PP,\39\\{botsink}{}$;\C{ $0%
+\(Y)g=1\(Y)g=0\(N)g=1\(N)g=0$ when \PB{\|g} isn't constant }\2\6
+${}\|v\K\\{thevar}(\|f);{}$\6
+${}\\{vg}\K\\{thevar}(\|g);{}$\6
+\&{if} ${}(\|v>\\{vg}){}$\1\5
+\&{return} \\{oo}${},\39\\{botsink}\MG\\{xref}\PP,\39\\{botsink}{}$;\C{ \PB{%
+\|f} doesn't depend on \PB{\\{vg}} }\2\6
+${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\\{curop}));{}$\6
+\&{if} (\|r)\1\5
+\&{return} \|r;\2\6
+\X89:Find $f\(Y)g$ or $f\(N)g$ recursively\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{89}\B\X89:Find $f\(Y)g$ or $f\(N)g$ recursively\X${}\E{}$\6
+$\\{rmems}\PP{}$;\C{ track recursion overhead }\6
+${}\|o,\39\\{r0}\K\\{yes\_no\_rec}(\\{curop},\39\\{node\_}(\|f\MG\\{lo}),\39(%
+\\{vg}\E\|v\?\|o,\39\\{node\_}(\|g\MG\\{hi}):\|g));{}$\6
+\&{if} ${}(\R\\{r0}){}$\1\5
+\&{return} ${}\NULL{}$;\C{ oops, trouble }\2\6
+\&{if} ${}(\\{r0}\Z\\{topsink}\W\\{vg}\E\|v){}$\5
+${}\{{}$\1\6
+\&{if} ${}((\\{r0}\E\\{topsink})\E(\\{curop}\E\T{12})){}$\5
+${}\{{}$\1\6
+${}\|r\K\\{botsink}{}$;\5
+\\{deref}(\\{r0});\5
+${}\\{botsink}\MG\\{xref}\PP;{}$\6
+\&{goto} \\{gotr};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\\{r1}\K\\{yes\_no\_rec}(\\{curop},\39\\{node\_}(\|f\MG\\{hi}),\39(\\{vg}\E%
+\|v\?\\{node\_}(\|g\MG\\{hi}):\|g));{}$\6
+\&{if} ${}(\R\\{r1}){}$\5
+${}\{{}$\1\6
+\\{deref}(\\{r0});\C{ too bad, but we have to abort in midstream }\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{vg}>\|v){}$\1\5
+${}\|r\K\\{unique\_find}(\|v,\39\\{r0},\39\\{r1});{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\\{curop}\E\T{12}){}$\1\5
+${}\|r\K\\{mux\_rec}(\\{r0},\39\\{botsink},\39\\{r1}){}$;\C{ $f\(Y)g=\bar r_0%
+\land r_1$ }\2\6
+\&{else}\1\5
+${}\|r\K\\{mux\_rec}(\\{r1},\39\\{botsink},\39\\{r0}){}$;\C{ $f\(N)g=r_0\land%
+\bar r_1$ }\2\6
+\\{deref}(\\{r0});\5
+\\{deref}(\\{r1});\C{ we're done with \PB{\\{r0}} and \PB{\\{r1}} }\6
+\4${}\}{}$\2\6
+\4\\{gotr}:\5
+\&{if} (\|r)\5
+${}\{{}$\1\6
+\&{if} ${}((\\{verbose}\AND\T{128})\W(\|v<\\{tvar})){}$\1\5
+${}\\{printf}(\.{"\ \ \ \%x=\%x\%s\%x\ (level}\)\.{\ \%d)\\n"},\39\\{id}(\|r),%
+\39\\{id}(\|f),\39\\{binopname}[\\{curop}],\39\\{id}(\|g),\39\|v-%
+\\{varhead});{}$\2\6
+${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\\{curop}),\39\|r);{}$\6
+\4${}\}{}$\2\6
+\&{return} \|r;\par
+\U88.\fi
+
+\M{90}Stay tuned: The \PB{\\{mux\_rec}} subroutine is coming soon.
+
+\Y\B\4\X25:Templates for subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{mux\_rec}(\&{node} ${}{*}\|f,\39{}$\&{node} ${}{*}\|g,%
+\39{}$\&{node} ${}{*}\|h){}$;\par
+\fi
+
+\N{1}{91}Ternary operations. All operations can be reduced to binary
+operations,
+but it should be interesting to see if we get a speedup by staying ternary.
+
+I like to call the first one ``mux,'' although many other authors have
+favored ``ite'' (meaning if-then-else). The latter doesn't seem right to
+me when I try to pronounce it. So I'm sticking with the well-worn,
+traditional name for this function.
+
+Two special cases are worthy of note: $h=1$ gives ``$f$ implies $g$'';
+$g=0$ gives ``not $f$ but $g$.'' I could have implemented those cases as
+binary operators, but I chose to let them take the slightly slower
+ternary route. (I'm usually a fan of speed, but this program is
+already long enough.)
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{mux\_rec}(\&{node} ${}{*}\|f,\39{}$\&{node} ${}{*}\|g,%
+\39{}$\&{node} ${}{*}\|h){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{var} ${}{*}\|v,{}$ ${}{*}\\{vf},{}$ ${}{*}\\{vg},{}$ ${}{*}\\{vh};{}$\6
+\&{node} ${}{*}\|r,{}$ ${}{*}\\{r0},{}$ ${}{*}\\{r1};{}$\7
+\&{if} ${}(\|f\Z\\{topsink}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|f\E\\{topsink}){}$\1\5
+\&{return} \\{oo}${},\39\|g\MG\\{xref}\PP,\39\|g{}$;\C{ $(1{?}\ g{:}\ h)=g$ }\2%
+\6
+\&{return} \\{oo}${},\39\|h\MG\\{xref}\PP,\39\|h{}$;\C{ $(0{?}\ g{:}\ h)=h$ }\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|g\E\|f\V\|g\E\\{topsink}){}$\1\5
+\&{return} \\{or\_rec}${}(\|f,\39\|h){}$;\C{ $(f{?}\ f{:}\ h) = (f{?}\ 1{:}\ h)
+= f\lor h$ }\2\6
+\&{if} ${}(\|h\E\|f\V\|h\E\\{botsink}){}$\1\5
+\&{return} \\{and\_rec}${}(\|f,\39\|g){}$;\C{ $(f{?}\ g{:}\ f) = (f{?}\ g{:}\
+0) = f\land g$ }\2\6
+\&{if} ${}(\|g\E\|h){}$\1\5
+\&{return} \\{oo}${},\39\|g\MG\\{xref}\PP,\39\|g{}$;\C{ $(f{?}\ g{:}\ g)=g$ }\2%
+\6
+\&{if} ${}(\|g\E\\{botsink}\W\|h\E\\{topsink}){}$\1\5
+\&{return} \\{xor\_rec}${}(\\{topsink},\39\|f){}$;\C{ $(f{?}\ 0{:}\ 1) = 1%
+\oplus f$ }\2\6
+${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\|h);{}$\6
+\&{if} (\|r)\1\5
+\&{return} \|r;\2\6
+\X92:Find $(f{?}\ g{:}\ h)$ recursively\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{92}\B\X92:Find $(f{?}\ g{:}\ h)$ recursively\X${}\E{}$\6
+$\\{rmems}\PP{}$;\C{ track recursion overhead }\6
+${}\|v\K\\{vf}\K\\{thevar}(\|f);{}$\6
+\&{if} ${}(\|g\E\\{botsink}){}$\1\5
+${}\\{vg}\K\\{topofvars}{}$;\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\\{vg}\K\\{thevar}(\|g){}$;\5
+\&{if} ${}(\|v>\\{vg}){}$\1\5
+${}\|v\K\\{vg};{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|h\E\\{topsink}){}$\1\5
+${}\\{vh}\K\\{topofvars}{}$;\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\|o,\39\\{vh}\K\\{thevar}(\|h){}$;\5
+\&{if} ${}(\|v>\\{vh}){}$\1\5
+${}\|v\K\\{vh};{}$\2\6
+\4${}\}{}$\2\6
+${}\\{r0}\K\\{mux\_rec}((\\{vf}\E\|v\?\|o,\39\\{node\_}(\|f\MG\\{lo}):\|f),\39(%
+\\{vg}\E\|v\?\|o,\39\\{node\_}(\|g\MG\\{lo}):\|g),\39(\\{vh}\E\|v\?\|o,\39%
+\\{node\_}(\|h\MG\\{lo}):\|h));{}$\6
+\&{if} ${}(\R\\{r0}){}$\1\5
+\&{return} ${}\NULL{}$;\C{ oops, trouble }\2\6
+${}\\{r1}\K\\{mux\_rec}((\\{vf}\E\|v\?\|o,\39\\{node\_}(\|f\MG\\{hi}):\|f),\39(%
+\\{vg}\E\|v\?\|o,\39\\{node\_}(\|g\MG\\{hi}):\|g),\39(\\{vh}\E\|v\?\|o,\39%
+\\{node\_}(\|h\MG\\{hi}):\|h));{}$\6
+\&{if} ${}(\R\\{r1}){}$\5
+${}\{{}$\1\6
+\\{deref}(\\{r0});\C{ too bad, but we have to abort in midstream }\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\6
+${}\|r\K\\{unique\_find}(\|v,\39\\{r0},\39\\{r1});{}$\6
+\&{if} (\|r)\5
+${}\{{}$\1\6
+\&{if} ${}((\\{verbose}\AND\T{128})\W(\|v<\\{tvar})){}$\1\5
+${}\\{printf}(\.{"\ \ \ \%x=\%x?\%x:\%x\ (lev}\)\.{el\ \%d)\\n"},\39\\{id}(%
+\|r),\39\\{id}(\|f),\39\\{id}(\|g),\39\\{id}(\|h),\39\|v-\\{varhead});{}$\2\6
+${}\\{cache\_insert}(\|f,\39\|g,\39\|h,\39\|r);{}$\6
+\4${}\}{}$\2\6
+\&{return} \|r;\par
+\U91.\fi
+
+\M{93}The median (or majority) operation $\langle fgh\rangle$ has lots of nice
+symmetry.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{med\_rec}(\&{node} ${}{*}\|f,\39{}$\&{node} ${}{*}\|g,%
+\39{}$\&{node} ${}{*}\|h){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{var} ${}{*}\|v,{}$ ${}{*}\\{vf},{}$ ${}{*}\\{vg},{}$ ${}{*}\\{vh};{}$\6
+\&{node} ${}{*}\|r,{}$ ${}{*}\\{r0},{}$ ${}{*}\\{r1};{}$\7
+\&{if} ${}(\|f>\|g){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|g>\|h){}$\1\5
+${}\|r\K\|f,\39\|f\K\|h,\39\|h\K\|r;{}$\2\6
+\&{else} \&{if} ${}(\|f>\|h){}$\1\5
+${}\|r\K\|f,\39\|f\K\|g,\39\|g\K\|h,\39\|h\K\|r;{}$\2\6
+\&{else}\1\5
+${}\|r\K\|f,\39\|f\K\|g,\39\|g\K\|r;{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\|g>\|h){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|f>\|h){}$\1\5
+${}\|r\K\|f,\39\|f\K\|h,\39\|h\K\|g,\39\|g\K\|r;{}$\2\6
+\&{else}\1\5
+${}\|r\K\|g,\39\|g\K\|h,\39\|h\K\|r;{}$\2\6
+\4${}\}{}$\C{ now $f\le g\le h$ }\2\6
+\&{if} ${}(\|f\Z\\{topsink}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|f\E\\{topsink}){}$\1\5
+\&{return} \\{or\_rec}${}(\|g,\39\|h){}$;\C{ $\langle 1gh\rangle=g\lor h$ }\2\6
+\&{return} \\{and\_rec}${}(\|g,\39\|h){}$;\C{ $\langle 0gh\rangle=g\land h$ }\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|f\E\|g){}$\1\5
+\&{return} \\{oo}${},\39\|f\MG\\{xref}\PP,\39\|f{}$;\C{ $\langle ffh\rangle=f$
+}\2\6
+\&{if} ${}(\|g\E\|h){}$\1\5
+\&{return} \\{oo}${},\39\|g\MG\\{xref}\PP,\39\|g{}$;\C{ $\langle fgg\rangle=g$
+}\2\6
+${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\\{addr\_}(\|h)+%
+\T{1}));{}$\6
+\&{if} (\|r)\1\5
+\&{return} \|r;\2\6
+\X94:Find $\langle fgh\rangle$ recursively\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{94}\B\X94:Find $\langle fgh\rangle$ recursively\X${}\E{}$\6
+$\\{rmems}\PP{}$;\C{ track recursion overhead }\6
+${}\\{vf}\K\\{thevar}(\|f);{}$\6
+${}\\{vg}\K\\{thevar}(\|g);{}$\6
+${}\|o,\39\\{vh}\K\\{thevar}(\|h);{}$\6
+\&{if} ${}(\\{vf}<\\{vg}){}$\1\5
+${}\|v\K\\{vf}{}$;\5
+\2\&{else}\1\5
+${}\|v\K\\{vg};{}$\2\6
+\&{if} ${}(\|v>\\{vh}){}$\1\5
+${}\|v\K\\{vh}{}$;\C{ choose the top variable, \PB{\|v} }\2\6
+${}\\{r0}\K\\{med\_rec}((\\{vf}\E\|v\?\|o,\39\\{node\_}(\|f\MG\\{lo}):\|f),\39(%
+\\{vg}\E\|v\?\|o,\39\\{node\_}(\|g\MG\\{lo}):\|g),\39(\\{vh}\E\|v\?\|o,\39%
+\\{node\_}(\|h\MG\\{lo}):\|h));{}$\6
+\&{if} ${}(\R\\{r0}){}$\1\5
+\&{return} ${}\NULL{}$;\C{ oops, trouble }\2\6
+${}\\{r1}\K\\{med\_rec}((\\{vf}\E\|v\?\|o,\39\\{node\_}(\|f\MG\\{hi}):\|f),\39(%
+\\{vg}\E\|v\?\|o,\39\\{node\_}(\|g\MG\\{hi}):\|g),\39(\\{vh}\E\|v\?\|o,\39%
+\\{node\_}(\|h\MG\\{hi}):\|h));{}$\6
+\&{if} ${}(\R\\{r1}){}$\5
+${}\{{}$\1\6
+\\{deref}(\\{r0});\C{ too bad, but we have to abort in midstream }\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\6
+${}\|r\K\\{unique\_find}(\|v,\39\\{r0},\39\\{r1});{}$\6
+\&{if} (\|r)\5
+${}\{{}$\1\6
+\&{if} ${}((\\{verbose}\AND\T{128})\W(\|v<\\{tvar})){}$\1\5
+${}\\{printf}(\.{"\ \ \ \%x=\%x.\%x.\%x\ (lev}\)\.{el\ \%d)\\n"},\39\\{id}(%
+\|r),\39\\{id}(\|f),\39\\{id}(\|g),\39\\{id}(\|h),\39\|v-\\{varhead});{}$\2\6
+${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\\{addr\_}(\|h)+\T{1}),\39%
+\|r);{}$\6
+\4${}\}{}$\2\6
+\&{return} \|r;\par
+\U93.\fi
+
+\M{95}We can also exploit the symmetry of $f\land g\land h$.
+(If I had lots of time, I could play similarly with $f\lor g\lor h$ and
+$f\oplus g\oplus h$.)
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{and\_and\_rec}(\&{node} ${}{*}\|f,\39{}$\&{node} ${}{*}%
+\|g,\39{}$\&{node} ${}{*}\|h){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{var} ${}{*}\|v,{}$ ${}{*}\\{vf},{}$ ${}{*}\\{vg},{}$ ${}{*}\\{vh};{}$\6
+\&{node} ${}{*}\|r,{}$ ${}{*}\\{r0},{}$ ${}{*}\\{r1};{}$\7
+\&{if} ${}(\|f>\|g){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|g>\|h){}$\1\5
+${}\|r\K\|f,\39\|f\K\|h,\39\|h\K\|r;{}$\2\6
+\&{else} \&{if} ${}(\|f>\|h){}$\1\5
+${}\|r\K\|f,\39\|f\K\|g,\39\|g\K\|h,\39\|h\K\|r;{}$\2\6
+\&{else}\1\5
+${}\|r\K\|f,\39\|f\K\|g,\39\|g\K\|r;{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\|g>\|h){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|f>\|h){}$\1\5
+${}\|r\K\|f,\39\|f\K\|h,\39\|h\K\|g,\39\|g\K\|r;{}$\2\6
+\&{else}\1\5
+${}\|r\K\|g,\39\|g\K\|h,\39\|h\K\|r;{}$\2\6
+\4${}\}{}$\C{ now $f\le g\le h$ }\2\6
+\&{if} ${}(\|f\Z\\{topsink}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|f\E\\{topsink}){}$\1\5
+\&{return} \\{and\_rec}${}(\|g,\39\|h){}$;\C{ $1\land g\land h=g\land h$ }\2\6
+\&{return} \\{oo}${},\39\\{botsink}\MG\\{xref}\PP,\39\\{botsink}{}$;\C{ $0\land
+g\land h=0$ }\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|f\E\|g){}$\1\5
+\&{return} \\{and\_rec}${}(\|g,\39\|h){}$;\C{ $f\land f\land h=f\land h$ }\2\6
+\&{if} ${}(\|g\E\|h){}$\1\5
+\&{return} \\{and\_rec}${}(\|f,\39\|g){}$;\C{ $f\land g\land g=f\land g$ }\2\6
+${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\\{addr\_}(\|h)+%
+\T{2}));{}$\6
+\&{if} (\|r)\1\5
+\&{return} \|r;\2\6
+\X96:Find $f\land g\land h$ recursively\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{96}\B\X96:Find $f\land g\land h$ recursively\X${}\E{}$\6
+$\\{rmems}\PP{}$;\C{ track recursion overhead }\6
+${}\\{vf}\K\\{thevar}(\|f);{}$\6
+${}\\{vg}\K\\{thevar}(\|g);{}$\6
+${}\|o,\39\\{vh}\K\\{thevar}(\|h);{}$\6
+\&{if} ${}(\\{vf}<\\{vg}){}$\1\5
+${}\|v\K\\{vf}{}$;\5
+\2\&{else}\1\5
+${}\|v\K\\{vg};{}$\2\6
+\&{if} ${}(\|v>\\{vh}){}$\1\5
+${}\|v\K\\{vh}{}$;\C{ choose the top variable, \PB{\|v} }\2\6
+${}\\{r0}\K\\{and\_and\_rec}((\\{vf}\E\|v\?\|o,\39\\{node\_}(\|f\MG\\{lo}):%
+\|f),\39(\\{vg}\E\|v\?\|o,\39\\{node\_}(\|g\MG\\{lo}):\|g),\39(\\{vh}\E\|v\?%
+\|o,\39\\{node\_}(\|h\MG\\{lo}):\|h));{}$\6
+\&{if} ${}(\R\\{r0}){}$\1\5
+\&{return} ${}\NULL{}$;\C{ oops, trouble }\2\6
+${}\\{r1}\K\\{and\_and\_rec}((\\{vf}\E\|v\?\|o,\39\\{node\_}(\|f\MG\\{hi}):%
+\|f),\39(\\{vg}\E\|v\?\|o,\39\\{node\_}(\|g\MG\\{hi}):\|g),\39(\\{vh}\E\|v\?%
+\|o,\39\\{node\_}(\|h\MG\\{hi}):\|h));{}$\6
+\&{if} ${}(\R\\{r1}){}$\5
+${}\{{}$\1\6
+\\{deref}(\\{r0});\C{ too bad, but we have to abort in midstream }\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\6
+${}\|r\K\\{unique\_find}(\|v,\39\\{r0},\39\\{r1});{}$\6
+\&{if} (\|r)\5
+${}\{{}$\1\6
+\&{if} ${}((\\{verbose}\AND\T{128})\W(\|v<\\{tvar})){}$\1\5
+${}\\{printf}(\.{"\ \ \ \%x=\%x\&\%x\&\%x\ (lev}\)\.{el\ \%d)\\n"},\39\\{id}(%
+\|r),\39\\{id}(\|f),\39\\{id}(\|g),\39\\{id}(\|h),\39\|v-\\{varhead});{}$\2\6
+${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\\{addr\_}(\|h)+\T{2}),\39%
+\|r);{}$\6
+\4${}\}{}$\2\6
+\&{return} \|r;\par
+\U95.\fi
+
+\M{97}The final ternary operation computes $(f\land g)\(E)h$, when \PB{\|h} is
+a conjunction of positive literals as before. Ken McMillan noticed that one can
+often save a lot of time computing this ternary function recursively, instead
+of first forming $f\land g$. We combine the ideas of \PB{\\{and\_rec}} and \PB{%
+\\{exist\_rec}}
+here.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{and\_exist\_rec}(\&{node} ${}{*}\|f,\39{}$\&{node} ${}{*}%
+\|g,\39{}$\&{node} ${}{*}\|h){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{var} ${}{*}\|v,{}$ ${}{*}\\{vf},{}$ ${}{*}\\{vg},{}$ ${}{*}\\{vh};{}$\6
+\&{node} ${}{*}\|r,{}$ ${}{*}\\{r0},{}$ ${}{*}\\{r1};{}$\7
+\4\\{restart}:\5
+\&{if} ${}(\|h\Z\\{topsink}){}$\1\5
+\&{return} \\{and\_rec}${}(\|f,\39\|g){}$;\C{ $(f\land g)\(E)1=f\land g$ }\2\6
+\&{if} ${}(\|f\E\|g){}$\1\5
+\&{return} \\{exist\_rec}${}(\|f,\39\|h){}$;\C{ $(f\land f)\(E)h=f\(E)h$ }\2\6
+\&{if} ${}(\|f>\|g){}$\1\5
+${}\|r\K\|f,\39\|f\K\|g,\39\|g\K\|r{}$;\C{ wow }\2\6
+\&{if} ${}(\|f\Z\\{topsink}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|f\E\\{topsink}){}$\1\5
+\&{return} \\{exist\_rec}${}(\|g,\39\|h){}$;\C{ $(1\land g)\(E)h=g\(E)h$ }\2\6
+\&{return} \\{oo}${},\39\\{botsink}\MG\\{xref}\PP,\39\\{botsink}{}$;\C{ $(0%
+\land d)\(E)h=0$ }\6
+\4${}\}{}$\2\6
+${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\\{addr\_}(\|h)+%
+\T{3}));{}$\6
+\&{if} (\|r)\1\5
+\&{return} \|r;\2\6
+${}\\{vf}\K\\{thevar}(\|f);{}$\6
+${}\\{vg}\K\\{thevar}(\|g);{}$\6
+${}\|o,\39\\{vh}\K\\{thevar}(\|h);{}$\6
+\&{if} ${}(\\{vf}<\\{vg}){}$\1\5
+${}\|v\K\\{vf}{}$;\5
+\2\&{else}\1\5
+${}\|v\K\\{vg};{}$\2\6
+\&{if} ${}(\|v>\\{vh}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|h\K\\{node\_}(\|h\MG\\{hi}){}$;\5
+\&{goto} \\{restart};\C{ \PB{\|f} and \PB{\|g} don't depend on \PB{\\{vh}} }\6
+\4${}\}{}$\2\6
+\X98:Find $(f\land g)\(E)h$ recursively\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{98}\B\X98:Find $(f\land g)\(E)h$ recursively\X${}\E{}$\6
+$\\{rmems}\PP{}$;\C{ track recursion overhead }\6
+${}\\{r0}\K\\{and\_exist\_rec}((\\{vf}\E\|v\?\|o,\39\\{node\_}(\|f\MG\\{lo}):%
+\|f),\39(\\{vg}\E\|v\?\|o,\39\\{node\_}(\|g\MG\\{lo}):\|g),\39(\\{vh}\E\|v\?%
+\|o,\39\\{node\_}(\|h\MG\\{hi}):\|h));{}$\6
+\&{if} ${}(\R\\{r0}){}$\1\5
+\&{return} ${}\NULL{}$;\C{ oops, trouble }\2\6
+\&{if} ${}(\\{r0}\E\\{topsink}\W\\{vg}\E\|v){}$\5
+${}\{{}$\1\6
+${}\|r\K\\{r0};{}$\6
+\&{goto} \\{gotr};\6
+\4${}\}{}$\2\6
+${}\\{r1}\K\\{and\_exist\_rec}((\\{vf}\E\|v\?\\{node\_}(\|f\MG\\{hi}):\|f),\39(%
+\\{vg}\E\|v\?\\{node\_}(\|g\MG\\{hi}):\|g),\39(\\{vh}\E\|v\?\\{node\_}(\|h\MG%
+\\{hi}):\|h));{}$\6
+\&{if} ${}(\R\\{r1}){}$\5
+${}\{{}$\1\6
+\\{deref}(\\{r0});\C{ too bad, but we have to abort in midstream }\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{vh}>\|v){}$\1\5
+${}\|r\K\\{unique\_find}(\|v,\39\\{r0},\39\\{r1});{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|r\K\\{or\_rec}(\\{r0},\39\\{r1}){}$;\C{ existential quantification happens
+here }\6
+\\{deref}(\\{r0});\5
+\\{deref}(\\{r1});\C{ we're done with \PB{\\{r0}} and \PB{\\{r1}} }\6
+\4${}\}{}$\2\6
+\4\\{gotr}:\5
+\&{if} (\|r)\5
+${}\{{}$\1\6
+\&{if} ${}((\\{verbose}\AND\T{128})\W(\|v<\\{tvar})){}$\1\5
+${}\\{printf}(\.{"\ \ \ \%x=\%x\&\%xE\%x\ (lev}\)\.{el\ \%d)\\n"},\39\\{id}(%
+\|r),\39\\{id}(\|f),\39\\{id}(\|g),\39\\{id}(\|h),\39\|v-\\{varhead});{}$\2\6
+${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\\{addr\_}(\|h)+\T{3}),\39%
+\|r);{}$\6
+\4${}\}{}$\2\6
+\&{return} \|r;\par
+\U97.\fi
+
+\N{1}{99}Composition of functions.
+Now we're ready for the biggie, the most powerful recursive command
+in our arsenal: Given the BDDs for a master function $f(x_0,\ldots,x_n)$
+and for replacement functions $y_0(x_0,\ldots,x_n)$,
+\dots,~$y_n(x_0,\ldots,x_n)$, construct the BDD for the grand composition
+$$
+F(x_0,\ldots,x_n)=f\big(y_0(x_0,\ldots,x_n),\ldots,y_n(x_0,\ldots,x_n)\bigr).
+$$
+This daunting task can actually be accomplished with a surprisingly short
+recursive program.
+
+Of course the result might be huge, so the running time
+can be humongous in bad cases. But in not-so-bad cases, the running time
+is not bad at all. Let's be optimistic.
+
+The replacements $y_k$ are specified by individual commands like
+`\.{y3=f7}' or `\.{y6=x5}' or `\.{y2=c1}'; see the syntax at the
+beginning of this program. One can also cancel a previous replacement by
+saying, for example, `\.{y3=.}'. If no replacement $y_k$ is currently
+specified, the identity function $y_k=x_k$ is assumed.
+
+\fi
+
+\M{100}Our main tool for efficiency in not-so-bad cases is the cache,
+so that previously known results needn't be recalculated.
+Each node in the BDD base represents a function of the variables
+$(x_v,x_{v+1},\ldots{})$, for some variable index~$v$, and we can
+let the cache remember if we've already composed this function with
+the replacements $(y_v,y_{v+1},\ldots{})$.
+When the user changes $y_k$, all results
+in the cache for functions with $v\le k$ are potentially incorrect;
+but the results for functions with $v>k$ remain usable.
+
+Therefore we maintain a time stamp for each variable $x_k$. The time stamps
+for $x_0$ through $x_k$ are increased whenever $y_k$ is updated, so that
+cache entries for the composition of such functions won't match when
+\PB{\\{cache\_lookup}} is called.
+
+The time stamp for $x_v$ is zero if and only if all of $y_v$, $y_{v+1}$,
+\dots\ are currently undefined.
+
+Two global variables control this process:
+The variable \PB{\\{timestamp\_changed}} is either 0 or~1;
+the difference \PB{$\\{timestamp}-\\{timestamp\_changed}$} is the number of
+times
+we've performed a composition operation.
+
+\fi
+
+\M{101}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{timestamp};\C{ the number of distinct compositions done or prepared
+}\6
+\&{int} \\{timestamp\_changed};\C{ has it changed since the last composition
+was done? }\par
+\fi
+
+\M{102}Here's how the individual time stamps are updated when the user gives a
+new
+specification for $y_k$:
+
+\Y\B\4\X102:Assign \PB{\|q} as the new value of \PB{$\|v\MG\\{repl}$}\X${}\E{}$%
+\6
+$\|v\MG\\{repl}\K\\{addr\_}(\|q);{}$\6
+\&{if} ${}(\|q\E\NULL){}$\5
+${}\{{}$\C{ cancel a previous replacement }\1\6
+\&{if} ${}(\|v+\T{1}<\\{topofvars}\W(\|o,\39(\|v+\T{1})\MG\\{timestamp}\I%
+\T{0})){}$\1\5
+\&{goto} \\{newstamps};\2\6
+\&{while} ${}(\|v\G\\{varhead}\W(\|o,\39\|v\MG\\{repl}\E\T{0})){}$\1\5
+${}\|o,\39\|v\MG\\{timestamp}\K\T{0},\39\|v\MM{}$;\C{ cancel the previous
+timestamp }\2\6
+\&{if} ${}(\|v\G\\{varhead}){}$\1\5
+\&{goto} \\{newstamps};\2\6
+${}\\{timestamp}\MRL{-{\K}}\\{timestamp\_changed},\39\\{timestamp\_changed}\K%
+\T{0}{}$;\C{ all clear }\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\\{oo},\39\|q\MG\\{xref}\PP;{}$\6
+\4\\{newstamps}:\5
+\&{if} ${}(\R\\{timestamp\_changed}){}$\1\5
+${}\\{timestamp\_changed}\K\T{1},\39\\{timestamp}\PP{}$;\C{ N.B.: \PB{%
+\\{timestamp}} won't become zero }\2\6
+\&{while} ${}(\|v\G\\{varhead}\W(\|o,\39\|v\MG\\{timestamp}\I\\{timestamp})){}$%
+\1\5
+${}\|o,\39\|v\MG\\{timestamp}\K\\{timestamp},\39\|v\MM{}$;\C{ this is done even
+when \PB{$\|v\MG\\{proj}\K\T{0}$} }\2\6
+\4${}\}{}$\2\par
+\U128.\fi
+
+\M{103}A special adjustment to the time stamps is needed when we're wiping out
+the whole cache.
+
+\Y\B\4\X103:Clear out the time stamps\X${}\E{}$\6
+\&{if} ${}(\\{varhead}[\T{0}].\\{timestamp}\E\T{0}){}$\1\5
+${}\|o,\39\\{timestamp}\K\\{timestamp\_changed}\K\T{0};{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{timestamp}\K\\{timestamp\_changed}\K\T{1};{}$\6
+\&{for} ${}(\|v\K\\{varhead};{}$ ${}\|v<\\{topofvars}\W(\|o,\39\|v\MG%
+\\{timestamp});{}$ ${}\|v\PP){}$\1\5
+${}\|o,\39\|v\MG\\{timestamp}\K\T{1};{}$\2\6
+\4${}\}{}$\2\par
+\U156.\fi
+
+\M{104}Okay, we're ready for the master recursion.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{compose\_rec}(\&{node} ${}{*}\|f){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{var} ${}{*}\\{vf};{}$\6
+\&{node} ${}{*}\|r,{}$ ${}{*}\\{r0},{}$ ${}{*}\\{r1};{}$\7
+\&{if} ${}(\|f\Z\\{topsink}){}$\1\5
+\&{return} \\{oo}${},\39\|f\MG\\{xref}\PP,\39\|f{}$;\C{ $f$ is constant }\2\6
+${}\|o,\39\\{vf}\K\\{thevar}(\|f);{}$\6
+\&{if} ${}(\|o,\39\\{vf}\MG\\{timestamp}\E\T{0}){}$\1\5
+\&{return} \\{oo}${},\39\|f\MG\\{xref}\PP,\39\|f{}$;\C{ $f$ doesn't depend on
+$y$'s }\2\6
+${}\|o,\39\|r\K\\{cache\_lookup}(\|f,\39\\{node\_}(\\{vf}\MG\\{timestamp}),\39%
+\\{node\_}(\T{0}));{}$\6
+\&{if} (\|r)\1\5
+\&{return} \|r;\2\6
+\X105:Find $f(y_0,\ldots{})$ recursively\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{105}The computations here look basically the same as those we've been
+seeing in previous recursions. But in fact there is a huge difference:
+The functions \PB{\\{r0}} and~\PB{\\{r1}} now can involve {\it all\/}
+variables,
+not just the variables near the bottom of the BDDs.
+
+\Y\B\4\X105:Find $f(y_0,\ldots{})$ recursively\X${}\E{}$\6
+$\\{rmems}\PP{}$;\C{ track recursion overhead }\6
+${}\|o,\39\\{r0}\K\\{compose\_rec}(\\{node\_}(\|f\MG\\{lo}));{}$\6
+\&{if} ${}(\R\\{r0}){}$\1\5
+\&{return} ${}\NULL{}$;\C{ oops, trouble }\2\6
+${}\\{r1}\K\\{compose\_rec}(\\{node\_}(\|f\MG\\{hi}));{}$\6
+\&{if} ${}(\R\\{r1}){}$\5
+${}\{{}$\1\6
+\\{deref}(\\{r0});\C{ too bad, but we have to abort in midstream }\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|o,\39\\{vf}\MG\\{repl}){}$\1\5
+${}\|r\K\\{node\_}(\\{vf}\MG\\{repl}){}$;\5
+\2\&{else}\1\5
+${}\|r\K\\{node\_}(\\{vf}\MG\\{proj});{}$\2\6
+${}\|r\K\\{mux\_rec}(\|r,\39\\{r1},\39\\{r0}){}$;\C{ replacement happens here }%
+\6
+\\{deref}(\\{r0});\5
+\\{deref}(\\{r1});\C{ we're done with \PB{\\{r0}} and \PB{\\{r1}} }\6
+\&{if} (\|r)\5
+${}\{{}$\1\6
+\&{if} ${}((\\{verbose}\AND\T{128})\W(\\{vf}<\\{tvar})){}$\1\5
+${}\\{printf}(\.{"\ \ \ \%x=\%x[\%u]\ (level}\)\.{\ \%d)\\n"},\39\\{id}(\|r),%
+\39\\{id}(\|f),\39\\{vf}\MG\\{timestamp},\39\\{vf}-\\{varhead});{}$\2\6
+${}\\{cache\_insert}(\|f,\39\\{node\_}(\\{vf}\MG\\{timestamp}),\39\\{node\_}(%
+\T{0}),\39\|r);{}$\6
+\4${}\}{}$\2\6
+\&{return} \|r;\par
+\U104.\fi
+
+\N{1}{106}Top-level calls. As mentioned above, there's a top-level ``wrapper''
+around
+each of the recursive synthesis routines, so that we can launch them properly.
+
+Here's the top-level routine for binary operators.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{binary\_top}(\&{int} \\{curop}${},\39{}$\&{node} ${}{*}%
+\|f,\39{}$\&{node} ${}{*}\|g){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{node} ${}{*}\|r;{}$\6
+\&{unsigned} \&{long} \&{long} \\{oldmems}${}\K\\{mems},{}$ \\{oldrmems}${}\K%
+\\{rmems},{}$ \\{oldzmems}${}\K\\{zmems};{}$\7
+\&{if} ${}(\\{verbose}\AND\T{2}){}$\1\5
+${}\\{printf}(\.{"beginning\ to\ comput}\)\.{e\ \%x\ \%s\ \%x:\\n"},\39\\{id}(%
+\|f),\39\\{binopname}[\\{curop}],\39\\{id}(\|g));{}$\2\6
+${}\\{cacheinserts}\K\T{0};{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{switch} (\\{curop})\5
+${}\{{}$\1\6
+\4\&{case} \T{1}:\5
+${}\|r\K\\{and\_rec}(\|f,\39\|g){}$;\5
+\&{break};\C{ $f\land g$ }\6
+\4\&{case} \T{2}:\5
+${}\|r\K\\{mux\_rec}(\|g,\39\\{botsink},\39\|f){}$;\5
+\&{break};\C{ $f\land\bar g=(g{?}\ 0{:}\ f)$ }\6
+\4\&{case} \T{4}:\5
+${}\|r\K\\{mux\_rec}(\|f,\39\\{botsink},\39\|g){}$;\5
+\&{break};\C{ $\bar f\land g=(f{?}\ 0{:}\ g)$ }\6
+\4\&{case} \T{6}:\5
+${}\|r\K\\{xor\_rec}(\|f,\39\|g){}$;\5
+\&{break};\C{ $f\oplus g$ }\6
+\4\&{case} \T{7}:\5
+${}\|r\K\\{or\_rec}(\|f,\39\|g){}$;\5
+\&{break};\C{ $f\lor g$ }\6
+\4\&{case} \T{8}:\5
+${}\|r\K\\{constrain\_rec}(\|f,\39\|g){}$;\5
+\&{break};\C{ $f\downarrow g$ }\6
+\4\&{case} \T{9}:\5
+${}\|r\K\\{all\_rec}(\|f,\39\|g){}$;\5
+\&{break};\C{ $f\(A) g$ }\6
+\4\&{case} \T{10}:\5
+\&{case} \T{12}:\5
+${}\|r\K\\{yes\_no\_rec}(\\{curop},\39\|f,\39\|g){}$;\5
+\&{break};\C{ $f\(N)g$ or $f\(Y)g$ }\6
+\4\&{case} \T{14}:\5
+${}\|r\K\\{diff\_rec}(\|f,\39\|g){}$;\5
+\&{break};\C{ $f\(D) g$ }\6
+\4\&{case} \T{15}:\5
+${}\|r\K\\{exist\_rec}(\|f,\39\|g){}$;\5
+\&{break};\6
+\4\&{default}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"This\ can't\ happen!\\}\)\.{n"}){}$;\5
+${}\\{exit}({-}\T{69});{}$\6
+\4${}\}{}$\2\6
+\&{if} (\|r)\1\5
+\&{break};\2\6
+\\{attempt\_repairs}(\,);\C{ try to carry on }\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{verbose}\AND(\T{1}+\T{2})){}$\1\5
+${}\\{printf}(\.{"\ \%x=\%x\%s\%x\ (\%llu\ me}\)\.{ms,\ \%llu\ rmems,\ \%llu}\)%
+\.{\ zmems)\\n"},\3{-1}\39\\{id}(\|r),\39\\{id}(\|f),\39\\{binopname}[%
+\\{curop}],\39\\{id}(\|g),\39\\{mems}-\\{oldmems},\39\\{rmems}-\\{oldrmems},\39%
+\\{zmems}-\\{oldzmems});{}$\2\6
+\&{return} \|r;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{107}\B\X25:Templates for subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{attempt\_repairs}(\&{void});\C{ collect garbage or something if
+there's hope }\par
+\fi
+
+\M{108}Have you any wool? Yes sir, yes sir.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{ternary\_top}(\&{int} \\{curop}${},\39{}$\&{node} ${}{*}%
+\|f,\39{}$\&{node} ${}{*}\|g,\39{}$\&{node} ${}{*}\|h){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{node} ${}{*}\|r;{}$\6
+\&{unsigned} \&{long} \&{long} \\{oldmems}${}\K\\{mems},{}$ \\{oldrmems}${}\K%
+\\{rmems},{}$ \\{oldzmems}${}\K\\{zmems};{}$\7
+\&{if} ${}(\\{verbose}\AND\T{2}){}$\1\5
+${}\\{printf}(\.{"beginning\ to\ comput}\)\.{e\ \%x\ \%s\ \%x\ \%s\ \%x:\\n"},%
+\39\\{id}(\|f),\39\\{ternopname1}[\\{curop}-\T{16}],\39\\{id}(\|g),\39%
+\\{ternopname2}[\\{curop}-\T{16}],\39\\{id}(\|h));{}$\2\6
+${}\\{cacheinserts}\K\T{0};{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{switch} (\\{curop})\5
+${}\{{}$\1\6
+\4\&{case} \T{16}:\5
+${}\|r\K\\{mux\_rec}(\|f,\39\|g,\39\|h){}$;\5
+\&{break};\C{ $f{?}\ g{:}\ h$ }\6
+\4\&{case} \T{17}:\5
+${}\|r\K\\{med\_rec}(\|f,\39\|g,\39\|h){}$;\5
+\&{break};\C{ $\langle fgh\rangle$ }\6
+\4\&{case} \T{18}:\5
+${}\|r\K\\{and\_and\_rec}(\|f,\39\|g,\39\|h){}$;\5
+\&{break};\C{ $f\land g\land h$ }\6
+\4\&{case} \T{19}:\5
+${}\|r\K\\{and\_exist\_rec}(\|f,\39\|g,\39\|h){}$;\5
+\&{break};\C{ $(f\land g)\(E)h$ }\6
+\4\&{default}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"This\ can't\ happen!\\}\)\.{n"}){}$;\5
+${}\\{exit}({-}\T{69});{}$\6
+\4${}\}{}$\2\6
+\&{if} (\|r)\1\5
+\&{break};\2\6
+\\{attempt\_repairs}(\,);\C{ try to carry on }\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{verbose}\AND(\T{1}+\T{2})){}$\1\5
+${}\\{printf}(\.{"\ \%x=\%x\%s\%x\%s\%x\ (\%ll}\)\.{u\ mems,\ \%llu\ rmems,\ }%
+\)\.{\%llu\ zmems)\\n"},\3{-1}\39\\{id}(\|r),\39\\{id}(\|f),\39\\{ternopname1}[%
+\\{curop}-\T{16}],\39\\{id}(\|g),\39\\{ternopname2}[\\{curop}-\T{16}],\39%
+\\{id}(\|h),\39\\{mems}-\\{oldmems},\39\\{rmems}-\\{oldrmems},\39\\{zmems}-%
+\\{oldzmems});{}$\2\6
+\&{return} \|r;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{109}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{compose\_top}(\&{node} ${}{*}\|f){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{node} ${}{*}\|r;{}$\6
+\&{unsigned} \&{long} \&{long} \\{oldmems}${}\K\\{mems},{}$ \\{oldrmems}${}\K%
+\\{rmems},{}$ \\{oldzmems}${}\K\\{zmems};{}$\7
+\&{if} ${}(\|f\Z\\{topsink}){}$\1\5
+\&{return} \|f;\2\6
+\&{if} ${}(\\{verbose}\AND\T{2}){}$\1\5
+${}\\{printf}(\.{"beginning\ to\ comput}\)\.{e\ \%x[\%u]:\\n"},\39\\{id}(\|f),%
+\39\\{thevar}(\|f)\MG\\{timestamp});{}$\2\6
+${}\\{cacheinserts}\K\T{0};{}$\6
+${}\\{timestamp\_changed}\K\T{0};{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+${}\|r\K\\{compose\_rec}(\|f);{}$\6
+\&{if} (\|r)\1\5
+\&{break};\2\6
+\\{attempt\_repairs}(\,);\C{ try to carry on }\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{verbose}\AND(\T{1}+\T{2})){}$\1\5
+${}\\{printf}(\.{"\ \%x=\%x[\%u]\ (\%llu\ me}\)\.{ms,\ \%llu\ rmems,\ \%llu}\)%
+\.{\ zmems)\\n"},\3{-1}\39\\{id}(\|r),\39\\{id}(\|f),\39\\{thevar}(\|f)\MG%
+\\{timestamp},\39\\{mems}-\\{oldmems},\39\\{rmems}-\\{oldrmems},\39\\{zmems}-%
+\\{oldzmems});{}$\2\6
+\&{return} \|r;\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{110}Parsing the commands.
+We're almost done, but we need to control the overall process by
+obeying the user's instructions.
+The syntax for elementary user commands appeared at the beginning of this
+program; now we want to flesh it out and implement it.
+
+\Y\B\4\X110:Read a command and obey it; \PB{\&{goto} \\{alldone}} if done\X${}%
+\E{}$\6
+${}\{{}$\1\6
+\X111:Make sure the coast is clear\X;\6
+\X113:Fill \PB{\\{buf}} with the next command, or \PB{\&{goto} \\{alldone}}\X;\6
+\X114:Parse the command and execute it\X;\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{111}Before we do any commands, it's helpful to ensure that no embarrassing
+anomalies will arise. For example, a command like `\.{f0=x1{\tta}x2{\tta}x3}'
+might necessitate making space for up to three new variables;
+it would be a nuisance if those attempts failed. (See the
+\PB{\\{projection}} routine.) We also want to check that \PB{\\{timestamp}}
+hasn't
+reached its maximum possible value.
+
+\Y\B\4\D$\\{debugging}$ \5
+\T{1}\par
+\Y\B\4\X111:Make sure the coast is clear\X${}\E{}$\6
+\8\#\&{if} ${}\\{debugging}\AND\\{includesanity}{}$\6
+\&{if} ${}(\\{verbose}\AND\T{8192}){}$\1\5
+\\{sanity\_check}(\,);\2\6
+\8\#\&{endif}\6
+\&{if} ${}(\\{totalnodes}\G\\{toobig}){}$\1\5
+\X153:Invoke autosifting\X;\2\6
+\&{if} ${}(\\{verbose}\AND\T{1024}){}$\1\5
+\\{show\_stats}(\,);\2\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{if} ${}(\\{timestamp}\I{-}\T{1}){}$\5
+${}\{{}$\1\6
+\X17:If there are at least three free pages and at least three free nodes, \PB{%
+\&{break}}\X;\6
+\4${}\}{}$\2\6
+\\{attempt\_repairs}(\,);\6
+\4${}\}{}$\2\par
+\U110.\fi
+
+\M{112}
+\Y\B\4\D$\\{bufsize}$ \5
+\T{100}\C{ all commands are very short, but comments might be long }\par
+\Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \\{buf}[\\{bufsize}];\C{ our master's voice }\par
+\fi
+
+\M{113}\B\X113:Fill \PB{\\{buf}} with the next command, or \PB{\&{goto} %
+\\{alldone}}\X${}\E{}$\6
+\&{if} (\\{infile})\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{fgets}(\\{buf},\39\\{bufsize},\39\\{infile})){}$\5
+${}\{{}$\C{ assume end of file }\1\6
+\&{if} (\\{file\_given})\1\5
+\&{goto} \\{alldone};\C{ quit the program if the file was \PB{\\{argv}[\T{1}]}
+}\2\6
+\\{fclose}(\\{infile});\6
+${}\\{infile}\K\NULL;{}$\6
+\&{continue};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{verbose}\AND\T{64}){}$\1\5
+${}\\{printf}(\.{">\ \%s"},\39\\{buf});{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+\1\&{while} (\T{1})\5
+${}\{{}$\1\6
+\\{printf}(\.{">\ "});\5
+\\{fflush}(\\{stdout});\C{ prompt the user }\6
+\&{if} ${}(\\{fgets}(\\{buf},\39\\{bufsize},\39\\{stdin})){}$\1\5
+\&{break};\2\6
+${}\\{freopen}(\.{"/dev/tty"},\39\.{"r"},\39\\{stdin}){}$;\C{ end of
+command-line \PB{\\{stdin}} }\6
+\4${}\}{}$\2\2\par
+\U110.\fi
+
+\M{114}The first nonblank character of each line identifies the type of
+command.
+All-blank lines are ignored; so are lines that begin with `\.\#'.
+
+I haven't attempted to make this interface the slightest bit fancy.
+Nor have I had time to write a detailed explanation of how to use
+this program---sorry. Hopefully someone like David Pogue will be
+motivated to write the missing manual.
+
+\Y\B\4\D$\\{getk}$ \5
+\&{for} ${}(\|k\K\T{0};{}$ ${}\\{isdigit}({*}\|c);{}$ ${}\|c\PP)$ $\|k\K\T{10}*%
+\|k+{*}\|c-{}$\.{'0'}\C{ scan a number }\par
+\B\4\D$\\{reporterror}$ \6
+${}\{{}$\5
+\1${}\\{printf}(\.{"Sorry;\ `\%c'\ confuse}\)\.{s\ me\ \%s\%s"},\3{-1}\39{*}(%
+\|c-\T{1}),\39\\{infile}\?\.{"in\ this\ command:\ "}:\.{"in\ that\ command."},%
+\39\\{infile}\?\\{buf}:\.{"\\n"});{}$\6
+\&{goto} \\{nextcommand};\5
+${}\}{}$\2\par
+\Y\B\4\X114:Parse the command and execute it\X${}\E{}$\6
+\4\\{rescan}:\5
+\&{for} ${}(\|c\K\\{buf};{}$ ${}{*}\|c\E\.{'\ '};{}$ ${}\|c\PP){}$\1\5
+;\C{ pass over initial blanks }\2\6
+\&{switch} ${}({*}\|c\PP){}$\5
+${}\{{}$\1\6
+\4\&{case} \.{'\\n'}:\5
+\&{if} ${}(\R\\{infile}){}$\1\5
+\\{printf}(\.{"(Type\ `quit'\ to\ exi}\)\.{t\ the\ program.)\\n"});\2\6
+\4\&{case} \.{'\#'}:\5
+\&{continue};\6
+\4\&{case} \.{'!'}:\5
+${}\\{printf}(\\{buf}+\T{1}){}$;\5
+\&{continue};\C{ echo the input line on \PB{\\{stdout}} }\6
+\4\&{case} \.{'b'}:\5
+\X146:Bubble sort to reestablish the natural variable order\X;\5
+\&{continue};\6
+\4\&{case} \.{'C'}:\5
+\\{print\_cache}(\,);\5
+\&{continue};\6
+\4\&{case} \.{'f'}:\5
+\X120:Parse and execute an assignment to $f_k$\X;\5
+\&{continue};\6
+\4\&{case} \.{'i'}:\5
+\X116:Get ready to read a new input file\X;\5
+\&{continue};\6
+\4\&{case} \.{'l'}:\5
+\\{getk};\5
+${}\\{leasesonlife}\K\|k{}$;\5
+\&{continue};\6
+\4\&{case} \.{'m'}:\5
+\X160:Print a Mathematica program for a generating function\X;\5
+\&{continue};\6
+\4\&{case} \.{'o'}:\5
+\X118:Output a function\X;\5
+\&{continue};\6
+\4\&{case} \.{'O'}:\5
+\X119:Print the current variable ordering\X;\5
+\&{continue};\6
+\4\&{case} \.{'p'}:\5
+\X117:Print a function or its profile\X;\5
+\&{continue};\6
+\4\&{case} \.{'P'}:\5
+${}\\{print\_base}(\T{0},\39\T{0}){}$;\5
+\&{continue};\C{ \.P means ``print all'' }\6
+\4\&{case} \.{'q'}:\5
+\&{goto} \\{alldone};\C{ this will exit the program }\6
+\4\&{case} \.{'r'}:\5
+\X152:Reset the reorder trigger\X;\5
+\&{continue};\6
+\4\&{case} \.{'s'}:\5
+\X130:Swap variable $x_k$ with its predecessor\X;\5
+\&{continue};\6
+\4\&{case} \.{'S'}:\6
+\&{if} ${}(\\{isdigit}({*}\|c)){}$\1\5
+\X147:Sift on variable $x_k$\X\2\6
+\&{else}\1\5
+\\{siftall}(\,);\5
+\2\&{continue};\6
+\4\&{case} \.{'t'}:\5
+\X129:Reset \PB{\\{tvar}}\X;\5
+\&{continue};\6
+\4\&{case} \.{'v'}:\5
+\\{getk};\5
+${}\\{verbose}\K\|k{}$;\5
+\&{continue};\6
+\4\&{case} \.{'V'}:\5
+${}\\{verbose}\K{-}\T{1}{}$;\5
+\&{continue};\6
+\4\&{case} \.{'y'}:\5
+\X128:Parse and execute an assignment to $y_k$\X;\5
+\&{continue};\6
+\4\&{case} \.{'\$'}:\5
+\\{show\_stats}(\,);\5
+\&{continue};\6
+\4\&{default}:\5
+\\{reporterror};\6
+\4${}\}{}$\2\6
+\4\\{nextcommand}:\5
+\&{continue};\par
+\U110.\fi
+
+\M{115}\B\X19:Local variables\X${}\mathrel+\E{}$\6
+\&{char} ${}{*}\|c,{}$ ${}{*}\\{cc}{}$;\C{ characters being scanned }\6
+\&{node} ${}{*}\|p,{}$ ${}{*}\|q,{}$ ${}{*}\|r{}$;\C{ operands }\6
+\&{var} ${}{*}\|v{}$;\C{ a variable }\6
+\&{int} \\{lhs};\C{ index on left side of equation }\6
+\&{int} \\{curop};\C{ current operator }\par
+\fi
+
+\M{116}The \<special> command \.{include} \<filename> starts up a new infile.
+(Instead of \.{include}, you could also say \.{input} or \.i, or
+even \.{ignore}.)
+
+\Y\B\4\D$\\{passblanks}$ \5
+\&{for} ( ; ${}{*}\|c\E\.{'\ '};{}$ ${}\|c\PP{}$)\par
+\Y\B\4\X116:Get ready to read a new input file\X${}\E{}$\6
+\&{if} (\\{infile})\1\5
+\\{printf}(\.{"Sorry\ ---\ you\ can't}\)\.{\ include\ one\ file\ in}\)\.{side\
+of\ another.\\n"});\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{for} ( ; ${}\\{isgraph}({*}\|c);{}$ ${}\|c\PP){}$\1\5
+;\C{ pass nonblanks }\2\6
+\\{passblanks};\6
+\&{for} ${}(\\{cc}\K\|c;{}$ ${}\\{isgraph}({*}\|c);{}$ ${}\|c\PP){}$\1\5
+;\C{ pass nonblanks }\2\6
+${}{*}\|c\K\.{'\\0'};{}$\6
+\&{if} ${}(\R(\\{infile}\K\\{fopen}(\\{cc},\39\.{"r"}))){}$\1\5
+${}\\{printf}(\.{"Sorry\ ---\ I\ couldn'}\)\.{t\ open\ file\ `\%s'!\\n"},\39%
+\\{cc});{}$\2\6
+\4${}\}{}$\2\par
+\U114.\fi
+
+\M{117}The command `\.{p3}' prints out the BDD for $f_3$; the command
+`\.{pp3}' prints just the profile.
+
+\Y\B\4\D$\\{getkf}$ \5
+\\{getk};\5
+\&{if} ${}(\|k\G\\{extsize}){}$\5
+${}\{{}$\5
+\1${}\\{printf}(\.{"f\%d\ is\ out\ of\ range}\)\.{.\\n"},\39\|k){}$;\5
+\&{continue};\5
+${}\}{}$\2\par
+\B\4\D$\\{getkv}$ \5
+\\{getk};\5
+\&{if} ${}(\|k\G\\{varsize}){}$\5
+${}\{{}$\5
+\1${}\\{printf}(\.{"x\%d\ is\ out\ of\ range}\)\.{.\\n"},\39\|k){}$;\5
+\&{continue};\5
+${}\}{}$\2\par
+\Y\B\4\X117:Print a function or its profile\X${}\E{}$\6
+\&{if} ${}({*}\|c\E\.{'p'}){}$\5
+${}\{{}$\C{ \.{pp} means ``print a profile'' }\1\6
+${}\|c\PP{}$;\5
+\\{getkf};\6
+${}\\{printf}(\.{"p\%d:"},\39\|k);{}$\6
+\\{print\_profile}(\|f[\|k]);\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\\{getkf};\6
+${}\\{printf}(\.{"f\%d="},\39\|k);{}$\6
+${}\\{print\_function}(\|f[\|k],\39\T{0});{}$\6
+\4${}\}{}$\2\par
+\U114.\fi
+
+\M{118}The command `\.{o3}' outputs the BDD for $f_3$; the command
+`\.{ou3}' outputs it with variable names ``unmapped'',
+so that all branches go to variables with higher numbers (in spite of any
+reordering that has been done). Unmapped
+BDD output is important for programs such as {\mc BDDREAD-COUNT}, which
+count the number of solutions, because those programs need to know
+how many levels are being crossed at every downward branch.
+
+\Y\B\4\X118:Output a function\X${}\E{}$\6
+${}\{{}$\1\6
+\&{int} \\{unmapped}${}\K\T{0};{}$\7
+\&{if} ${}({*}\|c\E\.{'u'}){}$\1\5
+${}\|c\PP,\39\\{unmapped}\K\T{1}{}$;\C{ \.{ou} means ``output unmapped'' }\2\6
+\\{getkf};\6
+${}\\{sprintf}(\\{buf},\39\.{"/tmp/f\%d.bdd"},\39\|k);{}$\6
+${}\\{freopen}(\\{buf},\39\.{"w"},\39\\{stdout}){}$;\C{ redirect \PB{%
+\\{stdout}} to a file }\6
+${}\\{print\_function}(\|f[\|k],\39\\{unmapped});{}$\6
+${}\\{freopen}(\.{"/dev/tty"},\39\.{"w"},\39\\{stdout}){}$;\C{ restore normal %
+\PB{\\{stdout}} }\6
+\4${}\}{}$\2\par
+\U114.\fi
+
+\M{119}\B\X119:Print the current variable ordering\X${}\E{}$\6
+\&{for} ${}(\|v\K\\{varhead};{}$ ${}\|v<\\{topofvars};{}$ ${}\|v\PP){}$\1\6
+\&{if} ${}(\|v\MG\\{proj}){}$\1\5
+${}\\{printf}(\.{"\ x\%d"},\39\|v\MG\\{name});{}$\2\2\6
+\\{printf}(\.{"\\n"});\par
+\U114.\fi
+
+\M{120}My little finite-state automaton.
+
+\Y\B\4\X120:Parse and execute an assignment to $f_k$\X${}\E{}$\6
+\\{getkf};\5
+${}\\{lhs}\K\|k;{}$\6
+\\{passblanks};\6
+\&{if} ${}({*}\|c\PP\I\.{'='}){}$\1\5
+\\{reporterror};\2\6
+\X121:Get the first operand, \PB{\|p}\X;\6
+\X122:Get the operator, \PB{\\{curop}}\X;\6
+\4\\{second}:\5
+\X123:Get the second operand, \PB{\|q}\X;\6
+\4\\{third}:\5
+\X124:If the operator is ternary, get the third operand, \PB{\|r}\X;\6
+\4\\{fourth}:\5
+\X125:Evaluate the right-hand side and put the answer in \PB{\|r}\X;\6
+\X126:Assign \PB{\|r} to $f_k$, where \PB{$\|k\K\\{lhs}$}\X;\par
+\U114.\fi
+
+\M{121}\B\D$\\{checknull}(\|p)$ \6
+\&{if} ${}(\R\|p){}$\5
+${}\{{}$\5
+\1${}\\{printf}(\.{"f\%d\ is\ null!\\n"},\39\|k){}$;\5
+\&{continue};\5
+${}\}{}$\2\par
+\Y\B\4\X121:Get the first operand, \PB{\|p}\X${}\E{}$\6
+\\{passblanks};\6
+\&{switch} ${}({*}\|c\PP){}$\5
+${}\{{}$\1\6
+\4\&{case} \.{'x'}:\5
+\\{getkv};\5
+${}\|p\K\\{projection}(\\{varmap}[\|k]){}$;\5
+\&{break};\6
+\4\&{case} \.{'f'}:\5
+\\{getkf};\5
+${}\|p\K\|f[\|k]{}$;\5
+\\{checknull}(\|p);\5
+\&{break};\6
+\4\&{case} \.{'c'}:\5
+${}\|k\K{*}\|c\PP-\.{'0'}{}$;\5
+\&{if} ${}((\|k\AND{-}\T{2})\E\T{0}){}$\1\5
+${}\|p\K\\{botsink}+\|k{}$;\5
+\2\&{else}\1\5
+\\{reporterror};\5
+\2\&{break};\6
+\4\&{case} \.{'\~'}:\5
+${}\|p\K\\{topsink}{}$;\5
+${}\\{curop}\K\T{6}{}$;\5
+\&{goto} \\{second};\C{ reduce $\lnot f$ to $1\oplus f$ }\6
+\4\&{case} \.{'.'}:\5
+\X127:Dereference the left-hand side\X;\5
+\&{continue};\6
+\4\&{default}:\5
+\\{reporterror};\6
+\4${}\}{}$\2\par
+\U120.\fi
+
+\M{122}Quantification uses the following conventions:
+\smallskip\noindent{$\bullet$}
+A command like `\.{f1=f2 A x2}' sets $f_1\gets\forall x_2\,f_2$.
+\smallskip\noindent{$\bullet$}
+A command like `\.{f1=f2 E f3}' where $f_3=x_4\land x_5$ sets
+$f_1\gets\exists x_4\,\exists x_5\,f_2$.
+\smallskip\noindent{$\bullet$}
+A command like `\.{f1=f2\tta f4 E f3}' with that $f_3$ sets
+$f_1\gets\exists x_4\,\exists x_5\,(f_2\land f_4)$.
+
+\Y\B\4\X122:Get the operator, \PB{\\{curop}}\X${}\E{}$\6
+\\{passblanks};\6
+\&{switch} ${}({*}\|c\PP){}$\5
+${}\{{}$\1\6
+\4\&{case} \.{'\&'}:\5
+${}\\{curop}\K\T{1}{}$;\5
+\&{break};\C{ and }\6
+\4\&{case} \.{'>'}:\5
+${}\\{curop}\K\T{2}{}$;\5
+\&{break};\C{ butnot }\6
+\4\&{case} \.{'<'}:\5
+${}\\{curop}\K\T{4}{}$;\5
+\&{break};\C{ notbut }\6
+\4\&{case} \.{'\^'}:\5
+${}\\{curop}\K\T{6}{}$;\5
+\&{break};\C{ xor }\6
+\4\&{case} \.{'|'}:\5
+${}\\{curop}\K\T{7}{}$;\5
+\&{break};\C{ or }\6
+\4\&{case} \.{'\_'}:\5
+${}\\{curop}\K\T{8}{}$;\5
+\&{break};\C{ constrain }\6
+\4\&{case} \.{'A'}:\5
+${}\\{curop}\K\T{9}{}$;\5
+\&{break};\C{ forall }\6
+\4\&{case} \.{'N'}:\5
+${}\\{curop}\K\T{10}{}$;\5
+\&{break};\C{ no }\6
+\4\&{case} \.{'Y'}:\5
+${}\\{curop}\K\T{12}{}$;\5
+\&{break};\C{ yes }\6
+\4\&{case} \.{'D'}:\5
+${}\\{curop}\K\T{14}{}$;\5
+\&{break};\C{ diff }\6
+\4\&{case} \.{'E'}:\5
+${}\\{curop}\K\T{15}{}$;\5
+\&{break};\C{ exists }\6
+\4\&{case} \.{'?'}:\5
+${}\\{curop}\K\T{16}{}$;\5
+\&{break};\C{ if-then-else }\6
+\4\&{case} \.{'.'}:\5
+${}\\{curop}\K\T{17}{}$;\5
+\&{break};\C{ median }\6
+\4\&{case} \.{'['}:\5
+${}\\{curop}\K\T{0}{}$;\C{ functional composition }\6
+\&{if} ${}({*}\|c\PP\I\.{'y'}){}$\1\5
+\\{reporterror};\2\6
+\&{if} ${}({*}\|c\PP\I\.{']'}){}$\1\5
+\\{reporterror};\2\6
+\&{goto} \\{fourth};\6
+\4\&{case} \.{'\\n'}:\5
+${}\\{curop}\K\T{7},\39\|q\K\|p,\39\|c\MM{}$;\5
+\&{goto} \\{fourth};\C{ change unary \PB{\|p} to $p\lor p$ }\6
+\4\&{default}:\5
+\\{reporterror};\6
+\4${}\}{}$\2\par
+\U120.\fi
+
+\M{123}\B\X123:Get the second operand, \PB{\|q}\X${}\E{}$\6
+\\{passblanks};\6
+\&{switch} ${}({*}\|c\PP){}$\5
+${}\{{}$\1\6
+\4\&{case} \.{'x'}:\5
+\\{getkv};\5
+${}\|q\K\\{projection}(\\{varmap}[\|k]){}$;\5
+\&{break};\6
+\4\&{case} \.{'f'}:\5
+\\{getkf};\5
+${}\|q\K\|f[\|k]{}$;\5
+\\{checknull}(\|q);\5
+\&{break};\6
+\4\&{case} \.{'c'}:\5
+${}\|k\K{*}\|c\PP-\.{'0'}{}$;\5
+\&{if} ${}((\|k\AND{-}\T{2})\E\T{0}){}$\1\5
+${}\|q\K\\{botsink}+\|k{}$;\5
+\2\&{else}\1\5
+\\{reporterror};\5
+\2\&{break};\6
+\4\&{default}:\5
+\\{reporterror};\6
+\4${}\}{}$\2\par
+\Us120\ET128.\fi
+
+\M{124}\B\X124:If the operator is ternary, get the third operand, \PB{\|r}\X${}%
+\E{}$\6
+\\{passblanks};\6
+\&{if} ${}(\\{curop}\E\T{1}\W{*}\|c\E\.{'\&'}){}$\1\5
+${}\\{curop}\K\T{18}{}$;\C{ and-and }\2\6
+\&{if} ${}(\\{curop}\E\T{1}\W{*}\|c\E\.{'E'}){}$\1\5
+${}\\{curop}\K\T{19}{}$;\C{ and-exists }\2\6
+\&{if} ${}(\\{curop}\Z\\{maxbinop}){}$\1\5
+${}\|r\K\NULL;{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}({*}\|c\PP\I\\{ternopname2}[\\{curop}-\T{16}][\T{0}]){}$\1\5
+\\{reporterror};\2\6
+\\{passblanks};\6
+\&{switch} ${}({*}\|c\PP){}$\5
+${}\{{}$\1\6
+\4\&{case} \.{'x'}:\5
+\\{getkv};\5
+${}\|r\K\\{projection}(\\{varmap}[\|k]){}$;\5
+\&{break};\6
+\4\&{case} \.{'f'}:\5
+\\{getkf};\5
+${}\|r\K\|f[\|k]{}$;\5
+\\{checknull}(\|r);\5
+\&{break};\6
+\4\&{case} \.{'c'}:\5
+${}\|k\K{*}\|c\PP-\.{'0'}{}$;\5
+\&{if} ${}((\|k\AND{-}\T{2})\E\T{0}){}$\1\5
+${}\|r\K\\{botsink}+\|k{}$;\5
+\2\&{else}\1\5
+\\{reporterror};\5
+\2\&{break};\6
+\4\&{default}:\5
+\\{reporterror};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U120.\fi
+
+\M{125}We have made sure that all the necessary operands are non-\PB{$\NULL$}.
+
+\Y\B\4\X125:Evaluate the right-hand side and put the answer in \PB{\|r}\X${}%
+\E{}$\6
+\\{passblanks};\6
+\&{if} ${}({*}\|c\I\.{'\\n'}\W{*}\|c\I\.{'\#'}){}$\5
+${}\{{}$\C{ comments may follow `\.\#' }\1\6
+\4\\{reportjunk}:\5
+${}\|c\PP;{}$\6
+\\{reporterror};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{curop}\E\T{0}){}$\1\5
+${}\|r\K\\{compose\_top}(\|p);{}$\2\6
+\&{else} \&{if} ${}(\\{curop}\Z\\{maxbinop}){}$\1\5
+${}\|r\K\\{binary\_top}(\\{curop},\39\|p,\39\|q);{}$\2\6
+\&{else}\1\5
+${}\|r\K\\{ternary\_top}(\\{curop},\39\|p,\39\|q,\39\|r){}$;\2\par
+\U120.\fi
+
+\M{126}The \PB{\\{sanity\_check}} routine tells me that
+I don't need to increase \PB{$\|r\MG\\{xref}$} here (although I'm not sure that
+I
+totally understand why).
+
+\Y\B\4\X126:Assign \PB{\|r} to $f_k$, where \PB{$\|k\K\\{lhs}$}\X${}\E{}$\6
+\&{if} ${}(\|o,\39\|f[\\{lhs}]){}$\1\5
+\\{deref}(\|f[\\{lhs}]);\2\6
+${}\|o,\39\|f[\\{lhs}]\K\|r{}$;\par
+\U120.\fi
+
+\M{127}\B\X127:Dereference the left-hand side\X${}\E{}$\6
+\&{if} ${}(\|o,\39\|f[\\{lhs}]){}$\5
+${}\{{}$\1\6
+\\{deref}(\|f[\\{lhs}]);\6
+${}\|o,\39\|f[\\{lhs}]\K\NULL;{}$\6
+\4${}\}{}$\2\par
+\U121.\fi
+
+\M{128}\B\X128:Parse and execute an assignment to $y_k$\X${}\E{}$\6
+\\{getkv};\5
+${}\|v\K{\AND}\\{varhead}[\\{varmap}[\|k]];{}$\6
+\&{if} ${}(\|o,\39\R\|v\MG\\{proj}){}$\1\5
+\\{projection}(\|k);\C{ ensure that $x_k$ exists }\2\6
+\\{passblanks};\6
+\&{if} ${}({*}\|c\PP\I\.{'='}){}$\1\5
+\\{reporterror};\2\6
+\\{passblanks};\6
+\&{if} ${}({*}\|c\E\.{'.'}){}$\1\5
+${}\|c\PP,\39\|q\K\NULL;{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\X123:Get the second operand, \PB{\|q}\X;\6
+\&{if} ${}(\|o,\39\|q\E\\{node\_}(\|v\MG\\{proj})){}$\1\5
+${}\|q\K\NULL;{}$\2\6
+\4${}\}{}$\2\6
+\\{passblanks};\6
+\&{if} ${}({*}\|c\I\.{'\\n'}\W{*}\|c\I\.{'\#'}){}$\1\5
+\&{goto} \\{reportjunk};\2\6
+\&{if} ${}(\|o,\39\|v\MG\\{repl}\I\\{addr\_}(\|q)){}$\5
+${}\{{}$\1\6
+${}\|p\K\\{node\_}(\|v\MG\\{repl});{}$\6
+\&{if} (\|p)\1\5
+\\{deref}(\|p);\2\6
+\X102:Assign \PB{\|q} as the new value of \PB{$\|v\MG\\{repl}$}\X;\6
+\4${}\}{}$\2\par
+\U114.\fi
+
+\M{129}In a long calculation, it's nice to get progress reports by setting
+bit 128 of the \PB{\\{verbose}} switch. But we want to see such reports only
+near the top of the BDDs. (Note that \PB{\\{varmap}} is not relevant here.)
+
+\Y\B\4\X129:Reset \PB{\\{tvar}}\X${}\E{}$\6
+\\{getkv};\6
+${}\\{tvar}\K{\AND}\\{varhead}[\|k+\T{1}]{}$;\par
+\U114.\fi
+
+\N{1}{130}Reordering. Now comes the new stuff, where {\mc BDD14} enters the
+territory into which {\mc BDD11} was afraid to tread. Everything is
+based on a primitive swap-in-place operation, which is made available
+to the user as an `\.s' command for online experimentation.
+
+The swap-in-place algorithm interchanges $x_u\leftrightarrow x_v$
+in the ordering, where $x_u$ immediately precedes~$x_v$. No new dead nodes are
+introduced during this process, although some nodes will disappear
+and others will be created. Furthermore, no pointers will change
+except within nodes that branch on $x_u$ or~$x_v$; every node on
+level $u$ or level~$v$ that is accessible either externally or from above
+will therefore continue to represent the same subfunction, but in a
+different way.
+
+\Y\B\4\X130:Swap variable $x_k$ with its predecessor\X${}\E{}$\6
+\\{getkv};\5
+${}\|v\K{\AND}\\{varhead}[\\{varmap}[\|k]];{}$\6
+\&{if} ${}(\|o,\39\R\|v\MG\\{proj}){}$\1\5
+\\{projection}(\|k);\C{ ensure that $x_k$ exists }\2\6
+\\{reorder\_init}(\,);\C{ prepare for reordering }\6
+\&{if} ${}(\|v\MG\\{up}){}$\1\5
+${}\\{swap}(\|v\MG\\{up},\39\|v);{}$\2\6
+\\{reorder\_fin}(\,);\C{ go back to normal processing }\par
+\U114.\fi
+
+\M{131}Before we diddle with such a sensitive thing as the order of branching,
+we must clear the cache. We also remove all dead nodes, which otherwise
+get in the way. Furthermore, we set the \PB{\\{up}} and \PB{\\{down}} links
+inside \PB{\&{var}} nodes.
+
+By setting \PB{$\\{leasesonlife}\K\T{1}$} here, I'm taking a rather cowardly
+approach
+to the problem of memory overflow: This program will simply give up,
+when it runs out of elbow room. No doubt there are much better ways
+to flail about and possibly recover, when memory gets tight, but I
+don't have the time or motivation to think about them today.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{reorder\_init}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+\&{var} ${}{*}\|v,{}$ ${}{*}\\{vup};{}$\7
+\\{collect\_garbage}(\T{1});\6
+${}\\{totalvars}\K\T{0};{}$\6
+\&{for} ${}(\|v\K\\{varhead},\39\\{vup}\K\NULL;{}$ ${}\|v<\\{topofvars};{}$ ${}%
+\|v\PP){}$\1\6
+\&{if} ${}(\|v\MG\\{proj}){}$\5
+${}\{{}$\1\6
+${}\|v\MG\\{aux}\K\PP\\{totalvars};{}$\6
+${}\|v\MG\\{up}\K\\{vup};{}$\6
+\&{if} (\\{vup})\1\5
+${}\\{vup}\MG\\{down}\K\|v{}$;\5
+\2\&{else}\1\5
+${}\\{firstvar}\K\|v;{}$\2\6
+${}\\{vup}\K\|v;{}$\6
+\4${}\}{}$\2\2\6
+\&{if} (\\{vup})\1\5
+${}\\{vup}\MG\\{down}\K\NULL{}$;\5
+\2\&{else}\1\5
+${}\\{firstvar}\K\NULL;{}$\2\6
+${}\\{oldleases}\K\\{leasesonlife};{}$\6
+${}\\{leasesonlife}\K\T{1}{}$;\C{ disallow reservations that fail }\6
+\4${}\}{}$\2\7
+\&{void} \\{reorder\_fin}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+\\{cache\_init}(\,);\6
+${}\\{leasesonlife}\K\\{oldleases};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{132}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{totalvars};\C{ this many \PB{\&{var}} records are in use }\6
+\&{var} ${}{*}\\{firstvar}{}$;\C{ and this one is the smallest in use }\6
+\&{int} \\{oldleases};\C{ this many ``leases on life'' have been held over }\par
+\fi
+
+\M{133}We classify the nodes on levels $u$ and $v$ into four categories:
+Level-$u$ nodes that branch to at least one level-$v$ node are called
+``tangled''; the others are ``solitary.'' Level-$v$ nodes that are
+reachable from levels above~$u$ or from external pointers ($f_j$ or
+$x_j$ or $y_j$) are called ``remote''; the others, which are reachable
+only from level~$u$, are ``hidden.''
+
+After the swap, the tangled nodes will remain on level~$u$; but they
+will now branch on the former~$x_v$, and their \PB{\\{lo}} and \PB{\\{hi}}
+pointers
+will probably change. The solitary nodes will move to
+level~$v$, where they will become remote; they'll still branch
+on the former~$x_u$ as before.
+The remote nodes will move to level~$u$, where they will become
+solitary---still branching as before on the former~$x_v$.
+The hidden nodes will
+disappear and be recycled. In their place we might create ``newbies,''
+which are new nodes on level~$v$ that branch on the old~$x_u$.
+The newbies are accessible only from tangled nodes that have been
+transmogrified; hence they will be
+the hidden nodes, if we decide to swap the levels back again immediately.
+
+Notice that if there are $m$ tangled nodes, there are at most $2m$
+hidden nodes, and at most $2m$ newbies. The swap is beneficial if and
+only if the hidden nodes outnumber the newbies.
+
+Notice also that
+the projection function $x_u$ is always solitary; the projection
+function $x_v$ is always remote. But the present implementation
+is based on the assumptions that almost all nodes on level~$u$
+are tangled and almost all nodes on level~$v$ are hidden.
+Therefore, instead of retaining solitary and remote nodes in their unique
+tables, deleting the other nodes, swapping unique tables, and then inserting
+tangled/newbies, we use a different strategy by which both unique tables
+are essentially trashed and rebuilt from scratch. (In other words,
+we assume that the deletion of
+tangled nodes and hidden nodes will cost more than the insertion of
+solitary nodes and remote nodes.)
+
+We need some way to form temporary lists of all the solitary, tangled, and
+remote nodes. No link fields are readily available in the nodes themselves,
+unless we resort to the shadow memory.
+The present implementation solves the problem by reconfiguring
+the unique table for level~$u$ before destroying it: We move
+all solitary nodes to the beginning of that table, and all tangled
+nodes to the end. This approach is consistent with our preference for
+cache-friendly methods like linear probing.
+
+\Y\B\4\X133:Declare the \PB{\\{swap}} subroutine\X${}\E{}$\6
+\&{void} \\{swap}(\&{var} ${}{*}\|u,\39{}$\&{var} ${}{*}\|v){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \\{solptr}${},{}$ \\{tangptr}${},{}$
+\\{umask}${},{}$ \\{vmask}${},{}$ \\{del};\6
+\&{register} \&{int} \\{hcount}${}\K\T{0},{}$ \\{rcount}${}\K\T{0},{}$ %
+\\{scount}${}\K\T{0},{}$ \\{tcount}${}\K\T{0},{}$ \\{icount}${}\K%
+\\{totalnodes};{}$\6
+\&{register} \&{node} ${}{*}\|f,{}$ ${}{*}\|g,{}$ ${}{*}\|h,{}$ ${}{*}%
+\\{gg},{}$ ${}{*}\\{hh},{}$ ${}{*}\|p,{}$ ${}{*}\\{pl},{}$ ${}{*}\\{ph},{}$
+${}{*}\|q,{}$ ${}{*}\\{ql},{}$ ${}{*}\\{qh},{}$ ${}{*}\\{firsthidden},{}$
+${}{*}\\{lasthidden};{}$\6
+\&{register} \&{var} ${}{*}\\{vg},{}$ ${}{*}\\{vh};{}$\6
+\&{unsigned} \&{long} \&{long} \\{omems}${}\K\\{mems},{}$ \\{ozmems}${}\K%
+\\{zmems};{}$\7
+${}\\{oo},\39\\{umask}\K\|u\MG\\{mask},\39\\{vmask}\K\|v\MG\\{mask};{}$\6
+${}\\{del}\K((\|u-\\{varhead})\XOR(\|v-\\{varhead}))\LL(\T{32}-%
+\\{logvarsize});{}$\6
+\X134:Separate the solitary nodes from the tangled nodes\X;\6
+\X135:Create a new unique table for $x_u$ and move the remote nodes to it\X;\6
+\&{if} ${}(\\{verbose}\AND\T{2048}){}$\1\5
+${}\\{printf}(\.{"swapping\ \%d(x\%d)<->}\)\.{\%d(x\%d):\ solitary\ \%d}\)\.{,\
+tangled\ \%d,\ remote}\)\.{\ \%d,\ hidden\ \%d\\n"},\3{-1}\39\|u-\\{varhead},%
+\39\|u\MG\\{name},\39\|v-\\{varhead},\39\|v\MG\\{name},\39\\{scount},\39%
+\\{tcount},\39\\{rcount},\39\\{hcount});{}$\2\6
+\X139:Create a new unique table for $x_v$ and move the solitary nodes to it\X;\6
+\X140:Transmogrify the tangled nodes and insert them in their new guise\X;\6
+\X143:Delete the lists of solitary, tangled, and hidden nodes\X;\6
+\&{if} ${}(\\{verbose}\AND\T{2048}){}$\1\5
+${}\\{printf}(\.{"\ newbies\ \%d,\ change}\)\.{\ \%d,\ mems\ (\%llu,0,\%l}\)%
+\.{lu)\\n"},\39\\{totalnodes}-\\{icount}+\\{hcount},\39\\{totalnodes}-%
+\\{icount},\39\\{mems}-\\{omems},\39\\{zmems}-\\{ozmems});{}$\2\6
+\X144:Swap names, projections, and replacement functions\X;\6
+\4${}\}{}$\2\par
+\U145.\fi
+
+\M{134}Here's a cute algorithm something like the inner loop of quicksort.
+By decreasing the reference counts of the tangled nodes' children, we will
+be able to distinguish remote nodes from hidden nodes in the next step.
+
+\Y\B\4\X134:Separate the solitary nodes from the tangled nodes\X${}\E{}$\6
+$\\{solptr}\K\|j\K\T{0}{}$;\5
+${}\\{tangptr}\K\|k\K\\{umask}+\T{1};{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{for} ( ; ${}\|j<\|k;{}$ ${}\|j\MRL{+{\K}}\&{sizeof}(\&{addr})){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39\|p\K\\{fetchnode}(\|u,\39\|j);{}$\6
+\&{if} ${}(\|p\E\T{0}){}$\1\5
+\&{continue};\2\6
+${}\|o,\39\\{pl}\K\\{node\_}(\|p\MG\\{lo}),\39\\{ph}\K\\{node\_}(\|p\MG%
+\\{hi});{}$\6
+\&{if} ${}((\\{pl}>\\{topsink}\W(\|o,\39\\{thevar}(\\{pl})\E\|v))\V(\\{ph}>%
+\\{topsink}\W(\|o,\39\\{thevar}(\\{ph})\E\|v))){}$\5
+${}\{{}$\1\6
+${}\\{oooo},\39\\{pl}\MG\\{xref}\MM,\39\\{ph}\MG\\{xref}\MM;{}$\6
+\&{break};\6
+\4${}\}{}$\2\6
+${}\\{storenode}(\|u,\39\\{solptr},\39\|p);{}$\6
+${}\\{solptr}\MRL{+{\K}}\&{sizeof}(\&{addr}),\39\\{scount}\PP;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|j\G\|k){}$\1\5
+\&{break};\2\6
+\&{for} ${}(\|k\MRL{-{\K}}\&{sizeof}(\&{addr});{}$ ${}\|j<\|k;{}$ ${}\|k\MRL{-{%
+\K}}\&{sizeof}(\&{addr})){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39\|q\K\\{fetchnode}(\|u,\39\|k);{}$\6
+\&{if} ${}(\|q\E\T{0}){}$\1\5
+\&{continue};\2\6
+${}\|o,\39\\{ql}\K\\{node\_}(\|q\MG\\{lo}),\39\\{qh}\K\\{node\_}(\|q\MG%
+\\{hi});{}$\6
+\&{if} ${}((\\{ql}>\\{topsink}\W(\|o,\39\\{thevar}(\\{ql})\E\|v))\V(\\{qh}>%
+\\{topsink}\W(\|o,\39\\{thevar}(\\{qh})\E\|v))){}$\1\5
+${}\\{oooo},\39\\{ql}\MG\\{xref}\MM,\39\\{qh}\MG\\{xref}\MM;{}$\2\6
+\&{else}\1\5
+\&{break};\2\6
+${}\\{tangptr}\MRL{-{\K}}\&{sizeof}(\&{addr}),\39\\{tcount}\PP;{}$\6
+${}\\{storenode}(\|u,\39\\{tangptr},\39\|q);{}$\6
+\4${}\}{}$\2\6
+${}\\{tangptr}\MRL{-{\K}}\&{sizeof}(\&{addr}),\39\\{tcount}\PP;{}$\6
+${}\\{storenode}(\|u,\39\\{tangptr},\39\|p);{}$\6
+\&{if} ${}(\|j\G\|k){}$\1\5
+\&{break};\2\6
+${}\\{storenode}(\|u,\39\\{solptr},\39\|q);{}$\6
+${}\\{solptr}\MRL{+{\K}}\&{sizeof}(\&{addr}),\39\\{scount}\PP;{}$\6
+${}\|j\MRL{+{\K}}\&{sizeof}(\&{addr});{}$\6
+\4${}\}{}$\2\par
+\U133.\fi
+
+\M{135}We temporarily save the pages of the old unique table, since they
+now contain the sequential lists of solitary and tangled nodes.
+
+The hidden nodes are linked together by \PB{\\{xref}} fields, but not yet
+recycled (because we will want to look at their \PB{\\{lo}} and \PB{\\{hi}}
+fields
+again).
+
+\Y\B\4\X135:Create a new unique table for $x_u$ and move the remote nodes to it%
+\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\\{umask}\GG\\{logpagesize};{}$ ${}\|k%
+\PP){}$\1\5
+${}\\{oo},\39\\{savebase}[\|k]\K\|u\MG\\{base}[\|k];{}$\2\6
+${}\\{new\_unique}(\|u,\39\\{tcount}+\T{1}){}$;\C{ initialize an empty unique
+table }\6
+\&{for} ${}(\|k\K\\{rcount}\K\\{hcount}\K\T{0};{}$ ${}\|k<\\{vmask};{}$ ${}\|k%
+\MRL{+{\K}}\&{sizeof}(\&{addr})){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39\|p\K\\{fetchnode}(\|v,\39\|k);{}$\6
+\&{if} ${}(\|p\E\T{0}){}$\1\5
+\&{continue};\2\6
+\&{if} ${}(\|o,\39\|p\MG\\{xref}<\T{0}){}$\5
+${}\{{}$\C{ \PB{\|p} is a hidden node }\1\6
+\&{if} ${}(\\{hcount}\E\T{0}){}$\1\5
+${}\\{firsthidden}\K\\{lasthidden}\K\|p,\39\\{hcount}\K\T{1};{}$\2\6
+\&{else}\1\5
+${}\|o,\39\\{hcount}\PP,\39\|p\MG\\{xref}\K\\{addr\_}(\\{lasthidden}),\39%
+\\{lasthidden}\K\|p;{}$\2\6
+${}\\{oo},\39\\{node\_}(\|p\MG\\{lo})\MG\\{xref}\MM{}$;\C{ recursive
+euthanization won't be needed }\6
+${}\\{oo},\39\\{node\_}(\|p\MG\\{hi})\MG\\{xref}\MM{}$;\C{ recursive
+euthanization won't be needed }\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\\{rcount}\PP{}$;\C{ \PB{\|p} is a remote node }\6
+${}\\{oo},\39\|p\MG\\{index}\MRL{{\XOR}{\K}}\\{del}{}$;\C{ change the level
+from \PB{\|v} to \PB{\|u} }\6
+${}\\{insert\_node}(\|u,\39\|p){}$;\C{ put it into the new unique table (see
+below) }\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U133.\fi
+
+\M{136}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{addr} \\{savebase}[\\{maxhashpages}];\C{ pages to be discarded after
+swapping }\par
+\fi
+
+\M{137}The \PB{\\{new\_unique}} routine inaugurates an empty unique table with
+room for
+at least \PB{\|m} nodes before its size will have to double.
+Those nodes will be inserted soon, so we don't mind
+that it is initially sparse.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{new\_unique}(\&{var} ${}{*}\|v,\39{}$\&{int} \|m)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|f${},{}$ \|j${},{}$ \|k;\7
+\&{for} ${}(\|f\K\T{6};{}$ ${}(\|m\LL\T{2})>\|f;{}$ ${}\|f\MRL{{\LL}{\K}}%
+\T{1}){}$\1\5
+;\2\6
+${}\|f\K\|f\AND({-}\|f);{}$\6
+${}\|o,\39\|v\MG\\{free}\K\|f,\39\|v\MG\\{mask}\K(\|f\LL\T{2})-\T{1};{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\|v\MG\\{mask}\GG\\{logpagesize};{}$ ${}\|k%
+\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|v\MG\\{base}[\|k]\K\\{addr\_}(\\{reserve\_page}(\,)){}$;\C{ it
+won't be \PB{$\NULL$} }\6
+\&{if} (\|k)\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\|v\MG\\{base}[\|k];{}$ ${}\|j<\|v\MG\\{base}[\|k]+%
+\\{pagesize};{}$ ${}\|j\MRL{+{\K}}{}$\&{sizeof}(\&{long} \&{long}))\1\5
+\\{storenulls}(\|j);\2\6
+${}\\{zmems}\MRL{+{\K}}\\{pagesize}/{}$\&{sizeof}(\&{long} \&{long});\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\|f\K\|v\MG\\{mask}\AND\\{pagemask};{}$\6
+\&{for} ${}(\|j\K\|v\MG\\{base}[\T{0}];{}$ ${}\|j<\|v\MG\\{base}[\T{0}]+\|f;{}$
+${}\|j\MRL{+{\K}}{}$\&{sizeof}(\&{long} \&{long}))\1\5
+\\{storenulls}(\|j);\2\6
+${}\\{zmems}\MRL{+{\K}}(\|f+\T{1})/{}$\&{sizeof}(\&{long} \&{long});\6
+\4${}\}{}$\2\par
+\fi
+
+\M{138}The \PB{\\{insert\_node}} subroutine is somewhat analogous to \PB{%
+\\{unique\_find}}, but its
+parameter~\PB{\|q} is a node that's known to
+be unique and not already present. The task is simply to insert
+this node into the hash table. Complications arise only if the
+table thereby becomes too full, and needs to be doubled in size, etc.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{insert\_node}(\&{var} ${}{*}\|v,\39{}$\&{node} ${}{*}\|q){}$\1\1\2%
+\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \\{mask}${},{}$ \\{free};\6
+\&{register} \&{addr} ${}{*}\\{hash};{}$\6
+\&{register} \&{node} ${}{*}\|l,{}$ ${}{*}\|h,{}$ ${}{*}\|p,{}$ ${}{*}\|r;{}$\7
+${}\|o,\39\|l\K\\{node\_}(\|q\MG\\{lo}),\39\|h\K\\{node\_}(\|q\MG\\{hi});{}$\6
+\4\\{restart}:\5
+${}\|o,\39\\{mask}\K\|v\MG\\{mask},\39\\{free}\K\|v\MG\\{free};{}$\6
+\&{for} ${}(\\{hash}\K\\{hashcode}(\|l,\39\|h);{}$  ; ${}\\{hash}\PP){}$\5
+${}\{{}$\C{ ye olde linear probing }\1\6
+${}\|k\K\\{addr\_}(\\{hash})\AND\\{mask};{}$\6
+${}\\{oo},\39\|r\K\\{fetchnode}(\|v,\39\|k);{}$\6
+\&{if} ${}(\R\|r){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\MM\\{free}\Z\\{mask}\GG\T{4}){}$\1\5
+\X32:Double the table size and \PB{\&{goto} \\{restart}}\X;\2\6
+${}\\{storenode}(\|v,\39\|k,\39\|q){}$;\5
+${}\|o,\39\|v\MG\\{free}\K\\{free};{}$\6
+\&{return};\6
+\4\\{cramped}:\5
+\\{printf}(\.{"Uh\ oh:\ insert\_node\ }\)\.{hasn't\ enough\ memory}\)\.{\ to\
+continue!\\n"});\6
+\\{show\_stats}(\,);\6
+${}\\{exit}({-}\T{96});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{139}\B\X139:Create a new unique table for $x_v$ and move the solitary nodes
+to it\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\\{vmask}\GG\\{logpagesize};{}$ ${}\|k%
+\PP){}$\1\5
+${}\|o,\39\\{free\_page}(\\{page\_}(\|v\MG\\{base}[\|k]));{}$\2\6
+${}\\{new\_unique}(\|v,\39\\{scount});{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{solptr};{}$ ${}\|k\MRL{+{\K}}\&{sizeof}(%
+\&{addr})){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|p\K\\{node\_}(\\{addr\_\_}(\\{savebase}[\|k\GG\\{logpagesize}]+(\|k%
+\AND\\{pagemask})));{}$\6
+${}\\{oo},\39\|p\MG\\{index}\MRL{{\XOR}{\K}}\\{del}{}$;\C{ change the level
+from \PB{\|u} to \PB{\|v} }\6
+${}\\{insert\_node}(\|v,\39\|p);{}$\6
+\4${}\}{}$\2\par
+\U133.\fi
+
+\M{140}The most dramatic change caused by swapping occurs in this step.
+Suppose \PB{\|f} is a tangled node on level~$u$ before the swap, and suppose
+\PB{$\|g\K\|f\MG\\{lo}$} and \PB{$\|h\K\|f\MG\\{hi}$} are on level~$v$ at that
+time. After swapping, we want
+\PB{$\|f\MG\\{lo}$} and \PB{$\|f\MG\\{hi}$} to be newbie nodes \PB{\\{gg}} and %
+\PB{\\{hh}},
+with \PB{$\\{gg}\MG\\{lo}\K\|g\MG\\{lo}$}, \PB{$\\{gg}\MG\\{hi}\K\|h\MG%
+\\{lo}$}, \PB{$\\{hh}\MG\\{lo}\K\|g\MG\\{hi}$}, \PB{$\\{hh}\MG\\{hi}\K\|h\MG%
+\\{hi}$}.
+(Actually, \PB{\\{gg}} and \PB{\\{hh}} might not both be newbies, because
+we might have \PB{$\|g\MG\\{lo}\K\|h\MG\\{lo}$} or \PB{$\|g\MG\\{hi}\K\|h\MG%
+\\{hi}$}.)
+Similar formulas apply when either \PB{\|g} or \PB{\|h} lies below level~$v$.
+
+\Y\B\4\X140:Transmogrify the tangled nodes and insert them in their new guise%
+\X${}\E{}$\6
+\&{for} ${}(\|k\K\\{tangptr};{}$ ${}\|k<\\{umask};{}$ ${}\|k\MRL{+{\K}}%
+\&{sizeof}(\&{addr})){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|f\K\\{node\_}(\\{addr\_\_}(\\{savebase}[\|k\GG\\{logpagesize}]+(\|k%
+\AND\\{pagemask})));{}$\6
+${}\|o,\39\|g\K\\{node\_}(\|f\MG\\{lo}),\39\|h\K\\{node\_}(\|f\MG\\{hi});{}$\6
+\&{if} ${}(\|g\Z\\{topsink}){}$\1\5
+${}\\{vg}\K\\{topofvars}{}$;\5
+\2\&{else}\1\5
+${}\|o,\39\\{vg}\K\\{thevar}(\|g);{}$\2\6
+\&{if} ${}(\|h\Z\\{topsink}){}$\1\5
+${}\\{vh}\K\\{topofvars}{}$;\5
+\2\&{else}\1\5
+${}\|o,\39\\{vh}\K\\{thevar}(\|h){}$;\C{ N.B.: \PB{\\{vg}} and/or \PB{\\{vh}}
+might be either \PB{\|u} or \PB{\|v} at this point }\2\6
+${}\\{gg}\K\\{swap\_find}(\|v,\39\\{vg}>\|v\?\|g:(\|o,\39\\{node\_}(\|g\MG%
+\\{lo})),\39\\{vh}>\|v\?\|h:(\|o,\39\\{node\_}(\|h\MG\\{lo})));{}$\6
+${}\\{hh}\K\\{swap\_find}(\|v,\39\\{vg}>\|v\?\|g:\\{node\_}(\|g\MG\\{hi}),\39%
+\\{vh}>\|v\?\|h:\\{node\_}(\|h\MG\\{hi}));{}$\6
+${}\|o,\39\|f\MG\\{lo}\K\\{addr\_}(\\{gg}),\39\|f\MG\\{hi}\K\\{addr\_}(%
+\\{hh}){}$;\C{ \PB{$(\|u,\\{gg},\\{hh})$} will be unique }\6
+${}\\{insert\_node}(\|u,\39\|f);{}$\6
+\4${}\}{}$\2\par
+\U133.\fi
+
+\M{141}The \PB{\\{swap\_find}} procedure in the transmogrification step is
+almost identical to \PB{\\{unique\_find}}; it differs only in the treatment
+of reference counts (and the knowledge that no nodes are currently dead).
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{swap\_find}(\&{var} ${}{*}\|v,\39{}$\&{node} ${}{*}\|l,%
+\39{}$\&{node} ${}{*}\|h){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \\{mask}${},{}$ \\{free};\6
+\&{register} \&{addr} ${}{*}\\{hash};{}$\6
+\&{register} \&{node} ${}{*}\|p,{}$ ${}{*}\|r;{}$\7
+\&{if} ${}(\|l\E\|h){}$\5
+${}\{{}$\C{ easy case }\1\6
+\&{return} \\{oo}${},\39\|l\MG\\{xref}\PP,\39\|l;{}$\6
+\4${}\}{}$\2\6
+\4\\{restart}:\5
+${}\|o,\39\\{mask}\K\|v\MG\\{mask},\39\\{free}\K\|v\MG\\{free};{}$\6
+\&{for} ${}(\\{hash}\K\\{hashcode}(\|l,\39\|h);{}$  ; ${}\\{hash}\PP){}$\5
+${}\{{}$\C{ ye olde linear probing }\1\6
+${}\|k\K\\{addr\_}(\\{hash})\AND\\{mask};{}$\6
+${}\\{oo},\39\|p\K\\{fetchnode}(\|v,\39\|k);{}$\6
+\&{if} ${}(\R\|p){}$\1\5
+\&{goto} \\{newnode};\2\6
+\&{if} ${}(\\{node\_}(\|p\MG\\{lo})\E\|l\W\\{node\_}(\|p\MG\\{hi})\E\|h){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{return} \|o${},\39\|p\MG\\{xref}\PP,\39\|p;{}$\6
+\4\\{newnode}:\5
+\X142:Create a newbie and return it\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{142}\B\X142:Create a newbie and return it\X${}\E{}$\6
+\&{if} ${}(\MM\\{free}\Z\\{mask}\GG\T{4}){}$\1\5
+\X32:Double the table size and \PB{\&{goto} \\{restart}}\X;\2\6
+${}\|p\K\\{reserve\_node}(\,);{}$\6
+${}\\{storenode}(\|v,\39\|k,\39\|p){}$;\5
+${}\|o,\39\|v\MG\\{free}\K\\{free};{}$\6
+${}\\{initnewnode}(\|p,\39\|v-\\{varhead},\39\|l,\39\|h);{}$\6
+${}\\{oooo},\39\|l\MG\\{xref}\PP,\39\|h\MG\\{xref}\PP;{}$\6
+\&{return} \|p;\6
+\4\\{cramped}:\5
+\\{printf}(\.{"Uh\ oh:\ swap\_find\ ha}\)\.{sn't\ enough\ memory\ t}\)\.{o\
+continue!\\n"});\6
+\\{show\_stats}(\,);\6
+${}\\{exit}({-}\T{95}){}$;\par
+\U141.\fi
+
+\M{143}\B\X143:Delete the lists of solitary, tangled, and hidden nodes\X${}%
+\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\\{umask}\GG\\{logpagesize};{}$ ${}\|k%
+\PP){}$\1\5
+${}\|o,\39\\{free\_page}(\\{page\_}(\\{savebase}[\|k]));{}$\2\6
+\&{if} (\\{hcount})\5
+${}\{{}$\1\6
+${}\|o,\39\\{firsthidden}\MG\\{xref}\K\\{addr\_}(\\{nodeavail});{}$\6
+${}\\{nodeavail}\K\\{lasthidden};{}$\6
+${}\\{totalnodes}\MRL{-{\K}}\\{hcount};{}$\6
+\4${}\}{}$\2\par
+\U133.\fi
+
+\M{144}Several of the following operations are unnecessary overkill. For
+example,
+instead of interchanging \PB{$\|u\MG\\{proj}$} with \PB{$\|v\MG\\{proj}$}, and
+using
+\PB{\\{projection}(\\{varmap}[\|k])} to access the projection function for
+$x_k$,
+I could leave \PB{$\|u\MG\\{proj}$} and \PB{$\|v\MG\\{proj}$} unchanged and
+just say
+`\PB{\\{projection}(\|k)}'. However, the interaction with replacement functions
+and composition gets tricky, so I've decided to play it safe (for a change):
+All \PB{\\{repl}} and \PB{\\{proj}} functions are kept internally consistent as
+if
+no reordering has taken place. The \PB{\\{varmap}} and \PB{\\{name}} tables
+provide
+an interface between the internal reality and the user's conventions
+for numbering the variables.
+
+\Y\B\4\X144:Swap names, projections, and replacement functions\X${}\E{}$\6
+$\\{oo},\39\|j\K\|u\MG\\{name},\39\|k\K\|v\MG\\{name};{}$\6
+${}\\{oooo},\39\|u\MG\\{name}\K\|k,\39\|v\MG\\{name}\K\|j,\39\\{varmap}[\|j]\K%
+\|v-\\{varhead},\39\\{varmap}[\|k]\K\|u-\\{varhead};{}$\6
+${}\\{oo},\39\|j\K\|u\MG\\{aux},\39\|k\K\|v\MG\\{aux};{}$\6
+\&{if} ${}(\|j*\|k<\T{0}){}$\1\5
+${}\\{oo},\39\|u\MG\\{aux}\K{-}\|j,\39\|v\MG\\{aux}\K{-}\|k{}$;\C{ sign of \PB{%
+\\{aux}} stays with \PB{\\{name}} }\2\6
+${}\|o,\39\|j\K\|u\MG\\{proj},\39\|k\K\|u\MG\\{repl};{}$\6
+${}\\{oo},\39\|u\MG\\{proj}\K\|v\MG\\{proj},\39\|u\MG\\{repl}\K\|v\MG%
+\\{repl};{}$\6
+${}\|o,\39\|v\MG\\{proj}\K\|j,\39\|v\MG\\{repl}\K\|k;{}$\6
+\&{if} ${}(\|v\MG\\{repl}\I\T{0}\W(\|o,\39\|v\MG\\{timestamp}\E\T{0})){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\|v-\\{varhead};{}$ ${}\|j>\|u-\\{varhead};{}$ ${}\|j\MM){}$\1%
+\5
+${}\|o,\39\\{varhead}[\|j].\\{timestamp}\K\T{1};{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\|v\MG\\{repl}\E\T{0}\W(\|o,\39\|v\MG\\{timestamp}\I%
+\T{0})\W(\|v+\T{1}\E\\{topofvars}\V(\|o,\39(\|v+\T{1})\MG\\{timestamp}\E%
+\T{0}))){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\|v-\\{varhead};{}$ ${}\|j>\|u-\\{varhead};{}$ ${}\|j\MM){}$\1%
+\5
+${}\|o,\39\\{varhead}[\|j].\\{timestamp}\K\T{0};{}$\2\6
+\4${}\}{}$\2\par
+\U133.\fi
+
+\M{145}The \PB{\\{swap}} subroutine is now complete. I can safely declare it,
+since its sub-subroutines have already been declared.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\X133:Declare the \PB{\\{swap}} subroutine\X\par
+\fi
+
+\M{146}\B\X146:Bubble sort to reestablish the natural variable order\X${}\E{}$\6
+\&{if} (\\{totalvars})\5
+${}\{{}$\1\6
+\\{reorder\_init}(\,);\C{ prepare for reordering }\6
+\&{for} ${}(\|o,\39\|v\K\\{firstvar}\MG\\{down};{}$ \|v; \,)\5
+${}\{{}$\1\6
+\&{if} ${}(\\{ooo},\39\|v\MG\\{name}>\|v\MG\\{up}\MG\\{name}){}$\1\5
+${}\|o,\39\|v\K\|v\MG\\{down};{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{swap}(\|v\MG\\{up},\39\|v);{}$\6
+\&{if} ${}(\|v\MG\\{up}\MG\\{up}){}$\1\5
+${}\|v\K\|v\MG\\{up};{}$\2\6
+\&{else}\1\5
+${}\|o,\39\|v\K\|v\MG\\{down};{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\\{reorder\_fin}(\,);\C{ go back to normal processing }\6
+\4${}\}{}$\2\par
+\U114.\fi
+
+\M{147}Now we come to the \PB{\\{sift}} routine, which finds the best position
+for a given variable when the relative positions of the others
+are left unchanged.
+
+\Y\B\4\X147:Sift on variable $x_k$\X${}\E{}$\6
+${}\{{}$\1\6
+\\{getkv};\5
+${}\|v\K{\AND}\\{varhead}[\\{varmap}[\|k]];{}$\6
+\&{if} ${}(\|o,\39\|v\MG\\{proj}){}$\5
+${}\{{}$\1\6
+\\{reorder\_init}(\,);\C{ prepare for reordering }\6
+\\{sift}(\|v);\6
+\\{reorder\_fin}(\,);\C{ go back to normal processing }\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U114.\fi
+
+\M{148}At this point \PB{$\|v\MG\\{aux}$} is the position of \PB{\|v} among all
+active variables. Thus \PB{$\|v\MG\\{aux}\K\T{1}$} if and only if \PB{$\|v\MG%
+\\{up}\K\NULL$}
+if and only if \PB{$\|v\K\\{firstvar}$}; \PB{$\|v\MG\\{aux}\K\\{totalvars}$} if
+and only if
+\PB{$\|v\MG\\{down}\K\NULL$}.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{sift}(\&{var} ${}{*}\|v){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \\{pass}${},{}$ \\{bestscore}${},{}$ \\{origscore}${},{}$ %
+\\{swaps};\6
+\&{var} ${}{*}\|u\K\|v;{}$\6
+\&{double} \\{worstratio}${},{}$ \\{saferatio};\6
+\&{unsigned} \&{long} \&{long} \\{oldmems}${}\K\\{mems},{}$ \\{oldrmems}${}\K%
+\\{rmems},{}$ \\{oldzmems}${}\K\\{zmems};{}$\7
+${}\\{bestscore}\K\\{origscore}\K\\{totalnodes};{}$\6
+${}\\{worstratio}\K\\{saferatio}\K\T{1.0};{}$\6
+${}\\{swaps}\K\\{pass}\K\T{0}{}$;\C{ first we go up or down; then we go down or
+up }\6
+\&{if} ${}(\|o,\39\\{totalvars}-\|v\MG\\{aux}<\|v\MG\\{aux}){}$\1\5
+\&{goto} \\{siftdown};\2\6
+\4\\{siftup}:\5
+\X149:Explore in the upward direction\X;\6
+\4\\{siftdown}:\5
+\X150:Explore in the downward direction\X;\6
+\4\\{wrapup}:\5
+\&{if} ${}(\\{verbose}\AND\T{4096}){}$\1\5
+${}\\{printf}(\.{"sift\ x\%d\ (\%d->\%d),\ }\)\.{\%d\ saved,\ \%.3f\ safe,}\)%
+\.{\ \%d\ swaps,\ (\%llu,0,\%}\)\.{llu)\ mems\\n"},\39\|u\MG\\{name},\39\|v-%
+\\{varhead},\39\|u-\\{varhead},\39\\{origscore}-\\{bestscore},\39\\{saferatio},%
+\39\\{swaps},\39\\{mems}-\\{oldmems},\39\\{zmems}-\\{oldzmems});{}$\2\6
+${}\\{oo},\39\|u\MG\\{aux}\K{-}\|u\MG\\{aux}{}$;\C{ mark this level as having
+been sifted }\6
+\4${}\}{}$\2\par
+\fi
+
+\M{149}In a production version of this program, I would stop sifting
+in a given direction when the ratio \PB{$\\{totalnodes}/\\{bestscore}$} exceeds
+some threshold. Here, on the other hand, I'm sifting completely;
+but I calculate the \PB{\\{saferatio}} for which a production version
+would obtain results just as good as the complete sift.
+
+\Y\B\4\X149:Explore in the upward direction\X${}\E{}$\6
+\&{while} ${}(\|o,\39\|u\MG\\{up}){}$\5
+${}\{{}$\1\6
+${}\\{swaps}\PP,\39\\{swap}(\|u\MG\\{up},\39\|u);{}$\6
+${}\|u\K\|u\MG\\{up};{}$\6
+\&{if} ${}(\\{bestscore}>\\{totalnodes}){}$\5
+${}\{{}$\C{ we've found an improvement }\1\6
+${}\\{bestscore}\K\\{totalnodes};{}$\6
+\&{if} ${}(\\{saferatio}<\\{worstratio}){}$\1\5
+${}\\{saferatio}\K\\{worstratio};{}$\2\6
+${}\\{worstratio}\K\T{1.0};{}$\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\\{totalnodes}>\\{worstratio}*\\{bestscore}){}$\1\5
+${}\\{worstratio}\K{}$(\&{double}) \\{totalnodes}${}/\\{bestscore};{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{pass}\E\T{0}){}$\5
+${}\{{}$\C{ we want to go back to the starting point, then down }\1\6
+\&{while} ${}(\|u\I\|v){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{swaps}\PP,\39\\{swap}(\|u,\39\|u\MG\\{down});{}$\6
+${}\|u\K\|u\MG\\{down};{}$\6
+\4${}\}{}$\2\6
+${}\\{pass}\K\T{1},\39\\{worstratio}\K\T{1.0};{}$\6
+\&{goto} \\{siftdown};\6
+\4${}\}{}$\2\6
+\&{while} ${}(\\{totalnodes}\I\\{bestscore}){}$\5
+${}\{{}$\C{ we want to go back to an optimum level }\1\6
+${}\|o,\39\\{swaps}\PP,\39\\{swap}(\|u,\39\|u\MG\\{down});{}$\6
+${}\|u\K\|u\MG\\{down};{}$\6
+\4${}\}{}$\2\6
+\&{goto} \\{wrapup};\par
+\U148.\fi
+
+\M{150}\B\X150:Explore in the downward direction\X${}\E{}$\6
+\&{while} ${}(\|o,\39\|u\MG\\{down}){}$\5
+${}\{{}$\1\6
+${}\\{swaps}\PP,\39\\{swap}(\|u,\39\|u\MG\\{down});{}$\6
+${}\|u\K\|u\MG\\{down};{}$\6
+\&{if} ${}(\\{bestscore}>\\{totalnodes}){}$\5
+${}\{{}$\C{ we've found an improvement }\1\6
+${}\\{bestscore}\K\\{totalnodes};{}$\6
+\&{if} ${}(\\{saferatio}<\\{worstratio}){}$\1\5
+${}\\{saferatio}\K\\{worstratio};{}$\2\6
+${}\\{worstratio}\K\T{1.0};{}$\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\\{totalnodes}>\\{worstratio}*\\{bestscore}){}$\1\5
+${}\\{worstratio}\K{}$(\&{double}) \\{totalnodes}${}/\\{bestscore};{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{pass}\E\T{0}){}$\5
+${}\{{}$\C{ we want to go back to the starting point, then up }\1\6
+\&{while} ${}(\|u\I\|v){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{swaps}\PP,\39\\{swap}(\|u\MG\\{up},\39\|u);{}$\6
+${}\|u\K\|u\MG\\{up};{}$\6
+\4${}\}{}$\2\6
+${}\\{pass}\K\T{1},\39\\{worstratio}\K\T{1.0};{}$\6
+\&{goto} \\{siftup};\6
+\4${}\}{}$\2\6
+\&{while} ${}(\\{totalnodes}\I\\{bestscore}){}$\5
+${}\{{}$\C{ we want to go back to an optimum level }\1\6
+${}\|o,\39\\{swaps}\PP,\39\\{swap}(\|u\MG\\{up},\39\|u);{}$\6
+${}\|u\K\|u\MG\\{up};{}$\6
+\4${}\}{}$\2\6
+\&{goto} \\{wrapup};\par
+\U148.\fi
+
+\M{151}The \PB{\\{siftall}} subroutine sifts until every variable has found
+a local sweet spot. This is as good as it gets, unless the user elects
+to sift some more.
+
+The order of sifting obviously affects the results. We could, for instance,
+sift first on a variable whose level has the most nodes. But Rudell tells me
+that nobody has found an ordering strategy that really stands out
+and outperforms the others. (He says, ``It's a wash.'') So I've adopted
+the first ordering that I thought of.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{siftall}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{var} ${}{*}\|v;{}$\7
+\\{reorder\_init}(\,);\6
+\&{for} ${}(\|v\K\\{firstvar};{}$ \|v; \,)\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\|v\MG\\{aux}<\T{0}){}$\5
+${}\{{}$\C{ we've already sifted this guy }\1\6
+${}\|o,\39\|v\K\|v\MG\\{down};{}$\6
+\&{continue};\6
+\4${}\}{}$\2\6
+\\{sift}(\|v);\6
+\4${}\}{}$\2\6
+\\{reorder\_fin}(\,);\6
+\4${}\}{}$\2\par
+\fi
+
+\M{152}Sifting is invoked automatically when the number of nodes is
+\PB{\\{toobig}} or more. By default, the \PB{\\{toobig}} threshold is
+essentially
+infinite, hence autosifting is disabled. But if a trigger of~$k$
+is set, we'll set \PB{\\{toobig}} to $k/100$ times the current size,
+and then to $k/100$ times the size after an autosift.
+
+\Y\B\4\X152:Reset the reorder trigger\X${}\E{}$\6
+\\{getk};\6
+${}\\{trigger}\K\|k/\T{100.0};{}$\6
+\&{if} ${}(\\{trigger}*\\{totalnodes}\G\\{memsize}){}$\1\5
+${}\\{toobig}\K\\{memsize};{}$\2\6
+\&{else}\1\5
+${}\\{toobig}\K\\{trigger}*\\{totalnodes}{}$;\2\par
+\U114.\fi
+
+\M{153}\B\X153:Invoke autosifting\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{verbose}\AND(\T{4096}+\T{8192})){}$\1\5
+${}\\{printf}(\.{"autosifting\ (totaln}\)\.{odes=\%d,\ trigger=\%.2}\)\.{f,\
+toobig=\%d)\\n"},\39\\{totalnodes},\39\\{trigger},\39\\{toobig});{}$\2\6
+\\{siftall}(\,);\C{ hopefully \PB{\\{totalnodes}} will decrease }\6
+\&{if} ${}(\\{trigger}*\\{totalnodes}\G\\{memsize}){}$\1\5
+${}\\{toobig}\K\\{memsize};{}$\2\6
+\&{else}\1\5
+${}\\{toobig}\K\\{trigger}*\\{totalnodes};{}$\2\6
+\4${}\}{}$\2\par
+\U111.\fi
+
+\M{154}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{double} \\{trigger};\C{ multiplier that governs automatic sifting }\6
+\&{int} \\{toobig}${}\K\\{memsize}{}$;\C{ threshold for automatic sifting
+(initially disabled) }\par
+\fi
+
+\M{155}I should mention a surprising feature of {\mc BDD14} that is not a bug:
+Sometimes a sifting operation can actually {\it increase\/} the size of a
+function, even when only one $f_k$ is defined!
+
+For example, consider $(x_1{?}\ x_3\land x_4{:}\
+x_2{?}\ x_3{:}\ x_4)\land x_5$. The profile of this function is
+$(1,1,2,1,1,2)$; and after swapping $x_4\leftrightarrow x_5$ it is
+$(1,1,2,2,1,2)$. But {\mc BDD14} does {\it not\/} consider this to be
+a change in the total number of nodes, because all of the projection
+functions are also implicitly present. When we consider the
+projection functions $x_1$, $x_2$, $x_3$, $x_4$, $x_5$ in addition
+to the stated function, the profile is $(2,2,3,2,1,2)$ both
+before and after swapping.
+
+\fi
+
+\N{1}{156}Triage and housekeeping.
+Hmmm; we can't postpone the dirty work any longer. In emergency situations,
+garbage collection is a necessity. And occasionally, as a BDD base grows,
+garbage collection is a nicety, to keep our house in order.
+
+The \PB{\\{collect\_garbage}} routine frees up all of the nodes that are
+currently dead. Before it can do this, all references to those nodes
+must be eliminated, from the cache and from the unique tables.
+When the \PB{\\{level}} parameter is nonzero, the cache is in fact
+entirely cleared.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{collect\_garbage}(\&{int} \\{level})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k;\6
+\&{var} ${}{*}\|v;{}$\7
+${}\\{last\_ditch}\K\T{0}{}$;\C{ see below }\6
+\&{if} ${}(\R\\{level}){}$\1\5
+\\{cache\_purge}(\,);\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\\{verbose}\AND\T{512}){}$\1\5
+\\{printf}(\.{"clearing\ the\ cache\\}\)\.{n"});\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{cachepages};{}$ ${}\|k\PP){}$\1\5
+\\{free\_page}(\\{page\_}(\\{cachepage}[\|k]));\2\6
+${}\\{cachepages}\K\T{0};{}$\6
+\X103:Clear out the time stamps\X;\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{verbose}\AND\T{512}){}$\1\5
+${}\\{printf}(\.{"collecting\ garbage\ }\)\.{(\%d/\%d)\\n"},\39\\{deadnodes},%
+\39\\{totalnodes});{}$\2\6
+\&{for} ${}(\|v\K\\{varhead};{}$ ${}\|v<\\{topofvars};{}$ ${}\|v\PP){}$\1\5
+\\{table\_purge}(\|v);\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{157}The global variable \PB{\\{last\_ditch}} is set nonzero when we resort
+to
+garbage collection without a guarantee of gaining at least
+\PB{$\\{totalnodes}/\\{deadfraction}$} free nodes in the process.
+If a last-ditch attempt fails, there's little likelihood that
+we'll get much further by eking out only a few more nodes each time;
+so we give up in that case.
+
+\fi
+
+\M{158}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{last\_ditch};\C{ are we backed up against the wall? }\par
+\fi
+
+\M{159}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{attempt\_repairs}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k;\7
+\&{if} (\\{last\_ditch})\5
+${}\{{}$\1\6
+\\{printf}(\.{"sorry\ ---\ there's\ n}\)\.{ot\ enough\ memory;\ we}\)\.{\ have\
+to\ quit!\\n"});\6
+\X6:Print statistics about this run\X;\6
+${}\\{exit}({-}\T{99}){}$;\C{ we're outta here }\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{verbose}\AND\T{512}){}$\1\5
+\\{printf}(\.{"(making\ a\ last\ ditc}\)\.{h\ attempt\ for\ space)}\)\.{\\n"});%
+\2\6
+\\{collect\_garbage}(\T{1});\C{ grab all the remaining space }\6
+\\{cache\_init}(\,);\C{ initialize a bare-bones cache }\6
+${}\\{last\_ditch}\K\T{1}{}$;\C{ and try one last(?) time }\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{160}Mathematica output. An afterthought: It's easy to output a
+(possibly huge) file from which Mathematica will compute the
+generating function.
+
+\Y\B\4\X160:Print a Mathematica program for a generating function\X${}\E{}$\6
+\\{getkf};\6
+\\{math\_print}(\|f[\|k]);\6
+${}\\{fprintf}(\\{stderr},\39\.{"(generating\ functio}\)\.{n\ for\ f\%d\
+written\ to}\)\.{\ \%s)\\n"},\39\|k,\39\\{buf}){}$;\par
+\U114.\fi
+
+\M{161}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{FILE} ${}{*}\\{outfile};{}$\6
+\&{int} \\{outcount};\C{ the number of files output so far }\par
+\fi
+
+\M{162}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{math\_print}(\&{node} ${}{*}\|p){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{var} ${}{*}\|v;{}$\6
+\&{int} \|k${},{}$ \|s${},{}$ \\{ss}${},{}$ \|t;\6
+\&{node} ${}{*}\|q,{}$ ${}{*}\|r;{}$\7
+\&{if} ${}(\R\|p){}$\1\5
+\&{return};\2\6
+${}\\{outcount}\PP;{}$\6
+${}\\{sprintf}(\\{buf},\39\.{"/tmp/bdd14-out\%d.m"},\39\\{outcount});{}$\6
+${}\\{outfile}\K\\{fopen}(\\{buf},\39\.{"w"});{}$\6
+\&{if} ${}(\R\\{outfile}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ can't\ open\ file\ \%}\)\.{s\ for\ writing!%
+\\n"},\39\\{buf});{}$\6
+${}\\{exit}({-}\T{71});{}$\6
+\4${}\}{}$\2\6
+${}\\{fprintf}(\\{outfile},\39\.{"g0=0\\ng1=1\\n"});{}$\6
+\&{if} ${}(\|p>\\{topsink}){}$\5
+${}\{{}$\1\6
+\\{mark}(\|p);\6
+\&{for} ${}(\|s\K\T{0},\39\|v\K\\{topofvars}-\T{1};{}$ ${}\|v\G\\{varhead};{}$
+${}\|v\MM){}$\1\6
+\&{if} ${}(\|v\MG\\{proj}){}$\1\5
+\X163:Generate Mathematica outputs for variable \PB{\|v}\X;\2\2\6
+\\{unmark}(\|p);\6
+\4${}\}{}$\2\6
+${}\\{fprintf}(\\{outfile},\39\.{"g\%x\\n"},\39\\{id}(\|p));{}$\6
+\\{fclose}(\\{outfile});\6
+\4${}\}{}$\2\par
+\fi
+
+\M{163}\B\X163:Generate Mathematica outputs for variable \PB{\|v}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|t\K\T{0};{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|v\MG\\{mask};{}$ ${}\|k\MRL{+{\K}}%
+\&{sizeof}(\&{addr})){}$\5
+${}\{{}$\1\6
+${}\|q\K\\{fetchnode}(\|v,\39\|k);{}$\6
+\&{if} ${}(\|q\W(\|q\MG\\{xref}+\T{1})<\T{0}){}$\5
+${}\{{}$\1\6
+${}\|t\K\T{1};{}$\6
+\X164:Generate a Mathematica line for node \PB{\|q}\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} (\|t)\1\5
+${}\|v\MG\\{aux}\K\PP\|s{}$;\C{ this many levels exist below \PB{\|v} }\2\6
+\4${}\}{}$\2\par
+\U162.\fi
+
+\M{164}\B\X164:Generate a Mathematica line for node \PB{\|q}\X${}\E{}$\6
+$\\{fprintf}(\\{outfile},\39\.{"g\%x=Expand["},\39\\{id}(\|q));{}$\6
+${}\|r\K\\{node\_}(\|q\MG\\{lo});{}$\6
+${}\\{ss}\K(\|r\Z\\{topsink}\?\T{0}:\\{thevar}(\|r)\MG\\{aux});{}$\6
+\&{if} ${}(\\{ss}<\|s){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|s\E\\{ss}+\T{1}){}$\1\5
+${}\\{fprintf}(\\{outfile},\39\.{"(1+z)*"});{}$\2\6
+\&{else}\1\5
+${}\\{fprintf}(\\{outfile},\39\.{"(1+z)\^\%d*"},\39\|s-\\{ss});{}$\2\6
+\4${}\}{}$\2\6
+${}\\{fprintf}(\\{outfile},\39\.{"g\%x+z*"},\39\\{id}(\|r));{}$\6
+${}\|r\K\\{node\_}(\|q\MG\\{hi});{}$\6
+${}\\{ss}\K(\|r\Z\\{topsink}\?\T{0}:\\{thevar}(\|r)\MG\\{aux});{}$\6
+\&{if} ${}(\\{ss}<\|s){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|s\E\\{ss}+\T{1}){}$\1\5
+${}\\{fprintf}(\\{outfile},\39\.{"(1+z)*"});{}$\2\6
+\&{else}\1\5
+${}\\{fprintf}(\\{outfile},\39\.{"(1+z)\^\%d*"},\39\|s-\\{ss});{}$\2\6
+\4${}\}{}$\2\6
+${}\\{fprintf}(\\{outfile},\39\.{"g\%x]\\n"},\39\\{id}(\|r)){}$;\par
+\U163.\fi
+
+\N{1}{165}Index.
+\fi
+
+\inx
+\fin
+\con

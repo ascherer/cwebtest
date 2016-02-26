@@ -1,0 +1,170 @@
+\I\X22, 68, 144:Additional local registers\X
+\U2.
+\I\X162:Advance \PB{\\{dflag}} to 2\X
+\U161.
+\I\X145:Apologize for inability to backtrack\X
+\U143.
+\I\X152:Block the troll bridge and stay put\X
+\U151.
+\I\X69, 70:Build the object tables\X
+\U200.
+\I\X23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41,
+42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61,
+62:Build the travel table\X
+\U200.
+\I\X10, 12, 14, 16:Build the vocabulary\X
+\U200.
+\I\X119:Chase the troll away\X
+\U117.
+\I\X153:Check for interference with the proposed move to \PB{\\{newloc}}\X
+\U75.
+\I\X195:Check if a hint applies, and give it if requested\X
+\U76.
+\I\X115:Check special cases for dropping a liquid\X
+\U117.
+\I\X120:Check special cases for dropping the bird\X
+\U117.
+\I\X121:Check special cases for dropping the vase\X
+\U117.
+\I\X114:Check special cases for taking a bird\X
+\U112.
+\I\X113:Check special cases for taking a liquid\X
+\U112.
+\I\X178:Check the clocks and the lamp\X
+\U76.
+\I\X184:Check the lamp\X
+\U178.
+\I\X149:Choose \PB{\\{newloc}} via plover-alcove passage\X
+\U146.
+\I\X181:Close the cave\X
+\U178.
+\I\X151:Cross troll bridge if possible\X
+\U146.
+\I\X188, 189, 191, 192:Deal with death and resurrection\X
+\U2.
+\I\X88:Describe the objects at this location\X
+\U86.
+\I\X146:Determine the next location, \PB{\\{newloc}}\X
+\Q19.
+\U75.
+\I\X127:Dispatch the poor bird\X
+\U125.
+\I\X150:Drop the emerald during plover transportation\X
+\U146.
+\I\X187:Extinguish the lamp\X
+\U184.
+\I\X128:Fun stuff for dragon\X
+\U125.
+\I\X76:Get user input; \PB{\&{goto} \\{try\_move}} if motion is requested\X
+\U75.
+\I\X80:Give advice about going \PB{\.{WEST}}\X
+\U76.
+\I\X157:Give optional \.{plugh} hint\X
+\U86.
+\I\X7, 15, 17, 20, 21, 63, 73, 74, 77, 81, 84, 87, 89, 96, 103, 137, 142, 155,
+159, 165, 168, 171, 177, 185, 190, 193, 196, 199:Global variables\X
+\U2.
+\I\X83, 105:Handle additional special cases of input\X
+\U76.
+\I\X92, 93, 94, 95, 136:Handle cases of intransitive verbs and \PB{%
+\&{continue}}\X
+\U79.
+\I\X97, 98, 99, 100, 101, 102, 106, 107, 110, 112, 117, 122, 125, 129, 130,
+135:Handle cases of transitive verbs and \PB{\&{continue}}\X
+\U79.
+\I\X82, 138:Handle special cases of input\X
+\U76.
+\I\X140:Handle special motion words\X
+\U75.
+\I\X147:If the condition of instruction \PB{\|q} isn't satisfied, advance \PB{%
+\|q}\X
+\U146.
+\I\X91:If \PB{\.{GRATE}} is actually a motion word, move to it\X
+\U90.
+\I\X200:Initialize all tables\X
+\U2.
+\I\X156:Initialize the random number generator\X
+\U200.
+\I\X175:Let the pirate be spotted\X
+\U172.
+\I\X78:Look at \PB{\\{word1}} and exit to the right place if it completes a
+command\X
+\U76.
+\I\X3:Macros for subroutine prototypes\X
+\U2.
+\I\X166:Make a table of all potential exits, \PB{\\{ploc}[\T{0}]} through \PB{$%
+\\{ploc}[\|i-\T{1}]$}\X
+\U164.
+\I\X167:Make dwarf \PB{\|j} follow\X
+\U164.
+\I\X85, 158, 169, 182:Make special adjustments before looking at new input\X
+\U76.
+\I\X90:Make sure \PB{\\{obj}} is meaningful at the current location\X
+\U78.
+\I\X172:Make the pirate track you\X
+\U167.
+\I\X170:Make the threatening dwarves attack\X
+\U164.
+\I\X164:Move dwarves and the pirate\X
+\U161.
+\I\X133:Open chain\X
+\U132.
+\I\X132:Open/close chain\X
+\U131.
+\I\X134:Open/close clam/oyster\X
+\U130.
+\I\X131:Open/close grate/chain\X
+\U130.
+\I\X180:Panic at closing time\X
+\Us131\ET153.
+\I\X79:Perform an action in the current place\X
+\U75.
+\I\X161:Possibly move dwarves and the pirate\X
+\U75.
+\I\X109:Pour water or oil on the door\X
+\U107.
+\I\X198:Print the score and say adieu\X
+\U2.
+\I\X139:Proceed foobarically\X
+\U136.
+\I\X118:Put coins in the vending machine\X
+\U117.
+\I\X141:Repeat the long description and \PB{\&{continue}}\X
+\U140.
+\I\X186:Replace the batteries\X
+\U184.
+\I\X148:Report on inapplicable motion and \PB{\&{continue}}\X
+\U146.
+\I\X86:Report the current state\X
+\U75.
+\I\X126:See if there's a unique object to attack\X
+\U125.
+\I\X75:Simulate an adventure, going to \PB{\\{quit}} when finished\X
+\U2.
+\I\X124:Snarf a treasure for the troll\X
+\U122.
+\I\X174:Snatch all treasures that are snatchable here\X
+\U173.
+\I\X176:Stay in \PB{\\{loc}} if a dwarf is blocking the way to \PB{\\{newloc}}\X
+\U153.
+\I\X6, 8, 64, 65, 66, 71, 72, 154, 160, 194, 197:Subroutines\X
+\U2.
+\I\X173:Take booty and hide it in the chest\X
+\U172.
+\I\X163:Throw the axe at a dwarf\X
+\U122.
+\I\X123:Throw the axe at the bear\X
+\U122.
+\I\X111:Try to fill the vase\X
+\U110.
+\I\X143:Try to go back\X
+\U140.
+\I\X108:Try to water the plant\X
+\U107.
+\I\X5, 9, 11, 13, 18, 19:Type definitions\X
+\U2.
+\I\X179:Warn that the cave is closing\X
+\U178.
+\I\X183:Zap the lamp if the remaining treasures are too elusive\X
+\U88.
+

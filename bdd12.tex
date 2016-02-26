@@ -1,0 +1,800 @@
+\input cwebmac
+\datethis
+
+
+\N{1}{1}Intro. This program is the twelfth in a series of exploratory studies
+by
+which I'm attempting to gain first-hand experience with OBDD structures, as I
+prepare Section 7.1.4 of {\sl The Art of Computer Programming}.
+Again it's quite different from its predecessors: This one implements a
+new approach to finding an optimum ordering for the variables of a given
+Boolean function or set of functions.
+The new approach is based on QDDs (quasi-reduced BDDs),
+which undergo the ``jump-up'' operation but not the normal
+synthesis operations of a traditional BDD package. It requires no
+hashing or garbage collection.
+
+The given function is specified explicitly by generating its QDD.
+As a demonstration, we implement the $2^m$-way multiplexer
+$M_m(x_1,\ldots,x_m;x_{m+1},\ldots,x_{m+2^m})$ here,
+because it exhibits great extremes of BDD size under different orderings.
+But with \.{CWEB} change files any other function can be substituted.
+
+If desired, optimization will be restricted to a subrange of the possible
+levels, keeping variables at the top and bottom of the BDD in place.
+We assume that \PB{$\\{botvar}-\\{topvar}$} is at most 24.
+
+\Y\B\4\D$\\{mm}$ \5
+\T{2}\C{ order of MUX in this demonstration version }\par
+\B\4\D$\\{nn}$ \5
+$(\\{mm}+(\T{1}\LL\\{mm}){}$)\C{ the number of Boolean variables }\par
+\B\4\D$\\{outs}$ \5
+\T{1}\C{ the number of Boolean functions to be simultaneously optimized }\par
+\B\4\D$\\{interval}$ \5
+\T{1000}\C{ make this larger to suppress progress reports }\par
+\B\4\D$\\{worksize}$ \5
+$(\T{1}\LL\T{20}{}$)\C{ must be at most \PB{$\T{1}\LL\T{20}$} in this
+implementation }\C{ the jump-up work area will have \PB{$\T{3}*\\{worksize}$}
+octabytes }\par
+\B\4\D$\\{topvar}$ \5
+\T{1}\C{ first variable whose order will be varied (must be \PB{$\G$ \T{1}} }%
+\par
+\B\4\D$\\{botvar}$ \5
+\\{nn}\C{ last variable whose order will be varied (must be \PB{$\Z$ \\{nn}} }%
+\par
+\B\4\D$\\{nnn}$ \5
+$(\\{botvar}+\T{1}-\\{topvar}{}$)\C{ variables being permuted (at most 25) }\Y%
+\par
+\B\4\D$\|o$ \5
+$\\{mems}\PP{}$\C{ count a memory access to an octabyte }\par
+\B\4\D$\\{oo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{2}\C{ or two }\par
+\B\4\D$\\{ooo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{3}\C{ or three }\par
+\B\4\D$\\{oooo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{4}\C{ or four, wow }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\X2:Type definitions\X\6
+\X3:Global variables\X\7
+\&{unsigned} \&{long} \&{long} \\{mems};\7
+\X7:Subroutines\X\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|h${},{}$ \|i${},{}$ \|j${},{}$ \|k${},{}$ \|l${},{}$ %
+\\{lo}${},{}$ \\{hi}${},{}$ \\{jj}${},{}$ \\{kk}${},{}$ \\{var}${},{}$ %
+\\{cycle};\6
+\&{octa} \|x;\7
+\X4:Initialize everything\X;\6
+\&{for} ${}(\\{cycle}\K\T{1};{}$ ${}\\{cycle}<\T{1}\LL(\\{nnn}-\T{1});{}$ ${}%
+\\{cycle}\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{cycle}\MOD\\{interval}\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"Beginning\ cycle\ \%d\ }\)\.{(\%llu\ mems\ so\ far)\\n}\)%
+\.{"},\39\\{cycle},\39\\{mems});{}$\6
+\\{fflush}(\\{stdout});\6
+\4${}\}{}$\2\6
+\X21:Do the jump-up for the current \PB{\\{cycle}}\X;\6
+\4${}\}{}$\2\6
+\X27:Figure out an optimum order\X;\6
+${}\\{printf}(\.{"Altogether\ \%llu\ mem}\)\.{s.\\n"},\39\\{mems});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Type definitions\X${}\E{}$\6
+\&{typedef} \&{unsigned} \&{long} \&{long} \&{octa};\C{ an octabyte }\par
+\A8.
+\U1.\fi
+
+\N{1}{3}QDD representation. The quasi-reduced binary decision decision
+for a Boolean function of $n$ variables has $q_k$ nodes on level~$k$,
+for $0\le k\le n$, one for every distinct subfunction that can arise
+by hard-wiring constant values for the initial variables
+$(x_1,\ldots,x_k)$. The sequence $(q_0,\ldots,q_n)$ is
+called the function's {\it quasi-profile}.
+
+The maximum value of $q_k$ is $\min(t2^k,2^{2^{n-k}})$ when there are
+$t$ output functions of $n$ input variables. In particular,
+the maximum quasi-profile when $n=25$ and $t=1$ is
+$$(1,2,4,\ldots,2^{19},2^{20},2^{16},2^8,2^4,2^2,2);$$
+its potentially biggest element, $2^{20}$, occurs when $k=20$.
+
+In this implementation the nodes on level $k$ are numbered from 0 to
+$q_k-1$, and we store them consecutively in a big array \PB{\\{node}[\|k]}.
+Each node contains three fields, (\PB{\\{lo}},\PB{\\{hi}},\PB{\\{dep}}), packed
+into a
+64-bit word. The \PB{\\{lo}} and \PB{\\{hi}} fields, 20 bits each, point to
+nodes
+at level~$k+1$; the \PB{\\{dep}} field, which occupies the other 24 bits,
+represents the set of variables on which this subfunction depends.
+Level $n$ is special; it has the two ``sink'' nodes 0 and~1,
+which are represented by \PB{$(\T{0},\T{0},\T{0})$} and \PB{$(\T{1},\T{1},%
+\T{0})$}, respectively.
+
+For example, suppose $n=3$ and $f(x_1,x_2,x_3)=(\bar x_1\land x_2)
+\lor(x_1\land x_3)$. The nodes at level~2, which correspond to
+branching on~$x_3$, are
+\PB{$\\{node}[\T{2}][\T{0}]\K(\T{0},\T{0},\T{0})$},
+\PB{$\\{node}[\T{2}][\T{1}]\K(\T{1},\T{1},\T{0})$}, and
+\PB{$\\{node}[\T{2}][\T{2}]\K(\T{0},\T{1},\T{\^4})$}, representing the
+respective subfunctions 0, 1,~$x_3$.
+The nodes at level~1, which correspond to branching on~$x_2$, are
+\PB{$\\{node}[\T{1}][\T{0}]\K(\T{0},\T{1},\T{\^2})$} and
+\PB{$\\{node}[\T{1}][\T{1}]\K(\T{2},\T{2},\T{\^4})$}, representing the
+subfunctions $x_2$ and $x_3$.
+And there's one node at level~0, namely
+\PB{$\\{node}[\T{0}][\T{0}]\K(\T{0},\T{1},\T{\^7})$}.
+
+\Y\B\4\X3:Global variables\X${}\E{}$\6
+\&{octa} ${}{*}\\{node}[\\{nnn}+\T{1}]{}$;\C{ the node arrays }\6
+\&{int} ${}\\{qq}[\\{nnn}+\T{1}]{}$;\C{ the quasi-profile: $\PB{%
+\\{qq}}[k]=q_{k-topvar+1}$ }\par
+\As9, 13, 15, 20, 24\ETs28.
+\U1.\fi
+
+\M{4}To launch this structure, we first need to allocate the \PB{\\{node}}
+arrays.
+They are actually created only for levels \PB{$\\{topvar}-\T{1}$} through \PB{%
+\\{botvar}}.
+
+\Y\B\4\X4:Initialize everything\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\\{nnn};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|j\K\\{worksize},\39\\{kk}\K\|k+\\{topvar}-\T{1};{}$\6
+\&{if} ${}(\\{nn}-\\{kk}<\T{5}\W\|j>\T{1}\LL(\T{1}\LL(\\{nn}-\\{kk}))){}$\1\5
+${}\|j\K\T{1}\LL(\T{1}\LL(\\{nn}-\\{kk}));{}$\2\6
+\&{if} ${}(\\{kk}<\T{20}\W((\\{worksize}/\\{outs})\GG\\{kk})>\T{0}\W(\|j>%
+\\{outs}*(\T{1}\LL\\{kk}))){}$\1\5
+${}\|j\K\\{outs}*(\T{1}\LL\\{kk});{}$\2\6
+${}\\{node}[\|k]\K{}$(\&{octa} ${}{*}){}$ \\{malloc}${}(\|j*\&{sizeof}(%
+\&{octa}));{}$\6
+\&{if} ${}(\R\\{node}[\|k]){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ couldn't\ allocate}\)\.{\ \%d\ octabytes\
+for\ no}\)\.{de[\%d]!\\n"},\39\|j,\39\|k);{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\As6, 16\ETs22.
+\U1.\fi
+
+\M{5}The packing policy is slightly unusual because I'm squeezing 65 bits
+into 64. The \PB{\\{dep}} field represents the state of up to 25 variables,
+but only 24 bits are available.
+
+Not to worry: The least significant bit of a 25-bit \PB{\\{dep}} would truly
+be of the least possible significance in every way, because it would be
+zero everywhere except on level~0. And that bit on level~0 is almost
+never examined.
+
+Therefore I don't store the least significant bit of \PB{\\{dep}}. I store only
+the value \PB{$\\{dp}\K\\{dep}\GG\T{1}$}, and I treat level~0 as a special
+case.
+This saves time even when $n<25$.
+
+(If I wanted to handle more than 25 variables, I could use a more
+elaborate scheme in which the packing conventions vary from level to level.
+But 25 is plenty for me at the moment.)
+
+\Y\B\4\D$\\{pack}(\\{lo},\\{hi},\\{dp})$ \5
+$(((((\&{octa})(\\{dp})\LL\T{20})+(\\{lo}))\LL\T{20})+(\\{hi}){}$)\par
+\B\4\D$\\{lofield}(\|x)$ \5
+$(((\|x)\GG\T{20})\AND\T{\^fffff}{}$)\par
+\B\4\D$\\{hifield}(\|x)$ \5
+$((\|x)\AND\T{\^fffff}{}$)\par
+\B\4\D$\\{depfield}(\|x)$ \5
+$(((\|x)\GG\T{40})\LL\T{1}{}$)\par
+\B\4\D$\\{extrabit}(\|k,\|j)$ \5
+$(\|k\E\T{0}\?\\{lofield}(\\{node}[\T{0}][\|j])\I\\{hifield}(\\{node}[\T{0}][%
+\|j]):\T{0}{}$)\par
+\fi
+
+\M{6}Once the \PB{\\{node}} arrays exist, we can set up the initial QDD.
+Here I implement the familiar function
+$$M_m(x_1,\ldots,x_m;x_{m+1},\ldots,x_{m+2^m})\;=\;
+x_{m+1+(x_1\ldots x_m)_2}.$$
+(In fact, the example $f(x_1,x_2,x_3)$ above is $M_1(x_1;x_2,x_3)$.)
+
+Only the \PB{\\{lo}} and \PB{\\{hi}} fields are initialized here, because we
+will use
+the reduction routine to compute appropriate \PB{\\{dep}}s.
+
+The following code assumes that \PB{$\\{topvar}\K\T{1}$} and \PB{$\\{botvar}\K%
+\\{nn}$}.
+
+\Y\B\4\X4:Initialize everything\X${}\mathrel+\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{mm};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{1}\LL\|k;{}$ ${}\|j\PP){}$\1\5
+${}\\{node}[\|k][\|j]\K\\{pack}(\|j+\|j,\39\|j+\|j+\T{1},\39\T{0});{}$\2\6
+${}\\{qq}[\|k]\K\T{1}\LL\|k;{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{1}\LL\\{mm};{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\|j\E\T{0}){}$\1\5
+${}\\{node}[\\{mm}][\|j]\K\\{pack}(\T{0},\39\T{1},\39\T{0});{}$\2\6
+\&{else}\1\5
+${}\\{node}[\\{mm}][\|j]\K\\{pack}(\|j+\T{1},\39\|j+\T{1},\39\T{0});{}$\2\2\6
+${}\\{qq}[\\{mm}]\K\T{1}\LL\\{mm};{}$\6
+\&{for} ${}(\|k\K\\{mm}+\T{1};{}$ ${}\|k\Z\\{nn};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{nn}+\T{2}-\|k;{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\|j<\T{2}){}$\1\5
+${}\\{node}[\|k][\|j]\K\\{pack}(\|j,\39\|j,\39\T{0});{}$\2\6
+\&{else} \&{if} ${}(\|j\E\T{2}){}$\1\5
+${}\\{node}[\|k][\|j]\K\\{pack}(\T{0},\39\T{1},\39\T{0});{}$\2\6
+\&{else}\1\5
+${}\\{node}[\|k][\|j]\K\\{pack}(\|j-\T{1},\39\|j-\T{1},\39\T{0});{}$\2\2\6
+${}\\{qq}[\|k]\K\\{nn}+\T{2}-\|k;{}$\6
+\4${}\}{}$\C{ N.B.: now \PB{$\\{qq}[\\{nn}]\K\T{2}$}, and the sink nodes have
+been initialized }\2\6
+\X14:Compute the \PB{\\{dep}} fields of the initial QDD\X;\par
+\fi
+
+\M{7}For diagnostic purposes, I might want to pretty-print the current QDD.
+
+\Y\B\4\X7:Subroutines\X${}\E{}$\6
+\&{void} \\{print\_level}(\&{int} \|k)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j;\7
+${}\\{printf}(\.{"level\ \%d\ (x\%d):\\n"},\39\|k,\39\\{map}[\|k]+%
+\\{topvar});{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{qq}[\|k];{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\ \%d,\%d\ \%x\\n"},\39\\{lofield}(\\{node}[\|k][\|j]),\39%
+\\{hifield}(\\{node}[\|k][\|j]),\39\\{depfield}(\\{node}[\|k][\|j])+%
+\\{extrabit}(\|k,\39\|j));{}$\2\6
+\4${}\}{}$\2\7
+\&{void} \\{print\_qbdd}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k;\7
+\&{for} ${}(\|k\K\\{topvar}-\T{1};{}$ ${}\|k<\\{botvar};{}$ ${}\|k\PP){}$\1\5
+\\{print\_level}(\|k);\2\6
+\4${}\}{}$\2\par
+\As10\ET11.
+\U1.\fi
+
+\N{1}{8}Reduction. Restructurings of the QDD are implemented with the help
+of a work area, capable of holding twice as many nodes
+as needed on any particular level.
+
+In the work area, nodes appear in octabytes of type \PB{\\{pair}}, which
+simply have two integer fields, \PB{\|l} and~\PB{\|r}.
+
+Two large arrays, \PB{\\{work}} and \PB{\\{head}}, comprise the work area.
+A node with fields \PB{$(\\{lo},\\{hi})$} is represented in a \PB{\\{pair}}
+that has
+\PB{$\|l\K\\{hi}$}; this pair, which appears in the \PB{\\{work}} array,
+is part of a linked list that begins \PB{\\{head}[\\{lo}]}. Links appear
+in the \PB{\|r} fields.
+
+The work area is intended for nodes that are destined to become
+part of \PB{\\{node}[\|k]}, for some level~\PB{\|k}. The \PB{\\{lo}} and
+\PB{\\{hi}} fields, which are addresses of nodes at the next level,
+must therefore be less than \PB{$\\{qq}[\|k+\T{1}]$}.
+
+\Y\B\4\X2:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} ${}\{{}$\5
+\1\&{unsigned} \&{int} \|l${},{}$ \|r;\5
+\2${}\}{}$ \&{pair};\par
+\fi
+
+\M{9}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{pair} ${}\\{work}[\T{2}*\\{worksize}],{}$ \\{head}[\\{worksize}];\C{ the big
+workspace }\par
+\fi
+
+\M{10}We use \PB{$\|j+\T{1}$} to link to entry \PB{\|j}, so that null links are
+distinguishable from links to entry~0.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_work}(\&{int} \|k)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \\{lo}${},{}$ \\{hi};\7
+${}\\{printf}(\.{"Current\ workspace\ f}\)\.{or\ level\ \%d:\\n"},\39\|k);{}$\6
+\&{for} ${}(\\{lo}\K\T{0};{}$ ${}\\{lo}<\\{qq}[\|k+\T{1}];{}$ ${}\\{lo}\PP){}$%
+\1\6
+\&{for} ${}(\\{hi}\K\\{head}[\\{lo}].\|r;{}$ \\{hi}; ${}\\{hi}\K\\{work}[%
+\\{hi}-\T{1}].\|r){}$\1\5
+${}\\{printf}(\.{"\ \%d,\%d\\n"},\39\\{lo},\39\\{work}[\\{hi}-\T{1}].\|l);{}$\2%
+\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{11}The key subroutine we need is called \PB{\\{reduce}}. It finds the
+unique combinations \PB{$(\\{lo},\\{hi})$} in the
+work area, and places them into \PB{\\{node}[\|k]} with proper \PB{\\{dep}}
+fields.
+It resets \PB{\\{qq}[\|k]} to the number of distinct nodes found.
+
+The \PB{\\{reduce}} routine also sets \PB{\\{clone}[\|j]} to the new address of
+the
+node that was originally represented in \PB{\\{work}[\|j]}.
+
+``Bucket sorting'' is the basic idea here.
+When we're working on list \PB{\\{head}[\\{lo}]}, we set \PB{$\\{head}[\\{hi}].%
+\|l$} to
+the address of an existing node \PB{$(\\{lo},\\{hi})$}, if \PB{\\{reduce}} has
+already created such a node.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{reduce}(\&{int} \|k)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \\{lo}${},{}$ \\{hi}${},{}$ \\{dep}${},{}$ \|p${},{}$ %
+\\{nextp}${},{}$ \|q;\7
+${}\|q\K\T{0}{}$;\C{ the number of nodes created so far }\6
+\&{for} ${}(\|o,\39\\{lo}\K\T{0};{}$ ${}\\{lo}<\\{qq}[\|k+\T{1}];{}$ ${}\\{lo}%
+\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|o,\39\|p\K\\{head}[\\{lo}].\|r;{}$ \|p; ${}\|p\K\\{nextp}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{nextp}\K\\{work}[\|p-\T{1}].\|r;{}$\6
+${}\\{hi}\K\\{work}[\|p-\T{1}].\|l{}$;\C{ the \PB{\\{hi}} field of a node with
+the current \PB{\\{lo}} }\6
+\&{if} ${}(\|o,\39\\{head}[\\{hi}].\|l){}$\1\5
+${}\|o,\39\\{clone}[\|p-\T{1}]\K\\{head}[\\{hi}].\|l-\T{1}{}$;\C{ \PB{$(\\{lo},%
+\\{hi})$} already exists }\2\6
+\&{else}\1\5
+\X12:Create a new entry in \PB{\\{node}[\|k]}\X;\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|p\K\\{head}[\\{lo}].\|r;{}$ \|p; ${}\|p\K\\{nextp}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{nextp}\K\\{work}[\|p-\T{1}].\|r,\39\\{hi}\K\\{work}[\|p-\T{1}].%
+\|l;{}$\6
+${}\|o,\39\\{head}[\\{hi}].\|l\K\T{0}{}$;\C{ clean up }\6
+\4${}\}{}$\2\6
+${}\|o,\39\\{head}[\\{lo}].\|r\K\T{0}{}$;\C{ reset the \PB{\\{lo}} list to
+empty }\6
+\4${}\}{}$\2\6
+${}\|o,\39\\{qq}[\|k]\K\|q;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{12}\B\X12:Create a new entry in \PB{\\{node}[\|k]}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\|q\G\\{worksize}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ level\ \%d\ of\ }\)\.{the\ QDD\ is\
+too\ big\ (}\)\.{worksize=\%d)!\\n"},\39\|k,\39\\{worksize});{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{lo}\I\\{hi}){}$\1\5
+${}\\{oo},\39\\{dep}\K\\{depfield}(\\{node}[\|k+\T{1}][\\{lo}]\OR\\{node}[\|k+%
+\T{1}][\\{hi}])\OR(\T{1}\LL\|k);{}$\2\6
+\&{else}\1\5
+${}\|o,\39\\{dep}\K\\{depfield}(\\{node}[\|k+\T{1}][\\{lo}]);{}$\2\6
+${}\|o,\39\\{node}[\|k][\|q]\K\\{pack}(\\{lo},\39\\{hi},\39\\{dep}\GG\T{1});{}$%
+\6
+${}\|o,\39\\{clone}[\|p-\T{1}]\K\|q;{}$\6
+${}\|o,\39\\{head}[\\{hi}].\|l\K\PP\|q;{}$\6
+\4${}\}{}$\2\par
+\U11.\fi
+
+\M{13}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{int} ${}\\{clone}[\T{2}*\\{worksize}]{}$;\C{ the new node addresses }\par
+\fi
+
+\M{14}Let's illustrate \PB{\\{reduce}} by using it to tidy up the initial QDD.
+The main point of interest is that we must remap the pointers on level~$k-1$
+after level~$k$ has been reduced.
+
+\Y\B\4\D$\\{makework}(\|j,\\{lo},\\{hi})$ \5
+$\\{work}[\|j].\|l\K\\{hi},\39\\{work}[\|j].\|r\K\\{head}[\\{lo}].\|r,\39%
+\\{head}[\\{lo}].\|r\K\|j+{}$\T{1}\par
+\Y\B\4\X14:Compute the \PB{\\{dep}} fields of the initial QDD\X${}\E{}$\6
+\&{for} ${}(\|k\K\\{nnn}-\T{1};{}$  ; ${}\|k\MM){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|o,\39\|j\K\T{0};{}$ ${}\|j<\\{qq}[\|k];{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{lo}\K\\{lofield}(\\{node}[\|k][\|j]);{}$\6
+${}\\{ooo},\39\\{makework}(\|j,\39\\{lo},\39\\{hifield}(\\{node}[\|k][%
+\|j]));{}$\6
+\4${}\}{}$\2\6
+\\{reduce}(\|k);\6
+\&{if} ${}(\|k\E\T{0}){}$\1\5
+\&{break};\2\6
+\&{for} ${}(\|o,\39\|j\K\T{0};{}$ ${}\|j<\\{qq}[\|k-\T{1}];{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|x\K\\{node}[\|k-\T{1}][\|j];{}$\6
+${}\\{ooo},\39\\{node}[\|k-\T{1}][\|j]\K\\{pack}(\\{clone}[\\{lofield}(\|x)],%
+\39\\{clone}[\\{hifield}(\|x)],\39\T{0});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U6.\fi
+
+\N{1}{15}Jumping. Our chief goal is to study what happens when the variables
+of our function are permuted. We'll see later that only $2^{n-1}$
+of the $n!$ permutations need to be examined, and that each of them
+can be obtained from its predecessor by a simple ``jump-up'' operation.
+
+The jump-up operation $k\to j$, where $k>j$, takes the variable
+at level~$k$ of the branching structure and moves it up to level~$j$,
+sliding the previous occupants of levels $(j,j+1,\ldots,k-1)$
+down one notch. For example, suppose $n=7$ and we do jump-up $5\to2$.
+Before the operation, levels 0 thru~6 represent branching on
+variables $(x_1,x_2,x_3,x_4,x_5,x_6,x_7)$, respectively; after jumping, they
+represent branching on $(x_1,x_2,x_6,x_3,x_4,x_5,x_7)$.
+
+The \PB{\\{dep}} fields are always based on the assumption that level $k$
+branches
+on variable $x_{k+1}$. An auxiliary \PB{\\{map}} table records the results of
+previous jumps; level~$k$ actually branches on variable
+$x_{map[k]+topvar}$ of the original unpermuted function. We also maintain
+a \PB{\\{bitmap}} array, where \PB{\\{bitmap}[\|k]} contains the bits that
+encode the set
+$\{\PB{\\{map}}[0],\ldots,\PB{\\{map}}[k-1]\}$.
+
+\Y\B\4\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{map}[\\{nnn}];\C{ the current permutation }\6
+\&{int} \\{bitmap}[\\{nnn}];\C{ its initial dependency sets }\par
+\fi
+
+\M{16}\B\X4:Initialize everything\X${}\mathrel+\E{}$\6
+\&{for} ${}(\|j\K\|k\K\T{0};{}$ ${}\|j<\\{nnn};{}$ ${}\|k\MRL{+{\K}}\T{1}\LL%
+\|j,\39\|j\PP){}$\1\5
+${}\|o,\39\\{map}[\|j]\K\|j,\39\\{bitmap}[\|j]\K\|k{}$;\2\par
+\fi
+
+\M{17}The basic idea for jumping up is quite simple. We essentially make
+two copies of levels $j$ thru~$k-1$, one for the case when $x_{k+1}=0$
+and one for the case when $x_{k+1}=1$. Those copies are moved to
+levels $j+1$ thru~$k$, and reduced to eliminate duplicates.
+Finally, every original node on level $j$ is replaced by a node
+that branches on $x_{k+1}$. The \PB{\\{lo}} branch of this new node is
+to the 0-copy of the old node, and the \PB{\\{hi}} branch is to the 1-copy.
+
+Because of the remapping that takes place here, the \PB{\\{dep}} fields
+in levels less than~\PB{\\{jj}} are no longer correct. But we will do
+jump-ups in a controlled manner, so that those \PB{\\{dep}} fields are
+never actually examined.
+
+\Y\B\4\X17:Jump up from \PB{\\{kk}} to \PB{\\{jj}}\X${}\E{}$\6
+$\|o,\39\\{var}\K\\{map}[\\{kk}];{}$\6
+\&{for} ${}(\|k\K\\{kk};{}$ ${}\|k>\\{jj};{}$ ${}\|k\MM){}$\5
+${}\{{}$\1\6
+\X18:Make two copies of level \PB{$\|k-\T{1}$} in the work area\X;\6
+\\{reduce}(\|k);\6
+${}\\{oo},\39\\{map}[\|k]\K\\{map}[\|k-\T{1}];{}$\6
+${}\\{oo},\39\\{bitmap}[\|k]\K\\{bitmap}[\|k-\T{1}]\OR(\T{1}\LL\\{var});{}$\6
+\4${}\}{}$\2\6
+\X19:Remake level \PB{\\{jj}}\X;\par
+\U21.\fi
+
+\M{18}Simple but cool list processing does the trick here.
+
+\Y\B\4\X18:Make two copies of level \PB{$\|k-\T{1}$} in the work area\X${}\E{}$%
+\6
+\&{for} ${}(\|o,\39\|j\K\T{0};{}$ ${}\|j<\\{qq}[\|k-\T{1}];{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|x\K\\{node}[\|k-\T{1}][\|j],\39\|l\K\\{lofield}(\|x),\39\|h\K%
+\\{hifield}(\|x);{}$\6
+\&{if} ${}(\|k\E\\{kk}){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39\\{lo}\K\\{lofield}(\\{node}[\|k][\|l]),\39\\{hi}\K\\{lofield}(%
+\\{node}[\|k][\|h]);{}$\6
+${}\\{ooo},\39\\{makework}(\|j+\|j,\39\\{lo},\39\\{hi});{}$\6
+${}\\{lo}\K\\{hifield}(\\{node}[\|k][\|l]),\39\\{hi}\K\\{hifield}(\\{node}[%
+\|k][\|h]);{}$\6
+${}\\{ooo},\39\\{makework}(\|j+\|j+\T{1},\39\\{lo},\39\\{hi});{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\\{oo},\39\\{lo}\K\\{clone}[\|l+\|l],\39\\{hi}\K\\{clone}[\|h+\|h];{}$\6
+${}\\{ooo},\39\\{makework}(\|j+\|j,\39\\{lo},\39\\{hi});{}$\6
+${}\\{oo},\39\\{lo}\K\\{clone}[\|l+\|l+\T{1}],\39\\{hi}\K\\{clone}[\|h+\|h+%
+\T{1}];{}$\6
+${}\\{ooo},\39\\{makework}(\|j+\|j+\T{1},\39\\{lo},\39\\{hi});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U17.\fi
+
+\M{19}As mentioned earlier, we needn't worry about the integrity of the
+\PB{\\{dep}} fields in levels less than \PB{\\{jj}}.
+
+\Y\B\4\X19:Remake level \PB{\\{jj}}\X${}\E{}$\6
+\&{for} ${}(\|o,\39\|j\K\T{0};{}$ ${}\|j<\\{qq}[\\{jj}];{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39\\{lo}\K\\{clone}[\|j+\|j],\39\\{hi}\K\\{clone}[\|j+\|j+\T{1}];{}$%
+\6
+${}\\{ooo},\39\\{makework}(\|j,\39\\{lo},\39\\{hi});{}$\6
+\4${}\}{}$\2\6
+\\{reduce}(\\{jj});\6
+${}\|o,\39\\{map}[\\{jj}]\K\\{var};{}$\6
+\&{if} (\\{jj})\1\6
+\&{for} ${}(\|o,\39\|j\K\T{0};{}$ ${}\|j<\\{qq}[\\{jj}-\T{1}];{}$ ${}\|j\PP){}$%
+\5
+${}\{{}$\1\6
+${}\|o,\39\|x\K\\{node}[\\{jj}-\T{1}][\|j];{}$\6
+${}\\{ooo},\39\\{node}[\\{jj}-\T{1}][\|j]\K\\{pack}(\\{clone}[\\{lofield}(%
+\|x)],\39\\{clone}[\\{hifield}(\|x)],\39\T{0});{}$\6
+\4${}\}{}$\2\2\par
+\U17.\fi
+
+\N{1}{20}The algorithm. OK, we've now got a beautiful infrastructure to work
+with.
+But the reader may well wonder why we've been building it.
+
+Perhaps I should have presented this program in a top-down way,
+starting with the statement of the problem (which is to find the optimum
+ordering of variables) and then explaining how to reduce that problem
+to list processing.
+
+Well then, to start at the beginning, we can note that the main problem
+can be reduced to smaller problems of the same kind. Namely,
+for any given subset $X$ of the variables $\{x_1,\ldots,x_n\}$,
+where $X$ has $k$ elements,
+we can ask what ordering of those variables minimizes the profile of the
+first $k$ levels, when those variables are required to
+be tested first. (Here I'm talking about the real profile
+$(b_0,\ldots,b_n)$, not the quasi-profile $(q_0,\ldots,q_n)$.)
+
+If we've solved that problem for all subsets $X$ of size~$k<n$, we can
+solve it for all subsets of size~$k+1$, as follows: Find a
+QDD in which the elements of~$X$ appear on the levels 0 through~$k-1$.
+For each $x\notin X$, count the number of elements on level~$k$
+that depend on~$x$; that is the value of $b_k$ that will appear in
+the profile of any BDD in which the elements of~$X$ are tested first.
+Add that value to the minimum cost of $X$ on the previous levels,
+thereby getting a candidate for the minimum cost of $X\cup x$.
+After trying all $X$ and all~$x$, we'll know the minimum costs for
+all $k+1$-element subsets.
+
+Notice that every QDD has information about $n$ different subsets
+at once, namely the subsets of elements on its initial $k$ levels
+for $1\le k\le n$. Therefore, instead of working only on small
+subsets before large ones, this program gathers data for all sizes
+simultaneously; we can determine the actual minimum costs later.
+
+(A completely different strategy, which uses branch-and-bound
+methods to avoid subsets that are known to be nonoptimum,
+will work better on many Boolean functions. I plan to implement that
+method too, for comparison purposes. But the method considered
+here is advantageous for the hard functions that can make branch-and-bound
+examine too many branches.)
+
+For each variable $x_{j+1}$ and each $k$-element set $X$ with
+$x_{j+1}\notin X$, we will set \PB{\|b[\|X][\|j]} to the profile element $b_k$
+that would occur when $x_{j+1}$ is at level~$k$ of a BDD
+and when the variables of $X$ occupy levels
+0 through~$k-1$. The subset \PB{\|X} is encoded as a binary number,
+$\sum\{2^{i-1}\mid x_i\in X\}$.
+
+\Y\B\4\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{int} ${}\|b[\T{1}\LL\\{nnn}][\\{nnn}]{}$;\C{ transition data for BDDs }\par
+\fi
+
+\M{21}Now I must explain a beautiful pattern: There's a simple way to produce
+all the QDDs we need, using a relatively short sequence of jump-ups.
+
+In essence, we want a sequence of permutations with the
+property that every $k$-element subset of $\{1,\ldots,n\}$ appears
+as the first $k$ elements of some permutation, and such that we can
+get from each permutation to its successor by a single jump-up.
+There's a nice way to do this with a sequence of length $2^{n-1}$:
+When $n=1$, the permutation is simply `1'. When $n>1$, take the
+sequence for $n-1$ and place $n$ at the bottom; then jump $n$ up
+to the top; then use the sequence for $n-1$ on the {\it lower\/}
+$n-1$ elements. This idea turns out to be equivalent to the following:
+The $k$th jump-up is $\nu k+\rho k\to\nu k-1$, for $1\le k<2^{n-1}$.
+(In this formula
+$\nu k$ denotes the number of 1s in the binary representation of~$k$,
+and $\rho k$ denotes the number of 0s at the right end of that representation.)
+For example, when $n=4$ the jumps are $1\to0$, $2\to0$, $2\to1$, $3\to0$,
+$2\to1$, $3\to1$, $3\to2$; the permutations are
+$$\thinmuskip=\thickmuskip
+1234,2134,3214,3124,4312,4132,4213,4231.$$
+The idea is that all $k$-combinations that don't contain~$n$ appear
+in the first half; those that do contain~$n$ appear in the second half.
+
+\Y\B\4\X21:Do the jump-up for the current \PB{\\{cycle}}\X${}\E{}$\6
+\&{for} ${}(\\{jj}\K\T{0},\39\\{kk}\K\T{1},\39\|k\K\\{cycle};{}$ ${}(\|k\AND%
+\T{1})\E\T{0};{}$ ${}\\{kk}\PP){}$\1\5
+${}\|k\MRL{{\GG}{\K}}\T{1}{}$;\C{ compute $\rho k$ }\2\6
+\&{for} ${}(\|k\MRL{\AND{\K}}\|k-\T{1};{}$ \|k; ${}\\{jj}\PP,\39\\{kk}\PP){}$\1%
+\5
+${}\|k\MRL{\AND{\K}}\|k-\T{1}{}$;\C{ compute $\nu k$ }\2\6
+\X17:Jump up from \PB{\\{kk}} to \PB{\\{jj}}\X;\6
+\&{for} ${}(\|k\K\\{jj}+\T{1};{}$ ${}\|k\Z\\{kk};{}$ ${}\|k\PP){}$\1\5
+\X23:Gather statistics from level \PB{\|k} of the current QDD\X;\2\par
+\U1.\fi
+
+\M{22}We also need to gather statistics from the initial QDD.
+
+\Y\B\4\X4:Initialize everything\X${}\mathrel+\E{}$\6
+\X26:Gather statistics from level 0 of the current QDD\X;\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\\{nnn};{}$ ${}\|k\PP){}$\1\5
+\X23:Gather statistics from level \PB{\|k} of the current QDD\X;\2\par
+\fi
+
+\M{23}Every node in \PB{\\{node}[\|k]} is marked with a \PB{\\{dep}} field,
+telling which
+of the remaining variables it depends on. More precisely, if the \PB{\\{dep}}
+contains the bit \PB{$\T{1}\LL\|i$}, there's a dependency on $x_j$, where \PB{$%
+\|j\K\\{map}[\|i]$}.
+
+There might be lots and lots of nodes, so I'd like to examine each \PB{\\{dep}}
+field only once. (In fact, I could have gathered the stats while doing
+\PB{\\{reduce}} during the jump-up; so I won't charge any mems for
+fetching the node here.) There are three bytes in the \PB{\\{dp}} field,
+so I'll count how many nodes have each possible pattern in each
+of those bytes. Usually only one or two of the bytes can be nonzero;
+so the routine breaks into six rather tedious cases.
+
+\Y\B\4\X23:Gather statistics from level \PB{\|k} of the current QDD\X${}\E{}$\6
+${}\{{}$\1\6
+\&{switch} ${}(((\\{nnn}-\T{2})\GG\T{3})*\T{4}+((\|k-\T{1})\GG\T{3})){}$\5
+${}\{{}$\1\6
+\4\&{case} \T{2}${}*\T{4}+\T{0}{}$:\5
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{256};{}$ ${}\|j\PP){}$\1\5
+${}\\{ooo},\39\\{count1}[\|j]\K\\{count2}[\|j]\K\\{count3}[\|j]\K\T{0};{}$\2\6
+\&{for} ${}(\|o,\39\|j\K\T{0};{}$ ${}\|j<\\{qq}[\|k];{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|x\K\\{node}[\|k][\|j]{}$;\C{ mems not charged, see above }\6
+${}\\{oo},\39\\{count1}[\|x\GG\T{56}]\PP;{}$\6
+${}\\{oo},\39\\{count2}[(\|x\GG\T{48})\AND\T{\^ff}]\PP;{}$\6
+${}\\{oo},\39\\{count3}[(\|x\GG\T{40})\AND\T{\^ff}]\PP;{}$\6
+\4${}\}{}$\2\6
+;\5
+\&{break};\6
+\4\&{case} \T{2}${}*\T{4}+\T{1}{}$:\5
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{256};{}$ ${}\|j\PP){}$\1\5
+${}\\{oo},\39\\{count1}[\|j]\K\\{count2}[\|j]\K\T{0};{}$\2\6
+\&{for} ${}(\|o,\39\|j\K\T{0};{}$ ${}\|j<\\{qq}[\|k];{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|x\K\\{node}[\|k][\|j]{}$;\C{ mems not charged, see above }\6
+${}\\{oo},\39\\{count1}[\|x\GG\T{56}]\PP;{}$\6
+${}\\{oo},\39\\{count2}[(\|x\GG\T{48})\AND\T{\^ff}]\PP;{}$\6
+\4${}\}{}$\2\6
+;\5
+\&{break};\6
+\4\&{case} \T{2}${}*\T{4}+\T{2}{}$:\5
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{256};{}$ ${}\|j\PP){}$\1\5
+${}\|o,\39\\{count1}[\|j]\K\T{0};{}$\2\6
+\&{for} ${}(\|o,\39\|j\K\T{0};{}$ ${}\|j<\\{qq}[\|k];{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|x\K\\{node}[\|k][\|j]{}$;\C{ mems not charged, see above }\6
+${}\\{oo},\39\\{count1}[\|x\GG\T{56}]\PP;{}$\6
+\4${}\}{}$\2\6
+;\5
+\&{break};\6
+\4\&{case} \T{1}${}*\T{4}+\T{0}{}$:\5
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{256};{}$ ${}\|j\PP){}$\1\5
+${}\\{oo},\39\\{count2}[\|j]\K\\{count3}[\|j]\K\T{0};{}$\2\6
+\&{for} ${}(\|o,\39\|j\K\T{0};{}$ ${}\|j<\\{qq}[\|k];{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|x\K\\{node}[\|k][\|j]{}$;\C{ mems not charged, see above }\6
+${}\\{oo},\39\\{count2}[(\|x\GG\T{48})\AND\T{\^ff}]\PP;{}$\6
+${}\\{oo},\39\\{count3}[(\|x\GG\T{40})\AND\T{\^ff}]\PP;{}$\6
+\4${}\}{}$\2\6
+;\5
+\&{break};\6
+\4\&{case} \T{1}${}*\T{4}+\T{1}{}$:\5
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{256};{}$ ${}\|j\PP){}$\1\5
+${}\|o,\39\\{count2}[\|j]\K\T{0};{}$\2\6
+\&{for} ${}(\|o,\39\|j\K\T{0};{}$ ${}\|j<\\{qq}[\|k];{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|x\K\\{node}[\|k][\|j]{}$;\C{ mems not charged, see above }\6
+${}\\{oo},\39\\{count2}[(\|x\GG\T{48})\AND\T{\^ff}]\PP;{}$\6
+\4${}\}{}$\2\6
+;\5
+\&{break};\6
+\4\&{case} \T{0}${}*\T{4}+\T{0}{}$:\5
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{256};{}$ ${}\|j\PP){}$\1\5
+${}\|o,\39\\{count3}[\|j]\K\T{0};{}$\2\6
+\&{for} ${}(\|o,\39\|j\K\T{0};{}$ ${}\|j<\\{qq}[\|k];{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|x\K\\{node}[\|k][\|j]{}$;\C{ mems not charged, see above }\6
+${}\\{oo},\39\\{count3}[(\|x\GG\T{40})\AND\T{\^ff}]\PP;{}$\6
+\4${}\}{}$\2\6
+;\5
+\&{break};\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\|k;{}$ ${}\|j<\\{nnn};{}$ ${}\|j\PP){}$\1\5
+\X25:Gather stats for variable \PB{\|j} at level \PB{\|k}\X;\2\6
+\4${}\}{}$\2\par
+\Us21\ET22.\fi
+
+\M{24}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{count1}[\T{256}]${},{}$ \\{count2}[\T{256}]${},{}$ \\{count3}[%
+\T{256}];\C{ bit pattern counts }\par
+\fi
+
+\M{25}\B\X25:Gather stats for variable \PB{\|j} at level \PB{\|k}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|l\K\T{1}\LL((\|j-\T{1})\AND\T{\^7}),\39\|i\K\T{0};{}$\6
+\&{if} ${}(\|j<\T{9}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{0},\39\|h\K\|l;{}$ ${}\|h<\T{256};{}$ ${}\|h\K(\|h+\T{1})%
+\OR\|l){}$\1\5
+${}\|o,\39\|i\MRL{+{\K}}\\{count3}[\|h];{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\|j<\T{17}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{0},\39\|h\K\|l;{}$ ${}\|h<\T{256};{}$ ${}\|h\K(\|h+\T{1})%
+\OR\|l){}$\1\5
+${}\|o,\39\|i\MRL{+{\K}}\\{count2}[\|h];{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\1\6
+\&{for} ${}(\|i\K\T{0},\39\|h\K\|l;{}$ ${}\|h<\T{256};{}$ ${}\|h\K(\|h+\T{1})%
+\OR\|l){}$\1\5
+${}\|o,\39\|i\MRL{+{\K}}\\{count1}[\|h];{}$\2\2\6
+${}\\{oooo},\39\|b[\\{bitmap}[\|k]][\\{map}[\|j]]\K\|i;{}$\6
+\4${}\}{}$\2\par
+\U23.\fi
+
+\M{26}At this point we have the initial QDD, with \PB{$\\{map}[\|j]\K\|j$} for
+all \PB{\|j}.
+
+\Y\B\4\X26:Gather statistics from level 0 of the current QDD\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{qq}[\T{0}];{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|i\K\\{depfield}(\\{node}[\T{0}][\|j])+\\{extrabit}(\T{0},\39%
+\|j);{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nnn};{}$ ${}\|k\PP){}$\1\5
+${}\|o,\39\|b[\T{0}][\|k]\MRL{+{\K}}(\|i\GG\|k)\AND\T{1};{}$\2\6
+\4${}\}{}$\2\par
+\U22.\fi
+
+\M{27}At last comes the final reckoning: We can compute the minimum cost
+that can be achieved when subset \PB{\|X} occurs at the top of the BDD,
+for $1\le X<2^n$.
+
+While we're at it, we might as well compute the maximum cost too.
+
+\Y\B\4\X27:Figure out an optimum order\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\T{1}\LL\\{nnn};{}$ ${}\|k\PP){}$\5
+${}\{{}$\C{ \PB{\|k} represents a subset \PB{\|X} }\1\6
+${}\|h\K\T{1}\LL\\{nnn}{}$;\C{ infinite cost }\6
+\&{for} ${}(\|j\K\T{0},\39\|i\K\T{1};{}$ ${}\|j<\\{nnn};{}$ ${}\|j\PP,\39\|i%
+\MRL{{\LL}{\K}}\T{1}){}$\1\6
+\&{if} ${}(\|k\AND\|i){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39\|l\K\\{cost}[\|k\XOR\|i]+\|b[\|k\XOR\|i][\|j]{}$;\C{ the cost if
+$x_{j+1}$ comes last }\6
+\&{if} ${}(\|l<\|h){}$\1\5
+${}\|h\K\|l,\39\\{lo}\K\|j;{}$\2\6
+\4${}\}{}$\2\2\6
+${}\\{oo},\39\\{cost}[\|k]\K\|h,\39\\{routing}[\|k]\K\\{lo};{}$\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"Optimum\ ordering\ (c}\)\.{ost\ \%d+externals)\ ca}\)\.{n\ be%
+\ achieved\ thus:\\}\)\.{n"},\39\\{cost}[(\T{1}\LL\\{nnn})-\T{1}]);{}$\6
+\&{for} ${}(\|j\K\\{nnn}-\T{1},\39\|k\K(\T{1}\LL\\{nnn})-\T{1};{}$ \|k; ${}\|j%
+\MM,\39\|k\MRL{{\XOR}{\K}}\T{1}\LL\\{routing}[\|k]){}$\1\5
+${}\\{printf}(\.{"\ level\ \%d,\ x\%d\ (\%d)}\)\.{\\n"},\39\|j,\39\\{routing}[%
+\|k]+\\{topvar},\39\|b[\|k\XOR(\T{1}\LL\\{routing}[\|k])][\\{routing}[%
+\|k]]);{}$\2\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\T{1}\LL\\{nnn};{}$ ${}\|k\PP){}$\5
+${}\{{}$\C{ \PB{\|k} represents a subset \PB{\|X} }\1\6
+${}\|h\K\T{0};{}$\6
+\&{for} ${}(\|j\K\T{0},\39\|i\K\T{1};{}$ ${}\|j<\\{nnn};{}$ ${}\|j\PP,\39\|i%
+\MRL{{\LL}{\K}}\T{1}){}$\1\6
+\&{if} ${}(\|k\AND\|i){}$\5
+${}\{{}$\1\6
+${}\|l\K\\{cost}[\|k\XOR\|i]+\|b[\|k\XOR\|i][\|j]{}$;\C{ the cost if $x_{j+1}$
+comes last }\6
+\&{if} ${}(\|l>\|h){}$\1\5
+${}\|h\K\|l,\39\\{lo}\K\|j;{}$\2\6
+\4${}\}{}$\2\2\6
+${}\\{cost}[\|k]\K\|h,\39\\{routing}[\|k]\K\\{lo};{}$\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"Pessimum\ ordering\ (}\)\.{cost\ \%d+externals)\ c}\)\.{an\
+be\ achieved\ thus:}\)\.{\\n"},\39\\{cost}[(\T{1}\LL\\{nnn})-\T{1}]);{}$\6
+\&{for} ${}(\|j\K\\{nnn}-\T{1},\39\|k\K(\T{1}\LL\\{nnn})-\T{1};{}$ \|k; ${}\|j%
+\MM,\39\|k\MRL{{\XOR}{\K}}\T{1}\LL\\{routing}[\|k]){}$\1\5
+${}\\{printf}(\.{"\ level\ \%d,\ x\%d\ (\%d)}\)\.{\\n"},\39\|j,\39\\{routing}[%
+\|k]+\\{topvar},\39\|b[\|k\XOR(\T{1}\LL\\{routing}[\|k])][\\{routing}[%
+\|k]]){}$;\2\par
+\U1.\fi
+
+\M{28}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{int} ${}\\{cost}[\T{1}\LL\\{nnn}]{}$;\C{ the optimum node count for each
+bitmap }\6
+\&{char} ${}\\{routing}[\T{1}\LL\\{nnn}]{}$;\C{ the variable to put last in the
+optimum order }\par
+\fi
+
+\N{1}{29}Index.
+\fi
+
+\inx
+\fin
+\con

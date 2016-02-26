@@ -1,0 +1,34 @@
+\I\X10:Assign index numbers to each tableau found\X
+\U6.
+\I\X18:Compute the representation of the \PB{\\{jj}}th standard tableau,
+permuted by \PB{\|p}\X
+\U2.
+\I\X5:Compute the transposed shape $\lambda^T$\X
+\U2.
+\I\X16:Compute \PB{\|f} basis vectors for the representation\X
+\U2.
+\I\X13:Figure out where each element is, and set \PB{\\{tt}} zero\X
+\U11.
+\I\X6:Find all the standard tableaux of the given shape\X
+\U2.
+\I\X7:Generate the order relation for the desired tableaux\X
+\U6.
+\I\X3, 9:Global variables\X
+\U2.
+\I\X17:Read a permutation \PB{\|p} (but \PB{\&{break}} if there's no more good
+data)\X
+\U2.
+\I\X4:Read the shape $\lambda$\X
+\U2.
+\I\X8:Record the tableau represented by $p$ and $q$\X
+\U6.
+\I\X19:Reduce the representation to a linear combination of basis elements\X
+\U2.
+\I\X14:Run through all solutions\X
+\U11.
+\I\X12:Sort the columns of \PB{\|t}\X
+\U11.
+\I\X11:Subroutines\X
+\U2.
+\I\X15:Use this solution and go to \PB{\\{levdone}}\X
+\U14.

@@ -1,0 +1,537 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. This program generates clauses for the transition relation
+from time $t$ to time $t+1$ in Conway's Game of Life, assuming that
+all of the potentially live cells at time $t$ belong to a pattern
+that's specified in \PB{\\{stdin}}. The pattern is defined by one or more
+lines representing rows of cells, where each line has `\..' in a
+cell that's guaranteed to be dead at time~$t$, otherwise it has `\.*'.
+The time is specified separately as a command-line parameter.
+
+The Boolean variable for cell $(x,y)$ at time $t$ is named by its
+so-called ``xty code,'' namely by the decimal value of~$x$, followed
+by a code letter for~$t$, followed by the decimal value of~$y$. For
+example, if $x=10$ and $y=11$ and $t=0$, the variable that indicates
+liveness of the cell is \.{10a11}; and the corresponding variable
+for $t=1$ is \.{10b11}.
+
+Up to 19 auxiliary variables are used together with each xty code,
+in order to construct clauses that define the successor state.
+The names of these variables are obtained by appending one of
+the following two-character combinations to the xty code:
+\.{A2}, \.{A3}, \.{A4},
+\.{B1}, \.{B2}, \.{B3}, \.{B4},
+\.{C1}, \.{C2}, \.{C3}, \.{C4},
+\.{D1}, \.{D2},
+\.{E1}, \.{E2},
+\.{F1}, \.{F2},
+\.{G1}, \.{G2}.
+These variables are derived from the Bailleux--Boufkhad method
+of encoding cardinality constraints:
+The auxiliary variable \.{A$k$} stands for the condition
+``at least $k$ of the eight neighbors are alive.'' Similarly,
+\.{B$k$} stans for ``at least $k$ of the first four neighbors
+are alive,'' and \.{C$k$} accounts for the other four neighbors.
+Codes \.D, \.E, \.F, and~\.G refer to pairs of neighbors.
+Thus, for instance, \.{10a11C2} means that at least two of the
+last four neighbors of cell $(10,11)$ are alive.
+
+Those auxiliary variables receive values by means of up to 77 clauses per cell.
+For example, if $u$ and~$v$ are the neighbors of cell~$z$ that correspond
+to a pairing of type~\.D, there are six clauses
+$$\bar u d_1,\quad
+\bar v d_1,\quad
+\bar u\bar v d_2,\quad
+u v\bar d_1,\quad
+u\bar d_2,\quad
+v\bar d_2.$$
+The sixteen clauses
+$$\displaylines{\hfill
+\bar d_1b_1,\quad
+\bar e_1b_1,\quad
+\bar d_2b_2,\quad
+\bar d_1\bar e_1b_2,\quad
+\bar e_2b_2,\quad
+\bar d_2\bar e_1b_3,\quad
+\bar d_1\bar e_2b_3,\quad
+\bar d_2\bar e_2b_4,
+\hfill\cr\hfill
+d_1e_1\bar b_1,\quad
+d_1e_2\bar b_2,\quad
+d_2e_1\bar b_2,\quad
+d_1\bar b_3,\quad
+d_2e_2\bar b_3,\quad
+e_1\bar b_3,\quad
+d_2\bar b_4,\quad
+e_2\bar b_4
+\hfill}$$
+define $b$ variables from $d$'s and $e$'s; and another sixteen
+define $c$'s from $f$'s and $g$'s in the same fashion.
+A similar set of 21 clauses will define the $a$'s from the $b$'s and $c$'s.
+
+Once the $a$'s are defined, thus essentially counting the
+live neighbors of cell $z$, the next
+state~$z'$ is defined by five further clauses
+$$\bar a_4\bar z',\quad
+a_2\bar z',\quad
+a_3z\bar z',\quad
+\bar a_3a_4z',\quad
+\bar a_2a_4\bar zz'.$$
+For example, the last of these states that $z'$ will be true
+(i.e., that cell $z$ will be alive at time $t+1$) if
+$z$ is alive at time~$t$ and has $\ge2$ live neighbors
+but not $\ge4$.
+
+Nearby cells can share auxiliary variables, according to a tricky scheme that
+is worked out below. In consequence, the actual number of auxiliary variables
+and clauses per cell is reduced from 19 and $77+5$ to 13 and $57+5$,
+respectively, except at the boundaries.
+
+\fi
+
+\M{2}So here's the overall outline of the program.
+
+\Y\B\4\D$\\{maxx}$ \5
+\T{20}\C{ maximum number of lines in the pattern supplied by \PB{\\{stdin}} }%
+\par
+\B\4\D$\\{maxy}$ \5
+\T{20}\C{ maximum number of columns per line in \PB{\\{stdin}} }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\&{char} ${}\|p[\\{maxx}+\T{2}][\\{maxy}+\T{2}]{}$;\C{ is cell $(x,y)$
+potentially alive? }\6
+\&{char} ${}\\{have\_b}[\\{maxx}+\T{2}][\\{maxy}+\T{2}]{}$;\C{ did we already
+generate $b(x,y)$? }\6
+\&{char} ${}\\{have\_d}[\\{maxx}+\T{2}][\\{maxy}+\T{2}]{}$;\C{ did we already
+generate $d(x,y)$? }\6
+\&{char} ${}\\{have\_e}[\\{maxx}+\T{2}][\\{maxy}+\T{4}]{}$;\C{ did we already
+generate $e(x,y)$? }\6
+\&{char} ${}\\{have\_f}[\\{maxx}+\T{4}][\\{maxy}+\T{2}]{}$;\C{ did we already
+generate $f(x-2,y)$? }\6
+\&{int} \\{tt};\C{ time as given on the command line }\6
+\&{int} \\{xmax}${},{}$ \\{ymax};\C{ the number of rows and columns in the
+input pattern }\6
+\&{int} \\{xmin}${}\K\\{maxx},{}$ \\{ymin}${}\K\\{maxy}{}$;\C{ limits in the
+other direction }\6
+\&{char} \\{timecode}[\,]${}\K\.{"abcdefghijklmnopqrs}\)\.{tuvwxyz"}\3{-1}%
+\.{"ABCDEFGHIJKLMNOPQRS}\)\.{TUVWXYZ"}\3{-1}\.{"!\\"\#\$\%\&'()*+,-./:;<}\)%
+\.{=>?@[\\\\]\^\_`\{|\}\~"}{}$;\C{ codes for $0\le t\le83$ }\6
+\&{char} ${}\\{buf}[\\{maxy}+\T{2}]{}$;\C{ input buffer }\6
+\&{unsigned} \&{int} \\{clause}[\T{4}];\C{ clauses are assembled here }\6
+\&{int} \\{clauseptr};\C{ this many literals are in the current clause }\7
+\X6:Subroutines\X\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|x${},{}$ \|y;\7
+\X3:Process the command line\X;\6
+\X4:Input the pattern\X;\6
+\&{for} ${}(\|x\K\\{xmin}-\T{1};{}$ ${}\|x\Z\\{xmax}+\T{1};{}$ ${}\|x\PP){}$\1\6
+\&{for} ${}(\|y\K\\{ymin}-\T{1};{}$ ${}\|y\Z\\{ymax}+\T{1};{}$ ${}\|y\PP){}$\5
+${}\{{}$\1\6
+\X5:If cell $(x,y)$ is obviously dead at time $t+1$, \PB{\&{continue}}\X;\6
+${}\|a(\|x,\39\|y);{}$\6
+${}\\{zprime}(\|x,\39\|y);{}$\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{3}\B\X3:Process the command line\X${}\E{}$\6
+\&{if} ${}(\\{argc}\I\T{2}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
+\\{tt})\I\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ t\\n"},\39\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{tt}<\T{0}\V\\{tt}>\T{82}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"The\ time\ should\ be\ }\)\.{between\ 0\ and\
+82\ (no}\)\.{t\ \%d)!\\n"},\39\\{tt});{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{4}\B\X4:Input the pattern\X${}\E{}$\6
+\&{for} ${}(\|x\K\T{1};{}$  ; ${}\|x\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{fgets}(\\{buf},\39\\{maxy}+\T{2},\39\\{stdin})){}$\1\5
+\&{break};\2\6
+\&{if} ${}(\|x>\\{maxx}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ the\ pattern\ }\)\.{should\ have\ at\
+most\ }\)\.{\%d\ rows!\\n"},\39\\{maxx});{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|y\K\T{1};{}$ ${}\\{buf}[\|y-\T{1}]\I\.{'\\n'};{}$ ${}\|y\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|y>\\{maxy}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ the\ pattern\ }\)\.{should\ have\ at\
+most\ }\)\.{\%d\ columns!\\n"},\39\\{maxy});{}$\6
+${}\\{exit}({-}\T{4});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{buf}[\|y-\T{1}]\E\.{'*'}){}$\5
+${}\{{}$\1\6
+${}\|p[\|x][\|y]\K\T{1};{}$\6
+\&{if} ${}(\|y>\\{ymax}){}$\1\5
+${}\\{ymax}\K\|y;{}$\2\6
+\&{if} ${}(\|y<\\{ymin}){}$\1\5
+${}\\{ymin}\K\|y;{}$\2\6
+\&{if} ${}(\|x>\\{xmax}){}$\1\5
+${}\\{xmax}\K\|x;{}$\2\6
+\&{if} ${}(\|x<\\{xmin}){}$\1\5
+${}\\{xmin}\K\|x;{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\\{buf}[\|y-\T{1}]\I\.{'.'}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Unexpected\ characte}\)\.{r\ `\%c'\ found\ in\
+the\ }\)\.{pattern!\\n"},\39\\{buf}[\|y-\T{1}]);{}$\6
+${}\\{exit}({-}\T{5});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{5}\B\D$\\{pp}(\\{xx},\\{yy})$ \5
+$((\\{xx})\G\T{0}\W(\\{yy})\G\T{0}\?\|p[\\{xx}][\\{yy}]:\T{0}{}$)\par
+\Y\B\4\X5:If cell $(x,y)$ is obviously dead at time $t+1$, \PB{\&{continue}}%
+\X${}\E{}$\6
+\&{if} ${}(\\{pp}(\|x-\T{1},\39\|y-\T{1})+\\{pp}(\|x-\T{1},\39\|y)+\\{pp}(\|x-%
+\T{1},\39\|y+\T{1})+\\{pp}(\|x,\39\|y-\T{1})+\|p[\|x][\|y]+\|p[\|x][\|y+\T{1}]+%
+\\{pp}(\|x+\T{1},\39\|y-\T{1})+\|p[\|x+\T{1}][\|y]+\|p[\|x+\T{1}][\|y+\T{1}]<%
+\T{3}){}$\1\5
+\&{continue};\2\par
+\U2.\fi
+
+\M{6}Clauses are assembled in the \PB{\\{clause}} array (surprise), where we
+put encoded literals.
+
+The code for a literal is an unsigned 32-bit quantity, where the leading
+bit is 1 if the literal should be complemented. The next three bits
+specify the type of the literal (0 thru 7 for plain and \.A--\.G);
+the next three bits specify an integer~$k$; and the next bit is zero.
+That leaves room for two 12-bit fields, which specify $x$ and $y$.
+
+Type 0 literals have $k=0$ for the ordinary xty code. However, the
+value $k=1$ indicates that the time code should be for $t+1$ instead of~$t$.
+And $k=2$ denotes a special ``tautology'' literal, which is always true.
+If the tautology literal is complemented, we omit it from the clause;
+otherwise we omit the entire clause.
+Finally, $k=7$ denotes an auxiliary literal, used to avoid
+clauses of length~4.
+
+Here's a subroutine that outputs the current clause and resets
+the \PB{\\{clause}} array.
+
+\Y\B\4\D$\\{taut}$ \5
+$(\T{2}\LL\T{25}{}$)\par
+\B\4\D$\\{sign}$ \5
+$(\T{1\$U}\LL\T{31}{}$)\par
+\Y\B\4\X6:Subroutines\X${}\E{}$\6
+\&{void} \\{outclause}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|c${},{}$ \|k${},{}$ \|x${},{}$ \|y${},{}$ \|p;\7
+\&{for} ${}(\|p\K\T{0};{}$ ${}\|p<\\{clauseptr};{}$ ${}\|p\PP){}$\1\6
+\&{if} ${}(\\{clause}[\|p]\E\\{taut}){}$\1\5
+\&{goto} \\{done};\2\2\6
+\&{for} ${}(\|p\K\T{0};{}$ ${}\|p<\\{clauseptr};{}$ ${}\|p\PP){}$\1\6
+\&{if} ${}(\\{clause}[\|p]\I\\{taut}+\\{sign}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{clause}[\|p]\GG\T{31}){}$\1\5
+\\{printf}(\.{"\ \~"});\5
+\2\&{else}\1\5
+\\{printf}(\.{"\ "});\2\6
+${}\|c\K(\\{clause}[\|p]\GG\T{28})\AND\T{\^7};{}$\6
+${}\|k\K(\\{clause}[\|p]\GG\T{25})\AND\T{\^7};{}$\6
+${}\|x\K(\\{clause}[\|p]\GG\T{12})\AND\T{\^fff};{}$\6
+${}\|y\K\\{clause}[\|p]\AND\T{\^fff};{}$\6
+\&{if} (\|c)\1\5
+${}\\{printf}(\.{"\%d\%c\%d\%c\%d"},\39\|x,\39\\{timecode}[\\{tt}],\39\|y,\39%
+\|c+\.{'@'},\39\|k);{}$\2\6
+\&{else} \&{if} ${}(\|k\E\T{7}){}$\1\5
+${}\\{printf}(\.{"\%d\%c\%dx"},\39\|x,\39\\{timecode}[\\{tt}],\39\|y);{}$\2\6
+\&{else}\1\5
+${}\\{printf}(\.{"\%d\%c\%d"},\39\|x,\39\\{timecode}[\\{tt}+\|k],\39\|y);{}$\2\6
+\4${}\}{}$\2\2\6
+\\{printf}(\.{"\\n"});\6
+\4\\{done}:\5
+${}\\{clauseptr}\K\T{0};{}$\6
+\4${}\}{}$\2\par
+\As7, 8, 9, 10, 11, 12, 13\ETs14.
+\U2.\fi
+
+\M{7}And here's another, which puts a type-0 literal into \PB{\\{clause}}.
+
+\Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{applit}(\&{int} \|x${},\39{}$\&{int} \|y${},\39{}$\&{int} %
+\\{bar}${},\39{}$\&{int} \|k)\1\1\2\2\6
+${}\{{}$\1\6
+\&{if} ${}(\|k\E\T{0}\W(\|x<\\{xmin}\V\|x>\\{xmax}\V\|y<\\{ymin}\V\|y>\\{ymax}%
+\V\|p[\|x][\|y]\E\T{0})){}$\1\5
+${}\\{clause}[\\{clauseptr}\PP]\K(\\{bar}\?\T{0}:\\{sign})+\\{taut};{}$\2\6
+\&{else}\1\5
+${}\\{clause}[\\{clauseptr}\PP]\K(\\{bar}\?\\{sign}:\T{0})+(\|k\LL\T{25})+(\|x%
+\LL\T{12})+\|y;{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{8}The \PB{\|d} and \PB{\|e} subroutines are called for only one-fourth
+of all cell addresses $(x,y)$. Indeed, one can show that
+$x$ is always odd, and that $y\bmod4<2$.
+
+Therefore we remember if we've seen $(x,y)$ before.
+
+\Y\B\4\D$\\{newlit}(\|x,\|y,\|c,\|k)$ \5
+$\\{clause}[\\{clauseptr}\PP]\K((\|c)\LL\T{28})+((\|k)\LL\T{25})+((\|x)\LL%
+\T{12})+{}$(\|y)\par
+\B\4\D$\\{newcomplit}(\|x,\|y,\|c,\|k)$ \5
+$\\{clause}[\\{clauseptr}\PP]\K\\{sign}+((\|c)\LL\T{28})+((\|k)\LL\T{25})+((%
+\|x)\LL\T{12})+{}$(\|y)\par
+\Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \|d(\&{int} \|x${},\39{}$\&{int} \|y)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \\{x1}${}\K\|x-\T{1},{}$ \\{x2}${}\K\|x,{}$ \\{yy}${}\K\|y+%
+\T{1};{}$\7
+\&{if} ${}(\\{have\_d}[\|x][\|y]\I\\{tt}+\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{applit}(\\{x1},\39\\{yy},\39\T{1},\39\T{0}),\39\\{newlit}(\|x,\39\|y,\39%
+\T{4},\39\T{1}),\39\\{outclause}(\,);{}$\6
+${}\\{applit}(\\{x2},\39\\{yy},\39\T{1},\39\T{0}),\39\\{newlit}(\|x,\39\|y,\39%
+\T{4},\39\T{1}),\39\\{outclause}(\,);{}$\6
+${}\\{applit}(\\{x1},\39\\{yy},\39\T{1},\39\T{0}),\39\\{applit}(\\{x2},\39%
+\\{yy},\39\T{1},\39\T{0}),\39\\{newlit}(\|x,\39\|y,\39\T{4},\39\T{2}),\39%
+\\{outclause}(\,);{}$\6
+${}\\{applit}(\\{x1},\39\\{yy},\39\T{0},\39\T{0}),\39\\{applit}(\\{x2},\39%
+\\{yy},\39\T{0},\39\T{0}),\39\\{newcomplit}(\|x,\39\|y,\39\T{4},\39\T{1}),\39%
+\\{outclause}(\,);{}$\6
+${}\\{applit}(\\{x1},\39\\{yy},\39\T{0},\39\T{0}),\39\\{newcomplit}(\|x,\39\|y,%
+\39\T{4},\39\T{2}),\39\\{outclause}(\,);{}$\6
+${}\\{applit}(\\{x2},\39\\{yy},\39\T{0},\39\T{0}),\39\\{newcomplit}(\|x,\39\|y,%
+\39\T{4},\39\T{2}),\39\\{outclause}(\,);{}$\6
+${}\\{have\_d}[\|x][\|y]\K\\{tt}+\T{1};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\7
+\&{void} \|e(\&{int} \|x${},\39{}$\&{int} \|y)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \\{x1}${}\K\|x-\T{1},{}$ \\{x2}${}\K\|x,{}$ \\{yy}${}\K\|y-%
+\T{1};{}$\7
+\&{if} ${}(\\{have\_e}[\|x][\|y]\I\\{tt}+\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{applit}(\\{x1},\39\\{yy},\39\T{1},\39\T{0}),\39\\{newlit}(\|x,\39\|y,\39%
+\T{5},\39\T{1}),\39\\{outclause}(\,);{}$\6
+${}\\{applit}(\\{x2},\39\\{yy},\39\T{1},\39\T{0}),\39\\{newlit}(\|x,\39\|y,\39%
+\T{5},\39\T{1}),\39\\{outclause}(\,);{}$\6
+${}\\{applit}(\\{x1},\39\\{yy},\39\T{1},\39\T{0}),\39\\{applit}(\\{x2},\39%
+\\{yy},\39\T{1},\39\T{0}),\39\\{newlit}(\|x,\39\|y,\39\T{5},\39\T{2}),\39%
+\\{outclause}(\,);{}$\6
+${}\\{applit}(\\{x1},\39\\{yy},\39\T{0},\39\T{0}),\39\\{applit}(\\{x2},\39%
+\\{yy},\39\T{0},\39\T{0}),\39\\{newcomplit}(\|x,\39\|y,\39\T{5},\39\T{1}),\39%
+\\{outclause}(\,);{}$\6
+${}\\{applit}(\\{x1},\39\\{yy},\39\T{0},\39\T{0}),\39\\{newcomplit}(\|x,\39\|y,%
+\39\T{5},\39\T{2}),\39\\{outclause}(\,);{}$\6
+${}\\{applit}(\\{x2},\39\\{yy},\39\T{0},\39\T{0}),\39\\{newcomplit}(\|x,\39\|y,%
+\39\T{5},\39\T{2}),\39\\{outclause}(\,);{}$\6
+${}\\{have\_e}[\|x][\|y]\K\\{tt}+\T{1};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{9}The \PB{\|f} subroutine can't be shared quite so often. But we
+do save a factor of~2, because $x+y$ is always even.
+
+\Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \|f(\&{int} \|x${},\39{}$\&{int} \|y)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \\{xx}${}\K\|x-\T{1},{}$ \\{y1}${}\K\|y,{}$ \\{y2}${}\K\|y+%
+\T{1};{}$\7
+\&{if} ${}(\\{have\_f}[\|x][\|y]\I\\{tt}+\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{applit}(\\{xx},\39\\{y1},\39\T{1},\39\T{0}),\39\\{newlit}(\|x,\39\|y,\39%
+\T{6},\39\T{1}),\39\\{outclause}(\,);{}$\6
+${}\\{applit}(\\{xx},\39\\{y2},\39\T{1},\39\T{0}),\39\\{newlit}(\|x,\39\|y,\39%
+\T{6},\39\T{1}),\39\\{outclause}(\,);{}$\6
+${}\\{applit}(\\{xx},\39\\{y1},\39\T{1},\39\T{0}),\39\\{applit}(\\{xx},\39%
+\\{y2},\39\T{1},\39\T{0}),\39\\{newlit}(\|x,\39\|y,\39\T{6},\39\T{2}),\39%
+\\{outclause}(\,);{}$\6
+${}\\{applit}(\\{xx},\39\\{y1},\39\T{0},\39\T{0}),\39\\{applit}(\\{xx},\39%
+\\{y2},\39\T{0},\39\T{0}),\39\\{newcomplit}(\|x,\39\|y,\39\T{6},\39\T{1}),\39%
+\\{outclause}(\,);{}$\6
+${}\\{applit}(\\{xx},\39\\{y1},\39\T{0},\39\T{0}),\39\\{newcomplit}(\|x,\39\|y,%
+\39\T{6},\39\T{2}),\39\\{outclause}(\,);{}$\6
+${}\\{applit}(\\{xx},\39\\{y2},\39\T{0},\39\T{0}),\39\\{newcomplit}(\|x,\39\|y,%
+\39\T{6},\39\T{2}),\39\\{outclause}(\,);{}$\6
+${}\\{have\_f}[\|x][\|y]\K\\{tt}+\T{1};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{10}The \PB{\|g} subroutine cleans up the dregs, by somewhat tediously
+locating the two neighbors that weren't handled by \PB{\|d}, \PB{\|e}, or~\PB{%
+\|f}.
+No sharing is possible here.
+
+\Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \|g(\&{int} \|x${},\39{}$\&{int} \|y)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \\{x1}${},{}$ \\{x2}${},{}$ \\{y1}${},{}$ \\{y2};\7
+\&{if} ${}(\|x\AND\T{1}){}$\1\5
+${}\\{x1}\K\|x-\T{1},\39\\{y1}\K\|y,\39\\{x2}\K\|x+\T{1},\39\\{y2}\K\|y\XOR%
+\T{1};{}$\2\6
+\&{else}\1\5
+${}\\{x1}\K\|x+\T{1},\39\\{y1}\K\|y,\39\\{x2}\K\|x-\T{1},\39\\{y2}\K\|y-%
+\T{1}+((\|y\AND\T{1})\LL\T{1});{}$\2\6
+${}\\{applit}(\\{x1},\39\\{y1},\39\T{1},\39\T{0}),\39\\{newlit}(\|x,\39\|y,\39%
+\T{7},\39\T{1}),\39\\{outclause}(\,);{}$\6
+${}\\{applit}(\\{x2},\39\\{y2},\39\T{1},\39\T{0}),\39\\{newlit}(\|x,\39\|y,\39%
+\T{7},\39\T{1}),\39\\{outclause}(\,);{}$\6
+${}\\{applit}(\\{x1},\39\\{y1},\39\T{1},\39\T{0}),\39\\{applit}(\\{x2},\39%
+\\{y2},\39\T{1},\39\T{0}),\39\\{newlit}(\|x,\39\|y,\39\T{7},\39\T{2}),\39%
+\\{outclause}(\,);{}$\6
+${}\\{applit}(\\{x1},\39\\{y1},\39\T{0},\39\T{0}),\39\\{applit}(\\{x2},\39%
+\\{y2},\39\T{0},\39\T{0}),\39\\{newcomplit}(\|x,\39\|y,\39\T{7},\39\T{1}),\39%
+\\{outclause}(\,);{}$\6
+${}\\{applit}(\\{x1},\39\\{y1},\39\T{0},\39\T{0}),\39\\{newcomplit}(\|x,\39\|y,%
+\39\T{7},\39\T{2}),\39\\{outclause}(\,);{}$\6
+${}\\{applit}(\\{x2},\39\\{y2},\39\T{0},\39\T{0}),\39\\{newcomplit}(\|x,\39\|y,%
+\39\T{7},\39\T{2}),\39\\{outclause}(\,);{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{11}Fortunately the \PB{\|b} subroutine {\it can\/} be shared (since \PB{\|x}
+is always
+odd), thus saving half of the sixteen clauses generated.
+
+\Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \|b(\&{int} \|x${},\39{}$\&{int} \|y)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \|j${},{}$ \|k${},{}$ \\{xx}${}\K\|x,{}$ \\{y1}${}\K\|y-(\|y\AND%
+\T{2}),{}$ \\{y2}${}\K\|y+(\|y\AND\T{2});{}$\7
+\&{if} ${}(\\{have\_b}[\|x][\|y]\I\\{tt}+\T{1}){}$\5
+${}\{{}$\1\6
+${}\|d(\\{xx},\39\\{y1});{}$\6
+${}\|e(\\{xx},\39\\{y2});{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{3};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{3};{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\|j+\|k){}$\5
+${}\{{}$\1\6
+\&{if} (\|j)\1\5
+${}\\{newcomplit}(\\{xx},\39\\{y1},\39\T{4},\39\|j){}$;\C{ $\bar d_j$ }\2\6
+\&{if} (\|k)\1\5
+${}\\{newcomplit}(\\{xx},\39\\{y2},\39\T{5},\39\|k){}$;\C{ $\bar e_k$ }\2\6
+${}\\{newlit}(\|x,\39\|y,\39\T{2},\39\|j+\|k){}$;\C{ $b_{j+k}$ }\6
+\\{outclause}(\,);\6
+\&{if} (\|j)\1\5
+${}\\{newlit}(\\{xx},\39\\{y1},\39\T{4},\39\T{3}-\|j){}$;\C{ $d_{3-j}$ }\2\6
+\&{if} (\|k)\1\5
+${}\\{newlit}(\\{xx},\39\\{y2},\39\T{5},\39\T{3}-\|k){}$;\C{ $e_{3-k}$ }\2\6
+${}\\{newcomplit}(\|x,\39\|y,\39\T{2},\39\T{5}-\|j-\|k){}$;\C{ $b_{5-j-k}$ }\6
+\\{outclause}(\,);\6
+\4${}\}{}$\2\2\2\6
+${}\\{have\_b}[\|x][\|y]\K\\{tt}+\T{1};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{12}The (unshared) \PB{\|c} subroutine handles the other four neighbors,
+by working with \PB{\|f} and \PB{\|g} instead of \PB{\|d} and~\PB{\|e}.
+
+\Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \|c(\&{int} \|x${},\39{}$\&{int} \|y)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \|j${},{}$ \|k${},{}$ \\{x1}${},{}$ \\{y1};\7
+\&{if} ${}(\|x\AND\T{1}){}$\1\5
+${}\\{x1}\K\|x+\T{2},\39\\{y1}\K(\|y-\T{1})\OR\T{1};{}$\2\6
+\&{else}\1\5
+${}\\{x1}\K\|x,\39\\{y1}\K\|y\AND{-}\T{2};{}$\2\6
+${}\|f(\\{x1},\39\\{y1});{}$\6
+${}\|g(\|x,\39\|y);{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{3};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{3};{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\|j+\|k){}$\5
+${}\{{}$\1\6
+\&{if} (\|j)\1\5
+${}\\{newcomplit}(\\{x1},\39\\{y1},\39\T{6},\39\|j){}$;\C{ $\bar f_j$ }\2\6
+\&{if} (\|k)\1\5
+${}\\{newcomplit}(\|x,\39\|y,\39\T{7},\39\|k){}$;\C{ $\bar g_k$ }\2\6
+${}\\{newlit}(\|x,\39\|y,\39\T{3},\39\|j+\|k){}$;\C{ $c_{j+k}$ }\6
+\\{outclause}(\,);\6
+\&{if} (\|j)\1\5
+${}\\{newlit}(\\{x1},\39\\{y1},\39\T{6},\39\T{3}-\|j){}$;\C{ $\bar f_{3-j}$ }\2%
+\6
+\&{if} (\|k)\1\5
+${}\\{newlit}(\|x,\39\|y,\39\T{7},\39\T{3}-\|k){}$;\C{ $\bar g_{3-k}$ }\2\6
+${}\\{newcomplit}(\|x,\39\|y,\39\T{3},\39\T{5}-\|j-\|k){}$;\C{ $c_{5-j-k}$ }\6
+\\{outclause}(\,);\6
+\4${}\}{}$\2\2\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{13}Totals over all eight neighbors are then deduced by the \PB{\|a}
+subroutine.
+
+\Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \|a(\&{int} \|x${},\39{}$\&{int} \|y)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \|j${},{}$ \|k${},{}$ \\{xx}${}\K\|x\OR\T{1};{}$\7
+${}\|b(\\{xx},\39\|y);{}$\6
+${}\|c(\|x,\39\|y);{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{5};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{5};{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\|j+\|k>\T{1}\W\|j+\|k<\T{5}){}$\5
+${}\{{}$\1\6
+\&{if} (\|j)\1\5
+${}\\{newcomplit}(\\{xx},\39\|y,\39\T{2},\39\|j){}$;\C{ $\bar b_j$ }\2\6
+\&{if} (\|k)\1\5
+${}\\{newcomplit}(\|x,\39\|y,\39\T{3},\39\|k){}$;\C{ $\bar c_k$ }\2\6
+${}\\{newlit}(\|x,\39\|y,\39\T{1},\39\|j+\|k){}$;\C{ $a_{j+k}$ }\6
+\\{outclause}(\,);\6
+\4${}\}{}$\2\2\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{5};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{5};{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\|j+\|k>\T{2}\W\|j+\|k<\T{6}\W\|j*\|k){}$\5
+${}\{{}$\1\6
+\&{if} (\|j)\1\5
+${}\\{newlit}(\\{xx},\39\|y,\39\T{2},\39\|j){}$;\C{ $b_j$ }\2\6
+\&{if} (\|k)\1\5
+${}\\{newlit}(\|x,\39\|y,\39\T{3},\39\|k){}$;\C{ $c_k$ }\2\6
+${}\\{newcomplit}(\|x,\39\|y,\39\T{1},\39\|j+\|k-\T{1}){}$;\C{ $\bar a_{j+k-1}$
+}\6
+\\{outclause}(\,);\6
+\4${}\}{}$\2\2\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{14}Finally, as mentioned at the beginning, $z'$ is determined
+from $z$, $a_2$, $a_3$, and $a_4$.
+
+I actually generate six clauses, not five, in order to stick to
+{\mc 3SAT}.
+
+\Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{zprime}(\&{int} \|x${},\39{}$\&{int} \|y)\1\1\2\2\6
+${}\{{}$\1\6
+${}\\{newcomplit}(\|x,\39\|y,\39\T{1},\39\T{4}),\39\\{applit}(\|x,\39\|y,\39%
+\T{1},\39\T{1}),\39\\{outclause}(\,){}$;\C{ $\bar a_4\bar z'$ }\6
+${}\\{newlit}(\|x,\39\|y,\39\T{1},\39\T{2}),\39\\{applit}(\|x,\39\|y,\39\T{1},%
+\39\T{1}),\39\\{outclause}(\,){}$;\C{ $a_2\bar z'$ }\6
+${}\\{newlit}(\|x,\39\|y,\39\T{1},\39\T{3}),\39\\{applit}(\|x,\39\|y,\39\T{0},%
+\39\T{0}),\39\\{applit}(\|x,\39\|y,\39\T{1},\39\T{1}),\39\\{outclause}(\,){}$;%
+\C{ $a_3z\bar z'$ }\6
+${}\\{newcomplit}(\|x,\39\|y,\39\T{1},\39\T{3}),\39\\{newlit}(\|x,\39\|y,\39%
+\T{1},\39\T{4}),\39\\{applit}(\|x,\39\|y,\39\T{0},\39\T{1}),\39\\{outclause}(%
+\,){}$;\C{ $\bar a_3a_4z'$ }\6
+${}\\{applit}(\|x,\39\|y,\39\T{0},\39\T{7}),\39\\{newcomplit}(\|x,\39\|y,\39%
+\T{1},\39\T{2}),\39\\{newlit}(\|x,\39\|y,\39\T{1},\39\T{4}),\39\\{outclause}(%
+\,){}$;\C{ $x\bar a_2a_4$ }\6
+${}\\{applit}(\|x,\39\|y,\39\T{1},\39\T{7}),\39\\{applit}(\|x,\39\|y,\39\T{1},%
+\39\T{0}),\39\\{applit}(\|x,\39\|y,\39\T{0},\39\T{1}),\39\\{outclause}(\,){}$;%
+\C{ $\bar x\bar zz'$ }\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{15}Index.
+\fi
+
+\inx
+\fin
+\con

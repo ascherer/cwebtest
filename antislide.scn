@@ -1,0 +1,53 @@
+\I\X11:Backtrack thru all possibilities\X
+\U1.
+\I\X21:Disallow move \PB{${*}\\{pp}$}\X
+\U11.
+\I\X12:Find a constraint to branch on, and put its moves on the move stack\X
+\U11.
+\I\X3, 10:Global variables\X
+\U1.
+\I\X13:If constraint \PB{${*}\\{cc}$} has smaller count than \PB{\\{best%
+\_count}}, set \PB{$\\{cbest}\K{*}\\{cc}$}\X
+\U12.
+\I\X18:If constraint \PB{$\\{pp}\K{*}\\{cc}$} is not satisfied, put it on the
+constraint stack\X
+\Q16.
+\U16.
+\I\X6:Initialize all moves that have constant first coordinate\X
+\U4.
+\I\X7:Initialize all moves that have constant second coordinate\X
+\U4.
+\I\X8:Initialize all moves that have constant third coordinate\X
+\U4.
+\I\X4:Initialize the data structures\X
+\U1.
+\I\X5:Make all cell lists empty\X
+\U4.
+\I\X16:Make move \PB{${*}\\{pp}$}\X
+\U11.
+\I\X24:Print a progress report\X
+\U11.
+\I\X9:Print the move that starts with \PB{\\{first\_node}}\X
+\Us6, 7\ETs8.
+\I\X23:Put all remaining moves on the move stack\X
+\U11.
+\I\X15:Put the initial constraints onto the constraint stack\X
+\U11.
+\I\X14:Put the moves for \PB{\\{cbest}} on the move stack\X
+\U12.
+\I\X25:Record a solution\X
+\U11.
+\I\X22:Reinstate all moves from this level\X
+\U11.
+\I\X17:Remove all other moves in the cell list containing \PB{\|p} from their
+other cell lists\X
+\U16.
+\I\X26:Report the answers\X
+\U1.
+\I\X2:Type definitions\X
+\U1.
+\I\X19:Unmake move \PB{${*}\\{pp}$}\X
+\U11.
+\I\X20:Unremove all other moves in the cell list containing \PB{\|p} from their
+other cell lists\X
+\U19.

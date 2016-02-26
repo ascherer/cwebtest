@@ -1,0 +1,33 @@
+\I\X14:Check for new forced moves\X
+\U2.
+\I\X13:Downdate \PB{\\{wait}[\T{0}]}\X
+\U2.
+\I\X2:Find all the solutions\X
+\U1.
+\I\X9:Go through \PB{\\{wait}[\|l]}, trying to move it to \PB{\\{wait}[\T{0}]};
+but reject~\PB{\|l} if there's a conflict\X
+\U2.
+\I\X3:Make the permutation tables\X
+\U1.
+\I\X4:Put all permutations into \PB{\\{wait}[\T{0}]}\X
+\U1.
+\I\X11:Reconstruct \PB{\\{wait}[\|l]}\X
+\U2.
+\I\X6:Record a solution\X
+\U2.
+\I\X5:Reject \PB{\|l} if it violates closure\X
+\U2.
+\I\X12:Reject \PB{\|l} immediately\X
+\U9.
+\I\X18:Sanity check the discard lists\X
+\U16.
+\I\X17:Sanity check the wait lists\X
+\U16.
+\I\X19:Sanity check \PB{\\{wait}[\T{0}]}\X
+\U16.
+\I\X16:Subroutines\X
+\U1.
+\I\X15:Uncheck for new forced moves\X
+\U2.
+\I\X10:Update \PB{\\{wait}[\T{0}]} and count the automorphisms\X
+\U2.

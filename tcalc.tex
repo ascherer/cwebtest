@@ -1,0 +1,1413 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Introduction.
+I'm writing this program to experiment with recursive algorithms on trees
+that I think are educational and fun. It's an interactive system that reads
+online commands in a primitive language and displays the results.
+
+The algorithms are based on a recursive way to represent nonnegative integers
+by binary trees: The empty tree is $r(0)$, the representation of zero.
+And the tree that represents the number $2^a+b$, where $0\le b<2^a$, is
+the binary tree whose left and right subtrees are $r(a)$ and $r(b)$.
+
+Stating this another way, let $\star$ be the binary operation on nonnegative
+integers defined by the rule $a\star b=2^a+b$. This operator is not
+associative, so we need to insert parentheses to indicate the meaning;
+however, right associativity is implied whenever there's any doubt,
+so that $a\star b\star c$ means $a\star(b\star c)$. Notice that $a\star b
+\star c=2^a+a^b+c$, so the partial commutative law $a\star b\star c=b\star a
+\star c$ is valid. We can use $\star$ to assign a number $v(T)$ to each binary
+tree~$T$, by saying that $v(\Lambda)=0$ and $v(T)=v(T_l)\star v(T_r)$ when
+$T$ is nonempty.
+
+A binary tree is a {\it normal form\/} if it is the representation of
+some integer as described above. It isn't hard to prove that this condition
+holds if and only if each node $x$ that has a right child $x_r$ satisfies
+the condition $v(xl)>v(x_{rl})$.
+
+The main algorithms in this program compute the sum and product of
+binary trees, in the sense that $v(T+T')=v(T)+v(T')$ and $v(T\times T')
+=v(T)v(T')$. If the tree operands are normal, the results are too. Otherwise
+the sum and product operations are a bit peculiar, but they are still
+well defined (they don't blow up), and they might even turn out to define
+interesting groupoids.
+
+Lots of interesting research problems arise immediately in this study, and
+I haven't time to answer them now. So I'll just state a few of the more
+obvious ones. For example: How many $n$-node binary trees are in normal form?
+Call this number $b_{n+1}$. It can be shown that the generating function
+$B(z)$ is defined by the formula $B(z)=z\exp\bigl(B(z)-{1\over2}B(z^2)
+{1\over3}B(z^3)-\cdots\,\bigr)$.
+I'm virtually certain that a little analysis will establish
+the formula $b_n\sim c\alpha^n/n^{3/2}$, where $c\approx0.36$ and
+$\alpha\approx2.52$, using methods that P\'olya applied to the similar
+equation $A(z)=z\exp\bigl(A(z)+{1\over2}A(z^2)+{1\over3}A(z^3)+\cdots\,\bigr)$;
+see {\sl Fundamental Algorithms}, exercise 2.3.4.4--4. The latter equation,
+incidentally, enumerates binary trees that are in normal form under the
+weaker condition $v(x_l)\ge v(x_{rl})$. The operator corresponding to this
+weaker condition is $a\star b=\omega^a+b$; it gives all the ``small''
+{\it ordinal\/} numbers. The free groupoid on one letter satisfying the
+axiom $a\star b\star c=b\star a\star c$ is isomorphic to the binary trees
+that have this weaker normal form.
+
+Another tantalizing problem: Estimate the size of the binary tree that
+represents $n$, when $n$ is large. This is the solution to the recurrence
+$$f(0)=0\,;\qquad f(2^a+b)=1+f(a)+f(b)\,,\quad\hbox{when $0\le b<2^a$}.$$
+Let $L(1)=1$ and $L(n)=\lfloor\lg n\rfloor L\bigl(\lfloor\lg n\rfloor\bigr)$
+for $n>1$. (Thus, $L(n)=\lg n(\lg\lg n)(\lg\lg\lg n)\ldots\,$, rounding
+each factor down to an integer and continuing until that integer reaches~1).
+Then it can be shown that $f(n)=\lfloor cL(n)/2^{\lg*n}\rfloor-2$ when
+$n$ has the special form $2\uparrow\uparrow m-1$ (namely a stack of 2s
+minus one): 1, 3, 7, 65535, $2^{65536}-1$, etc. Here $\lg*1=0$ and
+$\lg*n=1+\lg*\lfloor\lg n\rfloor$ when $n>1$. I conjecture that
+$f(n)\le\lfloor cL(n)/2^{\lg*n}\rfloor-2$ for all $n>0$. It is quite easy
+to prove the weaker bound $f(n)\le4L(n)-1$ by induction.
+
+How many binary trees give the value $n$? If this number is $c_n$, the
+generating function $C(z)$ satisfies
+$$C(z)={1\over1-c_0z-c_1z^2-c_2z^4-c_3z^8-\cdots}\,,$$
+so we find that $C(z)=1+z+2z^2+3z^3+7z^4+12z^5+23z^6+41z^7+81z^8+149z^9
++282z^{10}+\cdots\,$; what is the asymptotic growth?
+
+How many distinct values can you get by inserting parentheses into
+the expression $2\uparrow2\uparrow\cdots\uparrow2$, when there are $n$~2s?
+Since $2^{2^b}\uparrow2^{2^a}=2^{2^{a\star b}}$, this is the same as the
+number of distinct values you can get by inserting parentheses into
+the expression $0\star0\star\cdots\star0$ when there are $n$~0s. So it's
+the number of distinct values obtainable from $n-1$-node binary trees.
+This sequence begins $1,1,1,2,4,8,17,36,78,171,379$, according to
+Guy and Selfridge [{\sl AMM\/ \bf80} (1973), 868--876], but its general
+characteristics are unknown.
+
+Other problems concern time bounds for the algorithms below.
+
+\Y\B\8\#\&{include} \.{<stdio.h>}\7
+\X11:Type definitions\X\6
+\X2:Global variables\X\6
+\X13:Basic subroutines\X\6
+\X20:Subroutines\X\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k;\6
+\&{register} \&{node} ${}{*}\|p;{}$\7
+\X5:Initialize the data structures\X;\6
+\&{while} (\T{1})\1\5
+\X3:Prompt the user for a command and execute it\X\2\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{2}Input conventions. The user types short commands in a simple postfix
+language. For example, `\.{f2} \.{f3} \.+ \.s' means, ``fetch a copy of
+tree"2 (the output of a previous step), also fetch tree~3,
+add them, and compute the successor.''
+This tree will be displayed, and it might be fetched in later commands.
+
+Spaces in the input are ignored. Numbers are treated as decimal parameters
+for the operator that they follow; the default is zero if no explicit
+parameter is given. Each operator is a single character with mnemonic
+significance.
+
+The ``user manual'' is distributed throughout this program, since I keep
+adding features as I go. The operator `\.h' gives online help---a brief
+summary of all operators.
+
+\Y\B\4\D$\\{buf\_size}$ \5
+\T{200}\par
+\Y\B\4\X2:Global variables\X${}\E{}$\6
+\&{char} ${}{*}\\{helps}[\T{128}]{}$;\C{ strings describing each operator }\6
+\&{char} \\{buf}[\\{buf\_size}];\C{ the user's input goes here }\6
+\&{char} ${}{*}\\{loc}{}$;\C{ where we are looking in the buffer }\6
+\&{char} \\{op};\C{ the current operator }\6
+\&{int} \\{param};\C{ the parameter to the current operator }\par
+\As12, 24, 28, 45, 50, 53, 58\ETs63.
+\U1.\fi
+
+\M{3}\B\X3:Prompt the user for a command and execute it\X${}\E{}$\6
+${}\{{}$\1\6
+\X9:Fill \PB{\\{buf}} with the user's next sequence of commands\X;\6
+\X29:Clear the current stack\X;\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\X10:Set \PB{\\{op}} and \PB{\\{param}} for the next operator\X;\6
+\&{switch} (\\{op})\5
+${}\{{}$\1\6
+\4\&{case} \.{'\\n'}:\5
+\&{goto} \\{dump\_stack};\6
+\X6:Cases for one-character operators\X\6
+\4\&{default}:\5
+${}\\{printf}(\.{"Unknown\ operator\ `\%}\)\.{c'!\\n"},\39\\{op});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4\\{dump\_stack}:\5
+\X30:Display and save all trees currently in the stack\X;\6
+\X61:Check that the saved trees account for all the \PB{\\{used}} nodes\X;\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{4}Here's an example of how each operator is introduced; we begin with
+the `help' feature.
+
+\Y\B\4\X4:Define the help strings\X${}\E{}$\6
+$\\{helps}[\.{'h'}]\K\.{".helpful\ summary\ of}\)\.{\ all\ known\ operators}\)%
+\.{"}{}$;\C{ `\..' means that this operator ignores its parameter }\par
+\As7, 31, 33, 36, 38, 48\ETs51.
+\U5.\fi
+
+\M{5}\B\X5:Initialize the data structures\X${}\E{}$\6
+\X4:Define the help strings\X;\par
+\A46.
+\U1.\fi
+
+\M{6}I must remember to say \PB{\&{break}} at the end of the program for each
+case.
+
+\Y\B\4\X6:Cases for one-character operators\X${}\E{}$\6
+\4\&{case} \.{'h'}:\5
+\\{printf}(\.{"The\ following\ opera}\)\.{tors\ are\ currently\ i}\)%
+\.{mplemented:\\n"});\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{128};{}$ ${}\|k\PP){}$\1\6
+\&{if} (\\{helps}[\|k])\1\5
+${}\\{printf}(\.{"\ \ \%c\%s\ \%s\\n"},\39\|k,\39({*}\\{helps}[\|k]\E\.{'.'}\?%
+\.{":\ \ \ "}:\.{"<n>:"}),\39\\{helps}[\|k]+\T{1});{}$\2\2\6
+\&{break};\par
+\As8, 32, 34, 35, 37, 39, 40, 41, 42, 43, 49\ETs52.
+\U3.\fi
+
+\M{7}Here's another easy case: The normal way to stop, instead of resorting
+to control-C, is to give the quit command.
+
+\Y\B\4\X4:Define the help strings\X${}\mathrel+\E{}$\6
+$\\{helps}[\.{'q'}]\K\.{".quit\ the\ program"}{}$;\par
+\fi
+
+\M{8}\B\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
+\4\&{case} \.{'q'}:\5
+\\{printf}(\.{"Type\ <return>\ to\ co}\)\.{nfirm\ quitting:"});\6
+\&{if} ${}(\\{getchar}(\,)\E\.{'\\n'}){}$\1\5
+\&{return} \T{0};\2\6
+${}\\{fgets}(\\{buf},\39\\{buf\_size},\39\\{stdin}){}$;\C{ flush the rest of
+that line }\6
+\&{goto} \\{dump\_stack};\par
+\fi
+
+\M{9}\B\X9:Fill \PB{\\{buf}} with the user's next sequence of commands\X${}%
+\E{}$\6
+\\{printf}(\.{"?\ "});\C{ this is the prompt }\6
+\&{if} ${}(\\{fgets}(\\{buf},\39\\{buf\_size},\39\\{stdin})\E\T{0}){}$\1\5
+\&{return} \T{0};\C{ we quit at end of file }\2\6
+${}\\{loc}\K\\{buf}{}$;\C{ get ready to scan the buffer }\par
+\U3.\fi
+
+\M{10} The scanning routine is intentionally simple.
+
+\Y\B\4\D$\\{large}$ \5
+\T{1000000000}\C{ parameter numbers aren't allowed to get this big }\par
+\B\4\D$\\{larg}$ \5
+\T{100000000}\C{ \PB{$\\{large}/\T{10}$} }\par
+\Y\B\4\X10:Set \PB{\\{op}} and \PB{\\{param}} for the next operator\X${}\E{}$\6
+\&{while} ${}(\\{loc}<{\AND}\\{buf}[\\{buf\_size}]\W({*}\\{loc}\E\.{'\ '}\V{*}%
+\\{loc}<\T{0}\V{*}\\{loc}\G\T{128})){}$\1\5
+${}\\{loc}\PP{}$;\C{ bypass blanks and exotic characters }\2\6
+${}\\{param}\K\T{0}{}$;\C{ assign the default value }\6
+\&{if} ${}(\\{loc}\E{\AND}\\{buf}[\\{buf\_size}]){}$\1\5
+${}\\{op}\K\.{'\\n'};{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{op}\K{*}\\{loc}\PP;{}$\6
+\&{if} ${}(\\{op}\I\.{'\\n'}){}$\1\6
+\&{while} ${}(\\{loc}<{\AND}\\{buf}[\\{buf\_size}]\W({*}\\{loc}\E\.{'\ '}\V({*}%
+\\{loc}\Z\.{'9'}\W{*}\\{loc}\G\.{'0'}))){}$\5
+${}\{{}$\1\6
+\&{if} ${}({*}\\{loc}\I\.{'\ '}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{param}\G\\{larg}){}$\1\5
+${}\\{printf}(\.{"(I'm\ reducing\ your\ }\)\.{large\ parameter\ mod\ }\)\.{\%d)%
+\\n"},\39\\{large});{}$\2\6
+${}\\{param}\K((\\{param}\MOD\\{larg})*\T{10})+{*}\\{loc}-\.{'0'};{}$\6
+\4${}\}{}$\2\6
+${}\\{loc}\PP;{}$\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\par
+\U3.\fi
+
+\N{1}{11}Data structures. I'm representing trees in the obvious way: Each node
+consists of two pointers and one integer field for multipurpose use.
+
+\Y\B\4\X11:Type definitions\X${}\E{}$\6
+\&{typedef} \&{struct} \&{node\_struct} ${}\{{}$\1\6
+\&{int} \\{val};\C{ a value temporarily stored with this node }\6
+\&{struct} \&{node\_struct} ${}{*}\|l,{}$ ${}{*}\|r{}$;\C{ left and right
+subtree pointers }\2\6
+${}\}{}$ \&{node};\par
+\U1.\fi
+
+\M{12}Storage allocation is dynamic. We will explicitly free nodes when they
+are no longer active.
+
+\Y\B\4\X2:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{used};\C{ this many nodes are active }\6
+\&{node} ${}{*}\\{cur\_node}{}$;\C{ the next node to be allocated when we run
+out }\6
+\&{node} ${}{*}\\{bad\_node}{}$;\C{ if \PB{\\{cur\_node}} equals \PB{\\{bad%
+\_node}}, we need another block }\6
+\&{node} ${}{*}\\{avail}{}$;\C{ head of list of recycled nodes }\6
+\&{int} \\{mems};\C{ the number of memory references to node pointers }\par
+\fi
+
+\M{13}\B\D$\\{nodes\_per\_block}$ \5
+\T{1000}\par
+\Y\B\4\X13:Basic subroutines\X${}\E{}$\6
+\&{node} ${}{*}{}$\\{get\_avail}(\,)\C{ allocate a node }\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|p;{}$\7
+\&{if} (\\{avail})\5
+${}\{{}$\1\6
+${}\|p\K\\{avail};{}$\6
+${}\\{avail}\K\|p\MG\|r;{}$\6
+\4${}\}{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\\{cur\_node}\E\\{bad\_node}){}$\5
+${}\{{}$\1\6
+${}\\{cur\_node}\K{}$(\&{node} ${}{*}){}$ \\{calloc}${}(\\{nodes\_per\_block},%
+\39\&{sizeof}(\&{node}));{}$\6
+\&{if} ${}(\R\\{cur\_node}){}$\5
+${}\{{}$\1\6
+\\{printf}(\.{"Omigosh,\ the\ memory}\)\.{\ is\ all\ gone!\\n"});\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+${}\\{bad\_node}\K\\{cur\_node}+\\{nodes\_per\_block};{}$\6
+\4${}\}{}$\2\6
+${}\|p\K\\{cur\_node}\PP;{}$\6
+\4${}\}{}$\2\6
+${}\|p\MG\|l\K\|p\MG\|r\K\NULL;{}$\6
+${}\\{mems}\PP;{}$\6
+${}\\{used}\PP;{}$\6
+\&{return} \|p;\6
+\4${}\}{}$\2\par
+\As14, 15, 16, 17, 18, 19, 55, 60\ETs62.
+\U1.\fi
+
+\M{14}\B\X13:Basic subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{free\_node}(\|p)\C{ deallocate a node }\1\1\6
+\&{node} ${}{*}\|p;\2\2{}$\6
+${}\{{}$\1\6
+${}\|p\MG\|r\K\\{avail};{}$\6
+${}\\{avail}\K\|p;{}$\6
+${}\\{used}\MM;{}$\6
+${}\\{mems}\PP;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{15}We often want to free all nodes of a tree that has served its purpose.
+
+\Y\B\4\X13:Basic subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{recycle}(\|p)\C{ deallocate an entire tree }\1\1\6
+\&{node} ${}{*}\|p;\2\2{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\R\|p){}$\1\5
+\&{return};\2\6
+${}\\{recycle}(\|p\MG\|l);{}$\6
+${}\\{recycle}(\|p\MG\|r);{}$\6
+\\{free\_node}(\|p);\6
+\4${}\}{}$\2\par
+\fi
+
+\M{16}The algorithms for arithmetic are careful (I hope) to access node
+pointers only via the subroutines \PB{\\{left}}, \PB{\\{right}}, and \PB{%
+\\{change}}. This
+makes the program longer and slightly less readable, but it also
+ensures that \PB{\\{mems}} will be properly counted.
+
+In my first draft of this code I implemented a reference counter scheme,
+but I soon found that explicit deallocation was much better.;
+
+\Y\B\4\X13:Basic subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{left}(\|p)\C{ get the left subtree of a nonempty binary
+tree }\1\1\6
+\&{node} ${}{*}\|p;\2\2{}$\6
+${}\{{}$\1\6
+${}\\{mems}\PP;{}$\6
+\&{return} \|p${}\MG\|l;{}$\6
+\4${}\}{}$\2\7
+\&{node} ${}{*}{}$\\{right}(\|p)\C{ get the right subtree of a nonempty binary
+tree }\1\1\6
+\&{node} ${}{*}\|p;\2\2{}$\6
+${}\{{}$\1\6
+${}\\{mems}\PP;{}$\6
+\&{return} \|p${}\MG\|r;{}$\6
+\4${}\}{}$\2\7
+\&{void} ${}\\{change}(\|p,\39\|q{}$)\C{ change pointer field \PB{\|p} to \PB{%
+\|q} }\1\1\6
+\&{node} ${}{*}{*}\|p;{}$\6
+\&{node} ${}{*}\|q;\2\2{}$\6
+${}\{{}$\1\6
+${}{*}\|p\K\|q;{}$\6
+${}\\{mems}\PP;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{17}Simple tree operations. The multiplication routine needs to make
+several
+copies of subtrees, and the copying algorithm is one of the simplest we
+will need. So let's start with it. We can do the harder stuff once we
+get into the groove.
+
+\Y\B\4\X13:Basic subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{copy}(\|p)\C{ make a fresh copy of a binary tree }\1\1\6
+\&{node} ${}{*}\|p;\2\2{}$\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|q;{}$\7
+\&{if} ${}(\R\|p){}$\1\5
+\&{return} ${}\NULL;{}$\2\6
+${}\|q\K\\{get\_avail}(\,);{}$\6
+${}\\{change}({\AND}\|q\MG\|l,\39\\{copy}(\\{left}(\|p)));{}$\6
+${}\\{change}({\AND}\|q\MG\|r,\39\\{copy}(\\{right}(\|p)));{}$\6
+\&{return} \|q;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{18}Sometimes I want to copy tree behind the scenes; then I don't want to
+count mems.
+
+\Y\B\4\X13:Basic subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{cheap\_copy}(\|p)\C{ make a copy with no mem cost }\1\1\6
+\&{node} ${}{*}\|p;\2\2{}$\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|q;{}$\6
+\&{register} \&{int} \|m${}\K\\{mems};{}$\7
+${}\|q\K\\{copy}(\|p);{}$\6
+${}\\{mems}\K\|m;{}$\6
+\&{return} \|q;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{19}Another easy case, frequently needed for arithmetic, is the
+lexicographic comparison of binary trees. The \PB{\\{compare}} subroutine
+returns $-1$, $0$, or~$+1$ according as $p<q$, $p=q$, or $p>q$.
+
+\Y\B\4\X13:Basic subroutines\X${}\mathrel+\E{}$\6
+\&{int} ${}\\{compare}(\|p,\39\|q{}$)\C{ determine whether \PB{\|p} is less
+than, equal to, or                                    greater than~\PB{\|q} }\1%
+\1\6
+\&{node} ${}{*}\|p,{}$ ${}{*}\|q;\2\2{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k;\7
+\&{if} ${}(\R\|p){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\R\|q){}$\1\5
+\&{return} \T{0};\C{ they were both empty }\2\6
+\&{return} ${}{-}\T{1}{}$;\C{ only \PB{\|p} was empty, so it's less }\6
+\4${}\}{}$\2\6
+\&{if} ${}(\R\|q){}$\1\5
+\&{return} \T{1};\C{ only \PB{\|q} was empty, so \PB{\|p} was greater }\2\6
+${}\|k\K\\{compare}(\\{left}(\|p),\39\\{left}(\|q));{}$\6
+\&{if} ${}(\|k\I\T{0}){}$\1\5
+\&{return} \|k;\2\6
+\&{return} \\{compare}${}(\\{right}(\|p),\39\\{right}(\|q));{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{20}Having laid the groundwork, we come now to the first interesting case:
+The \PB{\\{succ}} function adds one to the value represented by a binary tree.
+
+This function would have been more efficient if we had represented
+numbers from right to left instead of from left to right. (A dual
+representation considers $2^a+b$ where $b$ is a multiple of $2^{a+1}$
+rather than a number less than $2^a$. The same number of nodes appears
+in both representations; the difference is sort of a reflection
+of the tree about a diagonal line, with a few additional alterations.)
+But the dual representation makes the comparison operation slower, and
+comparisons is more important than successions.
+
+The \PB{\\{succ}} routine is given a pointer to a nonempty binary tree.
+It changes that tree $T$ so that the new tree $T'$ has $v(T')=v(T)+1$;
+furthermore, $T'$ has the same root node as $T$. Thus this operation
+is sort of like `\PB{$\|T\PP$}'.
+
+\Y\B\4\X20:Subroutines\X${}\E{}$\6
+\&{void} \\{succ}(\|p)\C{ add one to tree \PB{\|p} }\1\1\6
+\&{node} ${}{*}\|p;\2\2{}$\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\\{pr},{}$ ${}{*}\\{pl},{}$ ${}{*}\\{prr},{}$
+${}{*}\\{prl};{}$\7
+${}\\{pr}\K\\{right}(\|p);{}$\6
+\&{if} ${}(\R\\{pr}){}$\5
+${}\{{}$\1\6
+${}\\{pr}\K\\{get\_avail}(\,);{}$\6
+${}\\{change}({\AND}\|p\MG\|r,\39\\{pr});{}$\6
+\4${}\}{}$\2\6
+\&{else}\1\5
+\\{succ}(\\{pr});\2\6
+${}\\{prr}\K\\{right}(\\{pr});{}$\6
+\&{if} ${}(\R\\{prr}){}$\5
+${}\{{}$\C{ the successor of \PB{\\{pr}} was a power of two;
+should we propagate a carry? }\1\6
+${}\\{pl}\K\\{left}(\|p);{}$\6
+${}\\{prl}\K\\{left}(\\{pr});{}$\6
+\&{if} ${}(\\{compare}(\\{pl},\39\\{prl})\E\T{0}){}$\5
+${}\{{}$\C{ yes, we should }\1\6
+\\{recycle}(\\{pr});\6
+${}\\{change}({\AND}\|p\MG\|r,\39\NULL);{}$\6
+\&{if} (\\{pl})\1\5
+\\{succ}(\\{pl});\2\6
+\&{else}\1\5
+${}\\{change}({\AND}\|p\MG\|l,\39\\{get\_avail}(\,));{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\As21, 25, 26, 27, 44, 47, 54\ETs57.
+\U1.\fi
+
+\N{1}{21}Addition. Arithmetic is now within our grasp. Again
+we need to think a bit about how to do it from left to right (i.e., from
+most significant bit to least significant). Here is a way that keeps the
+number of subtree comparisons to essentially the same amount as would
+be needed if we went from right to left.
+
+Trees \PB{\|p} and \PB{\|q} are destroyed by the action of the \PB{\\{sum}}
+procedure,
+which returns a tree that represents $v(T)+v(T')$. It also sets the
+global variable \PB{\\{easy}} nonzero if no carry propagated from the most
+significant bits.
+
+Incidentally, this addition operation is not associative on abnormal
+trees. The associative law fails, for example, on the first case I
+tried when I got the program working:
+$$\eqalign{
+b_{123}+(b_{456}+b_{789})&=2^{1+1+4}+2^{1+1}+4+2+2^{1+2^{1+1}}+1\,;\cr
+(b_{123}+b_{456})+b_{789}&=2^{1+1+4}+2^{1+1}+4+1+2+2^{1+2^{1+1}}\,.\cr}$$
+
+\Y\B\4\X20:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}\\{sum}(\|p,\39\|q{}$)\C{ compute the sum of two binary trees }%
+\1\1\6
+\&{node} ${}{*}\|p,{}$ ${}{*}\|q;\2\2{}$\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\\{pl},{}$ ${}{*}\\{ql};{}$\6
+\&{register} \&{int} \|s;\7
+${}\\{easy}\K\T{1};{}$\6
+\&{if} ${}(\R\|p){}$\1\5
+\&{return} \|q;\2\6
+\&{if} ${}(\R\|q){}$\1\5
+\&{return} \|p;\2\6
+${}\\{pl}\K\\{left}(\|p);{}$\6
+${}\\{ql}\K\\{left}(\|q);{}$\6
+${}\|s\K\\{compare}(\\{pl},\39\\{ql});{}$\6
+\&{if} ${}(\|s\E\T{0}){}$\5
+${}\{{}$\1\6
+\X23:Add \PB{\\{right}(\|p)} to \PB{\\{right}(\|q)} and append this to \PB{%
+\\{succ}(\\{pl})}\X\6
+${}\\{easy}\K\T{0}{}$;\5
+\&{return} \|p;\6
+\4${}\}{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\|s<\T{0}){}$\1\5
+\X22:Swap \PB{\|p} and \PB{\|q} so that \PB{$\|p>\|q$}\X;\2\6
+${}\|q\K\\{sum}(\\{right}(\|p),\39\|q);{}$\6
+\&{if} (\\{easy})\1\5
+\&{goto} \\{no\_sweat};\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{ql}\K\\{left}(\|q);{}$\6
+${}\|s\K\\{compare}(\\{pl},\39\\{ql}){}$;\C{ does a carry need to be
+propagated? }\6
+\&{if} ${}(\|s\E\T{0}){}$\5
+${}\{{}$\C{ yup }\1\6
+${}\\{change}({\AND}\|p\MG\|r,\39\\{right}(\|q));{}$\6
+\\{recycle}(\\{ql});\5
+\\{free\_node}(\|q);\6
+\&{if} (\\{pl})\1\5
+\\{succ}(\\{pl});\2\6
+\&{else}\1\5
+${}\\{change}({\AND}\|p\MG\|l,\39\\{get\_avail}(\,));{}$\2\6
+\&{return} \|p;\6
+\4${}\}{}$\2\6
+\&{else}\1\5
+${}\\{easy}\K\T{1}{}$;\C{ nope }\2\6
+\4${}\}{}$\2\6
+\4\\{no\_sweat}:\5
+${}\\{change}({\AND}\|p\MG\|r,\39\|q);{}$\6
+\&{return} \|p;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{22}\B\X22:Swap \PB{\|p} and \PB{\|q} so that \PB{$\|p>\|q$}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{pl}\K\\{ql};{}$\6
+${}\\{ql}\K\|p;{}$\6
+${}\|p\K\|q;{}$\6
+${}\|q\K\\{ql};{}$\6
+\4${}\}{}$\2\par
+\U21.\fi
+
+\M{23}\B\X23:Add \PB{\\{right}(\|p)} to \PB{\\{right}(\|q)} and append this to %
+\PB{\\{succ}(\\{pl})}\X${}\E{}$\6
+\\{recycle}(\\{ql});\6
+\&{if} (\\{pl})\1\5
+\\{succ}(\\{pl});\2\6
+\&{else}\1\5
+${}\\{change}({\AND}\|p\MG\|l,\39\\{get\_avail}(\,));{}$\2\6
+${}\\{change}({\AND}\|p\MG\|r,\39\\{sum}(\\{right}(\|p),\39\\{right}(\|q)));{}$%
+\6
+\\{free\_node}(\|q);\par
+\U21.\fi
+
+\M{24}\B\X2:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{easy};\C{ communication parameter for the \PB{\\{sum}} routine }\par
+\fi
+
+\M{25}One nice spinoff of the addition routine is the following procedure
+for normalization:
+
+\Y\B\4\X20:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{normalize}(\|p)\C{ change \PB{\|p} to normal form without
+changing the value }\1\1\6
+\&{node} ${}{*}\|p;\2\2{}$\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|q,{}$ ${}{*}\\{qq};{}$\7
+\&{if} ${}(\R\|p){}$\1\5
+\&{return};\2\6
+${}\|q\K\\{qq}\K\\{left}(\|p);{}$\6
+${}\|q\K\\{normalize}(\|q);{}$\6
+\&{if} ${}(\|q\I\\{qq}){}$\1\5
+${}\\{change}({\AND}\|p\MG\|l,\39\|q);{}$\2\6
+${}\|q\K\\{qq}\K\\{right}(\|p);{}$\6
+${}\|q\K\\{normalize}(\|q);{}$\6
+${}\\{change}({\AND}\|p\MG\|r,\39\NULL);{}$\6
+\&{return} \\{sum}${}(\|p,\39\|q);{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{26}Multiplication. A moment's thought reveals the somewhat surprising
+fact that
+it's easier to multiply by $2^a$ than by $a$. (Because if $b=2^{b_1}+\cdots
++2^{b_k}$, we have $2^ab=2^{a+b_1}-\cdots+2^{a+b_k}$.)
+
+\Y\B\4\X20:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}\\{ez\_prod}(\|p,\39\|q{}$)\C{ add \PB{\|p} to exponents of \PB{%
+\|q} }\1\1\6
+\&{node} ${}{*}\|p,{}$ ${}{*}\|q;\2\2{}$\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\\{qq},{}$ ${}{*}\\{qqr};{}$\7
+\&{if} ${}(\R\|q){}$\5
+${}\{{}$\1\6
+\\{recycle}(\|p);\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\\{qq}\K\|q;{}$ \\{qq}; ${}\\{qq}\K\\{qqr}){}$\5
+${}\{{}$\1\6
+${}\\{qqr}\K\\{right}(\\{qq});{}$\6
+\&{if} (\\{qqr})\1\5
+${}\\{change}({\AND}\\{qq}\MG\|l,\39\\{sum}(\\{left}(\\{qq}),\39\\{copy}(%
+\|p)));{}$\2\6
+\&{else}\1\5
+${}\\{change}({\AND}\\{qq}\MG\|l,\39\\{sum}(\\{left}(\\{qq}),\39\|p));{}$\2\6
+\4${}\}{}$\2\6
+\&{return} \|q;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{27}Full multiplication is, of course, a sum of such partial multiplications.
+I am not implementing it in the cleverest way, since I compute the
+final sum as $(\,\cdots((2^{a_1}b +2^{a_2}b)+2^{a_3}b)+\cdots\,)+2^{a_k}b$,
+thereby passing $k$ times over many of the nodes. It's obvious how to
+reduce this to $\log k$ times per node, but is there a better way?
+I leave that as an open problem for now.
+
+A bit of experimentation shows that the product of abnormal trees
+might not even be commutative, much less associative.
+
+\Y\B\4\X20:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}\\{prod}(\|p,\39\|q{}$)\C{ form the product of \PB{\|p} and \PB{%
+\|q} }\1\1\6
+\&{node} ${}{*}\|p,{}$ ${}{*}\|q;\2\2{}$\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\\{pp},{}$ ${}{*}\\{ppr},{}$ ${}{*}\\{ss};{}$\7
+\&{if} ${}(\R\|p\V\R\|q){}$\5
+${}\{{}$\1\6
+\\{recycle}(\|p);\6
+\\{recycle}(\|q);\6
+\&{return} ${}\NULL;{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\\{pp}\K\|p,\39\\{ss}\K\NULL;{}$ \\{pp}; ${}\\{pp}\K\\{ppr}){}$\5
+${}\{{}$\1\6
+${}\\{ppr}\K\\{right}(\\{pp});{}$\6
+\&{if} (\\{ppr})\1\5
+${}\\{ss}\K\\{sum}(\\{ss},\39\\{ez\_prod}(\\{left}(\\{pp}),\39\\{copy}(%
+\|q)));{}$\2\6
+\&{else}\1\5
+${}\\{ss}\K\\{sum}(\\{ss},\39\\{ez\_prod}(\\{left}(\\{pp}),\39\|q));{}$\2\6
+\\{free\_node}(\\{pp});\6
+\4${}\}{}$\2\6
+\&{return} \\{ss};\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{28}Stack discipline. Some commands put trees on the stack; others operate
+on those trees. Everything left on the stack at the end of a command line
+is displayed, and assigned an identification number for later use.
+
+\Y\B\4\D$\\{stack\_size}$ \5
+\T{20}\C{ this many trees can be on the stack at once }\par
+\B\4\D$\\{save\_size}$ \5
+\T{1000}\C{ this many trees can be recalled }\par
+\Y\B\4\X2:Global variables\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}\\{saved}[\\{save\_size}]{}$;\C{ trees that the user might
+recall }\6
+\&{int} \\{save\_ptr};\C{ the number of saved trees }\6
+\&{node} ${}{*}\\{stack}[\\{stack\_size}+\T{1}]{}$;\C{ there's one extra slot
+for breathing space }\6
+\&{int} \\{stack\_ptr};\C{ the number of items on the stack }\6
+\&{int} \\{showing\_mems};\C{ should we tell the user how many mems were used?
+}\6
+\&{int} \\{showing\_size};\C{ should we tell the user how big each tree is? }\6
+\&{int} \\{showing\_usage};\C{ should we tell the user how many nodes are
+active? }\6
+\&{int} \\{old\_mems};\C{ holding place for \PB{\\{mems}} until we're ready to
+report it }\par
+\fi
+
+\M{29}\B\X29:Clear the current stack\X${}\E{}$\6
+$\\{stack\_ptr}\K\T{0};{}$\6
+${}\\{mems}\K\T{0}{}$;\par
+\U3.\fi
+
+\M{30}The tree most recently in the stack is kept in \PB{\\{saved}[\T{0}]}.
+
+\Y\B\4\D$\\{operand}(\|n)$ \5
+$\\{stack}[\\{stack\_ptr}-(\|n){}$]\par
+\Y\B\4\X30:Display and save all trees currently in the stack\X${}\E{}$\6
+$\\{old\_mems}\K\\{mems};{}$\6
+\&{while} (\\{stack\_ptr})\5
+${}\{{}$\1\6
+${}\\{stack\_ptr}\MM;{}$\6
+\&{if} ${}(\PP\\{save\_ptr}<\\{save\_size}){}$\1\5
+${}\|k\K\\{save\_ptr};{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|k\K\T{0};{}$\6
+\\{recycle}(\\{saved}[\T{0}]);\6
+${}\\{save\_ptr}\K\\{save\_size}-\T{1};{}$\6
+\4${}\}{}$\2\6
+${}\\{saved}[\|k]\K\\{operand}(\T{0});{}$\6
+\&{if} ${}(\\{stack\_ptr}\E\T{0}\W\|k>\T{0}){}$\5
+${}\{{}$\1\6
+\\{recycle}(\\{saved}[\T{0}]);\6
+${}\\{saved}[\T{0}]\K\\{copy}(\\{saved}[\|k]);{}$\6
+\4${}\}{}$\2\6
+\X59:Display tree \PB{\\{saved}[\|k]}\X;\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{showing\_mems}\W\\{old\_mems}){}$\1\5
+${}\\{printf}(\.{"Operations\ cost\ \%d\ }\)\.{mems\\n"},\39\\{old\_mems});{}$%
+\2\6
+\&{if} (\\{showing\_usage})\1\5
+${}\\{printf}(\.{"(\%d\ nodes\ are\ now\ i}\)\.{n\ use)\\n"},\39\\{used}){}$;\2%
+\par
+\U3.\fi
+
+\M{31}\B\X4:Define the help strings\X${}\mathrel+\E{}$\6
+$\\{helps}[\.{'S'}]\K\.{":show\ tree\ sizes,\ i}\)\.{f\ <n>\ is\ nonzero"};{}$\6
+${}\\{helps}[\.{'T'}]\K\.{":show\ computation\ t}\)\.{ime\ in\ mems,\ if\ <n>\
+}\)\.{is\ nonzero"};{}$\6
+${}\\{helps}[\.{'U'}]\K\.{":show\ node\ usage,\ i}\)\.{f\ <n>\ is\
+nonzero"};{}$\6
+${}\\{helps}[\.{'k'}]\K\.{":kill\ \%<n>\ to\ conse}\)\.{rve\ memory"}{}$;\par
+\fi
+
+\M{32}\B\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
+\4\&{case} \.{'S'}:\5
+${}\\{showing\_size}\K\\{param}{}$;\5
+\&{break};\6
+\4\&{case} \.{'T'}:\5
+${}\\{showing\_mems}\K\\{param}{}$;\5
+\&{break};\6
+\4\&{case} \.{'U'}:\5
+${}\\{showing\_usage}\K\\{param}{}$;\5
+\&{break};\6
+\4\&{case} \.{'k'}:\6
+\&{if} ${}(\\{param}>\\{save\_ptr}){}$\1\5
+${}\\{printf}(\.{"You\ can't\ do\ k\%d,\ b}\)\.{ecause\ \%\%\%d\ doesn't\ }\)%
+\.{exist!\\n"},\39\\{param},\39\\{param});{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\\{recycle}(\\{saved}[\\{param}]);\6
+${}\\{saved}[\\{param}]\K\NULL;{}$\6
+\4${}\}{}$\2\6
+\&{break};\par
+\fi
+
+\M{33}One way to put a new item on the stack is to copy an old item.
+
+\Y\B\4\X4:Define the help strings\X${}\mathrel+\E{}$\6
+$\\{helps}[\.{'\%'}]\K\.{":recall\ a\ previousl}\)\.{y\ computed\ tree"};{}$\6
+${}\\{helps}[\.{'d'}]\K\.{":duplicate\ a\ tree\ t}\)\.{hat's\ already\ on\ the}%
+\)\.{\ stack"}{}$;\par
+\fi
+
+\M{34}\B\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
+\4\&{case} \.{'\%'}:\6
+\&{if} ${}(\\{param}>\\{save\_ptr}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"(\%\%\%d\ is\ unknown;\ I}\)\.{'m\ using\ \%\%0\ instead}\)%
+\.{)\\n"},\39\\{param});{}$\6
+${}\\{param}\K\T{0};{}$\6
+\4${}\}{}$\2\6
+${}\\{operand}(\T{0})\K\\{cheap\_copy}(\\{saved}[\\{param}]);{}$\6
+\4\\{inc\_stack}:\6
+\&{if} ${}(\\{stack\_ptr}<\\{stack\_size}){}$\5
+${}\{{}$\1\6
+${}\\{stack\_ptr}\PP;{}$\6
+\&{break};\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"Oops---the\ stack\ ov}\)\.{erflowed!\\n"});\6
+\\{recycle}(\\{operand}(\T{0}));\6
+\&{goto} \\{dump\_stack};\par
+\fi
+
+\M{35}The command `\.d' duplicates the top tree on the stack. Similarly,
+`\.{d3}' duplicates the item three down from the top.
+
+\Y\B\4\D$\\{check\_stack}(\|k)$ \6
+\&{if} ${}(\\{stack\_ptr}<\|k){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"Not\ enough\ items\ on}\)\.{\ the\ stack\ for\ opera}\)\.{tor%
+\ \%c!\\n"},\39\\{op});{}$\6
+\&{goto} \\{dump\_stack};\6
+\4${}\}{}$\2\par
+\Y\B\4\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
+\4\&{case} \.{'d'}:\5
+${}\\{check\_stack}(\\{param}+\T{1});{}$\6
+${}\\{operand}(\T{0})\K\\{cheap\_copy}(\\{operand}(\\{param}+\T{1}));{}$\6
+\&{goto} \\{inc\_stack};\par
+\fi
+
+\M{36}Here are two trivial operations that seem pointless, because I haven't
+allowed the user to define macros. But in fact, users do have macros,
+because they can run {\sc TCALC} from an emacs shell.
+
+\Y\B\4\X4:Define the help strings\X${}\mathrel+\E{}$\6
+$\\{helps}[\.{'p'}]\K\.{".pop\ the\ top\ tree\ o}\)\.{ff\ the\ stack"};{}$\6
+${}\\{helps}[\.{'x'}]\K\.{".exchange\ the\ top\ t}\)\.{wo\ trees"}{}$;\par
+\fi
+
+\M{37}Of course I could generalize these commands so that \PB{\\{param}} is
+relevant.
+
+\Y\B\4\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
+\4\&{case} \.{'p'}:\5
+\\{check\_stack}(\T{1});\6
+${}\\{stack\_ptr}\MM;{}$\6
+\\{recycle}(\\{operand}(\T{0}));\6
+\&{break};\6
+\4\&{case} \.{'x'}:\5
+\\{check\_stack}(\T{2});\6
+${}\|p\K\\{operand}(\T{2}){}$;\5
+${}\\{operand}(\T{2})\K\\{operand}(\T{1}){}$;\5
+${}\\{operand}(\T{1})\K\|p;{}$\6
+\&{break};\par
+\fi
+
+\M{38}Now we implement the arithmetic operators. Later we'll define an
+operator \.t such that `\.{tj}' replaces tree $a$ by $2^a$.
+
+\Y\B\4\X4:Define the help strings\X${}\mathrel+\E{}$\6
+$\\{helps}[\.{'l'}]\K\.{".replace\ tree\ by\ it}\)\.{s\ log\ (the\ left\ subt}%
+\)\.{ree)"};{}$\6
+${}\\{helps}[\.{'r'}]\K\.{".replace\ tree\ by\ it}\)\.{s\ remainder\ (the\ rig}%
+\)\.{ht\ subtree)"};{}$\6
+${}\\{helps}[\.{'s'}]\K\.{".replace\ tree\ by\ it}\)\.{s\ successor"};{}$\6
+${}\\{helps}[\.{'n'}]\K\.{".normalize\ a\ tree"};{}$\6
+${}\\{helps}[\.{'+'}]\K\.{".replace\ a,b\ by\ a+b}\)\.{"};{}$\6
+${}\\{helps}[\.{'*'}]\K\.{".replace\ a,b\ by\ ab"};{}$\6
+${}\\{helps}[\.{'\^'}]\K\.{".replace\ a,b\ by\ a\^b}\)\.{,\ assuming\ that\ a\
+is}\)\.{\ a\ power\ of\ 2"};{}$\6
+${}\\{helps}[\.{'j'}]\K\.{".replace\ a,b\ by\ 2\^a}\)\.{+b"}{}$;\C{ \.j is for
+``join'' }\6
+${}\\{helps}[\.{'m'}]\K\.{".replace\ a,b\ by\ 2\^a}\)\.{\ b"}{}$;\par
+\fi
+
+\M{39}Here's a typical unary operator.
+
+\Y\B\4\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
+\4\&{case} \.{'n'}:\5
+\\{check\_stack}(\T{1});\C{ normalization }\6
+${}\\{operand}(\T{1})\K\\{normalize}(\\{operand}(\T{1}));{}$\6
+\&{break};\par
+\fi
+
+\M{40}And another, only slightly more tricky.
+
+\Y\B\4\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
+\4\&{case} \.{'s'}:\5
+\\{check\_stack}(\T{1});\C{ the succ operation }\6
+\&{if} (\\{operand}(\T{1}))\1\5
+\\{succ}(\\{operand}(\T{1}));\2\6
+\&{else}\1\5
+${}\\{operand}(\T{1})\K\\{get\_avail}(\,);{}$\2\6
+\&{break};\par
+\fi
+
+\M{41}The \.l and \.r operators are charged as many mems as it takes to
+recycle the discarded nodes of the tree.
+
+\Y\B\4\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
+\4\&{case} \.{'l'}:\5
+\\{check\_stack}(\T{1});\C{ the log operation }\6
+${}\|p\K\\{operand}(\T{1});{}$\6
+\&{if} ${}(\R\|p){}$\1\5
+\\{printf}(\.{"(log\ 0\ is\ undefined}\)\.{;\ I'm\ using\ 0)\\n"});\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{operand}(\T{1})\K\\{left}(\|p);{}$\6
+\\{recycle}(\\{right}(\|p));\6
+\\{free\_node}(\|p);\6
+\4${}\}{}$\2\6
+\&{break};\6
+\4\&{case} \.{'r'}:\5
+\\{check\_stack}(\T{1});\C{ the rem operation }\6
+${}\|p\K\\{operand}(\T{1});{}$\6
+\&{if} ${}(\R\|p){}$\1\5
+\\{printf}(\.{"(rem\ 0\ is\ undefined}\)\.{;\ I'm\ using\ 0)\\n"});\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{operand}(\T{1})\K\\{right}(\|p);{}$\6
+\\{recycle}(\\{left}(\|p));\6
+\\{free\_node}(\|p);\6
+\4${}\}{}$\2\6
+\&{break};\par
+\fi
+
+\M{42}Binary operations are equally simple.
+
+\Y\B\4\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
+\4\&{case} \.{'j'}:\5
+\\{check\_stack}(\T{2});\C{ prepare for joining }\6
+${}\\{stack\_ptr}\MM;{}$\6
+${}\|p\K\\{get\_avail}(\,);{}$\6
+${}\|p\MG\|l\K\\{operand}(\T{1});{}$\6
+${}\|p\MG\|r\K\\{operand}(\T{0});{}$\6
+\4\\{return\_p}:\5
+${}\\{operand}(\T{1})\K\|p;{}$\6
+\&{break};\6
+\4\&{case} \.{'+'}:\5
+\\{check\_stack}(\T{2});\C{ prepare for addition }\6
+${}\\{stack\_ptr}\MM;{}$\6
+${}\\{operand}(\T{1})\K\\{sum}(\\{operand}(\T{1}),\39\\{operand}(\T{0}));{}$\6
+\&{break};\6
+\4\&{case} \.{'*'}:\5
+\\{check\_stack}(\T{2});\C{ prepare for multiplication }\6
+${}\\{stack\_ptr}\MM;{}$\6
+${}\\{operand}(\T{1})\K\\{prod}(\\{operand}(\T{1}),\39\\{operand}(\T{0}));{}$\6
+\&{break};\6
+\4\&{case} \.{'m'}:\5
+\\{check\_stack}(\T{2});\C{ prepare for power-of-2 multiplication }\6
+${}\\{stack\_ptr}\MM;{}$\6
+${}\\{operand}(\T{1})\K\\{ez\_prod}(\\{operand}(\T{1}),\39\\{operand}(%
+\T{0}));{}$\6
+\&{break};\par
+\fi
+
+\M{43}Here's the only one that's not quite trivial. Strictly speaking, I
+should disallow $0^x$; but the implementation is so easy, I went ahead
+and did it.
+
+\Y\B\4\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
+\4\&{case} \.{'\^'}:\5
+\\{check\_stack}(\T{2});\C{ prepare for exponentiation }\6
+${}\\{stack\_ptr}\MM;{}$\6
+${}\|p\K\\{operand}(\T{1});{}$\6
+\&{if} ${}(\R\|p){}$\5
+${}\{{}$\1\6
+\&{if} (\\{operand}(\T{0}))\1\5
+\\{recycle}(\\{operand}(\T{0}));\2\6
+\&{else}\1\5
+${}\|p\K\\{get\_avail}(\,){}$;\C{ $0^0=1$ }\2\6
+\4${}\}{}$\2\6
+\&{else} \&{if} (\\{right}(\|p))\5
+${}\{{}$\1\6
+\\{printf}(\.{"Sorry,\ I\ don't\ do\ a}\)\.{\^b\ unless\ a\ is\ a\ pow}\)\.{er\
+of\ 2!\\n"});\6
+${}\\{stack\_ptr}\PP;{}$\6
+\&{goto} \\{dump\_stack};\6
+\4${}\}{}$\2\6
+\&{else}\1\5
+${}\\{change}({\AND}\|p\MG\|l,\39\\{prod}(\\{left}(\|p),\39\\{operand}(%
+\T{0})));{}$\2\6
+\&{goto} \\{return\_p};\par
+\fi
+
+\N{1}{44}Generating binary trees. But how do the trees get built in the first
+place?
+One useful way to get a fairly big tree is to ask for `\.t$n$', the tree
+that canonically represents~$n$. Then we can get bigger by multiplication
+and exponentiation, etc.
+
+If this program is working properly, and if $n$ does not exceed the
+\PB{\\{threshold}} for compression to be described below, the binary tree
+created here will be displayed simply as the integer~$n$.
+
+\Y\B\4\X20:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{normal\_tree}(\|n)\C{ generate the standard tree
+representation of \PB{\|n} }\1\1\6
+\&{int} \|n;\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k;\6
+\&{register} \&{node} ${}{*}\|p;{}$\7
+\&{if} ${}(\R\|n){}$\1\5
+\&{return} ${}\NULL;{}$\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}(\T{1}\LL\|k)\Z\|n;{}$ ${}\|k\PP){}$\1\5
+;\C{ compute $k=1+\lfloor\lg n\rfloor$ }\2\6
+${}\|p\K\\{get\_avail}(\,){}$;\5
+${}\\{mems}\MM;{}$\6
+${}\|p\MG\|l\K\\{normal\_tree}(\|k-\T{1});{}$\6
+${}\|p\MG\|r\K\\{normal\_tree}(\|n-(\T{1}\LL(\|k-\T{1})));{}$\6
+\&{return} \|p;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{45}There's also a convenient way to build random binary trees, so that
+we can experiment with abnormal structures.
+
+For these, it's handy to have a table of the Catalan numbers, which
+enumerate the binary trees that have $n$~nodes.
+
+\Y\B\4\X2:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{cat}[\T{20}];\C{ the first twenty Catalan numbers; \PB{$\\{cat}[%
+\T{19}]\K\T{1767263190}$} }\par
+\fi
+
+\M{46}We have to be careful when evaluating $\PB{\\{cat}}[n]=(4n-2)\PB{%
+\\{cat}}[n-1]/(n+1)$,
+because the intermediate result might overflow even though the answer
+is a single-precision integer.
+
+\Y\B\4\X5:Initialize the data structures\X${}\mathrel+\E{}$\6
+$\\{cat}[\T{0}]\K\T{1};{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\T{20};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{register} \&{int} \\{quot}${}\K\\{cat}[\|k-\T{1}]/(\|k+\T{1}),{}$ \\{rem}${}%
+\K\\{cat}[\|k-\T{1}]\MOD(\|k+\T{1});{}$\7
+${}\\{cat}[\|k]\K(\T{4}*\|k-\T{2})*\\{quot}+(\&{int})(((\T{4}*\|k-\T{2})*%
+\\{rem})/(\|k+\T{1}));{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{47}The \PB{\\{btree}} subroutine is called only when $0\le m<\PB{%
+\\{cat}}[n]$.
+
+\Y\B\4\X20:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}\\{btree}(\|n,\39\|m{}$)\C{ generate the \PB{\|m}th binary tree
+that has \PB{\|n} nodes }\1\1\6
+\&{int} \|n${},{}$ \|m;\2\2\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|p;{}$\6
+\&{register} \&{int} \|k;\7
+\&{if} ${}(\R\|n){}$\1\5
+\&{return} ${}\NULL;{}$\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\\{cat}[\|k]*\\{cat}[\|n-\T{1}-\|k]\Z\|m;{}$ ${}%
+\|k\PP){}$\1\5
+${}\|m\MRL{-{\K}}\\{cat}[\|k]*\\{cat}[\|n-\T{1}-\|k];{}$\2\6
+${}\|p\K\\{get\_avail}(\,){}$;\5
+${}\\{mems}\MM;{}$\6
+${}\|p\MG\|l\K\\{btree}(\|k,\39(\&{int})(\|m/\\{cat}[\|n-\T{1}-\|k]));{}$\6
+${}\|p\MG\|r\K\\{btree}(\|n-\T{1}-\|k,\39\|m\MOD\\{cat}[\|n-\T{1}-\|k]);{}$\6
+\&{return} \|p;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{48}\B\X4:Define the help strings\X${}\mathrel+\E{}$\6
+$\\{helps}[\.{'t'}]\K\.{":the\ standard\ tree\ }\)\.{that\ represents\
+<n>"};{}$\6
+${}\\{helps}[\.{'b'}]\K\.{":the\ binary\ tree\ of}\)\.{\ rank\ <n>\ in\
+lexicog}\)\.{raphic\ order"}{}$;\par
+\fi
+
+\M{49}Lexicographic order of binary trees is taken to mean that we order
+them first by number of nodes, then recursively by the order of
+the \PB{\\{compare}} function.
+
+\Y\B\4\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
+\4\&{case} \.{'t'}:\5
+${}\\{operand}(\T{0})\K\\{normal\_tree}(\\{param});{}$\6
+\&{goto} \\{inc\_stack};\6
+\4\&{case} \.{'b'}:\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\\{cat}[\|k]\Z\\{param};{}$ ${}\|k\PP){}$\1\5
+${}\\{param}\MRL{-{\K}}\\{cat}[\|k];{}$\2\6
+${}\\{operand}(\T{0})\K\\{btree}(\|k,\39\\{param});{}$\6
+\&{goto} \\{inc\_stack};\par
+\fi
+
+\N{1}{50}Displaying the results. And finally, the grand climax---the most
+interesting
+algorithm in this whole program.
+
+A special form of display is appropriate for the binary trees we're
+considering. If a tree is in normal form, we can describe it by simply
+stating its value. However, a small binary tree can have a
+super-astronomical value; there is in fact a tree with six nodes whose
+numerical value involves more decimal digits than there are molecules in the
+universe! So we use power-of-two notation whenever the value of a
+subtree exceeds a given \PB{\\{thrsehold}}.
+
+If \PB{$\\{threshold}\K\T{0}$}, for example, the printed representation of~19,
+a tree of seven nodes, takes five lines:
+$$\catcode`?=\active \let?=\space
+\vbox{\halign{\tt#\hfil\cr
+????0\cr
+???2\cr
+??2?????0\cr
+?2?????2???0\cr
+2????+2??+2\cr}}$$
+(There's one `\.2' for each node, and one `\.+' for each node with a
+nonnull right subtree.) But if \PB{$\\{threshold}\K\T{1}$}, the displayed
+output will be
+$$\catcode`?=\active \let?=\space
+\vbox{\halign{\tt#\hfil\cr
+???1\cr
+??2\cr
+?2????1\cr
+2???+2?+1\cr}}$$
+And with \PB{$\\{threshold}\K\T{2}$} it becomes simpler yet:
+$$\catcode`?=\active \let?=\space
+\vbox{\halign{\tt#\hfil\cr
+??2\cr
+?2\cr
+2??+2+1\cr}}$$
+With \PB{$\\{threshold}\K\T{3}$} the `\.{2+1}' becomes `\.3', and with \PB{$%
+\\{threshold}\G\T{19}$}
+the whole tree is displayed simply as `\.{19}'.
+
+If a binary tree is not in normal form, its normal-form subtrees are displayed
+as usual but its abnormal subtrees are displayed as if the threshold were
+exceeded. For example, a two-node tree that has no left subtree will be
+displayed as `\.{1+1}' for all values of \PB{$\\{threshold}>\T{0}$}. This
+convention
+ensures that the tree structure is uniquely characterized by the display.
+
+Some binary trees are so huge, we don't want to see them displayed in full.
+The user can suppress detailed output of any tree with
+\PB{\\{max\_display\_size}} or more nodes. The value of
+\PB{\\{max\_display\_size}} must exceed the default value of 1000.
+
+\Y\B\4\D$\\{max\_tree}$ \5
+\T{1000}\C{ we don't display trees having this many nodes }\par
+\Y\B\4\X2:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{threshold};\C{ trees are compressed if their value is at most this }%
+\6
+\&{int} \\{max\_display\_size}${}\K\\{max\_tree}{}$;\C{ trees are shown if
+their size is less than this }\par
+\fi
+
+\M{51}\B\X4:Define the help strings\X${}\mathrel+\E{}$\6
+$\\{helps}[\.{'M'}]\K\.{".use\ maximum\ possib}\)\.{le\ compression\ thres}\)%
+\.{hold\ for\ tree\ displa}\)\.{y"};{}$\6
+${}\\{helps}[\.{'N'}]\K\.{":compress\ tree\ disp}\)\.{lays\ only\ for\ t0..t<}%
+\)\.{n>"};{}$\6
+${}\\{helps}[\.{'O'}]\K\.{":omit\ display\ of\ tr}\)\.{ees\ having\ <n>\ or\
+mo}\)\.{re\ nodes"}{}$;\par
+\fi
+
+\M{52}\B\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
+\4\&{case} \.{'M'}:\5
+${}\\{param}\K\\{large}-\T{1};{}$\6
+\4\&{case} \.{'N'}:\5
+${}\\{threshold}\K\\{param};{}$\6
+\&{break};\6
+\4\&{case} \.{'O'}:\6
+\&{if} ${}(\\{param}>\\{max\_tree}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"(I've\ changed\ O\%d\ t}\)\.{o\ the\ maximum\ permit}\)\.{ted%
+\ value,\ O\%d)\\n"},\39\\{param},\39\\{max\_tree});{}$\6
+${}\\{param}\K\\{max\_tree};{}$\6
+\4${}\}{}$\2\6
+${}\\{max\_display\_size}\K\\{param};{}$\6
+\&{break};\par
+\fi
+
+\M{53}The idea we'll use to display a tree is to tackle the job in two phases.
+First, we compute statistics about the tree nodes, so that the root of
+the tree ``knows'' about its subtrees. Then we recursively print each
+line of the display.
+
+The statistics-gathering phase is handled by a routine called \PB{\\{get%
+\_state}}.
+It first stamps each node with a serial number \PB{\|j}, which turns out to be
+the index of that node in postorder. Then it computes several important
+facts about that node's subtree: \PB{\\{width}[\|j]}, the number of columns
+needed to display this subtree; \PB{\\{height}[\|j]}, the number
+of rows needed to display this subtree, not counting the base row;
+\PB{\\{code}[\|j]}, the numerical value of this subtree; and
+\PB{\\{lcode}[\|j]}, which is zero if no \.+ sign will be printed for
+this subtree, otherwise it's the code for the part that precedes
+the \.+. An abnormal subtree is always considered \PB{\\{large}}.
+
+Initialization constants here apply to the empty binary tree, whose
+width is~1 because it's always displayed as `\.0'.
+
+\Y\B\4\X2:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{width}[\\{max\_tree}]${}\K\{\T{1}\}{}$;\C{ columns needed to display
+a subtree }\6
+\&{int} \\{height}[\\{max\_tree}];\C{ extra rows needed to display a subtree }\6
+\&{int} \\{code}[\\{max\_tree}];\C{ compressed numerical value, or \PB{%
+\\{large}} }\6
+\&{int} \\{lcode}[\\{max\_tree}];\C{ extra info when this subtree needs a \.+
+sign }\6
+\&{int} \\{count};\C{ this will be set to the number of nodes in the tree }\par
+\fi
+
+\M{54}\B\X20:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{get\_stats}(\|p)\C{ walk the tree and determine widths, lengths,
+etc. }\1\1\6
+\&{node} ${}{*}\|p;\2\2{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \\{jl}${},{}$ \\{jr};\7
+\&{if} ${}(\R\|p){}$\1\5
+\&{return};\2\6
+${}\\{get\_stats}(\|p\MG\|l){}$;\5
+${}\\{get\_stats}(\|p\MG\|r){}$;\C{ postorder traversal }\6
+${}\\{jl}\K(\|p\MG\|l\?\|p\MG\|l\MG\\{val}:\T{0});{}$\6
+${}\\{jr}\K(\|p\MG\|r\?\|p\MG\|r\MG\\{val}:\T{0});{}$\6
+${}\|p\MG\\{val}\K\|j\K\PP\\{count};{}$\6
+\&{if} ${}(\\{count}<\\{max\_display\_size}){}$\1\5
+\X56:Compute stats for \PB{\|j} from the stats of \PB{\\{jl}}, \PB{\\{jr}}\X;\2%
+\6
+\4${}\}{}$\2\par
+\fi
+
+\M{55}We need a subroutine to compute the width of a decimal number.
+
+\Y\B\4\X13:Basic subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{dwidth}(\|n)\C{ how many digits do we need to print \PB{\|n}? }\1\1\6
+\&{int} \|n;\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k;\7
+\&{for} ${}(\|j\K\T{1},\39\|k\K\T{10};{}$ ${}\|n\G\|k;{}$ ${}\|j\PP,\39\|k%
+\MRL{*{\K}}\T{10}){}$\1\5
+;\C{ $k=10^j$ }\2\6
+\&{return} \|j;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{56}Here we assume that the constant called \PB{\\{large}} is 1000000000.
+We use the facts that \PB{$\\{threshold}\Z\\{large}$} and $2^{29}<\PB{%
+\\{large}}<2^{30}$.
+Also the fact that \PB{$\\{large}+\\{large}<\\{maxint}$}.
+
+\Y\B\4\D$\\{lg\_large}$ \5
+\T{29}\C{ $\lfloor \log_2 \PB{\\{large}}\rfloor$ }\par
+\Y\B\4\X56:Compute stats for \PB{\|j} from the stats of \PB{\\{jl}}, \PB{%
+\\{jr}}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \\{tjl};\C{ $2^{\hbox{\PB{\\{jl}}}}$, or \PB{\\{large}} }\7
+${}\\{tjl}\K(\\{code}[\\{jl}]\Z\\{lg\_large}\?\T{1}\LL\\{code}[\\{jl}]:%
+\\{large});{}$\6
+\&{if} ${}(\\{tjl}\Z\\{threshold}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{code}[\\{jr}]<\\{tjl}\W\\{tjl}+\\{code}[\\{jr}]\Z%
+\\{threshold}){}$\5
+${}\{{}$\1\6
+${}\\{code}[\|j]\K\\{tjl}+\\{code}[\\{jr}];{}$\6
+${}\\{lcode}[\|j]\K\T{0};{}$\6
+${}\\{width}[\|j]\K\\{dwidth}(\\{code}[\|j]);{}$\6
+${}\\{height}[\|j]\K\T{0};{}$\6
+\4${}\}{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{code}[\|j]\K\\{large};{}$\6
+${}\\{lcode}[\|j]\K\\{tjl};{}$\6
+${}\\{width}[\|j]\K\\{dwidth}(\\{tjl})+\\{width}[\\{jr}]+\T{1};{}$\6
+${}\\{height}[\|j]\K\\{height}[\\{jr}];{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{code}[\|j]\K\\{large};{}$\6
+${}\\{width}[\|j]\K\\{width}[\\{jl}]+\\{width}[\\{jr}];{}$\6
+\&{if} ${}(\|p\MG\|r\E\T{0}){}$\1\5
+${}\\{lcode}[\|j]\K\T{0};{}$\2\6
+\&{else}\1\5
+${}\\{lcode}[\|j]\K\\{large},\39\\{width}[\|j]\MRL{+{\K}}\T{2};{}$\2\6
+${}\\{height}[\|j]\K\T{1}+\\{height}[\\{jl}];{}$\6
+\&{if} ${}(\\{height}[\\{jr}]>\\{height}[\|j]){}$\1\5
+${}\\{height}[\|j]\K\\{height}[\\{jr}];{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U54.\fi
+
+\M{57}The second phase is governed by another recursive procedure. This
+one, called \PB{\\{print\_rep}}, has three parameters representing a subtree
+to be displayed and its starting line and column numbers. Lines are
+numbered 0 and up from bottom to top.
+
+Global variable \PB{\|h} contains the line actually being printed. If \PB{$\|l%
+\I\|h$},
+we keep track of our position but don't emit any characters. The
+subroutine is called only when \PB{$\|l\Z\|h\Z\|l+\\{height}[\|j]$}, where \PB{%
+\|j} is the
+postorder index of the subtree being printed.
+
+Another global variable, \PB{\\{col}}, represents the number of columns output
+so far on line~\PB{\|h}.
+
+\Y\B\4\D$\\{align\_to}(\|c)$ \6
+\&{while} ${}(\\{col}<\|c){}$\5
+${}\{{}$\5
+\1${}\\{col}\PP{}$;\5
+\\{putchar}(\.{'\ '});\5
+${}\}{}$\2\par
+\B\4\D$\\{print\_digs}(\|n)$ \6
+${}\{{}$\5
+\1\\{align\_to}(\|c);\5
+${}\\{printf}(\.{"\%d"},\39\|n){}$;\5
+${}\\{col}\MRL{+{\K}}\\{dwidth}(\|n){}$;\5
+${}\}{}$\2\par
+\B\4\D$\\{print\_char}(\|n)$ \6
+${}\{{}$\5
+\1\\{align\_to}(\|c);\5
+\\{putchar}(\|n);\5
+${}\\{col}\PP{}$;\5
+${}\}{}$\2\par
+\Y\B\4\X20:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} ${}\\{print\_rep}(\|p,\39\|l,\39\|c{}$)\C{ print the representation of
+\PB{\|p} }\1\1\6
+\&{node} ${}{*}\|p{}$;\C{ the subtree in question }\6
+\&{int} \|l${},{}$ \|c;\C{ the starting line and column positions }\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${}\K(\|p\?\|p\MG\\{val}:\T{0});{}$\7
+\&{if} ${}(\\{code}[\|j]<\\{large}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|l\E\|h){}$\1\5
+\\{print\_digs}(\\{code}[\|j]);\2\6
+\4${}\}{}$\2\6
+\&{else} \&{if} ${}(\\{lcode}[\|j]\W\\{lcode}[\|j]<\\{large}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|l\E\|h){}$\1\5
+\\{print\_digs}(\\{lcode}[\|j]);\2\6
+\4${}\}{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{register} \&{int} \\{jl}${}\K(\|p\MG\|l\?\|p\MG\|l\MG\\{val}:\T{0});{}$\7
+\&{if} ${}(\|l\E\|h){}$\1\5
+\\{print\_char}(\.{'2'});\2\6
+\&{if} ${}(\|l<\|h\W\|l+\T{1}+\\{height}[\\{jl}]\G\|h){}$\1\5
+${}\\{print\_rep}(\|p\MG\|l,\39\|l+\T{1},\39\|c+\T{1});{}$\2\6
+\4${}\}{}$\2\6
+\&{if} (\\{lcode}[\|j])\5
+${}\{{}$\1\6
+\&{register} \\{jr}${}\K\|p\MG\|r\MG\\{val}{}$;\C{ we know that \PB{$\|p\MG\|r%
+\I\NULL$} }\7
+\&{if} ${}(\|l+\\{height}[\\{jr}]\G\|h){}$\5
+${}\{{}$\1\6
+${}\|c\MRL{+{\K}}\\{width}[\|j]-\\{width}[\\{jr}]-\T{1};{}$\6
+\&{if} ${}(\|l\E\|h){}$\1\5
+\\{print\_char}(\.{'+'});\2\6
+${}\\{print\_rep}(\|p\MG\|r,\39\|l,\39\|c+\T{1});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{58}\B\X2:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \|h;\C{ the row currently being printed }\6
+\&{int} \\{col};\C{ the col currently being printed }\par
+\fi
+
+\M{59}OK, we've built the necessary recursive mechanisms; now we just have
+to supply the driver program.
+
+\Y\B\4\X59:Display tree \PB{\\{saved}[\|k]}\X${}\E{}$\6
+$\\{count}\K\T{0};{}$\6
+${}\|p\K\\{saved}[\|k];{}$\6
+\\{get\_stats}(\|p);\6
+\&{if} ${}(\\{count}\G\\{max\_display\_size}){}$\1\5
+${}\\{printf}(\.{"\%\%\%d=large"},\39\|k);{}$\2\6
+\&{else}\1\6
+\&{for} ${}(\|h\K(\|p\?\\{height}[\\{count}]:\T{0});{}$ ${}\|h\G\T{0};{}$ ${}%
+\|h\MM){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|h\E\T{0}){}$\1\5
+${}\\{printf}(\.{"\%\%\%d="},\39\|k);{}$\2\6
+${}\\{col}\K(\|h\E\T{0}\?\\{dwidth}(\|k)+\T{2}:\T{0});{}$\6
+${}\\{print\_rep}(\|p,\39\T{0},\39\\{dwidth}(\|k)+\T{2});{}$\6
+\&{if} (\|h)\1\5
+\\{printf}(\.{"\\n"});\2\6
+\&{else} \&{if} (\\{showing\_size})\5
+${}\{{}$\1\6
+\&{int} \|c${}\K\\{dwidth}(\|k)+\T{2}+\\{width}[\\{count}];{}$\7
+\\{align\_to}(\|c);\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\6
+\&{if} (\\{showing\_size})\1\5
+${}\\{printf}(\.{"\ (\%d\ nodes)\\n"},\39\\{count});{}$\2\6
+\&{else}\1\5
+\\{printf}(\.{"\\n"});\2\par
+\U30.\fi
+
+\N{1}{60}Debugging. Finally, here are some quick-and-dirty routines
+that might be useful while I'm debugging.
+
+The \PB{\\{eval}} routine, which is invoked only by the debugger, computes
+$x_l\star x_r$ at every node of a possibly abnormal tree, and leaves
+these values in the \PB{\\{val}} fields. It also returns the value of the
+whole tree.
+
+\Y\B\4\X13:Basic subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{eval}(\|p)\C{ fills the \PB{\\{val}} fields of nodes }\1\1\6
+\&{node} ${}{*}\|p;\2\2{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \\{lv}${},{}$ \\{rv};\7
+\&{if} ${}(\R\|p){}$\1\5
+\&{return} \T{0};\2\6
+${}\\{lv}\K\\{eval}(\|p\MG\|l);{}$\6
+${}\\{rv}\K\\{eval}(\|p\MG\|r);{}$\6
+${}\|p\MG\\{val}\K(\\{lv}\Z\\{lg\_large}\?\T{1}\LL\\{lv}:\\{large})+\\{rv};{}$\6
+\&{if} ${}(\|p\MG\\{val}>\\{large}){}$\1\5
+${}\|p\MG\\{val}\K\\{large};{}$\2\6
+\&{return} \|p${}\MG\\{val};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{61}The next routine is used to check that I've recycled all the nodes.
+I could take it out, now that the program appears to work; but what the
+heck, this isn't a production program.
+
+\Y\B\4\X61:Check that the saved trees account for all the \PB{\\{used}} nodes%
+\X${}\E{}$\6
+$\PP\\{time\_stamp};{}$\6
+${}\\{count}\K\T{0};{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\\{save\_ptr};{}$ ${}\|k\PP){}$\1\5
+\\{stamp}(\\{saved}[\|k]);\2\6
+\&{if} ${}(\\{count}\I\\{used}){}$\1\5
+${}\\{printf}(\.{"We\ lost\ track\ of\ \%d}\)\.{\ nodes!\\n"},\39\\{used}-%
+\\{count}){}$;\2\par
+\U3.\fi
+
+\M{62}\B\X13:Basic subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{stamp}(\|p)\C{ stamp all nodes of \PB{\|p} with \PB{\\{time%
+\_stamp}}, and count them }\1\1\6
+\&{node} ${}{*}\|p;\2\2{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\R\|p){}$\1\5
+\&{return};\2\6
+${}\\{stamp}(\|p\MG\|l);{}$\6
+${}\\{stamp}(\|p\MG\|r);{}$\6
+\&{if} ${}(\|p\MG\\{val}\E\\{time\_stamp}){}$\1\5
+\\{printf}(\.{"***Node\ overlap!!\\n}\)\.{"});\2\6
+${}\|p\MG\\{val}\K\\{time\_stamp};{}$\6
+${}\\{count}\PP;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{63}\B\X2:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{time\_stamp}${}\K\\{large}{}$;\C{ unique number }\par
+\fi
+
+\N{1}{64}Index.
+\fi
+
+\inx
+\fin
+\con

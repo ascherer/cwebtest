@@ -1,0 +1,22 @@
+\I\X15:Add contributions for a constant case\X
+\U12.
+\I\X12:Add contributions for slates $(s,k)$ to \PB{\\{subtotal}}\X
+\U10.
+\I\X14:Clear the four constant tables\X
+\U10.
+\I\X10:Compute $b_k$\X
+\U1.
+\I\X16:Correct for constant nonbeads\X
+\U10.
+\I\X13:Correct for nonconstant nonbeads\X
+\U12.
+\I\X8:Initialize \PB{\\{mem}}\X
+\U1.
+\I\X11:Print $b_k$ and add it to the grand total\X
+\U1.
+\I\X4:Print the grand total\X
+\U1.
+\I\X2:Set up the permutation, \PB{\\{perm}}\X
+\U1.
+\I\X3, 5, 6, 7, 9:Subroutines\X
+\U1.

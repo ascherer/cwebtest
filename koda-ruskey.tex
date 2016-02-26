@@ -1,0 +1,558 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. This program contains two implementations of the Koda--Ruskey
+algorithm for generating all ideals of a given forest poset
+[{\sl Journal of Algorithms\/ \bf15} (1993), 324--340].
+The common goal of both implementations is, in essence, to generate all
+binary strings $b_0\ldots b_{n-1}$ in which certain bits are
+required to be less than or equal to specified bits that lie to their right.
+(For some values of $j$ there is a value of $k>j$ such that
+we don't allow $b_k$ to be 0 when $b_j=1$.)
+Moreover, each binary string should differ from its predecessor in exactly
+one bit position; the algorithm therefore
+defines a generalized reflected Gray code.
+
+The given forest is represented by $n$ pairs of nested parentheses. For
+example, \.{()()()()()} represents five independent bits, while
+\.{((((()))))} represents five bits with $b_0\le b_1\le b_2\le b_3\le b_4$.
+A more interesting example, \.{((())(()()))}, represents six bits subject
+to the conditions
+$b_0\le b_1$, $b_1\le b_5$, $b_2\le b_4$, $b_3\le b_4$, $b_4\le b_5$.
+Each pair of parentheses corresponds to a bit that must not exceed the
+bit of its enclosing pair, if any, and the pairs are ordered by the
+appearances of their right parentheses.
+
+The first implementation uses $n$ coroutines, which call each other
+in a hierarchical fashion. The second uses
+multilinked data structures in a loopless way, so that each generation step
+performs a bounded number of operations to obtain the next element.
+I couldn't resist writing this program, because both implementations turn out
+to be quite interesting and instructive.
+
+Indeed, I think it's a worthwhile challenge for people who study the
+science of computer programming to verify that these two implementations
+both define the same sequence of bitstrings. Even more challenging
+would be to derive the second implementation ``automatically'' from
+the first.
+
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\X4:Type definitions\X\6
+\X3:Global variables\X\7
+\&{int} \\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1%
+\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|l;\7
+\X2:Process the command line, parsing the given forest\X;\6
+${}\\{printf}(\.{"Bitstrings\ generate}\)\.{d\ from\ \\"\%s\\":\\n"},\39%
+\\{argv}[\T{1}]);{}$\6
+\X9:Generate the strings with a coroutine implementation\X;\6
+\\{printf}(\.{"\\nTrying\ again,\ loo}\)\.{plessly:\\n"});\6
+\X15:Generate the strings with a loopless implementation\X;\6
+\&{return} \T{0};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}In this step we parse the forest into an array of ``scopes'':
+\PB{\\{scope}[\|j]} is the index of the smallest descendant of node~\PB{\|j},
+including node~\PB{\|j} itself.
+
+\Y\B\4\D$\\{abort}(\|m,\|i)$ \6
+${}\{{}$\5
+\1${}\\{fprintf}(\\{stderr},\39\|m,\39\\{argv}[\|i]){}$;\5
+\&{return} ${}{-}\T{1}{}$;\5
+${}\}{}$\2\par
+\B\4\D$\\{stacksize}$ \5
+\T{100}\C{ max levels in the forest }\par
+\B\4\D$\\{forestsize}$ \5
+\T{100}\C{ max nodes in the forest }\par
+\Y\B\4\X2:Process the command line, parsing the given forest\X${}\E{}$\6
+\&{if} ${}(\\{argc}\I\T{2}\V\\{argv}[\T{1}][\T{0}]\I\.{'('}){}$\1\5
+${}\\{abort}(\.{"Usage:\ \%s\ \\"nestedp}\)\.{arens\\"\\n"},\39\T{0});{}$\2\6
+\&{for} ${}(\|j\K\|k\K\|l\K\T{0};{}$ \\{argv}[\T{1}][\|k]; ${}\|k\PP){}$\1\6
+\&{if} ${}(\\{argv}[\T{1}][\|k]\E\.{'('}){}$\5
+${}\{{}$\1\6
+${}\\{stack}[\|l\PP]\K\|j;{}$\6
+\&{if} ${}(\|l\E\\{stacksize}){}$\1\5
+${}\\{abort}(\.{"Stack\ overflow\ ---\ }\)\.{\\"\%s\\"\ is\ too\ deep\ f}\)%
+\.{or\ me!\\n"},\39\T{1});{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\\{argv}[\T{1}][\|k]\E\.{')'}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\MM\|l<\T{0}){}$\1\5
+${}\\{abort}(\.{"Extra\ right\ parenth}\)\.{esis\ in\ \\"\%s\\"!\\n"},\39%
+\T{1});{}$\2\6
+${}\\{scope}[\|j\PP]\K\\{stack}[\|l];{}$\6
+\&{if} ${}(\|j\E\\{forestsize}){}$\1\5
+${}\\{abort}(\.{"Memory\ overflow\ ---}\)\.{\ \\"\%s\\"\ is\ too\ big!\\}\)%
+\.{n"},\39\T{1});{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\\{abort}(\.{"The\ forest\ spec\ \\"\%}\)\.{s\\"\ should\ contain\ o}\)%
+\.{nly\ parentheses!\\n"},\39\T{1});{}$\2\2\6
+\&{if} (\|l)\1\5
+${}\\{abort}(\.{"Missing\ right\ paren}\)\.{thesis\ in\ \\"\%s\\"!\\n"},\39%
+\T{1});{}$\2\6
+${}\\{nn}\K\|j{}$;\par
+\U1.\fi
+
+\M{3}\B\X3:Global variables\X${}\E{}$\6
+\&{int} \\{stack}[\\{stacksize}];\C{ nodes preceding each open leftparen, while
+parsing }\6
+\&{int} \\{scope}[\\{forestsize}];\C{ table that exhibits each rightparen's
+influence }\6
+\&{int} \\{nn};\C{ the actual number of nodes in the forest }\par
+\As11\ET17.
+\U1.\fi
+
+\N{1}{4}The coroutine implementation. Our first implementation uses a system
+of $n$ cooperating programs, each of which represents a node in the forest.
+For convenience we will call the associated record a ``cnode.''
+If \PB{\|p} points to a cnode, \PB{$\|p\MG\\{child}$} points to the cnode
+representing
+its rightmost child, and \PB{$\|p\MG\\{sib}$} points to the cnode representing
+its nearest sibling on the left, in the given forest.
+
+Each cnode corresponds to a coroutine whose job is to generate all the ideals
+of the subforest it represents. Whenever the coroutine is invoked, it
+either changes one of the bits in its scope and returns \PB{\\{true}}, or
+it changes nothing and returns \PB{\\{false}}. Initially all the bits are~0;
+when it first returns \PB{\\{false}}, it will have generated all legitimate
+bit patterns, ending with some nonzero pattern. Subsequently it will
+generate the patterns again in reverse order, ending with all 0s,
+after which it will return \PB{\\{false}} a second time. Invoking it again and
+again will repeat the same process, going forwards and backwards, ad infinitum.
+
+Each coroutine has the same basic structure, which can be described
+as follows in an ad hoc extension of \CEE/ language:
+$$\vbox{\halign{#\hfil\cr
+\&{coroutine} \PB{\|p(\,)}\cr
+\quad\PB{$\{$}\cr
+\quad\quad\PB{\&{while} (\T{1}) $\{$}\cr
+\quad\quad\quad\PB{$\|p\MG\\{bit}\K\T{1}{}$; \&{return} \\{true};}\cr
+\quad\quad\quad\PB{ \&{while} ${}(\|p\MG\\{child}(\,)){}$ \&{return} \\{true};%
+\2}\cr
+\quad\quad\quad\PB{\&{return} \|p${}\MG\\{sib}(\,);$}\cr
+\quad\quad\quad\PB{ \&{while} ${}(\|p\MG\\{child}(\,)){}$ \&{return} \\{true};%
+\2}\cr
+\quad\quad\quad\PB{$\|p\MG\\{bit}\K\T{0}{}$; \&{return} \\{true};}\cr
+\quad\quad\quad\PB{\&{return} \|p${}\MG\\{sib}(\,);$}\cr
+\quad\quad\PB{$\}$}\cr
+\quad\PB{$\}$}\cr
+}}$$
+If either \PB{$\|p\MG\\{child}$} or \PB{$\|p\MG\\{sib}$} is \PB{$\NULL$}, the
+corresponding
+coroutine \PB{$\NULL(\,)$} is assumed to simply return \PB{\\{false}}.
+
+Suppose \PB{$\|p\MG\\{child}(\,)$} first returns \PB{\\{false}} after it has
+been called \PB{\|r} times;
+thus \PB{$\|p\MG\\{child}(\,)$} generates \PB{\|r} different patterns,
+including the
+initial pattern of all~0s. Similarly, suppose that \PB{$\|p\MG\\{sib}(\,)$}
+generates \PB{\|l}
+different patterns before first returning \PB{\\{false}}. Then the coroutine %
+\PB{\|p(\,)}
+itself will generate \PB{$\|l(\|r+\T{1})$} patterns in between the times when
+it
+returns \PB{\\{false}}.
+The final bit pattern for \PB{\|p} will be the final bit pattern
+for \PB{$\|p\MG\\{sib}$}, together with either
+\PB{$\|p\MG\\{bit}\K\T{1}$} and the final bit pattern of \PB{$\|p\MG\\{child}$}
+(if \PB{\|l} is odd)
+or with \PB{$\|p\MG\\{bit}\K\T{0}$} and all 0s in \PB{$\|p\MG\\{child}$} (if %
+\PB{\|l} is even).
+
+\Y\B\4\X4:Type definitions\X${}\E{}$\6
+\&{typedef} \&{enum} ${}\{{}$\1\6
+${}\\{false},\39\\{true}{}$\2\6
+${}\}{}$ \&{boolean};\7
+\&{typedef} \&{struct} \&{cnode\_struct} ${}\{{}$\1\6
+\&{char} \\{bit};\C{ either 0 or 1; always 1 when a child's bit is set }\6
+\&{char} \\{state};\C{ the current place in this cnode's coroutine }\6
+\&{struct} \&{cnode\_struct} ${}{*}\\{child}{}$;\C{ rightmost child in the
+given forest }\6
+\&{struct} \&{cnode\_struct} ${}{*}\\{sib}{}$;\C{ nearest left sibling in the
+given forest }\6
+\&{struct} \&{cnode\_struct} ${}{*}\\{caller}{}$;\C{ which coroutine invoked
+this one }\2\6
+${}\}{}$ \&{cnode};\par
+\A14.
+\U1.\fi
+
+\M{5}When coroutine \PB{\|p} calls coroutine \PB{\|q}, it sets \PB{$\|p\MG%
+\\{state}$} to an
+appropriate number and also sets \PB{$\|q\MG\\{caller}\K\|p$}. Then control
+passes
+to \PB{\|q} at the place determined by \PB{$\|q\MG\\{state}$}.
+
+When coroutine \PB{\|q} wants to return a boolean value, it sets \PB{%
+\\{coresult}} to this
+value; then it passes control to \PB{$\|p\K\|q\MG\\{caller}$} at the place
+determined
+by \PB{$\|p\MG\\{state}$}.
+
+This program simulates coroutine linkage with a big switch statement.
+Actually the notion of ``passing control'' really means that we simply
+assign a value to the variable \PB{\\{cur\_cnode}}.
+
+The value of \PB{$\|q\MG\\{caller}$} for every cnode \PB{\|q} is completely
+determined by the
+structure of the given forest, so we could set it once and for all during
+the initialization instead of setting it dynamically as done here.
+But what the heck.
+
+\Y\B\4\D$\\{cocall}(\|q,\|s)$ \6
+${}\{{}$\5
+\1${}\\{cur\_cnode}\MG\\{state}\K\|s;{}$\6
+\&{if} (\|q)\1\5
+${}\|q\MG\\{caller}\K\\{cur\_cnode},\39\\{cur\_cnode}\K\|q;{}$\2\6
+\&{else}\1\5
+${}\\{coresult}\K\\{false};{}$\2\6
+\&{goto} \\{cogo};\5
+${}\}{}$\2\par
+\B\4\D$\\{bitchange}(\|b,\|s)$ \6
+${}\{{}$\5
+\1${}\\{cur\_cnode}\MG\\{bit}\K\|b,\39\\{coresult}\K\\{true}{}$;\5
+\\{coreturn}(\|s);\5
+${}\}{}$\2\par
+\B\4\D$\\{coreturn}(\|s)$ \6
+${}\{{}$\5
+\1${}\\{cur\_cnode}\MG\\{state}\K\|s,\39\\{cur\_cnode}\K\\{cur\_cnode}\MG%
+\\{caller};{}$\6
+\&{goto} \\{cogo};\5
+${}\}{}$\2\par
+\Y\B\4\X5:Repeatedly switch to the proper part of the current coroutine\X${}%
+\E{}$\6
+\4\\{cogo}:\5
+\&{switch} ${}(\\{cur\_cnode}\MG\\{state}){}$\5
+${}\{{}$\1\6
+\X6:Cases for coroutine states\X;\6
+\4\&{default}:\5
+${}\\{abort}(\.{"\%s:\ Unknown\ state\ c}\)\.{ode\ (this\ can't\ happ}\)\.{en)!%
+\\n"},\39\T{0});{}$\6
+\4${}\}{}$\2\par
+\U9.\fi
+
+\M{6}In its initial state~0, a coroutine turns its bit on, returns~\PB{%
+\\{true}},
+and enters state~1.
+
+\Y\B\4\X6:Cases for coroutine states\X${}\E{}$\6
+\4\&{case} \T{0}:\5
+${}\\{bitchange}(\T{1},\39\T{1}){}$;\par
+\As7, 8\ETs12.
+\U5.\fi
+
+\M{7}The purpose of state 1 is to run through all bit patterns of the
+current node's children, starting with all 0s and ending when they reach their
+final pattern.
+At that point we invoke the current node's nearest left sibling
+and enter state~3. An intermediate state~2 is defined for the purpose
+of examining the result after calling the child coroutine.
+
+The purpose of state 3 is simply to return to whoever called us,
+passing along the information in \PB{\\{coresult}}, which tells whether
+any of our left siblings has changed one of its bits. Then we will
+continue in state 4.
+
+\Y\B\4\X6:Cases for coroutine states\X${}\mathrel+\E{}$\6
+\4\&{case} \T{1}:\5
+${}\\{cocall}(\\{cur\_cnode}\MG\\{child},\39\T{2});{}$\6
+\4\&{case} \T{2}:\5
+\&{if} (\\{coresult})\1\5
+\\{coreturn}(\T{1});\2\6
+${}\\{cocall}(\\{cur\_cnode}\MG\\{sib},\39\T{3});{}$\6
+\4\&{case} \T{3}:\5
+\\{coreturn}(\T{4});\par
+\fi
+
+\M{8}State 4 is rather like state 1, except that the child coroutine is now
+running through its bit patterns in reverse order. Finally it reduces them
+all to 0s, and returns \PB{\\{false}} the next time we attempt to invoke it.
+At that point we reset the current bit, return \PB{\\{true}}, and enter
+state~6.
+
+State 6 invokes the sibling coroutine, leading to state 7.
+And state 7 is like state 3, but it takes us back to state 0 instead
+of state 4.
+
+\Y\B\4\X6:Cases for coroutine states\X${}\mathrel+\E{}$\6
+\4\&{case} \T{4}:\5
+${}\\{cocall}(\\{cur\_cnode}\MG\\{child},\39\T{5});{}$\6
+\4\&{case} \T{5}:\5
+\&{if} (\\{coresult})\1\5
+\\{coreturn}(\T{4});\2\6
+${}\\{bitchange}(\T{0},\39\T{6});{}$\6
+\4\&{case} \T{6}:\5
+${}\\{cocall}(\\{cur\_cnode}\MG\\{sib},\39\T{7});{}$\6
+\4\&{case} \T{7}:\5
+\\{coreturn}(\T{0});\par
+\fi
+
+\M{9}Hey, the implementation is done already, except that we have to
+get it started and write the code that controls it at the outermost level.
+
+\Y\B\4\X9:Generate the strings with a coroutine implementation\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{cnode} ${}{*}\\{cur\_cnode};{}$\7
+\X10:Initialize the cnode structure\X;\6
+\X5:Repeatedly switch to the proper part of the current coroutine\X;\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{10}We allocate a special cnode to represent the external world outside of
+the
+given forest.
+
+\Y\B\4\D$\\{root\_cnode}$ \5
+$\\{cnode\_table}[\\{nn}].{}$\\{child}\par
+\Y\B\4\X10:Initialize the cnode structure\X${}\E{}$\6
+$\\{scope}[\\{nn}]\K\T{0};{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\\{nn};{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\\{scope}[\|k]<\|k){}$\5
+${}\{{}$\1\6
+${}\\{cnode\_table}[\|k].\\{child}\K\\{cnode\_table}+\|k-\T{1};{}$\6
+\&{for} ${}(\|j\K\|k-\T{1};{}$ ${}\\{scope}[\|j]>\\{scope}[\|k];{}$ ${}\|j\K%
+\\{scope}[\|j]-\T{1}){}$\1\5
+${}\\{cnode\_table}[\|j].\\{sib}\K\\{cnode\_table}+\\{scope}[\|j]-\T{1};{}$\2\6
+\4${}\}{}$\2\2\6
+${}\\{cur\_cnode}\K\\{cnode\_table}+\\{nn};{}$\6
+\&{goto} \\{upward\_step};\par
+\U9.\fi
+
+\M{11}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{cnode} ${}\\{cnode\_table}[\\{forestsize}+\T{1}]{}$;\C{ the cnodes }\6
+\&{boolean} \\{coresult};\C{ value returned by a coroutine }\par
+\fi
+
+\M{12}States 8 and greater are reserved for the external (outermost) level,
+which
+simply invokes the coroutine for the entire forest and prints out the
+results, until the bit patterns have been generated in both the
+forward and reverse directions.
+
+\Y\B\4\X6:Cases for coroutine states\X${}\mathrel+\E{}$\6
+\4\&{case} \T{8}:\5
+\&{if} (\\{coresult})\5
+${}\{{}$\1\6
+\4\\{upward\_step}:\5
+\X13:Print out all the current cnode bits\X;\6
+${}\\{cocall}(\\{root\_cnode},\39\T{8});{}$\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"...\ and\ now\ we\ gene}\)\.{rate\ them\ in\ reverse}\)\.{:%
+\\n"});\6
+\&{goto} \\{downward\_step};\6
+\4\&{case} \T{9}:\5
+\&{if} (\\{coresult})\5
+${}\{{}$\1\6
+\4\\{downward\_step}:\5
+\X13:Print out all the current cnode bits\X;\6
+${}\\{cocall}(\\{root\_cnode},\39\T{9});{}$\6
+\4${}\}{}$\2\6
+\&{break};\par
+\fi
+
+\M{13}\B\X13:Print out all the current cnode bits\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\1\5
+${}\\{putchar}(\.{'0'}+\\{cnode\_table}[\|k].\\{bit});{}$\2\6
+\\{putchar}(\.{'\\n'});\par
+\U12.\fi
+
+\N{1}{14}The loopless implementation. Our coroutine implementation solves
+the generation problem in a nice and natural fashion, but it can be
+inefficient if the given forest has numerous nodes of degree one.
+For example, a one-tree forest like \.{((...()...))} with $n$ pairs
+of parentheses will need approximately $n\choose2$ coroutine invocations
+to generate $n+1$ bitstrings.
+
+Our second implementation reduces the work in such cases to $O(n)$; in
+fact, it needs only a bounded number of operations to generate each
+bitstring after the first. It does, however, need a slightly more complex data
+structure with four link fields.
+
+The basic idea is to work with a dynamically varying list of nodes called
+the current {\it fringe\/} of the forest. The fringe consists of all
+node whose bit is~1, together with their children.
+We maintain it as a doubly linked list,
+so that \PB{$\|p\MG\\{left}$} and \PB{$\|p\MG\\{right}$} are
+the neighbors of \PB{\|p} on the left and right. A special node \PB{\\{head}}
+is
+provided to make the list circular; thus \PB{$\\{head}\MG\\{right}$} and \PB{$%
+\\{head}\MG\\{left}$}
+are the leftmost and rightmost fringe nodes.
+
+A fringe node is said to be said to be either {\it active\/} or {\it passive}.
+Every node is active when it joins the fringe, but it becomes passive for at
+least a short time when its bit changes value; at such times the node is
+essentially shifting direction between going forward or backward, as
+in the coroutine implementation. (A passive node corresponds roughly to
+a coroutine that is asking its siblings to make the next move.)
+We save time jumping across such call-chains by using a special link
+field called the \PB{\\{focus}}: If \PB{\|p} is a passive fringe node whose
+righthand
+neighbor \PB{$\|p\MG\\{right}$} is active, \PB{$\|p\MG\\{focus}$} is the
+rightmost active
+node to the left of~\PB{\|p} in the fringe; otherwise \PB{$\|p\MG\\{focus}\K%
+\|p$}. (The
+special \PB{\\{head}} node is always considered to be active, for purposes of
+this definition, but it is not strictly speaking a member of the fringe.)
+
+The loopless implementation works with records called lnodes, just as
+the coroutine implementation worked with cnodes.
+Besides the dynamic \PB{\\{bit}} and \PB{\\{left}} and \PB{\\{right}} and \PB{%
+\\{focus}} fields
+already mentioned, each lnode also has a static field called
+\PB{\\{lchild}}, representing its leftmost child.
+(There is no need for an \PB{\\{rchild}} field, since \PB{$\|p\MG\\{rchild}\K%
+\|p-\T{1}$} when
+\PB{$\|p\MG\\{lchild}\I\NULL$}.)
+
+If \PB{\|p} is not in the fringe, \PB{$\|p\MG\\{focus}$} should equal \PB{\|p}.
+Also, \PB{$\|p\MG\\{left}$} and \PB{$\|p\MG\\{right}$} are assumed to
+equal the nearest siblings of \PB{\|p} to the left and right, respectively,
+if such siblings exist; otherwise \PB{$\|p\MG\\{left}$} and/or \PB{$\|p\MG%
+\\{right}$} are undefined.
+
+\Y\B\4\X4:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} \&{lnode\_struct} ${}\{{}$\1\6
+\&{char} \\{bit};\C{ either 0 or 1; always 1 when a child's bit is set }\6
+\&{struct} \&{lnode\_struct} ${}{*}\\{left},{}$ ${}{*}\\{right}{}$;\C{
+neighbors in the forest and/or fringe }\6
+\&{struct} \&{lnode\_struct} ${}{*}\\{lchild}{}$;\C{ leftmost child }\6
+\&{struct} \&{lnode\_struct} ${}{*}\\{focus}{}$;\C{ red-tape cutter for
+efficiency }\2\6
+${}\}{}$ \&{lnode};\par
+\fi
+
+\M{15}Here now is the basic outline of the loopless implementation:
+
+\Y\B\4\X15:Generate the strings with a loopless implementation\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{lnode} ${}{*}\|p,{}$ ${}{*}\|q,{}$ ${}{*}\|r;{}$\7
+\X16:Initialize the lnode structure, putting all roots into the fringe\X;\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\X22:Print out all the current lnode bits\X;\6
+\X18:Set \PB{\|p} to the rightmost active node of the fringe, and activate
+everything to its right\X;\6
+\&{if} ${}(\|p\I\\{head}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|p\MG\\{bit}\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\|p\MG\\{bit}\K\T{1}{}$;\C{ moving forward }\6
+\X19:Insert the children of \PB{\|p} after \PB{\|p} in the fringe\X;\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\|p\MG\\{bit}\K\T{0}{}$;\C{ moving backward }\6
+\X20:Delete the children of \PB{\|p} from the fringe\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} (\\{been\_there\_and\_done\_that})\1\5
+\&{break};\2\6
+\&{else}\5
+${}\{{}$\1\6
+\\{printf}(\.{"...\ and\ now\ we\ gene}\)\.{rate\ them\ in\ reverse}\)\.{:%
+\\n"});\6
+${}\\{been\_there\_and\_done\_that}\K\\{true}{}$;\5
+\&{continue};\6
+\4${}\}{}$\2\6
+\X21:Make node \PB{\|p} passive\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{16}Initialization of the lnodes is similar to initialization of the cnodes,
+but more links need to be set up.
+
+\Y\B\4\D$\\{head}$ \5
+$(\\{lnode\_table}+\\{nn}{}$)\par
+\Y\B\4\X16:Initialize the lnode structure, putting all roots into the fringe%
+\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\\{nn};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{lnode\_table}[\|k].\\{focus}\K\\{lnode\_table}+\|k;{}$\6
+\&{if} ${}(\\{scope}[\|k]<\|k){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\|k-\T{1};{}$ ${}\\{scope}[\|j]>\\{scope}[\|k];{}$ ${}\|j\K%
+\\{scope}[\|j]-\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{lnode\_table}[\|j].\\{left}\K\\{lnode\_table}+\\{scope}[\|j]-\T{1};{}$\6
+${}\\{lnode\_table}[\\{scope}[\|j]-\T{1}].\\{right}\K\\{lnode\_table}+\|j;{}$\6
+\4${}\}{}$\2\6
+${}\\{lnode\_table}[\|k].\\{lchild}\K\\{lnode\_table}+\|j;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\\{head}\MG\\{left}\K\\{head}-\T{1},\39(\\{head}-\T{1})\MG\\{right}\K%
+\\{head};{}$\6
+${}\\{head}\MG\\{right}\K\\{head}\MG\\{lchild},\39\\{head}\MG\\{lchild}\MG%
+\\{left}\K\\{head}{}$;\par
+\U15.\fi
+
+\M{17}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{lnode} ${}\\{lnode\_table}[\\{forestsize}+\T{1}]{}$;\C{ the lnodes }\6
+\&{boolean} \\{been\_there\_and\_done\_that};\par
+\fi
+
+\M{18}\B\X18:Set \PB{\|p} to the rightmost active node of the fringe, and
+activate everything to its right\X${}\E{}$\6
+$\|q\K\\{head}\MG\\{left};{}$\6
+${}\|p\K\|q\MG\\{focus};{}$\6
+${}\|q\MG\\{focus}\K\|q{}$;\par
+\U15.\fi
+
+\M{19}\B\X19:Insert the children of \PB{\|p} after \PB{\|p} in the fringe\X${}%
+\E{}$\6
+\&{if} ${}(\|p\MG\\{lchild}){}$\5
+${}\{{}$\1\6
+${}\|q\K\|p\MG\\{right};{}$\6
+${}\|q\MG\\{left}\K\|p-\T{1},\39(\|p-\T{1})\MG\\{right}\K\|q;{}$\6
+${}\|p\MG\\{right}\K\|p\MG\\{lchild},\39\|p\MG\\{lchild}\MG\\{left}\K\|p;{}$\6
+\4${}\}{}$\2\par
+\U15.\fi
+
+\M{20}\B\X20:Delete the children of \PB{\|p} from the fringe\X${}\E{}$\6
+\&{if} ${}(\|p\MG\\{lchild}){}$\5
+${}\{{}$\1\6
+${}\|q\K(\|p-\T{1})\MG\\{right};{}$\6
+${}\|p\MG\\{right}\K\|q,\39\|q\MG\\{left}\K\|p;{}$\6
+\4${}\}{}$\2\par
+\U15.\fi
+
+\M{21}At this point we know that \PB{$\|p\MG\\{right}$} is active.
+
+\Y\B\4\X21:Make node \PB{\|p} passive\X${}\E{}$\6
+$\|p\MG\\{focus}\K\|p\MG\\{left}\MG\\{focus};{}$\6
+${}\|p\MG\\{left}\MG\\{focus}\K\|p\MG\\{left}{}$;\par
+\U15.\fi
+
+\M{22}\B\X22:Print out all the current lnode bits\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\1\5
+${}\\{putchar}(\.{'0'}+\\{lnode\_table}[\|k].\\{bit});{}$\2\6
+\\{putchar}(\.{'\\n'});\par
+\U15.\fi
+
+\M{23}I used the following code when debugging.
+
+\Y\B\4\D$\\{rel}(\|f)$ \5
+$(\\{lnode\_table}[\|k].\|f\?\\{lnode\_table}[\|k].\|f-\\{lnode\_table}:{-}%
+\T{1}{}$)\par
+\Y\B\4\X23:Print out the whole lnode structure\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\\{nn};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"lnode\ \%d:\ bit=\%d,\ "},\39\|k,\39\\{lnode\_table}[\|k].%
+\\{bit});{}$\6
+${}\\{printf}(\.{"focus=\%d,\ left=\%d,\ }\)\.{right=\%d,\ lchild=\%d\\}\)%
+\.{n"},\39\\{rel}(\\{focus}),\39\\{rel}(\\{left}),\39\\{rel}(\\{right}),\39%
+\\{rel}(\\{lchild}));{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{24}Index.
+
+\fi
+
+
+\inx
+\fin
+\con

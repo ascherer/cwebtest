@@ -1,0 +1,11 @@
+\I\X4:Compute the dominance relation\X
+\U1.
+\I\X5:Do transitive reduction\X
+\U1.
+\I\X3:Generate the rest of the permutations\X
+\U1.
+\I\X6:Print the results\X
+\U1.
+\I\X2:Set \PB{\\{work}} to the string that is to be permuted, and check it\X
+\U1.
+

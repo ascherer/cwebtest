@@ -1,0 +1,29 @@
+\I\X2:Check for nonstandard \PB{\\{zeta}} and \PB{\\{sharpening}} factors\X
+\U1.
+\I\X3:Check the beginning lines of the input file\X
+\U1.
+\I\X7:Choose pixel values and diffuse the errors in the buffer\X
+\U15.
+\I\X14:Compile ``instructions'' for the diffusion operations\X
+\U10.
+\I\X9:Decide the color of pixel \PB{$[\|i,\|j]$} and the resulting \PB{\\{err}}%
+\X
+\U7.
+\I\X4, 8, 11:Global variables\X
+\U1.
+\I\X13:Initialize the class number matrix\X
+\U10.
+\I\X10:Initialize the diffusion tables\X
+\U15.
+\I\X6:Input rectangular pixel data\X
+\U5.
+\I\X5:Input the graphic data\X
+\U1.
+\I\X16:Sharpen the input\X
+\U15.
+\I\X17:Spew out the answers\X
+\U1.
+\I\X12:Subroutines\X
+\U1.
+\I\X15:Translate input to output\X
+\U1.

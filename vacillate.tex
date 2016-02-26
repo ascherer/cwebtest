@@ -1,0 +1,263 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. A simple program to find the vacillating tableau loop
+that corresponds to a given restricted growth string, given in
+the standard input file.
+
+The program also computes the dual restricted growth string.
+
+Apology: I wrote the following code in an awful hurry, so there was
+no time to apply spit and/or polish.
+
+\Y\B\4\D$\\{maxn}$ \5
+\T{1000}\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\&{char} \\{buf}[\\{maxn}];\C{ the restricted growth string input }\6
+\&{int} \\{last}[\\{maxn}];\C{ table for decoding the restricted growth string
+}\6
+\&{int} \|a[\\{maxn}]${},{}$ \|b[\\{maxn}];\C{ rook positions }\6
+\&{int} \|p[\\{maxn}][\\{maxn}]${},{}$ \|q[\\{maxn}][\\{maxn}];\C{ tableaux }\6
+\&{int} \|r[\\{maxn}];\C{ row lengths }\6
+\&{int} \\{dualins}[\\{maxn}]${},{}$ \\{dualdel}[\\{maxn}];\C{ row changes for
+the dual }\6
+\&{int} \\{verbose}${}\K\T{1};{}$\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|m${},{}$ \|n${},{}$ %
+\\{xi}${},{}$ \\{xip};\7
+\&{while} ${}(\\{fgets}(\\{buf},\39\\{maxn},\39\\{stdin})){}$\5
+${}\{{}$\1\6
+\X2:Build the rook table\X;\6
+\X3:Make the inverse rook table\X;\6
+\X4:Compute and print the intermediate tableaux\X;\6
+\X9:Compute the dual rook table\X;\6
+\X12:Print the restricted growth string of the dual\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Build the rook table\X${}\E{}$\6
+$\\{printf}(\.{"Given:\ \%s"},\39\\{buf});{}$\6
+\&{for} ${}(\|k\K\T{0},\39\|m\K{-}\T{1};{}$ ${}(\\{buf}[\|k]\G\.{'0'}\W\\{buf}[%
+\|k]\Z\.{'9'})\V(\\{buf}[\|k]\G\.{'a'}\W\\{buf}[\|k]\Z\.{'z'});{}$ ${}\|k%
+\PP){}$\5
+${}\{{}$\1\6
+${}\|j\K(\\{buf}[\|k]\G\.{'a'}\?\\{buf}[\|k]-\.{'a'}+\T{10}:\\{buf}[\|k]-%
+\.{'0'});{}$\6
+\&{if} ${}(\|j>\|m){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|j\I\|m+\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{buf}[\|k]\K\T{0};{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"Bad\ form:\ \%s\%d\ shou}\)\.{ld\ be\ \%s\%d!%
+\\n"},\39\\{buf},\39\|j,\39\\{buf},\39\|m+\T{1});{}$\6
+\&{continue};\6
+\4${}\}{}$\2\6
+${}\|m\K\|j,\39\\{last}[\|m]\K\T{0};{}$\6
+\4${}\}{}$\2\6
+${}\|a[\|k+\T{1}]\K\\{last}[\|j],\39\\{last}[\|j]\K\|k+\T{1};{}$\6
+\4${}\}{}$\2\6
+${}\|n\K\|k{}$;\par
+\U1.\fi
+
+\M{3}\B\X3:Make the inverse rook table\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\1\5
+${}\|b[\|k]\K\T{0};{}$\2\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\1\6
+\&{if} (\|a[\|k])\1\5
+${}\|b[\|a[\|k]]\K\|k{}$;\2\2\par
+\U1.\fi
+
+\M{4}\B\D$\\{infty}$ \5
+\T{1000}\C{ infinity (approximately) }\par
+\Y\B\4\X4:Compute and print the intermediate tableaux\X${}\E{}$\6
+\X5:Initialize the tableaux\X;\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\X7:Possibly delete \PB{\|k}\X;\6
+\X6:Possibly insert \PB{\|k}\X;\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{5}\B\X5:Initialize the tableaux\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|r[\|k]\K\|q[\T{0}][\|k]\K\|q[\|k][\T{0}]\K\T{0},\39\|p[\T{0}][\|k]\K\|p[%
+\|k][\T{0}]\K\\{infty};{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\1\5
+${}\|q[\|k][\|j]\K\\{infty},\39\|p[\|k][\|j]\K\T{0};{}$\2\6
+\4${}\}{}$\2\par
+\U4.\fi
+
+\M{6}Here's Algorithm 5.1.4I, but with order reversed in the \PB{\|p} tableau.
+We insert \PB{\|b[\|k]} into~\PB{\|p} and \PB{\|k}~into~\PB{\|q}.
+
+I wouldn't actually have to work with both \PB{\|p} and \PB{\|q}; either one
+would
+suffice to determine the vacillation. But I compute them both because
+I'm trying to get familiar with the whole picture.
+
+\Y\B\4\X6:Possibly insert \PB{\|k}\X${}\E{}$\6
+\&{if} (\|b[\|k])\5
+${}\{{}$\1\6
+\4\\{i1}:\5
+${}\|i\K\T{1},\39\\{xi}\K\|b[\|k],\39\|j\K\|r[\T{1}]+\T{1};{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\4\\{i2}:\5
+\&{while} ${}(\\{xi}>\|p[\|i][\|j-\T{1}]){}$\1\5
+${}\|j\MM;{}$\2\6
+${}\\{xip}\K\|p[\|i][\|j];{}$\6
+\4\\{i3}:\5
+${}\|p[\|i][\|j]\K\\{xi};{}$\6
+\4\\{i4}:\5
+\&{if} (\\{xip})\1\5
+${}\|i\PP,\39\\{xi}\K\\{xip};{}$\2\6
+\&{else}\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+${}\|q[\|i][\|j]\K\|k;{}$\6
+${}\|r[\|i]\K\|j;{}$\6
+${}\\{dualins}[\|k]\K\|j;{}$\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\\{dualins}[\|k]\K\T{0};{}$\2\6
+\X8:Print the tableau shape\X;\par
+\U4.\fi
+
+\M{7}And here's Algorithm 5.1.4D, applied to the \PB{\|q} tableau.
+We delete \PB{\|k} from~\PB{\|p} and \PB{\|a[\|k]}~from~\PB{\|q}. The error
+messages
+here won't be needed unless I have made a mistake.
+
+\Y\B\4\X7:Possibly delete \PB{\|k}\X${}\E{}$\6
+\&{if} (\|a[\|k])\5
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{1},\39\|j\K\T{0};{}$ \|r[\|i]; ${}\|i\PP){}$\1\6
+\&{if} ${}(\|p[\|i][\|r[\|i]]\E\|k){}$\5
+${}\{{}$\1\6
+${}\|j\K\|r[\|i],\39\|r[\|i]\K\|j-\T{1},\39\|p[\|i][\|j]\K\T{0};{}$\6
+${}\\{dualdel}[\|k]\K\|j;{}$\6
+\&{break};\6
+\4${}\}{}$\2\2\6
+\&{if} ${}(\R\|j){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ couldn't\ find\ \%d\ }\)\.{in\ p!\\n"},\39%
+\|k);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\4\\{d1}:\5
+${}\\{xip}\K\\{infty};{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\4\\{d2}:\5
+\&{while} ${}(\|q[\|i][\|j+\T{1}]<\\{xip}){}$\1\5
+${}\|j\PP;{}$\2\6
+${}\\{xi}\K\|q[\|i][\|j];{}$\6
+\4\\{d3}:\5
+${}\|q[\|i][\|j]\K\\{xip};{}$\6
+\4\\{d4}:\5
+\&{if} ${}(\|i>\T{1}){}$\1\5
+${}\|i\MM,\39\\{xip}\K\\{xi};{}$\2\6
+\&{else}\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{xi}\I\|a[\|k]){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ removed\ \%d,\ not\ \%}\)\.{d,\ from\ q!%
+\\n"},\39\\{xi},\39\|a[\|k]);{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\\{dualdel}[\|k]\K\T{0};{}$\2\6
+\X8:Print the tableau shape\X;\par
+\U4.\fi
+
+\M{8}If \PB{\\{verbose}} is nonzero, we also print out the contents of \PB{\|p}
+and \PB{\|q}.
+
+\Y\B\4\X8:Print the tableau shape\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{1};{}$ \|r[\|i]; ${}\|i\PP){}$\1\5
+${}\\{printf}(\.{"\ \%d"},\39\|r[\|i]);{}$\2\6
+\&{if} ${}(\\{verbose}\W\|i>\T{1}){}$\5
+${}\{{}$\1\6
+\\{printf}(\.{"\ ("});\6
+\&{for} ${}(\|i\K\T{1};{}$ \|r[\|i]; ${}\|i\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|i>\T{1}){}$\1\5
+\\{printf}(\.{";"});\2\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|r[\|i];{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\%s\%d"},\39\|j>\T{1}\?\.{","}:\.{""},\39\|p[\|i][\|j]);{}$\2%
+\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"),("});\6
+\&{for} ${}(\|i\K\T{1};{}$ \|r[\|i]; ${}\|i\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|i>\T{1}){}$\1\5
+\\{printf}(\.{";"});\2\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|r[\|i];{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\%s\%d"},\39\|j>\T{1}\?\.{","}:\.{""},\39\|q[\|i][\|j]);{}$\2%
+\6
+\4${}\}{}$\2\6
+\\{printf}(\.{")"});\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|i\E\T{1}){}$\1\5
+\\{printf}(\.{"\ 0\\n"});\5
+\2\&{else}\1\5
+\\{printf}(\.{"\\n"});\2\par
+\Us6\ET7.\fi
+
+\M{9}Now for the dual, I'll work only with \PB{\|q}.
+
+\Y\B\4\X9:Compute the dual rook table\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{if} (\\{dualdel}[\|k])\1\5
+\X11:Dually delete \PB{\|k}\X;\2\6
+\&{if} (\\{dualins}[\|k])\1\5
+\X10:Dually insert \PB{\|k}\X;\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{10}\B\X10:Dually insert \PB{\|k}\X${}\E{}$\6
+$\|i\K\\{dualins}[\|k],\39\|j\K\|r[\|i]+\T{1},\39\|r[\|i]\K\|j,\39\|q[\|i][\|j]%
+\K\|k{}$;\par
+\U9.\fi
+
+\M{11}\B\X11:Dually delete \PB{\|k}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|i\K\\{dualdel}[\|k],\39\|j\K\|r[\|i],\39\|r[\|i]\K\|j-\T{1},\39\\{xip}\K%
+\\{infty};{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{while} ${}(\|q[\|i][\|j+\T{1}]<\\{xip}){}$\1\5
+${}\|j\PP;{}$\2\6
+${}\\{xi}\K\|q[\|i][\|j];{}$\6
+${}\|q[\|i][\|j]\K\\{xip};{}$\6
+\&{if} ${}(\|i>\T{1}){}$\1\5
+${}\|i\MM,\39\\{xip}\K\\{xi};{}$\2\6
+\&{else}\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+${}\|a[\|k]\K\\{xi};{}$\6
+\4${}\}{}$\2\par
+\U9.\fi
+
+\M{12}\B\X12:Print the restricted growth string of the dual\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{1},\39\|m\K{-}\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\1\6
+\&{if} (\|a[\|k])\1\5
+${}\\{buf}[\|k-\T{1}]\K\\{buf}[\|a[\|k]-\T{1}];{}$\2\6
+\&{else}\1\5
+${}\|m\PP,\39\\{buf}[\|k-\T{1}]\K(\|m>\T{9}\?\.{'a'}+\|m-\T{10}:\.{'0'}+%
+\|m);{}$\2\2\6
+${}\\{printf}(\.{"Dual:\ \%s"},\39\\{buf}){}$;\par
+\U1.\fi
+
+\N{1}{13}Index.
+\fi
+
+\inx
+\fin
+\con

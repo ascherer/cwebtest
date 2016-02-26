@@ -1,0 +1,1063 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Antisliding blocks. This program illustrates techniques of finding all
+nonequivalent solutions to an exact cover problem. I wrote it after returning
+from Japan in November, 1996, because Nob was particularly interested in the
+answers. (Two years ago I had written a similar program, which however did not
+remove inequivalent solutions; in 1994 I removed them by hand after generating
+all possible solutions.)
+
+The general question is to pack $2\times2\times1$ blocks into an $l\times
+m\times n$ array in such a way that the blocks cannot slide. This means that
+there should be at least one occupied cell touching each of the six faces of
+the block; cells outside the array are always considered to be occupied.
+For example, one such solution when $l=m=n=3$ is
+\def\layer#1{\vbox{\tt\let\\=\cr\halign{&\kern3pt##\kern3pt\cr#1\crcr}}}
+$$\layer{1&1&.\\1&1&2\\3&3&2}\qquad
+\layer{5&4&4\\5&.&2\\3&3&2}\qquad
+\layer{5&4&4\\5&6&6\\.&6&6}.$$
+But
+$$\layer{1&1&2\\1&1&2\\3&3&.}\qquad
+\layer{4&4&2\\.&.&2\\3&3&.}\qquad
+\layer{4&4&.\\.&5&5\\.&5&5}$$
+is not a solution, because blocks \.2, \.3, and \.5 can slide.
+
+Two solutions are considered to be the same if they are isomorphic---that is,
+if there's a symmetry that takes one into the other. In this sense the
+solution
+$$\layer{1&1&.\\2&3&3\\2&3&3}\qquad
+\layer{1&1&4\\2&.&4\\2&5&5}\qquad
+\layer{6&6&4\\6&6&4\\.&5&5}$$
+is no different from the first solution given above. Up to 48 symmetries are
+possible, obtained by permuting and complementing the coordinates in
+three-dimensional space. It turns out that the $3\times3\times3$ case has only
+one solution, besides the trivial case in which no blocks at all are present.
+
+Before writing this program I tried to find highly symmetric solutions to the
+$4\times4\times4$ problem without using a computer. I found
+a beautiful 12-block solution
+$$\layer{.&1&1&.\\2&1&1&3\\2&4&4&3\\.&4&4&.}\qquad
+\layer{5&5&6&6\\2&.&.&3\\2&.&.&3\\7&7&8&8}\qquad
+\layer{5&5&6&6\\9&.&.&A\\9&.&.&A\\7&7&8&8}\qquad
+\layer{.&B&B&.\\9&B&B&A\\9&C&C&A\\.&C&C&.}$$
+which has 24 symmetries and
+leaves the center cells and corner cells empty. But I saw no easy way to
+prove that an antisliding arrangement with fewer than 12 blocks is possible.
+This experience whetted my curiosity and got me ``hooked'' on the problem,
+so I couldn't resist writing this program even though I have many other
+urgent things to do. I'm considering it the final phase of my exciting visit
+to Japan. (I apologize for not having time to refine it further.)
+
+Note: The program assumes that $l=m$ if any two of the dimensions are equal.
+Then the number of symmetries is 8 if $l\ne m$, or 16 if $l=m\ne n$, or
+48 if $l=m=n$.
+
+\Y\B\4\D$\\{ll}$ \5
+\T{4}\C{ the first dimension }\par
+\B\4\D$\\{mm}$ \5
+\T{4}\C{ the second dimension }\par
+\B\4\D$\\{nn}$ \5
+\T{4}\C{ the third }\par
+\B\4\D$\\{ss}$ \5
+\T{48}\C{ the number of symmetries }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\X3:Type definitions\X\6
+\X2:Global variables\X\6
+\X19:Subroutines\X\7
+${}\\{main}(\\{argc},\39\\{argv}){}$\1\1\6
+\&{int} \\{argc};\6
+\&{char} ${}{*}\\{argv}[\,];\2\2{}$\6
+${}\{{}$\1\6
+\X24:Local variables\X;\6
+\&{if} ${}(\\{argc}>\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{verbose}\K\\{argc}-\T{1}{}$;\C{ set \PB{\\{verbose}} to the number of
+command-line arguments }\6
+${}\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}\\{spacing});{}$\6
+\4${}\}{}$\2\6
+\X8:Set up data structures for antisliding blocks\X;\6
+\X25:Backtrack through all solutions\X;\6
+\X47:Make redundancy checks to see if the backtracking was consistent\X;\6
+${}\\{printf}(\.{"Altogether\ \%d\ solut}\)\.{ions.\\n"},\39\\{count});{}$\6
+\&{if} (\\{verbose})\1\5
+\X45:Print a profile of the search tree\X;\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Global variables\X${}\E{}$\6
+\&{int} \\{verbose}${}\K\T{0}{}$;\C{ $>0$ to show solutions, $>1$ to show
+partial ones too }\6
+\&{int} \\{count}${}\K\T{0}{}$;\C{ number of antisliding solutions found so far
+}\6
+\&{int} \\{spacing}${}\K\T{1}{}$;\C{ if \PB{\\{verbose}}, we output solutions
+when \PB{$\\{count}\MOD\\{spacing}\E\T{0}$} }\6
+\&{int} ${}\\{profile}[\\{ll}*\\{mm}*\\{nn}+\T{1}],{}$ ${}\\{prof\_syms}[%
+\\{ll}*\\{mm}*\\{nn}+\T{1}],{}$ ${}\\{prof\_cons}[\\{ll}*\\{mm}*\\{nn}+%
+\T{1}],{}$ ${}\\{prof\_frcs}[\\{ll}*\\{mm}*\\{nn}+\T{1}]{}$;\C{ statistics }\par
+\As5, 7\ETs23.
+\U1.\fi
+
+\N{1}{3}Data structures. An exact cover problem is defined by a matrix $M$ of
+0s
+and~1s. The goal is to find a set of rows containing exactly one~1 in each
+column.
+
+In our case the rows stand for possible placements of blocks; the
+columns stand for cells of the $l\times m\times n$ array. There are
+$l(m-1)(n-1)+(l-1)m(n-1)+(l-1)(m-1)n$ rows for placements of $2\times2\times1$
+blocks and an additional $lmn$ rows for $1\times1\times1$ blocks that
+correspond to unoccupied cells.
+
+The heart of this program is its data structure for the matrix $M$. There is
+one node for each 1 in~$M$, and the 1s of each row are cyclically linked via
+\PB{\\{left}} and \PB{\\{right}} fields. Each node also contains an array of
+pointers
+\PB{\\{sym}[\T{0}]}, \PB{\\{sym}[\T{1}]}, \dots, which point to the nodes that
+are equivalent under
+each symmetry of the problem. Furthermore, the nodes for 1s in each column are
+doubly linked together by \PB{\\{up}} and \PB{\\{down}} fields.
+
+Although the pointers are called \PB{\\{left}}, \PB{\\{right}}, \PB{\\{up}},
+and \PB{\\{down}}, the row
+lists and column lists need not actually be linked together in any particular
+order. The row lists remain unchanged, but the column lists will change
+dynamically because we will implicitly remove rows from $M$ that contain 1s in
+columns that are already covered as we are constructing a solution.
+
+\Y\B\4\X3:Type definitions\X${}\E{}$\6
+\&{typedef} \&{struct} \&{node\_struct} ${}\{{}$\1\6
+\&{struct} \&{node\_struct} ${}{*}\\{left},{}$ ${}{*}\\{right}{}$;\C{
+predecessor and successor in row }\6
+\&{struct} \&{node\_struct} ${}{*}\\{up},{}$ ${}{*}\\{down}{}$;\C{ predecessor
+and successor in column }\6
+\&{struct} \&{node\_struct} ${}{*}\\{sym}[\\{ss}]{}$;\C{ symmetric equivalents
+}\6
+\&{struct} \&{row\_struct} ${}{*}\\{row}{}$;\C{ the row containing this node }\6
+\&{struct} \&{col\_struct} ${}{*}\\{col}{}$;\C{ the column containing this node
+}\2\6
+${}\}{}$ \&{node};\par
+\As4\ET6.
+\U1.\fi
+
+\M{4}Each column corresponds to a cell of the array. Special information for
+each cell is stored in an appropriate record, which points to the
+$1\times1\times1$ block node for that cell (also called the cell head).
+We maintain a doubly linked list of the
+cells that still need to be covered, using \PB{\\{next}} and \PB{\\{prev}}
+fields;
+also a count of the number of ways that remain to cover a given cell.
+A few other items are maintained to facilitate the bookkeeping.
+
+\Y\B\4\X3:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} \&{col\_struct} ${}\{{}$\1\6
+\&{node} \\{head};\C{ the empty option for this cell }\6
+\&{int} \\{len};\C{ the number of options for covering it }\6
+\&{int} \\{init\_len};\C{ initial value of \PB{\\{len}}, for redundancy check }%
+\6
+\&{struct} \&{col\_struct} ${}{*}\\{prev},{}$ ${}{*}\\{next}{}$;\C{
+still-to-be-covered neighbors }\6
+\&{node} ${}{*}\\{filled}{}$;\C{ node by which this column was filled }\6
+\&{int} \\{empty};\C{ is this cell covered by the empty ($1\times1\times1$)
+option? }\6
+\&{int} \\{nonempty};\C{ is this cell known to be nonempty? }\6
+\&{char} \\{name}[\T{4}];\C{ coordinates of this cell, as a string for printing
+}\6
+\&{struct} \&{col\_struct} ${}{*}\\{invsym}[\\{ss}]{}$;\C{ reverse pointers to %
+\PB{\\{sym}} in \PB{\\{head}} }\2\6
+${}\}{}$ \&{cell};\par
+\fi
+
+\M{5}One \PB{\&{cell}} struct is called the root. It serves as the head of the
+list of columns that need to be covered, and is identifiable by the fact
+that its \PB{\\{name}} is empty.
+
+\Y\B\4\X2:Global variables\X${}\mathrel+\E{}$\6
+\&{cell} \\{root};\C{ gateway to the unsettled columns }\par
+\fi
+
+\M{6}The rows of $M$ also have special data structures:
+We need to know which sets of two or four cells are neighbors of the
+faces of a block. These are listed in the option records,
+followed by null pointers.
+
+\Y\B\4\X3:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} \&{row\_struct} ${}\{{}$\1\6
+\&{cell} ${}{*}\\{neighbor}[\T{22}]{}$;\C{ sets of cells that shouldn't all be
+empty }\6
+\&{int} \\{neighbor\_ptr};\C{ size of the \PB{\\{neighbor}} info }\2\6
+${}\}{}$ \&{option};\par
+\fi
+
+\N{1}{7}Initialization. Like most table-driven programs, this one needs to
+construct its tables, using a rather long and boring routine. In compensation,
+we will be able to avoid tedious details in the rest of the code.
+
+\Y\B\4\X2:Global variables\X${}\mathrel+\E{}$\6
+\&{cell} \\{cells}[\\{ll}][\\{mm}][\\{nn}];\C{ columns of the matrix }\6
+\&{option} \\{opt}[\\{ll}][\\{mm}][\\{nn}]${},{}$ ${}\\{optx}[\\{ll}][\\{mm}-%
+\T{1}][\\{nn}-\T{1}],{}$ ${}\\{opty}[\\{ll}-\T{1}][\\{mm}][\\{nn}-\T{1}],{}$
+${}\\{optz}[\\{ll}-\T{1}][\\{mm}-\T{1}][\\{nn}]{}$;\C{ rows }\6
+\&{node} ${}\\{blockx}[\\{ll}][\\{mm}-\T{1}][\\{nn}-\T{1}][\T{4}],{}$ ${}%
+\\{blocky}[\\{ll}-\T{1}][\\{mm}][\\{nn}-\T{1}][\T{4}],{}$ ${}\\{blockz}[\\{ll}-%
+\T{1}][\\{mm}-\T{1}][\\{nn}][\T{4}]{}$;\C{ nodes }\par
+\fi
+
+\M{8}\B\X8:Set up data structures for antisliding blocks\X${}\E{}$\6
+\X9:Set up the cells\X;\6
+\X11:Set up the options\X;\6
+\X15:Set up the nodes\X;\par
+\U1.\fi
+
+\M{9}\B\X9:Set up the cells\X${}\E{}$\6
+$\|q\K{\AND}\\{root};{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{ll};{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|c\K{\AND}\\{cells}[\|i][\|j][\|k];{}$\6
+${}\|q\MG\\{next}\K\|c;{}$\6
+${}\|c\MG\\{prev}\K\|q;{}$\6
+${}\|q\K\|c;{}$\6
+${}\|p\K{\AND}(\|c\MG\\{head});{}$\6
+${}\|p\MG\\{left}\K\|p\MG\\{right}\K\|p\MG\\{up}\K\|p\MG\\{down}\K\|p;{}$\6
+${}\|p\MG\\{row}\K{\AND}\\{opt}[\|i][\|j][\|k];{}$\6
+${}\|p\MG\\{col}\K\|c;{}$\6
+\X10:Fill in the symmetry pointers of \PB{\|c}\X;\6
+${}\|c\MG\\{name}[\T{0}]\K\|i+\.{'0'};{}$\6
+${}\|c\MG\\{name}[\T{1}]\K\|j+\.{'0'};{}$\6
+${}\|c\MG\\{name}[\T{2}]\K\|k+\.{'0'};{}$\6
+${}\|c\MG\\{len}\K\T{1};{}$\6
+\4${}\}{}$\2\2\2\6
+${}\|q\MG\\{next}\K{\AND}\\{root};{}$\6
+${}\\{root}.\\{prev}\K\|q{}$;\par
+\U8.\fi
+
+\M{10}\B\X10:Fill in the symmetry pointers of \PB{\|c}\X${}\E{}$\6
+\&{for} ${}(\|s\K\T{0};{}$ ${}\|s<\\{ss};{}$ ${}\|s\PP){}$\5
+${}\{{}$\1\6
+\&{switch} ${}(\|s\GG\T{3}){}$\5
+${}\{{}$\1\6
+\4\&{case} \T{0}:\5
+${}\\{ii}\K\|i;{}$\6
+${}\\{jj}\K\|j;{}$\6
+${}\\{kk}\K\|k;{}$\6
+\&{break};\6
+\4\&{case} \T{1}:\5
+${}\\{ii}\K\|j;{}$\6
+${}\\{jj}\K\|i;{}$\6
+${}\\{kk}\K\|k;{}$\6
+\&{break};\6
+\4\&{case} \T{2}:\5
+${}\\{ii}\K\|k;{}$\6
+${}\\{jj}\K\|j;{}$\6
+${}\\{kk}\K\|i;{}$\6
+\&{break};\6
+\4\&{case} \T{3}:\5
+${}\\{ii}\K\|i;{}$\6
+${}\\{jj}\K\|k;{}$\6
+${}\\{kk}\K\|j;{}$\6
+\&{break};\6
+\4\&{case} \T{4}:\5
+${}\\{ii}\K\|j;{}$\6
+${}\\{jj}\K\|k;{}$\6
+${}\\{kk}\K\|i;{}$\6
+\&{break};\6
+\4\&{case} \T{5}:\5
+${}\\{ii}\K\|k;{}$\6
+${}\\{jj}\K\|i;{}$\6
+${}\\{kk}\K\|j;{}$\6
+\&{break};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|s\AND\T{4}){}$\1\5
+${}\\{ii}\K\\{ll}-\T{1}-\\{ii};{}$\2\6
+\&{if} ${}(\|s\AND\T{2}){}$\1\5
+${}\\{jj}\K\\{mm}-\T{1}-\\{jj};{}$\2\6
+\&{if} ${}(\|s\AND\T{1}){}$\1\5
+${}\\{kk}\K\\{nn}-\T{1}-\\{kk};{}$\2\6
+${}\|p\MG\\{sym}[\|s]\K{\AND}(\\{cells}[\\{ii}][\\{jj}][\\{kk}].\\{head});{}$\6
+${}\\{cells}[\\{ii}][\\{jj}][\\{kk}].\\{invsym}[\|s]\K\|c;{}$\6
+\4${}\}{}$\2\par
+\U9.\fi
+
+\M{11}\B\X11:Set up the options\X${}\E{}$\6
+\X12:Set up the \PB{\\{optx}} options\X;\6
+\X13:Set up the \PB{\\{opty}} options\X;\6
+\X14:Set up the \PB{\\{optz}} options\X;\par
+\U8.\fi
+
+\M{12}\B\D$\\{ox}(\\{j1},\\{k1},\\{j2},\\{k2})$ \6
+${}\{{}$\1\6
+${}\\{optx}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\|i][%
+\\{j1}][\\{k1}];{}$\6
+${}\\{optx}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\|i][%
+\\{j2}][\\{k2}];{}$\6
+${}\\{optx}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K\NULL;{}$\6
+\4${}\}{}$\2\par
+\B\4\D$\\{oxx}(\\{i1})$ \6
+${}\{{}$\1\6
+${}\\{optx}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\\{i1}][%
+\|j][\|k];{}$\6
+${}\\{optx}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\\{i1}][%
+\|j][\|k+\T{1}];{}$\6
+${}\\{optx}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\\{i1}][%
+\|j+\T{1}][\|k];{}$\6
+${}\\{optx}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\\{i1}][%
+\|j+\T{1}][\|k+\T{1}];{}$\6
+${}\\{optx}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K\NULL;{}$\6
+\4${}\}{}$\2\par
+\Y\B\4\X12:Set up the \PB{\\{optx}} options\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{ll};{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm}-\T{1};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn}-\T{1};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{kk}\K\T{0};{}$\6
+\&{if} (\|j)\1\5
+${}\\{ox}(\|j-\T{1},\39\|k,\39\|j-\T{1},\39\|k+\T{1});{}$\2\6
+\&{if} ${}(\|j<\\{mm}-\T{2}){}$\1\5
+${}\\{ox}(\|j+\T{2},\39\|k,\39\|j+\T{2},\39\|k+\T{1});{}$\2\6
+\&{if} (\|k)\1\5
+${}\\{ox}(\|j,\39\|k-\T{1},\39\|j+\T{1},\39\|k-\T{1});{}$\2\6
+\&{if} ${}(\|k<\\{nn}-\T{2}){}$\1\5
+${}\\{ox}(\|j,\39\|k+\T{2},\39\|j+\T{1},\39\|k+\T{2});{}$\2\6
+\&{if} (\|i)\1\5
+${}\\{oxx}(\|i-\T{1});{}$\2\6
+\&{if} ${}(\|i<\\{ll}-\T{1}){}$\1\5
+${}\\{oxx}(\|i+\T{1});{}$\2\6
+${}\\{optx}[\|i][\|j][\|k].\\{neighbor\_ptr}\K\\{kk};{}$\6
+\4${}\}{}$\2\2\2\par
+\U11.\fi
+
+\M{13}\B\D$\\{oy}(\\{i1},\\{k1},\\{i2},\\{k2})$ \6
+${}\{{}$\1\6
+${}\\{opty}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\\{i1}][%
+\|j][\\{k1}];{}$\6
+${}\\{opty}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\\{i2}][%
+\|j][\\{k2}];{}$\6
+${}\\{opty}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K\NULL;{}$\6
+\4${}\}{}$\2\par
+\B\4\D$\\{oyy}(\\{j1})$ \6
+${}\{{}$\1\6
+${}\\{opty}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\|i][%
+\\{j1}][\|k];{}$\6
+${}\\{opty}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\|i][%
+\\{j1}][\|k+\T{1}];{}$\6
+${}\\{opty}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\|i+\T{1}][%
+\\{j1}][\|k];{}$\6
+${}\\{opty}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\|i+\T{1}][%
+\\{j1}][\|k+\T{1}];{}$\6
+${}\\{opty}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K\NULL;{}$\6
+\4${}\}{}$\2\par
+\Y\B\4\X13:Set up the \PB{\\{opty}} options\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{ll}-\T{1};{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn}-\T{1};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{kk}\K\T{0};{}$\6
+\&{if} (\|i)\1\5
+${}\\{oy}(\|i-\T{1},\39\|k,\39\|i-\T{1},\39\|k+\T{1});{}$\2\6
+\&{if} ${}(\|i<\\{ll}-\T{2}){}$\1\5
+${}\\{oy}(\|i+\T{2},\39\|k,\39\|i+\T{2},\39\|k+\T{1});{}$\2\6
+\&{if} (\|k)\1\5
+${}\\{oy}(\|i,\39\|k-\T{1},\39\|i+\T{1},\39\|k-\T{1});{}$\2\6
+\&{if} ${}(\|k<\\{nn}-\T{2}){}$\1\5
+${}\\{oy}(\|i,\39\|k+\T{2},\39\|i+\T{1},\39\|k+\T{2});{}$\2\6
+\&{if} (\|j)\1\5
+${}\\{oyy}(\|j-\T{1});{}$\2\6
+\&{if} ${}(\|j<\\{mm}-\T{1}){}$\1\5
+${}\\{oyy}(\|j+\T{1});{}$\2\6
+${}\\{opty}[\|i][\|j][\|k].\\{neighbor\_ptr}\K\\{kk};{}$\6
+\4${}\}{}$\2\2\2\par
+\U11.\fi
+
+\M{14}\B\D$\\{oz}(\\{i1},\\{j1},\\{i2},\\{j2})$ \6
+${}\{{}$\1\6
+${}\\{optz}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\\{i1}][%
+\\{j1}][\|k];{}$\6
+${}\\{optz}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\\{i2}][%
+\\{j2}][\|k];{}$\6
+${}\\{optz}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K\NULL;{}$\6
+\4${}\}{}$\2\par
+\B\4\D$\\{ozz}(\\{k1})$ \6
+${}\{{}$\1\6
+${}\\{optz}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\|i][\|j][%
+\\{k1}];{}$\6
+${}\\{optz}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\|i][\|j+%
+\T{1}][\\{k1}];{}$\6
+${}\\{optz}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\|i+\T{1}][%
+\|j][\\{k1}];{}$\6
+${}\\{optz}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\|i+\T{1}][%
+\|j+\T{1}][\\{k1}];{}$\6
+${}\\{optz}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K\NULL;{}$\6
+\4${}\}{}$\2\par
+\Y\B\4\X14:Set up the \PB{\\{optz}} options\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{ll}-\T{1};{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm}-\T{1};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{kk}\K\T{0};{}$\6
+\&{if} (\|i)\1\5
+${}\\{oz}(\|i-\T{1},\39\|j,\39\|i-\T{1},\39\|j+\T{1});{}$\2\6
+\&{if} ${}(\|i<\\{ll}-\T{2}){}$\1\5
+${}\\{oz}(\|i+\T{2},\39\|j,\39\|i+\T{2},\39\|j+\T{1});{}$\2\6
+\&{if} (\|j)\1\5
+${}\\{oz}(\|i,\39\|j-\T{1},\39\|i+\T{1},\39\|j-\T{1});{}$\2\6
+\&{if} ${}(\|j<\\{mm}-\T{2}){}$\1\5
+${}\\{oz}(\|i,\39\|j+\T{2},\39\|i+\T{1},\39\|j+\T{2});{}$\2\6
+\&{if} (\|k)\1\5
+${}\\{ozz}(\|k-\T{1});{}$\2\6
+\&{if} ${}(\|k<\\{nn}-\T{1}){}$\1\5
+${}\\{ozz}(\|k+\T{1});{}$\2\6
+${}\\{optz}[\|i][\|j][\|k].\\{neighbor\_ptr}\K\\{kk};{}$\6
+\4${}\}{}$\2\2\2\par
+\U11.\fi
+
+\M{15}\B\X15:Set up the nodes\X${}\E{}$\6
+\X16:Set up the \PB{\\{blockx}} nodes\X;\6
+\X17:Set up the \PB{\\{blocky}} nodes\X;\6
+\X18:Set up the \PB{\\{blockz}} nodes\X;\par
+\U8.\fi
+
+\M{16}\B\X16:Set up the \PB{\\{blockx}} nodes\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{ll};{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm}-\T{1};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn}-\T{1};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|t\K\T{0};{}$ ${}\|t<\T{4};{}$ ${}\|t\PP){}$\5
+${}\{{}$\1\6
+${}\|p\K{\AND}\\{blockx}[\|i][\|j][\|k][\|t];{}$\6
+${}\|p\MG\\{right}\K{\AND}\\{blockx}[\|i][\|j][\|k][(\|t+\T{1})\AND\T{3}];{}$\6
+${}\|p\MG\\{left}\K{\AND}\\{blockx}[\|i][\|j][\|k][(\|t+\T{3})\AND\T{3}];{}$\6
+${}\|c\K{\AND}\\{cells}[\|i][\|j+((\|t\AND\T{2})\GG\T{1})][\|k+(\|t\AND%
+\T{1})];{}$\6
+${}\\{pp}\K\|c\MG\\{head}.\\{up};{}$\6
+${}\\{pp}\MG\\{down}\K\|c\MG\\{head}.\\{up}\K\|p;{}$\6
+${}\|p\MG\\{up}\K\\{pp};{}$\6
+${}\|p\MG\\{down}\K{\AND}(\|c\MG\\{head});{}$\6
+${}\|p\MG\\{row}\K{\AND}\\{optx}[\|i][\|j][\|k];{}$\6
+${}\|p\MG\\{col}\K\|c;{}$\6
+${}\|c\MG\\{len}\PP;{}$\6
+\4${}\}{}$\2\6
+\\{make\_syms}(\\{blockx}[\|i][\|j][\|k]);\6
+\4${}\}{}$\2\2\2\par
+\U15.\fi
+
+\M{17}\B\X17:Set up the \PB{\\{blocky}} nodes\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{ll}-\T{1};{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn}-\T{1};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|t\K\T{0};{}$ ${}\|t<\T{4};{}$ ${}\|t\PP){}$\5
+${}\{{}$\1\6
+${}\|p\K{\AND}\\{blocky}[\|i][\|j][\|k][\|t];{}$\6
+${}\|p\MG\\{right}\K{\AND}\\{blocky}[\|i][\|j][\|k][(\|t+\T{1})\AND\T{3}];{}$\6
+${}\|p\MG\\{left}\K{\AND}\\{blocky}[\|i][\|j][\|k][(\|t+\T{3})\AND\T{3}];{}$\6
+${}\|c\K{\AND}\\{cells}[\|i+((\|t\AND\T{2})\GG\T{1})][\|j][\|k+(\|t\AND%
+\T{1})];{}$\6
+${}\\{pp}\K\|c\MG\\{head}.\\{up};{}$\6
+${}\\{pp}\MG\\{down}\K\|c\MG\\{head}.\\{up}\K\|p;{}$\6
+${}\|p\MG\\{up}\K\\{pp};{}$\6
+${}\|p\MG\\{down}\K{\AND}(\|c\MG\\{head});{}$\6
+${}\|p\MG\\{row}\K{\AND}\\{opty}[\|i][\|j][\|k];{}$\6
+${}\|p\MG\\{col}\K\|c;{}$\6
+${}\|c\MG\\{len}\PP;{}$\6
+\4${}\}{}$\2\6
+\\{make\_syms}(\\{blocky}[\|i][\|j][\|k]);\6
+\4${}\}{}$\2\2\2\par
+\U15.\fi
+
+\M{18}\B\X18:Set up the \PB{\\{blockz}} nodes\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{ll}-\T{1};{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm}-\T{1};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|t\K\T{0};{}$ ${}\|t<\T{4};{}$ ${}\|t\PP){}$\5
+${}\{{}$\1\6
+${}\|p\K{\AND}\\{blockz}[\|i][\|j][\|k][\|t];{}$\6
+${}\|p\MG\\{right}\K{\AND}\\{blockz}[\|i][\|j][\|k][(\|t+\T{1})\AND\T{3}];{}$\6
+${}\|p\MG\\{left}\K{\AND}\\{blockz}[\|i][\|j][\|k][(\|t+\T{3})\AND\T{3}];{}$\6
+${}\|c\K{\AND}\\{cells}[\|i+((\|t\AND\T{2})\GG\T{1})][\|j+(\|t\AND\T{1})][%
+\|k];{}$\6
+${}\\{pp}\K\|c\MG\\{head}.\\{up};{}$\6
+${}\\{pp}\MG\\{down}\K\|c\MG\\{head}.\\{up}\K\|p;{}$\6
+${}\|p\MG\\{up}\K\\{pp};{}$\6
+${}\|p\MG\\{down}\K{\AND}(\|c\MG\\{head});{}$\6
+${}\|p\MG\\{row}\K{\AND}\\{optz}[\|i][\|j][\|k];{}$\6
+${}\|p\MG\\{col}\K\|c;{}$\6
+${}\|c\MG\\{len}\PP;{}$\6
+\4${}\}{}$\2\6
+\\{make\_syms}(\\{blockz}[\|i][\|j][\|k]);\6
+\4${}\}{}$\2\2\2\par
+\U15.\fi
+
+\M{19}\B\X19:Subroutines\X${}\E{}$\6
+\\{make\_syms}(\\{pp})\1\1\6
+\&{node} \\{pp}[\,];\2\2\6
+${}\{{}$\1\6
+\&{register} \&{char} ${}{*}\|q;{}$\6
+\&{register} \&{int} \|s${},{}$ \|t${},{}$ \\{imax}${},{}$ \\{imin}${},{}$ %
+\\{jmax}${},{}$ \\{jmin}${},{}$ \\{kmax}${},{}$ \\{kmin}${},{}$ \|i${},{}$ %
+\|j${},{}$ \|k;\7
+\&{for} ${}(\|s\K\T{0};{}$ ${}\|s<\\{ss};{}$ ${}\|s\PP){}$\5
+${}\{{}$\1\6
+${}\\{imax}\K\\{jmax}\K\\{kmax}\K{-}\T{1};{}$\6
+${}\\{imin}\K\\{jmin}\K\\{kmin}\K\T{1000};{}$\6
+\&{for} ${}(\|t\K\T{0};{}$ ${}\|t<\T{4};{}$ ${}\|t\PP){}$\5
+${}\{{}$\1\6
+${}\|q\K\\{pp}[\|t].\\{col}\MG\\{head}.\\{sym}[\|s]\MG\\{col}\MG\\{name};{}$\6
+${}\|i\K\|q[\T{0}]-\.{'0'};{}$\6
+${}\|j\K\|q[\T{1}]-\.{'0'};{}$\6
+${}\|k\K\|q[\T{2}]-\.{'0'};{}$\6
+\&{if} ${}(\|i<\\{imin}){}$\1\5
+${}\\{imin}\K\|i;{}$\2\6
+\&{if} ${}(\|i>\\{imax}){}$\1\5
+${}\\{imax}\K\|i;{}$\2\6
+\&{if} ${}(\|j<\\{jmin}){}$\1\5
+${}\\{jmin}\K\|j;{}$\2\6
+\&{if} ${}(\|j>\\{jmax}){}$\1\5
+${}\\{jmax}\K\|j;{}$\2\6
+\&{if} ${}(\|k<\\{kmin}){}$\1\5
+${}\\{kmin}\K\|k;{}$\2\6
+\&{if} ${}(\|k>\\{kmax}){}$\1\5
+${}\\{kmax}\K\|k;{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{imin}\E\\{imax}){}$\1\5
+\X20:Map to \PB{\\{blockx}} nodes\X\2\6
+\&{else} \&{if} ${}(\\{jmin}\E\\{jmax}){}$\1\5
+\X21:Map to \PB{\\{blocky}} nodes\X\2\6
+\&{else}\1\5
+\X22:Map to \PB{\\{blockz}} nodes\X;\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\As27, 28\ETs43.
+\U1.\fi
+
+\M{20}\B\X20:Map to \PB{\\{blockx}} nodes\X${}\E{}$\6
+\&{for} ${}(\|t\K\T{0};{}$ ${}\|t<\T{4};{}$ ${}\|t\PP){}$\5
+${}\{{}$\1\6
+${}\|q\K\\{pp}[\|t].\\{col}\MG\\{head}.\\{sym}[\|s]\MG\\{col}\MG\\{name};{}$\6
+${}\|i\K\|q[\T{0}]-\.{'0'};{}$\6
+${}\|j\K\|q[\T{1}]-\.{'0'};{}$\6
+${}\|k\K\|q[\T{2}]-\.{'0'};{}$\6
+${}\\{pp}[\|t].\\{sym}[\|s]\K{\AND}\\{blockx}[\|i][\\{jmin}][\\{kmin}][(\|j-%
+\\{jmin})*\T{2}+\|k-\\{kmin}];{}$\6
+\4${}\}{}$\2\par
+\U19.\fi
+
+\M{21}\B\X21:Map to \PB{\\{blocky}} nodes\X${}\E{}$\6
+\&{for} ${}(\|t\K\T{0};{}$ ${}\|t<\T{4};{}$ ${}\|t\PP){}$\5
+${}\{{}$\1\6
+${}\|q\K\\{pp}[\|t].\\{col}\MG\\{head}.\\{sym}[\|s]\MG\\{col}\MG\\{name};{}$\6
+${}\|i\K\|q[\T{0}]-\.{'0'};{}$\6
+${}\|j\K\|q[\T{1}]-\.{'0'};{}$\6
+${}\|k\K\|q[\T{2}]-\.{'0'};{}$\6
+${}\\{pp}[\|t].\\{sym}[\|s]\K{\AND}\\{blocky}[\\{imin}][\|j][\\{kmin}][(\|i-%
+\\{imin})*\T{2}+\|k-\\{kmin}];{}$\6
+\4${}\}{}$\2\par
+\U19.\fi
+
+\M{22}\B\X22:Map to \PB{\\{blockz}} nodes\X${}\E{}$\6
+\&{for} ${}(\|t\K\T{0};{}$ ${}\|t<\T{4};{}$ ${}\|t\PP){}$\5
+${}\{{}$\1\6
+${}\|q\K\\{pp}[\|t].\\{col}\MG\\{head}.\\{sym}[\|s]\MG\\{col}\MG\\{name};{}$\6
+${}\|i\K\|q[\T{0}]-\.{'0'};{}$\6
+${}\|j\K\|q[\T{1}]-\.{'0'};{}$\6
+${}\|k\K\|q[\T{2}]-\.{'0'};{}$\6
+${}\\{pp}[\|t].\\{sym}[\|s]\K{\AND}\\{blockz}[\\{imin}][\\{jmin}][\|k][(\|i-%
+\\{imin})*\T{2}+\|j-\\{jmin}];{}$\6
+\4${}\}{}$\2\par
+\U19.\fi
+
+\N{1}{23}Backtracking and isomorph rejection.
+The basic operation of this program is a backtrack
+search, which repeatedly finds an uncovered cell and tries to cover it in
+all possible ways. We save lots of work if we always choose a cell that has the
+fewest remaining options. The program considers each of those options in turn;
+a given option covers certain cells and removes all other options that
+cover those cells. We must backtrack if we run out of options for any
+uncovered cell.
+
+The solutions are sequences $a_1\,a_2\ldots a_l$, where each $a_k$ is a node.
+Node $a_k$ belongs to column~$c_k$, the cell chosen for covering at level~$k$,
+and to row~$r_k$, the option chosen for covering that cell.
+
+With 48 symmetries we can reduce the number of cases considered by a factor of
+up to 48 if we spend a bit more time on each case, by being careful to weed
+out solutions that are isomorphic to others that have been or will be found.
+If $a_1\,a_2\ldots a_l$ is a solution that defines a covering~$C$,
+and if $\sigma$ is a symmetry of the problem,
+the nodes $\sigma a_1$, $\sigma a_2$, \dots,~$\sigma a_l$ define a covering
+$\sigma C$ that is isomorphic to~$C$. For each $k$ in the range $1\le k\le l$,
+let $a'_k$ be the node for which $\sigma a'_k$ is the node that covers
+$\sigma c_k$ in~$\sigma C$. We will consider only solutions such that
+$a'_1\,a'_2\ldots a'_l$ is lexicographically less than or equal to
+$a_1\,a_2\ldots a_l$; this will guarantee that we obtain exactly one solution
+from every equivalence class of isomorphic coverings. (Notice that the number
+of symmetries of a given solution $a_1\,a_2\ldots a_l$ is the number of
+$\sigma$ for which we have $a'_1\,a'_2\ldots a'_l=a_1\,a_2\ldots a_l$.)
+
+If $a_l\,a_2\ldots a_l$ is a partial solution and $\sigma$ is any symmetry, we
+can compute $a'_1\,a'_2\ldots a'_j$ where $j$ is the smallest subscript
+such that $\sigma c_{j+1}$ has not yet been covered. The partial solution
+$a_l\,a_2\ldots a_l$ can be rejected if $a'_1\,a'_2\ldots a'_j$ is
+lexicographically less than $a_1\,a_2\ldots a_j$. The symmetry $\sigma$
+need not be monitored in extensions of $a_l\,a_2\ldots a_l$ to higher levels
+if $a'_1\,a'_2\ldots a'_j$ is lexicographically greater than $a_1\,a_2\ldots
+a_j$. We keep a list at level~$l$ of all $(\sigma,j)$ for which $a'_1\,
+a'_2\ldots a'_j=a_1\,a_2\ldots a_j$, where $j$ is defined as above; this
+is called the {\it symcheck list}. The symcheck list is the key to
+isomorph rejection.
+
+We also maintain a list of constraints: Sets of uncovered cells that must not
+all be empty; these constraints ensure an antisliding solution.
+
+\Y\B\4\X2:Global variables\X${}\mathrel+\E{}$\6
+\&{int} ${}\\{symcheck\_sig}[(\\{ll}*\\{mm}*\\{nn}+\T{1})*(\\{ss}-\T{1})],{}$
+${}\\{symcheck\_j}[(\\{ll}*\\{mm}*\\{nn}+\T{1})*(\\{ss}-\T{1})]{}$;\C{ symcheck
+list elements }\6
+\&{int} ${}\\{symcheck\_ptr}[\\{ll}*\\{mm}*\\{nn}+\T{2}]{}$;\C{ beginning of
+symcheck list on each level }\6
+\&{cell} ${}{*}\\{constraint}[\\{ll}*\\{mm}*\\{nn}*\T{22}]{}$;\C{ sets of cells
+that shouldn't all be empty }\6
+\&{int} ${}\\{constraint\_ptr}[\\{ll}*\\{mm}*\\{nn}+\T{2}]{}$;\C{ beginning of
+constraint list on each level }\6
+\&{cell} ${}{*}\\{force}[\\{ll}*\\{mm}*\\{nn}]{}$;\C{ list of cells forced to
+be nonempty }\6
+\&{int} ${}\\{force\_ptr}[\\{ll}*\\{mm}*\\{nn}+\T{1}]{}$;\C{ beginning of force
+records on each level }\6
+\&{cell} ${}{*}\\{best\_cell}[\\{ll}*\\{mm}*\\{nn}+\T{1}]{}$;\C{ cell chosen
+for covering on each level }\6
+\&{node} ${}{*}\\{move}[\\{ll}*\\{mm}*\\{nn}+\T{1}]{}$;\C{ the nodes $a_k$ on
+each level }\par
+\fi
+
+\M{24}\B\X24:Local variables\X${}\E{}$\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|s;\C{ miscellaneous
+indices }\6
+\&{register} \&{int} \|l;\C{ the current level }\6
+\&{register} \&{cell} ${}{*}\|c{}$;\C{ the cell being covered on the current
+level }\6
+\&{register} \&{node} ${}{*}\|p{}$;\C{ the current node of interest }\6
+\&{register} \&{cell} ${}{*}\|q{}$;\C{ the current cell of interest }\6
+\&{register} \&{option} ${}{*}\|r{}$;\C{ the current option of interest }\6
+\&{int} \\{ii}${},{}$ \\{jj}${},{}$ \\{kk}${},{}$ \|t;\6
+\&{node} ${}{*}\\{pp}{}$;\par
+\U1.\fi
+
+\M{25}As usual, I'm using labels and \PB{\&{goto}} statements as I backtrack,
+and making only a half-hearted apology for my outrageous style.
+
+\Y\B\4\X25:Backtrack through all solutions\X${}\E{}$\6
+\X46:Initialize for level 0\X;\6
+${}\|l\K\T{1}{}$;\5
+\&{goto} \\{choose};\6
+\4\\{advance}:\5
+\X29:Remove options that cover cells other than \PB{\\{best\_cell}[\|l]}\X;\6
+\&{if} (\\{verbose})\1\5
+\X44:Handle diagnostic info\X;\2\6
+${}\|l\PP;{}$\6
+\4\\{choose}:\5
+\X26:Choose the moves at level \PB{\|l}\X;\6
+\4\\{backup}:\5
+${}\|l\MM;{}$\6
+\&{if} ${}(\|l\E\T{0}){}$\1\5
+\&{goto} \\{done};\2\6
+\X30:Unremove options that cover cells other than \PB{\\{best\_cell}[\|l]}\X;\6
+\&{goto} \\{unmark};\C{ reconsider the move on level \PB{\|l} }\6
+\4\\{solution}:\5
+\X42:Record a solution\X;\6
+\&{goto} \\{backup}; \\{done}:\par
+\U1.\fi
+
+\M{26}The usual trick in backtracking is to update the data structures in such
+a
+way that we can faithfully downdate them as we back up. The harder cases,
+namely the symcheck list and the constraint list, are explicitly recomputed on
+each level so that downdating is unnecessary. The \PB{\\{force\_ptr}} array is
+used to
+remember where forcing moves need to be downdating.
+
+\Y\B\4\X26:Choose the moves at level \PB{\|l}\X${}\E{}$\6
+\X31:Select \PB{$\|c\K\\{best\_cell}[\|l]$}, or \PB{\&{goto} \\{solution}} if
+all cells are covered\X;\6
+${}\\{force\_ptr}[\|l]\K\\{force\_ptr}[\|l-\T{1}];{}$\6
+\\{cover}(\|c);\C{ remove options that cover \PB{\\{best\_cell}[\|l]} }\6
+${}\|c\MG\\{empty}\K\T{1};{}$\6
+\X41:Set $a_l$ to the empty option of \PB{\|c}; \PB{\&{goto} \\{try\_again}} if
+that option isn't allowed\X;\6
+\4\\{try}:\5
+\X32:Mark the newly covered elements\X;\6
+\X34:Compute the new constraint list; \PB{\&{goto} \\{unmark}} if previous
+choices are disallowed\X;\6
+\X40:Compute the new symcheck list; \PB{\&{goto} \\{unmark}} if $a_1\,a_2\ldots
+a_l$ is rejected\X;\6
+\&{goto} \\{advance};\6
+\4\\{unmark}:\5
+\X33:Unmark the newly covered elements\X;\6
+\X39:Delete the new forcing table entries\X;\6
+\4\\{try\_again}:\5
+${}\\{move}[\|l]\K\\{move}[\|l]\MG\\{up};{}$\6
+${}\\{best\_cell}[\|l]\MG\\{empty}\K\T{0};{}$\6
+\&{if} ${}(\\{move}[\|l]\MG\\{right}\I\\{move}[\|l]){}$\1\5
+\&{goto} \\{try};\C{ $a_l$ not the empty option }\2\6
+${}\|c\K\\{best\_cell}[\|l];{}$\6
+\\{uncover}(\|c);\par
+\U25.\fi
+
+\M{27}Here's a subroutine that removes all options that cover cell~\PB{\|c}
+from all
+cell lists except list~\PB{\|c}.
+
+\Y\B\4\X19:Subroutines\X${}\mathrel+\E{}$\6
+\\{cover}(\|c)\1\1\6
+\&{cell} ${}{*}\|c;\2\2{}$\6
+${}\{{}$\5
+\1\&{register} \&{cell} ${}{*}\|l,{}$ ${}{*}\|r;{}$\6
+\&{register} \&{node} ${}{*}\\{rr},{}$ ${}{*}\\{pp},{}$ ${}{*}\\{uu},{}$ ${}{*}%
+\\{dd};{}$\7
+${}\|l\K\|c\MG\\{prev}{}$;\5
+${}\|r\K\|c\MG\\{next};{}$\6
+${}\|l\MG\\{next}\K\|r{}$;\5
+${}\|r\MG\\{prev}\K\|l;{}$\6
+\&{for} ${}(\\{rr}\K\|c\MG\\{head}.\\{down};{}$ ${}\\{rr}\I{\AND}(\|c\MG%
+\\{head});{}$ ${}\\{rr}\K\\{rr}\MG\\{down}){}$\1\6
+\&{for} ${}(\\{pp}\K\\{rr}\MG\\{right};{}$ ${}\\{pp}\I\\{rr};{}$ ${}\\{pp}\K%
+\\{pp}\MG\\{right}){}$\5
+${}\{{}$\1\6
+${}\\{uu}\K\\{pp}\MG\\{up}{}$;\5
+${}\\{dd}\K\\{pp}\MG\\{down};{}$\6
+${}\\{uu}\MG\\{down}\K\\{dd}{}$;\5
+${}\\{dd}\MG\\{up}\K\\{uu};{}$\6
+${}\\{pp}\MG\\{col}\MG\\{len}\MM;{}$\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{28}Uncovering is done in precisely the reverse order. The pointers thereby
+execute an exquisitely choreo\-graphed dance, which returns them almost
+magically to their former state---because the old pointers still exist!
+(I think this technique was invented in Japan.)
+
+\Y\B\4\X19:Subroutines\X${}\mathrel+\E{}$\6
+\\{uncover}(\|c)\1\1\6
+\&{cell} ${}{*}\|c;\2\2{}$\6
+${}\{{}$\5
+\1\&{register} \&{cell} ${}{*}\|l,{}$ ${}{*}\|r;{}$\6
+\&{register} \&{node} ${}{*}\\{rr},{}$ ${}{*}\\{pp},{}$ ${}{*}\\{uu},{}$ ${}{*}%
+\\{dd};{}$\7
+\&{for} ${}(\\{rr}\K\|c\MG\\{head}.\\{up};{}$ ${}\\{rr}\I{\AND}(\|c\MG%
+\\{head});{}$ ${}\\{rr}\K\\{rr}\MG\\{up}){}$\1\6
+\&{for} ${}(\\{pp}\K\\{rr}\MG\\{left};{}$ ${}\\{pp}\I\\{rr};{}$ ${}\\{pp}\K%
+\\{pp}\MG\\{left}){}$\5
+${}\{{}$\1\6
+${}\\{uu}\K\\{pp}\MG\\{up}{}$;\5
+${}\\{dd}\K\\{pp}\MG\\{down};{}$\6
+${}\\{uu}\MG\\{down}\K\\{dd}\MG\\{up}\K\\{pp};{}$\6
+${}\\{pp}\MG\\{col}\MG\\{len}\PP;{}$\6
+\4${}\}{}$\2\2\6
+${}\|l\K\|c\MG\\{prev}{}$;\5
+${}\|r\K\|c\MG\\{next};{}$\6
+${}\|l\MG\\{next}\K\|r\MG\\{prev}\K\|c;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{29}\B\X29:Remove options that cover cells other than \PB{\\{best\_cell}[%
+\|l]}\X${}\E{}$\6
+\&{for} ${}(\|p\K\\{move}[\|l]\MG\\{right};{}$ ${}\|p\I\\{move}[\|l];{}$ ${}\|p%
+\K\|p\MG\\{right}){}$\1\5
+${}\\{cover}(\|p\MG\\{col}){}$;\2\par
+\U25.\fi
+
+\M{30}\B\X30:Unremove options that cover cells other than \PB{\\{best\_cell}[%
+\|l]}\X${}\E{}$\6
+\&{for} ${}(\|p\K\\{move}[\|l]\MG\\{left};{}$ ${}\|p\I\\{move}[\|l];{}$ ${}\|p%
+\K\|p\MG\\{left}){}$\1\5
+${}\\{uncover}(\|p\MG\\{col}){}$;\2\par
+\U25.\fi
+
+\M{31}\B\X31:Select \PB{$\|c\K\\{best\_cell}[\|l]$}, or \PB{\&{goto} %
+\\{solution}} if all cells are covered\X${}\E{}$\6
+$\|q\K\\{root}.\\{next};{}$\6
+\&{if} ${}(\|q\E{\AND}\\{root}){}$\1\5
+\&{goto} \\{solution};\2\6
+\&{for} ${}(\|c\K\|q,\39\|j\K\|q\MG\\{len},\39\|q\K\|q\MG\\{next};{}$ ${}\|q\I{%
+\AND}\\{root};{}$ ${}\|q\K\|q\MG\\{next}){}$\1\6
+\&{if} ${}(\|q\MG\\{len}<\|j){}$\1\5
+${}\|c\K\|q,\39\|j\K\|q\MG\\{len};{}$\2\2\6
+${}\\{best\_cell}[\|l]\K\|c{}$;\par
+\U26.\fi
+
+\M{32}\B\X32:Mark the newly covered elements\X${}\E{}$\6
+\&{for} ${}(\|p\K\\{move}[\|l]\MG\\{right};{}$ ${}\|p\I\\{move}[\|l];{}$ ${}\|p%
+\K\|p\MG\\{right}){}$\5
+${}\{{}$\1\6
+${}\|p\MG\\{col}\MG\\{filled}\K\|p;{}$\6
+${}\|p\MG\\{col}\MG\\{nonempty}\PP;{}$\6
+\4${}\}{}$\2\6
+${}\|p\MG\\{col}\MG\\{filled}\K\|p;{}$\6
+\&{if} ${}(\|p\MG\\{right}\I\|p){}$\1\5
+${}\|p\MG\\{col}\MG\\{nonempty}\PP{}$;\2\par
+\U26.\fi
+
+\M{33}\B\X33:Unmark the newly covered elements\X${}\E{}$\6
+\&{for} ${}(\|p\K\\{move}[\|l]\MG\\{left};{}$ ${}\|p\I\\{move}[\|l];{}$ ${}\|p%
+\K\|p\MG\\{left}){}$\5
+${}\{{}$\1\6
+${}\|p\MG\\{col}\MG\\{filled}\K\NULL;{}$\6
+${}\|p\MG\\{col}\MG\\{nonempty}\MM;{}$\6
+\4${}\}{}$\2\6
+${}\|p\MG\\{col}\MG\\{filled}\K\NULL;{}$\6
+\&{if} ${}(\|p\MG\\{right}\I\|p){}$\1\5
+${}\|p\MG\\{col}\MG\\{nonempty}\MM{}$;\2\par
+\U26.\fi
+
+\M{34}\B\X34:Compute the new constraint list; \PB{\&{goto} \\{unmark}} if
+previous choices are disallowed\X${}\E{}$\6
+$\|j\K\\{constraint\_ptr}[\|l-\T{1}];{}$\6
+${}\|k\K\\{constraint\_ptr}[\|l];{}$\6
+\&{if} ${}(\|p\MG\\{right}\E\|p){}$\1\5
+\X35:Delete current cell from the constraint list, possibly forcing other cells
+to be nonempty\X\2\6
+\&{else}\5
+${}\{{}$\1\6
+\X37:Add new constraints; \PB{\&{goto} \\{unmark}} if previous choices are
+disallowed\X;\6
+\X38:Copy former constraints that are still unsatisfied\X;\6
+\4${}\}{}$\2\6
+${}\\{constraint\_ptr}[\|l+\T{1}]\K\|k{}$;\par
+\U26.\fi
+
+\M{35}\B\X35:Delete current cell from the constraint list, possibly forcing
+other cells to be nonempty\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|c\K\|p\MG\\{col};{}$\6
+\&{while} ${}(\|j<\\{constraint\_ptr}[\|l]){}$\5
+${}\{{}$\1\6
+${}\\{kk}\K\|k;{}$\6
+\&{while} ${}((\|q\K\\{constraint}[\|j])){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|q\I\|c){}$\1\5
+${}\\{constraint}[\|k\PP]\K\|q;{}$\2\6
+${}\|j\PP;{}$\6
+\4${}\}{}$\2\6
+${}\|j\PP;{}$\6
+\&{if} ${}(\|k\E\\{kk}+\T{1}){}$\1\5
+\X36:Force \PB{\\{constraint}[\\{kk}]} to be nonempty\X\2\6
+\&{else}\1\5
+${}\\{constraint}[\|k\PP]\K\NULL;{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U34.\fi
+
+\M{36}\B\X36:Force \PB{\\{constraint}[\\{kk}]} to be nonempty\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|k\K\\{kk};{}$\6
+${}\|q\K\\{constraint}[\|k];{}$\6
+\&{if} ${}(\R\|q\MG\\{nonempty}){}$\5
+${}\{{}$\1\6
+${}\|q\MG\\{nonempty}\K\T{1};{}$\6
+${}\|q\MG\\{len}\MM;{}$\6
+${}\\{force}[\\{force\_ptr}[\|l]\PP]\K\|q;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U35.\fi
+
+\M{37}\B\X37:Add new constraints; \PB{\&{goto} \\{unmark}} if previous choices
+are disallowed\X${}\E{}$\6
+$\|r\K\|p\MG\\{row};{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|r\MG\\{neighbor\_ptr};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+${}\\{kk}\K\|k;{}$\6
+\&{while} ${}((\|q\K\|r\MG\\{neighbor}[\|i])){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|q\MG\\{nonempty}){}$\5
+${}\{{}$\C{ constraint is satisfied }\1\6
+\&{do}\5
+${}\|i\PP{}$;\5
+\5
+\&{while} ${}(\|r\MG\\{neighbor}[\|i]);{}$\6
+\&{goto} \\{no\_problem};\6
+\4${}\}{}$\2\6
+\&{else} \&{if} ${}(\R\|q\MG\\{empty}){}$\1\5
+${}\\{constraint}[\|k\PP]\K\|q;{}$\2\6
+${}\|i\PP;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|k>\\{kk}+\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{constraint}[\|k\PP]\K\NULL;{}$\6
+\&{continue};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|k\E\\{kk}){}$\1\5
+\&{goto} \\{unmark};\C{ all were covered by empty cells }\2\6
+${}\|q\K\\{constraint}[\\{kk}];{}$\6
+${}\|q\MG\\{nonempty}\K\T{1};{}$\6
+${}\|q\MG\\{len}\MM;{}$\6
+${}\\{force}[\\{force\_ptr}[\|l]\PP]\K\|q;{}$\6
+\4\\{no\_problem}:\5
+${}\|k\K\\{kk};{}$\6
+\4${}\}{}$\2\par
+\U34.\fi
+
+\M{38}\B\X38:Copy former constraints that are still unsatisfied\X${}\E{}$\6
+\&{while} ${}(\|j<\\{constraint\_ptr}[\|l]){}$\5
+${}\{{}$\1\6
+${}\\{kk}\K\|k;{}$\6
+\&{while} ${}((\|q\K\\{constraint}[\|j])){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|q\MG\\{nonempty}){}$\1\5
+\&{goto} \\{flush};\C{ constraint is satisfied }\2\6
+${}\\{constraint}[\|k\PP]\K\|q;{}$\6
+${}\|j\PP;{}$\6
+\4${}\}{}$\2\6
+${}\\{constraint}[\|k\PP]\K\NULL;{}$\6
+${}\|j\PP;{}$\6
+\&{continue};\6
+\4\\{flush}:\5
+\&{do}\5
+${}\|j\PP{}$;\5
+\5
+\&{while} (\\{constraint}[\|j]);\6
+${}\|k\K\\{kk};{}$\6
+${}\|j\PP;{}$\6
+\4${}\}{}$\2\par
+\U34.\fi
+
+\M{39}\B\X39:Delete the new forcing table entries\X${}\E{}$\6
+\&{while} ${}(\\{force\_ptr}[\|l]\I\\{force\_ptr}[\|l-\T{1}]){}$\5
+${}\{{}$\1\6
+${}\|q\K\\{force}[\MM\\{force\_ptr}[\|l]];{}$\6
+${}\|q\MG\\{len}\PP;{}$\6
+${}\|q\MG\\{nonempty}\K\T{0};{}$\6
+\4${}\}{}$\2\par
+\U26.\fi
+
+\M{40}\B\X40:Compute the new symcheck list; \PB{\&{goto} \\{unmark}} if $a_1%
+\,a_2\ldots a_l$ is rejected\X${}\E{}$\6
+\&{for} ${}(\|k\K\\{symcheck\_ptr}[\|l-\T{1}],\39\\{kk}\K\\{symcheck\_ptr}[%
+\|l];{}$ ${}\|k<\\{symcheck\_ptr}[\|l];{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\\{symcheck\_sig}[\|k],\39\|j\K\\{symcheck\_j}[\|k]+\T{1};{}$
+${}\|j\Z\|l;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|c\K\\{best\_cell}[\|j]\MG\\{invsym}[\|i]{}$;\C{ $\sigma c_i$ }\6
+\&{if} ${}(\R\|c\MG\\{filled}){}$\1\5
+\&{break};\2\6
+${}\|p\K\|c\MG\\{filled}\MG\\{sym}[\|i]{}$;\C{ $a'_i$ }\6
+\&{if} ${}(\|p<\\{move}[\|j]){}$\1\5
+\&{goto} \\{unmark};\2\6
+\&{if} ${}(\|p>\\{move}[\|j]){}$\1\5
+\&{goto} \\{okay};\2\6
+\4${}\}{}$\2\6
+${}\\{symcheck\_sig}[\\{kk}]\K\|i;{}$\6
+${}\\{symcheck\_j}[\\{kk}]\K\|j-\T{1};{}$\6
+${}\\{kk}\PP;{}$\6
+\4\\{okay}:\5
+;\6
+\4${}\}{}$\2\6
+${}\\{symcheck\_ptr}[\|l+\T{1}]\K\\{kk}{}$;\par
+\U26.\fi
+
+\M{41}\B\X41:Set $a_l$ to the empty option of \PB{\|c}; \PB{\&{goto} \\{try%
+\_again}} if that option isn't allowed\X${}\E{}$\6
+$\\{move}[\|l]\K{\AND}(\|c\MG\\{head});{}$\6
+\&{if} ${}(\|c\MG\\{nonempty}){}$\1\5
+\&{goto} \\{try\_again};\2\par
+\U26.\fi
+
+\M{42}\B\X42:Record a solution\X${}\E{}$\6
+$\\{count}\PP;{}$\6
+\&{if} (\\{verbose})\5
+${}\{{}$\1\6
+\&{if} ${}(\\{count}\MOD\\{spacing}\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\%d:\ "},\39\\{count});{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|l;{}$ ${}\|j\PP){}$\1\5
+\\{print\_move}(\\{move}[\|j]);\2\6
+\&{if} ${}(\\{symcheck\_ptr}[\|l]\E\\{symcheck\_ptr}[\|l-\T{1}]){}$\1\5
+${}\\{printf}(\.{"(1\ sym,\ \%d\ blks)\\n"},\39(\\{ll}*\\{mm}*\\{nn}+\T{1}-%
+\|l)/\T{3});{}$\2\6
+\&{else}\1\5
+${}\\{printf}(\.{"(\%d\ syms,\ \%d\ blks)\\}\)\.{n"},\39\\{symcheck\_ptr}[\|l]-%
+\\{symcheck\_ptr}[\|l-\T{1}]+\T{1},\39(\\{ll}*\\{mm}*\\{nn}+\T{1}-\|l)/%
+\T{3});{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U25.\fi
+
+\M{43}\B\X19:Subroutines\X${}\mathrel+\E{}$\6
+\\{print\_move}(\|p)\1\1\6
+\&{node} ${}{*}\|p;\2\2{}$\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|q;{}$\7
+\&{for} ${}(\|q\K\|p\MG\\{right};{}$ ${}\|q\I\|p;{}$ ${}\|q\K\|q\MG%
+\\{right}){}$\1\5
+${}\\{printf}(\.{"\%s-"},\39\|q\MG\\{col}\MG\\{name});{}$\2\6
+${}\\{printf}(\.{"\%s\ "},\39\|q\MG\\{col}\MG\\{name});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{44}\B\X44:Handle diagnostic info\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{profile}[\|l]\PP;{}$\6
+${}\\{prof\_syms}[\|l]\MRL{+{\K}}\\{symcheck\_ptr}[\|l+\T{1}]-\\{symcheck%
+\_ptr}[\|l]+\T{1};{}$\6
+${}\\{prof\_cons}[\|l]\MRL{+{\K}}\\{constraint\_ptr}[\|l+\T{1}]-\\{constraint%
+\_ptr}[\|l];{}$\6
+${}\\{prof\_frcs}[\|l]\MRL{+{\K}}\\{force\_ptr}[\|l]-\\{force\_ptr}[\|l-%
+\T{1}];{}$\6
+\&{if} ${}(\\{verbose}>\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"Level\ \%d,\ "},\39\|l);{}$\6
+\\{print\_move}(\\{move}[\|l]);\6
+${}\\{printf}(\.{"(\%d,\%d,\%d)\\n"},\39\\{symcheck\_ptr}[\|l+\T{1}]-%
+\\{symcheck\_ptr}[\|l]+\T{1},\39\\{constraint\_ptr}[\|l+\T{1}]-\\{constraint%
+\_ptr}[\|l],\39\\{force\_ptr}[\|l]-\\{force\_ptr}[\|l-\T{1}]);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U25.\fi
+
+\M{45}\B\X45:Print a profile of the search tree\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\\{ll}*\\{mm}*\\{nn};{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\ Level\ \%d:\ \%d\ sols,}\)\.{\ \%\#.1f\ syms,\ \%\#.1f\ c}%
+\)\.{ons,\ \%\#.1f\ frcs\\n"},\39\|j,\39\\{profile}[\|j],\39{}$(\&{double}) %
+\\{prof\_syms}[\|j]${}/{}$(\&{double}) \\{profile}[\|j]${},\39{}$(\&{double}) %
+\\{prof\_cons}[\|j]${}/{}$(\&{double}) \\{profile}[\|j]${},\39{}$(\&{double}) %
+\\{prof\_frcs}[\|j]${}/{}$(\&{double}) \\{profile}[\|j]);\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{46}\B\X46:Initialize for level 0\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{ll};{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|c\K{\AND}\\{cells}[\|i][\|j][\|k];{}$\6
+${}\|c\MG\\{init\_len}\K\|c\MG\\{len};{}$\6
+\4${}\}{}$\2\2\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{ss};{}$ ${}\|k\PP){}$\1\5
+${}\\{symcheck\_sig}[\|k]\K\|k+\T{1};{}$\2\6
+${}\\{symcheck\_ptr}[\T{1}]\K\\{ss}-\T{1}{}$;\par
+\U25.\fi
+
+\M{47}\B\X47:Make redundancy checks to see if the backtracking was consistent%
+\X${}\E{}$\6
+$\|q\K{\AND}\\{root};{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{ll};{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|c\K{\AND}\\{cells}[\|i][\|j][\|k];{}$\6
+\&{if} ${}(\|c\MG\\{nonempty}\V\|c\MG\\{len}\I\|c\MG\\{init\_len}\V\|c\MG%
+\\{prev}\I\|q\V\|q\MG\\{next}\I\|c){}$\1\5
+${}\\{printf}(\.{"Trouble\ at\ cell\ \%s!}\)\.{\\n"},\39\|c\MG\\{name});{}$\2\6
+${}\|q\K\|c;{}$\6
+\4${}\}{}$\2\2\2\par
+\U1.\fi
+
+\N{1}{48}Index.
+\fi
+
+\inx
+\fin
+\con

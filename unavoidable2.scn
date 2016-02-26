@@ -1,0 +1,12 @@
+\I\X4:Avoid the $n$-tuple encoded by \PB{\\{code}}\X
+\U3.
+\I\X2:Compute the \PB{\\{avoid}} and \PB{\\{deg}} tables\X
+\U1.
+\I\X5:Decrease the degree of \PB{\|l}'s predecessors, and stack them if their
+degree drops to zero\X
+\U1.
+\I\X3:Generate an $n$-tuple to avoid\X
+\U2.
+\I\X6:Print out a longest path\X
+\U1.
+

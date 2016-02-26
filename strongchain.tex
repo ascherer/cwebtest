@@ -1,0 +1,476 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Introduction. This program finds the length of the shortest strong
+addition chain that leads to a given number~$n$.
+A strong addition chain --- aka a Lucas chain or a Chebyshev chain ---
+is a sequence of integers $1=a_0<a_1<\cdots<a_m=n$ with the property that
+each element $a_k$, for $1\le k\le m$, is the sum $a_i+a_j$ of prior elements
+(as in an ordinary addition chain); furthermore, the difference
+$\vert a_i-a_j\vert$ is either zero or appears in the chain. The
+minimum possible value of~$m$ is called $L(n)$.
+
+This program calculates $L(1)$, $L(2)$, \dots, getting as far as it can
+until time runs out. As usual, I wrote it in a big hurry.
+My main goal today is to get more
+experience writing backtrack algorithms, as I rev up to write the early
+sections of Volume~4 in earnest.
+
+\Y\B\4\D$\\{maxn}$ \5
+\T{100000}\C{ size of arrays; I don't really expect to get this far }\par
+\B\4\D$\\{maxm}$ \5
+\T{40}\C{ actually $2\lg\PB{\\{maxn}}$ will suffice }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\&{int} \|L[\\{maxn}];\C{ the results }\6
+\&{int} \\{ub}[\\{maxm}]${},{}$ \\{lb}[\\{maxm}];\C{ upper and lower bounds on
+$a_k$ }\6
+\&{int} ${}\\{choice}[\T{4}*\\{maxm}]{}$;\C{ current choices at each level }\6
+\&{int} ${}\\{bound}[\T{4}*\\{maxm}]{}$;\C{ maximum possible choices at each
+level }\6
+\&{struct} ${}\{{}$\1\6
+\&{int} ${}{*}\\{ptr};{}$\6
+\&{int} \\{val};\2\6
+${}\}{}$ ${}\\{assigned}[\T{8}*\\{maxm}*\\{maxm}]{}$;\C{ for undoing }\6
+\&{int} \\{undo\_ptr};\C{ pointer to the \PB{\\{assigned}} stack }\6
+\&{int} ${}\\{save}[\T{4}*\\{maxm}]{}$;\C{ information for undoing at each
+level }\6
+\&{int} ${}\\{hint}[\T{4}*\\{maxm}]{}$;\C{ additional information at each level
+}\6
+\&{int} \\{verbose}${}\K\T{0}{}$;\C{ set nonzero when debugging }\6
+\&{int} \\{record}${}\K\T{0}{}$;\C{ largest $L(n)$ seen so far }\7
+\X7:Subroutines\X\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|a${},{}$ \|k${},{}$ \|l${},{}$ \|m${},{}$ \|n${},{}$ %
+\|t${},{}$ \\{work};\6
+\&{int} \\{special}${}\K\T{0},{}$ \\{ap}${},{}$ \\{app};\7
+${}\\{ub}[\T{0}]\K\\{lb}[\T{0}]\K\T{1};{}$\6
+${}\|n\K\T{1}{}$;\5
+${}\|m\K\T{0}{}$;\5
+${}\\{work}\K\T{0};{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+${}\|L[\|n]\K\|m;{}$\6
+${}\\{printf}(\.{"L(\%d)=\%d:"},\39\|n,\39\|m);{}$\6
+\&{if} ${}(\|m>\\{record}){}$\5
+${}\{{}$\1\6
+${}\\{record}\K\|m;{}$\6
+\\{printf}(\.{"*"});\6
+\4${}\}{}$\2\6
+\&{if} (\\{special})\1\5
+\X21:Print special reason\X\2\6
+\&{else}\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\|m;{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\.{"\ \%d"},\39\\{ub}[\|k]);{}$\2\2\6
+${}\\{printf}(\.{"\ [\%d]\\n"},\39\\{work});{}$\6
+${}\|n\PP{}$;\5
+${}\\{work}\K\T{0};{}$\6
+\X2:Find a shortest strong chain for $n$\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{2}Backtracking. The choices to be made on levels 0, 1, 2, \dots\ can
+be grouped in fours, so that the actions at level $l$ depend on $l\bmod4$.
+If $l\bmod4=0$, we're given a number $a$ and we want to decide how to
+write it as a sum $a'+a''$. If $l\bmod4!=0$, we're given a number $b$ and
+we want to place it in the chain if it isn't already present. The
+cases $l\bmod4=1$,~2,~3 correspond respectively to $b=a'$, $b=a''$, and
+$b=\vert a'-a''\vert$ in the previous choice $a=a'+a''$.
+
+We keep the current state of the chain in arrays \PB{\\{lb}} and \PB{\\{ub}}.
+If \PB{$\\{lb}[\|k]\K\\{ub}[\|k]$},
+their common value is $a_k$; otherwise $a_k$ has not yet been specified,
+but its eventual value  will satisfy $\PB{\\{lb}}[k]\le a_k\le\PB{\\{ub}}[k]$.
+These bounds are maintained in such a way that
+$$\hbox{\PB{$\\{ub}[\|k]<\\{ub}[\|k+\T{1}]\Z\T{2}*\\{ub}[\|k]$}}\qquad and%
+\qquad
+\hbox{\PB{$\\{lb}[\|k]<\\{lb}[\|k+\T{1}]\Z\T{2}*\\{lb}[\|k]$}}.$$
+As a consequence, setting the value of $a_k$ might automatically
+fix the value of some of its neighbors.
+
+Variable \PB{\|t} records the state of our progress, in the sense that
+all elements $a_k$ are known to satisfy the strong chain condition
+for $m\ge k\ge t$.
+
+Variable \PB{\|l} is the current level. We don't find all solutions,
+since one strong chain is enough to establish the value of~$L(n)$.
+
+\Y\B\4\X2:Find a shortest strong chain for $n$\X${}\E{}$\6
+\X3:Set $m$ to the obvious lower bound\X;\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\X18:Check for known upper bound to simplify the work\X;\6
+\X4:Initialize to try for a chain of length $m$\X;\6
+\X5:Backtrack until finding a solution or exhausting all possibilities\X;\6
+\4\\{not\_found}:\5
+${}\|m\PP;{}$\6
+\4${}\}{}$\2\6
+\\{found}:\par
+\U1.\fi
+
+\M{3}The obvious lower bound is $\lceil\lg n\rceil$.
+
+\Y\B\4\X3:Set $m$ to the obvious lower bound\X${}\E{}$\6
+\&{for} ${}(\|k\K(\|n-\T{1})\GG\T{1},\39\|m\K\T{1};{}$ \|k; ${}\|m\PP){}$\1\5
+${}\|k\MRL{{\GG}{\K}}\T{1}{}$;\2\par
+\U2.\fi
+
+\M{4}A slightly subtle point arises here: We make \PB{\\{lb}[\|k]} and \PB{%
+\\{ub}[\|k]} infinite for
+$k>m$, because some of our routines below will look in positions $\ge L(a)$
+when trying to insert an element~$a$.
+
+\Y\B\4\X4:Initialize to try for a chain of length $m$\X${}\E{}$\6
+$\\{ub}[\|m]\K\\{lb}[\|m]\K\|n;{}$\6
+\&{for} ${}(\|k\K\|m-\T{1};{}$ \|k; ${}\|k\MM){}$\5
+${}\{{}$\1\6
+${}\\{lb}[\|k]\K(\\{lb}[\|k+\T{1}]+\T{1})\GG\T{1};{}$\6
+\&{if} ${}(\\{lb}[\|k]\Z\|k){}$\1\5
+${}\\{lb}[\|k]\K\|k+\T{1};{}$\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\|m;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{ub}[\|k]\K\\{ub}[\|k-\T{1}]\LL\T{1};{}$\6
+\&{if} ${}(\\{ub}[\|k]>\|n-(\|m-\|k)){}$\1\5
+${}\\{ub}[\|k]\K\|n-(\|m-\|k);{}$\2\6
+\4${}\}{}$\2\6
+${}\|l\K\T{0};{}$\6
+${}\|t\K\|m+\T{1};{}$\6
+\&{for} ${}(\|k\K\|t;{}$ ${}\|k\Z\\{record};{}$ ${}\|k\PP){}$\1\5
+${}\\{lb}[\|k]\K\\{ub}[\|k]\K\\{maxn};{}$\2\6
+${}\\{undo\_ptr}\K\T{0}{}$;\par
+\U2.\fi
+
+\M{5}At each level \PB{\|l} we make all choices that lie between \PB{%
+\\{choice}[\|l]} and
+\PB{\\{bound}[\|l]}, inclusive. If successful, we advance \PB{\|l} and go to %
+\PB{\\{start\_level}};
+otherwise we go to \PB{\\{backup}}.
+
+\Y\B\4\X5:Backtrack until finding a solution or exhausting all possibilities%
+\X${}\E{}$\6
+\4\\{start\_level}:\5
+${}\\{work}\PP;{}$\6
+\&{if} (\\{verbose})\1\5
+\X6:Print diagnostic info\X;\2\6
+\&{if} ${}(\|l\AND\T{3}){}$\1\5
+\X14:Place \PB{\\{hint}[\|l]}\X\2\6
+\&{else}\1\5
+\X8:Decrease \PB{\|t} and vet another entry, or go to \PB{\\{found}}\X;\2\6
+\X15:Additional code reached by \PB{\&{goto}} statements\X;\par
+\U2.\fi
+
+\M{6}\B\X6:Print diagnostic info\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{printf}(\.{"Entering\ level\ \%d:\\}\)\.{n"},\39\|l);{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\|t;{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\.{"\ \%d..\%d"},\39\\{lb}[\|k],\39\\{ub}[\|k]);{}$\2\6
+\\{printf}(\.{"\ |"});\6
+\&{for} ( ; ${}\|k\Z\|m;{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\.{"\ \%d..\%d"},\39\\{lb}[\|k],\39\\{ub}[\|k]);{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|l;{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\.{"\%c\%d..\%d"},\39(\|k\AND\T{3}\?\.{','}:\.{'\ '}),\39%
+\\{choice}[\|k],\39\\{bound}[\|k]);{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\U5.\fi
+
+\N{1}{7}Choosing the summands. When $a$ is in the chain and we want to
+express it as $a'+a''$, we can assume that $a'\ge a''$.
+Naturally we want to look first to see if
+suitable values of $a'$ and $a''$ are already present.
+
+\Y\B\4\X7:Subroutines\X${}\E{}$\6
+\&{int} \\{lookup}(\&{int} \|x)\C{ is $x$ already in the chain? }\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k;\7
+\&{if} ${}(\|x\Z\T{2}){}$\1\5
+\&{return} \T{1};\2\6
+\&{for} ${}(\|k\K\|L[\|x];{}$ ${}\|x>\\{ub}[\|k];{}$ ${}\|k\PP){}$\1\5
+;\2\6
+\&{return} \|x${}\E\\{ub}[\|k]\W\|x\E\\{lb}[\|k];{}$\6
+\4${}\}{}$\2\par
+\As9, 12, 13\ETs20.
+\U1.\fi
+
+\M{8}The values of $a_1$ and $a_2$ can never be a problem.
+
+\Y\B\4\X8:Decrease \PB{\|t} and vet another entry, or go to \PB{\\{found}}\X${}%
+\E{}$\6
+$\\{save}[\|l]\K\|t{}$;\C{ remember the current value of $t$, in case we fail }%
+\6
+\4\\{decr\_t}:\5
+${}\|t\MM;{}$\6
+\&{if} ${}(\|t\Z\T{2}){}$\1\5
+\&{goto} \\{found};\2\6
+\&{if} ${}(\\{ub}[\|t]>\\{lb}[\|t]){}$\1\5
+\&{goto} \\{restore\_t\_and\_backup};\2\6
+${}\|a\K\\{ub}[\|t];{}$\6
+\&{for} ${}(\|k\K\|t-\T{1};{}$  ; ${}\|k\MM){}$\1\6
+\&{if} ${}(\\{ub}[\|k]\E\\{lb}[\|k]){}$\5
+${}\{{}$\1\6
+${}\\{ap}\K\\{ub}[\|k],\39\\{app}\K\|a-\\{ap};{}$\6
+\&{if} ${}(\\{app}>\\{ap}){}$\1\5
+\&{break};\2\6
+\&{if} ${}(\\{lookup}(\\{app})\W\\{lookup}(\\{ap}-\\{app})){}$\1\5
+\&{goto} \\{decr\_t};\C{ yes, it's OK already }\2\6
+\4${}\}{}$\2\2\6
+${}\\{choice}[\|l]\K(\|a+\T{1})\GG\T{1}{}$;\C{ the minimum choice is $a'=\lceil
+a/2\rceil$ }\6
+${}\\{bound}[\|l]\K\|a-\T{1}{}$;\C{ and the maximum choice is $a'=a-1$ }\6
+\4\\{vet\_it}:\5
+\X10:Put $a'$, $a''$, and $a'-a''$ into \PB{$\\{hint}[\|l+\T{1}]$}, \PB{$%
+\\{hint}[\|l+\T{2}]$}, and \PB{$\\{hint}[\|l+\T{3}]$}\X;\6
+\4\\{advance}:\5
+${}\|l\PP{}$;\5
+\&{goto} \\{start\_level};\par
+\U5.\fi
+
+\M{9}The \PB{\\{impossible}} subroutine determines rapidly when there is no
+``hole'' in which an element can be placed in the current chain.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{impossible}(\&{int} \|x)\C{ is there obviously no way to put $x$ in?
+}\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k;\7
+\&{if} ${}(\|x\Z\T{2}){}$\1\5
+\&{return} \T{0};\2\6
+\&{for} ${}(\|k\K\|L[\|x];{}$ ${}\|x>\\{ub}[\|k];{}$ ${}\|k\PP){}$\1\5
+;\2\6
+\&{return} \|x${}<\\{lb}[\|k];{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{10}The impossibility test here is redundant, since we would discover in any
+case that placement fails. But the test makes this program run
+about twice as fast.
+
+\Y\B\4\X10:Put $a'$, $a''$, and $a'-a''$ into \PB{$\\{hint}[\|l+\T{1}]$}, \PB{$%
+\\{hint}[\|l+\T{2}]$}, and \PB{$\\{hint}[\|l+\T{3}]$}\X${}\E{}$\6
+$\\{ap}\K\\{choice}[\|l]{}$;\5
+${}\\{app}\K\|a-\\{ap};{}$\6
+\&{if} ${}(\\{impossible}(\\{ap})\V\\{impossible}(\\{app})\V\\{impossible}(%
+\\{ap}-\\{app})){}$\1\5
+\&{goto} \\{next\_choice};\2\6
+${}\\{hint}[\|l+\T{1}]\K\\{ap}{}$;\5
+${}\\{hint}[\|l+\T{2}]\K\\{app}{}$;\5
+${}\\{hint}[\|l+\T{3}]\K\\{ap}-\\{app}{}$;\par
+\U8.\fi
+
+\N{1}{11}Placing the summands. Any change to the \PB{\\{ub}} and \PB{\\{lb}}
+table needs to
+be recorded in the \PB{\\{assigned}} array, because we may need to undo it.
+
+\Y\B\4\D$\\{assign}(\|x,\|y)$ \5
+$\\{assigned}[\\{undo\_ptr}].\\{ptr}\K\|x,\39\\{assigned}[\\{undo\_ptr}\PP].%
+\\{val}\K{*}\|x,\39{*}\|x\K{}$\|y\par
+\fi
+
+\M{12}The algorithm for adjusting upper and lower bounds is probably the most
+interesting part of this whole program. I suppose I should prove it correct.
+
+(Since this subroutine is called only in one place, I might want to try
+experimenting to see how much faster this program runs when subroutine-call
+overhead is avoided by converting to inline code. Subroutining might actually
+turn out to be a win because of the limited number of registers
+on x86-like computers.)
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\\{place}(\&{int} \|x${},\39{}$\&{int} \|k)\C{ set $a_k=x$ }\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${}\K\|k,{}$ \|y${}\K\|x;{}$\7
+\&{if} ${}(\\{ub}[\|j]\E\|y\W\\{lb}[\|j]\E\|y){}$\1\5
+\&{return};\2\6
+\&{while} ${}(\\{ub}[\|j]>\|y){}$\5
+${}\{{}$\1\6
+${}\\{assign}({\AND}\\{ub}[\|j],\39\|y){}$;\C{ the upper bound decreases }\6
+${}\|j\MM,\39\|y\MM;{}$\6
+\4${}\}{}$\2\6
+${}\|j\K\|k+\T{1},\39\|y\K\|x+\|x;{}$\6
+\&{while} ${}(\\{ub}[\|j]>\|y){}$\5
+${}\{{}$\1\6
+${}\\{assign}({\AND}\\{ub}[\|j],\39\|y){}$;\C{ the upper bound decreases }\6
+${}\|j\PP,\39\|y\MRL{+{\K}}\|y;{}$\6
+\4${}\}{}$\2\6
+${}\|j\K\|k,\39\|y\K\|x;{}$\6
+\&{while} ${}(\\{lb}[\|j]<\|y){}$\5
+${}\{{}$\1\6
+${}\\{assign}({\AND}\\{lb}[\|j],\39\|y){}$;\C{ the lower bound increases }\6
+${}\|j\MM,\39\|y\K(\|y+\T{1})\GG\T{1};{}$\6
+\4${}\}{}$\2\6
+${}\|j\K\|k+\T{1},\39\|y\K\|x+\T{1};{}$\6
+\&{while} ${}(\\{lb}[\|j]<\|y){}$\5
+${}\{{}$\1\6
+${}\\{assign}({\AND}\\{lb}[\|j],\39\|y){}$;\C{ the lower bound increases }\6
+${}\|j\PP,\39\|y\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{13}We need a subroutine that does a bit more than just plain \PB{%
+\\{lookup}};
+\PB{\\{choice\_lookup}} returns zero if the entry is $\le2$, otherwise it
+returns the least index where the entry might possibly be found
+based on the \PB{\\{ub}} table.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{choice\_lookup}(\&{int} \|x)\C{ find the smallest viable place for
+$x$ }\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k;\7
+\&{if} ${}(\|x\Z\T{2}){}$\1\5
+\&{return} \T{0};\2\6
+\&{for} ${}(\|k\K\|L[\|x];{}$ ${}\|x>\\{ub}[\|k];{}$ ${}\|k\PP){}$\1\5
+;\2\6
+\&{return} \|k;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{14}In the special case that the entry to be placed is already present,
+we avoid unnecessary computation by setting \PB{\\{bound}[\|l]} to zero.
+
+(Note: I thought this would be a good idea, but it didn't actually
+decrease the observed running time.)
+
+\Y\B\4\X14:Place \PB{\\{hint}[\|l]}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|a\K\\{hint}[\|l];{}$\6
+${}\\{save}[\|l]\K\\{undo\_ptr};{}$\6
+${}\|k\K\\{choice}[\|l]\K\\{choice\_lookup}(\|a);{}$\6
+\&{if} ${}(\|k\E\T{0}\V(\|a\E\\{ub}[\|k]\W\|a\E\\{lb}[\|k])){}$\5
+${}\{{}$\1\6
+${}\\{bound}[\|l]\K\T{0};{}$\6
+\&{goto} \\{advance};\6
+\4${}\}{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{while} ${}(\|a\G\\{lb}[\|k]){}$\1\5
+${}\|k\PP;{}$\2\6
+${}\\{bound}[\|l]\K\|k-\T{1};{}$\6
+\4${}\}{}$\2\6
+\&{goto} \\{next\_place};\6
+\4${}\}{}$\2\par
+\U5.\fi
+
+\M{15}\B\X15:Additional code reached by \PB{\&{goto}} statements\X${}\E{}$\6
+\4\\{unplace}:\6
+\&{if} ${}(\R\\{bound}[\|l]){}$\1\5
+\&{goto} \\{backup};\2\6
+\&{while} ${}(\\{undo\_ptr}>\\{save}[\|l]){}$\5
+${}\{{}$\1\6
+${}\MM\\{undo\_ptr};{}$\6
+${}{*}\\{assigned}[\\{undo\_ptr}].\\{ptr}\K\\{assigned}[\\{undo\_ptr}].%
+\\{val};{}$\6
+\4${}\}{}$\2\6
+${}\\{choice}[\|l]\PP;{}$\6
+${}\|a\K\\{hint}[\|l];{}$\6
+\4\\{next\_place}:\5
+\&{if} ${}(\\{choice}[\|l]>\\{bound}[\|l]){}$\1\5
+\&{goto} \\{backup};\2\6
+${}\\{place}(\|a,\39\\{choice}[\|l]);{}$\6
+\&{goto} \\{advance};\par
+\A17.
+\U5.\fi
+
+\M{16}Finally, when we run out of steam on the current level, we reconsider
+previous choices as follows.
+
+\fi
+
+\M{17}\B\X15:Additional code reached by \PB{\&{goto}} statements\X${}\mathrel+%
+\E{}$\6
+\4\\{restore\_t\_and\_backup}:\5
+${}\|t\K\\{save}[\|l];{}$\6
+\4\\{backup}:\6
+\&{if} ${}(\|l\E\T{0}){}$\1\5
+\&{goto} \\{not\_found};\2\6
+${}\MM\|l;{}$\6
+\&{if} ${}(\|l\AND\T{3}){}$\1\5
+\&{goto} \\{unplace};\C{ $l\bmod4=1$, 2, or 3 }\2\6
+${}\|a\K\\{ub}[\|t]{}$;\C{ $l\bmod4=0$ }\6
+\4\\{next\_choice}:\5
+${}\\{choice}[\|l]\PP;{}$\6
+\&{if} ${}(\\{choice}[\|l]\Z\\{bound}[\|l]){}$\1\5
+\&{goto} \\{vet\_it};\2\6
+\&{goto} \\{restore\_t\_and\_backup};\par
+\fi
+
+\N{1}{18}Simple upper bounds. We can often save a lot of work by using the fact
+that $L(mn)\le L(m)+L(n)$.
+
+\Y\B\4\X18:Check for known upper bound to simplify the work\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{2},\39\|a\K\|n/\|k;{}$ ${}\|k\Z\|a;{}$ ${}\|k\PP,\39\|a\K%
+\|n/\|k){}$\1\6
+\&{if} ${}(\|n\MOD\|k\E\T{0}\W\|m\E\|L[\|k]+\|L[\|a]){}$\5
+${}\{{}$\1\6
+${}\\{special}\K\|k;{}$\6
+\&{goto} \\{found};\6
+\4${}\}{}$\2\2\6
+\X19:Check for binary method\X;\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{19}Another simple upper bound,
+$L(n)\le\lfloor\lg n\rfloor+\lfloor\lg{2\over3}n\rfloor$,
+follows from the fact that a strong chain ending with $(a,a+1)$
+can be extended by appending either $(2a,2a+1)$ or $(2a+1,2a+2)$.
+
+I programmed it here just to see how often it helps, but I doubt if it will
+be very effective. (Indeed, experience showed that it was the method of
+choice only for $n=2$, 3, 5, 7, 11, and 23; probably not for any larger~$n$.)
+
+Incidentally,
+the somewhat plausible inequality $L(2n+1)\le L(n)+2$ is {\it not\/}
+true, although the analogous inequality
+$l(2n+1)\le l(n)+2$ obviously holds for ordinary addition chains.
+Indeed, $L(17)=6$ and $L(8)=3$.
+
+\Y\B\4\X19:Check for binary method\X${}\E{}$\6
+\&{if} ${}(\|m\E\\{lg}(\|n)+\\{lg}((\|n+\|n)/\T{3})){}$\1\5
+${}\\{special}\K\T{1}{}$;\2\par
+\U18.\fi
+
+\M{20}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{lg}(\&{int} \|n)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|m${},{}$ \|x;\7
+\&{for} ${}(\|x\K\|n\GG\T{1},\39\|m\K\T{0};{}$ \|x; ${}\|m\PP){}$\1\5
+${}\|x\MRL{{\GG}{\K}}\T{1};{}$\2\6
+\&{return} \|m;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{21}\B\X21:Print special reason\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{special}\E\T{1}){}$\1\5
+\\{printf}(\.{"\ Binary\ method"});\2\6
+\&{else}\1\5
+${}\\{printf}(\.{"\ Factor\ method\ \%d\ x}\)\.{\ \%d"},\39\\{special},\39\|n/%
+\\{special});{}$\2\6
+${}\\{special}\K\T{0};{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{22}Experience showed that the factor method often gives an optimum result,
+at least for small~$n$. Indeed, the factor method was optimum for all
+nonprime $n<1219$. (The first exception, 1219, is $23\times53$, the
+product of two primes that have worse-than-normal $L$~values.)
+Yet the factoring shortcut reduced the total running time by only
+about 4\%, because it didn't help with the hard cases --- the cases that
+keep the computer working hardest. (These timing statistics are based
+only on the calculations for $n\le1000$; larger values of~$n$ may well
+be a different story. But I think most of the running time goes into
+proving that shorter chains are impossible.)
+
+\fi
+
+\N{1}{23}Index.
+\fi
+
+\inx
+\fin
+\con

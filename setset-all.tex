@@ -1,0 +1,1140 @@
+\input cwebmac
+\datethis
+\def\SET/{{\mc SET\null}}
+
+
+\N{1}{1}Introduction. This program finds all nonisomorphic sets of \SET/ cards
+that contain no \SET/s.
+
+In case you don't know what that means, a \SET/ card is a vector
+$(c_1,c_2,c_3,c_4)$ where each $c_i$ is 0, 1, or~2. Thus there are 81
+possible \SET/ cards. A~\SET/ is a set of three \SET/ cards that sums
+to $(0,0,0,0)$ modulo~3. Equivalently, the numbers in each coordinate
+position of the three vectors in a \SET/ are either all the same or all
+different. (It's kind of a 4-dimensional tic-tac-toe with wraparound.)
+
+My previous {\sc SETSET} program considered only isomorphisms that
+apply directly to the semantics of the game of \SET/, namely
+permutations of coordinates and permutations of individual coordinate
+positions; there are $4!\times 3!^4=31104$ of those. But now I want
+to consider the much larger collection of all isomorphisms that
+preserve \SET/s. There are $81\cdot(81-1)\cdot(81-3)\cdot(81-9)\cdot(81-27)
+=1{,}965{,}150{,}720$ of these; thus the method used in the
+previous program, which had complexity $\Omega(\hbox{number of isomorphisms})$
+in both time and space, would be quite inappropriate. Here I'm using
+a possibly new method, with space requirement only
+$O(\hbox{number of elements})^2D$, where $D$ bounds the partial
+transitivity of the isomorphism group: The image of the first $D$ elements
+is sufficient to determine the images of all. In our case, $D=5$.
+
+A web page of David Van Brink states that you can't have more than 20 \SET/
+cards without having a \SET/. He says that he proved this in 1997 with a
+computer program that took about one week to run on a 90MHz Pentium machine.
+I'm hoping to get the result faster by using ideas of isomorph rejection,
+meanwhile also discovering all of the $k$-element \SET/-less solutions
+for $k\le20$.
+
+The theorem about at most 20 \SET/-free cards was actually proved in much
+stronger form by G. Pellegrino, {\sl Matematiche\/ \bf25} (1971), 149--157,
+without using computers. Pellegrino showed that any set of 21 points in
+the projective space of $81+27+9+3+1$ elements, represented by nonzero
+5-tuples in which $x$ and $-x$ are considered equivalent, has three
+collinear points; this would correspond to sets of three distinct points
+in which the third is the sum or difference of the first two.
+
+Incidentally, I've written this program for my own instruction, not for
+publication. I~still haven't had time to read the highly relevant
+papers by Adalbert Kerber, Reinhard Laue, and their colleagues at Bayreuth,
+^{Kerber, Adalbert}
+^{Laue, Reinhard}
+although I've
+had those works in my files for many years. Members of that group
+probably are quite familiar with equivalent or better methods.
+Perhaps I'm being foolish, but I thought it would be most educational to try
+my own hand before looking at other people's solutions. I seem to learn a new
+subject best when I try to write code for it, because the computer is
+such a demanding, unbluffable taskmaster.
+
+[\SET/ is a registered trademark of SET Enterprises, Inc.]
+
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\8\#\&{include} \.{<setjmp.h>}\6
+\&{jmp\_buf} \\{restart\_point};\7
+\X5:Type definitions\X\6
+\X6:Global variables\X\6
+\X22:Subroutines\X\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\X40:Local variables\X\6
+\X8:Initialize\X;\6
+\X39:Enumerate and print all solutions\X;\6
+\X47:Print the totals\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}Our basic approach is to define a linear ordering on solutions, and to
+look only for solutions that are smallest in their isomorphism class.
+In other words, we will count the sets $S$ such that $S\le\alpha S$ for
+all automorphisms~$\alpha$. We'll also count the number $t$ of cases where
+$S=\alpha S$; then the number of distinct solutions isomorphic to~$S$
+is $1965150720/t$, so we will essentially have also enumerated the distinct
+solutions.
+
+The ordering we use is almost standard: Vectors are ordered
+by weight, and vectors of equal weight are ordered lexicographically;
+thus the sequence is $(0,0,0,0)$, $(0,0,0,1)$, $(0,0,1,0)$, $(0,1,0,0)$,
+$(1,0,0,0)$, $(0,0,0,2)$, $(0,0,1,1)$, \dots, $(2,2,2,2)$.
+Also, when $S$ and $T$ are both sets of $k$ \SET/ cards, we define
+$S\le T$ by first sorting the vectors into order so that $s_1<\cdots<s_k$ and
+$t_1<\cdots<t_k$, then we compare $(s_1,\ldots,s_k)$ lexicographically
+to $(t_1,\ldots,t_k)$. (Equivalently, we compare the smallest elements
+of $S$ and~$T$; if they are equal, we compare the second-smallest elements,
+and so on, until we've either found inequality or established that $S=T$.)
+
+\fi
+
+\M{3}The automorphisms can be thought of as the collection of all linear
+mappings that take $x\mapsto Ax+b$, where $x$ is the column vector
+$(c_1,c_2,c_3,c_4)^T$, $A$ is a nonsingular $4\times4$
+matrix (mod~3), and $b$ is an arbitrary vector. Alternatively we can
+think of the mapping $x\mapsto Ax$, where each \SET/ card~$x$ is a
+column vector of the form $(c_1,c_2,c_3,c_4,1)^T$
+and $A$ is a nonsingular $5\times5$ matrix whose bottom row is $(0,0,0,0,1)$.
+In either case
+we have the so-called ``affine linear group'' in 4-space (mod~3).
+
+For example, any set of five points that are {\it independent}, in the
+sense that none is in the subspace spanned by the other four, can be
+mapped into the smallest five cards
+$$\{(0,0,0,0),\;(0,0,0,1),\;(0,0,1,0),\;(0,1,0,0),(1,0,0,0)\}.$$
+The set consisting of the smallest four cards has $24\cdot54=1296$
+automorphisms, hence there are exactly $1965150720/1296=1516320$ ways to
+choose four \SET/ cards that are independent in this sense.
+All other \SET/-less sets of four cards are isomorphic to the dependent set
+$$\{(0,0,0,0),\;(0,0,0,1),\;(0,0,1,0),\;(0,0,1,1)\};$$
+and this set has 31104 automorphisms, leading to an additional
+$1965150720/31104=63180$ ways to choose a set of four \SET/-less cards.
+This explains why the total number of such sets is $1516320+63180=1579500$,
+a number that the {\mc SETSET} program was able to compute only after
+it had laboriously considered 128 cases that were nonisomorphic
+in the previous setup.
+
+\fi
+
+\M{4}We will generate the elements of a $k$-set in order. If we have
+$s_1<\cdots<s_k$ and $\{s_1,\ldots,s_k\}\le\{\alpha s_1,\ldots,\alpha s_k\}$
+for all $\alpha$, it is not hard to prove that $\{s_1,\ldots,s_j\}\le\{\alpha
+s_1,\ldots,\alpha s_j\}$ for all $\alpha$ and $1\le j\le k$.
+(The reason is that $S<T$ and $t\ge\max T$ implies
+$S\cup\{s\}<S\cup\{\infty\}<T\cup\{t\}$, for all $s$.)
+Therefore every canonical $k$-set is obtained by extending a unique
+canonical $(k-1)$-set.
+
+\fi
+
+\N{1}{5}Permutations.
+It's convenient to represent \SET/ card vectors in a compact code,
+as an integer between 0 and 80.
+
+\Y\B\4\X5:Type definitions\X${}\E{}$\6
+\&{typedef} \&{char} \&{SETcard};\C{ a \SET/ card $(c_1,c_2,c_3,c_4)$
+represented as $\PB{\\{encode}}[(c_1 c_2 c_3 c_4)_3]$ }\par
+\A20.
+\U1.\fi
+
+\M{6} Lexicographic order would correspond
+to ternary notation, but our weight-first ordering is slightly different.
+Here we specify the card ranks in the desired order.
+
+\Y\B\4\D$\\{nn}$ \5
+\T{81}\C{ the total number of elements permuted by automorphisms }\par
+\B\4\D$\\{nnn}$ \5
+\T{128}\C{ the value of \PB{\\{nn}} rounded up to a power of 2, for efficiency
+}\par
+\Y\B\4\X6:Global variables\X${}\E{}$\6
+\&{SETcard} \\{encode}[\\{nn}]${}\K\{\T{0},\39\T{1},\39\T{5},\39\T{2},\39\T{6},%
+\39\T{15},\39\T{7},\39\T{16},\39\T{31},\3{-1}\39\T{3},\39\T{8},\39\T{17},\39%
+\T{9},\39\T{18},\39\T{32},\39\T{19},\39\T{33},\39\T{50},\3{-1}\39\T{10},\39%
+\T{20},\39\T{34},\39\T{21},\39\T{35},\39\T{51},\39\T{36},\39\T{52},\39\T{66},%
+\3{-1}\39\T{4},\39\T{11},\39\T{22},\39\T{12},\39\T{23},\39\T{37},\39\T{24},\39%
+\T{38},\39\T{53},\3{-1}\39\T{13},\39\T{25},\39\T{39},\39\T{26},\39\T{40},\39%
+\T{54},\39\T{41},\39\T{55},\39\T{67},\3{-1}\39\T{27},\39\T{42},\39\T{56},\39%
+\T{43},\39\T{57},\39\T{68},\39\T{58},\39\T{69},\39\T{76},\3{-1}\39\T{14},\39%
+\T{28},\39\T{44},\39\T{29},\39\T{45},\39\T{59},\39\T{46},\39\T{60},\39\T{70},%
+\3{-1}\39\T{30},\39\T{47},\39\T{61},\39\T{48},\39\T{62},\39\T{71},\39\T{63},\39%
+\T{72},\39\T{77},\3{-1}\39\T{49},\39\T{64},\39\T{73},\39\T{65},\39\T{74},\39%
+\T{78},\39\T{75},\39\T{79},\39\T{80}\}{}$;\par
+\As7, 9, 11, 15, 16, 21, 23, 28, 41\ETs46.
+\U1.\fi
+
+\M{7}When we output a \SET/ card, however, we prefer a decimal code.
+
+\Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{decimalform}[\\{nn}]${}\K\{\T{0},\39\T{1},\39\T{2},\39\T{10},\39%
+\T{11},\39\T{12},\39\T{20},\39\T{21},\39\T{22},\3{-1}\39\T{100},\39\T{101},\39%
+\T{102},\39\T{110},\39\T{111},\39\T{112},\39\T{120},\39\T{121},\39\T{122},%
+\3{-1}\39\T{200},\39\T{201},\39\T{202},\39\T{210},\39\T{211},\39\T{212},\39%
+\T{220},\39\T{221},\39\T{222},\3{-1}\39\T{1000},\39\T{1001},\39\T{1002},\39%
+\T{1010},\39\T{1011},\39\T{1012},\39\T{1020},\39\T{1021},\39\T{1022},\3{-1}\39%
+\T{1100},\39\T{1101},\39\T{1102},\39\T{1110},\39\T{1111},\39\T{1112},\39%
+\T{1120},\39\T{1121},\39\T{1122},\3{-1}\39\T{1200},\39\T{1201},\39\T{1202},\39%
+\T{1210},\39\T{1211},\39\T{1212},\39\T{1220},\39\T{1221},\39\T{1222},\3{-1}\39%
+\T{2000},\39\T{2001},\39\T{2002},\39\T{2010},\39\T{2011},\39\T{2012},\39%
+\T{2020},\39\T{2021},\39\T{2022},\3{-1}\39\T{2100},\39\T{2101},\39\T{2102},\39%
+\T{2110},\39\T{2111},\39\T{2112},\39\T{2120},\39\T{2121},\39\T{2122},\3{-1}\39%
+\T{2200},\39\T{2201},\39\T{2202},\39\T{2210},\39\T{2211},\39\T{2212},\39%
+\T{2220},\39\T{2221},\39\T{2222}\};{}$\6
+\&{int} \\{decode}[\\{nn}];\par
+\fi
+
+\M{8}\B\X8:Initialize\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\1\5
+${}\\{decode}[\\{encode}[\|k]]\K\\{decimalform}[\|k]{}$;\2\par
+\As10, 12\ETs17.
+\U1.\fi
+
+\M{9}We will frequently need to find the third card of a \SET/,
+given any two distinct cards $x$ and $y$, so we store the answers
+in a precomputed table.
+
+\Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \|z[\T{3}][\T{3}]${}\K\{\{\T{0},\39\T{2},\39\T{1}\},\39\{\T{2},\39%
+\T{1},\39\T{0}\},\39\{\T{1},\39\T{0},\39\T{2}\}\}{}$;\C{ $x+y+z\equiv0$ (mod 3)
+}\6
+\&{char} \\{third}[\\{nn}][\\{nnn}];\par
+\fi
+
+\M{10}\B\D$\\{pack}(\|a,\|b,\|c,\|d)$ \5
+$\\{encode}[(((\|a)*\T{3}+(\|b))*\T{3}+(\|c))*\T{3}+(\|d){}$]\par
+\Y\B\4\X8:Initialize\X${}\mathrel+\E{}$\6
+${}\{{}$\1\6
+\&{int} \|a${},{}$ \|b${},{}$ \|c${},{}$ \|d${},{}$ \|e${},{}$ \|f${},{}$ %
+\|g${},{}$ \|h;\7
+\&{for} ${}(\|a\K\T{0};{}$ ${}\|a<\T{3};{}$ ${}\|a\PP){}$\1\6
+\&{for} ${}(\|b\K\T{0};{}$ ${}\|b<\T{3};{}$ ${}\|b\PP){}$\1\6
+\&{for} ${}(\|c\K\T{0};{}$ ${}\|c<\T{3};{}$ ${}\|c\PP){}$\1\6
+\&{for} ${}(\|d\K\T{0};{}$ ${}\|d<\T{3};{}$ ${}\|d\PP){}$\1\6
+\&{for} ${}(\|e\K\T{0};{}$ ${}\|e<\T{3};{}$ ${}\|e\PP){}$\1\6
+\&{for} ${}(\|f\K\T{0};{}$ ${}\|f<\T{3};{}$ ${}\|f\PP){}$\1\6
+\&{for} ${}(\|g\K\T{0};{}$ ${}\|g<\T{3};{}$ ${}\|g\PP){}$\1\6
+\&{for} ${}(\|h\K\T{0};{}$ ${}\|h<\T{3};{}$ ${}\|h\PP){}$\1\5
+${}\\{third}[\\{pack}(\|a,\39\|b,\39\|c,\39\|d)][\\{pack}(\|e,\39\|f,\39\|g,\39%
+\|h)]\K\\{pack}(\|z[\|a][\|e],\39\|z[\|b][\|f],\39\|z[\|c][\|g],\39\|z[\|d][%
+\|h]);{}$\2\2\2\2\2\2\2\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{11}The set of automorphisms is conveniently represented by a mapping
+table, as in the author's paper ``Efficient representation of
+perm groups,'' {\sl Combinatorica\/ \bf11} (1991), 33--43.
+If there is an $\alpha$ such that $\alpha k=j$ and $\alpha$ fixes
+all elements~$<j$, we let \PB{\\{perm}[\|j][\|k]} be one such permutation~$%
+\alpha$,
+represented as an array of 81 elements. In particular, \PB{\\{perm}[\|j][\|j]}
+always is
+the identity permutation. If no such $\alpha$ exists, however, we set
+\PB{$\\{perm}[\|j][\|k][\T{0}]\K{-}\T{1}$}.
+
+Our algorithm for finding nonisomorphic \SET/-less sets is based entirely
+on the group of isomorphisms defined by a \PB{\\{perm}} table. If \PB{\\{perm}}
+is
+initialized to the definition of some other group, the rest of this program
+should need no further modification except for counting the
+total number of automorphisms. (Of course, not every \PB{\\{perm}} table
+defines a
+group of permutations; the set of all possible products
+$\pi_0\pi_1\ldots\pi_{80}$, where each $\pi_j$ is one of the permutations
+$\PB{\\{perm}[\|j][\|k]}$ for some $k\ge j$, must be closed under
+multiplication.
+We assume that this condition is satisfied.)
+
+There is an integer~$D$ such that \PB{$\\{perm}[\|j][\|k]\K{-}\T{1}$} for
+all $D\le j<k$; in other words, each $\alpha$ that fixes 0,~1, \dots, $D-1$
+is the identity map. We needn't bother representing \PB{\\{perm}[\|j][\|k]} for
+$j\ge D$.
+
+{\sl Important Note [30 April 2001]:\/} No, the algorithm does {\it not\/}
+work for arbitrary permutation groups. I thank Prof.\ Reinhard Laue for
+^{Laue, Reinhard}
+pointing out a serious error. However, I do think the special group dealt
+with here is handled satisfactorily because of its highly transitive nature.
+
+\Y\B\4\D$\\{dd}$ \5
+\T{5}\C{ in our case $D=5$ }\par
+\Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \\{perm}[\\{dd}][\\{nnn}][\\{nnn}];\C{ mapping table }\par
+\fi
+
+\M{12}Now let's set up the mapping table for the affine transformations we
+need.
+The basic idea is simple. For example, the group of all $5\times 5$ matrices
+that fix $(0,0,0,0)=0$ and $(0,0,0,1)=1$ is the set of all nonsingular~$A$
+of the form
+$$\pmatrix{\ast&\ast&\ast&0&0\cr
+\ast&\ast&\ast&0&0\cr
+\ast&\ast&\ast&0&0\cr
+\ast&\ast&\ast&1&0\cr
+0 &  0 &  0 &0&1\cr}\,;$$
+and the image of $(0,0,1,0)$ is the third column. For every possible third
+column~$k$ (which must not be zero in the top three rows, lest the matrix be
+singular), we need to choose an appropriate setting of the first two columns.
+Then we get an affine mapping that takes $(0,0,1,0)=2$ into $k$, and
+the inverse of this mapping can be stored in \PB{\\{perm}[\T{2}][\|k]} because
+it
+maps $k\mapsto2$.
+
+\Y\B\4\X8:Initialize\X${}\mathrel+\E{}$\6
+$\\{aa}[\T{4}][\T{4}]\K\T{1};{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{5};{}$ ${}\|j\PP){}$\5
+${}\{{}$\C{ we want to set up \PB{$\\{perm}[\T{4}-\|j]$} }\1\6
+\&{int} \|a${},{}$ \|b${},{}$ \|c${},{}$ \|d${},{}$ \|e${},{}$ \|f${},{}$ %
+\|g${},{}$ \|h${},{}$ \\{jj}${},{}$ \\{kk};\7
+\&{for} ${}(\\{jj}\K\|j+\T{1};{}$ ${}\\{jj}<\T{5};{}$ ${}\\{jj}\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{4};{}$ ${}\|k\PP){}$\1\5
+${}\\{aa}[\\{jj}][\|k]\K(\|k\E\\{jj}\?\T{1}:\T{0});{}$\2\2\6
+\&{for} ${}(\|a\K\T{0};{}$ ${}\|a<\T{3};{}$ ${}\|a\PP){}$\1\6
+\&{for} ${}(\|b\K\T{0};{}$ ${}\|b<\T{3};{}$ ${}\|b\PP){}$\1\6
+\&{for} ${}(\|c\K\T{0};{}$ ${}\|c<\T{3};{}$ ${}\|c\PP){}$\1\6
+\&{for} ${}(\|d\K\T{0};{}$ ${}\|d<\T{3};{}$ ${}\|d\PP){}$\5
+${}\{{}$\1\6
+${}\\{aa}[\|j][\T{0}]\K\|a,\39\\{aa}[\|j][\T{1}]\K\|b,\39\\{aa}[\|j][\T{2}]\K%
+\|c,\39\\{aa}[\|j][\T{3}]\K\|d;{}$\6
+\&{for} ${}(\\{kk}\K\|j;{}$ ${}\\{kk}\G\T{0};{}$ ${}\\{kk}\MM){}$\1\6
+\&{if} (\\{aa}[\|j][\\{kk}])\1\5
+\&{break};\2\2\6
+\&{if} ${}(\\{kk}<\T{0}){}$\1\5
+${}\\{perm}[\T{4}-\|j][\\{pack}(\|a,\39\|b,\39\|c,\39\|d)][\T{0}]\K{-}\T{1};{}$%
+\2\6
+\&{else}\5
+${}\{{}$\1\6
+\X13:Complete \PB{\\{aa}} to a nonsingular matrix\X;\6
+\X14:Use \PB{\\{aa}} to define the mapping \PB{$\\{perm}[\T{4}-\|j][\\{pack}(%
+\|a,\|b,\|c,\|d)]$}\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\2\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{13}\B\X13:Complete \PB{\\{aa}} to a nonsingular matrix\X${}\E{}$\6
+\&{for} ${}(\\{jj}\K\T{0};{}$ ${}\\{jj}<\|j;{}$ ${}\\{jj}\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{4};{}$ ${}\|k\PP){}$\1\5
+${}\\{aa}[\\{jj}][\|k]\K\T{0};{}$\2\6
+${}\\{aa}[\\{jj}][(\\{jj}+\\{kk}+\T{1})\MOD(\|j+\T{1})]\K\T{1};{}$\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{14}\B\X14:Use \PB{\\{aa}} to define the mapping \PB{$\\{perm}[\T{4}-\|j][%
+\\{pack}(\|a,\|b,\|c,\|d)]$}\X${}\E{}$\6
+$\\{kk}\K\\{pack}(\|a,\39\|b,\39\|c,\39\|d);{}$\6
+\&{for} ${}(\|e\K\T{0};{}$ ${}\|e<\T{3};{}$ ${}\|e\PP){}$\1\6
+\&{for} ${}(\|f\K\T{0};{}$ ${}\|f<\T{3};{}$ ${}\|f\PP){}$\1\6
+\&{for} ${}(\|g\K\T{0};{}$ ${}\|g<\T{3};{}$ ${}\|g\PP){}$\1\6
+\&{for} ${}(\|h\K\T{0};{}$ ${}\|h<\T{3};{}$ ${}\|h\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{4};{}$ ${}\|k\PP){}$\1\5
+${}\\{trit}[\|k]\K(\|e*\\{aa}[\T{0}][\|k]+\|f*\\{aa}[\T{1}][\|k]+\|g*\\{aa}[%
+\T{2}][\|k]+\|h*\\{aa}[\T{3}][\|k]+\\{aa}[\T{4}][\|k])\MOD\T{3};{}$\2\6
+${}\\{perm}[\T{4}-\|j][\\{kk}][\\{pack}(\\{trit}[\T{0}],\39\\{trit}[\T{1}],\39%
+\\{trit}[\T{2}],\39\\{trit}[\T{3}])]\K\\{pack}(\|e,\39\|f,\39\|g,\39\|h);{}$\6
+\4${}\}{}$\2\2\2\2\par
+\U12.\fi
+
+\M{15}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \\{trit}[\T{4}];\C{ four ternary digits }\6
+\&{char} \\{aa}[\T{5}][\T{8}];\C{ matrix $A$, stored columnwise }\par
+\fi
+
+\M{16}The algorithm below also needs another table of permutations: For $j<D$
+and
+$k\ge j$, we let \PB{\\{minp}[\|j][\|k]} be a permutation that takes $k$ into
+the
+smallest possible value, among all permutations that fix all elements
+less than~$j$.
+
+\Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{char} ${}\\{minp}[\\{dd}][\\{nnn}][\\{nnn}+\\{nnn}]{}$;\par
+\fi
+
+\M{17}The \PB{\\{minp}} table is readily built from the \PB{\\{perm}} table,
+working from
+bottom to top. (In the affine linear group under the ordering we have chosen,
+\PB{\\{minp}} actually is the same as \PB{\\{perm}} if we plug the identity in
+place
+of empty permutations. But this code tries to be general.)
+
+We store the inverse permutation too: If \PB{$\|p\K\\{minp}[\|j][\|k]$}, then
+\PB{\|p} maps $v$ to $p[v]$ and $p[v+\PB{\\{nnn}}]$ to $v$.
+
+\Y\B\4\X8:Initialize\X${}\mathrel+\E{}$\6
+\&{for} ${}(\|j\K\\{dd}-\T{1};{}$ ${}\|j\G\T{0};{}$ ${}\|j\MM){}$\1\6
+\&{for} ${}(\|k\K\|j;{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{perm}[\|j][\|k][\T{0}]\I{-}\T{1}){}$\5
+${}\{{}$\C{ the best we can do is obviously $k\mapsto j$ }\1\6
+\&{for} ${}(\|l\K\T{0};{}$ ${}\|l<\\{nn};{}$ ${}\|l\PP){}$\1\5
+${}\\{minp}[\|j][\|k][\|l]\K\\{perm}[\|j][\|k][\|l];{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\|j\E\\{dd}-\T{1}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|l\K\T{0};{}$ ${}\|l<\\{nn};{}$ ${}\|l\PP){}$\1\5
+${}\\{minp}[\|j][\|k][\|l]\K\|l;{}$\2\6
+\&{for} ${}(\|i\K\|j+\T{1};{}$ ${}\|i<\\{nn};{}$ ${}\|i\PP){}$\1\6
+\&{if} ${}(\\{perm}[\|j][\|i][\T{0}]\I{-}\T{1}\W\\{perm}[\|j][\|i][\|k]<%
+\\{minp}[\|j][\|k][\|k]){}$\1\6
+\&{for} ${}(\|l\K\T{0};{}$ ${}\|l<\\{nn};{}$ ${}\|l\PP){}$\1\5
+${}\\{minp}[\|j][\|k][\|l]\K\\{perm}[\|j][\|i][\|l];{}$\2\2\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{register} \&{int} \\{kk};\7
+\&{for} ${}(\|l\K\T{0};{}$ ${}\|l<\\{nn};{}$ ${}\|l\PP){}$\1\5
+${}\\{minp}[\|j][\|k][\|l]\K\\{minp}[\|j+\T{1}][\|k][\|l];{}$\2\6
+\&{for} ${}(\|i\K\|j+\T{1};{}$ ${}\|i<\\{nn};{}$ ${}\|i\PP){}$\1\6
+\&{if} ${}(\\{perm}[\|j][\|i][\T{0}]\I{-}\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{kk}\K\\{perm}[\|j][\|i][\|k];{}$\6
+\&{if} ${}(\\{minp}[\|j+\T{1}][\\{kk}][\\{kk}]<\\{minp}[\|j][\|k][\|k]){}$\1\6
+\&{for} ${}(\|l\K\T{0};{}$ ${}\|l<\\{nn};{}$ ${}\|l\PP){}$\1\5
+${}\\{minp}[\|j][\|k][\|l]\K\\{minp}[\|j+\T{1}][\\{kk}][\\{perm}[\|j][\|i][%
+\|l]];{}$\2\2\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|l\K\T{0};{}$ ${}\|l<\\{nn};{}$ ${}\|l\PP){}$\1\5
+${}\\{minp}[\|j][\|k][\\{minp}[\|j][\|k][\|l]+\\{nnn}]\K\|l;{}$\2\6
+\4${}\}{}$\2\2\par
+\fi
+
+\M{18}The mapping table of a permutation group has many magical properties.
+For example, consider the digraph with arcs from $(j,x)$ to $(j+1,y)$
+whenever there is a $k$ with \PB{\\{perm}[\|j][\|k]} mapping $x$ to $y$.
+This digraph has a path from $(j,x)$ to $(D,y)$ if and only if
+the group has a permutation that maps $x$ to $y$ and fixes all elements
+less than~$j$; hence such a path exists if and only if there is also a path
+from $(j,y)$ to $(D,x)$.
+
+Furthermore, if we let $S$ be the set of all elements $k$ such that
+\PB{\\{perm}[\T{0}][\|k][\T{0}]}
+is $-1$, namely the set of all elements that are not permutable into~0
+(not in the ``orbit'' of~0), then the group never maps an element of~$S$
+to an element not in~$S$. In other words, the group also induces a
+permutation group on the elements of~$S$. We will make use of this
+property in the algorithm below.
+
+\fi
+
+\N{1}{19}Data structures. I'm going to try to describe the algorithm
+simultaneously as I explain its main data structures, because the
+two are somewhat intertwined.
+
+Our main task is to check that a set $S=\{x_1,\ldots,x_l\}$, where
+$x_1<\cdots<x_l$, cannot be mapped into a smaller set $\alpha S$, for
+any automorphism~$\alpha$. This breaks down into subtasks where we consider
+cases in which $\alpha x_i$ is the smallest element of $\alpha S$. If we
+can map $x_i$ into a number less than $x_1$, we reject the set~$S$.
+If we cannot map $x_i$ into any number $\le x_1$, we need not consider this
+subtask any further. But if there is an $\alpha$ such that $\alpha x_i=x_1$,
+we fix our attention on one such $\alpha$ and we reduce the problem to
+showing that the set $\alpha x_1,\ldots,\alpha x_{i-1},\alpha x_{i+1},\ldots,
+\alpha x_l\}$ cannot be mapped into a set smaller than $\{x_2,\ldots,x_l\}$
+in the subgroup of automorphisms that fix all elements $\le x_1$.
+For this subproblem we first rule out all elements that could map into anything
+{\it between\/} $x_1$ and $x_2$; then we consider only the subgroup of
+automorphisms on the {\it remaining\/} elements.
+(Only one $\alpha$ is needed for each $x_i$; this is a key point, which
+is proved below.)
+
+\fi
+
+\M{20}The data structure we use to support such an approach has one node \PB{%
+\|p} for
+each subtask. If we are currently trying to see whether $\{y_1,\ldots,y_r\}$
+can be mapped into a set smaller than $\{x_d,\ldots,x_l\}$, by automorphisms
+that fix all elements $\le x_{d-1}$, then $p$ will be on level~$d$ of the
+current tree of tasks and subtasks, and \PB{$\|p\MG\\{val}$} will be $y_i$ for
+some~$i$.
+
+The task tree is triply linked in the conventional way, with links
+\PB{\\{par}}, \PB{\\{kid}}, and \PB{\\{sib}} for parent, child, and sibling,
+respectively.
+In other words, if \PB{\|p} is a subtask of~\PB{\|q}, we have \PB{$\|p\MG%
+\\{par}\K\|q$},
+and the subtasks
+of~\PB{\|q} (including \PB{\|p} itself) are respectively \PB{$\|q\MG\\{kid}$}, %
+\PB{$\|q\MG\\{kid}\MG\\{sib}$},
+\PB{$\|q\MG\\{kid}\MG\\{sib}\MG\\{sib}$}, etc.
+The youngest child of a family, namely the child
+added most recently to the structure, is \PB{$\|q\MG\\{kid}$}, and the next
+youngest
+is \PB{$\|q\MG\\{kid}\MG\\{sib}$}.
+
+An additional field \PB{$\|p\MG\\{trans}$}, if non-null, is the automorphism $%
+\alpha$ by
+which the values of \PB{\|p}'s subtasks $\{\alpha y_1,\ldots,\alpha y_{i-1},
+\alpha y_{i+1},\ldots,\alpha y_r\}$ have been transformed. If \PB{$\|p\MG%
+\\{trans}$}
+is null it means that subtask~\PB{\|p} is ``dead'' because $y_i$ cannot be
+transformed into anything $\le x_d$.
+
+\Y\B\4\X5:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} \&{node\_struct} ${}\{{}$\1\6
+\&{SETcard} \\{val};\C{ value that is assumed to be smallest after
+          subsequent mapping }\6
+\&{char} \\{level};\C{ state information for terminal nodes, see below }\6
+\&{struct} \&{node\_struct} ${}{*}\\{par},{}$ ${}{*}\\{kid},{}$ ${}{*}%
+\\{sib}{}$;\C{ pointers in triply linked tree }\6
+\&{char} ${}{*}\\{trans}{}$;\C{ a permutation, or \PB{$\NULL$} }\2\6
+${}\}{}$ \&{node};\par
+\fi
+
+\M{21}Part of the algorithm is somewhat subtle and requires proof, so I shall
+try
+to state the inductive assumptions carefully. But I will state them only in a
+particular case, in order to keep the notation simple. The general case can
+easily be inferred from the special case considered here.
+
+Suppose \PB{\|q} is a node at level 2 that corresponds to the subtask for
+permutations that map $x_3\mapsto x_1$ and $x_5\mapsto x_2$. Then we have
+found particular
+automorphisms $\alpha_1$ and $\alpha_2$ such that $\alpha_1 x_3=x_1$
+and $\alpha_2\alpha_1 x_5=x_2$, where $\alpha_2$ fixes all elements $\le x_1$.
+(Automorphism $\alpha_2$ will be stored in \PB{$\|q\MG\\{trans}$} and $%
+\alpha_1$ will
+be in \PB{$\|q\MG\\{par}\MG\\{trans}$}; $x_3$ will be \PB{$\|q\MG\\{par}\MG%
+\\{val}$}, and \PB{$\|q\MG\\{val}$} will
+be $\alpha_1x_5$. Also
+\PB{$\|q\MG\\{sib}\MG\\{val}$}${}=\alpha_1x_4$,
+\PB{$\|q\MG\\{sib}\MG\\{sib}\MG\\{val}$}${}=\alpha_1x_2$,
+\PB{$\|q\MG\\{sib}\MG\\{sib}\MG\\{sib}\MG\\{val}$}${}=\alpha_1x_1$, and
+\PB{$\|q\MG\\{sib}\MG\\{sib}\MG\\{sib}\MG\\{sib}\K\NULL$}.)
+
+We assume that there is a set $X_q$ of ``legal'' elements that might be used
+to extend the current set $\{x_1,\ldots,x_l\}$. This set has the property
+that, if $\alpha$ is any automorphism with $\alpha x_3=x_1$ and $\alpha
+x_5=x_2$ and $\alpha x=y$ for some~$y$, where $x\in X_q$, then there is
+an automorphism $\alpha'$ that fixes all elements $\le x_2$ and satisfies
+$\alpha'\alpha_2\alpha_1 x=y$. In other words, we assume that we can obtain
+the images
+of all legal elements that belong to our subtask by restricting consideration
+to automorphisms of the form $\alpha\alpha_2\alpha_1$, where $\alpha$
+fixes all elements $\le x_2$ and where $\alpha_1$ and $\alpha_2$ are the
+particular automorphisms we have chosen..
+
+Now one of the subtasks below \PB{\|q} will be node \PB{\|p}, having
+\PB{$\|p\MG\\{val}$}${}=\alpha_2\alpha_1x_4$ and \PB{$\|p\MG\\{trans}$}${}=%
+\alpha_3$, where $\alpha_3$
+is some automorphism that fixes everything $\le x_2$ and satisfies
+$\alpha_3\alpha_2\alpha_1x_4=x_3$. The set of legal elements $X_p$ is obtained
+by deleting from $X_q$ all elements~$z$ such that $\alpha\alpha_2\alpha_1z
+< x_3$ for some $\alpha$ fixing $\le x_2$.
+
+To prove that $X_p$ satisfies the required inductive assumption, suppose
+$\alpha$ is any automorphism with $\alpha x_3=x_1$, $\alpha x_5=x_2$,
+$\alpha x_4=x_3$, and $\alpha x=y$, where $x\in X_p$. Then since $x\in X_q$,
+there is $\alpha'$ fixing $\le x_2$ such that $\alpha'\alpha_2\alpha_1x=y$.
+And by definition of $X_p$ we know that $y\ge x_3$; we can assume $x\ne x_4$,
+hence $y>x_3$. We can write $\alpha'=
+\beta\alpha''$, where $\beta$ is a product of $x_3-x_2$ elements from the
+\PB{\\{perm}} table (one from each row~$j$ for $x_2\le j<x_3$) and $\alpha''$
+fixes
+all elements $\le x_3$.
+
+Consider the group $G$ of all $\alpha$ that fix the elements $\le x_2$. Every
+permutation $\pi$ in $G$ is a product $\pi'\pi''$, where $\pi'$ permutes
+the elements that can map into $\{x_2,\ldots,x_3-1\}$ and $\pi''$ permutes
+those that can't. Thus we have $\beta=\beta'\beta''$ and $\alpha_3=
+\alpha_3'\alpha_3''$. We also have
+$\pi\alpha_2\alpha_1x=\pi''\alpha_2\alpha_1x$ for any $\pi$ in~$G$.
+
+Now the permutation $\alpha''\beta''\alpha_3''^{-}$ fixes all elements
+$\le x_3$, and we have
+$\alpha''\beta''\alpha_3''{}^{-}\alpha_3\alpha_2\alpha_1x=
+\alpha''\beta''\alpha_3'\alpha_2\alpha_1x=
+\alpha''\beta''\alpha_2\alpha_1x=
+\alpha''\beta''\beta'\alpha_2\alpha_1x=
+\alpha'\alpha_2\alpha_1x=y$.
+
+{\sl Important Note [30 April 2001]:\/} Oops no, that permutations does
+{\it not\/} necessarily fix~$x_3$. I don't know at present how to repair this
+error without spoiling the efficiency of the algorithm.
+
+Suppose $\{x_1,\ldots,x_l\}$ is non canonical because some $\alpha$ has
+$\alpha x_3=x_1$, $\alpha x_5=x_2$, $\alpha x_4=x_3$, and $\alpha x_1<x_4$.
+If $x_1$ is in $X_p$, we've proved that there must be $\alpha'$ fixing $\le
+x_3$ such that $\alpha\alpha_3\alpha_2\alpha_1x_1<x_4$; and
+$\alpha_3\alpha_2\alpha_1x_1$ will be the value of one of $p$'s children, so
+we will discover the existence of $\alpha'$ by looking at the \PB{\\{minp}}
+table.
+If $x_1$ is in $X_q$ but not $X_p$, there must be $\alpha'$ fixing $\le x_2$
+such that $\alpha\alpha_2\alpha_1x_1<x_3$; the fact that $\{x_1,\ldots,x_l\}$
+is noncanonical will be discovered on a sibling task $r$ of~$p$, having
+\PB{$\|r\MG\\{val}$}${}=\alpha_2\alpha_1x_1$. Similarly, if $x_1$ is not in
+$X_q$ there
+must be $\alpha'$ fixing $\le x_1$ such that $\alpha'\alpha_1x_1<x_2$, and
+a sibling task of~$q$ will discover this.
+
+That, for me, completes the proof.
+Readers who do not believe that I lived up to my
+promise of ``keeping the notation simple'' are encouraged to supply a nicer
+argument; I~decided to use brute force here in order to familiarize myself with
+the underlying structure.
+
+(Speaking of notation, I must admit to being unhappy today with my former
+choice, in
+{\mc SETSET}, of writing $\alpha x$ instead of $x\alpha$ for the image of
+$x$ under a permutation~$\alpha$. This has compelled me to write
+$\alpha_2\alpha_1$
+for the permutation in which $\alpha_1$ is applied before $\alpha_2$,
+against my normal custom and preference. Certainly I'll use the other
+order if I ever write this up.)
+
+\Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{char} ${}\\{legal}[\\{nn}+\T{1}]{}$;\C{ nonzero when a card is legal in all
+subtasks }\par
+\fi
+
+\M{22}Nodes come and go in a last-in-first-out fashion, so we can allocate them
+sequentially.
+
+\Y\B\4\D$\\{max\_node\_count}$ \5
+\T{22000000}\par
+\Y\B\4\X22:Subroutines\X${}\E{}$\6
+\&{node} ${}{*}\\{new\_node}(\,){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|p\K\\{node\_ptr}\PP;{}$\7
+\&{if} ${}(\|p\G{\AND}\\{nodes}[\\{max\_node\_count}]){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Node\ memory\ overflo}\)\.{w!\\n"});{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+${}\|p\MG\\{kid}\K\NULL;{}$\6
+\&{return} \|p;\6
+\4${}\}{}$\2\par
+\As24, 25, 30, 34, 36, 37, 38\ETs44.
+\U1.\fi
+
+\M{23}\B\D$\\{root}$ \5
+${\AND}\\{nodes}{}$[\T{0}]\par
+\Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{node} \\{nodes}[\\{max\_node\_count}];\6
+\&{node} ${}{*}\\{node\_ptr}\K{\AND}\\{nodes}[\T{1}]{}$;\par
+\fi
+
+\M{24}When we're processing a set $\{x_1,\ldots,x_l\}$, every active node on
+level~$d$ of the tree has $l-d$ children. Thus when $l$ increases by~1, every
+active node gains a child; this leads to an interesting recursive algorithm.
+
+The \PB{\\{new\_kid}} procedure creates a new child of $p$ at level $d+1$ with
+a given value~$v$.
+
+If $d$ is sufficiently deep, we switch to another strategy described below.
+
+\Y\B\4\X22:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{launch}(\&{node} ${}{*},\39\&{int},\39{}$\&{node} ${}{*}){}$;\C{
+prototype for a subroutine declared below }\6
+\&{void} \\{new\_terminal\_kid}(\&{node} ${}{*},\39\&{SETcard}){}$;\C{ and
+another }\7
+\&{void} \\{new\_kid}(\&{node} ${}{*}\|p,\39{}$\&{int} \|d${},\39{}$\&{SETcard}
+\|v)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|q;{}$\7
+\X29:Use special strategy for \PB{\\{new\_kid}} if \PB{\|d} is sufficiently
+deep\X;\6
+${}\|q\K\\{new\_node}(\,);{}$\6
+${}\|q\MG\\{val}\K\|v,\39\|q\MG\\{par}\K\|p,\39\|q\MG\\{level}\K\T{0};{}$\6
+${}\|q\MG\\{sib}\K\|p\MG\\{kid},\39\|p\MG\\{kid}\K\|q;{}$\6
+${}\\{launch}(\|p,\39\|d+\T{1},\39\|q);{}$\6
+\&{for} ${}(\|q\K\|q\MG\\{sib};{}$ \|q; ${}\|q\K\|q\MG\\{sib}){}$\1\6
+\&{if} ${}(\|q\MG\\{trans}){}$\1\5
+${}\\{new\_kid}(\|q,\39\|d+\T{1},\39\|q\MG\\{trans}[\|v]);{}$\2\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{25}At this point we've reached the heart of the algorithm, the \PB{%
+\\{launch}}
+subroutine that initializes each new node created by \PB{\\{new\_kid}} (or by
+\PB{\\{launch}} itself). When \PB{$\\{launch}(\|p,\|d,\|q)$} is called, node~%
+\PB{\|q} is a child of~\PB{\|p}
+on level~\PB{\|d} whose \PB{\\{val}} field has been set but the \PB{\\{trans}}
+field has not.
+
+\Y\B\4\X22:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{launch}(\&{node} ${}{*}\|p,\39{}$\&{int} \|d${},\39{}$\&{node}
+${}{*}\|q){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|v${},{}$ \|w;\6
+\&{register} \&{node} ${}{*}\|r,{}$ ${}{*}\|s,{}$ ${}{*}\|t;{}$\7
+${}\|v\K\|q\MG\\{val};{}$\6
+${}\|w\K\\{minp}[\|x[\|d-\T{1}]+\T{1}][\|v][\|v];{}$\6
+\&{if} ${}(\|w<\|x[\|d]){}$\1\5
+\X42:Reject the current set $\{x_1,\ldots,x_l\}$\X;\2\6
+\&{if} ${}(\|w>\|x[\|d]){}$\1\5
+${}\|q\MG\\{trans}\K\NULL{}$;\C{ this branch is dormant }\2\6
+\&{else}\1\5
+\X26:Launch a new node that maps $v$ to $x_d$\X;\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{26}We can exclude values that will map between $x_{d-1}$ and $x_{d+1}$,
+at least when $d<l$. By setting $x_{l+1}=x_l$ below, we make this
+work also when $d=l$.
+
+\Y\B\4\X26:Launch a new node that maps $v$ to $x_d$\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|w\K\|x[\|d-\T{1}]+\T{1};{}$\6
+${}\|q\MG\\{trans}\K\\{minp}[\|w][\|v];{}$\6
+\&{for} ( ; ${}\|w<\|x[\|d+\T{1}];{}$ ${}\|w\PP){}$\1\6
+\&{if} ${}(\|w\I\|x[\|d]){}$\1\5
+\X27:Make sure $w$ is forbidden\X;\2\2\6
+\X33:Use special strategy for \PB{\\{launch}} if \PB{\|d} is sufficiently deep%
+\X;\6
+\&{for} ${}(\|r\K\|p\MG\\{kid},\39\|s\K\NULL;{}$ \|r; ${}\|r\K\|r\MG\\{sib}){}$%
+\1\6
+\&{if} ${}(\|r\I\|q){}$\5
+${}\{{}$\1\6
+${}\|t\K\\{new\_node}(\,);{}$\6
+${}\|t\MG\\{par}\K\|q;{}$\6
+${}\|t\MG\\{val}\K\|q\MG\\{trans}[\|r\MG\\{val}],\39\|t\MG\\{level}\K\T{0};{}$\6
+\&{if} (\|s)\1\5
+${}\|s\MG\\{sib}\K\|t{}$;\5
+\2\&{else}\1\5
+${}\|q\MG\\{kid}\K\|t;{}$\2\6
+${}\|s\K\|t;{}$\6
+\4${}\}{}$\2\2\6
+\&{if} (\|s)\1\5
+${}\|s\MG\\{sib}\K\NULL;{}$\2\6
+\&{else}\1\5
+${}\\{auts}\PP{}$;\C{ when we've reached level $l$, we've found an automorphism
+}\2\6
+\&{for} ${}(\|r\K\|q\MG\\{kid};{}$ \|r; ${}\|r\K\|r\MG\\{sib}){}$\1\5
+${}\\{launch}(\|q,\39\|d+\T{1},\39\|r);{}$\2\6
+\4${}\}{}$\2\par
+\U25.\fi
+
+\M{27}The \PB{\\{forbidden}} table is used in the algorithm below to ensure
+that no
+\SET/ occurs among the elements $\{x_1,\ldots,x_l\}$. We also use it here
+to forbid card values that will be transformed into~\PB{\|w}
+by a sequence of permutations ending with \PB{$\|q\MG\\{trans}$}. (Since all
+such
+cases will ultimately lead to rejection, we can presumably save time
+by ruling them out in advance. If I myself had more time to spend,
+I'd check this to see just how much it helps.)
+
+The reader should not confuse ``forbidden'' elements with elements that are
+``illegal'' in the sense of the proof above. The two concepts are related,
+but the algorithm would work even if the present step were omitted.
+
+\Y\B\4\X27:Make sure $w$ is forbidden\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|r\K\|q,\39\|v\K\|w;{}$ ${}\|r\I\\{root};{}$ ${}\|r\K\|r\MG%
+\\{par}){}$\1\5
+${}\|v\K\|r\MG\\{trans}[\|v+\\{nnn}];{}$\2\6
+${}\\{forbidden}[\|v]\K\T{1};{}$\6
+\4${}\}{}$\2\par
+\U26.\fi
+
+\M{28}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{SETcard} \|x[\T{22}];\C{ here's where we remember $x_1$, $x_2$, etc. }\6
+\&{char} ${}\\{forbidden}[\\{nn}+\T{1}]{}$;\C{ nonzero for noncanonical choices
+}\6
+\&{int} \\{auts};\C{ automorphisms of $\{x_1,\ldots,x_l\}$ found }\6
+\&{int} \|l;\C{ the current level }\par
+\fi
+
+\M{29}Eventually we get to a level so deep that only the identity mapping fixes
+all elements $\le x_d$. Then the algorithm we have described so far,
+although correct, begins to spin its wheels as it laboriously finds at
+most one active child of each node.
+
+Therefore we streamline the data structures for all such nodes, which we
+call ``terminal,'' and we go into a different mode of operation when we
+reach a terminal node. Such a node~\PB{\|q} is identified by the condition
+\PB{$\|q\MG\\{level}>\T{0}$};
+if \PB{$\|q\MG\\{level}\K\|k$} it means that all nodes $\{x_1,\ldots,x_{k-1}\}$
+have
+been matched among \PB{\|q} and its ancestors and older siblings. The next
+younger siblings of~\PB{\|q} will therefore try to match $x_k$.
+
+The \PB{\\{new\_kid}} procedure will add a new terminal node to the descendants
+of~\PB{\|p}, if \PB{\|d} is sufficiently deep as described above; this will be
+true
+if and only if $x_d\ge D-1$, where $D$ is the \PB{\\{perm}} table depth.
+If \PB{\|p} already has at least one child, all of its children are terminal,
+and we use the \PB{\\{new\_terminal\_kid}} procedure to extend \PB{\|p}'s
+family.
+Otherwise we initiate the family, using the fact that \PB{\|l} must equal \PB{$%
+\|d+\T{1}$}
+if \PB{\|p} was previously childless.
+
+\Y\B\4\X29:Use special strategy for \PB{\\{new\_kid}} if \PB{\|d} is
+sufficiently deep\X${}\E{}$\6
+\&{if} ${}(\|x[\|d]\G\\{dd}-\T{1}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|p\MG\\{kid}){}$\1\5
+${}\\{new\_terminal\_kid}(\|p,\39\|v);{}$\2\6
+\&{else}\5
+${}\{{}$\C{ \PB{$\|l\K\|d+\T{1}$} }\1\6
+\&{if} ${}(\|v<\|x[\|l]){}$\1\5
+\X42:Reject the current set $\{x_1,\ldots,x_l\}$\X;\2\6
+${}\|q\K\\{new\_node}(\,);{}$\6
+${}\|p\MG\\{kid}\K\|q,\39\|q\MG\\{val}\K\|v,\39\|q\MG\\{sib}\K\NULL,\39\|q\MG%
+\\{par}\K\|p;{}$\6
+\&{if} ${}(\|v\E\|x[\|l]){}$\1\5
+${}\|q\MG\\{level}\K\|l+\T{1},\39\\{auts}\PP;{}$\2\6
+\&{else}\1\5
+${}\|q\MG\\{level}\K\|l;{}$\2\6
+\4${}\}{}$\2\6
+\&{return};\6
+\4${}\}{}$\2\par
+\U24.\fi
+
+\M{30}The \PB{\\{kid}} links in terminal nodes are {\it not\/} used for
+parenting; they jump across siblings known to be irrelevant in future
+searches. (This is just a heuristic, designed to ameliorate the fact
+that we don't want to complicate the backtracking process by updating
+any existing links in a family when a new child is born.)
+
+\Y\B\4\X22:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{new\_terminal\_kid}(\&{node} ${}{*}\|q,\39{}$\&{SETcard} \|v)\1\1\2%
+\2\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|r,{}$ ${}{*}\|p;{}$\6
+\&{register} \&{int} \|k${},{}$ \|w;\7
+${}\|r\K\\{new\_node}(\,);{}$\6
+${}\|r\MG\\{val}\K\|v,\39\|r\MG\\{sib}\K\|q\MG\\{kid},\39\|q\MG\\{kid}\K\|r;{}$%
+\6
+\X31:Find the index $k$ such that we've matched $\{x_1,\ldots,x_{k-1}\}$ and
+such that all other values exceed~$x_k$\X;\6
+${}\|r\MG\\{level}\K\|k;{}$\6
+\&{for} ${}(\|p\K\|r\MG\\{sib};{}$ \|p; ${}\|p\K\|p\MG\\{kid}){}$\1\6
+\&{if} ${}(\|p\MG\\{val}>\|x[\|k]){}$\1\5
+\&{break};\2\2\6
+${}\|r\MG\\{kid}\K\|p;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{31}\B\X31:Find the index $k$ such that we've matched $\{x_1,\ldots,x_{k-1}%
+\}$ and such that all other values exceed~$x_k$\X${}\E{}$\6
+$\|k\K\|r\MG\\{sib}\MG\\{level};{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\C{ \PB{\|v} is the smallest value greater than $x_{k-1}$ }\1\6
+\&{if} ${}(\|v<\|x[\|k]){}$\1\5
+\X42:Reject the current set $\{x_1,\ldots,x_l\}$\X;\2\6
+\&{if} ${}(\|v>\|x[\|k]){}$\1\5
+\&{break};\2\6
+\X32:Forbid values that will cause rejection if they propagate this far\X;\6
+${}\|k\PP;{}$\6
+\&{if} ${}(\|k>\|l){}$\5
+${}\{{}$\1\6
+${}\\{auts}\PP{}$;\C{ hey, we've matched everything }\6
+\&{break};\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|p\K\|r\MG\\{sib},\39\|v\K\\{nn};{}$ \|p; ${}\|p\K\|p\MG%
+\\{kid}){}$\1\6
+\&{if} ${}(\|p\MG\\{val}>\|x[\|k-\T{1}]\W\|p\MG\\{val}<\|v){}$\1\5
+${}\|v\K\|p\MG\\{val};{}$\2\2\6
+\4${}\}{}$\2\par
+\U30.\fi
+
+\M{32}We can exclude values that will map between $x_{k-1}$ and $x_{k+1}$,
+at least when $k<l$. By setting $x_{l+1}=x_l$ below, we make this
+work also when $k=l$.
+
+\Y\B\4\X32:Forbid values that will cause rejection if they propagate this far%
+\X${}\E{}$\6
+\&{for} ${}(\|w\K\|x[\|k-\T{1}]+\T{1};{}$ ${}\|w<\|x[\|k+\T{1}];{}$ ${}\|w%
+\PP){}$\1\6
+\&{if} ${}(\|w\I\|x[\|k]){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|p\K\|q,\39\|v\K\|w;{}$ ${}\|p\I\\{root};{}$ ${}\|p\K\|p\MG%
+\\{par}){}$\1\5
+${}\|v\K\|p\MG\\{trans}[\|v+\\{nnn}];{}$\2\6
+${}\\{forbidden}[\|v]\K\T{1};{}$\6
+\4${}\}{}$\2\2\par
+\U31.\fi
+
+\M{33}When all children of a newly launched node \PB{\|q} are terminal,
+we append them in reverse order. This is done only for convenience,
+because the order
+is unimportant in newly launched nodes. (Such nodes will disappear completely
+when we backtrack.)
+
+\Y\B\4\X33:Use special strategy for \PB{\\{launch}} if \PB{\|d} is sufficiently
+deep\X${}\E{}$\6
+\&{if} ${}(\|x[\|d]\G\\{dd}-\T{1}\W\|d<\|l){}$\5
+${}\{{}$\1\6
+${}\|s\K\|p\MG\\{kid}{}$;\5
+\&{if} ${}(\|s\E\|q){}$\1\5
+${}\|s\K\|s\MG\\{sib};{}$\2\6
+${}\|v\K\|q\MG\\{trans}[\|s\MG\\{val}];{}$\6
+\&{if} ${}(\|v<\|x[\|d+\T{1}]){}$\1\5
+\X42:Reject the current set $\{x_1,\ldots,x_l\}$\X;\2\6
+${}\|r\K\\{new\_node}(\,);{}$\6
+${}\|q\MG\\{kid}\K\|r,\39\|r\MG\\{par}\K\|q;{}$\6
+${}\|r\MG\\{val}\K\|v,\39\|r\MG\\{sib}\K\NULL;{}$\6
+\&{if} ${}(\|v\E\|x[\|d+\T{1}]){}$\5
+${}\{{}$\1\6
+${}\|r\MG\\{level}\K\|d+\T{2};{}$\6
+\&{if} ${}(\|d+\T{1}\E\|l){}$\1\5
+${}\\{auts}\PP;{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\|r\MG\\{level}\K\|d+\T{1};{}$\2\6
+\&{for} ${}(\|s\K\|s\MG\\{sib};{}$ \|s; ${}\|s\K\|s\MG\\{sib}){}$\1\6
+\&{if} ${}(\|s\I\|q){}$\1\5
+${}\\{new\_terminal\_kid}(\|q,\39\|q\MG\\{trans}[\|s\MG\\{val}]);{}$\2\2\6
+\&{return};\6
+\4${}\}{}$\2\par
+\U26.\fi
+
+\M{34}Here's a subroutine that I expect will be useful during the debugging
+process.
+
+\Y\B\4\X22:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_subtree}(\&{node} ${}{*}\|p,\39{}$\&{int} \|d)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|r;{}$\6
+\&{register} \&{int} \|k;\7
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|d;{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\|p\MG\\{level}\?\.{"\ "}:\.{"."});{}$\2\6
+${}\\{printf}(\.{"\%04d"},\39\\{decode}[\|p\MG\\{val}]);{}$\6
+\&{if} ${}(\|p\MG\\{level}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{",\%d"},\39\|p\MG\\{level});{}$\6
+\&{if} ${}(\|p\MG\\{kid}){}$\1\5
+${}\\{printf}(\.{"\ ->\%04d"},\39\\{decode}[\|p\MG\\{kid}\MG\\{val}]);{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\6
+\&{else} \&{if} ${}(\|p\MG\\{trans}){}$\5
+${}\{{}$\1\6
+\X35:Print the current transform matrix\X;\6
+\&{for} ${}(\|r\K\|p\MG\\{kid};{}$ \|r; ${}\|r\K\|r\MG\\{sib}){}$\1\5
+${}\\{print\_subtree}(\|r,\39\|d+\T{1});{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+\\{printf}(\.{"\\n"});\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{35}We print the matrix by giving five vectors $y_i$ such that
+$(x_1,x_2,x_3,x_4)\mapsto y_0+x_1y_1+x_2y_2+x_3y_3+x_4y_4$.
+
+\Y\B\4\X35:Print the current transform matrix\X${}\E{}$\6
+$\|k\K\|p\MG\\{trans}[\T{0}];{}$\6
+${}\\{printf}(\.{"\ [\%04d,\%04d,\%04d,\%0}\)\.{4d,\%04d]\\n"},\39\\{decode}[%
+\|k],\39\\{decode}[\\{third}[\|k][\\{third}[\T{0}][\|p\MG\\{trans}[\T{4}]]]],%
+\39\\{decode}[\\{third}[\|k][\\{third}[\T{0}][\|p\MG\\{trans}[\T{3}]]]],\39%
+\\{decode}[\\{third}[\|k][\\{third}[\T{0}][\|p\MG\\{trans}[\T{2}]]]],\39%
+\\{decode}[\\{third}[\|k][\\{third}[\T{0}][\|p\MG\\{trans}[\T{1}]]]]){}$;\par
+\U34.\fi
+
+\M{36}\B\X22:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_trees}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|r;{}$\7
+\&{for} ${}(\|r\K(\\{root})\MG\\{kid};{}$ \|r; ${}\|r\K\|r\MG\\{sib}){}$\1\5
+${}\\{print\_subtree}(\|r,\39\T{0});{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{37}More help for debugging: \PB{\\{nod}(\.{"123"})} gives the third-youngest
+child of the
+second-youngest child of the youngest child of the root.
+
+\Y\B\4\X22:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{nod}(\&{char} ${}{*}\|s){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{char} ${}{*}\|p;{}$\6
+\&{register} \&{int} \|j;\6
+\&{register} \&{node} ${}{*}\|q\K\\{root};{}$\7
+\&{for} ${}(\|p\K\|s;{}$ ${}{*}\|p;{}$ ${}\|p\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\R\|q){}$\1\5
+\&{return} ${}\NULL;{}$\2\6
+\&{for} ${}(\|j\K{*}\|p-\.{'1'},\39\|q\K\|q\MG\\{kid};{}$ \|j; ${}\|j\MM){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\R\|q){}$\1\5
+\&{return} ${}\NULL;{}$\2\6
+${}\|q\K\|q\MG\\{sib};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{return} \|q;\6
+\4${}\}{}$\2\7
+\&{void} \\{dummy}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\\{malloc}(\T{1});\C{ loads a routine needed by \.{gdb} }\6
+\4${}\}{}$\2\par
+\fi
+
+\M{38}And here's a sort of converse routine, \PB{\\{whoami}}.
+
+\Y\B\4\X22:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_id}(\&{node} ${}{*}\|p){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|q\K\|p\MG\\{par},{}$ ${}{*}\|r;{}$\6
+\&{register} \&{char} \|j;\7
+\&{if} (\|q)\5
+${}\{{}$\1\6
+\\{print\_id}(\|q);\6
+\&{for} ${}(\|r\K\|q\MG\\{kid},\39\|j\K\.{'1'};{}$ ${}\|r\I\|p;{}$ ${}\|j%
+\PP){}$\1\6
+\&{if} (\|r)\1\5
+${}\|r\K\|r\MG\\{sib};{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\\{printf}(\.{"???"});\5
+\&{return};\6
+\4${}\}{}$\2\2\6
+${}\\{printf}(\.{"\%c"},\39\|j);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\7
+\&{void} \\{whoami}(\&{node} ${}{*}\|p){}$\1\1\2\2\6
+${}\{{}$\1\6
+\\{print\_id}(\|p);\5
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{39}Backtracking. Now we're ready to construct the tree of all canonical
+\SET/-free sets $\{x_1,\ldots,x_l\}$.
+
+\Y\B\4\X39:Enumerate and print all solutions\X${}\E{}$\6
+$\|l\K\T{0}{}$;\5
+${}\|j\K\T{0};{}$\6
+${}\|x[\T{0}]\K{-}\T{1};{}$\6
+\&{if} (\\{setjmp}(\\{restart\_point}))\1\5
+\&{goto} \\{backup};\C{ get ready for \PB{\\{longjmp}} }\2\6
+\4\\{moveup}:\5
+\&{while} (\\{forbidden}[\|j])\1\5
+${}\|j\PP;{}$\2\6
+\&{if} ${}(\|j\E\\{nn}){}$\1\5
+\&{goto} \\{backup};\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\1\5
+${}\\{forbidden\_back}[\|l][\|k]\K\\{forbidden}[\|k];{}$\2\6
+${}\\{node\_ptr\_back}[\|l]\K\\{node\_ptr};{}$\6
+${}\\{auts}\K\T{0};{}$\6
+${}\|l\PP,\39\|x[\|l]\K\|x[\|l+\T{1}]\K\|j;{}$\6
+${}\\{new\_kid}(\\{root},\39\T{0},\39\|x[\|l]);{}$\6
+\X45:Record the current canonical $l$-set as a solution\X;\6
+\X43:Forbid all \SET/s that include $\{x_k,x_l\}$ for $1\le k<l$\X;\6
+${}\|j\K\|x[\|l]+\T{1}{}$;\5
+\&{goto} \\{moveup};\6
+\4\\{backup}:\5
+${}\|l\MM;{}$\6
+${}\\{node\_ptr}\K\\{node\_ptr\_back}[\|l];{}$\6
+\\{prune}(\\{root});\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\1\5
+${}\\{forbidden}[\|k]\K\\{forbidden\_back}[\|l][\|k];{}$\2\6
+${}\|j\K\|x[\|l+\T{1}]+\T{1};{}$\6
+\&{if} (\|l)\1\5
+\&{goto} \\{moveup};\2\par
+\U1.\fi
+
+\M{40}\B\X40:Local variables\X${}\E{}$\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k;\C{ miscellaneous indices }\par
+\U1.\fi
+
+\M{41}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \\{forbidden\_back}[\T{22}][\\{nnn}];\C{ brute-force undoing }\6
+\&{node} ${}{*}\\{node\_ptr\_back}[\T{22}]{}$;\par
+\fi
+
+\M{42}If the recursive procedures invoked by \PB{\\{new\_kid}} lead to a
+non-canonical
+situation, we leave them and back up by using \CEE/'s \PB{\\{longjmp}}
+library function. (The code above will then cause control to pass
+to the label \PB{\\{rejected}}.)
+
+\Y\B\4\X42:Reject the current set $\{x_1,\ldots,x_l\}$\X${}\E{}$\6
+$\\{longjmp}(\\{restart\_point},\39\T{1}){}$;\par
+\Us25, 29, 31\ETs33.\fi
+
+\M{43}\B\X43:Forbid all \SET/s that include $\{x_k,x_l\}$ for $1\le k<l$\X${}%
+\E{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\|l;{}$ ${}\|k\PP){}$\1\5
+${}\\{forbidden}[\\{third}[\|x[\|k]][\|x[\|l]]]\K\T{1}{}$;\2\par
+\U39.\fi
+
+\M{44}The data structures have been designed so that all changes invoked by
+\PB{\\{new\_kid}} and \PB{\\{launch}} are easily undone. Indeed, if \PB{$\\{new%
+\_kid}(\\{root},\T{0},\|x[\|l])$}
+terminates normally, it has added precisely one child to each active node
+(including any terminal nodes that are present), and the newly added child
+will of course be the youngest. But if \PB{\\{new\_kid}} terminates abnormally
+via \PB{\\{longjmp}}, some active nodes may not have been reached.
+
+\Y\B\4\X22:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{prune}(\&{node} ${}{*}\|p){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|q\K\|p\MG\\{kid};{}$\6
+\&{register} \&{node} ${}{*}\|r;{}$\7
+\&{if} (\|q)\5
+${}\{{}$\1\6
+${}\|r\K\|q;{}$\6
+\&{if} ${}(\|q\G\\{node\_ptr}){}$\1\5
+${}\|p\MG\\{kid}\K\|q\K\|q\MG\\{sib}{}$;\C{ the youngest should be pruned away
+}\2\6
+\&{if} ${}(\R\|r\MG\\{level}){}$\1\6
+\&{for} ( ; \|q; ${}\|q\K\|q\MG\\{sib}){}$\1\5
+\\{prune}(\|q);\2\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{45}The totals. I want to know not only the nonisomorphic solutions but
+also
+the exact number of \SET/-less $k$ sets that are possible. Then I'll know the
+precise odds of having no \SET/ in a random deal.
+
+When the program reaches this point, \PB{\\{auts}} will have been set to the
+number
+of permutations of $\{x_1,\ldots,x_l\}$ that are achievable by automorphisms.
+The true number of automorphisms of $\{x_1,\ldots,x_l\}$ will therefore be
+\PB{\\{auts}} times the number of automorphisms that fix each of $\{x_1,%
+\ldots,x_l\}$.
+
+I don't know how to compute the latter quantity easily from the \PB{\\{perm}}
+table
+of a general permutation group. But in the affine linear group of interest
+here, we need only determine the number of independent elements. This is
+the smallest index~$k$ such that $x_{k+1}\ne k$.
+
+\Y\B\4\X45:Record the current canonical $l$-set as a solution\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|l;{}$ ${}\|j\PP){}$\1\5
+\\{printf}(\.{"."});\2\6
+${}\\{non\_iso\_count}[\|l]\PP;{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|x[\|k+\T{1}]\E\|k;{}$ ${}\|k\PP){}$\1\5
+;\2\6
+${}\\{total\_count}[\|l]\MRL{+{\K}}\\{multiplier}[\|k-\T{1}]/{}$(\&{double}) %
+\\{auts};\6
+${}\\{printf}(\.{"\%04d\ (\%d:\%d)\ \%d\\n"},\39\\{decode}[\|x[\|l]],\39%
+\\{auts},\39\|k,\39\\{node\_ptr}-\\{nodes}){}$;\par
+\U39.\fi
+
+\M{46}Integers of 32 bits are insufficient to hold the numbers we're counting,
+but double precision floating point turns out to be good enough
+for exact values in this problem.
+
+\Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{non\_iso\_count}[\T{30}];\C{ number of canonical solutions }\6
+\&{double} \\{total\_count}[\T{30}];\C{ total number of solutions }\6
+\&{double} \\{multiplier}[\T{5}]${}\K\{\T{81.0},\39\T{6480.0},\39\T{505440.0},%
+\39\T{36391680.0},\39\T{1965150720.0}\}{}$;\par
+\fi
+
+\M{47}\B\X47:Print the totals\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\T{21};{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\%20.20g\ SETless\ \%d-}\)\.{sets\ (\%d\ cases)\\n"},\39%
+\\{total\_count}[\|j],\39\|j,\39\\{non\_iso\_count}[\|j]){}$;\2\par
+\U1.\fi
+
+\N{1}{48}Index.
+
+\fi
+
+
+\inx
+\fin
+\con

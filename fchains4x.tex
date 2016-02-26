@@ -1,0 +1,299 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. I'm hurriedly experimenting with a new(?) way to explore the
+complexity of 4-variable Boolean functions. Namely, I calculate the
+``footprint'' of each function, the set of all first steps by which I
+know how to evaluate the function in $k$ steps. Then, if the footprints
+of $f$ and $g$ overlap, I can compute $f\circ g$ in
+${\rm cost}(f)+{\rm cost}(g)$ steps.
+
+I can restrict consideration to the $2^{15}$ functions that take
+$(0,0,0,0)\mapsto0$.
+
+This program extends {\mc FCHAINS4} by allowing several additional
+functions to be precomputed. Those functions appear on the command line,
+in hexadecimal form.
+
+\Y\B\4\D$\\{footsize}$ \5
+\T{100}\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\&{typedef} \&{struct} \&{node\_struct} ${}\{{}$\1\6
+\&{unsigned} \&{int} \\{footprint}[\\{footsize}];\6
+\&{int} \\{parent};\6
+\&{int} \\{cost};\6
+\&{struct} \&{node\_struct} ${}{*}\\{prev},{}$ ${}{*}\\{next};{}$\2\6
+${}\}{}$ \&{node};\6
+\&{node} ${}\\{func}[\T{1}\LL\T{15}];{}$\6
+\&{node} \\{head}[\T{9}];\6
+\&{int} \|x[\T{100}];\6
+\&{char} \\{buf}[\T{100}];\C{ lines of input }\6
+\&{char} ${}\\{name}[\T{32}*\\{footsize}][\T{16}];{}$\6
+\&{unsigned} \&{int} \\{ttt};\C{ truth table found in input line }\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|c${},{}$ \|j${},{}$ \|k${},{}$ \|r${},{}$ \|t${},{}$ %
+\|m${},{}$ \\{mm}${},{}$ \|s;\6
+\&{register} \&{unsigned} \&{int} \|u;\6
+\&{register} \&{node} ${}{*}\|p,{}$ ${}{*}\|q,{}$ ${}{*}\\{pp};{}$\7
+\X2:Read the initial functions\X;\6
+\X8:Initialize the tables\X;\6
+\&{for} ${}(\|r\K\T{2};{}$ \|c; ${}\|r\PP){}$\1\6
+\&{for} ${}(\|k\K(\|r-\T{1})\GG\T{1};{}$ ${}\|k\G\T{0};{}$ ${}\|k\MM){}$\1\5
+\X3:Combine all functions of costs \PB{\|k} and \PB{$\|r-\T{1}-\|k$}\X;\2\2\6
+\X12:Answer queries\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Read the initial functions\X${}\E{}$\6
+$\|m\K\\{argc}+\T{3};{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|m;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|k\Z\T{4}){}$\1\5
+${}\|x[\|k]\K\T{\^ffff}/((\T{1}\LL(\T{1}\LL(\T{4}-\|k)))+\T{1});{}$\2\6
+\&{else} \&{if} ${}(\\{sscanf}(\\{argv}[\|k-\T{4}],\39\.{"\%x"},\39{\AND}\|x[%
+\|k])\I\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Parameter\ \%s\ should}\)\.{\ have\ been\
+hexadecim}\)\.{al!\\n"},\39\\{argv}[\|k-\T{4}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|x[\|k]>\T{\^ffff}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Parameter\ \%s\ is\ too}\)\.{\ big!\\n"},\39%
+\\{argv}[\|k-\T{4}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|x[\|k]\G\T{\^8000}){}$\1\5
+${}\|x[\|k]\MRL{{\XOR}{\K}}\T{\^ffff};{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}\B\X3:Combine all functions of costs \PB{\|k} and \PB{$\|r-\T{1}-\|k$}%
+\X${}\E{}$\6
+\&{for} ${}(\|p\K\\{head}[\|k].\\{next};{}$ ${}\|p\MG\\{parent}\G\T{0};{}$ ${}%
+\|p\K\|p\MG\\{next}){}$\1\6
+\&{for} ${}(\|q\K\\{head}[\|r-\T{1}-\|k].\\{next};{}$ ${}\|q\MG\\{parent}\G%
+\T{0};{}$ ${}\|q\K\|q\MG\\{next}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm};{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\|p\MG\\{footprint}[\|j]\AND\|q\MG\\{footprint}[\|j]){}$\1\5
+\X6:Try for breakthru and \PB{\&{goto} \\{pqdone}}\X\2\2\6
+\X4:Try for new function\X;\6
+\4\\{pqdone}:\5
+\&{continue};\6
+\4${}\}{}$\2\2\par
+\U1.\fi
+
+\M{4}\B\D$\\{fun}(\|p)$ \5
+$((\|p)-\\{func}{}$)\par
+\Y\B\4\X4:Try for new function\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|t\K\\{fun}(\|p)\AND\\{fun}(\|q);{}$\6
+\&{if} ${}(\\{func}[\|t].\\{cost}\G\|r){}$\1\5
+\X5:Update the table for cost \PB{\|r}\X;\2\6
+${}\|t\K\\{fun}(\|p)\AND(\CM\\{fun}(\|q));{}$\6
+\&{if} ${}(\\{func}[\|t].\\{cost}\G\|r){}$\1\5
+\X5:Update the table for cost \PB{\|r}\X;\2\6
+${}\|t\K(\CM\\{fun}(\|p))\AND\\{fun}(\|q);{}$\6
+\&{if} ${}(\\{func}[\|t].\\{cost}\G\|r){}$\1\5
+\X5:Update the table for cost \PB{\|r}\X;\2\6
+${}\|t\K\\{fun}(\|p)\OR\\{fun}(\|q);{}$\6
+\&{if} ${}(\\{func}[\|t].\\{cost}\G\|r){}$\1\5
+\X5:Update the table for cost \PB{\|r}\X;\2\6
+${}\|t\K\\{fun}(\|p)\XOR\\{fun}(\|q);{}$\6
+\&{if} ${}(\\{func}[\|t].\\{cost}\G\|r){}$\1\5
+\X5:Update the table for cost \PB{\|r}\X;\2\6
+\4${}\}{}$\2\par
+\U3.\fi
+
+\M{5}\B\X5:Update the table for cost \PB{\|r}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{pp}\K{\AND}\\{func}[\|t];{}$\6
+\&{if} ${}(\\{pp}\MG\\{cost}>\|r){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{pp}\MG\\{cost}\E\T{8}){}$\1\5
+${}\|c\MM;{}$\2\6
+${}\\{pp}\MG\\{next}\MG\\{prev}\K\\{pp}\MG\\{prev},\39\\{pp}\MG\\{prev}\MG%
+\\{next}\K\\{pp}\MG\\{next};{}$\6
+${}\\{pp}\MG\\{cost}\K\|r,\39\\{pp}\MG\\{parent}\K(\\{fun}(\|p)\LL\T{16})+%
+\\{fun}(\|q);{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm};{}$ ${}\|j\PP){}$\1\5
+${}\\{pp}\MG\\{footprint}[\|j]\K\T{0};{}$\2\6
+${}\\{pp}\MG\\{next}\K\\{head}[\|r].\\{next},\39\\{pp}\MG\\{prev}\K{\AND}%
+\\{head}[\|r];{}$\6
+${}\\{pp}\MG\\{next}\MG\\{prev}\K\\{pp},\39\\{pp}\MG\\{prev}\MG\\{next}\K%
+\\{pp};{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm};{}$ ${}\|j\PP){}$\1\5
+${}\\{pp}\MG\\{footprint}[\|j]\MRL{{\OR}{\K}}\|p\MG\\{footprint}[\|j]\OR\|q\MG%
+\\{footprint}[\|j];{}$\2\6
+\4${}\}{}$\2\par
+\U4.\fi
+
+\M{6}\B\X6:Try for breakthru and \PB{\&{goto} \\{pqdone}}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|t\K\\{fun}(\|p)\AND\\{fun}(\|q);{}$\6
+\&{if} ${}(\\{func}[\|t].\\{cost}\G\|r-\T{1}){}$\1\5
+\X7:Update the table for cost \PB{$\|r-\T{1}$}\X;\2\6
+${}\|t\K\\{fun}(\|p)\AND(\CM\\{fun}(\|q));{}$\6
+\&{if} ${}(\\{func}[\|t].\\{cost}\G\|r-\T{1}){}$\1\5
+\X7:Update the table for cost \PB{$\|r-\T{1}$}\X;\2\6
+${}\|t\K(\CM\\{fun}(\|p))\AND\\{fun}(\|q);{}$\6
+\&{if} ${}(\\{func}[\|t].\\{cost}\G\|r-\T{1}){}$\1\5
+\X7:Update the table for cost \PB{$\|r-\T{1}$}\X;\2\6
+${}\|t\K\\{fun}(\|p)\OR\\{fun}(\|q);{}$\6
+\&{if} ${}(\\{func}[\|t].\\{cost}\G\|r-\T{1}){}$\1\5
+\X7:Update the table for cost \PB{$\|r-\T{1}$}\X;\2\6
+${}\|t\K\\{fun}(\|p)\XOR\\{fun}(\|q);{}$\6
+\&{if} ${}(\\{func}[\|t].\\{cost}\G\|r-\T{1}){}$\1\5
+\X7:Update the table for cost \PB{$\|r-\T{1}$}\X;\2\6
+\&{goto} \\{pqdone};\6
+\4${}\}{}$\2\par
+\U3.\fi
+
+\M{7}This code is not executed when $k=0$, because \PB{\|q}'s footprint is zero
+in that case.
+
+\Y\B\4\X7:Update the table for cost \PB{$\|r-\T{1}$}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{pp}\K{\AND}\\{func}[\|t];{}$\6
+\&{if} ${}(\\{pp}\MG\\{cost}>\|r-\T{1}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{pp}\MG\\{cost}\E\T{8}){}$\1\5
+${}\|c\MM;{}$\2\6
+${}\\{pp}\MG\\{next}\MG\\{prev}\K\\{pp}\MG\\{prev},\39\\{pp}\MG\\{prev}\MG%
+\\{next}\K\\{pp}\MG\\{next};{}$\6
+${}\\{pp}\MG\\{cost}\K\|r-\T{1},\39\\{pp}\MG\\{parent}\K(\\{fun}(\|p)\LL%
+\T{16})+\\{fun}(\|q);{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm};{}$ ${}\|j\PP){}$\1\5
+${}\\{pp}\MG\\{footprint}[\|j]\K\T{0};{}$\2\6
+${}\\{pp}\MG\\{next}\K\\{head}[\|r-\T{1}].\\{next},\39\\{pp}\MG\\{prev}\K{\AND}%
+\\{head}[\|r-\T{1}];{}$\6
+${}\\{pp}\MG\\{next}\MG\\{prev}\K\\{pp},\39\\{pp}\MG\\{prev}\MG\\{next}\K%
+\\{pp};{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm};{}$ ${}\|j\PP){}$\1\5
+${}\\{pp}\MG\\{footprint}[\|j]\MRL{{\OR}{\K}}\|p\MG\\{footprint}[\|j]\AND\|q\MG%
+\\{footprint}[\|j];{}$\2\6
+\4${}\}{}$\2\par
+\U6.\fi
+
+\M{8}\B\X8:Initialize the tables\X${}\E{}$\6
+\&{for} ${}(\|p\K{\AND}\\{func}[\T{2}];{}$ ${}\|p<{\AND}\\{func}[\T{%
+\^8000}];{}$ ${}\|p\PP){}$\1\5
+${}(\|p-\T{1})\MG\\{next}\K\|p,\39\|p\MG\\{prev}\K\|p-\T{1},\39\|p\MG\\{cost}\K%
+\T{8};{}$\2\6
+${}\\{func}[\T{1}].\\{cost}\K\T{8};{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\T{8};{}$ ${}\|k\PP){}$\1\5
+${}\\{head}[\|k].\\{parent}\K{-}\T{1},\39\\{head}[\|k].\\{next}\K\\{head}[\|k].%
+\\{prev}\K{\AND}\\{head}[\|k];{}$\2\6
+${}\\{head}[\T{0}].\\{next}\K\\{head}[\T{0}].\\{prev}\K{\AND}\\{func}[%
+\T{0}];{}$\6
+${}\\{func}[\T{0}].\\{next}\K\\{func}[\T{0}].\\{prev}\K{\AND}\\{head}[%
+\T{0}];{}$\6
+${}\\{head}[\T{8}].\\{next}\K{\AND}\\{func}[\T{1}],\39\\{func}[\T{1}].\\{prev}%
+\K{\AND}\\{head}[\T{8}];{}$\6
+${}\\{head}[\T{8}].\\{prev}\K{\AND}\\{func}[\T{\^7fff}],\39\\{func}[\T{%
+\^7fff}].\\{next}\K{\AND}\\{head}[\T{8}];{}$\6
+\X9:Initialize the functions of cost 0\X;\6
+\X10:Initialize the functions of cost 1\X;\par
+\U1.\fi
+
+\M{9}\B\X9:Initialize the functions of cost 0\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|m;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|p\K{\AND}\\{func}[\|x[\|k]];{}$\6
+\&{if} ${}(\|p\MG\\{cost}\E\T{0}){}$\1\5
+\&{continue};\2\6
+${}\|p\MG\\{next}\MG\\{prev}\K\|p\MG\\{prev},\39\|p\MG\\{prev}\MG\\{next}\K\|p%
+\MG\\{next};{}$\6
+${}\|p\MG\\{cost}\K\T{0};{}$\6
+${}\|p\MG\\{next}\K\\{head}[\T{0}].\\{next},\39\|p\MG\\{prev}\K{\AND}\\{head}[%
+\T{0}];{}$\6
+${}\|p\MG\\{next}\MG\\{prev}\K\|p,\39\|p\MG\\{prev}\MG\\{next}\K\|p;{}$\6
+\4${}\}{}$\2\6
+${}\|c\K(\T{1}\LL\T{15})-\T{1}-\|m{}$;\par
+\U8.\fi
+
+\M{10}\B\X10:Initialize the functions of cost 1\X${}\E{}$\6
+$\|s\K\T{0};{}$\6
+\&{for} ${}(\|r\K\T{2};{}$ ${}\|r\Z\|m;{}$ ${}\|r\PP){}$\1\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\|r;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|t\K\|x[\|k]\AND\|x[\|r],\39\\{sprintf}(\\{name}[\|s],\39\.{"\%d\&\%d(%
+\%04x)"},\39\|k,\39\|r,\39\|t);{}$\6
+\X11:Update for cost 1\X;\6
+${}\|t\K\|x[\|k]\AND(\CM\|x[\|r]),\39\\{sprintf}(\\{name}[\|s],\39\.{"\%d>\%d(%
+\%04x)"},\39\|k,\39\|r,\39\|t);{}$\6
+\X11:Update for cost 1\X;\6
+${}\|t\K(\CM\|x[\|k])\AND\|x[\|r],\39\\{sprintf}(\\{name}[\|s],\39\.{"\%d<\%d(%
+\%04x)"},\39\|k,\39\|r,\39\|t);{}$\6
+\X11:Update for cost 1\X;\6
+${}\|t\K\|x[\|k]\OR\|x[\|r],\39\\{sprintf}(\\{name}[\|s],\39\.{"\%d|\%d(%
+\%04x)"},\39\|k,\39\|r,\39\|t);{}$\6
+\X11:Update for cost 1\X;\6
+${}\|t\K\|x[\|k]\XOR\|x[\|r],\39\\{sprintf}(\\{name}[\|s],\39\.{"\%d\^\%d(%
+\%04x)"},\39\|k,\39\|r,\39\|t);{}$\6
+\X11:Update for cost 1\X;\6
+\4${}\}{}$\2\2\6
+${}\\{mm}\K(\|s+\T{31})/\T{32}{}$;\par
+\U8.\fi
+
+\M{11}\B\X11:Update for cost 1\X${}\E{}$\6
+$\|p\K{\AND}\\{func}[\|t];{}$\6
+\&{if} ${}(\|p\MG\\{cost}>\T{1}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|s\G\T{32}*\\{footsize}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Too\ many\ special\ fu}\)\.{nctions\
+(footsize=\%d}\)\.{)!\\n"},\39\\{footsize});{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+${}\|p\MG\\{next}\MG\\{prev}\K\|p\MG\\{prev},\39\|p\MG\\{prev}\MG\\{next}\K\|p%
+\MG\\{next};{}$\6
+${}\|p\MG\\{cost}\K\T{1},\39\|p\MG\\{parent}\K(\|x[\|k]\LL\T{16})+\|x[\|r];{}$\6
+${}\|p\MG\\{footprint}[\|s\GG\T{5}]\K\T{1}\LL(\|s\AND\T{\^1f});{}$\6
+${}\|p\MG\\{next}\K\\{head}[\T{1}].\\{next},\39\|p\MG\\{prev}\K{\AND}\\{head}[%
+\T{1}];{}$\6
+${}\|p\MG\\{next}\MG\\{prev}\K\|p,\39\|p\MG\\{prev}\MG\\{next}\K\|p;{}$\6
+${}\|s\PP;{}$\6
+${}\|c\MM;{}$\6
+\4${}\}{}$\2\par
+\U10.\fi
+
+\M{12}\B\X12:Answer queries\X${}\E{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\\{printf}(\.{"Truth\ table\ (hex):\ }\)\.{"});\6
+\\{fflush}(\\{stdout});\6
+\&{if} ${}(\R\\{fgets}(\\{buf},\39\T{100},\39\\{stdin})){}$\1\5
+\&{break};\2\6
+\&{if} ${}(\\{sscanf}(\\{buf},\39\.{"\%x"},\39{\AND}\\{ttt})\I\T{1}){}$\1\5
+\&{break};\2\6
+${}\\{printf}(\.{"\%04x\ has\ cost\ "},\39\\{ttt});{}$\6
+\&{if} ${}(\\{ttt}\AND\T{\^8000}){}$\1\5
+${}\\{ttt}\MRL{{\XOR}{\K}}\T{\^ffff};{}$\2\6
+${}\\{printf}(\.{"\%d,\ parents\ (\%04x,\%}\)\.{04x),\ and\ footprint"},\39%
+\\{func}[\\{ttt}].\\{cost},\39\\{func}[\\{ttt}].\\{parent}\GG\T{16},\39%
+\\{func}[\\{ttt}].\\{parent}\AND\T{\^ffff});{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm};{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\\{func}[\\{ttt}].\\{footprint}[\|j]){}$\5
+${}\{{}$\1\6
+${}\|s\K\T{32}*\|j;{}$\6
+\&{for} ${}(\|u\K\\{func}[\\{ttt}].\\{footprint}[\|j];{}$ \|u; ${}\|u\MRL{{%
+\GG}{\K}}\T{1},\39\|s\PP){}$\1\6
+\&{if} ${}(\|u\AND\T{1}){}$\1\5
+${}\\{printf}(\.{"\ \%s"},\39\\{name}[\|s]);{}$\2\2\6
+\4${}\}{}$\2\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\N{1}{13}Index.
+\fi
+
+\inx
+\fin
+\con

@@ -1,0 +1,60 @@
+\I\X38:Advance at bottom level\X
+\U14.
+\I\X14:Backtrack through all solutions\X
+\U1.
+\I\X36:Bootstrap the backtrack process\X
+\U14.
+\I\X32:Check for solution and \PB{\&{goto} \\{backup}}\X
+\U14.
+\I\X15:Choose an outer vertex \PB{\|v} of minimum degree \PB{\|d}\X
+\U14.
+\I\X18:Clothe everything on the bare list\X
+\U14.
+\I\X29:Demote III to OBO\X
+\U25.
+\I\X28:Demote IIO to OBB\X
+\U25.
+\I\X27:Demote OII to BBO\X
+\U25.
+\I\X26:Demote OIO to BBB\X
+\U25.
+\I\X31:Demote \PB{\|v} from \PB{\\{inner}} to \PB{\\{outer}}\X
+\U14.
+\I\X30:Downdate data structures to deaccount for choosing edge \PB{\\{cura}[%
+\|l]}\X
+\U14.
+\I\X19:Find the two neighbors, \PB{\|u} and \PB{\|w}, of vertex \PB{\|v}\X
+\U18.
+\I\X3, 4, 8, 10, 11, 35:Global variables\X
+\U1.
+\I\X33:If the two \PB{\\{outer}} vertices aren't adjacent, \PB{\&{goto} %
+\\{backup}}\X
+\U32.
+\I\X9:Prepare the graph for backtracking\X
+\U1.
+\I\X13:Print the results\X
+\U1.
+\I\X39:Print the state line for the bottom level\X
+\U12.
+\I\X2:Process the command line, inputting the graph\X
+\U1.
+\I\X20:Promote BBB to OIO\X
+\U18.
+\I\X21:Promote BBO to OII\X
+\U18.
+\I\X22:Promote OBB to IIO\X
+\U18.
+\I\X23:Promote OBO to III\X
+\U18.
+\I\X16:Promote \PB{\|v} from \PB{\\{outer}} to \PB{\\{inner}}\X
+\U14.
+\I\X37:Remove the arc from \PB{\|u} to \PB{\|v}\X
+\U36.
+\I\X5, 6, 7, 12:Subroutines\X
+\U1.
+\I\X25:Unclothe everything clothed on level \PB{\|l}\X
+\U14.
+\I\X34:Unscramble and print the current solution\X
+\U32.
+\I\X17:Update data structures to account for choosing edge \PB{\\{cura}[\|l]}\X
+\U14.

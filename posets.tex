@@ -1,0 +1,265 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. Sequence M1805, posets with linear order $1\ldots n$.
+Same as upper triangular $n\times n$ Boolean matrices $B$
+such that $I\subseteq B^2\subseteq B$.
+
+I'm in kind of a hurry tonight, so please excuse terseness.
+This prog was developed from {\mc POSET0}, which does the cases
+up to $n=9$ in a few seconds, but with much calculation repeated
+unnecessarily. Therefore I reformulated the method using
+dynamic programming.
+
+We're given a list of pairs $(A,w)$ where $A$ is an $n\times n$
+Boolean matrix and $w$ is a positive weight.
+The problem is to compute the sum of $w$ times the number of
+upper triangular $B$ such that
+$I\subseteq B^2\subseteq B\subseteq \overline A$.
+The solution is to go through that list and generate all first rows
+of each $A$, creating a new list with $n$ decreased by 1.
+
+An $n\times n$ upper triangular Boolean matrix is represented in $n\choose2$
+bits, because we don't care about the diagonal. We want to be able
+to go up to $n=12$ at least, on my 32-bit computer, so this program
+is set up to handle multiple precision. It operates in two phases:
+Double precision for matrices at first, then single precision when $n$ has been
+reduced. But in the latter case we need double precision for the weight $w$.
+
+\Y\B\4\D$\|n$ \5
+\T{12}\par
+\B\4\D$\\{memsize}$ \5
+\T{36000000}\C{ should be a multiple of 12 }\par
+\B\4\D$\\{thresh}$ \5
+$(\T{1}\LL\T{7}{}$)\C{ boundary between phases; maximum is \PB{$\T{1}\LL\T{7}$}
+}\par
+\B\4\D$\\{hashsize}$ \5
+$(\T{1}\LL\T{21}{}$)\C{ should be a power of 2 }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{"gb\_flip.h"}\6
+\&{typedef} \&{unsigned} \&{int} \&{uint};\6
+\&{uint} \\{mem}[\\{memsize}];\C{ memory pool }\6
+\&{int} ${}{*}\\{hash}[\T{1}\LL\T{21}]{}$;\C{ heads of hash lists or direct
+data pointers }\6
+\&{short} \\{uni}[\T{4}][\T{256}];\C{ random bits for universal hashing }\6
+\&{uint} ${}{*}\\{top},{}$ ${}{*}\\{start},{}$ ${}{*}\\{ostart}{}$;\C{ key
+places in \PB{\\{mem}} }\6
+\&{int} ${}\\{offset}[\T{1}\LL(\|n-\T{1})]{}$;\C{ table showing how bits are
+mapped }\6
+\&{int} \|t${},{}$ \|x${},{}$ \|y${},{}$ \|z${},{}$ \\{mask}${},{}$ \\{hmask};\6
+\&{int} \\{count}${},{}$ \\{curn};\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|l${},{}$ \\{curbits}${},{}$ %
+\\{curaux};\6
+\&{uint} ${}{*}\|p;{}$\7
+\X2:Initialize\X;\6
+\X5:Do the first phase\X;\6
+\X7:Do the second phase\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}First we initialize the \PB{\\{uni}} table, for hashing.
+
+\Y\B\4\X2:Initialize\X${}\E{}$\6
+\\{gb\_init\_rand}(\T{0});\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{4};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\T{256};{}$ ${}\|k\PP){}$\1\5
+${}\\{uni}[\|j][\|k]\K\\{gb\_next\_rand}(\,){}$;\2\2\par
+\A4.
+\U1.\fi
+
+\M{3}If \PB{\\{thresh}} is \PB{$\T{1}\LL\|k$}, the \PB{\\{bits}} field will
+contain rows having
+\PB{\|k}~or fewer bits, and the \PB{\\{aux}} field will contain the longer
+rows.
+
+\fi
+
+\M{4}\B\X2:Initialize\X${}\mathrel+\E{}$\6
+\&{for} ${}(\|j\K\T{0},\39\|k\K\T{1},\39\|l\K\T{2};{}$ ${}\|l\Z\\{thresh};{}$
+${}\|k\PP,\39\|l\MRL{{\LL}{\K}}\T{1}){}$\1\5
+${}\\{offset}[\|l-\T{1}]\K\|j,\39\|j\MRL{+{\K}}\|k;{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|l<\T{1}\LL\|n;{}$ ${}\|k\PP,\39\|l\MRL{{\LL}{%
+\K}}\T{1}){}$\1\5
+${}\\{offset}[\|l-\T{1}]\K\|j,\39\|j\MRL{+{\K}}\|k{}$;\2\par
+\fi
+
+\M{5}Data is kept sequentially in \PB{\\{mem}}, beginning at \PB{\\{start}};
+the first
+available location is \PB{\\{top}}. During the first phase the data appears
+in four-word packets, because we want link fields for hashing.
+
+\Y\B\4\D$\\{wt}(\|p)$ \5
+${*}{}$\|p\C{ first word of packet }\par
+\B\4\D$\\{aux}(\|p)$ \5
+${*}(\|p+\T{1}{}$)\C{ second word of packet }\par
+\B\4\D$\\{bits}(\|p)$ \5
+${*}(\|p+\T{2}{}$)\C{ third word of packet }\par
+\B\4\D$\\{link}(\|p)$ \5
+${*}(\|p+\T{3}{}$)\C{ fourth word of packet (phase one only) }\par
+\Y\B\4\X5:Do the first phase\X${}\E{}$\6
+$\\{start}\K{\AND}\\{mem}[\T{0}];{}$\6
+${}\\{wt}(\\{start})\K\T{1},\39\\{aux}(\\{start})\K\\{bits}(\\{start})\K\T{0},%
+\39\\{link}(\\{start})\K{}$(\&{uint}) ${}\NULL;{}$\6
+${}\\{top}\K\\{start}+\T{4};{}$\6
+\&{for} ${}(\|l\K(\T{1}\LL(\|n-\T{1}))-\T{1},\39\\{curn}\K\|n;{}$ ${}\|l>%
+\\{thresh};{}$ ${}\|l\MRL{{\GG}{\K}}\T{1},\39\\{curn}\MM){}$\5
+${}\{{}$\1\6
+${}\\{hmask}\K(\T{1}\LL\\{offset}[\|l])-\T{1};{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{hashsize};{}$ ${}\|j\PP){}$\1\5
+${}\\{hash}[\|j]\K\NULL;{}$\2\6
+${}\\{count}\K\T{0};{}$\6
+\&{for} ${}(\|p\K\\{start},\39\\{start}\K\\{top};{}$ ${}\|p\I\\{start};{}$ ${}%
+\|p\K(\|p\E{\AND}\\{mem}[\\{memsize}-\T{4}]\?{\AND}\\{mem}[\T{0}]:\|p+%
+\T{4})){}$\5
+${}\{{}$\1\6
+${}\\{count}\PP;{}$\6
+${}\\{mask}\K(\\{aux}(\|p)\GG\\{offset}[\|l])\AND\|l;{}$\6
+\&{for} ${}(\|x\K\T{0};{}$ ${}\|x\Z\|l;{}$ ${}\|x\K((\|x\OR\\{mask})+\T{1})\AND%
+\CM\\{mask}){}$\5
+${}\{{}$\1\6
+${}\\{curbits}\K\\{bits}(\|p);{}$\6
+${}\\{curaux}\K\\{aux}(\|p);{}$\6
+\&{for} ${}(\|y\K\|x\AND(\|x+\T{1}),\39\|t\K\|x\XOR{-}\T{1};{}$ \|y; ${}\|y%
+\MRL{-{\K}}\|z){}$\5
+${}\{{}$\1\6
+${}\|z\K\|y\AND{-}\|y;{}$\6
+\&{if} ${}(\|z\Z\\{thresh}){}$\1\5
+${}\\{curbits}\MRL{{\OR}{\K}}(\|t\AND(\|z-\T{1}))\LL\\{offset}[\|z-\T{1}];{}$\2%
+\6
+\&{else}\1\5
+${}\\{curaux}\MRL{{\OR}{\K}}(\|t\AND(\|z-\T{1}))\LL\\{offset}[\|z-\T{1}];{}$\2\6
+\4${}\}{}$\2\6
+\X6:Put \PB{\\{curbits}} and \PB{\\{curaux}} into the new list with weight \PB{%
+\|w}\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"\ \%d\ item\%s\ on\ list\ }\)\.{\%d;\\n"},\39\\{count},\39%
+\\{count}>\T{1}\?\.{"s"}:\.{""},\39\\{curn});{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{6}\B\X6:Put \PB{\\{curbits}} and \PB{\\{curaux}} into the new list with
+weight \PB{\|w}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \|h;\6
+\&{register} \&{uint} ${}{*}\|q;{}$\7
+${}\\{curaux}\MRL{\AND{\K}}\\{hmask};{}$\6
+${}\|h\K\\{uni}[\T{0}][\\{curbits}\AND\T{\^ff}]+\\{uni}[\T{1}][(\\{curbits}\GG%
+\T{8})\AND\T{\^ff}]+\\{uni}[\T{2}][(\\{curbits}\GG\T{16})\AND\T{\^ff}]+\\{uni}[%
+\T{3}][\\{curbits}\GG\T{24}];{}$\6
+${}\|h\MRL{+{\K}}\\{uni}[\T{0}][\\{curaux}\AND\T{\^ff}]+\\{uni}[\T{1}][(%
+\\{curaux}\GG\T{8})\AND\T{\^ff}]+\\{uni}[\T{2}][(\\{curaux}\GG\T{16})\AND\T{%
+\^ff}]+\\{uni}[\T{3}][\\{curaux}\GG\T{24}];{}$\6
+${}\|h\MRL{\AND{\K}}\\{hashsize}-\T{1};{}$\6
+\&{for} ${}(\|q\K\\{hash}[\|h];{}$ \|q; ${}\|q\K{}$(\&{uint} ${}{*}){}$ %
+\\{link}(\|q))\1\6
+\&{if} ${}(\\{bits}(\|q)\E\\{curbits}\W\\{aux}(\|q)\E\\{curaux}){}$\1\5
+\&{goto} \\{found};\2\2\6
+${}\|q\K\\{top};{}$\6
+\&{if} ${}(\|q\E\|p){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ I\ need\ more\ }\)\.{memory!\\n"});{}$%
+\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+${}\\{bits}(\|q)\K\\{curbits},\39\\{aux}(\|q)\K\\{curaux},\39\\{wt}(\|q)\K%
+\T{0};{}$\6
+${}\\{link}(\|q)\K{}$(\&{uint}) \\{hash}[\|h]${},\39\\{hash}[\|h]\K\|q;{}$\6
+${}\\{top}\K\|q+\T{4};{}$\6
+\&{if} ${}(\\{top}\E{\AND}\\{mem}[\\{memsize}]){}$\1\5
+${}\\{top}\K{\AND}\\{mem}[\T{0}];{}$\2\6
+\4\\{found}:\5
+${}\\{wt}(\|q)\MRL{+{\K}}\\{wt}(\|p);{}$\6
+\4${}\}{}$\2\par
+\U5.\fi
+
+\M{7}In the second phase we use the \PB{\\{hash}} table as a direct pointer to
+the data.
+
+\Y\B\4\X7:Do the second phase\X${}\E{}$\6
+\X9:Repack the data into shorter packets\X;\6
+\&{for} ( ; \|l; ${}\|l\MRL{{\GG}{\K}}\T{1},\39\\{curn}\MM){}$\5
+${}\{{}$\1\6
+${}\\{hmask}\K(\T{1}\LL\\{offset}[\|l])-\T{1};{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j\Z\\{hmask};{}$ ${}\|j\PP){}$\1\5
+${}\\{hash}[\|j]\K\NULL;{}$\2\6
+${}\\{count}\K\T{0};{}$\6
+\&{for} ${}(\|p\K\\{start},\39\\{start}\K\\{top};{}$ ${}\|p\I\\{start};{}$ ${}%
+\|p\K(\|p\E{\AND}\\{mem}[\\{memsize}-\T{3}]\?{\AND}\\{mem}[\T{0}]:\|p+%
+\T{3})){}$\5
+${}\{{}$\1\6
+${}\\{count}\PP;{}$\6
+${}\\{mask}\K(\\{bits}(\|p)\GG\\{offset}[\|l])\AND\|l;{}$\6
+\&{for} ${}(\|x\K\T{0};{}$ ${}\|x\Z\|l;{}$ ${}\|x\K((\|x\OR\\{mask})+\T{1})\AND%
+\CM\\{mask}){}$\5
+${}\{{}$\1\6
+${}\\{curbits}\K\\{bits}(\|p);{}$\6
+\&{for} ${}(\|y\K\|x\AND(\|x+\T{1}),\39\|t\K\|x\XOR{-}\T{1};{}$ \|y; ${}\|y%
+\MRL{-{\K}}\|z){}$\5
+${}\{{}$\1\6
+${}\|z\K\|y\AND{-}\|y;{}$\6
+${}\\{curbits}\MRL{{\OR}{\K}}(\|t\AND(\|z-\T{1}))\LL\\{offset}[\|z-\T{1}];{}$\6
+\4${}\}{}$\2\6
+\X8:Put \PB{\\{curbits}} into the new list with weight \PB{\|w}\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"\ \%d\ items\ on\ list\ \%}\)\.{d;\\n"},\39\\{count},\39%
+\\{curn});{}$\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"...and\ the\ solution}\)\.{\ for\ \%d\ is\ \%d\%09d.\\n}\)%
+\.{"},\39\|n,\39\\{aux}(\\{start}),\39\\{wt}(\\{start})){}$;\par
+\U1.\fi
+
+\M{8}\B\X8:Put \PB{\\{curbits}} into the new list with weight \PB{\|w}\X${}%
+\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{uint} ${}{*}\|q;{}$\7
+${}\|y\K\\{curbits}\AND\\{hmask};{}$\6
+${}\|q\K\\{hash}[\|y];{}$\6
+\&{if} ${}(\R\|q){}$\5
+${}\{{}$\1\6
+${}\|q\K\\{top};{}$\6
+\&{if} ${}(\|q\E\|p){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ I\ need\ more\ }\)\.{memory!\\n"});{}$%
+\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+${}\\{bits}(\|q)\K\\{curbits},\39\\{wt}(\|q)\K\\{aux}(\|q)\K\T{0};{}$\6
+${}\\{hash}[\|y]\K\|q;{}$\6
+${}\\{top}\K\|q+\T{3};{}$\6
+\&{if} ${}(\\{top}\E{\AND}\\{mem}[\\{memsize}]){}$\1\5
+${}\\{top}\K{\AND}\\{mem}[\T{0}];{}$\2\6
+\4${}\}{}$\2\6
+${}\\{wt}(\|q)\MRL{+{\K}}\\{wt}(\|p),\39\\{aux}(\|q)\MRL{+{\K}}\\{aux}(\|p);{}$%
+\6
+\&{if} ${}(\\{wt}(\|q)\G\T{1000000000}){}$\1\5
+${}\\{aux}(\|q)\MRL{+{\K}}\T{1},\39\\{wt}(\|q)\MRL{-{\K}}\T{1000000000};{}$\2\6
+\4${}\}{}$\2\par
+\U7.\fi
+
+\M{9}\B\X9:Repack the data into shorter packets\X${}\E{}$\6
+$\\{ostart}\K\\{top};{}$\6
+${}\|x\K(\\{top}-\\{mem})\MOD\T{3};{}$\6
+\&{if} (\|x)\1\5
+${}\\{top}\MRL{+{\K}}\T{3}-\|x;{}$\2\6
+\&{for} ${}(\|p\K\\{start},\39\\{start}\K\\{top};{}$ ${}\|p\I\\{ostart};{}$ ${}%
+\|p\K(\|p\E{\AND}\\{mem}[\\{memsize}-\T{4}]\?{\AND}\\{mem}[\T{0}]:\|p+%
+\T{4})){}$\5
+${}\{{}$\1\6
+${}\\{wt}(\\{top})\K\\{wt}(\|p),\39\\{aux}(\\{top})\K\T{0},\39\\{bits}(\\{top})%
+\K\\{bits}(\|p);{}$\6
+${}\\{top}\MRL{+{\K}}\T{3};{}$\6
+\&{if} ${}(\\{top}\E{\AND}\\{mem}[\\{memsize}]){}$\1\5
+${}\\{top}\K{\AND}\\{mem}[\T{0}];{}$\2\6
+\4${}\}{}$\2\par
+\U7.\fi
+
+\N{1}{10}Index.
+\fi
+
+\inx
+\fin
+\con

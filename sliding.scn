@@ -1,0 +1,70 @@
+\I\X41:Apologize for lack of memory and go back to square one with reduced
+problem\X
+\U39.
+\I\X7:Compute the offsets for a piece\X
+\U15.
+\I\X47:Construct the digraph for \PB{$\\{del}\K\T{1}$}\X
+\U57.
+\I\X48:Construct the digraph for \PB{$\\{del}\K\\{colsp}$}\X
+\U57.
+\I\X46:Copy and link the \PB{\\{board}}\X
+\U57.
+\I\X38:Generate all positions at distance \PB{\|d}\X
+\U34.
+\I\X6, 8, 11, 18, 21, 25, 27, 49, 53:Global variables\X
+\U4.
+\I\X44:Handle the tricky case and \PB{\&{return}}\X
+\U28.
+\I\X42:Hash in every move from \PB{\\{board}}\X
+\U38.
+\I\X24, 30:Initialize\X
+\U4.
+\I\X31:Insert \PB{\\{config}} into the \PB{\\{pos}} table\X
+\U28.
+\I\X40:Print all of the key moves that survive in \PB{\\{pos}}; \PB{\\{exit}}
+if done\X
+\U39.
+\I\X39:Print the solution\X
+\U4.
+\I\X54:Process an ideal\X
+\U50.
+\I\X5:Process the command line\X
+\U4.
+\I\X52:Put all vertices that lead from \PB{\\{perm}[\|j]} into positions near
+$j$\X
+\U50.
+\I\X51:Put all vertices that lead to \PB{\\{perm}[\|j]} into positions near $j$%
+\X
+\U50.
+\I\X37:Put the starting configuration into \PB{\\{pos}}\X
+\U34.
+\I\X14:Read the board size\X
+\U13.
+\I\X15:Read the piece specs\X
+\U13.
+\I\X13:Read the puzzle specification; abort if it isn't right\X
+\U4.
+\I\X16:Read the starting configuration into \PB{\\{board}}\X
+\U13.
+\I\X17:Read the stopping configuration into \PB{\\{aboard}}\X
+\U13.
+\I\X36:Remember the starting configuration\X
+\U34.
+\I\X35:Remember the stopping configuration\X
+\U34.
+\I\X34:Solve the puzzle\X
+\U4.
+\I\X10, 12, 20, 22, 23, 26, 28, 43, 50, 55:Subroutines\X
+\U4.
+\I\X29:Test if \PB{\\{config}} equals the goal\X
+\U28.
+\I\X57:Try all supermoves\X
+\U42.
+\I\X45:Unmove the piece and recurse\X
+\U43.
+\I\X56:Unmove the superpiece and recurse\X
+\U55.
+\I\X32:Update \PB{\\{configs}}\X
+\U31.
+\I\X33:Update \PB{\\{curpos}}\X
+\U31.

@@ -1,0 +1,66 @@
+\I\X14:Advance to the next offset, or \PB{\&{break}} if it needs too many zeros%
+\X
+\U2.
+\I\X10:Build the table of constants\X
+\U2.
+\I\X34:Check for unusual solutions and \PB{\&{goto} \\{b5}}\X
+\U20.
+\I\X15:Choose \PB{\\{pos}}\X
+\U18.
+\I\X18:Create detailed specifications from the pattern\X
+\U2.
+\I\X27:Delete \PB{\\{choice}[\|k][\T{0}]} from all constraints $\ne c_k$\X
+\U24.
+\I\X29:Downdate the data structures\X
+\U20.
+\I\X13:Establish the minimum offsets\X
+\U2.
+\I\X20:Find all solutions for the current offsets and special digit $d$\X
+\U2.
+\I\X11, 17, 21, 40:Global variables\X
+\U2.
+\I\X30:If all constraints are totally satisfied, print a solution\X
+\U20.
+\I\X31:If constraint $c_k$ isn't totally satisfied, \PB{\&{goto} \\{nope}}\X
+\U30.
+\I\X32:If constraint $c_m$ isn't totally satisfied, \PB{\&{goto} \\{nope}}\X
+\U30.
+\I\X25:If constraint \PB{\|k} can't be satisfied when $a_l=x$, \PB{\&{goto} %
+\\{b4}}\X
+\U24.
+\I\X24:If some constraint can't be satisfied when $a_l=x$, \PB{\&{goto} \\{b4}}%
+\X
+\U20.
+\I\X26:If \PB{\|j} remains satisfactory when $a_l=x$, \PB{\&{goto} \\{jok}}\X
+\U25.
+\I\X22:Initialize the data structures\X
+\U20.
+\I\X5:Input row \PB{\|n} of the shape\X
+\U4.
+\I\X4:Input the pattern\X
+\U2.
+\I\X33:Print a solution\X
+\U30.
+\I\X23:Print the \PB{\\{csize}} status information\X
+\U20.
+\I\X3:Process the command line\X
+\U2.
+\I\X39:Remove items from \PB{\\{choice}[\|k]}\X
+\U35.
+\I\X36:Run through all $m$-tuples $g_0\ldots g_{m-1}$\X
+\U35.
+\I\X16:Set up the constraints\X
+\U18.
+\I\X37:Set \PB{\\{acc}[\|k]} to the least significant digits of the $k$th
+partial sum\X
+\U36.
+\I\X7, 8, 9:Subroutines\X
+\U2.
+\I\X38:Test compliance with $c_m$ and \PB{\&{goto} \\{bb5}}\X
+\U36.
+\I\X35:Test the overall product constraint $c_m$\X
+\U24.
+\I\X6:Typedefs\X
+\U2.
+\I\X28:Update the data structures\X
+\U20.

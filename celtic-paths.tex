@@ -1,0 +1,612 @@
+\input cwebmac
+\input epsf
+\font\celtica=celtica13 \font\celticb=celticb13
+\datethis
+
+\N{1}{1}Intro. This quick-and-dirty program prepares \TeX\ files for use with
+the weird fonts {\mc CELTICA} and {\mc CELTICB}. You can use it to print
+amazing pictures that look like stylized Celtic knots. Sometimes the
+resulting pictures look very elegant.
+(Plug: You can see the author's most elegant example, so far,
+in Chapter 46 of the book {\sl Selected
+Papers on Fun and Games}, published by CSLI in 2010.)
+
+The ``knots'' we print consist of one or more closed loops in which
+no three points are concurrent. Therefore we can draw them in such a way
+that the paths go alternately over-under-over-under, etc., whenever
+they cross. The loops consist of segments that cut a square grid
+either at corner points or at midpoints between adjacent corners.
+So we can think of the total picture as composed of square tiles, where
+each tile has eight possible entry or exit points, numbered thus:
+$$\centerline{\epsfbox{celtic-picture.1}}$$
+
+There are three kinds of tiles, each representable as a sequence
+of four characters:
+
+\smallskip\item{$\bullet$} A blank tile, represented by four blanks.
+\smallskip\item{$\bullet$} A tile with a single segment from $i$ to~$j$,
+where $i<j$, represented by $ij$ and two blanks.
+\smallskip\item{$\bullet$} A tile with segments from $i$ to~$j$ and
+from $i'$ to~$j'$, where $i<j$ and $i'<j'$ and $i<i'$, represented by $iji'j'$.
+
+\smallskip\noindent The segments from $i$ to $j$ are also subject
+to several additional restrictions:
+\smallskip\item{$\bullet$} $i$ and $j$ cannot be adjacent on the periphery.
+\smallskip\item{$\bullet$} $i$ and $j$ cannot both be even.
+\smallskip\noindent Thus, for example, if $i=0$ the only possibilities
+for $j$ are 3 and~5. But if $i=1$ we can have $j=3$, 4, 5, 6,~or~7.
+It follows that 14 different one-segment tiles are legal,
+and there are 47 with two segments.
+
+The input to this program, for an $m\times n$ picture,
+consists of $m$ lines of $5n$ characters, where each line contains
+$n$ tile specifications separated by blanks and followed by a period.
+For example, the simple $3\times4$ input
+$$\def\\.{}
+\vbox{\tt\obeyspaces\halign{\\#\cr
+.35   57   35   57  .\cr
+.13   1537 1537 17  .\cr
+.     13   17       .\cr}}$$
+yields the nice little picture `$\vcenter{
+\begingroup\celtica
+\catcode`\?=\active \def?#1?{\hskip#1em}
+\catcode`\-=\active \def-#1#2#3{\celtica\char'#1#2#3}
+\catcode`\+=\active \def+#1#2#3{\celticb\char'#1#2#3}
+\offinterlineskip\baselineskip=1em
+\let\par=\cr \obeylines \halign{#\hfil
+-067-077-067-077
+-051+005-012+061
+?1?-051+061
+}\endgroup
+}$'.
+
+The rules are illustrated more fully by the following $6\times7$ example,
+which was used in the author's initial tests:
+$$\def\\.{}
+\vbox{\tt\obeyspaces\halign{\\#\cr
+.                    35   57       .\cr
+.     35   57   35   1537 1357 57  .\cr
+.     1435 1657 15   1435 1637 17  .\cr
+.35   1725 0514 16   1325 0537 57  .\cr
+.13   1735 1725 03   17   13   17  .\cr
+.     13   17                      .\cr}}$$
+From that input (on \PB{\\{stdin}}), the output of this program (on \PB{%
+\\{stdout}})
+is a \TeX\ file that prints a ``poodle'':
+$$\advance\abovedisplayskip-8pt\vcenter{
+\begingroup\celtica
+\catcode`\?=\active \def?#1?{\hskip#1em}
+\catcode`\-=\active \def-#1#2#3{\celtica\char'#1#2#3}
+\catcode`\+=\active \def+#1#2#3{\celticb\char'#1#2#3}
+\offinterlineskip\baselineskip=1em
+\let\par=\cr \obeylines \halign{#\hfil
+?4?-067-077
+?1?-067-077-067-002+102-077
+?1?-341+326-055+340-226+061
+-067-137+153-057+315-233-077
+-051+107-137+045+061-051+061
+?1?-051+061
+}\endgroup
+}$$
+
+\fi
+
+\M{2}Whenever a tile contains a segment through some boundary point,
+the neighboring tiles must also contain a segment through that common point.
+For example, tile `\.{35}' can be used only if its neighbor to the right
+uses its point~\.7, and only if its neighbor below uses its point~\.1.
+More significantly, if a tile uses a corner point, it has three neighbors
+that touch the same corner, and all three of them must use that corner.
+Paths therefore always make an `X' crossing, at right angles, whenever they
+pass through a corner of the grid.
+
+All regions of the final illustration are filled in with black, if they
+don't lie completely outside of all paths.
+
+\fi
+
+\M{3}OK, let's get going. This program ought to be fun, once we get through
+the tedious details of preparing font tables and of
+reading/checking the input.
+
+\Y\B\4\D$\\{maxm}$ \5
+\T{100}\C{ at most this many rows; mustn't exceed 4096 }\par
+\B\4\D$\\{maxn}$ \5
+\T{100}\C{ at most this many columns; mustn't exceed 4096 }\par
+\B\4\D$\\{bufsize}$ \5
+$\T{5}*\\{maxn}+{}$\T{2}\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\&{char} \\{buf}[\\{bufsize}]${},{}$ \\{entry}[\T{8}];\6
+\&{int} \|a[\\{maxm}][\\{maxn}];\C{ the input }\6
+\&{int} \|b[\\{maxm}][\\{maxn}];\C{ endpoints touched in each tile }\6
+\&{int} \\{codetable}[\T{\^7778}];\C{ mapping from tiles to font positions }\6
+\&{char} \\{bw}[\\{maxm}][\\{maxn}][\T{8}];\C{ black/white coloring of regions
+}\6
+\&{int} \\{inout}[\\{maxm}][\\{maxn}][\T{8}];\C{ inside/outside coloring of
+regions }\7
+\X11:Declare the magic tables\X;\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \\{ii}${},{}$ %
+\\{jj}${},{}$ \\{kk}${},{}$ \|m${},{}$ \|n${},{}$ \|s${},{}$ \|t;\7
+\X4:Initialize \PB{\\{codetable}}\X;\6
+\X5:Read the input into \PB{\|a}, and check it for consistency\X;\6
+\X8:Do the black/white coloring\X;\6
+\X9:Do the inside/outside coloring\X;\6
+\X13:Produce the output\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{4}(Begin tedium.)
+Fonts {\mc CELTICA} and {\mc CELTICB} have a peculiar encoding scheme,
+not terribly systematic, governed by a mapping from tile specs (in
+hexadecimal) to character positions (in octal).
+
+\Y\B\4\X4:Initialize \PB{\\{codetable}}\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{1};{}$ ${}\|i<\T{\^7778};{}$ ${}\|i\PP){}$\1\5
+${}\\{codetable}[\|i]\K{-}\T{1};{}$\2\6
+${}\\{codetable}[\T{\^1537}]\K\T{0}{}$;\5
+${}\\{codetable}[\T{0}]\K\T{\~40};{}$\6
+${}\\{codetable}[\T{\^0300}]\K\T{\~44},\39\\{codetable}[\T{\^0500}]\K\T{\~46},%
+\39\\{codetable}[\T{\^1300}]\K\T{\~50},\39\\{codetable}[\T{\^1400}]\K\T{\~52},%
+\39\\{codetable}[\T{\^1500}]\K\T{\~54},\39\\{codetable}[\T{\^1600}]\K\T{\~56},%
+\39\\{codetable}[\T{\^1700}]\K\T{\~60},\39\\{codetable}[\T{\^2500}]\K\T{\~62},%
+\39\\{codetable}[\T{\^2700}]\K\T{\~64},\39\\{codetable}[\T{\^3500}]\K\T{\~66},%
+\39\\{codetable}[\T{\^3600}]\K\T{\~70},\39\\{codetable}[\T{\^3700}]\K\T{\~72},%
+\39\\{codetable}[\T{\^4700}]\K\T{\~74},\39\\{codetable}[\T{\^5700}]\K\T{\~76},%
+\39\\{codetable}[\T{\^1357}]\K\T{\~100},\39\\{codetable}[\T{\^1735}]\K\T{%
+\~104},\39\\{codetable}[\T{\^0513}]\K\T{\~110},\39\\{codetable}[\T{\^2735}]\K%
+\T{\~114},\39\\{codetable}[\T{\^1457}]\K\T{\~120},\39\\{codetable}[\T{\^1736}]%
+\K\T{\~124},\39\\{codetable}[\T{\^0357}]\K\T{\~130},\39\\{codetable}[\T{%
+\^1725}]\K\T{\~134},\39\\{codetable}[\T{\^1347}]\K\T{\~140},\39\\{codetable}[%
+\T{\^1635}]\K\T{\~144},\39\\{codetable}[\T{\^0514}]\K\T{\~150},\39%
+\\{codetable}[\T{\^2736}]\K\T{\~154},\39\\{codetable}[\T{\^0347}]\K\T{\~160},%
+\39\\{codetable}[\T{\^1625}]\K\T{\~164},\39\\{codetable}[\T{\^0314}]\K\T{%
+\~170},\39\\{codetable}[\T{\^2536}]\K\T{\~174},\39\\{codetable}[\T{\^0547}]\K%
+\T{\~200},\39\\{codetable}[\T{\^1627}]\K\T{\~204},\39\\{codetable}[\T{\^0315}]%
+\K\T{\~210},\39\\{codetable}[\T{\^2537}]\K\T{\~214},\39\\{codetable}[\T{%
+\^1547}]\K\T{\~220},\39\\{codetable}[\T{\^1637}]\K\T{\~224},\39\\{codetable}[%
+\T{\^0537}]\K\T{\~230},\39\\{codetable}[\T{\^1527}]\K\T{\~234},\39%
+\\{codetable}[\T{\^1437}]\K\T{\~240},\39\\{codetable}[\T{\^1536}]\K\T{\~244},%
+\39\\{codetable}[\T{\^0316}]\K\T{\~250},\39\\{codetable}[\T{\^0325}]\K\T{%
+\~254},\39\\{codetable}[\T{\^2547}]\K\T{\~260},\39\\{codetable}[\T{\^1647}]\K%
+\T{\~264},\39\\{codetable}[\T{\^0527}]\K\T{\~270},\39\\{codetable}[\T{\^1425}]%
+\K\T{\~274},\39\\{codetable}[\T{\^1436}]\K\T{\~300},\39\\{codetable}[\T{%
+\^0536}]\K\T{\~304},\39\\{codetable}[\T{\^0317}]\K\T{\~310},\39\\{codetable}[%
+\T{\^1325}]\K\T{\~314},\39\\{codetable}[\T{\^3547}]\K\T{\~320},\39%
+\\{codetable}[\T{\^1657}]\K\T{\~324},\39\\{codetable}[\T{\^0517}]\K\T{\~330},%
+\39\\{codetable}[\T{\^1327}]\K\T{\~334},\39\\{codetable}[\T{\^1435}]\K\T{%
+\~340},\39\\{codetable}[\T{\^3657}]\K\T{\~344},\39\\{codetable}[\T{\^0516}]\K%
+\T{\~350},\39\\{codetable}[\T{\^0327}]\K\T{\~354},\39\\{codetable}[\T{\^1425}]%
+\K\T{\~360},\39\\{codetable}[\T{\^3647}]\K\T{\~364}{}$;\par
+\U3.\fi
+
+\M{5}(More tedium. I do try to check carefully for errors, because the task
+of preparing the input is even more tedious than the task of writing
+this code.)
+
+The rows are numbered from 0 to \PB{$\|m-\T{1}$}, and the columns from 0 to %
+\PB{$\|n-\T{1}$}.
+
+\Y\B\4\X5:Read the input into \PB{\|a}, and check it for consistency\X${}\E{}$\6
+\&{for} ${}(\|m\K\T{0};{}$  ; ${}\|m\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{fgets}(\\{buf},\39\\{bufsize},\39\\{stdin})){}$\1\5
+\&{break};\2\6
+\&{for} ${}(\|j\K\T{0};{}$  ; ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|k\K\T{5}*\|j;{}$\6
+\&{if} ${}(\|j\E\|n\W\|m>\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Missing\ `.'\ at\ the\ }\)\.{end\ of\ row\ %
+\%d!\\n"},\39\|m);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\X6:Parse the entry for row \PB{\|m} and column \PB{\|j}\X;\6
+\&{if} ${}(\\{buf}[\|k+\T{4}]\E\.{'.'}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|m\E\T{0}){}$\1\5
+${}\|n\K\|j+\T{1};{}$\2\6
+\&{else} \&{if} ${}(\|n\I\|j+\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Premature\ `.'\ in\ ro}\)\.{w\ \%d!\\n"},\39%
+\|m);{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+\&{break};\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\\{buf}[\|k+\T{4}]\I\.{'\ '}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Tile\ spec\ in\ row\ \%d}\)\.{,\ col\ \%d\ not%
+\ followe}\)\.{d\ by\ blank!\\n"},\39\|m,\39\|j);{}$\6
+${}\\{exit}({-}\T{5});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{continue};\6
+\4\\{badentry}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"Bad\ entry\ (\%s)\ in\ r}\)\.{ow\ \%d\ and\
+column\ \%d!}\)\.{\\n"},\39\\{entry},\39\|m,\39\|j);{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|m\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"There\ was\ no\ input!}\)\.{\\n"});{}$\6
+${}\\{exit}({-}\T{4});{}$\6
+\4${}\}{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"OK,\ I've\ successful}\)\.{ly\ read\ \%d\ rows%
+\ and\ }\)\.{\%d\ columns.\\n"},\39\|m,\39\|n);{}$\6
+\X7:Check for consistency\X;\par
+\U3.\fi
+
+\M{6}\B\X6:Parse the entry for row \PB{\|m} and column \PB{\|j}\X${}\E{}$\6
+\&{for} ${}(\\{jj}\K\T{0};{}$ ${}\\{jj}<\T{4};{}$ ${}\\{jj}\PP){}$\1\5
+${}\\{entry}[\\{jj}]\K\\{buf}[\T{5}*\|j+\\{jj}];{}$\2\6
+\&{if} ${}(\\{entry}[\T{0}]\E\.{'\ '}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{entry}[\T{1}]\I\.{'\ '}\V\\{entry}[\T{2}]\I\.{'\ '}\V\\{entry}[%
+\T{3}]\I\.{'\ '}){}$\1\5
+\&{goto} \\{badentry};\2\6
+\&{else}\1\5
+${}\|a[\|m][\|j]\K\T{0};{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\\{entry}[\T{0}]<\.{'0'}\V\\{entry}[\T{0}]>\.{'7'}){}$\1\5
+\&{goto} \\{badentry};\2\6
+\&{if} ${}(\\{entry}[\T{1}]<\.{'0'}\V\\{entry}[\T{1}]>\.{'7'}){}$\1\5
+\&{goto} \\{badentry};\2\6
+${}\|a[\|m][\|j]\K((\\{entry}[\T{0}]-\.{'0'})\LL\T{12})+((\\{entry}[\T{1}]-%
+\.{'0'})\LL\T{8});{}$\6
+${}\|b[\|m][\|j]\K(\T{1}\LL(\\{entry}[\T{0}]-\.{'0'}))+(\T{1}\LL(\\{entry}[%
+\T{1}]-\.{'0'}));{}$\6
+\&{if} ${}(\\{entry}[\T{2}]\E\.{'\ '}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{entry}[\T{3}]\I\.{'\ '}){}$\1\5
+\&{goto} \\{badentry};\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\\{entry}[\T{2}]<\.{'0'}\V\\{entry}[\T{2}]>\.{'7'}){}$\1\5
+\&{goto} \\{badentry};\2\6
+\&{if} ${}(\\{entry}[\T{3}]<\.{'0'}\V\\{entry}[\T{3}]>\.{'7'}){}$\1\5
+\&{goto} \\{badentry};\2\6
+${}\|a[\|m][\|j]\MRL{+{\K}}((\\{entry}[\T{2}]-\.{'0'})\LL\T{4})+(\\{entry}[%
+\T{3}]-\.{'0'});{}$\6
+${}\|b[\|m][\|j]\MRL{+{\K}}(\T{1}\LL(\\{entry}[\T{2}]-\.{'0'}))+(\T{1}\LL(%
+\\{entry}[\T{3}]-\.{'0'}));{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{codetable}[\|a[\|m][\|j]]<\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ \%s\ isn't\ a\ l}\)\.{egal\ tile\ (row%
+\ \%d,\ c}\)\.{ol\ \%d)!\\n"},\39\\{entry},\39\|m,\39\|j);{}$\6
+${}\\{exit}({-}\T{4});{}$\6
+\4${}\}{}$\2\par
+\U5.\fi
+
+\M{7}\B\D$\\{eqbit}(\|k,\\{kk})$ \5
+$(((\|i\GG\|k)\XOR(\\{ii}\GG\\{kk}))\AND\T{1}{}$)\par
+\Y\B\4\X7:Check for consistency\X${}\E{}$\6
+$\|t\K\T{0};{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j\Z\|m;{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\\{jj}\K\T{0};{}$ ${}\\{jj}<\|n;{}$ ${}\\{jj}\PP){}$\5
+${}\{{}$\1\6
+${}\|i\K(\|j>\T{0}\?\|b[\|j-\T{1}][\\{jj}]:\T{0});{}$\6
+${}\\{ii}\K(\|j<\|m\?\|b[\|j][\\{jj}]:\T{0});{}$\6
+\&{if} ${}(\\{eqbit}(\T{4},\39\T{2})+\\{eqbit}(\T{5},\39\T{1})+\\{eqbit}(\T{6},%
+\39\T{0})){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Inconsistent\ tiles\ }\)\.{\%04x/\%04x\ (row\ %
+\%d,\ c}\)\.{ol\ \%d)!\\n"},\39\|j>\T{0}\?\|a[\|j-\T{1}][\\{jj}]:\T{0},\39\|a[%
+\|j][\\{jj}],\39\|j,\39\\{jj});{}$\6
+${}\|t\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\6
+\&{for} ${}(\\{jj}\K\T{0};{}$ ${}\\{jj}\Z\|n;{}$ ${}\\{jj}\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|m;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|i\K(\\{jj}>\T{0}\?\|b[\|j][\\{jj}-\T{1}]:\T{0});{}$\6
+${}\\{ii}\K(\\{jj}<\|n\?\|b[\|j][\\{jj}]:\T{0});{}$\6
+\&{if} ${}(\\{eqbit}(\T{2},\39\T{0})+\\{eqbit}(\T{3},\39\T{7})+\\{eqbit}(\T{4},%
+\39\T{6})){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Inconsistent\ tiles\ }\)\.{\%04x,\%04x\ (row\ %
+\%d,\ c}\)\.{ol\ \%d)!\\n"},\39\\{jj}>\T{0}\?\|a[\|j][\\{jj}-\T{1}]:\T{0},\39%
+\|a[\|j][\\{jj}],\39\|j,\39\\{jj});{}$\6
+${}\|t\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\6
+\&{if} (\|t)\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ I\ can't\ go\ o}\)\.{n\ (errs=\%d).%
+\\n"},\39\|t);{}$\6
+${}\\{exit}({-}\T{69});{}$\6
+\4${}\}{}$\2\par
+\U5.\fi
+
+\M{8}OK, now the fun begins: We've got decent input, and we want to figure out
+how to typeset it.
+
+The given loops partition the plane into regions, and the key idea is to
+assign ``colors'' to each region of each tile. We use two different
+bicolorings: (1) Regions are either black or white, where the color changes
+at each boundary edge between regions. (2) Regions are either inside or
+outside of the total picture. These two colorings are related by the
+fact that outside regions are always white.
+
+A blank tile has only one region. A tile $ij$ has two. And a tile
+$iji'j'$ has either three or four, depending on whether $ij$ and $i'j'$
+intersect. We unify these cases by considering eight subregions
+along the boundary, namely
+$0\,.\,.\,1$,
+$1\,.\,.\,2$, \dots,
+$7\,.\,.\,0$, some of which are known to be identical.
+
+The black/white coloring is easily done in one pass. (This code is
+in fact overkill.)
+
+\Y\B\4\X8:Do the black/white coloring\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|m;{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\\{bw}[\|i][\|j][\T{0}]\K(\|i\E\T{0}\?\T{0}:\\{bw}[\|i-\T{1}][\|j][%
+\T{5}]);{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\T{8};{}$ ${}\|k\PP){}$\1\5
+${}\\{bw}[\|i][\|j][\|k]\K(\|b[\|i][\|j]\AND(\T{1}\LL\|k)\?\T{1}:\T{0})\XOR%
+\\{bw}[\|i][\|j][\|k-\T{1}];{}$\2\6
+\4${}\}{}$\2\2\par
+\U3.\fi
+
+\M{9}The inside/outside coloring is trickier, because connectivity to the
+outside can twist around, and because three-region tiles behave
+differently from four-region tiles.
+
+The following algorithm is essentially a depth-first search to find
+all subregions that are connected to the upper left corner. A~stack
+is maintained within the data structure. At the end of the process,
+\PB{\\{inout}[\|i][\|j][\|k]} is nonzero if and only if that subregion is
+outside.
+
+\Y\B\4\D$\\{pop}(\|i,\|j,\|k)$ \5
+$\|i\K\|s\GG\T{16},\39\|j\K(\|s\GG\T{4})\AND\T{\^fff},\39\|k\K\|s\AND\T{\^7},%
+\39\|s\K\\{inout}[\|i][\|j]{}$[\|k]\par
+\B\4\D$\\{push}(\\{ii},\\{jj},\\{kk})$ \6
+${}\{{}$\5
+\1\&{if} ${}(\\{inout}[\\{ii}][\\{jj}][(\\{kk})\AND\T{\^7}]\E\T{0}){}$\1\5
+${}\\{inout}[\\{ii}][\\{jj}][(\\{kk})\AND\T{\^7}]\K\|s,\39\|s\K((\\{ii})\LL%
+\T{16})+((\\{jj})\LL\T{4})+((\\{kk})\AND\T{\^7}){}$;\5
+\2${}\}{}$\2\par
+\Y\B\4\X9:Do the inside/outside coloring\X${}\E{}$\6
+$\\{inout}[\T{0}][\T{0}][\T{0}]\K{-}\T{1};{}$\6
+\&{for} ${}(\|s\K\T{0};{}$ ${}\|s\G\T{0};{}$ \,)\5
+${}\{{}$\1\6
+${}\\{pop}(\|i,\39\|j,\39\|k);{}$\6
+\X10:Push all unseen neighbors of subregion \PB{[\|i][\|j][\|k]} onto the stack%
+\X;\6
+\4${}\}{}$\2\par
+\U3.\fi
+
+\M{10}The neighbors of a subregion within a tile are either in an adjacent tile
+or in the same tile.
+
+\Y\B\4\X10:Push all unseen neighbors of subregion \PB{[\|i][\|j][\|k]} onto the
+stack\X${}\E{}$\6
+\&{switch} (\|k)\5
+${}\{{}$\1\6
+\4\&{case} \T{0}:\5
+\&{case} \T{1}:\5
+\&{if} ${}(\|i>\T{0}){}$\1\5
+${}\\{push}(\|i-\T{1},\39\|j,\39\T{5}-\|k){}$;\5
+\2\&{break};\6
+\4\&{case} \T{2}:\5
+\&{case} \T{3}:\5
+\&{if} ${}(\|j<\|n-\T{1}){}$\1\5
+${}\\{push}(\|i,\39\|j+\T{1},\39\T{9}-\|k){}$;\5
+\2\&{break};\6
+\4\&{case} \T{4}:\5
+\&{case} \T{5}:\5
+\&{if} ${}(\|i<\|m-\T{1}){}$\1\5
+${}\\{push}(\|i+\T{1},\39\|j,\39\T{5}-\|k){}$;\5
+\2\&{break};\6
+\4\&{case} \T{6}:\5
+\&{case} \T{7}:\5
+\&{if} ${}(\|j>\T{0}){}$\1\5
+${}\\{push}(\|i,\39\|j-\T{1},\39\T{9}-\|k){}$;\5
+\2\&{break};\6
+\4${}\}{}$\2\6
+\&{if} ${}((\|b[\|i][\|j]\AND(\T{1}\LL\|k))\E\T{0}){}$\1\5
+${}\\{push}(\|i,\39\|j,\39\|k+\T{7}){}$;\C{ move counterclockwise }\2\6
+${}\\{kk}\K(\|k+\T{1})\AND\T{\^7};{}$\6
+\&{if} ${}((\|b[\|i][\|j]\AND(\T{1}\LL\\{kk}))\E\T{0}){}$\1\5
+${}\\{push}(\|i,\39\|j,\39\\{kk}){}$;\C{ move clockwise }\2\6
+\X12:Check neighbors in three-region tiles\X;\par
+\U9.\fi
+
+\M{11}A tile that contains two nonintersecting segments consists of a
+middle region and two others. The middle region needs to be identified
+so that we can ``jump'' from one of its edges to the other.
+
+Three-region tiles are characterized by having \PB{\\{codetable}[\|a[\|i][%
+\|j]]}
+between \PB{\T{\~100}} and \PB{\T{\~164}}, inclusive. When that happens, we can
+pack the
+necessary logic into a magic four-byte table, which contains
+the four endpoints $\{i,j,i',j'\}$ in the correct clockwise
+order for processing.
+
+\Y\B\4\X11:Declare the magic tables\X${}\E{}$\6
+\&{char} \\{magic}[\T{56}]${}\K\{\3{-1}\T{1},\39\T{3},\39\T{5},\39\T{7},\3{-1}%
+\39\T{7},\39\T{1},\39\T{3},\39\T{5},\3{-1}\39\T{1},\39\T{3},\39\T{5},\39\T{0},%
+\3{-1}\39\T{7},\39\T{2},\39\T{3},\39\T{5},\3{-1}\39\T{1},\39\T{4},\39\T{5},\39%
+\T{7},\3{-1}\39\T{7},\39\T{1},\39\T{3},\39\T{6},\3{-1}\39\T{0},\39\T{3},\39%
+\T{5},\39\T{7},\3{-1}\39\T{7},\39\T{1},\39\T{2},\39\T{5},\3{-1}\39\T{1},\39%
+\T{3},\39\T{4},\39\T{7},\3{-1}\39\T{6},\39\T{1},\39\T{3},\39\T{5},\3{-1}\39%
+\T{1},\39\T{4},\39\T{5},\39\T{0},\3{-1}\39\T{7},\39\T{2},\39\T{3},\39\T{6},%
+\3{-1}\39\T{0},\39\T{3},\39\T{4},\39\T{7},\3{-1}\39\T{6},\39\T{1},\39\T{2},\39%
+\T{5}\}{}$;\par
+\A22.
+\U3.\fi
+
+\M{12}\B\X12:Check neighbors in three-region tiles\X${}\E{}$\6
+$\\{kk}\K\\{codetable}[\|a[\|i][\|j]]-\T{\~100};{}$\6
+\&{if} ${}(\\{kk}<\T{\~70}\W\\{kk}\G\T{0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|k\E\\{magic}[\\{kk}+\T{1}]){}$\1\5
+${}\\{push}(\|i,\39\|j,\39\\{magic}[\\{kk}]+\T{7});{}$\2\6
+\&{if} ${}(\|k\E((\\{magic}[\\{kk}]+\T{7})\AND\T{\^7})){}$\1\5
+${}\\{push}(\|i,\39\|j,\39\\{magic}[\\{kk}+\T{1}]);{}$\2\6
+\&{if} ${}(\|k\E\\{magic}[\\{kk}+\T{3}]){}$\1\5
+${}\\{push}(\|i,\39\|j,\39\\{magic}[\\{kk}+\T{2}]+\T{7});{}$\2\6
+\&{if} ${}(\|k\E((\\{magic}[\\{kk}+\T{2}]+\T{7})\AND\T{\^7})){}$\1\5
+${}\\{push}(\|i,\39\|j,\39\\{magic}[\\{kk}+\T{3}]);{}$\2\6
+\4${}\}{}$\2\par
+\U10.\fi
+
+\M{13}And at last, when every subregion has been colored in both of the
+bicolorings, we come to the {\it denouement\/}:
+Typesetting can proceed.
+
+Suppose \PB{\\{codetable}[\|a[\|i][\|j]]} is \PB{\|k}. Then the tile in
+row~$i$, column~$j$
+is typeset in font {\mc CELTICA} or {\mc CELTICB},
+depending on whether
+its subregion 0 is white or black, respectively; that is, depending on whether
+\PB{\\{bw}[\|i][\|j][\T{0}]} is 0 or~1, respectively.
+
+A~blank tile, when \PB{$\|k\K\T{\~40}$}, is typeset only if it's inside.
+(Character \PB{\T{\~40}} is `$\vcenter{\hbox{\celtica\char'040}}$'.)
+
+A two-region tile is typeset from $k$ if both regions are inside,
+from $k+1$ if one region is outside. (For example, character
+\PB{\T{\~44}} is `$\vcenter{\hbox{\celtica\char'044}}$'; character
+\PB{\T{\~45}} is `$\vcenter{\hbox{\celtica\char'045}}$' in {\mc CELTICA} and
+`$\vcenter{\hbox{\celticb\char'045}}$' in {\mc CELTICB}.)
+
+A three-region or four-region tile is typeset from $k$, $k+1$, $k+2$,
+or $k+3$, depending on the inside/outside configurations; details
+are worked out below.
+
+\Y\B\4\X13:Produce the output\X${}\E{}$\6
+\X14:Publish the preamble\X;\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|m;{}$ ${}\|i\PP){}$\1\5
+\X16:Publish row \PB{\|i}\X;\2\6
+\X15:Publish the postamble\X;\par
+\U3.\fi
+
+\M{14}\B\X14:Publish the preamble\X${}\E{}$\6
+\\{printf}(\.{"\%\%\ begin\ output\ of\ }\)\.{CELTIC-PATHS\\n"});\6
+\\{printf}(\.{"\\\\font\\\\celtica=cel}\)\.{tica13\ \\\\font\\\\celti}\)%
+\.{cb=celticb13\\n\\n"});\6
+\\{printf}(\.{"\\\\begingroup\\\\celti}\)\.{ca\\n"});\6
+\\{printf}(\.{"\\\\catcode`\\\\|=\\\\act}\)\.{ive\ \\\\def|\#1|\{\\\\hski}\)%
+\.{p\#1em\}\\n"});\6
+\\{printf}(\.{"\\\\catcode`\\\\-=\\\\act}\)\.{ive\ \\\\def-\#1\#2\#3\{\\\\c}\)%
+\.{eltica\\\\char'\#1\#2\#3\}}\)\.{\\n"});\6
+\\{printf}(\.{"\\\\catcode`\\\\+=\\\\act}\)\.{ive\ \\\\def+\#1\#2\#3\{\\\\c}\)%
+\.{elticb\\\\char'\#1\#2\#3\}}\)\.{\\n"});\6
+\\{printf}(\.{"\\\\offinterlineskip\\}\)\.{\\baselineskip=1em\\n"});\6
+\\{printf}(\.{"\\\\let\\\\par=\\\\cr\ \\\\o}\)\.{beylines\ \\\\halign\{\#\\}\)%
+\.{\\hfil\\n"});\par
+\U13.\fi
+
+\M{15}\B\X15:Publish the postamble\X${}\E{}$\6
+\\{printf}(\.{"\}\\\\endgroup\\n"});\par
+\U13.\fi
+
+\M{16}\B\X16:Publish row \PB{\|i}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|s\K\T{0}{}$;\C{ \PB{\|s} holds the number of accumulated blanks }\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\1\5
+\X17:Typeset tile $(i,j)$\X;\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\U13.\fi
+
+\M{17}\B\X17:Typeset tile $(i,j)$\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{kk}\K\\{codetable}[\|a[\|i][\|j]];{}$\6
+${}\\{ii}\K\\{bw}[\|i][\|j][\T{0}];{}$\6
+\&{if} ${}(\\{kk}\G\T{\~100}){}$\1\5
+\X21:Handle a tile with three or four regions\X\2\6
+\&{else} \&{if} ${}(\\{kk}\E\T{\~40}){}$\1\5
+\X18:Handle a blank tile\X\2\6
+\&{else} \&{if} ${}(\\{kk}\E\T{0}){}$\1\5
+\X20:Handle tile \.{1537}\X\2\6
+\&{else}\1\5
+\X19:Handle a two-region tile\X;\2\6
+\&{if} (\|s)\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"|\%d|"},\39\|s);{}$\6
+${}\|s\K\T{0};{}$\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"\%c\%03o"},\39\\{ii}\?\.{'+'}:\.{'-'},\39\\{kk});{}$\6
+\4${}\}{}$\2\par
+\U16.\fi
+
+\M{18}\B\X18:Handle a blank tile\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} (\\{inout}[\|i][\|j][\T{0}])\5
+${}\{{}$\C{ normal case, blank and outside }\1\6
+${}\|s\PP{}$;\5
+\&{continue};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U17.\fi
+
+\M{19}\B\X19:Handle a two-region tile\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{8};{}$ ${}\|k\PP){}$\1\6
+\&{if} (\\{inout}[\|i][\|j][\|k])\5
+${}\{{}$\1\6
+${}\\{kk}\PP{}$;\5
+\&{break};\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\par
+\U17.\fi
+
+\M{20}The fonts treat \.{1537} as a special case in which all sixteen
+combinations of black/white backgrounds are permissible.
+Only four of them can actually occur in the output of this program,
+because adjacent regions cannot both be `outside'.
+
+\Y\B\4\X20:Handle tile \.{1537}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{kk}\K(\\{inout}[\|i][\|j][\T{1}]\?\T{1}:\T{0})+(\\{inout}[\|i][\|j][%
+\T{3}]\?\T{8}:\T{0})+(\\{inout}[\|i][\|j][\T{5}]\?\T{4}:\T{0})+(\\{inout}[\|i][%
+\|j][\T{7}]\?\T{2}:\T{0});{}$\6
+\4${}\}{}$\2\par
+\U17.\fi
+
+\M{21}In the most complex case, we walk clockwise around the edge of the tile
+and
+note the pattern of four inside/outside regions that we see. Four patterns
+are possible (either 0000, 1000, 0010, or 1010 in {\mc CELTICA}, and
+either 0000, 0001, 0100, or 0101 in {\mc CELTICB}); they cause us to
+add 0, 1, 2, or 3, respectively to the character code \PB{\\{kk}}.
+
+\Y\B\4\X21:Handle a tile with three or four regions\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|t\K(\\{inout}[\|i][\|j][\T{0}]\?\T{8}:\T{0});{}$\6
+\&{for} ${}(\|k\K\T{1},\39\\{jj}\K\T{4};{}$ \\{jj}; ${}\|k\PP){}$\1\6
+\&{if} ${}(\|b[\|i][\|j]\AND(\T{1}\LL\|k)){}$\5
+${}\{{}$\1\6
+${}\|t\MRL{+{\K}}(\\{inout}[\|i][\|j][\|k]\?\\{jj}:\T{0});{}$\6
+${}\\{jj}\MRL{{\GG}{\K}}\T{1};{}$\6
+\4${}\}{}$\2\2\6
+${}\\{kk}\MRL{+{\K}}\\{offset}[\|t];{}$\6
+\4${}\}{}$\2\par
+\U17.\fi
+
+\M{22}\B\X11:Declare the magic tables\X${}\mathrel+\E{}$\6
+\&{char} \\{offset}[\T{16}]${}\K\{\T{0},\39\T{1},\39\T{2},\39\T{0},\39\T{2},\39%
+\T{3},\39\T{0},\39\T{0},\39\T{1},\39\T{0},\39\T{3},\39\T{0},\39\T{0},\39\T{0},%
+\39\T{0},\39\T{0}\}{}$;\par
+\fi
+
+\N{1}{23}Index.
+\fi
+
+\inx
+\fin
+\con

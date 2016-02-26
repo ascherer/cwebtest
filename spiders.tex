@@ -1,0 +1,1133 @@
+\input cwebmac
+\datethis
+\input epsf
+\def\dts{\mathinner{\ldotp\ldotp}}
+\let\from=\gets
+\def\bit#1{\\{bit}[#1]}
+\def\losub#1{^{\vphantom\prime}_{#1}} % for contexts like $x'_n+x\losub n$
+
+
+\N{1}{1}Introduction. The purpose of this program is to implement a pretty
+algorithm that has a very pleasant theory. But I apologize
+at the outset that the algorithm seems to be rather subtle, and
+I have not been able to think of any way to explain it to dummies.
+Readers who like discrete mathematics and computer science are
+encouraged to persevere nonetheless.
+
+An overview of the relevant theory appears in a paper called ``Deconstructing
+coroutines,'' by D.~E. Knuth and F.~Ruskey, but this program tries to be
+self-contained. Earlier versions of the ideas were embedded in now-obsolete
+programs called {\mc KODA-RUSKEY} and {\mc LI-RUSKEY}, written in June, 2001.
+
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\X4:Global variables\X\6
+\X13:Subroutines\X\7
+\&{int} \\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1%
+\2\2\6
+${}\{{}$\1\6
+\X5:Local variables\X;\6
+\X3:Parse the command line\X;\6
+\X7:Initialize the data structures\X;\6
+\X24:Generate the answers\X;\6
+\&{return} \T{0};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}Given a digraph that is {\it totally acyclic}, in the sense that it has
+no cycles when we ignore the arc directions, we want to find all ways to
+label its vertices with 0s and 1s in such a way that
+$x\to y$ implies $\bit x\le\bit y$.
+Moreover, we want to list all such labelings as a Gray path,
+changing only one bit at a time. The algorithm below does this, with
+an extra proviso: Given a designated ``root'' vertex~$v$, $\bit v$
+begins at 0 and changes exactly once.
+
+For brevity, a totally acyclic digraph is called a {\it tad}, and a
+connected tad is called a {\it spider}.
+
+The simple three-vertex spider with $x\to y\from z$ has only five such
+labelings, and they form a Gray path in essentially only one way,
+namely $(000,010,011,111,110)$. This example shows that we cannot require
+the Gray path to end at a convenient prespecified labeling like $11\ldots1$;
+and the dual graph, obtained by reversing all the arrows and complementing
+all the bits, shows that we can't require the path to start at $00\ldots0$.
+[Generalizations of this example, in which the vertices are
+$\{x_1,x_2,\ldots,x_n\}$ and each arc is either $x_{k-1}\to x_k$ or
+$x_{k-1}\from x_k$, have solutions related to continued fractions.
+Interested readers will enjoy working out the details.]
+
+It is convenient to describe a tad by using a variant
+of right-Polish notation, where a dot means ``put a new node on the stack''
+and where a \.+ or \.- sign means ``draw an arc $x\from y$ (\.+) or
+$x\to y$ (\.-) and remove $y$ from the stack,'' if $x$ and~$y$ are the
+top stack elements. For example, a digraph with four vertices and no arcs is
+represented by `\.{....}'; the digraph $1\to2\from3$ is `\.{...+-}', and
+$2\to1\from 3$ is `\.{..+.+}', numbering the dots from left to right. This
+numbering corresponds to {\it preorder\/} of the forest that is obtained if we
+ignore arc directions.
+
+The Polish notation implicitly specifies a hierarchical order, if the
+\.+ and \.- operations make $y$ a child of~$x$. Using this tree structure,
+each node of the digraph defines a subtree, and that subtree is a spider.
+The Gray path we
+construct is obtained by judiciously combining the Gray paths obtained
+from the spiders.
+
+\fi
+
+\M{3}In the following program, the parent of node $k$ is \PB{\\{par}[\|k]}, and
+the
+arc between $k$ and its parent goes toward \PB{\\{par}[\|k]} if \PB{$\\{sign}[%
+\|k]\K\T{1}$},
+toward~$k$ if \PB{$\\{sign}[\|k]\K\T{0}$}.
+The spider corresponding to~$k$ consists of nodes $k$ through
+\PB{\\{scope}[\|k]}, inclusive. The Gray path corresponding to this spider
+will be called $G_k$.
+
+While we build the data structures, we might as well compute also \PB{%
+\\{rchild}[\|k]}
+and \PB{\\{lsib}[\|k]}, the rightmost child and left sibling of node~\PB{\|k}.
+Then we
+have a triply linked tree.
+
+\Y\B\4\D$\\{maxn}$ \5
+\T{100}\C{ limit on number of vertices }\par
+\B\4\D$\\{abort}(\|f,\|d,\|n)$ \5
+${}\{{}$\5
+\1${}\\{fprintf}(\\{stderr},\39\|f,\39\|d){}$;\5
+${}\\{exit}({-}\|n){}$;\5
+${}\}{}$\2\par
+\Y\B\4\X3:Parse the command line\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{char} ${}{*}\|c;{}$\7
+\&{if} ${}(\\{argc}<\T{2}\V\\{argc}>\T{3}\V(\\{argc}\E\T{3}\W\\{sscanf}(%
+\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}\\{verbose})\I\T{1})){}$\1\5
+${}\\{abort}(\.{"Usage:\ \%s\ graphspec}\)\.{ification\ [verbosity}\)\.{]\\n"},%
+\39\\{argv}[\T{0}],\39\T{1});{}$\2\6
+\&{for} ${}(\|c\K\\{argv}[\T{1}],\39\|j\K\|n\K\T{0};{}$ ${}{*}\|c;{}$ ${}\|c%
+\PP){}$\1\6
+\&{switch} ${}({*}\|c){}$\5
+${}\{{}$\1\6
+\4\&{case} \.{'.'}:\5
+\&{if} ${}(\|n\E\\{maxn}-\T{1}){}$\1\5
+${}\\{abort}(\.{"Sorry,\ I\ can\ only\ h}\)\.{andle\ \%d\ vertices!\\n}\)\.{"},%
+\39\\{maxn}-\T{1},\39\T{2});{}$\2\6
+${}\\{stack}[\|j\PP]\K\PP\|n{}$;\5
+\&{break};\6
+\4\&{case} \.{'+'}:\5
+\&{case} \.{'-'}:\5
+\&{if} ${}(\|j<\T{2}){}$\1\5
+${}\\{abort}(\.{"Parsing\ error:\ `\%s'}\)\.{\ should\ start\ with\ `}\)\.{.'!%
+\\n"},\39\|c,\39\T{3});{}$\2\6
+${}\|j\MM,\39\|k\K\\{stack}[\|j],\39\|l\K\\{stack}[\|j-\T{1}];{}$\6
+${}\\{sign}[\|k]\K({*}\|c\E\.{'+'}\?\T{1}:\T{0});{}$\6
+${}\\{par}[\|k]\K\|l,\39\\{lsib}[\|k]\K\\{rchild}[\|l],\39\\{rchild}[\|l]\K%
+\|k;{}$\6
+${}\\{scope}[\|k]\K\|n;{}$\6
+\&{break};\6
+\4\&{default}:\5
+${}\\{abort}(\.{"Parsing\ error:\ `\%s'}\)\.{\ should\ start\ with\ `}\)\.{.'\
+or\ `+'\ or\ `-'!\\n"},\39\|c,\39\T{4});{}$\6
+\4${}\}{}$\2\2\6
+${}\\{scope}[\T{0}]\K\|n,\39\\{sign}[\T{0}]\K\T{1},\39\\{rchild}[\T{0}]\K%
+\\{stack}[\MM\|j];{}$\6
+\&{for} ${}(\|k\K\|n;{}$ ${}\|j\G\T{0};{}$ ${}\|j\MM){}$\5
+${}\{{}$\1\6
+${}\|l\K\\{stack}[\|j],\39\\{scope}[\|l]\K\|k,\39\|k\K\|l-\T{1};{}$\6
+\&{if} ${}(\|j>\T{0}){}$\1\5
+${}\\{lsib}[\|l]\K\\{stack}[\|j-\T{1}];{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{4}\B\X4:Global variables\X${}\E{}$\6
+\&{int} \\{par}[\\{maxn}];\C{ the parent of $k$ }\6
+\&{int} \\{sign}[\\{maxn}];\C{ 0 if $\PB{\\{par}}[k]\to k$,\quad 1 if $\PB{%
+\\{par}}[k]\from k$ }\6
+\&{int} \\{scope}[\\{maxn}];\C{ rightmost element of the spider $k$ }\6
+\&{int} \\{stack}[\\{maxn}];\C{ vertices whose \PB{\\{scope}} is not yet set }\6
+\&{int} \\{rchild}[\\{maxn}]${},{}$ \\{lsib}[\\{maxn}];\C{ tree links for
+traversal }\6
+\&{int} \\{verbose};\C{ controls the amount of output }\par
+\As9, 12, 18, 25\ETs32.
+\U1.\fi
+
+\M{5}\B\X5:Local variables\X${}\E{}$\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|l${}\K\T{0}{}$;\C{ heavily-used
+miscellaneous indices }\6
+\&{int} \|n;\C{ size of the input graph }\par
+\U1.\fi
+
+\M{6}Consider the example spider
+$$\epsfbox{deco.5}$$
+in which all arcs are directed upward; it could be written
+\.{....+-.--..+-..-+} in Polish notation. Vertex~1 is the root.
+A nonroot vertex~$k$ is
+called {\it positive\/} if $\PB{\\{par}}[k]\to k$ and {\it negative\/}
+if $\PB{\\{par}}[k]\from k$;
+thus $\{2,3,5,6,9\}$ are positive in this example, and $\{4,7,8\}$ are
+negative.
+
+We write $j\to^* k$ if there is a directed path from $j$ to $k$.
+Removing all vertices $j$ such that $j\to^* k$ disconnects spider~$k$
+into a number of pieces having positive roots; in our example, removing
+$\{1,8\}$ leaves three components rooted at $\{2,6,9\}$. We call these roots
+the set of {\it positive vertices near\/}~$k$, and denote that set by~$U_k$.
+Similarly, the {\it negative vertices near\/}~$k$ are obtained when we remove
+all $j$ such that $k\to^* j$; the set of resulting roots, denoted by~$V_k$,
+is $\{4,7,8\}$ in our example.
+
+Why are the sets $U_k$ and $V_k$ so important? Because
+the labelings of the $k$th spider for which $\bit k=0$ are
+precisely those that we obtain by setting $\bit j=0$ for all $j\to^* k$
+and then labeling each spider $u$ for $u\in U_k$.
+Similarly, all labelings for which $\bit k=1$ are obtained by
+setting $\bit j=1$ for all $k\to^* j$ and labeling each spider
+$v$ for $v\in V_k$.
+
+Thus if $n_k$ denotes the number of labelings of spider~$k$,
+we have $n_k=\prod_{u\in U_k}n_u\,+\,\prod_{v\in V_k}n_v$.
+
+\smallskip
+
+Every positive child of $k$ appears in $U_k$, and every negative
+child appears in $V_k$. These are called the {\it principal\/}
+elements of~$U_k$ and~$V_k$. Every nonprincipal member of~$U_k$ is a member
+of $U_v$ for some unique principal vertex~$v\in V_k$. Similarly, every
+nonprincipal member of~$V_k$ is a member of $V_u$ for some unique
+principal vertex $u\in U_k$. For example, 9~is a nonprincipal member of~$U_1$
+and it also belongs to~$U_8$; 4~is a nonprincipal member of~$V_1$ and it
+also belongs to~$V_2$.
+
+If $k$ is a root of the given digraph, we say that $k$'s parent is~0.
+This dummy vertex 0 is assumed to have arcs to all such~$k$, and it follows
+that $U_0$ is the collection of those root vertices; the total number
+of labelings is therefore $\prod_{u\in U_0}n_u$.
+According to this convention, the root vertices
+are considered to be positive. We also regard 0 as negative.
+
+For example, the sample spider above has the following characteristics:
+$$\vbox{\halign{$\hfil#\hfil$\quad&
+$\hfil#\hfil$\quad&
+$\hfil#\hfil$\quad&
+$\hfil#\hfil$\quad&
+$\hfil#\hfil$\quad&
+$\hfil#\hfil$\quad&
+$\hfil#\hfil$\quad&
+$\hfil#\hfil$\quad&
+$\hfil#+{}$&$#\hfil={}$&\hfil#\cr
+k&\PB{\\{sign}}[k]&\PB{\\{scope}}[k]&\PB{\\{par}}[k]&\PB{\\{rchild}}[k]&\PB{%
+\\{lsib}}[k]&U_k&V_k&
+\multispan3{\hfil$n_k$\hfil}\cr
+\noalign{\vskip2pt}
+0&1&9&0&1& &\{1\}&\{4,7,8\}\cr
+1&0&9&0&8&0&\{2,6,9\}&\{4,7,8\}&48&12&60\cr
+2&0&5&1&5&0&\{3,5\}&\{4\}&6&2&8\cr
+3&0&4&2&4&0&\emptyset&\{4\}&1&2&3\cr
+4&1&4&3&0&0&\emptyset&\emptyset&1&1&2\cr
+5&0&5&2&0&3&\emptyset&\emptyset&1&1&2\cr
+6&0&7&1&7&2&\emptyset&\{7\}&1&2&3\cr
+7&1&7&6&0&0&\emptyset&\emptyset&1&1&2\cr
+8&1&9&1&9&6&\{9\}&\emptyset&2&1&3\cr
+9&0&9&8&0&0&\emptyset&\emptyset&1&1&2\cr}}$$
+
+\fi
+
+\M{7}We don't want to compute the sets $U_1$, \dots, $U_n$ explicitly,
+because the total number of elements $\vert U_1\vert+\cdots+\vert U_n\vert$
+can be $\Omega(n^2)$ in cases like $\..^{n/2}(\.{.+})^{n/2}\.+^{n/2-1}$.
+But luckily for us, there is a nice way to represent all of those sets
+implicitly, computing the representation in linear time.
+
+Suppose $u$ is a positive vertex, not a root, so that $u\from v_1$ where
+$v_1$ is $u$'s parent and $v_1\ne0$. If $v_1$ is negative, let $v_2$ be the
+parent of $v_1$, and continue until reaching a positive vertex~$v_j$.
+We call $v_j$ the {\it positive progenitor\/} of $v_1$; it is also
+the positive progenitor of  $v_2$, \dots,~$v_{j-1}$, and itself.
+By definition, $u\in U_k$ if and only if $k\in\{v_1,\ldots,v_j\}$.
+It follows that $U_k=U_{k'}\cap\bigl[k\dts\PB{\\{scope}}[k]\bigr]$ when $k'$ is
+the positive progenitor of~$k$.
+
+We can therefore represent all the sets $U_k$ by linking their elements
+together explicitly whenever $k$ is a positive vertex; such sets
+$U_k$ are disjoint. Then if we compute \PB{\\{umax}[\|k]} for {\it every\/}
+vertex~$k$, namely the index of the largest element of $U_k$, the set $U_k$
+will consist of \PB{\\{umax}[\|k]}, \PB{\\{prev}[\\{umax}[\|k]]}, \PB{\\{prev}[%
+\\{prev}[\\{umax}[\|k]]]}, etc.,
+proceeding until reaching an element less than~$k$.
+
+One pass through the forest in preorder suffices to compute the \PB{\\{prev}}
+values.
+A second pass in reverse postorder suffices to compute each \PB{\\{umax}},
+because postorder traverses nodes in order of their scopes.
+
+A similar idea works, of course, for $V_1$, \dots, $V_n$, using
+{\it negative\/} progenitors.
+
+\Y\B\4\X7:Initialize the data structures\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|k\K\\{par}[\|j];{}$\6
+\&{if} ${}(\\{sign}[\|j]\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{ppro}[\|j]\K\|j,\39\\{npro}[\|j]\K\\{npro}[\|k];{}$\6
+\&{if} (\|k)\1\5
+${}\\{prev}[\|j]\K\\{umax}[\\{ppro}[\|k]],\39\\{umax}[\\{ppro}[\|k]]\K\|j;{}$\2%
+\6
+\&{else}\1\5
+${}\\{prev}[\|j]\K\\{lsib}[\|j]{}$;\C{ special case when $j$ is a root }\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\\{npro}[\|j]\K\|j,\39\\{ppro}[\|j]\K\\{ppro}[\|k];{}$\6
+${}\\{prev}[\|j]\K\\{vmax}[\\{npro}[\|k]],\39\\{vmax}[\\{npro}[\|k]]\K\|j;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\X8:Fill in all \PB{\\{umax}} and \PB{\\{vmax}} links, traversing in reverse
+postorder\X;\par
+\As10, 11\ETs16.
+\U1.\fi
+
+\M{8}Tree traversal is great fun, when it works.
+
+\Y\B\4\X8:Fill in all \PB{\\{umax}} and \PB{\\{vmax}} links, traversing in
+reverse postorder\X${}\E{}$\6
+$\\{lsib}[\T{0}]\K{-}\T{1}{}$;\C{ sentinel }\6
+${}\\{ptr}[\T{0}]\K\\{vmax}[\T{0}];{}$\6
+${}\\{umax}[\T{0}]\K\\{rchild}[\T{0}];{}$\6
+\&{for} ${}(\|j\K\\{rchild}[\T{0}];{}$  ; \,)\5
+${}\{{}$\1\6
+\&{if} ${}(\\{sign}[\|j]\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{ptr}[\|j]\K\\{umax}[\|j]{}$;\C{ this pointer will run through $U_j$ }\6
+${}\|k\K\\{npro}[\|j],\39\|l\K\\{ptr}[\|k];{}$\6
+\&{while} ${}(\|l>\\{scope}[\|j]){}$\1\5
+${}\|l\K\\{prev}[\|l];{}$\2\6
+${}\\{ptr}[\|k]\K\|l;{}$\6
+\&{if} ${}(\|l>\|j){}$\1\5
+${}\\{vmax}[\|j]\K\|l;{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\\{ptr}[\|j]\K\\{vmax}[\|j]{}$;\C{ this pointer will run through $V_j$ }\6
+${}\|k\K\\{ppro}[\|j],\39\|l\K\\{ptr}[\|k];{}$\6
+\&{while} ${}(\|l>\\{scope}[\|j]){}$\1\5
+${}\|l\K\\{prev}[\|l];{}$\2\6
+${}\\{ptr}[\|k]\K\|l;{}$\6
+\&{if} ${}(\|l>\|j){}$\1\5
+${}\\{umax}[\|j]\K\|l;{}$\2\6
+\4${}\}{}$\2\6
+\&{if} (\\{rchild}[\|j])\1\5
+${}\|j\K\\{rchild}[\|j]{}$;\C{ now we move to the next node }\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{while} ${}(\R\\{lsib}[\|j]){}$\1\5
+${}\|j\K\\{par}[\|j];{}$\2\6
+${}\|j\K\\{lsib}[\|j];{}$\6
+\&{if} ${}(\|j<\T{0}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U7.\fi
+
+\M{9}The sample spider leads, for example, to the following values:
+$$\vbox{\halign{$\hfil#\hfil$\quad&
+$\hfil#\hfil$\quad&
+$\hfil#\hfil$\quad&
+$\hfil#\hfil$\quad&
+$\hfil#\hfil$\quad&
+$\hfil#\hfil$\cr
+k&\PB{\\{ppro}}[k]&\PB{\\{npro}}[k]&\PB{\\{prev}}[k]&\PB{\\{umax}}[k]&\PB{%
+\\{vmax}}[k]\cr
+\noalign{\vskip2pt}
+0&0&0&0&1&8\cr
+1&1&0&0&9&8\cr
+2&2&0&0&5&4\cr
+3&3&0&0&0&4\cr
+4&3&4&0&0&0\cr
+5&5&0&3&0&0\cr
+6&6&0&2&0&7\cr
+7&6&7&4&0&0\cr
+8&1&8&7&9&0\cr
+9&9&8&6&0&0\cr}}$$
+
+\Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{ppro}[\\{maxn}]${},{}$ \\{npro}[\\{maxn}];\C{ progenitors }\6
+\&{int} \\{prev}[\\{maxn}];\C{ previous element in the same progenitorial list
+}\6
+\&{int} \\{ptr}[\\{maxn}];\C{ current element in such a list }\6
+\&{int} \\{umax}[\\{maxn}]${},{}$ \\{vmax}[\\{maxn}];\C{ rightmost elements in
+$U_k$, $V_k$ }\par
+\fi
+
+\M{10}Aha! We can begin to see how to get the desired Gray path. The well-known
+reflected Gray code for mixed-radix number systems tells us how to obtain a
+path $P_k$ of length $\prod_{u\in U_k}n_u$ for the labelings of
+spider~$k$ with $\bit k=0$, as
+well as a path $Q_k$ of length $\prod_{v\in V_k}n_v$ for the labelings with
+$\bit k=1$. All we have to do is figure out a way to end $P_k$ with
+a labeling that differs only in $\bit k$ from the starting point of $Q_k$;
+then we can let $G_k$ be `$P_k, Q_k$'. And indeed, such a labeling
+is fairly obvious: It consists of the last labeling of spider~$u$ for
+each positive child $u$ of~$k$, and the first labeling of spider~$v$ for
+each negative child~$v$.
+
+If $j\in U_k$, the reflected code in $P_k$ involves traversing $G_j$
+a total of
+$$\delta_{jk}=
+\prod_{\scriptstyle u<j_{\mathstrut}\atop\scriptstyle u\in U_k}n_u$$
+times, in alternating directions. Similarly, if $j\in V_k$, the path $G_j$
+is traversed
+$$\delta_{jk}=
+\prod_{\scriptstyle v<j_{\mathstrut}\atop\scriptstyle v\in V_k}n_v$$
+times in $Q_k$. We need to know whether these numbers are even or odd,
+in order to figure out how $P_k$ should begin and $Q_k$ should end,
+because we know how $P_k$ ends and $Q_k$ begins.
+
+The numbers $\delta_{jk}$ can get as large as $2^n$, and we don't want to
+mess with $n$-bit arithmetic if we don't have~to.
+The trick is to compute two more tables, \PB{\\{ueven}[\|k]} and \PB{\\{veven}[%
+\|k]},
+which point to the smallest elements $u\in U_k$ and $v\in V_k$ such that
+$n_u$ and $n_v$ are even. (If no such elements exist,
+\PB{\\{ueven}[\|k]} and/or \PB{\\{veven}[\|k]} are set to \PB{\\{maxn}},
+representing $\infty$.)
+These tables give us the information we need about $\delta_{jk}$.
+
+We set \PB{\\{ueven}[\T{0}]} artificially to $\infty$. This has the effect of
+keeping each component of the digraph independent.
+
+While we're computing the \PB{\\{ueven}} and \PB{\\{veven}} tables, we might as
+well
+also compute \PB{\\{umin}} and \PB{\\{vmin}}, a counterpart of \PB{\\{umax}}
+and \PB{\\{vmax}} that
+will prove useful later.
+
+\Y\B\4\X7:Initialize the data structures\X${}\mathrel+\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\1\5
+${}\\{ueven}[\|k]\K\\{veven}[\|k]\K\\{umin}[\|k]\K\\{vmin}[\|k]\K\\{maxn};{}$\2%
+\6
+\&{for} ${}(\|j\K\|n;{}$ ${}\|j>\T{0};{}$ ${}\|j\MM){}$\5
+${}\{{}$\1\6
+${}\|k\K\\{ppro}[\|j];{}$\6
+\&{if} ${}(\\{umin}[\|k]\Z\\{scope}[\|j]){}$\1\5
+${}\\{umin}[\|j]\K\\{umin}[\|k];{}$\2\6
+\&{if} ${}(\\{ueven}[\|k]\Z\\{scope}[\|j]){}$\1\5
+${}\\{ueven}[\|j]\K\\{ueven}[\|k];{}$\2\6
+${}\|k\K\\{npro}[\|j];{}$\6
+\&{if} ${}(\\{vmin}[\|k]\Z\\{scope}[\|j]){}$\1\5
+${}\\{vmin}[\|j]\K\\{vmin}[\|k];{}$\2\6
+\&{if} ${}(\\{veven}[\|k]\Z\\{scope}[\|j]){}$\1\5
+${}\\{veven}[\|j]\K\\{veven}[\|k];{}$\2\6
+${}\|l\K(\\{ueven}[\|j]<\\{maxn})\XOR(\\{veven}[\|j]<\\{maxn}){}$;\C{ $l=n_j%
+\bmod2$ }\6
+${}\|k\K\\{par}[\|j];{}$\6
+\&{if} ${}(\\{sign}[\|j]\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{umin}[\\{ppro}[\|k]]\K\|j;{}$\6
+\&{if} ${}(\|l\E\T{0}){}$\1\5
+${}\\{ueven}[\\{ppro}[\|k]]\K\|j;{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\\{vmin}[\\{npro}[\|k]]\K\|j;{}$\6
+\&{if} ${}(\|l\E\T{0}){}$\1\5
+${}\\{veven}[\\{npro}[\|k]]\K\|j;{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\\{ueven}[\T{0}]\K\\{maxn}{}$;\par
+\fi
+
+\M{11}Another thing we'll need to know is \PB{\\{umaxbit}[\|k]}, the value of
+\PB{\\{bit}[\\{umax}[\|k]]} when \PB{\\{bit}[\|k]} changes from 0 to~1. And of
+course
+the dual value \PB{\\{vmaxbit}[\|k]} will be equally important.
+
+\Y\B\4\X7:Initialize the data structures\X${}\mathrel+\E{}$\6
+\&{for} ${}(\|k\K\|n;{}$ ${}\|k>\T{0};{}$ ${}\|k\MM){}$\5
+${}\{{}$\1\6
+${}\|l\K\\{par}[\|k];{}$\6
+\&{if} ${}(\|k\E\\{umax}[\|l]){}$\1\5
+${}\\{umaxbit}[\|l]\K\T{1};{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|j\K\\{umax}[\|k];{}$\6
+\&{if} ${}(\|j\W\\{umax}[\|l]\E\|j){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{ueven}[\|k]<\|j){}$\1\5
+${}\\{umaxbit}[\|l]\K\\{umaxbit}[\|k]{}$;\C{ $\delta_{jk}$ is even }\2\6
+\&{else}\1\5
+${}\\{umaxbit}[\|l]\K\T{1}\XOR\\{umaxbit}[\|k];{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|k\E\\{vmax}[\|l]){}$\1\5
+${}\\{vmaxbit}[\|l]\K\T{0};{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|j\K\\{vmax}[\|k];{}$\6
+\&{if} ${}(\|j\W\\{vmax}[\|l]\E\|j){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{veven}[\|k]<\|j){}$\1\5
+${}\\{vmaxbit}[\|l]\K\\{vmaxbit}[\|k]{}$;\C{ $\delta_{jk}$ is even }\2\6
+\&{else}\1\5
+${}\\{vmaxbit}[\|l]\K\T{1}\XOR\\{vmaxbit}[\|k];{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{12}For the record, our example spider has the following additional
+characteristics (including some that we'll introduce later):
+$$\vbox{\halign{$\hfil#\hfil$\enspace&
+$\hfil#\hfil$\enspace&
+$\hfil#\hfil$\enspace&
+$\hfil#\hfil$\enspace&
+$\hfil#\hfil$\enspace&
+$\hfil#\hfil$\enspace&
+$\hfil#\hfil$\enspace&
+$\hfil#\hfil$\enspace&
+$\hfil#\hfil$\enspace&
+$\hfil#\hfil$\cr
+k&\PB{\\{bstart}}[k]&\PB{\\{umin}}[k]&\PB{\\{ueven}}[k]&\PB{\\{umaxbit}}[k]&%
+\PB{\\{umaxscope}}[k]&
+\PB{\\{vmin}}[k]&\PB{\\{veven}}[k]&\PB{\\{vmaxbit}}[k]&\PB{\\{vmaxscope}}[k]\cr
+\noalign{\vskip2pt}
+0& &1&\infty& & &4&4\cr
+1&1&2&2&0&9&4&4&0&9\cr
+2&2&3&5&1&5&4&4&1&4\cr
+3&3&\infty&\infty&0&3&4&4&0&4\cr
+4&4&\infty&\infty&0&4&\infty&\infty&0&4\cr
+5&5&\infty&\infty&0&5&\infty&\infty&0&5\cr
+6&6&\infty&\infty&0&6&7&7&0&7\cr
+7&7&\infty&\infty&0&7&\infty&\infty&0&7\cr
+8&8&9&9&1&9&\infty&\infty&0&8\cr
+9&9&\infty&\infty&0&9&\infty&\infty&0&9\cr
+}}$$
+
+\Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{umin}[\\{maxn}]${},{}$ \\{vmin}[\\{maxn}];\C{ the smallest guys in
+$U_k$, $V_k$ }\6
+\&{int} \\{ueven}[\\{maxn}]${},{}$ \\{veven}[\\{maxn}];\C{ the smallest even
+guys in $U_k$, $V_k$ }\6
+\&{int} \\{umaxbit}[\\{maxn}]${},{}$ \\{vmaxbit}[\\{maxn}];\C{ significant
+transition bits }\6
+\&{int} \\{bit}[\\{maxn}];\C{ the current labeling }\par
+\fi
+
+\M{13}A somewhat subtle point arises here, and it provides an important
+simplification: Suppose $j$ is a negative child of~$k$,
+and $\PB{\\{ueven}}[k]\ge j$. Then the initial bits of spider~$j$ in the
+sequence
+for spider~$k$ are the same as the transition bits of spider~$j$.
+The reason is that $\delta_{ij}+\delta_{ik}$ is even for all
+$i\in U_j$.
+
+Using this principle, we can write recursive procedures so that \PB{%
+\\{setfirst}(\T{0})}
+computes the very first setting the bit table, in $O(n)$ steps.
+(This bound on the running time comes from the fact that each procedure sets
+the bits of a subspider using a number of steps bounded by a constant times the
+number of bits being set. Formally, if $T_n\le
+a+(b+T_{n_1})+\cdots+(b+T_{n_t})$ where $n_1+\cdots+n_t=n-1$, then
+it follows by induction that $T_n\le(a+b)n-b$.)
+
+The first labeling of our example spider uses the first labeling
+of subspider~2, the last labeling of subspider~6, and the first labeling
+of subspider~8, so it is
+$\PB{\\{bit}}[1]\ldots\PB{\\{bit}}[9]=000001100$.
+
+Recursion is lots of fun too. Why do I sometimes prefer traversal?
+
+\Y\B\4\X13:Subroutines\X${}\E{}$\6
+\&{void} \\{setlast}(\&{register} \&{int} \|k);\C{ see below }\6
+\&{void} \\{setmid}(\&{register} \&{int} \|k${},\39{}$\&{int} \|b);\C{ ditto }\7
+\&{void} \\{setfirst}(\&{register} \&{int} \|k)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j;\7
+${}\\{bit}[\|k]\K\T{0};{}$\6
+\&{for} ${}(\|j\K\\{rchild}[\|k];{}$ \|j; ${}\|j\K\\{lsib}[\|j]){}$\1\6
+\&{if} ${}(\\{sign}[\|j]\E\T{0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{ueven}[\|k]\G\|j){}$\1\5
+\\{setfirst}(\|j);\C{ $\delta_{jk}$ is odd }\2\6
+\&{else}\1\5
+\\{setlast}(\|j);\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\\{ueven}[\|k]\G\|j){}$\1\5
+${}\\{setmid}(\|j,\39\T{0}){}$;\C{ by the subtle point }\2\6
+\&{else}\1\5
+\\{setfirst}(\|j);\C{ $\delta_{ik}$ is even for all $i\in U_j$ }\2\2\6
+\4${}\}{}$\2\7
+\&{void} \\{setlast}(\&{register} \&{int} \|k)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j;\7
+${}\\{bit}[\|k]\K\T{1};{}$\6
+\&{for} ${}(\|j\K\\{rchild}[\|k];{}$ \|j; ${}\|j\K\\{lsib}[\|j]){}$\1\6
+\&{if} ${}(\\{sign}[\|j]\E\T{1}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{veven}[\|k]\G\|j){}$\1\5
+\\{setlast}(\|j);\C{ $\delta_{jk}$ is odd }\2\6
+\&{else}\1\5
+\\{setfirst}(\|j);\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\\{veven}[\|k]\G\|j){}$\1\5
+${}\\{setmid}(\|j,\39\T{1}){}$;\C{ by the subtle point }\2\6
+\&{else}\1\5
+\\{setlast}(\|j);\C{ $\delta_{ik}$ is even for all $i\in V_j$ }\2\2\6
+\4${}\}{}$\2\7
+\&{void} \\{setmid}(\&{register} \&{int} \|k${},\39{}$\&{int} \|b)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j;\7
+${}\\{bit}[\|k]\K\|b;{}$\6
+\&{for} ${}(\|j\K\\{rchild}[\|k];{}$ \|j; ${}\|j\K\\{lsib}[\|j]){}$\1\6
+\&{if} ${}(\\{sign}[\|j]\E\T{0}){}$\1\5
+\\{setlast}(\|j);\5
+\2\&{else}\1\5
+\\{setfirst}(\|j);\2\2\6
+\4${}\}{}$\2\par
+\A19.
+\U1.\fi
+
+\N{1}{14}The active list. Reflected Gray code is nicely generated by a process
+based on a list of elements that are alternately active and passive.
+(See, for example, Algorithm 7.2.1.1L in {\sl The Art of Computer
+Programming}.) A slight generalization of that notion works admirably for the
+problem faced here: We maintain a so-called {\it active list\/} $L$, whose
+elements are alternately awake and asleep. Elements are occasionally inserted
+into~$L$ and/or deleted from~$L$ according to the following protocol:
+\smallskip
+\itemitem{1)} Find the largest node $k\in L$ that is awake, and wake up
+all elements of $L$ that exceed~$k$.
+\itemitem{2)} If \PB{$\\{bit}[\|k]\K\T{0}$}, set $\PB{\\{bit}}[k]\gets1$ and
+$L\gets(L\setminus U'_k)\cup V'_k$; otherwise set $\PB{\\{bit}}[k]\gets0$ and
+$L\gets(L\setminus V'_k)\cup U'_k$. Here $U'_k$ and $V'_k$ denote the
+{\it principal elements\/} of $U_k$ and $V_k$, namely the positive
+and negative children of~$k$.
+\itemitem{3)} Put $k$ to sleep.
+\smallskip\noindent
+The process stops when all elements of $L$ are asleep in step 1. In such a
+case, waking them up and repeating the process will run through the
+bit labelings again, but in reverse order.
+
+The elements of $L$ are the positive vertices $k$ for which \PB{$\\{bit}[%
+\\{par}[\|k]]\K\T{0}$}
+and the negative vertices $k$ for which \PB{$\\{bit}[\\{par}[\|k]]\K\T{1}$}.
+For example, the initial active list for the example spider
+is $L=\{1,2,3,5,6,7,9\}$. All elements are awake at the beginning.
+
+\def\p#1{\overline#1}
+We can conveniently represent $L$ as a list of elements $k$, with
+subscripts to indicate the current setting of \PB{\\{bit}[\|k]}. Then $k_0$ is
+always followed in the list by sublists for the spiders of~$U_k$, and
+$k_1$ is always followed by sublists for the spiders of~$V_k$. With
+these conventions, the initial active list is
+$$1_0\quad 2_0\quad 3_0\quad 5_0\quad 6_1\quad 7_1\quad 9_0\,.$$
+Since $9_0$ is awake, we complement \PB{\\{bit}[\T{9}]}, and $L$ becomes
+$$1_0\quad 2_0\quad 3_0\quad 5_0\quad 6_1\quad 7_1\quad \p9_1\,.$$
+The bar over 9 indicates that this node is now asleep.
+
+The next step complements \PB{\\{bit}[\T{7}]} and wakes up 9; thus the first
+few steps take place as follows:
+$$\vbox{\halign{$#\hfil$&
+\quad\smash{\lower.5\baselineskip\hbox{$\cdots$ complement $\bit#$\hfil}}\cr
+1_0\quad 2_0\quad 3_0\quad 5_0\quad 6_1\quad 7_1\quad 9_0&9\cr
+1_0\quad 2_0\quad 3_0\quad 5_0\quad 6_1\quad 7_1\quad \p9_1&7\cr
+1_0\quad 2_0\quad 3_0\quad 5_0\quad 6_1\quad \p7_0\quad 9_1&9\cr
+1_0\quad 2_0\quad 3_0\quad 5_0\quad 6_1\quad \p7_0\quad \p9_0&6\cr
+1_0\quad 2_0\quad 3_0\quad 5_0\quad \p6_0\quad 9_0&9\cr
+1_0\quad 2_0\quad 3_0\quad 5_0\quad \p6_0\quad \p9_1&5\cr
+1_0\quad 2_0\quad 3_0\quad \p5_1\quad 6_0\quad 9_1&9\cr
+1_0\quad 2_0\quad 3_0\quad \p5_1\quad 6_0\quad \p9_0&6\cr
+1_0\quad 2_0\quad 3_0\quad \p5_1\quad \p6_1\quad 7_0\quad 9_0\cr}}$$
+Notice that 7 disappears from $L$ when \PB{\\{bit}[\T{6}]} becomes 0, but it
+comes back again when \PB{\\{bit}[\T{6}]} reverts to~1. Soon \PB{\\{bit}[%
+\T{3}]} will
+change to~1, and $4_0$ will enter the fray.
+
+The most dramatic change will occur after the first $n_2n_6n_9=48$ labelings,
+when \PB{\\{bit}[\T{1}]} changes:
+$$\vbox{\halign{$#\hfil$&
+\quad\smash{\lower.5\baselineskip\hbox{$\cdots$ complement $\bit#$\hfil}}\cr
+1_0\quad \p2_1\quad \p4_0\quad \p6_1\quad \p7_1\quad \p9_0&1\cr
+\p1_1\quad 4_0\quad 7_1\quad 8_0\quad 9_0&9\cr
+\p1_1\quad 4_0\quad 7_1\quad 8_0\quad \p9_1&8\cr
+\p1_1\quad 4_0\quad 7_1\quad \p8_1&7\cr
+\qquad\vdots&8\cr
+\p1_1\quad \p4_1\quad \p7_1\quad \p8_0\quad 9_1&9\cr
+\p1_1\quad \p4_1\quad \p7_1\quad \p8_0\quad \p9_0\cr}}$$
+And finally the whole list is asleep; all 60 labelings have been generated.
+
+\fi
+
+\M{15}Using the active list protocol, the average amount of work per bit change
+is
+only $O(1)$ when amortized over the entire computation, even if we do a
+sequential search for~$k$ in step~(1) and recopy all elements greater than~$k$
+in step~(2). Our implementation goes beyond the notion of amortization,
+however; after $O(n)$ steps of initialization, the program below does at most
+a bounded number of operations between bit changes. Thus it is actually {\it
+loopless}, in the sense defined by Gideon Ehrlich [{\sl Journal of the ACM\/
+\bf20} (1973), 500--513].
+
+The extra contortions that we need to go through in order to achieve
+looplessness are usually ill-advised, because they actually cause the
+total execution time to be longer than it would be with a more straightforward
+algorithm. But hey, looplessness carries an academic cachet.
+So we might as well treat this task as a
+challenging exercise that might help us to sharpen our algorithmic wits.
+
+(There may actually be a loopless algorithm for this problem that does not
+slow down the total execution time. For example, the loopless implementation
+in the program {\mc LI-RUSKEY} is quite fast, but it sometimes needs
+$\Omega(n^2)$ steps for initialization and $\Omega(n^2)$ space for tables.
+The existence of such a fast implementation suggests that
+totally acyclic digraphs might well have additional properties that
+yield improvements over the approach taken here; readers are encouraged to
+find a better way.)
+
+The first step we shall take toward a loopless algorithm is to introduce
+``focus pointers,'' as in Ehrlich's Algorithm 7.2.1.1L. Usually \PB{$\\{focus}[%
+\|k]\K\|k$},
+except when $k$ is asleep and the successor of~$k$ is awake. In the latter
+case, \PB{\\{focus}[\|k]} is the largest $j<k$ such that $j$ is awake.
+
+The active list will be doubly linked, with $k$ preceded by \PB{\\{left}[\|k]}
+and
+followed by \PB{\\{right}[\|k]}. We make the list circular by letting \PB{%
+\\{left}[\T{0}]} be its
+rightmost element and \PB{\\{right}[\T{0}]} the leftmost. Then, for example,
+\PB{\\{focus}[\\{left}[\T{0}]]} will be the element~$k$ needed in step~(1) of
+the protocol.
+We can wake up all elements to $k$'s right by setting
+\PB{$\\{focus}[\\{left}[\T{0}]]\K\\{left}[\T{0}]$}, and we can put $k$ to sleep
+by setting
+\PB{$\\{focus}[\|k]\K\\{focus}[\\{left}[\|k]]$}, \PB{$\\{focus}[\\{left}[\|k]]%
+\K\\{left}[\|k]$}.
+
+\fi
+
+\M{16}Now let's focus on the implementation of step (2), which is the
+heart of the computation.
+
+A positive child $j$ of $k$ is called ``simple'' if $V_j$ is empty; a
+negative child is called simple if $U_j$ is empty. Same-sign siblings always
+enter or leave the active list as a unit. Therefore if $j$ and $j'$ have the
+same sign and if $j=\PB{\\{lsib}}[j']$ is simple,  we will have $\PB{%
+\\{right}}[j]=j'$ and
+$\PB{\\{left}}[j']=j$ whenever they are inserted or deleted. These links can be
+established as part of the initialization. On the other hand when $j$
+cannot be combined with its right neighbor, we compute \PB{\\{bstart}[\|j]},
+the
+leftmost sibling that forms a block with~$j$. (Possibly \PB{$\\{bstart}[\|j]\K%
+\|j$}.)
+
+The following preprocessing steps establish the initial values of \PB{%
+\\{bstart}},
+\PB{\\{left}}, and \PB{\\{right}}. They also compute two further quantities
+that sometimes
+turn out to be indispensable: \PB{\\{umaxscope}[\|k]} is the largest node that
+is
+forced to be in the active list at a transition point
+when \PB{$\\{bit}[\|k]\K\T{0}$}, and \PB{\\{vmaxscope}[\|k]} is
+the corresponding quantity when \PB{$\\{bit}[\|k]\K\T{1}$}.
+
+\Y\B\4\X7:Initialize the data structures\X${}\mathrel+\E{}$\6
+\&{for} ${}(\|k\K\|n;{}$ \|k; ${}\|k\MM){}$\5
+${}\{{}$\1\6
+${}\|j\K\\{lsib}[\|k];{}$\6
+\&{if} (\|j)\1\5
+${}\\{left}[\|k]\K\|j,\39\\{right}[\|j]\K\|k;{}$\2\6
+\&{else}\1\5
+\X17:Compute the \PB{\\{bstart}} links for \PB{\|k}'s family\X;\2\6
+${}\|j\K\\{umax}[\|k];{}$\6
+\&{if} ${}(\R\|j){}$\1\5
+${}\\{umaxscope}[\|k]\K\|k;{}$\2\6
+\&{else}\1\5
+${}\\{umaxscope}[\|k]\K(\\{umaxbit}[\|k]\E\T{1}\?(\\{vmax}[\|j]\?\\{vmax}[\|j]:%
+\|j):\\{umaxscope}[\|j]);{}$\2\6
+${}\|j\K\\{vmax}[\|k];{}$\6
+\&{if} ${}(\R\|j){}$\1\5
+${}\\{vmaxscope}[\|k]\K\|k;{}$\2\6
+\&{else}\1\5
+${}\\{vmaxscope}[\|k]\K(\\{vmaxbit}[\|k]\E\T{0}\?(\\{umax}[\|j]\?\\{umax}[\|j]:%
+\|j):\\{vmaxscope}[\|j]);{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{17}\B\X17:Compute the \PB{\\{bstart}} links for \PB{\|k}'s family\X${}\E{}$\6
+\&{for} ${}(\|j\K\|l\K\|k;{}$ \|j; ${}\|j\K\\{right}[\|j]){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{right}[\|j]\W\\{sign}[\|j]\E\\{sign}[\\{right}[\|j]]\W\3{-1}((%
+\\{sign}[\|j]\E\T{0}\W\R\\{vmax}[\|j])\V(\\{sign}[\|j]\E\T{1}\W\R\\{umax}[%
+\|j]))){}$\1\5
+\&{continue};\2\6
+${}\\{bstart}[\|j]\K\|l,\39\|l\K\\{right}[\|j];{}$\6
+\4${}\}{}$\2\par
+\U16.\fi
+
+\M{18}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{left}[\\{maxn}]${},{}$ \\{right}[\\{maxn}];\C{ neighbors in the
+active list }\6
+\&{int} \\{bstart}[\\{maxn}];\C{ start of a block }\6
+\&{int} \\{umaxscope}[\\{maxn}]${},{}$ \\{vmaxscope}[\\{maxn}];\C{ extreme
+nodes when \PB{\\{bit}[\|k]} changes }\6
+\&{int} \\{flag}[\\{maxn}];\C{ nonzero when an insertion or deletion is needed
+}\6
+\&{int} \\{focus}[\\{maxn}];\C{ pointers that encode wakefulness }\par
+\fi
+
+\M{19}When \PB{\\{bit}[\|k]} changes from 0 to 1, we want to delete $k$'s
+positive blocks of
+children from the active list and insert the negative ones. The rightmost
+block is addressed by \PB{\\{rchild}[\|k]}, and we get to the others by
+following
+\PB{\\{bstart}} and \PB{\\{lsib}} links. Our algorithm is supposed to be
+loopless, so we
+can't do all this updating at once. Therefore we do only the rightmost step,
+and we plant a warning in the data structure so that subsequent steps
+will be performed before the missing information is needed. All nodes are
+awake while waiting to be inserted or deleted, so the focus pointers are
+unaffected by these delayed actions.
+
+The \PB{\\{fixup}} subroutine is the basic mechanism by which nodes
+enter or leave the active list. This subroutine not only inserts
+or deletes a block of children, it also inserts a flag so that
+the previous block will be fixed in due time.
+
+\Y\B\4\X13:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{fixup}(\&{register} \&{int} \|k${},\39{}$\&{register} \&{int} \|l)%
+\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j;\7
+${}\\{flag}[\|l]\K\T{0};{}$\6
+\&{if} ${}(\|k>\T{0}){}$\1\5
+\X20:Insert block $k$ before $l$ and \PB{\&{return}}\X\2\6
+\X21:Delete block $k$ before $l$\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{20}Once the process has gotten started, \PB{\\{left}[\|j]} and \PB{%
+\\{right}[\|k]} will
+already have the correct values, unchanged from the time block $k$ was
+previously deleted. But we don't make use of this fact, because we don't
+want to worry about presetting \PB{\\{left}[\|j]} and \PB{\\{right}[\|k]} when
+the
+action list is initialized.
+
+\Y\B\4\X20:Insert block $k$ before $l$ and \PB{\&{return}}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|j\K\\{bstart}[\|k],\39\|i\K\\{lsib}[\|j];{}$\6
+${}\\{left}[\|j]\K\\{left}[\|l],\39\\{right}[\\{left}[\|l]]\K\|j;{}$\6
+${}\\{left}[\|l]\K\|k,\39\\{right}[\|k]\K\|l;{}$\6
+\&{if} (\|i)\5
+${}\{{}$\1\6
+\&{if} ${}(\\{sign}[\|k]\E\T{1}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{sign}[\|i]\E\T{0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{vmin}[\|i]<\\{maxn}){}$\1\5
+${}\|j\K\\{vmin}[\|i];{}$\2\6
+${}\|i\K{-}\|i{}$;\C{ the next fix will be a deletion }\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\|j\K\\{umin}[\|i];{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\\{sign}[\|i]\E\T{1}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{umin}[\|i]<\\{maxn}){}$\1\5
+${}\|j\K\\{umin}[\|i];{}$\2\6
+${}\|i\K{-}\|i{}$;\C{ the next fix will be a deletion }\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\|j\K\\{vmin}[\|i];{}$\2\6
+\4${}\}{}$\2\6
+${}\\{flag}[\|j]\K\|i;{}$\6
+\4${}\}{}$\2\6
+\&{return};\6
+\4${}\}{}$\2\par
+\U19.\fi
+
+\M{21}A block being deleted might be preceded by a simple block of the
+other sign that wants to be inserted. In that case we insert the latter
+in place of the former.
+
+\Y\B\4\X21:Delete block $k$ before $l$\X${}\E{}$\6
+$\|k\K{-}\|k,\39\|j\K\\{bstart}[\|k],\39\|i\K\\{lsib}[\|j];{}$\6
+\&{if} ${}(\\{left}[\|l]\I\|k){}$\1\5
+${}\\{printf}(\.{"Oops,\ fixup(\%d,\%d)\ }\)\.{is\ confused!\\n"},\39{-}\|k,\39%
+\|l){}$;\C{ can't happen }\2\6
+\&{if} ${}(\|i\W\\{sign}[\|i]\I\\{sign}[\|k]){}$\5
+${}\{{}$\1\6
+\&{if} ${}((\\{sign}[\|i]\E\T{0}\W\\{vmax}[\|i]\E\T{0})\V(\\{sign}[\|i]\E\T{1}%
+\W\\{umax}[\|i]\E\T{0})){}$\1\5
+\X22:Replace block $k$ by block $i$ and \PB{\&{return}}\X;\2\6
+\4${}\}{}$\2\6
+${}\\{left}[\|l]\K\\{left}[\|j],\39\\{right}[\\{left}[\|j]]\K\|l;{}$\6
+\&{if} (\|i)\5
+${}\{{}$\1\6
+\&{if} ${}(\\{sign}[\|k]\E\T{0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{sign}[\|i]\E\T{1}){}$\1\5
+${}\|j\K\\{umin}[\|i];{}$\2\6
+\&{else}\1\5
+${}\|j\K\\{vmin}[\|i],\39\|i\K{-}\|i{}$;\C{ the next fix will be another
+deletion }\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\\{sign}[\|i]\E\T{0}){}$\1\5
+${}\|j\K\\{vmin}[\|i];{}$\2\6
+\&{else}\1\5
+${}\|j\K\\{umin}[\|i],\39\|i\K{-}\|i{}$;\C{ the next fix will be another
+deletion }\2\6
+\4${}\}{}$\2\6
+${}\\{flag}[\|j]\K\|i;{}$\6
+\4${}\}{}$\2\par
+\U19.\fi
+
+\M{22}\B\X22:Replace block $k$ by block $i$ and \PB{\&{return}}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{left}[\|l]\K\|i,\39\\{right}[\|i]\K\|l;{}$\6
+${}\|k\K\\{bstart}[\|i],\39\\{left}[\|k]\K\\{left}[\|j],\39\\{right}[\\{left}[%
+\|k]]\K\|k;{}$\6
+${}\|i\K\\{lsib}[\|k];{}$\6
+\&{if} (\|i)\5
+${}\{{}$\1\6
+\&{if} ${}(\\{sign}[\|k]\E\T{0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{sign}[\|i]\E\T{1}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{umin}[\|i]<\\{maxn}){}$\1\5
+${}\|k\K\\{umin}[\|i];{}$\2\6
+${}\|i\K{-}\|i{}$;\C{ the next fix will be another deletion }\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\|k\K\\{vmin}[\|i];{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\\{sign}[\|i]\E\T{0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{vmin}[\|i]<\\{maxn}){}$\1\5
+${}\|k\K\\{vmin}[\|i];{}$\2\6
+${}\|i\K{-}\|i{}$;\C{ the next fix will be another deletion }\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\|k\K\\{umin}[\|i];{}$\2\6
+\4${}\}{}$\2\6
+${}\\{flag}[\|k]\K\|i;{}$\6
+\4${}\}{}$\2\6
+\&{return};\6
+\4${}\}{}$\2\par
+\U21.\fi
+
+\M{23}How does the active list get there in the first place? We
+compute it from the \PB{\\{bit}} table, as follows.
+
+\Y\B\4\X23:Launch the active list\X${}\E{}$\6
+\\{setfirst}(\T{0});\C{ compute the initial setting of $\PB{\\{bit}}[1]\ldots%
+\PB{\\{bit}}[n]$ }\6
+\&{for} ${}(\|l\K\|k\K\T{0};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{focus}[\|k]\K\|k;{}$\6
+\&{if} ${}(\\{sign}[\|k]\E\\{bit}[\\{par}[\|k]]){}$\1\5
+${}\\{right}[\|l]\K\|k,\39\\{left}[\|k]\K\|l,\39\|l\K\|k;{}$\2\6
+\4${}\}{}$\2\6
+${}\\{right}[\|l]\K\T{0},\39\\{left}[\T{0}]\K\|l{}$;\C{ link in the rightmost
+node of the active list }\par
+\U24.\fi
+
+\N{1}{24}Doing it. The time has come to construct the loopless implementation
+in
+practice, as we have been doing so far in theory.
+
+Of course the printout in each step does involve a loop. This printout
+is suppressed if \PB{$\\{verbose}<\T{0}$}.
+
+\Y\B\4\X24:Generate the answers\X${}\E{}$\6
+\X23:Launch the active list\X;\6
+\&{if} ${}(\\{verbose}>\T{1}){}$\1\5
+\X33:Print out the results of initialization\X;\2\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+${}\\{count}\PP;{}$\6
+\&{if} ${}(\\{verbose}\G\T{0}){}$\1\5
+\X30:Print out all the current bits\X;\2\6
+\X26:Set \PB{\|k} to the rightmost nonsleeping node of the active list\X;\6
+\&{if} (\|k)\5
+${}\{{}$\1\6
+\&{if} (\\{flag}[\|k])\1\5
+${}\\{fixup}(\\{flag}[\|k],\39\|k);{}$\2\6
+\&{if} ${}(\\{bit}[\|k]\E\T{0}){}$\1\5
+\X28:Move forward, setting \PB{$\\{bit}[\|k]\K\T{1}$}\X\2\6
+\&{else}\1\5
+\X29:Move backward, setting \PB{$\\{bit}[\|k]\K\T{0}$}\X;\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} (\\{been\_there\_and\_done\_that})\1\5
+\&{break};\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"...\%d\ so\ far;\ now\ w}\)\.{e\ generate\ in\ revers}\)\.{e:%
+\\n"},\39\\{count});{}$\6
+${}\\{been\_there\_and\_done\_that}\K\T{1};{}$\6
+\&{continue};\6
+\4${}\}{}$\2\6
+\X27:Put \PB{\|k} to sleep\X;\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"Altogether\ \%d/2\ lab}\)\.{elings.\\n"},\39\\{count}){}$;\par
+\U1.\fi
+
+\M{25}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{count};\C{ the number of labelings found so far }\6
+\&{int} \\{been\_there\_and\_done\_that};\C{ have we reached all-asleep state
+before? }\par
+\fi
+
+\M{26}\B\X26:Set \PB{\|k} to the rightmost nonsleeping node of the active list%
+\X${}\E{}$\6
+$\|j\K\\{left}[\T{0}],\39\|k\K\\{focus}[\|j],\39\\{focus}[\|j]\K\|j{}$;\par
+\U24.\fi
+
+\M{27}At this point we know that all nodes greater than $k$ are awake and
+that \PB{$\\{flag}[\|k]\K\T{0}$}.
+
+\Y\B\4\X27:Put \PB{\|k} to sleep\X${}\E{}$\6
+$\|j\K\\{left}[\|k],\39\\{focus}[\|k]\K\\{focus}[\|j],\39\\{focus}[\|j]\K%
+\|j{}$;\par
+\U24.\fi
+
+\M{28}\B\X28:Move forward, setting \PB{$\\{bit}[\|k]\K\T{1}$}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{bit}[\|k]\K\T{1},\39\|j\K\\{rchild}[\|k];{}$\6
+\&{if} (\|j)\5
+${}\{{}$\1\6
+\&{if} ${}(\\{sign}[\|j]\E\T{0}){}$\5
+${}\{{}$\C{ we want to delete \PB{$\|j\K\\{umax}[\|k]$} }\1\6
+${}\|l\K\\{vmin}[\|j];{}$\6
+\&{if} ${}(\|l<\\{maxn}){}$\1\5
+${}\\{fixup}({-}\|j,\39\|l);{}$\2\6
+\&{else}\1\5
+${}\\{fixup}({-}\|j,\39\\{right}[\|j]){}$;\C{ $j$ ends a simple block }\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\C{ we want to insert \PB{$\|j\K\\{vmax}[\|k]$} }\1\6
+${}\|l\K\\{umin}[\|j];{}$\6
+\&{if} ${}(\|l<\\{maxn}){}$\1\5
+${}\\{fixup}(\|j,\39\|l);{}$\2\6
+\&{else}\1\5
+${}\\{fixup}(\|j,\39\\{right}[\\{umaxscope}[\|k]]){}$;\C{ $j$ ends a simple
+block }\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U24.\fi
+
+\M{29}\B\X29:Move backward, setting \PB{$\\{bit}[\|k]\K\T{0}$}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{bit}[\|k]\K\T{0},\39\|j\K\\{rchild}[\|k];{}$\6
+\&{if} (\|j)\5
+${}\{{}$\1\6
+\&{if} ${}(\\{sign}[\|j]\E\T{1}){}$\5
+${}\{{}$\C{ we want to delete \PB{$\|j\K\\{vmax}[\|k]$} }\1\6
+${}\|l\K\\{umin}[\|j];{}$\6
+\&{if} ${}(\|l<\\{maxn}){}$\1\5
+${}\\{fixup}({-}\|j,\39\|l);{}$\2\6
+\&{else}\1\5
+${}\\{fixup}({-}\|j,\39\\{right}[\|j]){}$;\C{ $j$ ends a simple block }\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\C{ we want to insert \PB{$\|j\K\\{umax}[\|k]$} }\1\6
+${}\|l\K\\{vmin}[\|j];{}$\6
+\&{if} ${}(\|l<\\{maxn}){}$\1\5
+${}\\{fixup}(\|j,\39\|l);{}$\2\6
+\&{else}\1\5
+${}\\{fixup}(\|j,\39\\{right}[\\{vmaxscope}[\|k]]){}$;\C{ $j$ ends a simple
+block }\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U24.\fi
+
+\M{30}\B\X30:Print out all the current bits\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\1\5
+${}\\{putchar}(\.{'0'}+\\{bit}[\|k]);{}$\2\6
+\&{if} ${}(\\{verbose}>\T{0}){}$\1\5
+\X31:Print the active list in symbolic form\X;\2\6
+\\{putchar}(\.{'\\n'});\6
+\4${}\}{}$\2\par
+\U24.\fi
+
+\M{31}Here I recompute what the active list should be, and compare it
+to the current links. Discrepancies are noted only if no flagged nodes
+follow.
+
+Sleeping nodes are enclosed in parentheses;
+an exclamation point is printed before a node that is flagged.
+
+\Y\B\4\X31:Print the active list in symbolic form\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\\{left}[\T{0}];{}$  ; ${}\|k\MM){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\|k,\39\|k\K\\{focus}[\|k];{}$ ${}\|j>\|k;{}$ ${}\|j\MM){}$\5
+${}\{{}$\1\6
+${}\\{asleep}[\|j]\K\T{1};{}$\6
+\&{if} (\\{flag}[\|j])\1\5
+${}\\{printf}(\.{"\\nOops,\ flag[\%d]\ is}\)\.{\ wrong!\\n"},\39\|j);{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|k\E\T{0}){}$\1\5
+\&{break};\2\6
+${}\\{asleep}[\|k]\K\T{0};{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|k\K\T{1},\39\|j\K\T{0};{}$ ${}\|k\Z\\{left}[\T{0}];{}$ ${}\|k%
+\PP){}$\1\6
+\&{if} ${}(\\{sign}[\|k]\E\\{bit}[\\{par}[\|k]]){}$\5
+${}\{{}$\1\6
+\&{if} (\\{asleep}[\|k])\1\5
+${}\\{printf}(\.{"\ (\%d)"},\39\|k);{}$\2\6
+\&{else} \&{if} (\\{flag}[\|k])\1\5
+${}\\{printf}(\.{"\ !\%d"},\39\|k);{}$\2\6
+\&{else}\1\5
+${}\\{printf}(\.{"\ \%d"},\39\|k);{}$\2\6
+\&{if} ${}((\|k\I\\{right}[\|j]\V\\{left}[\|k]\I\|j)\W\|k>\|l){}$\1\5
+\\{printf}(\.{"[oops]"});\2\6
+${}\|j\K\|k;{}$\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\par
+\U30.\fi
+
+\M{32}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{asleep}[\\{maxn}];\C{ sleeping (or inactive) nodes }\par
+\fi
+
+\M{33}Finally, we print even more stuff when the user calls for an
+exceptional level of absolute verbosity.
+
+\Y\B\4\X33:Print out the results of initialization\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\%d(\%c):\ scope=\%d,\ p}\)\.{ar=\%d,\ rchild=\%d,\ ls}\)%
+\.{ib=\%d,"},\39\|k,\39\\{sign}[\|k]\?\.{'-'}:\.{'+'},\39\\{scope}[\|k],\39%
+\\{par}[\|k],\39\\{rchild}[\|k],\39\\{lsib}[\|k]);{}$\6
+${}\\{printf}(\.{"\ ppro=\%d,\ npro=\%d,\ }\)\.{prev=\%d,\ bstart=\%d\\n}\)%
+\.{"},\39\\{ppro}[\|k],\39\\{npro}[\|k],\39\\{prev}[\|k],\39\\{bstart}[%
+\|k]);{}$\6
+${}\\{printf}(\.{"\ umin=\%d,\ ueven=\%d,}\)\.{\ umax=\%d,\ umaxbit=\%d}\)\.{,\
+umaxscope=\%d\\n"},\39\\{umin}[\|k],\39\\{ueven}[\|k],\39\\{umax}[\|k],\39%
+\\{umaxbit}[\|k],\39\\{umaxscope}[\|k]);{}$\6
+${}\\{printf}(\.{"\ vmin=\%d,\ veven=\%d,}\)\.{\ vmax=\%d,\ vmaxbit=\%d}\)\.{,\
+vmaxscope=\%d\\n"},\39\\{vmin}[\|k],\39\\{veven}[\|k],\39\\{vmax}[\|k],\39%
+\\{vmaxbit}[\|k],\39\\{vmaxscope}[\|k]);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U24.\fi
+
+\N{1}{34}Index.
+\fi
+
+\inx
+\fin
+\con

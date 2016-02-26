@@ -1,0 +1,20 @@
+\I\X9:Backtrack thru all solutions\X
+\U1.
+\I\X7:Build the tri\X
+\U4.
+\I\X6:Check the length of the new line\X
+\U5.
+\I\X4:Input the $m$-words and make the tri\X
+\U1.
+\I\X5:Input the $n$-words and make the trie\X
+\U1.
+\I\X10:Print a solution and \PB{\&{goto} \\{b5}}\X
+\U9.
+\I\X2:Print the profile\X
+\U1.
+\I\X3:Process the command line\X
+\U1.
+\I\X11:Report the current state, if \PB{$\\{mems}\G\\{thresh}$}\X
+\U9.
+\I\X8:Subroutines\X
+\U1.

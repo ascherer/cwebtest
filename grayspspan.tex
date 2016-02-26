@@ -1,0 +1,1622 @@
+\input cwebmac
+\datethis
+
+
+
+
+\N{1}{1}Introduction. This program combines the ideas of {\mc GRAYSPAN}
+and {\mc SPSPAN}, resulting in a glorious routine that generates
+all spanning trees of a given graph, changing only one edge at a time,
+with ``guaranteed efficiency''---in the sense that the total running
+time is $O(m+n+t)$ when there are $m$ edges, $n$ vertices, and $t$
+spanning trees.
+
+The reader should be familiar with both {\mc GRAYSPAN} and {\mc SPSPAN},
+because their principles of operation are not repeated here.
+
+The first command line argument is the name of a file that specifies
+an undirected graph in Stanford GraphBase
+{\mc SAVE\_GRAPH} format. Additional command line
+arguments are ignored except that they cause more verbose output.
+The least verbose output contains only overall statistics about the total
+number of spanning trees found and the total number of mems used.
+
+\Y\B\4\D$\\{verbose}$ \5
+$(\\{xargc}>\T{2}{}$)\par
+\B\4\D$\\{extraverbose}$ \5
+$(\\{xargc}>\T{3}{}$)\par
+\B\4\D$\|o$ \5
+$\\{mems}\PP{}$\par
+\B\4\D$\\{oo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{2}\par
+\B\4\D$\\{ooo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{3}\par
+\B\4\D$\\{oooo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{4}\par
+\B\4\D$\\{ooooo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{5}\par
+\B\4\D$\\{oooooo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{6}\par
+\Y\B\8\#\&{include} \.{"gb\_graph.h"}\6
+\8\#\&{include} \.{"gb\_save.h"}\6
+\ATH\6
+\&{double} \\{mems};\C{ memory references made }\6
+\&{double} \\{count};\C{ trees found }\6
+\&{Graph} ${}{*}\\{gg}{}$;\C{ a global copy of \PB{\|g} }\6
+\&{int} \\{xargc};\C{ a global copy of \PB{\\{argc}} }\7
+\X5:Type definitions\X\6
+\X7:Global variables\X\6
+\X9:Subroutines\X\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\X3:Local variables\X;\6
+\X2:Input the graph\X;\6
+\&{if} ${}(\|n>\T{1}){}$\1\5
+\X25:Generate all spanning trees\X;\2\6
+${}\\{printf}(\.{"Altogether\ \%.15g\ sp}\)\.{anning\ trees,\ using\ }\)\.{%
+\%.15g\ mems.\\n"},\39\\{count},\39\\{mems});{}$\6
+\\{exit}(\T{0});\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Input the graph\X${}\E{}$\6
+\&{if} ${}(\\{argc}<\T{2}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ foo.gb\ [[}\)\.{gory]\ details]%
+\\n"},\39\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{11});{}$\6
+\4${}\}{}$\2\6
+${}\\{xargc}\K\\{argc};{}$\6
+${}\\{gg}\K\|g\K\\{restore\_graph}(\\{argv}[\T{1}]);{}$\6
+\&{if} ${}(\R\|g){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ can't\ create}\)\.{\ the\ graph\ from\
+file}\)\.{\ \%s!\ (error\ code\ \%d)}\)\.{\\n"},\39\\{argv}[\T{1}],\39\\{panic%
+\_code});{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+\X6:Allocate additional storage\X;\6
+\X18:Check the graph for validity and prepare it for action\X;\par
+\U1.\fi
+
+\M{3}\B\X3:Local variables\X${}\E{}$\6
+\&{register} \&{Graph} ${}{*}\|g{}$;\C{ the graph we're dealing with }\6
+\&{register} \&{int} \|n;\C{ the number of vertices }\6
+\&{register} \&{int} \|m;\C{ the number of edges }\6
+\&{register} \&{int} \|l;\C{ the current level of shrinkage }\6
+\&{register} \&{int} \|k;\C{ current integer of interest }\6
+\&{register} \&{Vertex} ${}{*}\|u,{}$ ${}{*}\|v,{}$ ${}{*}\|w{}$;\C{ current
+vertices of interest }\6
+\&{register} \&{Arc} ${}{*}\|e,{}$ ${}{*}\\{ee},{}$ ${}{*}\|f,{}$ ${}{*}%
+\\{ff}{}$;\C{ current edges of interest }\6
+\&{register} \&{Bond} ${}{*}\|b{}$;\C{ current interest-bearing bond }\par
+\U1.\fi
+
+\N{1}{4}The method and its data structures. The basic idea of this program,
+which goes back to Malcolm Smith's M.S. thesis, ``Generating spanning trees''
+(University of Victoria, 1997), is to modify the {\mc GRAYSPAN} algorithm,
+replacing edges by series-parallel subgraphs that we will call ``bonds.''
+
+A {\it bond\/} between vertices \PB{\|u} and \PB{\|v} is either an edge of the
+given graph, or a sequence of bonds joined in series, or a set of bonds
+joined in parallel.
+The {\mc GRAYSPSPAN} algorithm essentially uses
+the {\mc GRAYSPAN} method to generate spanning trees with respect to bonds,
+together with the {\mc SPSPAN} method to generate all of the corresponding
+spanning trees with respect to the original edges.
+
+Suppose we start by considering each edge to be a bond of the simplest kind.
+Then we can remove multiple bonds, if any, by combining them in parallel.
+And we can remove vertices of degree~2 by combining their adjacent bonds
+in series. A vertex of degree~1 and its adjacent bond can be removed
+from the graph, if we require that bond to be present in every spanning tree.
+Under the assumption that the given graph is connected, repeated reductions
+of this kind will eventually lead to a simple graph that is {\it irreducible},
+either trivial (with only one point) or with all vertices of degree
+3~or~more.
+
+For example, consider the smallest nontrivial irreducible graph,
+having four vertices and bonds between any two of them. Suppose the
+vertices are $v_1$, $v_2$, $v_3$, $v_4$ and the bonds are $b_{12}$,
+$b_{13}$, $b_{14}$, $b_{23}$, $b_{24}$, $b_{34}$. If the {\mc GRAYSPAN}
+algorithm produces the spanning tree $b_{12}b_{13}b_{24}$, say, the
+{\mc SPSPAN} algorithm is used to cycle through all the 1-configs of
+$b_{12}$, $b_{13}$, and $b_{24}$ together with all the 0-configs
+of the other bonds $b_{14}$, $b_{23}$, $b_{34}$. Then if {\mc GRAYSPAN}
+produces its next spanning tree by changing $b_{24}$ to $b_{34}$,
+this change corresponds to removing the designated leaf of bond~$b_{24}$
+and including the designated leaf of $b_{34}$, after which {\mc SPSPAN}
+runs through the 1-configs of $b_{12}$, $b_{13}$, $b_{34}$ with the
+0-configs of $b_{14}$, $b_{23}$, $b_{24}$.
+
+The actual operation of this program is not quite the same as
+just described, because the
+operation of shrinking $b_{12}$ causes the resulting graph to reduce to a
+triviality; the {\mc GRAYSPAN} algorithm never gets to the
+case $n=2$ that used to be its goal. But conceptually we make progress
+on the graph as a whole
+by shrinking edges and removing nonbridges just as in {\mc GRAYSPAN},
+and each reduction in the number of bonds takes more of the computation
+into the highly efficient {\mc SPSPAN} domain.
+
+\fi
+
+\M{5}A suitable data structure to support all this machinery can be
+fashioned from a struct of type \&{Bond}, which contains the fields
+\PB{\\{typ}}, \PB{\\{val}}, \PB{\\{des}}, \PB{\\{done}}, \PB{\\{focus}}, and %
+\PB{\\{rsib}} that we used in
+{\mc SPSPAN}. We also need \PB{\\{left}} and \PB{\\{right}} pointers, because
+we
+must keep branch nodes in a doubly linked list instead of allocating
+them sequentially and statically as we did before. Then there are \PB{%
+\\{lchild}},
+\PB{\\{lsib}}, and \PB{\\{scope}} pointers for constructing new bonds from old
+ones;
+also \PB{\\{lhist}} and \PB{\\{rhist}} for deconstructing when bonds are being
+undone.
+Finally there's yet another doubly linked list, containing the top-level
+bonds of the current spanning tree; its link fields are called \PB{\\{up}} and %
+\PB{\\{down}}.
+
+\Y\B\4\X5:Type definitions\X${}\E{}$\6
+\&{typedef} \&{struct} \&{bond\_struct} ${}\{{}$\1\6
+\&{int} \\{typ};\C{ 1 for series bonds, 0 for parallel bonds, 2 for deletion
+records }\6
+\&{int} \\{val};\C{ 1 if the bond is in the current spanning tree }\6
+\&{struct} \&{bond\_struct} ${}{*}\\{lchild}{}$;\C{ leftmost child; \PB{$%
+\NULL$} for a leaf }\6
+\&{struct} \&{bond\_struct} ${}{*}\\{lsib}{}$;\C{ left sibling; wraps around
+cyclically }\6
+\&{struct} \&{bond\_struct} ${}{*}\\{rsib}{}$;\C{ right sibling; wraps around
+cyclically }\6
+\&{struct} \&{bond\_struct} ${}{*}\\{des}{}$;\C{ designated child }\6
+\&{struct} \&{bond\_struct} ${}{*}\\{done}{}$;\C{ final designated child in a
+sweep }\6
+\&{struct} \&{bond\_struct} ${}{*}\\{scope}{}$;\C{ last branch descendant in
+preorder }\6
+\&{struct} \&{bond\_struct} ${}{*}\\{focus}{}$;\C{ magic pointer control for
+Gray products }\6
+\&{struct} \&{bond\_struct} ${}{*}\\{left}{}$;\C{ left neighbor in the action
+list }\6
+\&{struct} \&{bond\_struct} ${}{*}\\{right}{}$;\C{ right neighbor in the action
+list }\6
+\&{struct} \&{bond\_struct} ${}{*}\\{up}{}$;\C{ upper neighbor in the tree list
+}\6
+\&{struct} \&{bond\_struct} ${}{*}\\{down}{}$;\C{ lower neighbor in the tree
+list }\6
+\&{struct} \&{bond\_struct} ${}{*}\\{lsave},{}$ ${}{*}\\{rsave}{}$;\C{ needed
+for restoration in one case }\6
+\&{Arc} ${}{*}\\{lhist},{}$ ${}{*}\\{rhist}{}$;\C{ the edges that spawned this
+bond }\2\6
+${}\}{}$ \&{Bond};\par
+\U1.\fi
+
+\M{6}If the graph has \PB{\|m} edges, we put the basic one-edge bonds into
+\PB{$\\{bondbase}+\|k$} for $1\le k\le m$; series and parallel combinations,
+and ``deletion records'' for undoing a bond deletion, go into the
+subsequent locations, in a last-in-first-out manner.
+
+\Y\B\4\D$\\{isleaf}(\|b)$ \5
+$((\|b)\Z\\{topleaf}{}$)\C{ is \PB{\|b} simply an edge? }\par
+\B\4\D$\\{action}$ \5
+\\{bondbase}\C{ head of the action list }\par
+\B\4\D$\\{tree}$ \5
+$({\AND}\\{treehead}{}$)\C{ head of the tree list }\par
+\Y\B\4\X6:Allocate additional storage\X${}\E{}$\6
+$\|m\K\|g\MG\|m/\T{2};{}$\6
+${}\\{bondbase}\K{}$(\&{Bond} ${}{*}){}$ \\{calloc}${}(\T{3}*\|m,\39\&{sizeof}(%
+\&{Bond}));{}$\6
+${}\\{action}\MG\\{left}\K\\{action}\MG\\{right}\K\\{action},\39\\{action}\MG%
+\\{typ}\K\T{2},\39\\{action}\MG\\{focus}\K\\{action}{}$;\C{ the action list
+starts empty }\6
+${}\\{tree}\MG\\{up}\K\\{tree}\MG\\{down}\K\\{tree}{}$;\C{ and so does the tree
+list }\par
+\U2.\fi
+
+\M{7}\B\X7:Global variables\X${}\E{}$\6
+\&{Bond} ${}{*}\\{bondbase}{}$;\C{ base address for almost all \&{Bond} structs
+}\6
+\&{int} \\{bondcount};\C{ the number of bonds currently defined }\6
+\&{Bond} ${}{*}\\{topleaf}{}$;\C{ dividing line between leaves and branches }\6
+\&{Bond} \\{treehead};\C{ header for the tree list }\6
+\&{Bond} ${}{*}\\{inbond},{}$ ${}{*}\\{outbond}{}$;\C{ bonds to be included and
+excluded next }\6
+\&{Bond} \\{James};\C{ my little joke }\par
+\U1.\fi
+
+\M{8}The bonds between vertices are represented as \&{Arc} structs in
+almost the usual way; namely, a bond between \PB{\|u} and \PB{\|v} appears as
+an arc \PB{\|e} with \PB{$\|e\MG\\{tip}\K\|v$} in the list \PB{$\|u\MG%
+\\{arcs}$}, and as an arc \PB{\|f}
+with \PB{$\|f\MG\\{tip}\K\|u$} in the list \PB{$\|v\MG\\{arcs}$}, where \PB{$%
+\|f\K\\{mate}(\|e)$} and \PB{$\|e\K\\{mate}(\|f)$}.
+However, as in {\mc GRAYSPAN}, we doubly link the arc list,
+making \PB{$\|e\MG\\{prev}\MG\\{next}\K\|e\MG\\{next}\MG\\{prev}\K\|e$} and
+starting the list with
+a dummy entry called its header.
+
+We also include a new field
+\PB{$\|e\MG\\{bond}$} pointing to the \&{Bond} struct that carries further
+information.
+This one has to be coerced to type \PB{(\&{Bond} ${}{*})$} when used in the %
+\CEE/ code.
+
+\Y\B\4\D$\\{deg}$ \5
+$\|u.{}$\|I\C{ utility field \PB{\|u} of each vertex holds its current degree }%
+\par
+\B\4\D$\\{prev}$ \5
+$\|a.{}$\|A\C{ utility field \PB{\|a} of each arc holds its backpointer }\par
+\B\4\D$\\{bond}$ \5
+$\|b.{}$\|A\C{ utility field \PB{\|b} of each arc leads to the corresponding %
+\&{Bond} }\par
+\B\4\D$\\{mate}(\|e)$ \5
+$(\\{edge\_trick}\AND(\&{siz\_t})(\|e)\?(\|e)-\T{1}:(\|e)+\T{1}{}$)\par
+\B\4\D$\\{bn}(\|b)$ \5
+$((\|b)-\\{bondbase}{}$)\C{ the number of bond \PB{\|b}, for printout }\par
+\B\4\D$\\{ebn}(\|e)$ \5
+\\{bn}((\&{Bond} ${}{*})((\|e)\MG\\{bond}){}$)\par
+\B\4\D$\\{delete}(\|e)$ \5
+$\\{ee}\K\|e,\39\\{oooo},\39\\{ee}\MG\\{prev}\MG\\{next}\K\\{ee}\MG\\{next},\39%
+\\{ee}\MG\\{next}\MG\\{prev}\K\\{ee}\MG{}$\\{prev}\par
+\B\4\D$\\{undelete}(\|e)$ \5
+$\\{ee}\K\|e,\39\\{oooo},\39\\{ee}\MG\\{next}\MG\\{prev}\K\\{ee},\39\\{ee}\MG%
+\\{prev}\MG\\{next}\K{}$\\{ee}\par
+\fi
+
+\N{1}{9}Diagnostic routines. Here are a few handy ways to look at the current
+data.
+
+\Y\B\4\X9:Subroutines\X${}\E{}$\6
+\&{void} \\{printgraph}(\&{void})\C{ prints the current graph }\6
+${}\{{}$\1\6
+\&{register} \&{Vertex} ${}{*}\|v;{}$\6
+\&{register} \&{Arc} ${}{*}\|e;{}$\7
+\&{for} ${}(\|v\K\\{gg}\MG\\{vertices};{}$ ${}\|v<\\{gg}\MG\\{vertices}+\\{gg}%
+\MG\|n;{}$ ${}\|v\PP){}$\1\6
+\&{if} ${}(\|v\MG\\{mark}\G\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"Bonds\ from\ \%s:"},\39\|v\MG\\{name});{}$\6
+\&{for} ${}(\|e\K\|v\MG\\{arcs}\MG\\{next};{}$ ${}\|e\MG\\{tip};{}$ ${}\|e\K\|e%
+\MG\\{next}){}$\1\5
+${}\\{printf}(\.{"\ \%s(\%d)"},\39\|e\MG\\{tip}\MG\\{name},\39\\{ebn}(\|e));{}$%
+\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\par
+\As10, 11, 12, 31, 38\ETs39.
+\U1.\fi
+
+\M{10}\B\X9:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{printbond}(\&{Bond} ${}{*}\|b){}$\1\1\2\2\6
+${}\{{}$\1\6
+${}\\{printf}(\.{"\%d:\%c"},\39\\{bn}(\|b),\39\\{isleaf}(\|b)\?\.{'l'}:\|b\MG%
+\\{typ}\E\T{2}\?\.{'r'}:\|b\MG\\{typ}\E\T{1}\?\.{'s'}:\.{'p'});{}$\6
+\&{if} ${}(\|b\MG\\{typ}\E\T{2}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\ lhist=\%d"},\39\\{ebn}(\|b\MG\\{lhist}));{}$\6
+\&{if} ${}(\|b\MG\\{rhist}){}$\1\5
+${}\\{printf}(\.{"\ rhist=\%d"},\39\\{ebn}(\|b\MG\\{lhist}));{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\%c"},\39\|b\MG\\{val}+\.{'0'});{}$\6
+\&{if} ${}(\|b\MG\\{lsib}){}$\1\5
+${}\\{printf}(\.{"\ lsib=\%d,\ rsib=\%d"},\39\\{bn}(\|b\MG\\{lsib}),\39\\{bn}(%
+\|b\MG\\{rsib}));{}$\2\6
+\&{if} ${}(\R\\{isleaf}(\|b)){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|b\MG\\{focus}\I\|b){}$\1\5
+${}\\{printf}(\.{"\ focus=\%d"},\39\\{bn}(\|b\MG\\{focus}));{}$\2\6
+${}\\{printf}(\.{"\ lchild=\%d,\ scope=\%}\)\.{d,\ des=\%d,\ done=\%d"},\39%
+\\{bn}(\|b\MG\\{lchild}),\39\\{bn}(\|b\MG\\{scope}),\39\\{bn}(\|b\MG\\{des}),%
+\39\\{bn}(\|b\MG\\{done}));{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\fi
+
+\M{11}\B\X9:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{printaction}(\&{void})\C{ prints the current action list }\6
+${}\{{}$\1\6
+\&{register} \&{Bond} ${}{*}\|b;{}$\7
+\&{for} ${}(\|b\K\\{action}\MG\\{right};{}$ ${}\|b\I\\{action};{}$ ${}\|b\K\|b%
+\MG\\{right}){}$\1\5
+\\{printbond}(\|b);\2\6
+\4${}\}{}$\2\7
+\&{void} \\{printtree}(\&{void})\C{ prints the current tree list }\6
+${}\{{}$\1\6
+\&{register} \&{Bond} ${}{*}\|b;{}$\7
+\&{for} ${}(\|b\K\\{tree}\MG\\{down};{}$ ${}\|b\I\\{tree};{}$ ${}\|b\K\|b\MG%
+\\{down}){}$\1\5
+\\{printbond}(\|b);\2\6
+\4${}\}{}$\2\7
+\&{void} \\{printleaves}(\&{void})\C{ prints all the leaves }\6
+${}\{{}$\1\6
+\&{register} \&{Bond} ${}{*}\|b;{}$\7
+\&{for} ${}(\|b\K\\{bondbase}+\T{1};{}$ ${}\|b\Z\\{topleaf};{}$ ${}\|b\PP){}$\1%
+\5
+\\{printbond}(\|b);\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{12}Since there's so much redundancy in the data structures, I need
+reassurance
+that I haven't slipped up and forgotten to keep everything shipshape.
+``A~data structure is only as strong as its weakest link.''
+
+The \PB{\\{sanitycheck}}
+routine is designed to print out most discrepancies between my assumptions and
+the true state of affairs. I~used it to locate lapses when this program
+was being debugged, and it remains as testimony to the most vital structural
+assumptions that are being made.
+
+\Y\B\4\X9:Subroutines\X${}\mathrel+\E{}$\6
+\X16:Declare the recursive routine \PB{\\{bondsanity}}\X;\7
+\&{int} \\{sanitycheck}(\&{int} \\{flags})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{Vertex} ${}{*}\|u,{}$ ${}{*}\|v;{}$\6
+\&{register} \&{Arc} ${}{*}\|e;{}$\6
+\&{register} \&{Bond} ${}{*}\|b;{}$\6
+\&{register} \&{int} \|k${},{}$ \|n;\6
+\&{int} \\{bugs}${}\K\T{0};{}$\7
+\&{if} ${}(\\{flags}\AND\T{1}){}$\1\5
+\X13:Do a sanity check on the graph\X;\2\6
+\&{if} ${}(\\{flags}\AND\T{2}){}$\1\5
+\X15:Do a sanity check on the action list\X;\2\6
+\&{if} ${}(\\{flags}\AND\T{4}){}$\1\5
+\X17:Do a sanity check on the tree list\X;\2\6
+\&{return} \\{bugs};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{13}\B\X13:Do a sanity check on the graph\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|n\K\T{0},\39\|v\K\\{gg}\MG\\{vertices};{}$ ${}\|v<\\{gg}\MG%
+\\{vertices}+\\{gg}\MG\|n;{}$ ${}\|v\PP){}$\1\6
+\&{if} ${}(\|v\MG\\{mark}\G\T{0}){}$\1\5
+\X14:Do a sanity check on \PB{\|v}'s bond list\X;\2\2\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{14}Some of the ``bugs'' detected in this routine are, of course,
+harmless in certain contexts. My goal is to call attention to
+things that might be unexpected, but to keep going in any case.
+
+\Y\B\4\X14:Do a sanity check on \PB{\|v}'s bond list\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|n\PP;{}$\6
+\&{if} ${}(\|v\MG\\{mark}){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Vertex\ \%s\ is\ marked}\)\.{\\n"},\39\|v\MG%
+\\{name});{}$\2\6
+\&{if} ${}((\|v\MG\\{deg}<\T{3}\W\|v\MG\\{deg}\I\T{0})\V\|v\MG\\{deg}\G\\{gg}%
+\MG\|n){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Vertex\ \%s\ has\ degre}\)\.{e\ \%d\\n"},\39%
+\|v\MG\\{name},\39\|v\MG\\{deg});{}$\2\6
+\&{for} ${}(\|k\K\T{0},\39\|e\K\|v\MG\\{arcs};{}$ ${}\|k\Z\|v\MG\\{deg};{}$ ${}%
+\|k\PP,\39\|e\K\|e\MG\\{next}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|e\MG\\{prev}\MG\\{next}\I\|e\V\|e\MG\\{next}\MG\\{prev}\I\|e){}$\1%
+\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Link\ failure\ at\ ver}\)\.{tex\ \%s,\ bond\ %
+\%d\\n"},\39\|v\MG\\{name},\39\|k);{}$\2\6
+\&{if} ${}(\|k>\T{0}){}$\5
+${}\{{}$\1\6
+${}\|b\K{}$(\&{Bond} ${}{*}){}$ \|e${}\MG\\{bond};{}$\6
+\&{if} ${}(\|b\Z\\{bondbase}\V\|b>\\{bondbase}+\\{bondcount}){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Vertex\ \%s\ has\ bad\ b}\)\.{ond\ \%d\\n"},%
+\39\|v\MG\\{name},\39\|k);{}$\2\6
+\&{else} \&{if} ${}(\|b\MG\\{lhist}\I\|e\W\|b\MG\\{lhist}\I\\{mate}(\|e)){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Bond\ \%d\ has\ bad\ lhi}\)\.{st\ pointer%
+\\n"},\39\\{bn}(\|b));{}$\2\6
+\&{if} ${}(\\{mate}(\|e)\MG\\{bond}\I\|e\MG\\{bond}){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Vertex\ \%s\ has\ unmat}\)\.{ed\ bond\ \%d%
+\\n"},\39\|v\MG\\{name},\39\|k);{}$\2\6
+\&{if} ${}(\\{mate}(\|e)\MG\\{tip}\I\|v){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Vertex\ \%s's\ bond\ \%d}\)\.{\ has\ wrong\
+mate\ tip\\}\)\.{n"},\39\|v\MG\\{name},\39\|k);{}$\2\6
+${}\|u\K\|e\MG\\{tip};{}$\6
+\&{if} ${}(\R\|u){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Vertex\ \%s\ has\ bad\ t}\)\.{ip\ \%d\\n"},\39%
+\|v\MG\\{name},\39\|k);{}$\2\6
+\&{else} \&{if} ${}(\|u\MG\\{mark}<\T{0}){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Vertex\ \%s\ points\ to}\)\.{\ deleted\ vertex%
+\ \%s\\n}\)\.{"},\39\|v\MG\\{name},\39\|u\MG\\{name});{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|e\I\|v\MG\\{arcs}){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Vertex\ \%s\ has\ more\ }\)\.{than\ \%d\ bonds%
+\\n"},\39\|v\MG\\{name},\39\|v\MG\\{deg});{}$\2\6
+\4${}\}{}$\2\par
+\U13.\fi
+
+\M{15}The action list is essentially a forest of bonds, in preorder.
+
+\Y\B\4\X15:Do a sanity check on the action list\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{action}\MG\\{left}\MG\\{right}\I\\{action}\V\\{action}\MG%
+\\{right}\MG\\{left}\I\\{action}){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Link\ failure\ at\ hea}\)\.{d\ of\ action\
+list\\n"});{}$\2\6
+\&{for} ${}(\|b\K\\{action}\MG\\{right};{}$ ${}\|b\I\\{action};{}$ ${}\|b\K\|b%
+\MG\\{right}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|b\MG\\{val}\E\T{1}\W(\R\|b\MG\\{up}\V\|b\MG\\{up}\MG\\{down}\I%
+\|b)){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Bond\ \%d\ isn't\ prope}\)\.{rly\ in\ the\
+tree\ list}\)\.{\\n"},\39\\{bn}(\|b));{}$\2\6
+\&{if} ${}(\|b\MG\\{lsib}\V\|b\MG\\{rsib}){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Top\ level\ bond\ \%d\ h}\)\.{as\ siblings%
+\\n"},\39\\{bn}(\|b));{}$\2\6
+\&{if} (\\{isleaf}(\|b))\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Leaf\ \%d\ is\ in\ the\ a}\)\.{ction\ list%
+\\n"},\39\\{bn}(\|b));{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{bugs}\MRL{+{\K}}\\{bondsanity}(\|b);{}$\6
+${}\|b\K\|b\MG\\{scope};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{16}\B\X16:Declare the recursive routine \PB{\\{bondsanity}}\X${}\E{}$\6
+\&{int} \\{bondsanity}(\&{Bond} ${}{*}\|b){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{int} \\{bugs}${}\K\T{0};{}$\6
+\&{register} \&{Bond} ${}{*}\|a,{}$ ${}{*}\\{extent};{}$\6
+\&{register} \&{int} \|j${},{}$ \|k;\7
+${}\\{extent}\K\|b;{}$\6
+\&{if} ${}(\|b\MG\\{left}\MG\\{right}\I\|b\V\|b\MG\\{right}\MG\\{left}\I\|b){}$%
+\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Link\ failure\ at\ bon}\)\.{d\ \%d\\n"},\39%
+\\{bn}(\|b));{}$\2\6
+\&{for} ${}(\|a\K\|b\MG\\{lchild},\39\|j\K\|k\K\T{0};{}$ ${}\|a\I\|b\MG%
+\\{lchild}\V\|k\E\T{0};{}$ ${}\|a\K\|a\MG\\{rsib},\39\|k\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|a\Z\\{bondbase}\V\|a>\\{bondbase}+\\{bondcount}){}$\5
+${}\{{}$\1\6
+${}\\{bugs}\PP,\39\\{printf}(\.{"Bond\ \%d\ has\ a\ child}\)\.{\ out\ of\ range%
+\\n"},\39\\{bn}(\|b));{}$\6
+\&{break};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|a\MG\\{lsib}\MG\\{rsib}\I\|a\V\|a\MG\\{rsib}\MG\\{lsib}\I\|a){}$\1%
+\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Sibling\ link\ failur}\)\.{e\ at\ bond\ \%d%
+\\n"},\39\\{bn}(\|a));{}$\2\6
+\&{if} ${}(\|a\E\|b\MG\\{des}){}$\1\5
+${}\|j\K\T{1};{}$\2\6
+\&{else} \&{if} ${}(\|a\MG\\{val}\I\|b\MG\\{typ}){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Bond\ \%d\ should\ have}\)\.{\ value\ \%d%
+\\n"},\39\\{bn}(\|a),\39\|b\MG\\{typ});{}$\2\6
+\&{if} ${}(\R\\{isleaf}(\|a)){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|a\MG\\{left}\I\\{extent}){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Preorder\ failure:\ b}\)\.{ond\ \%d\ doesn't\
+follo}\)\.{w\ \%d\\n"},\39\\{bn}(\|a),\39\\{bn}(\\{extent}));{}$\2\6
+${}\\{bugs}\MRL{+{\K}}\\{bondsanity}(\|a);{}$\6
+${}\\{extent}\K\|a\MG\\{scope};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\R\|j){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Bond\ \%d\ doesn't\ des}\)\.{ignate\ any\ of\
+its\ ch}\)\.{ildren\\n"},\39\\{bn}(\|b));{}$\2\6
+\&{else} \&{if} ${}(\|b\MG\\{done}\I\|b\MG\\{des}\MG\\{lsib}){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Bond\ \%d\ should\ be\ d}\)\.{one\ at\ \%d%
+\\n"},\39\\{bn}(\|b),\39\\{bn}(\|b\MG\\{des}\MG\\{lsib}));{}$\2\6
+\&{if} ${}(\|b\MG\\{scope}\I\\{extent}){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Bond\ \%d\ should\ have}\)\.{\ scope\ \%d%
+\\n"},\39\\{bn}(\|b),\39\\{bn}(\\{extent}));{}$\2\6
+\&{return} \\{bugs};\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{17}If \PB{$\\{flags}\AND\T{1}$}, we've computed the number \PB{\|n} of
+current vertices.
+
+\Y\B\4\X17:Do a sanity check on the tree list\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{tree}\MG\\{up}\MG\\{down}\I\\{tree}\V\\{tree}\MG\\{down}\MG\\{up}%
+\I\\{tree}){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Link\ failure\ at\ hea}\)\.{d\ of\ tree\ list%
+\\n"});{}$\2\6
+\&{for} ${}(\|b\K\\{tree}\MG\\{down},\39\|k\K\T{0};{}$ ${}\|b\I\\{tree};{}$ ${}%
+\|k\PP,\39\|b\K\|b\MG\\{down}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|b\MG\\{up}\MG\\{down}\I\|b\V\|b\MG\\{down}\MG\\{up}\I\|b){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Link\ failure\ in\ tre}\)\.{e\ list\ at\ bond\
+\%d\\n"},\39\\{bn}(\|b));{}$\2\6
+\&{if} ${}(\|b\MG\\{val}\I\T{1}){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"Bond\ \%d\ in\ the\ tree}\)\.{\ list\ has\
+value\ 0\\n"},\39\\{bn}(\|b));{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}((\\{flags}\AND\T{1})\W(\|k\I\|n-\T{1}-(\\{inbond}\E\NULL))){}$\1\5
+${}\\{bugs}\PP,\39\\{printf}(\.{"The\ tree\ list\ holds}\)\.{\ \%d\ bonds,\ not%
+\ \%d\\n"},\39\|k,\39\|n-\T{1}-(\\{inbond}\E\NULL));{}$\2\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\N{1}{18}Graph preparation. At the beginning, we want to make sure that the
+given graph is truly undirected, and that we can find mates of its
+edges using the infamous \PB{\\{edge\_trick}}. We also need to change its
+representation from singly linked edges to doubly linked bonds,
+and to compute vertex degrees,
+as well as to find an initial spanning tree.
+
+All of these things can be done easily with a single
+search of the graph. The following program sets \PB{$\|v\MG\\{mark}\K\T{2}$}
+for each
+vertex that has been seen, and keeps a sequential stack of vertices
+that have been seen but not yet explored. (The search has aspects
+of both bread-first and depth-first approaches: When we explore a vertex
+we see all of its successors before exploring another, but we select
+new vertices for exploration in the last-seen-first-explored manner.)
+
+Why is the \PB{\\{mark}} field set to 2? Because any nonzero value will do,
+and it turns out that we'll want to set it to~2 shortly after
+this part of the program is done.
+
+\Y\B\4\D$\\{stack}(\|k)$ \5
+$(\|g\MG\\{vertices}+(\|k))\MG\|z.{}$\|V\C{ utility field \PB{\|z} is used for
+a stack }\par
+\B\4\D$\\{mark}$ \5
+$\|v.{}$\|I\C{ utility field \PB{\|v} of each vertex holds a mark }\par
+\Y\B\4\X18:Check the graph for validity and prepare it for action\X${}\E{}$\6
+\&{for} ${}(\|v\K\|g\MG\\{vertices}+\T{1};{}$ ${}\|v\Z\|g\MG\\{vertices}+\|g\MG%
+\|n;{}$ ${}\|v\PP){}$\1\5
+${}\|v\MG\\{mark}\K\T{0};{}$\2\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"Graph\ \%s\ has\ the\ fo}\)\.{llowing\ edges:\\n"},\39\|g\MG%
+\\{id});{}$\2\6
+${}\|v\K\|g\MG\\{vertices},\39\\{stack}(\T{0})\K\|v,\39\|k\K\T{1},\39\|v\MG%
+\\{mark}\K\T{2},\39\|n\K\T{1},\39\|m\K\T{0};{}$\6
+\&{while} (\|k)\5
+${}\{{}$\C{ $k$ is the number of items on the stack }\1\6
+${}\|o,\39\|v\K\\{stack}(\MM\|k);{}$\6
+${}\|f\K\\{gb\_virgin\_arc}(\,);{}$\6
+${}\|f\MG\\{next}\K\|v\MG\\{arcs}{}$;\C{ the new header node }\6
+\&{for} ${}(\|v\MG\\{deg}\K\T{0},\39\|e\K\|v\MG\\{arcs},\39\|v\MG\\{arcs}\K%
+\|f;{}$ \|e; ${}\|v\MG\\{deg}\PP,\39\|f\K\|e,\39\|e\K\|e\MG\\{next}){}$\5
+${}\{{}$\1\6
+\4\\{looky}:\5
+${}\|u\K\|e\MG\\{tip};{}$\6
+\&{if} ${}(\|u\E\|v){}$\5
+${}\{{}$\C{ self-loops are silently ignored }\1\6
+${}\|f\MG\\{next}\K\|e\K\|e\MG\\{next};{}$\6
+\&{if} ${}(\R\|e){}$\1\5
+\&{break};\2\6
+\&{goto} \\{looky};\6
+\4${}\}{}$\2\6
+${}\|e\MG\\{prev}\K\|f;{}$\6
+\&{if} ${}(\\{mate}(\|e)\MG\\{tip}\I\|v){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Graph\ \%s\ has\ an\ arc}\)\.{\ from\ \%s\ to\
+\%s,\\n"},\39\|g\MG\\{id},\39\|u\MG\\{name},\39\|v\MG\\{name});{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ but\ the\ edge\ trick}\)\.{\ doesn't\ find\
+the\ op}\)\.{posite\ arc!\\n"});{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|o,\39\R\|e\MG\\{bond}){}$\5
+${}\{{}$\1\6
+${}\\{ooo},\39\|m\PP,\39\|b\K\\{bondbase}+\|m,\39\|e\MG\\{bond}\K\\{mate}(\|e)%
+\MG\\{bond}\K{}$(\&{Arc} ${}{*}){}$ \|b${},\39\|b\MG\\{lhist}\K\|e;{}$\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"\ \%d:\ \%s\ --\ \%s\\n"},\39\|m,\39\|v\MG\\{name},\39\|u\MG%
+\\{name});{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|o,\39\R\|u\MG\\{mark}){}$\5
+${}\{{}$\1\6
+${}\\{ooo},\39\|u\MG\\{mark}\K\T{2},\39\\{stack}(\|k\PP)\K\|u,\39\|b\K{}$(%
+\&{Bond} ${}{*}){}$ \|e${}\MG\\{bond},\39\|b\MG\\{val}\K\T{1};{}$\6
+${}\\{ooo},\39\|n\PP,\39\|b\MG\\{up}\K\\{tree}\MG\\{up},\39\\{tree}\MG\\{up}\MG%
+\\{down}\K\|b,\39\\{tree}\MG\\{up}\K\|b,\39\|b\MG\\{down}\K\\{tree};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\|v\MG\\{arcs}\MG\\{prev}\K\|f,\39\|f\MG\\{next}\K\|v\MG\\{arcs}{}$;\C{
+complete the double linking }\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|n<\|g\MG\|n){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Oops,\ the\ graph\ isn}\)\.{'t\ connected!%
+\\n"});{}$\6
+${}\\{exit}({-}\T{4});{}$\6
+\4${}\}{}$\2\6
+${}\|o,\39\\{topleaf}\K\\{bondbase}+\|m,\39\\{bondcount}\K\|m{}$;\par
+\U2.\fi
+
+\N{1}{19}Reduction. Let's start to write real code now. This program reaches
+a crucial step when we get to the label called \PB{\\{reduce}}, corresponding
+roughly to the point where {\mc GRAYSPAN} gets to its label called \\{enter}.
+
+When \PB{\\{reduce}} is reached, we're in the following state:
+
+\smallskip\item{1)} Bonds $a_1\ldots a_l$ of the current graph have
+been shrunk, represented as the array \PB{\\{aa}(\T{1})} through \PB{\\{aa}(%
+\|l)}.
+After we've found all spanning trees in
+the shrunken graph, we'll want to unshrink them.
+
+\smallskip\item{2)} The \PB{\\{tree}} list specifies a set of bonds that form
+a spanning tree on the current graph, if \PB{$\\{inbond}\I\NULL$},
+or a near-spanning tree if \PB{$\\{inbond}\K\NULL$}. The next spanning tree
+we generate is supposed to include all of those bonds.
+
+\smallskip\item{3)} If the current graph contains any parallel edges,
+they are adjacent to vertices \PB{\|v} for which \PB{$\|v\MG\\{mark}\K\T{2}$}.
+
+\smallskip\item{4)} If the current graph contains any vertices \PB{\|v} of
+degree
+less than~3, we have \PB{$\|v\MG\\{mark}>\T{0}$}.
+
+\smallskip\item{5)} All marked vertices appear on the stack, which currently
+holds \PB{\|k} items.
+
+\smallskip\item{6)} All current bonds and subbonds appear in locations
+\PB{$\\{bondbase}+\T{1}$} through \PB{$\\{bondbase}+\\{bondcount}$}. The ones
+created before
+reaching level~\PB{\|l} are less than or equal to \PB{$\\{bondbase}+\\{bonds}(%
+\|l)$}.
+
+\smallskip\noindent
+Our job is to zero out the marks, continuing to reduce the graph
+either by forming more complex bonds or by shrinking bonds of
+the tree list, until the graph finally becomes trivial.
+
+\Y\B\4\D$\\{bonds}(\|l)$ \5
+$(\|g\MG\\{vertices}+\|l)\MG\|y.{}$\|I\C{ utility field \PB{\|y} of the vertex
+array }\par
+\B\4\D$\\{aa}(\|l)$ \5
+$(\|g\MG\\{vertices}+\|l)\MG\|x.{}$\|A\C{ utility field \PB{\|x} holds $a_l$ }%
+\par
+\Y\B\4\X19:Reduce the graph until it's trivial\X${}\E{}$\6
+\4\\{reduce}:\5
+\&{while} (\|k)\5
+${}\{{}$\1\6
+${}\|o,\39\|v\K\\{stack}(\MM\|k);{}$\6
+\&{if} ${}(\|o,\39\|v\MG\\{mark}>\T{1}){}$\1\5
+\X20:Parallelize duplicate bonds from \PB{\|v}\X;\2\6
+\&{if} ${}(\|o,\39\|v\MG\\{deg}<\T{3}){}$\1\5
+\X21:Eliminate \PB{\|v}, then \PB{\&{goto} \\{trivialgraph}} if only one vertex
+is left\X\2\6
+\&{else}\1\5
+${}\|o,\39\|v\MG\\{mark}\K\T{0};{}$\2\6
+\4${}\}{}$\2\6
+\hbox{}\C{ now all relevant marks are zero and the graph still isn't trivial }\6
+${}\|o,\39\|l\PP,\39\\{bonds}(\|l)\K\\{bondcount};{}$\6
+\&{if} (\\{extraverbose})\1\5
+${}\\{printf}(\.{"Entering\ level\ \%d\\n}\)\.{"},\39\|l);{}$\2\6
+${}\\{oooo},\39\|b\K\\{tree}\MG\\{down},\39\\{tree}\MG\\{down}\K\|b\MG\\{down},%
+\39\\{tree}\MG\\{down}\MG\\{up}\K\\{tree};{}$\6
+${}\\{oo},\39\|e\K\|b\MG\\{lhist},\39\\{aa}(\|l)\K\|e{}$;\C{ we have \PB{$\|b%
+\MG\\{lhist}\MG\\{bond}\K{}$(\&{Arc} ${}{*}){}$ \|b} }\6
+\X24:Shrink bond \PB{\|e}\X;\6
+\&{goto} \\{reduce};\par
+\U25.\fi
+
+\M{20}\B\D$\\{dup}$ \5
+$\|w.{}$\|A\C{ utility field \PB{\|w} points to a previous edge }\par
+\Y\B\4\X20:Parallelize duplicate bonds from \PB{\|v}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\\{oo},\39\|e\K\|v\MG\\{arcs}\MG\\{next};{}$ \|o${},\39\|e\MG%
+\\{tip};{}$ \|o${},\39\|e\K\|e\MG\\{next}){}$\1\5
+${}\|o,\39\|e\MG\\{tip}\MG\\{dup}\K\NULL;{}$\2\6
+\&{for} ${}(\|e\K\|v\MG\\{arcs}\MG\\{next};{}$ \|o${},\39\|e\MG\\{tip};{}$ %
+\|o${},\39\|e\K\|e\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|u\K\|e\MG\\{tip};{}$\6
+\&{if} ${}(\|o,\39\|u\MG\\{dup}){}$\5
+${}\{{}$\1\6
+${}\\{makeparallel}(\|u\MG\\{dup},\39\|e){}$;\C{ create a new parallel bond }\6
+\&{if} ${}(\|o,\39\R\|u\MG\\{mark}){}$\1\5
+${}\\{oo},\39\|u\MG\\{mark}\K\T{1},\39\\{stack}(\|k\PP)\K\|u;{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\|o,\39\|u\MG\\{dup}\K\|e;{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U19.\fi
+
+\M{21}A deleted vertex is marked $-1$, for debugging purposes only.
+
+\Y\B\4\X21:Eliminate \PB{\|v}, then \PB{\&{goto} \\{trivialgraph}} if only one
+vertex is left\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|v\MG\\{mark}\K{-}\T{1};{}$\6
+\&{if} ${}(\|v\MG\\{deg}\E\T{2}){}$\1\5
+\X23:Serialize the bonds from \PB{\|v}\X\2\6
+\&{else} \&{if} ${}(\|v\MG\\{deg}\E\T{1}){}$\1\5
+\X22:Require the bond from \PB{\|v}\X\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|v\MG\\{mark}\K\T{0}{}$;\C{ the last vertex doesn't go away }\6
+\&{goto} \\{trivialgraph};\C{ \PB{$\|v\MG\\{deg}\K\T{0}$}, hence no other
+vertices remain }\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U19.\fi
+
+\M{22}If the single bond touching \PB{\|v} isn't in the tree list,
+we know that the tree list must specify only a near-spanning tree.
+So we set \PB{\\{inbond}}, which will complete a spanning tree later.
+And we eliminate \PB{\|v}; thus the tree list henceforth is a spanning
+tree on the remaining vertices.
+
+\Y\B\4\X22:Require the bond from \PB{\|v}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{ooo},\39\|e\K\|v\MG\\{arcs}\MG\\{next},\39\|b\K{}$(\&{Bond} ${}{*}){}$ %
+\|e${}\MG\\{bond};{}$\6
+${}\|o,\39\|u\K\|e\MG\\{tip};{}$\6
+${}\\{deletebonds}(\\{mate}(\|e),\39\NULL){}$;\C{ remove \PB{\\{mate}(\|e)} and
+decrease \PB{$\|u\MG\\{deg}$} }\6
+\&{if} ${}(\|o,\39\|b\MG\\{val}){}$\1\5
+${}\\{oooo},\39\|b\MG\\{up}\MG\\{down}\K\|b\MG\\{down},\39\|b\MG\\{down}\MG%
+\\{up}\K\|b\MG\\{up};{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{if} (\\{inbond})\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I've\ goofed\ (inbond}\)\.{\ doubly\ set)!%
+\\n"});{}$\6
+${}\\{exit}({-}\T{5});{}$\6
+\4${}\}{}$\2\6
+${}\\{inbond}\K\|b;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|o,\39\R\|u\MG\\{mark}){}$\1\5
+${}\\{oo},\39\|u\MG\\{mark}\K\T{1},\39\\{stack}(\|k\PP)\K\|u;{}$\2\6
+\4${}\}{}$\2\par
+\U21.\fi
+
+\M{23}A subtle point arises here: We might be serializing two bonds not
+in the spanning tree, if \PB{\|v} happens to be the only vertex not reachable
+from the current near-spanning tree. In that case we want to set
+\PB{\\{inbond}} to the subbond of the new series bond that will {\it not\/} be
+designated by \PB{\\{makeseries}}.
+
+\Y\B\4\X23:Serialize the bonds from \PB{\|v}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{oooooo},\39\|e\K\|v\MG\\{arcs}\MG\\{next},\39\|f\K\|e\MG\\{next},\39\|u\K%
+\|e\MG\\{tip},\39\|w\K\|f\MG\\{tip},\39\|b\K{}$(\&{Bond} ${}{*}){}$ \|e${}\MG%
+\\{bond};{}$\6
+\&{if} ${}(\|o,\39\R\|b\MG\\{val}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|b\K{}$(\&{Bond} ${}{*}){}$ \|f${}\MG\\{bond};{}$\6
+\&{if} ${}(\|o,\39\R\|b\MG\\{val}){}$\5
+${}\{{}$\1\6
+\&{if} (\\{inbond})\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I've\ doubly\ goofed\ }\)\.{(inbond\ set)!%
+\\n"});{}$\6
+${}\\{exit}({-}\T{6});{}$\6
+\4${}\}{}$\2\6
+${}\\{inbond}\K\|b;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\\{makeseries}(\|e,\39\|f){}$;\C{ create a new series bond }\6
+\&{if} ${}(\|o,\39\|u\MG\\{mark}){}$\1\5
+${}\|o,\39\|u\MG\\{mark}\K\T{2};{}$\2\6
+\&{else}\1\5
+${}\\{oo},\39\|u\MG\\{mark}\K\T{2},\39\\{stack}(\|k\PP)\K\|u;{}$\2\6
+\&{if} ${}(\|o,\39\|w\MG\\{mark}){}$\1\5
+${}\|o,\39\|w\MG\\{mark}\K\T{2};{}$\2\6
+\&{else}\1\5
+${}\\{oo},\39\|w\MG\\{mark}\K\T{2},\39\\{stack}(\|k\PP)\K\|w;{}$\2\6
+\4${}\}{}$\2\par
+\U21.\fi
+
+\M{24}At this point the graph is irreducible, so \PB{\|v} appears only once
+in \PB{\|u}'s list.
+
+\Y\B\4\X24:Shrink bond \PB{\|e}\X${}\E{}$\6
+$\\{oo},\39\|u\K\|e\MG\\{tip},\39\|v\K\\{mate}(\|e)\MG\\{tip};{}$\6
+\&{for} ${}(\\{oo},\39\|f\K\|u\MG\\{arcs}\MG\\{next};{}$ \|o${},\39\|f\MG%
+\\{tip};{}$ \|o${},\39\|f\K\|f\MG\\{next}){}$\1\6
+\&{if} ${}(\|f\E\\{mate}(\|e)){}$\1\5
+\\{delete}(\|f);\2\6
+\&{else}\1\5
+${}\|o,\39\\{mate}(\|f)\MG\\{tip}\K\|v;{}$\2\2\6
+\\{delete}(\|e);\6
+${}\\{ooo},\39\|v\MG\\{deg}\MRL{+{\K}}\|u\MG\\{deg}-\T{2};{}$\6
+${}\|o,\39\\{ee}\K\|v\MG\\{arcs}{}$;\C{ now \PB{$\|f\K\|u\MG\\{arcs}$} }\6
+${}\\{oooo},\39\|f\MG\\{prev}\MG\\{next}\K\\{ee}\MG\\{next},\39\\{ee}\MG%
+\\{next}\MG\\{prev}\K\|f\MG\\{prev};{}$\6
+${}\\{ooo},\39\|f\MG\\{next}\MG\\{prev}\K\\{ee},\39\\{ee}\MG\\{next}\K\|f\MG%
+\\{next};{}$\6
+\&{if} (\\{extraverbose})\1\5
+${}\\{printf}(\.{"\ shrinking\ \%d;\ now\ }\)\.{\%s\ has\ degree\ \%d\\n"},\39%
+\\{ebn}(\|e),\39\|v\MG\\{name},\39\|v\MG\\{deg});{}$\2\6
+${}\\{oo},\39\|u\MG\\{mark}\K{-}\T{1},\39\|v\MG\\{mark}\K\T{2},\39\|k\K\T{1},%
+\39\\{stack}(\T{0})\K\|v{}$;\par
+\U19.\fi
+
+\N{1}{25}The main algorithm. Now that we understand reduction, we're ready to
+complete the {\mc GRAYSPAN} portion of this program, except for low-level
+details.
+
+\Y\B\4\X25:Generate all spanning trees\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|n;{}$ ${}\|k\PP){}$\1\5
+${}\|o,\39\\{stack}(\|k)\K\|g\MG\\{vertices}+\|k{}$;\C{ all vertices are
+initially suspect }\2\6
+${}\|o,\39\|b\K\\{tree}\MG\\{up},\39\|b\MG\\{val}\K\T{0}{}$;\C{ we delete the
+last edge of the preliminary tree }\6
+${}\\{oo},\39\\{tree}\MG\\{up}\K\|b\MG\\{up},\39\\{tree}\MG\\{up}\MG\\{down}\K%
+\\{tree};{}$\6
+\&{if} (\\{verbose})\5
+${}\{{}$\1\6
+\\{printf}(\.{"Start\ with\ the\ near}\)\.{-spanning\ edges"});\6
+\&{for} ${}(\|b\K\\{tree}\MG\\{down};{}$ ${}\|b\I\\{tree};{}$ ${}\|b\K\|b\MG%
+\\{down}){}$\1\5
+${}\\{printf}(\.{"\ \%d"},\39\\{bn}(\|b));{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\6
+${}\|l\K\T{0};{}$\6
+\X19:Reduce the graph until it's trivial\X;\6
+\4\\{trivialgraph}:\5
+\X30:Obtain a new spanning tree by changing \PB{\\{outbond}} and \PB{%
+\\{inbond}}\X;\6
+\X47:Do the {\mc SPSPAN} algorithm on the action list\X;\6
+\&{while} (\|l)\5
+${}\{{}$\1\6
+\X29:Undo all changes to the graph since entering level \PB{\|l}\X;\6
+${}\|o,\39\|e\K\\{aa}(\|l);{}$\6
+\X26:Unshrink bond \PB{\|e}\X;\6
+${}\|l\MM;{}$\6
+\X27:If \PB{\|e} is not a bridge, delete it, set \PB{$\\{outbond}\K\|e\MG%
+\\{bond}$}, and \PB{\&{goto} \\{reduce}}\X;\6
+${}\\{oooooo},\39\|b\K{}$(\&{Bond} ${}{*}){}$ \|e${}\MG\\{bond},\39\|b\MG\\{up}%
+\K\\{tree}\MG\\{up},\39\\{tree}\MG\\{up}\K\|b\MG\\{up}\MG\\{down}\K\|b,\39\|b%
+\MG\\{down}\K\\{tree};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{26}After unshrinking, the graph will still be irreducible.
+
+\Y\B\4\X26:Unshrink bond \PB{\|e}\X${}\E{}$\6
+$\\{ooooo},\39\|u\K\|e\MG\\{tip},\39\|v\K\\{mate}(\|e)\MG\\{tip},\39\|v\MG%
+\\{deg}\MRL{-{\K}}\|u\MG\\{deg}-\T{2};{}$\6
+${}\\{oo},\39\\{ee}\K\|v\MG\\{arcs},\39\|f\K\|u\MG\\{arcs};{}$\6
+${}\\{oooo},\39\\{ee}\MG\\{next}\K\|f\MG\\{prev}\MG\\{next},\39\\{ee}\MG%
+\\{next}\MG\\{prev}\K\\{ee};{}$\6
+${}\\{ooo},\39\|f\MG\\{prev}\MG\\{next}\K\|f,\39\|f\MG\\{next}\MG\\{prev}\K%
+\|f;{}$\6
+\&{for} ${}(\|o,\39\|f\K\|f\MG\\{next};{}$ \|o${},\39\|f\MG\\{tip};{}$ \|o${},%
+\39\|f\K\|f\MG\\{next}){}$\1\5
+${}\|o,\39\\{mate}(\|f)\MG\\{tip}\K\|u;{}$\2\6
+${}\\{undelete}(\|e),\39\\{undelete}(\\{mate}(\|e));{}$\6
+\&{if} (\\{extraverbose})\1\5
+${}\\{printf}(\.{"\ unshrinking\ \%d;\ no}\)\.{w\ \%s\ has\ degree\ \%d\\n}\)%
+\.{"},\39\\{ebn}(\|e),\39\|v\MG\\{name},\39\|v\MG\\{deg});{}$\2\6
+${}\|u\MG\\{mark}\K\T{0}{}$;\C{ it was $-1$ }\par
+\U25.\fi
+
+\M{27}We use a field \PB{\\{bfs}} that shares space with \PB{\\{mark}}, because
+\PB{\\{mark}}
+is zero in all relevant vertices at this time.
+
+\Y\B\4\D$\\{bfs}$ \5
+$\|v.{}$\|V\C{ link for the breadth-first search: nonnull if vertex seen }\par
+\Y\B\4\X27:If \PB{\|e} is not a bridge, delete it, set \PB{$\\{outbond}\K\|e\MG%
+\\{bond}$}, and \PB{\&{goto} \\{reduce}}\X${}\E{}$\6
+$\\{oo},\39\|u\K\|e\MG\\{tip},\39\|v\K\\{mate}(\|e)\MG\\{tip};{}$\6
+\&{for} ${}(\|o,\39\|u\MG\\{bfs}\K\|v,\39\|w\K\|u;{}$ ${}\|u\I\|v;{}$ \|o${},%
+\39\|u\K\|u\MG\\{bfs}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\\{oo},\39\|f\K\|u\MG\\{arcs}\MG\\{next};{}$ \|o${},\39\|f\MG%
+\\{tip};{}$ \|o${},\39\|f\K\|f\MG\\{next}){}$\1\6
+\&{if} ${}(\|o,\39\|f\MG\\{tip}\MG\\{bfs}\E\NULL){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|f\MG\\{tip}\E\|v){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|f\I\\{mate}(\|e)){}$\1\5
+\X28:Nullify all \PB{\\{bfs}} links, delete \PB{\|e}, and \PB{\&{goto} %
+\\{reduce}}\X;\2\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\\{oo},\39\|f\MG\\{tip}\MG\\{bfs}\K\|v,\39\|w\MG\\{bfs}\K\|f\MG\\{tip},\39%
+\|w\K\|f\MG\\{tip};{}$\2\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\6
+\&{if} (\\{extraverbose})\1\5
+${}\\{printf}(\.{"Leaving\ level\ \%d:\ \%}\)\.{d\ is\ a\ bridge\\n"},\39\|l+%
+\T{1},\39\\{ebn}(\|e));{}$\2\6
+\&{for} ${}(\|o,\39\|u\K\|e\MG\\{tip};{}$ ${}\|u\I\|v;{}$ \|o${},\39\|u\MG%
+\\{bfs}\K\NULL,\39\|u\K\|w){}$\1\5
+${}\|o,\39\|w\K\|u\MG\\{bfs}{}$;\2\par
+\U25.\fi
+
+\M{28}We have discovered that \PB{\|e} is not a bridge.
+
+\Y\B\4\X28:Nullify all \PB{\\{bfs}} links, delete \PB{\|e}, and \PB{\&{goto} %
+\\{reduce}}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|o,\39\|u\K\|e\MG\\{tip};{}$ ${}\|u\I\|v;{}$ \|o${},\39\|u\MG%
+\\{bfs}\K\NULL,\39\|u\K\|w){}$\1\5
+${}\|o,\39\|w\K\|u\MG\\{bfs};{}$\2\6
+${}\\{outbond}\K{}$(\&{Bond} ${}{*})(\|e\MG\\{bond});{}$\6
+${}\\{deletebonds}(\|e,\39\\{mate}(\|e));{}$\6
+${}\\{oooo},\39\|k\K\T{2},\39\\{stack}(\T{0})\K\|e\MG\\{tip},\39\\{stack}(%
+\T{1})\K\\{mate}(\|e)\MG\\{tip};{}$\6
+${}\\{oo},\39\|e\MG\\{tip}\MG\\{mark}\K\\{mate}(\|e)\MG\\{tip}\MG\\{mark}\K%
+\T{1};{}$\6
+\&{goto} \\{reduce};\6
+\4${}\}{}$\2\par
+\U27.\fi
+
+\M{29}\B\X29:Undo all changes to the graph since entering level \PB{\|l}\X${}%
+\E{}$\6
+\|o;\5
+\&{while} ${}(\\{bondcount}>\\{bonds}(\|l)){}$\1\5
+\\{unbuildbond}(\,);\2\par
+\U25.\fi
+
+\M{30}When the program reaches \PB{\\{trivialgraph}}, the variables \PB{%
+\\{outbond}}
+and \PB{\\{inbond}} point to bonds whose values are to become 0 and~1,
+respectively, in the next spanning tree.
+
+(Exception: On the first
+iteration, \PB{\\{outbond}} is null and we've already printed $n-2$ edges
+of the first spanning tree, as sort of a pump-priming process.)
+
+Note that \PB{\\{inbond}} might not be a top-level bond, because of the
+subtle point mentioned earlier. But \PB{\\{outbond}} always at the top level,
+because it was removed from the graph when \PB{\\{outbond}} was set.
+
+\Y\B\4\X30:Obtain a new spanning tree by changing \PB{\\{outbond}} and \PB{%
+\\{inbond}}\X${}\E{}$\6
+$\\{count}\PP;{}$\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"\%.15g:"},\39\\{count});{}$\2\6
+\&{if} (\\{outbond})\5
+${}\{{}$\1\6
+\&{for} ${}(\|b\K\\{outbond};{}$  ; \|o${},\39\|b\K\|b\MG\\{des}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|b\MG\\{val}\K\T{0};{}$\6
+\&{if} (\\{isleaf}(\|b))\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"-\%d"},\39\\{bn}(\|b));{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\R\\{inbond}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Internal\ error\ (no\ }\)\.{inbond)!\\n"});{}$%
+\6
+${}\\{exit}({-}\T{7});{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|b\K\\{inbond};{}$  ; \|o${},\39\|b\K\|b\MG\\{des}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|b\MG\\{val}\K\T{1};{}$\6
+\&{if} (\\{isleaf}(\|b))\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{if} (\\{verbose})\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"+\%d"},\39\\{bn}(\|b));{}$\6
+\&{if} (\\{extraverbose})\5
+${}\{{}$\1\6
+\\{printf}(\.{"\ ("});\6
+\&{for} ${}(\|b\K\\{bondbase}+\T{1};{}$ ${}\|b\Z\\{topleaf};{}$ ${}\|b\PP){}$\1%
+\6
+\&{if} ${}(\|b\MG\\{val}){}$\1\5
+${}\\{printf}(\.{"\ \%d"},\39\\{bn}(\|b));{}$\2\2\6
+\\{printf}(\.{"\ )\\n"});\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+\\{printf}(\.{"\\n"});\2\6
+\4${}\}{}$\2\6
+${}\\{inbond}\K\\{outbond}\K\NULL{}$;\par
+\U25.\fi
+
+\N{1}{31}Construction. Reducing the main graph means constructing more bonds.
+
+The down side of having a complex data structure is that
+we have to do tedious maintenance work when conditions change. The following
+part of the program was least fun to write, and it is the most likely
+place where silly errors might have crept in. But I gritted my teeth
+and I think I've gotten the job done. (As Anne Lamott would say,
+this part of the program was written ``bird by bird.'')
+
+The two subroutines \PB{\\{makeseries}} and \PB{\\{makeparallel}} are each
+called
+only once, so I needn't have made them subroutines. They do share a
+lot of common code, however, so I've simplified my task by writing
+a combined routine that handles both cases. Hopefully this will reduce
+the chances of error. But mems are computed as if the subroutine had
+been expanded inline and customized for the cases \PB{$\|t\K\T{0}$} and \PB{$%
+\|t\K\T{1}$}.
+
+\Y\B\4\D$\\{makeseries}(\|e,\|f)$ \5
+$\\{buildbond}(\T{1},\39\|e,\39\|f{}$)\par
+\B\4\D$\\{makeparallel}(\|e,\|f)$ \5
+$\\{buildbond}(\T{0},\39\|e,\39\|f{}$)\par
+\Y\B\4\X9:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{buildbond}(\&{int} \|t${},\39{}$\&{Arc} ${}{*}\\{aa},\39{}$\&{Arc}
+${}{*}\\{bb}){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{Bond} ${}{*}\|a,{}$ ${}{*}\|b,{}$ ${}{*}\|c,{}$ ${}{*}\|d;{}$\6
+\&{register} \&{int} \\{at}${},{}$ \\{av}${},{}$ \\{bt}${},{}$ \\{bv};\6
+\&{register} \&{Vertex} ${}{*}\|u,{}$ ${}{*}\|v;{}$\6
+\&{register} \&{Arc} ${}{*}\\{ee}{}$;\C{ used by the \PB{\\{delete}} macro }\7
+${}\\{bondcount}\PP,\39\|c\K\\{bondbase}+\\{bondcount};{}$\6
+${}\\{oooo},\39\|c\MG\\{typ}\K\|t,\39\|c\MG\\{lhist}\K\\{aa},\39\|c\MG\\{rhist}%
+\K\\{bb},\39\|c\MG\\{focus}\K\|c;{}$\6
+${}\\{oo},\39\|a\K{}$(\&{Bond} ${}{*}){}$ \\{aa}${}\MG\\{bond},\39\|b\K{}$(%
+\&{Bond} ${}{*}){}$ \\{bb}${}\MG\\{bond};{}$\6
+${}\\{oo},\39\\{av}\K\|a\MG\\{val},\39\\{at}\K\|a\MG\\{typ},\39\\{bv}\K\|b\MG%
+\\{val},\39\\{bt}\K\|b\MG\\{typ};{}$\6
+\&{if} (\|t)\1\5
+\X32:Update \PB{\\{aa}} and \PB{\\{bb}} for a new series bond\X\2\6
+\&{else}\1\5
+\X33:Update \PB{\\{aa}} and \PB{\\{bb}} for a new parallel bond\X;\2\6
+${}\\{oo},\39\\{mate}(\\{bb})\MG\\{bond}\K\\{aa}\MG\\{bond}{}$;\C{ remember the
+bond that's going away }\6
+${}\\{oo},\39\\{aa}\MG\\{bond}\K\\{mate}(\\{aa})\MG\\{bond}\K{}$(\&{Arc}
+${}{*}){}$ \|c;\C{ \PB{$\|c\MG\\{lhist}\MG\\{bond}$} points to \PB{\|c} }\6
+\&{if} (\\{isleaf}(\|a))\1\6
+\&{if} (\\{isleaf}(\|b))\1\5
+\X34:Build leaf with leaf\X\2\6
+\&{else}\1\5
+\X35:Build leaf with branch\X\2\2\6
+\&{else} \&{if} (\\{isleaf}(\|b))\1\5
+\X36:Build branch with leaf\X\2\6
+\&{else}\1\5
+\X37:Build branch with branch\X;\2\6
+\&{if} (\\{av})\1\5
+${}\\{oooo},\39\|a\MG\\{up}\MG\\{down}\K\|a\MG\\{down},\39\|a\MG\\{down}\MG%
+\\{up}\K\|a\MG\\{up};{}$\2\6
+\&{if} (\\{bv})\1\5
+${}\\{oooo},\39\|b\MG\\{up}\MG\\{down}\K\|b\MG\\{down},\39\|b\MG\\{down}\MG%
+\\{up}\K\|b\MG\\{up};{}$\2\6
+\&{if} ${}(\\{av}\E\\{bv}\V\\{bv}\E\|t){}$\1\6
+\&{if} ${}(\\{isleaf}(\|a)\V\\{at}\I\|t){}$\1\5
+${}\|o,\39\|c\MG\\{des}\K\|a;{}$\2\6
+\&{else}\1\5
+${}\\{oo},\39\|c\MG\\{des}\K\|a\MG\\{des};{}$\2\2\6
+\&{else} \&{if} ${}(\\{isleaf}(\|b)\V\\{bt}\I\|t){}$\1\5
+${}\|o,\39\|c\MG\\{des}\K\|b;{}$\2\6
+\&{else}\1\5
+${}\\{oo},\39\|c\MG\\{des}\K\|b\MG\\{des};{}$\2\6
+${}\\{oooo},\39\|c\MG\\{val}\K\|c\MG\\{des}\MG\\{val},\39\|c\MG\\{done}\K\|c\MG%
+\\{des}\MG\\{lsib};{}$\6
+\&{if} ${}(\|c\MG\\{val}){}$\1\5
+${}\\{ooooo},\39\|c\MG\\{up}\K\\{tree}\MG\\{up},\39\\{tree}\MG\\{up}\K\|c\MG%
+\\{up}\MG\\{down}\K\|c,\39\|c\MG\\{down}\K\\{tree};{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{32}The new series bond has to agree with its mate. So we move
+the arc node \PB{\\{aa}} from one list to another.
+
+\Y\B\4\X32:Update \PB{\\{aa}} and \PB{\\{bb}} for a new series bond\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} (\\{extraverbose})\1\5
+${}\\{printf}(\.{"\ \%d=series(\%d,\%d)\ b}\)\.{etween\ \%s\ and\ \%s\\n"},\39%
+\\{bn}(\|c),\39\\{bn}(\|a),\39\\{bn}(\|b),\39\\{aa}\MG\\{tip}\MG\\{name},\39%
+\\{bb}\MG\\{tip}\MG\\{name});{}$\2\6
+${}\\{oooo},\39\\{ee}\K\\{mate}(\\{bb}),\39\\{aa}\MG\\{prev}\K\\{ee}\MG%
+\\{prev},\39\\{aa}\MG\\{next}\K\\{ee}\MG\\{next};{}$\6
+${}\\{oo},\39\\{aa}\MG\\{prev}\MG\\{next}\K\\{aa}\MG\\{next}\MG\\{prev}\K%
+\\{aa};{}$\6
+${}\\{oo},\39\\{mate}(\\{aa})\MG\\{tip}\K\\{bb}\MG\\{tip};{}$\6
+\4${}\}{}$\2\par
+\U31.\fi
+
+\M{33}\B\X33:Update \PB{\\{aa}} and \PB{\\{bb}} for a new parallel bond\X${}%
+\E{}$\6
+${}\{{}$\1\6
+${}\\{oo},\39\|u\K\\{aa}\MG\\{tip},\39\|v\K\\{mate}(\\{aa})\MG\\{tip};{}$\6
+\&{if} (\\{extraverbose})\1\5
+${}\\{printf}(\.{"\ \%d=parallel(\%d,\%d)}\)\.{\ between\ \%s\ and\ \%s\\n}\)%
+\.{"},\39\\{bn}(\|c),\39\\{bn}(\|a),\39\\{bn}(\|b),\39\|u\MG\\{name},\39\|v\MG%
+\\{name});{}$\2\6
+${}\\{oooo},\39\\{delete}(\\{bb}),\39\\{delete}(\\{mate}(\\{bb})),\39\|u\MG%
+\\{deg}\MM,\39\|v\MG\\{deg}\MM;{}$\6
+\4${}\}{}$\2\par
+\U31.\fi
+
+\M{34}\B\X34:Build leaf with leaf\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{oooo},\39\|a\MG\\{lsib}\K\|a\MG\\{rsib}\K\|b,\39\|b\MG\\{lsib}\K\|b\MG%
+\\{rsib}\K\|a;{}$\6
+${}\|o,\39\|c\MG\\{lchild}\K\|a;{}$\6
+${}\\{ooo},\39\|c\MG\\{right}\K\\{action}\MG\\{right},\39\|c\MG\\{right}\MG%
+\\{left}\K\|c;{}$\6
+${}\\{oo},\39\|c\MG\\{left}\K\\{action},\39\\{action}\MG\\{right}\K\|c;{}$\6
+${}\|o,\39\|c\MG\\{scope}\K\|c;{}$\6
+\4${}\}{}$\2\par
+\U31.\fi
+
+\M{35}\B\X35:Build leaf with branch\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{bt}\I\|t){}$\5
+${}\{{}$\1\6
+${}\\{oooo},\39\|a\MG\\{lsib}\K\|a\MG\\{rsib}\K\|b,\39\|b\MG\\{lsib}\K\|b\MG%
+\\{rsib}\K\|a;{}$\6
+${}\\{ooo},\39\|c\MG\\{right}\K\|b,\39\|c\MG\\{scope}\K\|b\MG\\{scope};{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\\{oooo},\39\|a\MG\\{rsib}\K\|b\MG\\{lchild},\39\|a\MG\\{lsib}\K\|b\MG%
+\\{lchild}\MG\\{lsib};{}$\6
+${}\\{oo},\39\|a\MG\\{rsib}\MG\\{lsib}\K\|a\MG\\{lsib}\MG\\{rsib}\K\|a;{}$\6
+${}\\{oooo},\39\|c\MG\\{right}\K\|b\MG\\{right},\39\|c\MG\\{scope}\K(\|b\MG%
+\\{scope}\E\|b\?\|c:\|b\MG\\{scope});{}$\6
+\4${}\}{}$\2\6
+${}\|o,\39\|c\MG\\{lchild}\K\|a;{}$\6
+${}\\{oo},\39\|c\MG\\{left}\K\|b\MG\\{left};{}$\6
+${}\\{oo},\39\|c\MG\\{left}\MG\\{right}\K\|c\MG\\{right}\MG\\{left}\K\|c;{}$\6
+\4${}\}{}$\2\par
+\U31.\fi
+
+\M{36}\B\X36:Build branch with leaf\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{at}\I\|t){}$\5
+${}\{{}$\1\6
+${}\\{oooo},\39\|a\MG\\{lsib}\K\|a\MG\\{rsib}\K\|b,\39\|b\MG\\{lsib}\K\|b\MG%
+\\{rsib}\K\|a;{}$\6
+${}\\{oooo},\39\|c\MG\\{right}\K\|c\MG\\{lchild}\K\|a,\39\|c\MG\\{scope}\K\|a%
+\MG\\{scope};{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\\{oooo},\39\|b\MG\\{rsib}\K\|a\MG\\{lchild},\39\|b\MG\\{lsib}\K\|a\MG%
+\\{lchild}\MG\\{lsib};{}$\6
+${}\\{oo},\39\|b\MG\\{rsib}\MG\\{lsib}\K\|b\MG\\{lsib}\MG\\{rsib}\K\|b;{}$\6
+${}\\{oooo},\39\|c\MG\\{right}\K\|a\MG\\{right},\39\|c\MG\\{lchild}\K\|a\MG%
+\\{lchild};{}$\6
+${}\\{oo},\39\|c\MG\\{scope}\K(\|a\MG\\{scope}\E\|a\?\|c:\|a\MG\\{scope});{}$\6
+\4${}\}{}$\2\6
+${}\\{oo},\39\|c\MG\\{left}\K\|a\MG\\{left};{}$\6
+${}\\{oo},\39\|c\MG\\{left}\MG\\{right}\K\|c\MG\\{right}\MG\\{left}\K\|c;{}$\6
+\4${}\}{}$\2\par
+\U31.\fi
+
+\M{37}\B\X37:Build branch with branch\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{ooo},\39\|d\K\|a\MG\\{scope},\39\|c\MG\\{rsave}\K\|d\MG\\{right};{}$\6
+${}\\{oooo},\39\|a\MG\\{left}\MG\\{right}\K\|d\MG\\{right},\39\|d\MG\\{right}%
+\MG\\{left}\K\|a\MG\\{left};{}$\6
+${}\\{ooo},\39\|c\MG\\{left}\K\|b\MG\\{left},\39\|c\MG\\{left}\MG\\{right}\K%
+\|c;{}$\6
+\&{if} ${}(\\{at}\I\|t){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39\|c\MG\\{lsave}\K\|a\MG\\{left};{}$\6
+${}\\{ooo},\39\|c\MG\\{lchild}\K\|a,\39\|c\MG\\{right}\K\|a,\39\|a\MG\\{left}\K%
+\|c;{}$\6
+\&{if} ${}(\\{bt}\I\|t){}$\5
+${}\{{}$\1\6
+${}\\{oooo},\39\|a\MG\\{lsib}\K\|a\MG\\{rsib}\K\|b,\39\|b\MG\\{lsib}\K\|b\MG%
+\\{rsib}\K\|a;{}$\6
+${}\\{oo},\39\|d\MG\\{right}\K\|b,\39\|b\MG\\{left}\K\|d;{}$\6
+${}\\{ooo},\39\|c\MG\\{scope}\K\|b\MG\\{scope};{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\\{oooo},\39\|a\MG\\{rsib}\K\|b\MG\\{lchild},\39\|a\MG\\{lsib}\K\|b\MG%
+\\{lchild}\MG\\{lsib};{}$\6
+${}\\{oo},\39\|a\MG\\{lsib}\MG\\{rsib}\K\|a\MG\\{rsib}\MG\\{lsib}\K\|a;{}$\6
+${}\\{ooo},\39\|d\MG\\{right}\K\|b\MG\\{right},\39\|d\MG\\{right}\MG\\{left}\K%
+\|d;{}$\6
+${}\\{oo},\39\|c\MG\\{scope}\K(\|b\MG\\{scope}\E\|b\?\|d:\|b\MG\\{scope});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\\{bt}\I\|t){}$\5
+${}\{{}$\1\6
+${}\\{ooo},\39\|c\MG\\{lchild}\K\|b\MG\\{rsib}\K\|a\MG\\{lchild};{}$\6
+${}\\{oo},\39\|b\MG\\{lsib}\K\|a\MG\\{lchild}\MG\\{lsib};{}$\6
+${}\\{oo},\39\|b\MG\\{lsib}\MG\\{rsib}\K\|b\MG\\{rsib}\MG\\{lsib}\K\|b;{}$\6
+\&{if} ${}(\|d\E\|a){}$\1\5
+${}\|o,\39\|c\MG\\{right}\K\|b;{}$\2\6
+\&{else}\1\5
+${}\\{oooo},\39\|c\MG\\{right}\K\|a\MG\\{right},\39\|d\MG\\{right}\K\|b,\39\|b%
+\MG\\{left}\K\|d;{}$\2\6
+${}\|o,\39\|c\MG\\{right}\MG\\{left}\K\|c;{}$\6
+${}\\{oo},\39\|c\MG\\{scope}\K\|b\MG\\{scope};{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\|d\E\|a){}$\1\5
+${}\\{oo},\39\|c\MG\\{right}\K\|b\MG\\{right};{}$\2\6
+\&{else}\1\5
+${}\\{ooooo},\39\|c\MG\\{right}\K\|a\MG\\{right},\39\|d\MG\\{right}\K\|b\MG%
+\\{right},\39\|b\MG\\{right}\MG\\{left}\K\|d;{}$\2\6
+${}\|o,\39\|c\MG\\{right}\MG\\{left}\K\|c;{}$\6
+${}\\{oo},\39\|c\MG\\{lchild}\K\|a\MG\\{lchild};{}$\6
+${}\\{oooo},\39\|d\K\|a\MG\\{lchild}\MG\\{lsib},\39\|a\MG\\{lchild}\MG\\{lsib}%
+\K\|b\MG\\{lchild}\MG\\{lsib};{}$\6
+${}\\{ooo},\39\|b\MG\\{lchild}\MG\\{lsib}\MG\\{rsib}\K\|a\MG\\{lchild},\39\|b%
+\MG\\{lchild}\MG\\{lsib}\K\|d,\39\|d\MG\\{rsib}\K\|b\MG\\{lchild};{}$\6
+${}\\{oo},\39\|c\MG\\{scope}\K(\|b\MG\\{scope}\E\|b\?(\|a\MG\\{scope}\E\|a\?%
+\|c:\|a\MG\\{scope}):\|b\MG\\{scope});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U31.\fi
+
+\M{38}A much simpler subroutine is used to record the fact that one or
+two bonds are temporarily being deleted from the graph.
+
+\Y\B\4\X9:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{deletebonds}(\&{Arc} ${}{*}\\{aa},\39{}$\&{Arc} ${}{*}\\{bb}){}$\1%
+\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{Bond} ${}{*}\|a,{}$ ${}{*}\|c;{}$\6
+\&{register} \&{Vertex} ${}{*}\|u,{}$ ${}{*}\|v;{}$\6
+\&{register} \&{Arc} ${}{*}\\{ee};{}$\7
+${}\\{bondcount}\PP,\39\|c\K\\{bondbase}+\\{bondcount};{}$\6
+${}\\{ooo},\39\|c\MG\\{typ}\K\T{2},\39\|c\MG\\{lhist}\K\\{aa},\39\|c\MG%
+\\{rhist}\K\\{bb};{}$\6
+${}\\{oo},\39\|u\K\\{mate}(\\{aa})\MG\\{tip},\39\|a\K{}$(\&{Bond} ${}{*}){}$ %
+\\{aa}${}\MG\\{bond};{}$\6
+${}\|o,\39\|v\K(\\{bb}\?\\{mate}(\\{bb})\MG\\{tip}:\\{aa}\MG\\{tip});{}$\6
+\&{if} (\\{extraverbose})\1\5
+${}\\{printf}(\.{"\ \%d:\ deleting\ bond\ }\)\.{\%d\ between\ \%s\ and\ \%s}\)%
+\.{\%s\\n"},\39\\{bn}(\|c),\39\\{bn}(\|a),\39\|u\MG\\{name},\39\\{bb}\?\.{""}:%
+\.{"endpoint\ "},\39\|v\MG\\{name});{}$\2\6
+${}\\{oo},\39\\{delete}(\\{aa}),\39\|u\MG\\{deg}\MM;{}$\6
+\&{if} (\\{bb})\1\5
+${}\\{oo},\39\\{delete}(\\{bb}),\39\|v\MG\\{deg}\MM;{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{39}Deconstruction. Every change to the graph after we first reach level~1
+must be undone again before we finish the program. But fortunately
+the changes are always made in a strictly last-done-first-undone
+manner. Therefore we can use the ``dancing links'' principle to
+exploit of the fact that pointers within deleted structures
+still retain the values to which they should be restored.
+
+Thus I could write \PB{\\{unbuildbond}} by just looking at the code for \PB{%
+\\{buildbond}}
+and unchanging everything that it changed.
+(These remarks apply only to changes
+to \PB{\\{prev}}, \PB{\\{next}}, \PB{\\{bond}}, \PB{\\{lchild}}, \PB{\\{lsib}},
+\PB{\\{rsib}}, \PB{\\{scope}}, \PB{\\{left}},
+and \PB{\\{right}}, which govern the state of the bonds. The \PB{\\{val}}, \PB{%
+\\{des}}, \PB{\\{done}},
+\PB{\\{up}}, and \PB{\\{down}} fields vary dynamically with the spanning tree
+and
+should not be restored blindly. The \PB{\\{focus}} fields always point to self
+when
+construction or deconstruction is being done.)
+
+(The programming task still was tedious and error-prone though; sigh.)
+
+\Y\B\4\X9:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{unbuildbond}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{Bond} ${}{*}\|a,{}$ ${}{*}\|b,{}$ ${}{*}\|c,{}$ ${}{*}\|d;{}$\6
+\&{register} \&{int} \|t${},{}$ \\{at}${},{}$ \\{bt};\6
+\&{register} \&{Vertex} ${}{*}\|u,{}$ ${}{*}\|v;{}$\6
+\&{register} \&{Arc} ${}{*}\\{aa},{}$ ${}{*}\\{bb},{}$ ${}{*}\\{ee}{}$;\C{ used
+by the \PB{\\{undelete}} macro }\7
+${}\|c\K\\{bondbase}+\\{bondcount},\39\\{bondcount}\MM;{}$\6
+${}\\{ooo},\39\|t\K\|c\MG\\{typ},\39\\{aa}\K\|c\MG\\{lhist},\39\\{bb}\K\|c\MG%
+\\{rhist};{}$\6
+\&{if} ${}(\|t>\T{1}){}$\1\5
+\X46:Restore one or two deleted bonds and \PB{\&{return}}\X\2\6
+${}\\{oo},\39\|a\K{}$(\&{Bond} ${}{*}){}$ \\{mate}(\\{bb})${}\MG\\{bond},\39\|b%
+\K{}$(\&{Bond} ${}{*}){}$ \\{bb}${}\MG\\{bond};{}$\6
+${}\|o,\39\\{mate}(\\{bb})\MG\\{bond}\K{}$(\&{Arc} ${}{*}){}$ \|b;\6
+${}\\{oo},\39\\{aa}\MG\\{bond}\K\\{mate}(\\{aa})\MG\\{bond}\K{}$(\&{Arc}
+${}{*}){}$ \|a;\6
+${}\\{oo},\39\\{at}\K\|a\MG\\{typ},\39\\{bt}\K\|b\MG\\{typ};{}$\6
+\&{if} (\|t)\1\5
+\X40:Downdate \PB{\\{aa}} and \PB{\\{bb}} from an old series bond\X\2\6
+\&{else}\1\5
+\X41:Downdate \PB{\\{aa}} and \PB{\\{bb}} from an old parallel bond\X;\2\6
+\&{if} (\\{isleaf}(\|a))\1\6
+\&{if} (\\{isleaf}(\|b))\1\5
+\X42:Unbuild leaf with leaf\X\2\6
+\&{else}\1\5
+\X43:Unbuild leaf with branch\X\2\2\6
+\&{else} \&{if} (\\{isleaf}(\|b))\1\5
+\X44:Unbuild branch with leaf\X\2\6
+\&{else}\1\5
+\X45:Unbuild branch with branch\X;\2\6
+\&{if} ${}(\|c\MG\\{val}){}$\1\5
+${}\\{oooo},\39\|c\MG\\{up}\MG\\{down}\K\|c\MG\\{down},\39\|c\MG\\{down}\MG%
+\\{up}\K\|c\MG\\{up};{}$\2\6
+\&{if} ${}(\|a\MG\\{val}){}$\1\5
+${}\\{ooooo},\39\|a\MG\\{up}\K\\{tree}\MG\\{up},\39\\{tree}\MG\\{up}\K\|a\MG%
+\\{up}\MG\\{down}\K\|a,\39\|a\MG\\{down}\K\\{tree};{}$\2\6
+\&{if} ${}(\|b\MG\\{val}){}$\1\5
+${}\\{ooooo},\39\|b\MG\\{up}\K\\{tree}\MG\\{up},\39\\{tree}\MG\\{up}\K\|b\MG%
+\\{up}\MG\\{down}\K\|b,\39\|b\MG\\{down}\K\\{tree};{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{40}\B\X40:Downdate \PB{\\{aa}} and \PB{\\{bb}} from an old series bond\X${}%
+\E{}$\6
+${}\{{}$\1\6
+\\{undelete}(\\{mate}(\\{bb}));\C{ now \PB{$\\{ee}\K\\{mate}(\\{bb})$} }\6
+${}\\{oo},\39\|v\K\\{ee}\MG\\{tip},\39\\{mate}(\\{aa})\MG\\{tip}\K\|v,\39\|v\MG%
+\\{mark}\K\T{0};{}$\6
+${}\\{ooo},\39\\{aa}\MG\\{prev}\K\|v\MG\\{arcs},\39\\{aa}\MG\\{next}\K%
+\\{bb};{}$\6
+\&{if} (\\{extraverbose})\1\5
+${}\\{printf}(\.{"\ removing\ \%d=series}\)\.{(\%d,\%d)\ between\ \%s\ a}\)%
+\.{nd\ \%s\\n"},\39\\{bn}(\|c),\39\\{bn}(\|a),\39\\{bn}(\|b),\39\\{aa}\MG%
+\\{tip}\MG\\{name},\39\\{bb}\MG\\{tip}\MG\\{name});{}$\2\6
+\4${}\}{}$\2\par
+\U39.\fi
+
+\M{41}\B\X41:Downdate \PB{\\{aa}} and \PB{\\{bb}} from an old parallel bond%
+\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{oo},\39\|u\K\\{aa}\MG\\{tip},\39\|v\K\\{mate}(\\{aa})\MG\\{tip};{}$\6
+${}\\{oooo},\39\\{undelete}(\\{mate}(\\{bb})),\39\\{undelete}(\\{bb}),\39\|u\MG%
+\\{deg}\PP,\39\|v\MG\\{deg}\PP;{}$\6
+\&{if} (\\{extraverbose})\1\5
+${}\\{printf}(\.{"\ removing\ \%d=parall}\)\.{el(\%d,\%d)\ between\ \%s}\)\.{\
+and\ \%s\\n"},\39\\{bn}(\|c),\39\\{bn}(\|a),\39\\{bn}(\|b),\39\|u\MG\\{name},%
+\39\|v\MG\\{name});{}$\2\6
+\4${}\}{}$\2\par
+\U39.\fi
+
+\M{42}Sibling links of bonds at the top level are never examined.
+This program nullifies them only to be tidy and possibly catch
+errors, but no mems are counted.
+
+\Y\B\4\X42:Unbuild leaf with leaf\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|a\MG\\{lsib}\K\|a\MG\\{rsib}\K\|b\MG\\{lsib}\K\|b\MG\\{rsib}\K\NULL;{}$\6
+${}\\{ooo},\39\\{action}\MG\\{right}\K\|c\MG\\{right},\39\\{action}\MG\\{right}%
+\MG\\{left}\K\\{action};{}$\6
+\4${}\}{}$\2\par
+\U39.\fi
+
+\M{43}The nonobvious part here is the calculation of \PB{\\{des}} when a
+disabled bond reenters the picture.
+
+\Y\B\4\X43:Unbuild leaf with branch\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{bt}\I\|t){}$\5
+${}\{{}$\1\6
+${}\|a\MG\\{lsib}\K\|a\MG\\{rsib}\K\|b\MG\\{lsib}\K\|b\MG\\{rsib}\K\NULL;{}$\6
+${}\\{oo},\39\|b\MG\\{left}\K\|c\MG\\{left};{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\|c\MG\\{des}\E\|a){}$\1\5
+${}\|o,\39\|b\MG\\{val}\K\\{bt};{}$\2\6
+\&{else}\1\5
+${}\\{oo},\39\|b\MG\\{val}\K\|c\MG\\{val};{}$\2\6
+\&{if} ${}(\|b\MG\\{val}\I\\{bt}){}$\1\5
+${}\|b\MG\\{des}\K\|c\MG\\{des}{}$;\C{ mem is charged below }\2\6
+${}\\{oooo},\39\|b\MG\\{lchild}\MG\\{lsib}\K\|a\MG\\{lsib},\39\|a\MG\\{lsib}\MG%
+\\{rsib}\K\|b\MG\\{lchild};{}$\6
+${}\\{ooo},\39\|b\MG\\{done}\K\|b\MG\\{des}\MG\\{lsib};{}$\6
+${}\|a\MG\\{lsib}\K\|a\MG\\{rsib}\K\NULL;{}$\6
+${}\\{oo},\39\|b\MG\\{right}\MG\\{left}\K\|b;{}$\6
+\4${}\}{}$\2\6
+${}\\{oo},\39\|b\MG\\{left}\MG\\{right}\K\|b;{}$\6
+\4${}\}{}$\2\par
+\U39.\fi
+
+\M{44}\B\X44:Unbuild branch with leaf\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{at}\I\|t){}$\5
+${}\{{}$\1\6
+${}\|a\MG\\{lsib}\K\|a\MG\\{rsib}\K\|b\MG\\{lsib}\K\|b\MG\\{rsib}\K\NULL;{}$\6
+${}\\{oo},\39\|a\MG\\{left}\K\|c\MG\\{left};{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\|c\MG\\{des}\E\|b){}$\1\5
+${}\|o,\39\|a\MG\\{val}\K\\{at};{}$\2\6
+\&{else}\1\5
+${}\\{oo},\39\|a\MG\\{val}\K\|c\MG\\{val};{}$\2\6
+\&{if} ${}(\|a\MG\\{val}\I\\{at}){}$\1\5
+${}\|a\MG\\{des}\K\|c\MG\\{des};{}$\2\6
+${}\\{oooo},\39\|a\MG\\{lchild}\MG\\{lsib}\K\|b\MG\\{lsib},\39\|b\MG\\{lsib}\MG%
+\\{rsib}\K\|a\MG\\{lchild};{}$\6
+${}\\{ooo},\39\|a\MG\\{done}\K\|a\MG\\{des}\MG\\{lsib};{}$\6
+${}\|b\MG\\{rsib}\K\|b\MG\\{lsib}\K\NULL;{}$\6
+${}\\{oo},\39\|a\MG\\{right}\MG\\{left}\K\|a;{}$\6
+\4${}\}{}$\2\6
+${}\\{oo},\39\|a\MG\\{left}\MG\\{right}\K\|a;{}$\6
+\4${}\}{}$\2\par
+\U39.\fi
+
+\M{45}If we previously combined two series bonds into a larger series bond, or
+two parallel bonds into a larger parallel bond, we may have to search through
+the children in order to figure out where \PB{$\|c\MG\\{des}$} lies.
+
+\Y\B\4\X45:Unbuild branch with branch\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{ooo},\39\|d\K\|a\MG\\{scope},\39\|d\MG\\{right}\K\|c\MG\\{rsave};{}$\6
+\&{if} ${}(\\{at}\I\|t){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39\|a\MG\\{left}\K\|c\MG\\{lsave};{}$\6
+\&{if} ${}(\\{bt}\I\|t){}$\5
+${}\{{}$\1\6
+${}\|a\MG\\{lsib}\K\|a\MG\\{rsib}\K\|b\MG\\{lsib}\K\|b\MG\\{rsib}\K\NULL;{}$\6
+${}\\{ooo},\39\|b\MG\\{left}\K\|c\MG\\{left},\39\|b\MG\\{left}\MG\\{right}\K%
+\|b;{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\|c\MG\\{des}\E\|a){}$\1\5
+${}\|o,\39\|b\MG\\{val}\K\\{bt};{}$\2\6
+\&{else}\1\5
+${}\\{oo},\39\|b\MG\\{val}\K\|c\MG\\{val};{}$\2\6
+\&{if} ${}(\|b\MG\\{val}\I\\{bt}){}$\1\5
+${}\|b\MG\\{des}\K\|c\MG\\{des};{}$\2\6
+${}\\{oooo},\39\|b\MG\\{lchild}\MG\\{lsib}\K\|a\MG\\{lsib},\39\|a\MG\\{lsib}\MG%
+\\{rsib}\K\|b\MG\\{lchild};{}$\6
+${}\\{ooo},\39\|b\MG\\{done}\K\|b\MG\\{des}\MG\\{lsib};{}$\6
+${}\\{oooo},\39\|b\MG\\{left}\MG\\{right}\K\|b\MG\\{right}\MG\\{left}\K\|b;{}$\6
+${}\|a\MG\\{lsib}\K\|a\MG\\{rsib}\K\NULL;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\|d\I\|a){}$\1\5
+${}\\{oo},\39\|a\MG\\{right}\MG\\{left}\K\|a;{}$\2\6
+\&{if} ${}(\\{bt}\I\|t){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\|c\MG\\{des}\E\|b){}$\1\5
+${}\|o,\39\|a\MG\\{val}\K\\{at};{}$\2\6
+\&{else}\1\5
+${}\\{oo},\39\|a\MG\\{val}\K\|c\MG\\{val};{}$\2\6
+\&{if} ${}(\|a\MG\\{val}\I\\{at}){}$\1\5
+${}\|a\MG\\{des}\K\|c\MG\\{des};{}$\2\6
+${}\\{oooo},\39\|a\MG\\{lchild}\MG\\{lsib}\K\|b\MG\\{lsib},\39\|b\MG\\{lsib}\MG%
+\\{rsib}\K\|a\MG\\{lchild};{}$\6
+${}\\{ooo},\39\|a\MG\\{done}\K\|a\MG\\{des}\MG\\{lsib};{}$\6
+${}\\{oooo},\39\|b\MG\\{left}\K\|c\MG\\{left},\39\|b\MG\\{left}\MG\\{right}\K%
+\|b;{}$\6
+${}\|b\MG\\{lsib}\K\|b\MG\\{rsib}\K\NULL;{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\|c\MG\\{val}\E\|t){}$\1\5
+${}\\{oo},\39\|a\MG\\{val}\K\|b\MG\\{val}\K\|t;{}$\2\6
+\&{else}\5
+\1\&{for} ${}(\\{ooo},\39\|d\K\|c\MG\\{des};{}$  ; \|o${},\39\|d\K\|d\MG%
+\\{lsib}){}$\1\6
+\&{if} ${}(\|d\E\|a\MG\\{lchild}){}$\5
+${}\{{}$\1\6
+${}\\{ooo},\39\|a\MG\\{val}\K\T{1}-\|t,\39\|b\MG\\{val}\K\|t,\39\|a\MG\\{des}\K%
+\|c\MG\\{des}{}$;\5
+\&{break};\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\|d\E\|b\MG\\{lchild}){}$\5
+${}\{{}$\1\6
+${}\\{ooo},\39\|b\MG\\{val}\K\T{1}-\|t,\39\|a\MG\\{val}\K\|t,\39\|b\MG\\{des}\K%
+\|c\MG\\{des}{}$;\5
+\&{break};\6
+\4${}\}{}$\2\2\2\6
+${}\\{oooooo},\39\|d\K\|a\MG\\{lchild}\MG\\{lsib},\39\|a\MG\\{lchild}\MG%
+\\{lsib}\K\|b\MG\\{lchild}\MG\\{lsib},\39\|b\MG\\{lchild}\MG\\{lsib}\K\|d;{}$\6
+${}\\{oo},\39\|d\MG\\{rsib}\K\|b\MG\\{lchild},\39\|a\MG\\{lchild}\MG\\{lsib}\MG%
+\\{rsib}\K\|a\MG\\{lchild};{}$\6
+${}\\{ooooo},\39\|a\MG\\{done}\K\|a\MG\\{des}\MG\\{lsib},\39\|b\MG\\{done}\K\|b%
+\MG\\{des}\MG\\{lsib};{}$\6
+${}\|d\K\|a\MG\\{scope};{}$\6
+${}\\{oooo},\39\|b\MG\\{left}\MG\\{right}\K\|b\MG\\{right}\MG\\{left}\K\|b;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\\{oooo},\39\|a\MG\\{left}\MG\\{right}\K\|a,\39\|d\MG\\{right}\MG\\{left}\K%
+\|d;{}$\6
+\4${}\}{}$\2\par
+\U39.\fi
+
+\M{46}\B\X46:Restore one or two deleted bonds and \PB{\&{return}}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{oo},\39\|u\K\\{mate}(\\{aa})\MG\\{tip},\39\|a\K{}$(\&{Bond} ${}{*}){}$ %
+\\{aa}${}\MG\\{bond};{}$\6
+${}\|o,\39\|v\K(\\{bb}\?\\{mate}(\\{bb})\MG\\{tip}:\\{aa}\MG\\{tip});{}$\6
+\&{if} (\\{bb})\1\5
+${}\\{oo},\39\\{undelete}(\\{bb}),\39\|v\MG\\{deg}\PP;{}$\2\6
+\&{else}\1\5
+${}\|v\MG\\{mark}\K\T{0}{}$;\C{ for debugging, remove its negative mark }\2\6
+${}\\{oo},\39\\{undelete}(\\{aa}),\39\|u\MG\\{deg}\PP;{}$\6
+\&{if} (\\{extraverbose})\1\5
+${}\\{printf}(\.{"\ restoring\ bond\ \%d\ }\)\.{between\ \%s\ and\ \%s\%s\\}\)%
+\.{n"},\39\\{bn}(\|a),\39\|u\MG\\{name},\39\\{bb}\?\.{""}:\.{"endpoint\ "},\39%
+\|v\MG\\{name});{}$\2\6
+\&{if} ${}(\|a\MG\\{val}){}$\1\5
+${}\\{ooooo},\39\|a\MG\\{up}\K\\{tree}\MG\\{up},\39\\{tree}\MG\\{up}\K\|a\MG%
+\\{up}\MG\\{down}\K\|a,\39\|a\MG\\{down}\K\\{tree};{}$\2\6
+\&{return};\6
+\4${}\}{}$\2\par
+\U39.\fi
+
+\N{1}{47}Pulsing the action list. OK, all the hard stuff is done; only one
+more piece of the program needs to be put in place. And from {\mc SPSPAN},
+we know how to do the remaining job nicely.
+
+\Y\B\4\D$\\{easy}(\|b)$ \5
+$\|o,\39\|b\MG\\{typ}\E\|b\MG{}$\\{val}\par
+\Y\B\4\X47:Do the {\mc SPSPAN} algorithm on the action list\X${}\E{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{register} \&{Bond} ${}{*}\|q,{}$ ${}{*}\|l,{}$ ${}{*}\|r;{}$\7
+\&{for} ${}(\|o,\39\|r\K\\{action}\MG\\{left};{}$ \\{easy}(\|r); \|o${},\39\|r%
+\K\|r\MG\\{left}){}$\1\5
+;\C{ find the rightmost uneasy node }\2\6
+${}\\{oo},\39\|b\K\|r\MG\\{focus},\39\|r\MG\\{focus}\K\|r{}$;\C{ steps (1) and
+(3) }\6
+\&{if} ${}(\|b\E\\{action}){}$\1\5
+\&{break};\2\6
+\X49:Change \PB{$\|b\MG\\{des}$} and visit a new spanning tree\X;\6
+\&{if} ${}(\|o,\39\|b\MG\\{des}\E\|b\MG\\{done}){}$\1\5
+\X48:Passivate \PB{\|b}\X;\2\6
+\4${}\}{}$\2\par
+\U25.\fi
+
+\M{48}All uneasy nodes to the right of \PB{\|b} are now active, and \PB{\|l} is
+the
+former \PB{$\|b\MG\\{des}$}.
+
+\Y\B\4\X48:Passivate \PB{\|b}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|o,\39\|b\MG\\{done}\K\|l;{}$\6
+\&{for} ${}(\|o,\39\|l\K\|b\MG\\{left};{}$ \\{easy}(\|l); \|o${},\39\|l\K\|l\MG%
+\\{left}){}$\1\5
+;\C{ find the first uneasy node to the left }\2\6
+${}\\{ooo},\39\|b\MG\\{focus}\K\|l\MG\\{focus},\39\|l\MG\\{focus}\K\|l;{}$\6
+\4${}\}{}$\2\par
+\U47.\fi
+
+\M{49}If the user has asked for \PB{\\{verbose}} output, we print only the
+edge that has entered the spanning tree and the edge that has left.
+
+\Y\B\4\X49:Change \PB{$\|b\MG\\{des}$} and visit a new spanning tree\X${}\E{}$\6
+$\\{count}\PP;{}$\6
+${}\\{oo},\39\|l\K\|b\MG\\{des},\39\|r\K\|l\MG\\{rsib};{}$\6
+${}\|o,\39\|k\K\|b\MG\\{val}{}$;\C{ \PB{$\|k\K\|l\MG\\{val}\I\|r\MG\\{val}$} }\6
+\&{for} ${}(\|q\K\|l;{}$  ; \|o${},\39\|q\K\|q\MG\\{des}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|q\MG\\{val}\K\|k\XOR\T{1};{}$\6
+\&{if} (\\{isleaf}(\|q))\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"\%.15g:\ \%c\%d"},\39\\{count},\39\|k\?\.{'-'}:\.{'+'},\39%
+\\{bn}(\|q));{}$\2\6
+\&{for} ${}(\|q\K\|r;{}$  ; \|o${},\39\|q\K\|q\MG\\{des}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|q\MG\\{val}\K\|k;{}$\6
+\&{if} (\\{isleaf}(\|q))\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{if} (\\{verbose})\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\%c\%d"},\39\|k\?\.{'+'}:\.{'-'},\39\\{bn}(\|q));{}$\6
+\&{if} (\\{extraverbose})\5
+${}\{{}$\1\6
+\\{printf}(\.{"\ ("});\6
+\&{for} ${}(\|q\K\\{bondbase}+\T{1};{}$ ${}\|q\Z\\{topleaf};{}$ ${}\|q\PP){}$\1%
+\6
+\&{if} ${}(\|q\MG\\{val}){}$\1\5
+${}\\{printf}(\.{"\ \%d"},\39\\{bn}(\|q));{}$\2\2\6
+\\{printf}(\.{"\ )\\n"});\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+\\{printf}(\.{"\\n"});\2\6
+\4${}\}{}$\2\6
+${}\|o,\39\|b\MG\\{des}\K\|r{}$;\C{ ``visiting'' }\par
+\U47.\fi
+
+\M{50}Note: I haven't proved the efficiency claim made in the opening
+paragraph.
+I don't have time to write the proof down now, sorry. But it is based on
+the fact that a connected graph on $n$ vertices
+with all vertices of degree 3~or~more
+always has more than $2^{n/2}$ spanning trees. Therefore the time
+that is spent checking for bridges, etc., which is polynomial in the
+number of vertices, is asymptotically
+less than the time needed to spew out the trees.
+
+\fi
+
+\N{1}{51}Index.
+\fi
+
+\inx
+\fin
+\con

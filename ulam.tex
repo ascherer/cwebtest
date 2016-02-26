@@ -1,0 +1,180 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. I'm trying to calculate a few million Ulam numbers.
+This sequence
+$$(U_1,U_2,\ldots{})=(1,2,3,4,6,8,11,13,16,18,26,\ldots{})$$
+is defined by setting $U_1=1$, $U_2=2$, and thereafter letting
+$U_{n+1}$ be the smallest number greater than $U_n$ that can be
+writtin $U_j+U_k$ for exactly one pair $(j,k)$ with $1\le j<k\le n$.
+(Such a number must exist; otherwise the pair $(j,k)=(n-1,n)$ would
+qualify and lead to a contradiction.)
+
+This program uses a sieve method inspired by M. C. Wunderlich
+[{\sl BIT\/ \bf11} (1971), 217--224]. The basic idea is to
+form infinite binary sequences $u=u_0u_1u_2\ldots{}$ and $v=v_0v_1v_2\ldots{}$
+where $u_k=[k$ is an Ulam number] and $v_k=[k$ has more than one
+representation as a sum of distinct Ulam numbers].
+To build this sequence we start with $u=0110\ldots{}$ and $v=000\ldots{}$;
+then we do the bitwise calculation
+$w_k\ldots w_{2k-1}\gets w_k\ldots w_{2k-1}\circ u_0\ldots u_{k-1}$
+for $k=U_2$, $U_3$, \dots, where $w_k=(u_k,v_k)$ and
+$$(u,v)\circ u'=((u\oplus u')\wedge\bar v,(u\wedge u')\vee v).$$
+The method works because,
+when $k=U_n$, the current settings of $u$ and $v$ satisfy the
+following invariant relations for $2<j<2k$:
+$$\vcenter{\halign{#\hfil\cr
+$u_j=[j$ is a sum of distinct Ulam numbers $<k$ in exactly one way];\cr
+\noalign{\smallskip}
+$v_j=[j$ is a sum of distinct Ulam numbers $<k$ in more than one way].\cr}}$$
+
+In other words this program is basically an exercise in doing the requisite
+shifting and masking when the bits of $u$ and~$v$ are packed as unsigned
+integers.
+
+Besides computing $U_n$, I also report the value of $U_n/n$ whenever
+$n$ is a multiple of $m$. This ratio is reported to be about 13.5 when
+$n\le 10^6$ [see Wolfram's {\sl NKS}, page 908].
+
+And I keep some rudimentary statistics about gaps, based on ideas
+of Jud McCranie.
+
+\Y\B\4\D$\\{gsize}$ \5
+\T{1000}\par
+\B\4\D$\|m$ \5
+\T{10000}\par
+\B\4\D$\\{nsize}$ \5
+\T{10000000}\par
+\B\4\D$\\{nmax}$ \5
+$(\T{32}*\\{nsize}{}$)\C{ we will find all Ulam numbers less than \PB{\\{nmax}}
+}\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\&{unsigned} \&{int} ${}\\{ubit}[\\{nsize}+\T{1}],{}$ ${}\\{vbit}[\\{nsize}+%
+\T{1}];{}$\6
+\&{char} \\{table}[\T{256}];\6
+\&{int} \\{count}[\\{gsize}]${},{}$ \\{example}[\\{gsize}];\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{unsigned} \&{int} \|j${},{}$ \\{jj}${},{}$ \|k${},{}$ %
+\\{kk}${},{}$ \\{kq}${},{}$ \\{kr}${},{}$ \\{del}${},{}$ \|c${},{}$ \|n${},{}$ %
+\|u${},{}$ \\{prevu}${},{}$ \\{gap};\7
+\X5:Set up the \PB{\\{table}}\X;\6
+${}\\{gap}\K\T{1},\39\\{count}[\T{1}]\K\T{1},\39\\{example}[\T{1}]\K\T{2};{}$\6
+${}\\{ubit}[\T{0}]\K\T{\^6},\39\\{kr}\K\|n\K\\{prevu}\K\T{2},\39\\{kq}\K\T{0},%
+\39\\{kk}\K\T{4}{}$;\C{ $U_1=1$, $U_2=2$ }\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\X2:Update $w_k\ldots w_{2k-1}$ from $u_0\ldots u_{k-1}$\X;\6
+\X4:Advance $k$ to $U_{n+1}$ and advance $n$\X;\6
+${}\|k\K\\{kr}+(\\{kq}\LL\T{5});{}$\6
+${}\\{del}\K\|k-\\{prevu};{}$\6
+${}\\{count}[\\{del}]\PP,\39\\{example}[\\{del}]\K\|k;{}$\6
+\&{if} ${}(\\{del}>\\{gap}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{del}\G\\{gsize}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Unexpectedly\ large\ }\)\.{gap\ (\%d)!\
+Recompile\ }\)\.{me...\\n"},\39\\{del});{}$\6
+\&{return};\6
+\4${}\}{}$\2\6
+${}\\{gap}\K\\{del};{}$\6
+${}\\{printf}(\.{"New\ gap\ \%d:\ U\_\%d=\%d}\)\.{,\ U\_\%d=\%d\\n"},\39%
+\\{gap},\39\|n-\T{1},\39\\{prevu},\39\|n,\39\|k);{}$\6
+\\{fflush}(\\{stdout});\6
+\4${}\}{}$\2\6
+${}\\{prevu}\K\|k;{}$\6
+\&{if} ${}((\|n\MOD\|m)\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"U\_\%d=\%d\ is\ about\ \%.}\)\.{5g*\%d\\n"},\39\|n,\39\|k,%
+\39{}$((\&{double}) \|k)${}/\|n,\39\|n);{}$\6
+\\{fflush}(\\{stdout});\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4\\{done}:\5
+\X6:Print gap stats\X;\6
+${}\\{printf}(\.{"There\ are\ \%d\ Ulam\ n}\)\.{umbers\ less\ than\ \%d.}\)\.{%
+\\n"},\39\|n,\39\\{nmax});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}As we compute, we'll implicitly have $k=32\PB{\\{kq}}+\PB{\\{kr}}$, where
+$0\le\PB{\\{kr}}<32$;
+also \PB{$\\{kk}\K\T{1}\LL\\{kr}$}. Bit~$k$ of~$u$ is \PB{$(\\{ubit}[\\{kq}]\GG%
+\\{kr})\AND\T{1}$}, etc.
+
+\Y\B\4\X2:Update $w_k\ldots w_{2k-1}$ from $u_0\ldots u_{k-1}$\X${}\E{}$\6
+\&{for} ${}(\|j\K\|c\K\T{0},\39\\{jj}\K\|j+\\{kq};{}$ ${}\|j<\\{kq};{}$ ${}\|j%
+\PP,\39\\{jj}\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{jj}\G\\{nsize}){}$\1\5
+\&{goto} \\{update\_done};\2\6
+${}\\{del}\K(\\{ubit}[\|j]\LL\\{kr})+\|c{}$;\C{ \PB{\|c} is a ``carry'' }\6
+${}\|c\K(\\{ubit}[\|j]\GG(\T{31}-\\{kr}))\GG\T{1};{}$\6
+\X3:Set \PB{$(\\{ubit}[\\{jj}],\\{vbit}[\\{jj}])$} to \PB{$(\\{ubit}[\\{jj}],%
+\\{vbit}[\\{jj}])$}${}\circ\PB{\\{del}}$\X;\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{jj}\G\\{nsize}){}$\1\5
+\&{goto} \\{update\_done};\2\6
+${}\|u\K\\{ubit}[\\{kq}]\AND(\\{kk}-\T{1});{}$\6
+${}\\{del}\K(\|u\LL\\{kr})+\|c,\39\|c\K(\|u\GG(\T{31}-\\{kr}))\GG\T{1};{}$\6
+\X3:Set \PB{$(\\{ubit}[\\{jj}],\\{vbit}[\\{jj}])$} to \PB{$(\\{ubit}[\\{jj}],%
+\\{vbit}[\\{jj}])$}${}\circ\PB{\\{del}}$\X;\6
+\&{if} ${}(\|c\I\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{jj}\PP,\39\\{del}\K\|c;{}$\6
+\X3:Set \PB{$(\\{ubit}[\\{jj}],\\{vbit}[\\{jj}])$} to \PB{$(\\{ubit}[\\{jj}],%
+\\{vbit}[\\{jj}])$}${}\circ\PB{\\{del}}$\X;\6
+\4${}\}{}$\2\6
+\4\\{update\_done}:\par
+\U1.\fi
+
+\M{3}\B\X3:Set \PB{$(\\{ubit}[\\{jj}],\\{vbit}[\\{jj}])$} to \PB{$(\\{ubit}[%
+\\{jj}],\\{vbit}[\\{jj}])$}${}\circ\PB{\\{del}}$\X${}\E{}$\6
+$\|u\K(\\{ubit}[\\{jj}]\XOR\\{del})\AND\CM\\{vbit}[\\{jj}];{}$\6
+${}\\{vbit}[\\{jj}]\MRL{{\OR}{\K}}\\{ubit}[\\{jj}]\AND\\{del};{}$\6
+${}\\{ubit}[\\{jj}]\K\|u{}$;\par
+\U2.\fi
+
+\M{4}\B\X4:Advance $k$ to $U_{n+1}$ and advance $n$\X${}\E{}$\6
+$\|u\K\\{ubit}[\\{kq}]\AND{-}(\\{kk}+\\{kk}){}$;\C{ erase bits $\le k$ }\6
+\&{while} ${}(\R\|u){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\PP\\{kq}\G\\{nsize}){}$\1\5
+\&{goto} \\{done};\2\6
+${}\|u\K\\{ubit}[\\{kq}];{}$\6
+\4${}\}{}$\2\6
+${}\\{kk}\K\|u\AND{-}\|u{}$;\C{ now we must calculate $\PB{\\{kr}}=\lg\PB{%
+\\{kk}}$ }\6
+\&{if} ${}(\\{kk}\AND\T{\^ffff0000}){}$\1\5
+${}\\{kr}\K\T{16},\39\|u\K\\{kk}\GG\T{16}{}$;\5
+\2\&{else}\1\5
+${}\\{kr}\K\T{0},\39\|u\K\\{kk};{}$\2\6
+\&{if} ${}(\|u\AND\T{\^ff00}){}$\1\5
+${}\\{kr}\MRL{+{\K}}\T{8},\39\|u\MRL{{\GG}{\K}}\T{8};{}$\2\6
+\&{if} ${}(\|u\AND\T{\^f0}){}$\1\5
+${}\\{kr}\MRL{+{\K}}\T{4},\39\|u\MRL{{\GG}{\K}}\T{4};{}$\2\6
+${}\\{kr}\MRL{+{\K}}\\{table}[\|u];{}$\6
+${}\|n\PP{}$;\par
+\U1.\fi
+
+\M{5}\B\X5:Set up the \PB{\\{table}}\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{2};{}$ ${}\|j<\T{256};{}$ ${}\|j\MRL{{\LL}{\K}}\T{1}){}$\1\5
+${}\\{table}[\|j]\K\T{1}+\\{table}[\|j\GG\T{1}]{}$;\2\par
+\U1.\fi
+
+\M{6}\B\X6:Print gap stats\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\\{gap};{}$ ${}\|j\PP){}$\1\6
+\&{if} (\\{count}[\|j])\1\5
+${}\\{printf}(\.{"gap\ \%d\ occurred\ \%d\ }\)\.{time\%s,\ last\ was\ \%d\\}\)%
+\.{n"},\39\|j,\39\\{count}[\|j],\39\\{count}[\|j]\E\T{1}\?\.{""}:\.{"s"},\39%
+\\{example}[\|j]){}$;\2\2\par
+\U1.\fi
+
+\N{1}{7}Index.
+
+\fi
+
+
+\inx
+\fin
+\con

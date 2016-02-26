@@ -1,0 +1,10 @@
+\I\X5:Check for pairs\X
+\U1.
+\I\X4:Make move \PB{\|k}\X
+\U1.
+\I\X6:Output the result\X
+\U1.
+\I\X2:Process the command line\X
+\U1.
+\I\X3:Set \PB{\|m} to the number of possible moves\X
+\U1.

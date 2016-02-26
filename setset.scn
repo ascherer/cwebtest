@@ -1,0 +1,48 @@
+\I\X33:Begin backing up in Case A\X
+\U23.
+\I\X32:Begin backing up in Case B\X
+\U25.
+\I\X31:Begin backing up in Case C\X
+\U29.
+\I\X24:Bring \PB{$\\{current}[\|k].\\{image}[\\{alf}]$} up to date for \PB{$%
+\\{ll}<\|k\Z\|l$}\X
+\U21.
+\I\X25:Compute the new threshold for $\alpha$, or backup\X
+\U21.
+\I\X28:Downdate the data structures for all elements whose threshold was $j$\X
+\U16.
+\I\X30:Downdate the data structures for all elements whose threshold was
+unknown\X
+\U16.
+\I\X20:Downdate \PB{\\{tab}}\X
+\U16.
+\I\X16:Enumerate and print all solutions\X
+\U1.
+\I\X4, 5, 8, 10, 12, 13, 17, 35:Global variables\X
+\U1.
+\I\X6, 7, 11, 14:Initialize\X
+\U1.
+\I\X18, 22:Local variables\X
+\U1.
+\I\X23:Make quick check for easy cases that become dormant\X
+\U21.
+\I\X36:Print the totals\X
+\U1.
+\I\X34:Record the current canonical $l$-set as a solution\X
+\U16.
+\I\X15:Subroutines\X
+\U1.
+\I\X26:Tabulate newly forbidden values\X
+\U25.
+\I\X3, 9:Type definitions\X
+\U1.
+\I\X27:Untabulate values that were considered newly forbidden\X
+\U28.
+\I\X21:Update the data structures for all elements whose threshold is $j$, or
+backup\X
+\U16.
+\I\X29:Update the data structures for all elements whose threshold is unknown,
+or backup\X
+\U16.
+\I\X19:Update \PB{\\{tab}}\X
+\U16.

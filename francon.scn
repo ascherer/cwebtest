@@ -1,0 +1,15 @@
+\I\X4:Check the Strahler number\X
+\U1.
+\I\X9:Check the inverse bijection\X
+\U1.
+\I\X7:Find the tree corresponding to \PB{\|d}\X
+\U1.
+\I\X8:Move the subheap rooted at \PB{\\{kk}} up one level\X
+\Us7\ET9.
+\I\X3:Move to the next nested string, or \PB{\&{goto} \\{done}}\X
+\U1.
+\I\X2:Set up the first nested string, \PB{\|d}\X
+\U1.
+\I\X5:Subroutines\X
+\U1.
+

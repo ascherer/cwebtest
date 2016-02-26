@@ -1,0 +1,417 @@
+\input cwebmac
+
+\N{1}{1}An example of backtracking. Given a list of $m$-letter words and
+another
+list of $n$-letter words, we find all $m\times n$ matrices whose rows and
+columns are all listed. This program was written a week or so after I wrote
+{\mc BACK-MXN-WORDS}, because I realized that I ought to try a scheme
+that fills in the cells of the matrix one by one. (That program
+fills entire columns at each level.)
+
+I'm thinking $m=5$ and $n=6$ as an interesting case to try in {\sl TAOCP},
+but of course the problem makes sense in general.
+
+The word list files are named on the command line. You can also restrict
+the list length to, say, at most 500 words, by appending `\.{:500}' to
+the file name.
+
+\Y\B\4\D$\\{maxm}$ \5
+\T{7}\C{ largest permissible value of $m$ }\par
+\B\4\D$\\{maxn}$ \5
+\T{10}\C{ largest permissible value of $n$ }\par
+\B\4\D$\\{maxmwds}$ \5
+\T{20000}\C{ largest permissible number of $m$-letter words }\par
+\B\4\D$\\{maxtriesize}$ \5
+\T{100000}\C{ largest permissible number of prefixes }\par
+\B\4\D$\|o$ \5
+$\\{mems}\PP{}$\par
+\B\4\D$\\{oo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{2}\par
+\B\4\D$\\{bufsize}$ \5
+$\\{maxm}+{}$\\{maxn}\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\8\#\&{include} \.{<string.h>}\6
+\&{unsigned} \&{long} \&{long} \\{mems};\C{ memory references }\6
+\&{unsigned} \&{long} \&{long} \\{thresh}${}\K\T{10000000000}{}$;\C{ reporting
+time }\6
+\&{typedef} \&{struct} ${}\{{}$\1\6
+\&{int} \|c;\C{ a character (the other seven bytes are zero) }\6
+\&{int} \\{link};\C{ a pointer }\2\6
+${}\}{}$ \&{trielt};\C{ a ``tri element'' }\6
+\&{int} \\{maxmm}${}\K\\{maxmwds},{}$ \\{maxnn}${}\K\\{maxtriesize};{}$\6
+\&{char} ${}\\{mword}[\\{maxmwds}][\\{maxm}+\T{1}];{}$\6
+\&{int} \\{trie}[\\{maxtriesize}][\T{27}];\6
+\&{int} \\{trieptr};\C{ this many nodes in the trie of $n$-letter words }\6
+\&{trielt} \\{tri}[\\{maxtriesize}];\6
+\&{int} \\{triptr};\C{ this many elements in the tri of $m$-letter words }\6
+\&{char} \\{buf}[\\{bufsize}];\6
+\&{unsigned} \&{int} \\{count};\C{ this many solutions found }\6
+\&{FILE} ${}{*}\\{mfile},{}$ ${}{*}\\{nfile};{}$\6
+\&{int} ${}\|a[\\{maxn}+\T{1}][\\{maxn}+\T{1}];{}$\6
+\&{int} ${}\|x[\\{maxm}*\\{maxn}+\T{1}];{}$\6
+\&{long} \&{long} ${}\\{profile}[\\{maxm}*\\{maxn}+\T{2}];{}$\7
+\X8:Subroutines\X;\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|l${},{}$ \|m${},{}$ %
+\|n${},{}$ \|p${},{}$ \|q${},{}$ \\{mm}${},{}$ \\{nn}${},{}$ \\{xl}${},{}$ %
+\\{li}${},{}$ \\{lj}${},{}$ \\{lnk}${},{}$ \\{chr};\6
+\&{register} \&{char} ${}{*}\|w;{}$\7
+\X3:Process the command line\X;\6
+\X4:Input the $m$-words and make the tri\X;\6
+\X5:Input the $n$-words and make the trie\X;\6
+${}\\{fprintf}(\\{stderr},\39\.{"(\%llu\ mems\ to\ initi}\)\.{alize\ the\ data\
+struc}\)\.{tures)\\n"},\39\\{mems});{}$\6
+\X9:Backtrack thru all solutions\X;\6
+${}\\{fprintf}(\\{stderr},\39\.{"Altogether\ \%u\ solut}\)\.{ions\ (\%llu\
+mems).\\n"},\39\\{count},\39\\{mems});{}$\6
+\X2:Print the profile\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Print the profile\X${}\E{}$\6
+$\\{fprintf}(\\{stderr},\39\.{"Profile:\ \ \ \ \ \ \ \ \ \ 1}\)\.{\\n"});{}$\6
+\&{for} ${}(\|k\K\T{2};{}$ ${}\|k\Z\|m*\|n+\T{1};{}$ ${}\|k\PP){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\%19lld\\n"},\39\\{profile}[\|k]){}$;\2\par
+\U1.\fi
+
+\M{3}\B\X3:Process the command line\X${}\E{}$\6
+\&{if} ${}(\\{argc}\I\T{3}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ mwords[:m}\)\.{m]\ nwords[:nn]%
+\\n"},\39\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+${}\|w\K\\{strchr}(\\{argv}[\T{1}],\39\.{':'});{}$\6
+\&{if} (\|w)\5
+${}\{{}$\C{ colon in filename }\1\6
+\&{if} ${}(\\{sscanf}(\|w+\T{1},\39\.{"\%d"},\39{\AND}\\{maxmm})\I\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ can't\ parse\ the\ m}\)\.{-file\ spec\ `%
+\%s'!\\n"},\39\\{argv}[\T{1}]);{}$\6
+${}\\{exit}({-}\T{20});{}$\6
+\4${}\}{}$\2\6
+${}{*}\|w\K\T{0};{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\R(\\{mfile}\K\\{fopen}(\\{argv}[\T{1}],\39\.{"r"}))){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ can't\ open\ file\ `}\)\.{\%s'\ for\
+reading\ m-wo}\)\.{rds!\\n"},\39\\{argv}[\T{1}]);{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+${}\|w\K\\{strchr}(\\{argv}[\T{2}],\39\.{':'});{}$\6
+\&{if} (\|w)\5
+${}\{{}$\C{ colon in filename }\1\6
+\&{if} ${}(\\{sscanf}(\|w+\T{1},\39\.{"\%d"},\39{\AND}\\{maxnn})\I\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ can't\ parse\ the\ n}\)\.{-file\ spec\ `%
+\%s'!\\n"},\39\\{argv}[\T{1}]);{}$\6
+${}\\{exit}({-}\T{22});{}$\6
+\4${}\}{}$\2\6
+${}{*}\|w\K\T{0};{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\R(\\{nfile}\K\\{fopen}(\\{argv}[\T{2}],\39\.{"r"}))){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ can't\ open\ file\ `}\)\.{\%s'\ for\
+reading\ n-wo}\)\.{rds!\\n"},\39\\{argv}[\T{2}]);{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{4}\B\X4:Input the $m$-words and make the tri\X${}\E{}$\6
+$\|m\K\\{mm}\K\T{0};{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{if} ${}(\\{mm}\E\\{maxmm}){}$\1\5
+\&{break};\2\6
+\&{if} ${}(\R\\{fgets}(\\{buf},\39\\{bufsize},\39\\{mfile})){}$\1\5
+\&{break};\2\6
+\&{for} ${}(\|k\K\T{0};{}$ \|o${},\39\\{buf}[\|k]\G\.{'a'}\W\\{buf}[\|k]\Z%
+\.{'z'};{}$ ${}\|k\PP){}$\1\5
+${}\|o,\39\\{mword}[\\{mm}][\|k]\K\\{buf}[\|k];{}$\2\6
+\&{if} ${}(\\{buf}[\|k]\I\.{'\\n'}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Illegal\ m-word:\ \%s"},\39\\{buf});{}$\6
+${}\\{exit}({-}\T{10});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|m\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\|m\K\|k;{}$\6
+\&{if} ${}(\|m>\\{maxm}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ m\ should\ be\ }\)\.{at\ most\ \%d!%
+\\n"},\39\\{maxm});{}$\6
+${}\\{exit}({-}\T{16});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\|k\I\|m){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"The\ m-file\ has\ word}\)\.{s\ of\ lengths\ %
+\%d\ and\ }\)\.{\%d!\\n"},\39\|m,\39\|k);{}$\6
+${}\\{exit}({-}\T{4});{}$\6
+\4${}\}{}$\2\6
+${}\\{mm}\PP;{}$\6
+\4${}\}{}$\2\6
+\X7:Build the tri\X;\6
+${}\\{fprintf}(\\{stderr},\39\.{"OK,\ I've\ successful}\)\.{ly\ read\ \%d\
+words\ of\ }\)\.{length\ m=\%d.\\n"},\39\\{mm},\39\|m);{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"(The\ tri\ has\ \%d\ ele}\)\.{ments.)\\n"},\39%
+\\{triptr}){}$;\par
+\U1.\fi
+
+\M{5}For simplicity, I make a sparse trie with 27 branches at every node.
+An $n$-letter word $w_1\ldots w_n$ leads to entries
+\PB{\\{trie}}$[p_{k-1}][[w_k]=p_k$ for $1\le k\le n$, where $p_0=0$ and
+$p_k>0$.
+Here $1\le w_k\le 26$; I am reserving slot~0 for later enhancements.
+
+Mems are counted as if \PB{\\{trie}[\|x][\|y]} is \PB{$\\{array}[\T{27}*\|x+%
+\|y]$}. (I mean,
+`\PB{\\{trie}[\|x]}' is not a pointer that must be fetched, it's a pointer
+that the program can compute without fetching.)
+
+\Y\B\4\D$\\{trunc}(\|c)$ \5
+$((\|c)\AND\T{\^1f}{}$)\C{ convert \PB{\.{'a'}} to 1, \dots, \PB{\.{'z'}} to 26
+}\par
+\Y\B\4\X5:Input the $n$-words and make the trie\X${}\E{}$\6
+$\|n\K\\{nn}\K\T{0},\39\\{trieptr}\K\T{1};{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{if} ${}(\\{nn}\E\\{maxnn}){}$\1\5
+\&{break};\2\6
+\&{if} ${}(\R\\{fgets}(\\{buf},\39\\{bufsize},\39\\{nfile})){}$\1\5
+\&{break};\2\6
+\&{for} ${}(\|k\K\|p\K\T{0};{}$ \|o${},\39\\{buf}[\|k]\G\.{'a'}\W\\{buf}[\|k]\Z%
+\.{'z'};{}$ ${}\|k\PP,\39\|p\K\|q){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|q\K\\{trie}[\|p][\\{trunc}(\\{buf}[\|k])];{}$\6
+\&{if} ${}(\|q\E\T{0}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\|k;{}$ \|o${},\39\\{buf}[\|j]\G\.{'a'}\W\\{buf}[\|j]\Z%
+\.{'z'};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|j<\|n-\T{1}\V\|n\E\T{0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{trieptr}\E\\{maxtriesize}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Overflow\ (maxtriesi}\)\.{ze=\%d)!\\n"},\39%
+\\{maxtriesize});{}$\6
+${}\\{exit}({-}\T{66});{}$\6
+\4${}\}{}$\2\6
+${}\|o,\39\\{trie}[\|p][\\{trunc}(\\{buf}[\|j])]\K\\{trieptr};{}$\6
+${}\|p\K\\{trieptr}\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{buf}[\|j]\I\.{'\\n'}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Illegal\ n-word:\ \%s"},\39\\{buf});{}$\6
+${}\\{exit}({-}\T{11});{}$\6
+\4${}\}{}$\2\6
+\X6:Check the length of the new line\X;\6
+${}\|o,\39\\{trie}[\|p][\\{trunc}(\\{buf}[\|n-\T{1}])]\K\\{nn}+\T{1}{}$;\C{
+remember index of the word }\6
+${}\\{mems}\MRL{-{\K}}\T{3}{}$;\C{ we knew \PB{\\{trie}[\|p]} when \PB{$\|p\K%
+\T{0}$} and when \PB{$\|q\K\T{0}$}; \PB{\\{buf}[\|j]} when \PB{$\|j\K\|k$} }\6
+${}\\{nn}\PP;{}$\6
+\4${}\}{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"Plus\ \%d\ words\ of\ le}\)\.{ngth\ n=\%d.%
+\\n"},\39\\{nn},\39\|n);{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"(The\ trie\ has\ \%d\ no}\)\.{des.)\\n"},\39%
+\\{trieptr}){}$;\par
+\U1.\fi
+
+\M{6}\B\X6:Check the length of the new line\X${}\E{}$\6
+\&{if} ${}(\|n\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\|n\K\|j;{}$\6
+\&{if} ${}(\|n>\\{maxn}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ n\ should\ be\ }\)\.{at\ most\ \%d!%
+\\n"},\39\\{maxn});{}$\6
+${}\\{exit}({-}\T{17});{}$\6
+\4${}\}{}$\2\6
+${}\|p\MM,\39\\{trieptr}\MM{}$;\C{ we allocated an unnecessary node, since \PB{%
+\|n} wasn't known }\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\|n\I\|j){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"The\ n-file\ has\ word}\)\.{s\ of\ lengths\ %
+\%d\ and\ }\)\.{\%d!\\n"},\39\|n,\39\|j);{}$\6
+${}\\{exit}({-}\T{5});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|k\E\|n){}$\5
+${}\{{}$\1\6
+${}\\{buf}[\|j]\K\T{0};{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"The\ n-file\ has\ the\ }\)\.{duplicate\ word\
+`\%s'!}\)\.{\\n"},\39\\{buf});{}$\6
+${}\\{exit}({-}\T{6});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U5.\fi
+
+\M{7}In this program I build what's called here (only) a ``tri,'' by which I
+mean
+a trie that has been compressed into the following simple format: When
+node~$k$ has $c$ children, the \PB{\&{trielt}} entries
+\PB{\\{tri}[\|k]}, \PB{$\\{tri}[\|k+\T{1}]$}, \dots, \PB{$\\{tri}[\|k+\|c-%
+\T{1}]$} will contain the next character
+and a pointer to the relevant child node. The folloiwing entry, \PB{$\\{tri}[%
+\|k+\|c]$},
+will be zero. (More precisely, its \PB{\\{link}} part will be zero.)
+
+It's easiest to build a normal trie first, and to compress it afterwards.
+So the following code---which is actually performed {\it before\/} the
+$n$-letter words are input---uses the \PB{\\{trie}} array to do this.
+
+\Y\B\4\X7:Build the tri\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{0},\39\\{trieptr}\K\T{1};{}$ ${}\|i<\\{mm};{}$ ${}\|i%
+\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|o,\39\|k\K\|p\K\T{0};{}$ ${}\|k<\|m;{}$ ${}\|k\PP,\39\|p\K\|q){}$%
+\5
+${}\{{}$\1\6
+${}\|o,\39\|q\K\\{trie}[\|p][\\{trunc}(\\{mword}[\|i][\|k])];{}$\6
+\&{if} ${}(\|q\E\T{0}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\|k;{}$ ${}\|j<\|m;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|j<\|m-\T{1}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{trieptr}\E\\{maxtriesize}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Overflow\ (maxtriesi}\)\.{ze=\%d)!\\n"},\39%
+\\{maxtriesize});{}$\6
+${}\\{exit}({-}\T{67});{}$\6
+\4${}\}{}$\2\6
+${}\|o,\39\\{trie}[\|p][\\{trunc}(\\{mword}[\|i][\|j])]\K\\{trieptr};{}$\6
+${}\|p\K\\{trieptr}\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\|o,\39\\{trie}[\|p][\\{trunc}(\\{mword}[\|i][\|m-\T{1}])]\K\|i+\T{1}{}$;\C{
+remember the word }\6
+\4${}\}{}$\2\6
+${}\\{compress}(\T{0},\39\|m){}$;\par
+\U4.\fi
+
+\M{8}With a small change (namely to cache the value of a compressed node)
+this program would actually compress a trie that has
+overlapping subtries. But our trie doesn't have that property,
+so I don't worry about it here.
+
+\Y\B\4\X8:Subroutines\X${}\E{}$\6
+\&{int} \\{compress}(\&{int} \|p${},\39{}$\&{int} \|l)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|a${},{}$ \|c${},{}$ \|k;\7
+${}\\{oo},\39\\{oo}{}$;\C{ subroutine call overhead }\6
+\&{if} ${}(\|l\E\T{0}){}$\1\5
+\&{return} \|p;\C{ prefix has its maximum length }\2\6
+\&{for} ${}(\|c\K\T{0},\39\|k\K\T{1};{}$ ${}\|k<\T{27};{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\|o,\39\\{trie}[\|p][\|k]){}$\1\5
+${}\|c\PP;{}$\2\2\6
+${}\|a\K\\{triptr};{}$\6
+${}\\{triptr}\MRL{+{\K}}\|c+\T{1};{}$\6
+\&{if} ${}(\\{triptr}\G\\{maxtriesize}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Tri\ overflows\ (maxt}\)\.{riesize=\%d)!\\n"},%
+\39\\{maxtriesize});{}$\6
+${}\\{exit}({-}\T{67});{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|c\K\T{0},\39\|k\K\T{1};{}$ ${}\|k<\T{27};{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\|o,\39\\{trie}[\|p][\|k]){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{tri}[\|a+\|c].\\{link}\K\\{compress}(\\{trie}[\|p][\|k],\39\|l-%
+\T{1});{}$\6
+${}\\{tri}[\|a+\|c\PP].\|c\K\|k;{}$\6
+${}\|o,\39\\{trie}[\|p][\|k]\K\T{0}{}$;\C{ clear the trie for the next user }\6
+\4${}\}{}$\2\2\6
+\&{return} \|a;\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{9}Here I follow Algorithm 7.2.2B.
+
+\Y\B\4\X9:Backtrack thru all solutions\X${}\E{}$\6
+\4\\{b1}:\5
+${}\|l\K\T{1};{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|m;{}$ ${}\|k\PP){}$\1\5
+${}\|o,\39\|a[\|k][\T{0}]\K\T{0}{}$;\C{ root of trie at left of each row }\2\6
+\4\\{b2}:\5
+${}\\{profile}[\|l]\PP;{}$\6
+\X11:Report the current state, if \PB{$\\{mems}\G\\{thresh}$}\X;\6
+\&{if} ${}(\|l>\|m*\|n){}$\1\5
+\X10:Print a solution and \PB{\&{goto} \\{b5}}\X;\2\6
+${}\\{li}\K(\|l-\T{1})\MOD\|m;{}$\6
+${}\\{lj}\K((\|l-\T{1})/\|m)+\T{1}{}$;\C{ at this level we work on row \PB{%
+\\{li}} and column \PB{\\{lj}} }\6
+\&{if} (\\{li})\1\5
+${}\\{xl}\K\\{lnk};{}$\2\6
+\&{else}\1\5
+${}\\{xl}\K\T{0}{}$;\C{ root of tri at top of each column }\2\6
+${}\|o,\39\\{lnk}\K\\{tri}[\\{xl}].\\{link};{}$\6
+\4\\{b3}:\5
+${}\\{chr}\K\\{tri}[\\{xl}].\|c{}$;\C{ no mem cost, this word has already been
+fetched }\6
+${}\\{oo},\39\|q\K\\{trie}[\|a[\\{li}][\\{lj}-\T{1}]][\\{chr}];{}$\6
+\&{if} ${}(\R\|q){}$\1\5
+\&{goto} \\{b4};\2\6
+${}\|o,\39\|x[\|l]\K\\{xl};{}$\6
+${}\|o,\39\|a[\\{li}][\\{lj}]\K\|q;{}$\6
+${}\|l\PP;{}$\6
+\&{goto} \\{b2};\6
+\4\\{b4}:\5
+${}\|o,\39\\{lnk}\K\\{tri}[\PP\\{xl}].\\{link};{}$\6
+\&{if} (\\{lnk})\1\5
+\&{goto} \\{b3};\2\6
+\4\\{b5}:\5
+${}\|l\MM;{}$\6
+\&{if} (\|l)\5
+${}\{{}$\1\6
+${}\|o,\39\\{xl}\K\|x[\|l];{}$\6
+${}\\{li}\K(\|l-\T{1})\MOD\|m;{}$\6
+${}\\{lj}\K((\|l-\T{1})/\|m)+\T{1};{}$\6
+\&{goto} \\{b4};\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{10}\B\X10:Print a solution and \PB{\&{goto} \\{b5}}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{count}\PP{}$;\5
+${}\\{printf}(\.{"\%d:"},\39\\{count});{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\.{"\ \%s"},\39\\{mword}[\\{tri}[\|x[\|m*\|k]].\\{link}-%
+\T{1}]);{}$\2\6
+\&{for} ${}(\|p\K\T{0},\39\|k\K\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\\{tri}[\|x[\|m*\|k]].\\{link}>\|p){}$\1\5
+${}\|p\K\\{tri}[\|x[\|m*\|k]].\\{link};{}$\2\2\6
+\&{for} ${}(\|q\K\T{0},\39\|j\K\T{1};{}$ ${}\|j\Z\|m;{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\|a[\|j-\T{1}][\|n]>\|q){}$\1\5
+${}\|q\K\|a[\|j-\T{1}][\|n];{}$\2\2\6
+${}\\{printf}(\.{"\ (\%06d,\%06d;\ sum\ \%0}\)\.{7d,\ prod\ \%012d)\\n"},\39%
+\|p,\39\|q,\39\|p+\|q,\39\|p*\|q);{}$\6
+\&{goto} \\{b5};\6
+\4${}\}{}$\2\par
+\U9.\fi
+
+\M{11}\B\X11:Report the current state, if \PB{$\\{mems}\G\\{thresh}$}\X${}\E{}$%
+\6
+\&{if} ${}(\\{mems}\G\\{thresh}){}$\5
+${}\{{}$\1\6
+${}\\{thresh}\MRL{+{\K}}\T{10000000000};{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"After\ \%lld\ mems:"},\39\\{mems});{}$\6
+\&{for} ${}(\|k\K\T{2};{}$ ${}\|k\Z\|l;{}$ ${}\|k\PP){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ \%lld"},\39\\{profile}[\|k]);{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
+\4${}\}{}$\2\par
+\U9.\fi
+
+\N{1}{12}Index.
+\fi
+
+\inx
+\fin
+\con

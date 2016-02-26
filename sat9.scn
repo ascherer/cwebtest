@@ -1,0 +1,85 @@
+\I\X39:Adjust the reinforcement fields\X
+\U35.
+\I\X29:Allocate the main arrays\X
+\U28.
+\I\X34:Check consistency\X
+\U28.
+\I\X38:Compute the $\pi$'s\X
+\U35.
+\I\X31:Copy all the temporary cells to the \PB{\\{mem}} and \PB{\\{cmem}}
+arrays in proper format\X
+\U28.
+\I\X33:Copy all the temporary variable nodes to the \PB{\\{nmem}} array in
+proper format\X
+\U28.
+\I\X45:Decide which variables to fix\X
+\U42.
+\I\X51:Enforce the unit literal \PB{$\\{mem}[\|k-\T{1}].\\{lit}$}\X
+\U46.
+\I\X50:Enforce the unit literal \PB{$\\{mem}[\|p].\\{lit}$}\X
+\U49.
+\I\X40:Exit if the clauses are pseudo-satisfied\X
+\U35.
+\I\X17:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash table at \PB{\|p}\X
+\U12.
+\I\X4, 8, 25, 36, 54:Global variables\X
+\U3.
+\I\X18:Handle a duplicate literal\X
+\U12.
+\I\X37:Initialize all $\eta$'s to random fractions\X
+\U35.
+\I\X9, 15:Initialize everything\X
+\U3.
+\I\X11:Input the clause in \PB{\\{buf}}\X
+\U10.
+\I\X10:Input the clauses\X
+\U3.
+\I\X32:Insert the cells for the literals of clause \PB{\|c}\X
+\U31.
+\I\X14:Install a new \PB{\&{chunk}}\X
+\U12.
+\I\X13:Install a new \PB{\&{vchunk}}\X
+\U12.
+\I\X48:Mark the clauses that contain \PB{\|l} satisfied\X
+\U47.
+\I\X20:Move \PB{\\{cur\_cell}} backward to the previous cell\X
+\Us19\ET32.
+\I\X21:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary variable\X
+\U33.
+\I\X42:Output a reduced problem\X
+\U35.
+\I\X53:Output the reduced problem\X
+\U42.
+\I\X46:Preprocess the clauses for reduction\X
+\U42.
+\I\X44:Print a two-dimension histogram of $\pi_v$ versus $\pi_{\bar v}$\X
+\U42.
+\I\X43:Print all the $\pi$'s\X
+\U42.
+\I\X5:Process the command line\X
+\U3.
+\I\X16:Put the variable name beginning at \PB{\\{buf}[\|j]} in \PB{$\\{cur\_tmp%
+\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X
+\U12.
+\I\X52:Reduce the problem\X
+\U42.
+\I\X49:Remove $\bar l$ from all clauses\X
+\U47.
+\I\X19:Remove all variables of the current clause\X
+\U11.
+\I\X22:Report the successful completion of the input phase\X
+\U3.
+\I\X12:Scan and record a variable; negate it if \PB{$\|i\E\T{1}$}\X
+\U11.
+\I\X28:Set up the main data structures\X
+\U3.
+\I\X35:Solve the problem\X
+\U3.
+\I\X26, 27, 47:Subroutines\X
+\U3.
+\I\X6, 7, 24:Type definitions\X
+\U3.
+\I\X41:Update the $\eta$'s\X
+\U35.
+\I\X30:Zero the links\X
+\U28.

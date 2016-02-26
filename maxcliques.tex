@@ -1,0 +1,312 @@
+\input cwebmac
+\datethis
+
+
+
+
+\N{1}{1}Intro. This is a simple program to find all maximal cliques of a
+graph, when the graph has at most 64 vertices and is given by
+its adjacency matrix.
+
+The algorithm, due to Moody and Hollis, is described in Appendix 5
+of the book {\sl Mathematical Taxonomy\/} by Jardine and Sibson (1971).
+I'm writing this program hastily today because it's a nice example of
+bitwise manipulation in graph theory, probably suitable for Section
+7.1.3 of {\sl The Art of Computer Programming}.
+
+In brief, we have vectors $\rho_v$ and $\delta_v$ for each vertex~$v$,
+where $\rho_v$ is $v$'s row in the adjacency matrix and
+$\delta_v$ is all 1s except for 0 in position~$v$. (Position~$v$
+in $\rho_v$ is always~1; in other words, we assume that each vertex
+is adjacent to itself.) One can easily show that a set of
+vertices~$q$ is a clique if and only if $q$ is the bitwise intersection
+of $(v{\in}q?\,\rho_v{:}\,\delta_v)$ over all vertices~$v$.
+To find all cliques, we could compute all $2^n$ such bitwise
+intersections, discarding duplicates. To find all maximal cliques,
+we could compute all $2^n$ such bitwise intersections and discard
+any clique $q$ that is found to be contained in another. To speed
+the process up, we can do those discards much more cleverly.
+
+The input graph is specified by an ASCII file in Stanford GraphBase format.
+The name of that file, say `\.{foo.gb}',
+is the one-and-only command-line parameter.
+
+I've instrumented this program to see how many memory references
+it makes (\PB{\\{mems}}) and how many words of workspace it needs (\PB{%
+\\{space}}),
+exclusive of input-output.
+
+(Note: I consider a ``clique'' to be any complete subgraph of
+a graph. Many of the older books on graph theory define it to
+be a {\it maximal\/} complete subgraph; but that terminology
+is now dying out. The earlier definition is less desirable, because
+for example we'd like a clique of~$G$ to be equivalent to
+an independent set of $\overline G$.)
+
+Beware: Memory overflow is not checked. This is not intended to
+be a robust program; I wrote it only as a experiment.
+
+\Y\B\4\D$\\{size}$ \5
+\T{100000}\C{ size reserved for the workspace }\par
+\B\4\D$\|o$ \5
+$\\{mems}\PP{}$\par
+\B\4\D$\\{oo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{2}\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{"gb\_graph.h"}\6
+\8\#\&{include} \.{"gb\_save.h"}\6
+\&{unsigned} \&{long} \&{long} \\{rho}[\T{64}];\C{ rows of the adjacency matrix
+}\6
+\&{unsigned} \&{long} \&{long} \\{work}[\\{size}];\6
+\&{unsigned} \&{int} \\{mems};\6
+\&{int} \\{space};\6
+\&{char} \\{table}[\T{64}];\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|l${},{}$ \|m${},{}$ %
+\|n${},{}$ \|p${},{}$ \|q${},{}$ \|r;\6
+\&{register} \&{Graph} ${}{*}\|g;{}$\6
+\&{register} \&{Arc} ${}{*}\|a;{}$\6
+\&{unsigned} \&{long} \&{long} \|u${},{}$ \|v${},{}$ \|w;\7
+\X2:Input the graph\X;\6
+\X6:Find the maximal cliques\X;\6
+\X4:Output the maximal cliques\X;\6
+${}\\{printf}(\.{"(The\ computation\ to}\)\.{ok\ \%u\ mems,\ using\ \%d}\)\.{\
+words\ of\ workspace.}\)\.{)\\n"},\39\\{mems},\39\\{space});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Input the graph\X${}\E{}$\6
+\&{if} ${}(\\{argc}\I\T{2}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ inputgrap}\)\.{h.gb\\n"},\39%
+\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+${}\|g\K\\{restore\_graph}(\\{argv}[\T{1}]);{}$\6
+\&{if} ${}(\R\|g){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ can't\ input\ the\ g}\)\.{raph\ \%s\ (panic%
+\ code\ }\)\.{\%ld)!\\n"},\39\\{argv}[\T{1}],\39\\{panic\_code});{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+${}\|n\K\|g\MG\|n;{}$\6
+\&{if} ${}(\|n>\T{64}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ that\ graph\ h}\)\.{as\ \%d\ vertices;%
+\ "},\39\|n);{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ can't\ handle\ more}\)\.{\ than\ 64!%
+\\n"});{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+\X3:Set up the \PB{\\{rho}} table\X;\par
+\U1.\fi
+
+\M{3}\B\X3:Set up the \PB{\\{rho}} table\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|w\K\T{1\$L\$L}\LL\|j;{}$\6
+\&{for} ${}(\|a\K(\|g\MG\\{vertices}+\|j)\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG%
+\\{next}){}$\1\5
+${}\|w\MRL{{\OR}{\K}}\T{1\$L\$L}\LL(\|a\MG\\{tip}-\|g\MG\\{vertices});{}$\2\6
+${}\\{rho}[\|j]\K\|w;{}$\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{4}\B\D$\\{deBruijn}$ \5
+\T{\^03f79d71b4ca8b09}\C{ the least de Bruijn cycle of length 64 }\par
+\Y\B\4\X4:Output the maximal cliques\X${}\E{}$\6
+$\\{printf}(\.{"Graph\ \%s\ has\ \%d\ max}\)\.{imal\ cliques:\\n"},\39\|g\MG%
+\\{id},\39\|m);{}$\6
+\X5:Set up the de Bruijn table\X;\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|m;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|w\K\\{work}[\|k];{}$ \|w; ${}\|w\K\|w\XOR\|v){}$\5
+${}\{{}$\1\6
+${}\|v\K\|w\AND{-}\|w;{}$\6
+${}\|u\K\|v*\\{deBruijn};{}$\6
+${}\|j\K\\{table}[\|u\GG\T{58}];{}$\6
+${}\\{printf}(\.{"\ \%s"},\39(\|g\MG\\{vertices}+\|j)\MG\\{name});{}$\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{5}The ruler-function calculation in the previous section isn't part
+of the inner loop; so I could use a slower, brute-force scheme
+that simply examines each bit, one bit at a time.
+But I'm using the de Bruijn method anyway, in order to get
+experience with it.
+
+\Y\B\4\X5:Set up the de Bruijn table\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{0},\39\|v\K\T{1};{}$ \|v; ${}\|j\PP,\39\|v\MRL{{\LL}{\K}}%
+\T{1}){}$\5
+${}\{{}$\1\6
+${}\|u\K\|v*\\{deBruijn};{}$\6
+${}\\{table}[\|u\GG\T{58}]\K\|j;{}$\6
+\4${}\}{}$\2\par
+\U4.\fi
+
+\N{1}{6}The algorithm. The \PB{\\{work}} area holds all maximal elements of the
+$2^i$ bitwise-ands of either $\rho_v$ or $\delta_v$ for the first
+$i$ vertices. There are $m$ of them.
+
+A vertex that's adjacent to all other vertices is just carried
+along in all entries, so we needn't bother with it.
+
+\Y\B\4\X6:Find the maximal cliques\X${}\E{}$\6
+$\|w\K\T{1\$L\$L}\LL(\|n-\T{1});{}$\6
+${}\\{oo},\39\\{work}[\T{1}]\K\\{work}[\\{size}-\T{1}]\K(\|w\LL\T{1})-\T{1}{}$;%
+\C{ $n$ 1s }\6
+${}\|m\K\T{1},\39\\{space}\K\T{4};{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|n;{}$ ${}\|i\PP){}$\1\6
+\&{if} ${}(\\{oo},\39\\{rho}[\|i]\I\\{work}[\\{size}-\T{1}]){}$\5
+${}\{{}$\1\6
+${}\|v\K\T{1\$L\$L}\LL\|i{}$;\C{ this is the new vertex we're considering }\6
+\X7:Partition the \PB{\\{work}} area, putting entries that contain~$v$ last\X;\6
+\X8:Convert the $v$-containing entries $u$ into $u\AND\rho_v$, $u\AND\delta_v$%
+\X;\6
+\4${}\}{}$\2\2\par
+\U1.\fi
+
+\M{7}To visualize the current situation, suppose bit~$v$ is the leftmost.
+Then we want to rearrange \PB{\\{work}[\T{1}]} thru \PB{\\{work}[\|m]} so that
+they have the form
+$$\vcenter{\halign{#\thinspace&$#$\hfil\cr
+0&\alpha_1\cr
+&\vdots\cr
+0&\alpha_k\cr
+1&\beta_1\cr
+&\vdots\cr
+1&\beta_{m-k}\cr}}$$
+
+This loop is like the partitioning step of radix-exchange.
+There always is at least one element $u$ with $u\AND v\ne0$.
+For convenience (and speed) we keep \PB{$\\{work}[\T{0}]\K\T{0}$}.
+
+\Y\B\4\X7:Partition the \PB{\\{work}} area, putting entries that contain~$v$
+last\X${}\E{}$\6
+$\|j\K\T{1},\39\|k\K\|m;{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{while} ${}((\|o,\39\\{work}[\|j]\AND\|v)\E\T{0}){}$\1\5
+${}\|j\PP;{}$\2\6
+\&{while} ${}((\|o,\39\\{work}[\|k]\AND\|v)\I\T{0}){}$\1\5
+${}\|k\MM;{}$\2\6
+\&{if} ${}(\|j>\|k){}$\1\5
+\&{break};\2\6
+${}\\{oo},\39\|u\K\\{work}[\|j],\39\\{work}[\|j]\K\\{work}[\|k],\39\\{work}[%
+\|k]\K\|u;{}$\6
+${}\|j\PP,\39\|k\MM;{}$\6
+\4${}\}{}$\2\par
+\U6.\fi
+
+\M{8}Now comes the interesting part. At this point $j=k+1$.
+
+Entries 1 thru $k$ of the workspace should simply be carried
+over to the next round. For if $u=0\,\alpha_i$ in the notation above,
+we have $u\AND\rho_i\subseteq u\AND\delta_i=u$; and $u$~(which is
+currently maximal) won't be contained in any other entries.
+
+Thus we focus our attention on the remaining entries in the current workspace,
+namely \PB{\\{work}[\|j]} thru \PB{\\{work}[\|m]}, which need to be ``split.''
+
+Let $u$ be the current entry; we want to split it into
+$u'=u\AND\rho_v$ and $u''=u\AND\delta_v$. The first one,
+$u'=(1\beta)\AND\rho_v$, must be checked
+against all other first entries before it is accepted for the
+new round. (It can't be contained in a second entry, because it has 1~in
+position~$v$.)
+If it is contained in a first entry already generated, we drop it.
+But if it contains one of those entries, we might need to drop
+more than one of them.
+
+The second entry, $u''=(1\beta)\AND\delta_v=0\beta$,
+is fairly easy to deal with. It can be
+contained in some first entry $(1\beta')\AND\rho_v$ only if
+$\beta\subseteq\beta'$; hence $\beta=\beta'$ and $1\beta\subseteq\rho_v$.
+If $1\beta\not\subseteq\rho_v$, we accept $0\beta$ if and only if it
+isn't contained in any held-over entry $0\alpha$.
+
+In the following steps, positions $p$ thru \PB{$\\{size}-\T{2}$} of the
+workspace
+hold the first entries $u'$ that have been tentatively accepted.
+Positions $k+1$ thru $l$ hold the second entries $u'$ that have
+definitely been accepted.
+
+Notice that the resulting algorithm avoids linked memory, so it
+ought to be cache-friendly.
+
+\Y\B\4\X8:Convert the $v$-containing entries $u$ into $u\AND\rho_v$, $u\AND%
+\delta_v$\X${}\E{}$\6
+\&{for} ${}(\|l\K\|k,\39\|p\K\\{size}-\T{1};{}$ ${}\|j\Z\|m;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|u\K\\{work}[\|j],\39\|q\K\\{size}-\T{2};{}$\6
+${}\|w\K\|u\AND\\{rho}[\|i]{}$;\C{ $w=u'$; we've already fetched \PB{\\{rho}[%
+\|i]} from memory }\6
+\&{if} ${}(\|u\I\|w){}$\5
+${}\{{}$\1\6
+\&{for} ( ; ${}\|q\G\|p;{}$ ${}\|q\MM){}$\5
+${}\{{}$\1\6
+\&{if} ${}((\|o,\39\|w\AND\\{work}[\|q])\E\|w){}$\1\5
+\&{goto} \\{second\_entry};\2\6
+\&{if} ${}((\|w\AND\\{work}[\|q])\E\\{work}[\|q]){}$\1\5
+\&{goto} \\{absorb};\2\6
+\4${}\}{}$\2\6
+${}\|o,\39\\{work}[\MM\|p]\K\|w{}$;\C{ accept $u'$, tentatively }\6
+\&{if} ${}(\\{space}<\|m+\T{2}+\\{size}-\|p){}$\1\5
+${}\\{space}\K\|m+\T{2}+\\{size}-\|p;{}$\2\6
+\&{goto} \\{second\_entry};\6
+\4${}\}{}$\2\6
+\4\\{absorb}:\5
+\X9:Handle the cases where $w$ may absorb previous first entries\X;\6
+\&{if} ${}(\|u\E\|w){}$\1\5
+\&{continue};\2\6
+\4\\{second\_entry}:\5
+${}\|w\K\|u\AND\CM\|v{}$;\C{ $w=u''$ }\6
+\&{for} ${}(\|q\K\T{1};{}$ ${}\|q\Z\|k;{}$ ${}\|q\PP){}$\1\6
+\&{if} ${}((\|o,\39\|w\AND\\{work}[\|q])\E\|w){}$\1\5
+\&{goto} \\{done\_with\_u};\2\2\6
+${}\|o,\39\\{work}[\PP\|l]\K\|w{}$;\C{ accept $u''$ }\6
+\4\\{done\_with\_u}:\5
+\&{continue};\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|m\K\|l;{}$ ${}\|p<\\{size}-\T{1};{}$ ${}\|p\PP){}$\1\5
+${}\\{oo},\39\\{work}[\PP\|m]\K\\{work}[\|p]{}$;\2\par
+\U6.\fi
+
+\M{9}Finally, we need another loop analogous to radix-exchange partitioning.
+But this time we will move all entries contained in~\PB{\|w} down, and
+all entries not contained in~\PB{\|w} up. (In fact we don't really
+move anything down, because those entries will be discarded.)
+
+When we come here with $u\ne w$, the first test made is
+redundant. (I mean, we know that $w\AND\PB{\\{work}}[q]=\PB{\\{work}}[q]$,
+hence
+$w\OR\PB{\\{work}}[q]=w$.) I could avoid that by reordering the loop, and
+recopying part of it to be down only when $u=w$;
+but I decided not to bother with such a tricky optimization.
+
+\Y\B\4\X9:Handle the cases where $w$ may absorb previous first entries\X${}%
+\E{}$\6
+$\|o,\39\|r\K\|p,\39\\{work}[\|p-\T{1}]\K\T{0};{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{while} ${}(\|o,\39(\|w\OR\\{work}[\|q])\I\|w){}$\1\5
+${}\|q\MM;{}$\2\6
+\&{while} ${}(\|o,\39(\|w\OR\\{work}[\|r])\E\|w){}$\1\5
+${}\|r\PP;{}$\2\6
+\&{if} ${}(\|q<\|r){}$\1\5
+\&{break};\2\6
+${}\\{oo},\39\\{work}[\|q]\K\\{work}[\|r],\39\\{work}[\|r]\K\T{0},\39\|q\MM,\39%
+\|r\PP;{}$\6
+\4${}\}{}$\2\6
+${}\|o,\39\\{work}[\|q]\K\|w,\39\|p\K\|q{}$;\par
+\U8.\fi
+
+\N{1}{10}Index.
+\fi
+
+\inx
+\fin
+\con

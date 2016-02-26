@@ -1,0 +1,28 @@
+\I\X14:Compute the \PB{\\{dep}} fields of the initial QDD\X
+\U6.
+\I\X12:Create a new entry in \PB{\\{node}[\|k]}\X
+\U11.
+\I\X21:Do the jump-up for the current \PB{\\{cycle}}\X
+\U1.
+\I\X27:Figure out an optimum order\X
+\U1.
+\I\X26:Gather statistics from level 0 of the current QDD\X
+\U22.
+\I\X23:Gather statistics from level \PB{\|k} of the current QDD\X
+\Us21\ET22.
+\I\X25:Gather stats for variable \PB{\|j} at level \PB{\|k}\X
+\U23.
+\I\X3, 9, 13, 15, 20, 24, 28:Global variables\X
+\U1.
+\I\X4, 6, 16, 22:Initialize everything\X
+\U1.
+\I\X17:Jump up from \PB{\\{kk}} to \PB{\\{jj}}\X
+\U21.
+\I\X18:Make two copies of level \PB{$\|k-\T{1}$} in the work area\X
+\U17.
+\I\X19:Remake level \PB{\\{jj}}\X
+\U17.
+\I\X7, 10, 11:Subroutines\X
+\U1.
+\I\X2, 8:Type definitions\X
+\U1.

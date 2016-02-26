@@ -1,0 +1,580 @@
+\input cwebmac
+\datethis
+
+
+\N{1}{1}Intro. Counting closure operators on six elements that are
+nonisomorphic
+under permutations. (My program for $n=5$ used a too-slow method;
+here I speed up by a factor of $n!$, I hope.)
+
+I wrote this in a terrific hurry---sorry. The strategy is outlined
+in the next section below.
+
+\Y\B\4\D$\|n$ \5
+\T{5}\par
+\B\4\D$\\{nn}$ \5
+$(\T{1}\LL\|n{}$)\par
+\B\4\D$\\{nfactorial}$ \5
+\T{120}\par
+\B\4\D$\\{final\_level}$ \5
+$(\\{nn}-\T{1}{}$)\C{ the first element that is never in a solution }\par
+\B\4\D$\\{verbose}$ \5
+$(\|n<\T{5}{}$)\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\&{char} \|f[\\{nn}];\6
+\&{unsigned} \&{char} \\{perm}[\\{nfactorial}][\\{nn}]${},{}$ \\{iperm}[%
+\\{nfactorial}][\\{nn}];\C{ perms and inverses }\6
+\&{int} \\{link}[\\{nfactorial}];\C{ links in the lists of permutations }\6
+\&{int} \\{wait}[\\{nn}];\C{ heads of those lists }\6
+\&{int} \\{disc}[\\{nn}];\C{ permutations discarded at each level }\6
+\&{int} \\{log0}[\\{nn}]${},{}$ \\{logl}[\\{nn}];\C{ where we began shuffling
+perms at each level }\6
+\&{int} ${}\\{log}[\\{nfactorial}*\\{nn}*\T{2}];{}$\6
+\&{int} \\{logptr};\C{ current position in \PB{\\{log}} table }\6
+\&{int} \\{forced}[\\{nn}];\C{ is this entry forced to be zero? }\6
+\&{int} \\{forcings}[\\{nfactorial}];\C{ how many cases has this perm forced? }%
+\6
+\&{unsigned} \&{int} \\{sols}${},{}$ \\{tsols};\7
+\X16:Subroutines\X\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|d${},{}$ \|j${},{}$ \|k${},{}$ \|l${},{}$ \|m${},{}$ %
+\|p${},{}$ \|q${},{}$ \|t${},{}$ \\{auts};\7
+\X3:Make the permutation tables\X;\6
+\X4:Put all permutations into \PB{\\{wait}[\T{0}]}\X;\6
+\X2:Find all the solutions\X;\6
+${}\\{printf}(\.{"Altogether\ \%d\ solut}\)\.{ions\ (reduced\ from\ \%}\)\.{d).%
+\\n"},\39\\{sols}+\T{1},\39\\{tsols}+\T{1});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Find all the solutions\X${}\E{}$\6
+$\|l\K\\{logptr}\K\T{0};{}$\6
+${}\\{auts}\K\\{nfactorial};{}$\6
+\4\\{newlevel}:\5
+\&{if} ${}(\|l\E\\{final\_level}){}$\1\5
+\&{goto} \\{backtrack};\2\6
+${}\\{logl}[\|l]\K\\{logptr};{}$\6
+\&{if} (\\{verbose})\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"Entering\ level\ \%x\ (}\)\.{\%d\ auts\ so\ far)\\n"},\39\|l,%
+\39\\{auts});{}$\6
+\4${}\}{}$\2\6
+\&{if} (\\{forced}[\|l])\5
+${}\{{}$\1\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"\ forced\ rejection\ o}\)\.{f\ \%x\\n"},\39\|l);{}$\2\6
+\&{goto} \\{reject};\6
+\4${}\}{}$\2\6
+\X5:Reject \PB{\|l} if it violates closure\X;\6
+\X9:Go through \PB{\\{wait}[\|l]}, trying to move it to \PB{\\{wait}[\T{0}]};
+but reject~\PB{\|l} if there's a conflict\X;\6
+${}\|f[\|l]\K\T{1};{}$\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"\ accepting\ \%x\\n"},\39\|l);{}$\2\6
+\X10:Update \PB{\\{wait}[\T{0}]} and count the automorphisms\X \X6:Record a
+solution\X;\6
+${}\|l\PP;{}$\6
+\&{goto} \\{newlevel};\6
+\4\\{undo}:\5
+\X13:Downdate \PB{\\{wait}[\T{0}]}\X;\6
+\X11:Reconstruct \PB{\\{wait}[\|l]}\X;\6
+\4\\{reject}:\5
+${}\|f[\|l]\K\T{0};{}$\6
+\X14:Check for new forced moves\X;\6
+${}\|l\PP;{}$\6
+\&{goto} \\{newlevel};\6
+\4\\{backtrack}:\5
+\&{while} ${}(\|l>\T{0}){}$\5
+${}\{{}$\1\6
+${}\|l\MM;{}$\6
+\&{if} ${}(\|f[\|l]\E\T{1}){}$\5
+${}\{{}$\1\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"\ now\ rejecting\ \%x\\n}\)\.{"},\39\|l);{}$\2\6
+\&{goto} \\{undo};\6
+\4${}\}{}$\2\6
+\&{else}\1\5
+\X15:Uncheck for new forced moves\X;\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|p\K\T{1};{}$ ${}\|p<\\{nfactorial};{}$ ${}\|p\PP){}$\1\6
+\&{if} (\\{forcings}[\|p])\1\5
+${}\\{printf}(\.{"error:\ forcings[\%d]}\)\.{\ not\ restored\ to\ zer}\)\.{o!%
+\\n"},\39\|p);{}$\2\2\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\1\6
+\&{if} (\\{forced}[\|k])\1\5
+${}\\{printf}(\.{"error:\ forced[\%x]\ n}\)\.{ot\ restored\ to\ zero!}\)\.{%
+\\n"},\39\|k){}$;\2\2\par
+\U1.\fi
+
+\M{3}Algorithm 7.2.1.2T.
+
+\Y\B\4\X3:Make the permutation tables\X${}\E{}$\6
+$\|d\K\\{nfactorial}\GG\T{1},\39\\{perm}[\|d][\T{0}]\K\T{1};{}$\6
+\&{for} ${}(\|m\K\T{2};{}$ ${}\|m<\|n;{}$ \,)\5
+${}\{{}$\1\6
+${}\|m\PP,\39\|d\K\|d/\|m;{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nfactorial};{}$ \,)\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\MRL{+{\K}}\|d,\39\|j\K\|m-\T{1};{}$ ${}\|j>\T{0};{}$ ${}\|k%
+\MRL{+{\K}}\|d,\39\|j\MM){}$\1\5
+${}\\{perm}[\|k][\T{0}]\K\|j;{}$\2\6
+${}\\{perm}[\|k][\T{0}]\PP,\39\|k\MRL{+{\K}}\|d;{}$\6
+\&{for} ${}(\|j\PP;{}$ ${}\|j<\|m;{}$ ${}\|k\MRL{+{\K}}\|d,\39\|j\PP){}$\1\5
+${}\\{perm}[\|k][\T{0}]\K\|j;{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{nn};{}$ ${}\|j\PP){}$\1\5
+${}\\{perm}[\T{0}][\|j]\K\|j;{}$\2\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\\{nfactorial};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|m\K\T{1}\LL(\\{perm}[\|k][\T{0}]-\T{1});{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{nn};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|d\K\\{perm}[\|k-\T{1}][\|j];{}$\6
+${}\|d\MRL{{\XOR}{\K}}\|d\GG\T{1};{}$\6
+${}\|d\MRL{\AND{\K}}\|m;{}$\6
+${}\|d\MRL{{\OR}{\K}}\|d\LL\T{1};{}$\6
+${}\\{perm}[\|k][\|j]\K\\{perm}[\|k-\T{1}][\|j]\XOR\|d;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|p\K\T{0};{}$ ${}\|p<\\{nfactorial};{}$ ${}\|p\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\1\5
+${}\\{iperm}[\|p][\\{perm}[\|p][\|k]]\K\|k{}$;\2\2\par
+\U1.\fi
+
+\M{4}\B\X4:Put all permutations into \PB{\\{wait}[\T{0}]}\X${}\E{}$\6
+\&{for} ${}(\|p\K\T{1};{}$ ${}\|p<\\{nfactorial};{}$ ${}\|p\PP){}$\1\5
+${}\\{link}[\|p]\K\\{wait}[\T{0}],\39\\{wait}[\T{0}]\K\|p{}$;\2\par
+\U1.\fi
+
+\M{5}\B\X5:Reject \PB{\|l} if it violates closure\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|l;{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\|f[\|j]\W\R(\|f[\|j\AND\|l])){}$\5
+${}\{{}$\1\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"\ rejecting\ \%x\ for\ c}\)\.{losure\\n"},\39\|l);{}$\2\6
+\&{goto} \\{reject};\6
+\4${}\}{}$\2\2\par
+\U2.\fi
+
+\M{6}\B\X6:Record a solution\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{sols}\PP;{}$\6
+${}\\{tsols}\MRL{+{\K}}\\{nfactorial}/\\{auts};{}$\6
+\&{if} ${}(\|n<\T{6}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\%d:"},\39\\{sols});{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{nn};{}$ ${}\|j\PP){}$\1\6
+\&{if} (\|f[\|j])\1\5
+${}\\{printf}(\.{"\ \%x"},\39\|j);{}$\2\2\6
+${}\\{printf}(\.{"\ (\%d\ aut\%s)\\n"},\39\\{auts},\39\\{auts}>\T{1}\?\.{"s"}:%
+\.{""});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\N{1}{7}The interesting part. When writing this program, I didn't have to work
+nearly as hard  as I did in {\mc GROPESX} (a program for algebraic
+structures that I wrote a few months ago).
+But still there are a few nontrivial points
+of interest as the permutations get shuffled from list to list.
+
+In fact, I tried to get away with a more substantial simplification.
+It failed miserably.
+
+In actual fact, I was tearing my hair out for awhile, because I couldn't
+believe that this would be so complicated. Maybe some day I'll learn
+the right way to tackle this problem.
+
+\fi
+
+\M{8}The basic idea is simple: Each closure operation corresponds to
+a sequence $(f[0],\ldots,f[\PB{\\{nn}}-2])$ with the property that
+$f[j]=f[k]=1$ implies $f[j\AND k]=1$. This program produces only
+canonical solutions, namely solutions with the property that
+$(f[0],\ldots,f[\PB{\\{nn}}-1])$ is lexicographically greater than or equal to
+$(f[p_0],\ldots,f[p_{nn-1}])$ for all perms $p$. (These perms are
+permutations of the bits; for example, if $p_1=2$ and $p_2=4$ then
+$p_3=6$.)
+
+At level \PB{\|l}, I've set the values of $(f[0],\ldots,f[l-1])$.
+All perms live in various lists: If $(f[0],\ldots,f[l-1])$ is known to
+be lexicographically greater than $(f[p_0],\ldots,f[p_{l-1}])$,
+the perm~$p$ is in a discard list; otherwise $p$ is in a waiting list.
+List \PB{\\{wait}[\T{0}]} has all the current automorphisms: These perms
+permute the current 1s $\{j\mid 0\le j<l\ {\rm and}\ f[j]=1\}$.
+Furthermore, for all subscripts $k<l$ such that $f[k]=0$ and $p_k>l$,
+the future values $p_k$ are marked so as to force $f[p_k]=0$.
+Finally, the waiting lists \PB{\\{wait}[\|k]} for $l\le k<nn$ contain elements
+$j<l$ such that $f[j]=1$ and $p_j=k$ and $f[i]=f[p_i]$ for
+$0\le i<j$. When level~$k$ comes along, such perms will effectively
+be discarded if $f[k]$ is set to~0; but if $f[k]$ is set to~1,
+they will move to other lists.
+
+The forcings were what caused me grief. I didn't want to have an
+elaborate data structure that showed exactly who was forcing whom,
+because that was very difficult to maintain under backtracking.
+The solution I found, shown below, is not terrifically easy, but
+it certainly is better than anything else I could think of.
+Basically \PB{\\{forcings}[\|p]} counts the number of places where $p$ has
+forced a future value~$k$; and \PB{\\{forced}[\|k]} counts the number of perms
+that have forced that value. These counts can, fortunately, be maintained by
+doing local operations, as we see for how many levels
+each perm remains relevant.
+
+\fi
+
+\M{9}Okay, now let me write the most critical part of the program.
+At this point in the computation
+we are planning to set \PB{$\|f[\|l]\K\T{1}$}. But we may have to
+abandon that plan, if ``immediate rejection'' would result.
+(Immediate rejection occurs when setting \PB{$\|f[\|l]\K\T{1}$} unhides a
+lexicographically superior solution.)
+
+The \PB{\\{log}} table records what we do here, so that it can be undone later.
+Entries on the log are of two kinds: A negative entry stands for a
+permutation that was ``discarded'' because it is no longer active.
+A nonnegative entry~$k$ stands for a permutation that moved to \PB{\\{wait}[%
+\|k]}.
+In either case, entry \PB{\\{log}[\|t]} identifies the destination of
+a permutation that came from \PB{\\{wait}[\T{0}]} if \PB{$\|t\G\\{log0}[\|l]$},
+otherwise from \PB{\\{wait}[\|l]}.
+
+\Y\B\4\X9:Go through \PB{\\{wait}[\|l]}, trying to move it to \PB{\\{wait}[%
+\T{0}]}; but reject~\PB{\|l} if there's a conflict\X${}\E{}$\6
+\&{for} ${}(\|p\K\\{wait}[\|l],\39\\{wait}[\|l]\K\T{0};{}$ \|p; ${}\|p\K\|q){}$%
+\5
+${}\{{}$\1\6
+${}\|q\K\\{link}[\|p];{}$\6
+\&{for} ${}(\|k\K\\{iperm}[\|p][\|l]+\T{1};{}$ ${}\|k<\|l;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|f[\|k]\E\T{0}\W\\{iperm}[\|p][\|k]<\\{iperm}[\|p][\|l]){}$\1\5
+${}\\{forcings}[\|p]\MM;{}$\2\6
+${}\|j\K\\{perm}[\|p][\|k];{}$\6
+\&{if} ${}(\|j<\|l){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|f[\|j]\E\|f[\|k]){}$\1\5
+\&{continue};\2\6
+\&{if} ${}(\|f[\|k]\E\T{0}){}$\1\5
+\X12:Reject \PB{\|l} immediately\X;\2\6
+${}\\{log}[\\{logptr}\PP]\K{-}\|j,\39\\{link}[\|p]\K\\{disc}[\|l],\39\\{disc}[%
+\|l]\K\|p{}$;\C{ discard \PB{\|p} }\6
+\&{goto} \\{nextp};\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\|f[\|k]\E\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{log}[\\{logptr}\PP]\K\|j,\39\\{link}[\|p]\K\\{wait}[\|j],\39\\{wait}[\|j]%
+\K\|p;{}$\6
+\&{for} ${}(\|j\K\|k-\T{1};{}$ ${}\|j>\\{iperm}[\|p][\|l];{}$ ${}\|j\MM){}$\1\6
+\&{if} ${}(\|f[\|j]\E\T{0}\W\\{perm}[\|p][\|j]>\|k\W\\{perm}[\|p][\|j]<\|l){}$%
+\1\5
+${}\\{forcings}[\|p]\PP;{}$\2\2\6
+\&{goto} \\{nextp};\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"\ f[\%x]=1\ will\ force}\)\.{\ f[\%x]=0\\n"},\39\|j);{}$\2\6
+${}\\{forcings}[\|p]\PP,\39\\{forced}[\|j]\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\\{log}[\\{logptr}\PP]\K\T{0},\39\\{link}[\|p]\K\\{wait}[\T{0}],\39\\{wait}[%
+\T{0}]\K\|p;{}$\6
+\4\\{nextp}:\5
+\&{continue};\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{10}After we've made it through \PB{\\{wait}[\|l]}, we are able to set
+\PB{$\|f[\|l]\K\T{1}$}. The items of \PB{\\{wait}[\T{0}]} might now be
+automorphisms,
+or they might need to be moved to other waiting lists.
+
+\Y\B\4\X10:Update \PB{\\{wait}[\T{0}]} and count the automorphisms\X${}\E{}$\6
+$\\{log0}[\|l]\K\\{logptr};{}$\6
+\&{for} ${}(\\{auts}\K\T{1},\39\|p\K\\{wait}[\T{0}],\39\\{wait}[\T{0}]\K%
+\T{0};{}$ \|p; ${}\|p\K\|q){}$\5
+${}\{{}$\1\6
+${}\|q\K\\{link}[\|p];{}$\6
+${}\|j\K\\{perm}[\|p][\|l];{}$\6
+\&{if} ${}(\|j\E\|l){}$\1\5
+\&{goto} \\{retain\_it};\2\6
+\&{else} \&{if} ${}(\|j>\|l){}$\1\5
+${}\\{log}[\\{logptr}\PP]\K\|j,\39\\{link}[\|p]\K\\{wait}[\|j],\39\\{wait}[\|j]%
+\K\|p;{}$\2\6
+\&{else} \&{if} ${}(\|f[\|j]\E\T{0}){}$\1\5
+${}\\{log}[\\{logptr}\PP]\K{-}\T{1},\39\\{link}[\|p]\K\\{disc}[\|l],\39%
+\\{disc}[\|l]\K\|p;{}$\2\6
+\&{else}\1\5
+\&{goto} \\{retain\_it};\2\6
+\&{continue};\6
+\4\\{retain\_it}:\5
+${}\\{log}[\\{logptr}\PP]\K\T{0},\39\\{link}[\|p]\K\\{wait}[\T{0}],\39\\{wait}[%
+\T{0}]\K\|p;{}$\6
+${}\\{auts}\PP;{}$\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{11}Here I've made a point to ``undo'' in precisely the reverse order
+of what I ``did,'' so that lists are perfectly restored to their
+former condition.
+
+The label \PB{\\{kludge}} is one of my trademarks, I guess: It's a place
+in the middle of nested loops, which just happens to be the
+place we want to jump when doing an immediate rejection.
+
+\Y\B\4\X11:Reconstruct \PB{\\{wait}[\|l]}\X${}\E{}$\6
+$\|t\K\T{0};{}$\6
+\&{while} ${}(\\{logptr}>\\{logl}[\|l]){}$\5
+${}\{{}$\1\6
+${}\|j\K\\{log}[\MM\\{logptr}];{}$\6
+\&{if} ${}(\|j<\T{0}){}$\5
+${}\{{}$\1\6
+${}\|p\K\\{disc}[\|l],\39\\{disc}[\|l]\K\\{link}[\|p],\39\|k\K\\{iperm}[%
+\|p][{-}\|j];{}$\6
+\&{if} ${}(\|f[\|k]\E\T{0}\W\\{iperm}[\|p][\|k]<\\{iperm}[\|p][\|l]){}$\1\5
+${}\\{forcings}[\|p]\PP;{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\|j>\T{0}){}$\5
+${}\{{}$\1\6
+${}\|p\K\\{wait}[\|j],\39\\{wait}[\|j]\K\\{link}[\|p],\39\|k\K\\{iperm}[\|p][%
+\|j];{}$\6
+\&{for} ${}(\|j\K\|k-\T{1};{}$ ${}\|j>\\{iperm}[\|p][\|l];{}$ ${}\|j\MM){}$\1\6
+\&{if} ${}(\|f[\|j]\E\T{0}\W\\{perm}[\|p][\|j]>\|k\W\\{perm}[\|p][\|j]<\|l){}$%
+\1\5
+${}\\{forcings}[\|p]\MM;{}$\2\2\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\|p\K\\{wait}[\T{0}],\39\\{wait}[\T{0}]\K\\{link}[\|p],\39\|k\K\|l;{}$\2\6
+${}\\{link}[\|p]\K\|t,\39\|t\K\|p,\39\|k\MM;{}$\6
+\&{while} ${}(\|k>\\{iperm}[\|p][\|l]){}$\5
+${}\{{}$\1\6
+${}\|j\K\\{perm}[\|p][\|k];{}$\6
+\&{if} ${}(\|j>\|l\W\|f[\|k]\E\T{0}){}$\1\5
+${}\\{forcings}[\|p]\MM,\39\\{forced}[\|j]\MM;{}$\2\6
+\4\\{kludge}:\5
+\&{if} ${}(\|f[\|k]\E\T{0}\W\\{iperm}[\|p][\|k]<\\{iperm}[\|p][\|l]){}$\1\5
+${}\\{forcings}[\|p]\PP;{}$\2\6
+${}\|k\MM;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\\{wait}[\|l]\K\|t{}$;\C{ I think it's ``all together now'' }\par
+\U2.\fi
+
+\M{12}\B\X12:Reject \PB{\|l} immediately\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|t\K\|p;{}$\6
+\&{goto} \\{kludge};\6
+\4${}\}{}$\2\par
+\U9.\fi
+
+\M{13}\B\X13:Downdate \PB{\\{wait}[\T{0}]}\X${}\E{}$\6
+$\|t\K\T{0};{}$\6
+\&{while} ${}(\\{logptr}>\\{log0}[\|l]){}$\5
+${}\{{}$\1\6
+${}\|j\K\\{log}[\MM\\{logptr}];{}$\6
+\&{if} ${}(\|j<\T{0}){}$\1\5
+${}\|p\K\\{disc}[\|l],\39\\{disc}[\|l]\K\\{link}[\|p];{}$\2\6
+\&{else}\1\5
+${}\|p\K\\{wait}[\|j],\39\\{wait}[\|j]\K\\{link}[\|p];{}$\2\6
+${}\\{link}[\|p]\K\|t,\39\|t\K\|p;{}$\6
+\4${}\}{}$\2\6
+${}\\{wait}[\T{0}]\K\|t{}$;\par
+\U2.\fi
+
+\M{14}\B\X14:Check for new forced moves\X${}\E{}$\6
+\&{for} ${}(\\{auts}\K\T{1},\39\|p\K\\{wait}[\T{0}];{}$ \|p; ${}\|p\K\\{link}[%
+\|p]){}$\5
+${}\{{}$\1\6
+${}\|j\K\\{perm}[\|p][\|l];{}$\6
+\&{if} ${}(\|j>\|l){}$\5
+${}\{{}$\1\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"\ forcing\ f[\%x]=0\\n"},\39\|j);{}$\2\6
+${}\\{forcings}[\|p]\PP,\39\\{forced}[\|j]\PP;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{iperm}[\|p][\|l]<\|l){}$\1\5
+${}\\{forcings}[\|p]\MM;{}$\2\6
+\&{if} (\\{verbose})\1\5
+${}\\{auts}\PP;{}$\2\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{15}\B\X15:Uncheck for new forced moves\X${}\E{}$\6
+\&{for} ${}(\|p\K\\{wait}[\T{0}];{}$ \|p; ${}\|p\K\\{link}[\|p]){}$\5
+${}\{{}$\1\6
+${}\|j\K\\{perm}[\|p][\|l];{}$\6
+\&{if} ${}(\|j>\|l){}$\5
+${}\{{}$\1\6
+${}\\{forcings}[\|p]\MM,\39\\{forced}[\|j]\MM;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{iperm}[\|p][\|l]<\|l){}$\1\5
+${}\\{forcings}[\|p]\PP;{}$\2\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{16}Finally, here's a routine that documents the main invariant
+relations that I expect to be true when this program enters level~\PB{\|l}.
+(The \PB{\\{sanity}} routine sure did prove to be useful when I was
+debugging the twisted logic above.)
+
+\Y\B\4\X16:Subroutines\X${}\E{}$\6
+\&{int} \\{timestamp};\6
+\&{int} \\{stamp}[\\{nfactorial}];\7
+\&{void} \\{sanity}(\&{int} \|l)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \|c${},{}$ \|j${},{}$ \\{jj}${},{}$ \|k${},{}$ \|p;\7
+\&{if} ${}(\|l\E\T{0}){}$\1\5
+\&{return};\2\6
+${}\\{timestamp}\PP;{}$\6
+\X17:Sanity check the wait lists\X;\6
+\X18:Sanity check the discard lists\X;\6
+\X19:Sanity check \PB{\\{wait}[\T{0}]}\X;\6
+\&{for} ${}(\|p\K\T{1};{}$ ${}\|p<\\{nfactorial};{}$ ${}\|p\PP){}$\1\6
+\&{if} ${}(\\{stamp}[\|p]\I\\{timestamp}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"error:\ perm\ \%d\ has\ }\)\.{disappeared!\\n"},\39\|p);{}$\6
+\&{goto} \\{error\_exit};\6
+\4${}\}{}$\2\2\6
+\&{return};\6
+\4\\{error\_exit}:\5
+${}\\{printf}(\.{"(Detected\ at\ level\ }\)\.{\%x)\\n"},\39\|l){}$;\5
+\&{return};\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{17}\B\X17:Sanity check the wait lists\X${}\E{}$\6
+\&{for} ${}(\|k\K\|l;{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\1\6
+\&{for} ${}(\|p\K\\{wait}[\|k];{}$ \|p; ${}\|p\K\\{link}[\|p]){}$\5
+${}\{{}$\1\6
+${}\\{stamp}[\|p]\K\\{timestamp};{}$\6
+${}\\{jj}\K\\{iperm}[\|p][\|k];{}$\6
+\&{if} ${}(\|f[\\{jj}]\I\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"error:\ wait[\%x]\ con}\)\.{tains\ noncritical\ pe}\)\.{rm\ %
+\%d!\\n"},\39\|k,\39\|p);{}$\6
+\&{goto} \\{error\_exit};\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\|c\K\T{0};{}$  ; ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{perm}[\|p][\|j]>\\{jj}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|f[\|j]\E\T{0}){}$\1\5
+${}\|c\PP;{}$\2\6
+\&{else} \&{if} ${}(\\{perm}[\|p][\|j]\E\|k){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\|f[\|j]\I\|f[\\{perm}[\|p][\|j]]){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"error:\ perm\ \%d\ on\ w}\)\.{ait[\%x]\ contains\ ear}\)\.{ly%
+\ mismatch\ f[\%x]!=f}\)\.{[\%x]!\\n"},\39\|p,\39\|k,\39\|j,\39\\{perm}[\|p][%
+\|j]);{}$\6
+\&{goto} \\{error\_exit};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|c\I\\{forcings}[\|p]){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"error:\ forcings[\%d]}\)\.{\ is\ \%d,\ not\ \%d,\ in\ w}\)%
+\.{ait[\%x]!\\n"},\39\|p,\39\\{forcings}[\|p],\39\|c,\39\|k);{}$\6
+\&{goto} \\{error\_exit};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\par
+\U16.\fi
+
+\M{18}The wait lists \PB{\\{wait}[\|k]} for $1\le k<l$ are essentially discards
+too,
+because we've set \PB{$\|f[\|k]\K\T{0}$}.
+
+I don't check the \PB{\\{forcings}} count in \PB{\\{disc}[\|k]}, because the
+perms
+in such lists don't satisfy the same invariants as other perms.
+
+\Y\B\4\X18:Sanity check the discard lists\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\|l;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|p\K\\{disc}[\|k];{}$ \|p; ${}\|p\K\\{link}[\|p]){}$\5
+${}\{{}$\1\6
+${}\\{stamp}[\|p]\K\\{timestamp};{}$\6
+\&{for} ${}(\\{jj}\K\T{0};{}$ ${}\\{jj}<\|l;{}$ ${}\\{jj}\PP){}$\1\6
+\&{if} ${}(\|f[\\{jj}]\I\|f[\\{perm}[\|p][\\{jj}]]){}$\1\5
+\&{break};\2\2\6
+\&{if} ${}(\\{jj}\E\|l){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"error:\ disc[\%x]\ con}\)\.{tains\ the\ nondiscard}\)\.{able\
+perm\ \%d!\\n"},\39\|k,\39\|p);{}$\6
+\&{goto} \\{error\_exit};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|f[\\{jj}]\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"error:\ disc[\%x]\ con}\)\.{tains\ the\ counterexa}\)\.{mple\
+perm\ \%d!\\n"},\39\|k,\39\|p);{}$\6
+\&{goto} \\{error\_exit};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|p\K\\{wait}[\|k];{}$ \|p; ${}\|p\K\\{link}[\|p]){}$\5
+${}\{{}$\1\6
+${}\\{stamp}[\|p]\K\\{timestamp};{}$\6
+\&{for} ${}(\\{jj}\K\T{0};{}$ ${}\\{jj}<\|l;{}$ ${}\\{jj}\PP){}$\1\6
+\&{if} ${}(\|f[\\{jj}]\I\|f[\\{perm}[\|p][\\{jj}]]){}$\1\5
+\&{break};\2\2\6
+\&{if} ${}(\\{jj}\E\|l){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"error:\ wait[\%x]\ con}\)\.{tains\ the\ nondiscard}\)\.{able\
+perm\ \%d!\\n"},\39\|k,\39\|p);{}$\6
+\&{goto} \\{error\_exit};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|f[\\{jj}]\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"error:\ wait[\%x]\ con}\)\.{tains\ the\ counterexa}\)\.{mple\
+perm\ \%d!\\n"},\39\|k,\39\|p);{}$\6
+\&{goto} \\{error\_exit};\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\|c\K\T{0};{}$ ${}\|j<\\{jj};{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\\{perm}[\|p][\|j]>\\{jj}\W\|f[\|j]\E\T{0}){}$\1\5
+${}\|c\PP;{}$\2\2\6
+\&{if} ${}(\|c\I\\{forcings}[\|p]){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"error:\ forcings[\%d]}\)\.{\ is\ \%d,\ not\ \%d,\ in\ w}\)%
+\.{ait[\%x]!\\n"},\39\|p,\39\\{forcings}[\|p],\39\|c,\39\|k);{}$\6
+\&{goto} \\{error\_exit};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U16.\fi
+
+\M{19}\B\X19:Sanity check \PB{\\{wait}[\T{0}]}\X${}\E{}$\6
+\&{for} ${}(\|p\K\\{wait}[\T{0}];{}$ \|p; ${}\|p\K\\{link}[\|p]){}$\5
+${}\{{}$\1\6
+${}\\{stamp}[\|p]\K\\{timestamp};{}$\6
+\&{for} ${}(\|c\K\|j\K\T{0};{}$ ${}\|j<\|l;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|f[\|j]\I\|f[\\{perm}[\|p][\|j]]){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|f[\|j]\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"error:\ wait[0]\ cont}\)\.{ains\ the\ counterexam}\)\.{ple\
+perm\ \%d!\\n"},\39\|k,\39\|p);{}$\6
+\&{goto} \\{error\_exit};\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"error:\ wait[0]\ cont}\)\.{ains\ the\ discardable}\)\.{\ perm%
+\ \%d!\\n"},\39\|k,\39\|p);{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{perm}[\|p][\|j]\G\|l){}$\1\5
+${}\|c\PP;{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|c\I\\{forcings}[\|p]){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"error:\ forcings[\%d]}\)\.{\ is\ \%d,\ not\ \%d,\ in\ w}\)%
+\.{ait[0]!\\n"},\39\|p,\39\\{forcings}[\|p],\39\|c);{}$\6
+\&{goto} \\{error\_exit};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U16.\fi
+
+\N{1}{20}Index.
+\fi
+
+\inx
+\fin
+\con

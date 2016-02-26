@@ -1,0 +1,129 @@
+\input cwebmac
+
+\N{1}{1}Intro. This is a simple filter that inputs the well-known DIMACS format
+for
+satisfiability problems and outputs the format used by {\mc SAT0}, {\mc SAT1},
+etc.
+
+DIMACS format begins with zero or more optional comment lines, indicated by
+their first character `\.c'. The next line should say `\.p \.{cnf} $n$ $m$',
+where $n$ is the number of variables and $m$ is the number of clauses.
+Then comes a string of $m$ ``clauses,'' which are sequences of
+nonzero integers of absolute value $\le n$, followed by zero.
+A literal for the $k$th variable is represented by $k$; its complement
+is represented by $-k$.
+
+SAT format is explained in the programs cited above.
+
+\Y\B\4\D$\\{buf\_size}$ \5
+\T{1024}\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\&{char} \\{buf}[\\{buf\_size}];\6
+\&{int} \|m${},{}$ \|n${},{}$ \|v;\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|l${},{}$ \|p;\7
+\X2:Read the preamble\X;\6
+\&{if} ${}(\|m\E\T{0}\V\|n\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ didn't\ find\ m\ or\ }\)\.{n!\\n"});{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\X4:Read and translate the clauses\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Read the preamble\X${}\E{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{fgets}(\\{buf},\39\\{buf\_size},\39\\{stdin})){}$\1\5
+\&{break};\2\6
+\&{if} ${}(\\{buf}[\T{0}]\E\.{'c'}){}$\1\5
+\X3:Process a comment line and \PB{\&{continue}}\X;\2\6
+\&{if} ${}(\\{buf}[\T{0}]\I\.{'p'}\V\\{buf}[\T{1}]\I\.{'\ '}\V\\{buf}[\T{2}]\I%
+\.{'c'}\V\\{buf}[\T{3}]\I\.{'n'}\V\\{buf}[\T{4}]\I\.{'f'}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Unrecognized\ input\ }\)\.{line:\ \%s\\n"},\39%
+\\{buf});{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+${}\\{sscanf}(\\{buf}+\T{5},\39\.{"\%i\ \%i"},\39{\AND}\|n,\39{\AND}\|m);{}$\6
+\&{break};\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}\B\X3:Process a comment line and \PB{\&{continue}}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{printf}(\.{"\~\ \%s"},\39\\{buf}+\T{1});{}$\6
+\&{continue};\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{4}\B\X4:Read and translate the clauses\X${}\E{}$\6
+$\|j\K\|k\K\|l\K\|p\K\T{0};{}$\6
+\&{while} ${}(\\{fscanf}(\\{stdin},\39\.{"\%i"},\39{\AND}\|v)\E\T{1}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|v\E\T{0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|j\E\T{0}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Warning:\ Clause\ \%d\ }\)\.{is\ empty!\\n"},%
+\39\|k+\T{1});{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\&{if} ${}(\|k\E\|m){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Too\ many\ clauses\ (m}\)\.{ore\ than\ \%d)!%
+\\n"},\39\|m);{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+${}\|k\PP,\39\|j\K\T{0};{}$\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\|v>\T{0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|v>\|n){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Too\ many\ variables\ }\)\.{(\%d\ >\ \%d)!%
+\\n"},\39\|v,\39\|n);{}$\6
+${}\\{exit}({-}\T{4});{}$\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"\ \%d"},\39\|v);{}$\6
+\&{if} ${}(\|v>\|p){}$\1\5
+${}\|p\K\|v;{}$\2\6
+${}\|j\PP,\39\|l\PP;{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\|v<{-}\|n){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Too\ many\ variables\ }\)\.{(\%d\ <\ -\%d)!%
+\\n"},\39\|v,\39\|n);{}$\6
+${}\\{exit}({-}\T{5});{}$\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"\ \~\%d"},\39{-}\|v);{}$\6
+\&{if} ${}({-}\|v>\|p){}$\1\5
+${}\|p\K{-}\|v;{}$\2\6
+${}\|j\PP,\39\|l\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} (\|j)\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"The\ last\ clause\ did}\)\.{n't\ end\ with\ 0!%
+\\n"});{}$\6
+\\{printf}(\.{"\\n"});\6
+${}\|k\PP;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|k<\|m){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Too\ few\ clauses\ (\%d}\)\.{\ <\ \%d)!\\n"},%
+\39\|k,\39\|m);{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"OK,\ I\ wrote\ out\ \%d\ }\)\.{literals\ in\ %
+\%d\ claus}\)\.{es\ on\ \%d\ variables.\\}\)\.{n"},\39\|l,\39\|k,\39\|p){}$;\par
+\U1.\fi
+
+\N{1}{5}Index.
+
+\fi
+
+
+\inx
+\fin
+\con

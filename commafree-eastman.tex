@@ -1,0 +1,208 @@
+\input cwebmac
+
+\N{1}{1}Intro. This program is an iterative implementation of
+an interesting recursive algorithm due to
+Willard~L. Eastman, {\sl IEEE Trans.\ \bf IT-11} (1965), 263--267:
+Given a sequence of nonnegative integers $x=x_0x_1\ldots x_{n-1}$ of
+odd length~$n$, where $x$ is not equal to any of its cyclic shifts
+$x_k\ldots x_{n-1}x_0\ldots x_{k-1}$ for $1\le k<n$, we output a
+cyclic shift $\sigma x$ such that the set of all such $\sigma x$
+forms a commafree code of block length~$n$ (over an infinite alphabet).
+
+The integers are given as command-line arguments.
+
+The simplest nontrivial example occurs when $n=3$. If $x=abc$, where
+$a$, $b$, and~$c$ aren't all equal, then exactly one of the cyclic shifts
+$y_0y_1y_2=abc$, $bca$, $cab$ will satisfy $y_0>y_1\le y_2$, and we
+choose that one. It's easy to check that the triples chosen in
+this way are commafree.
+
+Similar constructions are possible when $n=5$ or $n=7$. But the case
+$n=9$ already gets a bit dicey, and when $n$ is really large it's not
+at all clear that commafreeness is possible. Eastman's paper resolved
+a conjecture made by Golomb, Gordon, and Welch in their pioneering paper about
+comma-free codes (1958).
+
+(Of course, it's not at all clear
+that we would want to actually {\it use\/} a commafree code when
+$n$ is large; but that's another story, and beside the point. The point
+is that Eastman discovered a really interesting algorithm.)
+
+\Y\B\4\D$\\{maxn}$ \5
+\T{105}\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\&{int} ${}\|x[\\{maxn}+\\{maxn}+\\{maxn}];{}$\6
+\&{int} ${}\|b[\\{maxn}+\\{maxn}+\\{maxn}];{}$\6
+\&{int} \\{bb}[\\{maxn}];\7
+\X5:Subroutines\X;\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|n${},{}$ \|p${},{}$ %
+\|q${},{}$ \|t${},{}$ \\{tt};\7
+\X2:Process the command line\X;\6
+\X3:Do Eastman's algorithm\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Process the command line\X${}\E{}$\6
+\&{if} ${}(\\{argc}<\T{4}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ x1\ x2\ ...}\)\.{\ xn\\n"},\39%
+\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+${}\|n\K\\{argc}-\T{1};{}$\6
+\&{if} ${}((\|n\AND\T{1})\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"The\ number\ of\ items}\)\.{,\ n,\ should\ be\
+odd,\ }\)\.{not\ \%d!\\n"},\39\|n);{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\\{argc};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{sscanf}(\\{argv}[\|j],\39\.{"\%d"},\39{\AND}\|x[\|j-\T{1}])\I%
+\T{1}\V\|x[\|j-\T{1}]<\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Argument\ \%d\ should\ }\)\.{be\ a\
+nonnegative\ int}\)\.{eger,\ not\ `\%s'!\\n"},\39\|j,\39\\{argv}[\|j]);{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\N{1}{3}The algorithm.
+We think of $x$ as written cyclically, with $x_{n+j}=x_j$ for all~$j\ge0$.
+The basic idea in the algorithm below is to also think of $x$ as partitioned
+into $t\le n$ subwords by boundary markers $b_j$ where $0\le b_0<b_1<\cdots
+<b_{t-1}<n$; then subword $y_j$ is $x_{b_j}x_{b_j+1}\ldots x_{b_{j+1}-1}$,
+for $0\le j<t$, where $b_t=b_0$. If $t=1$, there's just one subword,
+and it's a cyclic shift of~$x$. The number $t$ of subwords during each phase
+will be odd.
+
+Eastman's algorithm essentially begins with $b_j=j$ for $0\le j<n$, so that
+$x$ is partitioned into $n$ subwords of length~1. It successively {\it removes%
+\/}
+boundary points until only one subword is left; that subword is the answer.
+It operates in phases, so that all subwords during the $j$th phase have
+length $3^{j-1}$ or more; thus at most $\lfloor\log_3n\rfloor$ phases
+are needed. (For example, the case $n=9$ is ``dicey'' because it might
+require two phases.)
+
+The algorithm is based on comparison of adjacent subwords $y_{j-1}$ and~$y_j$.
+If those subwords have the same length, we use lexicographic comparison;
+otherwise we declare that the longer subword is bigger.
+
+(After the first phase, all subwords not only have length $\ge3$, they also
+always begin with a nonzero entry; in other words, $x_{b_j}>0$ for every
+boundary marker~$b_j$. However, we won't need to use that fact explicitly.)
+
+The algorithm can be described with terminology based on the topography
+of Nevada: Say that $i$ is a {\it basin\/} if the subwords satisfy
+$y_{i-1}>y_i\le y_{i+1}$. There must be at least one basin; otherwise all
+the $y_j$ would be equal, and $x$ would equal one of its cyclic shifts.
+We look at consecutive basins, $i$ and~$j$; this means that $i<j$ and that
+$i$ and $j$ are basins, and that $i+1$ through $j-1$ are {\it not\/} basins.
+If there's only one basin we have $j=i+t$.
+The indices between consecutive basins are called {\it ranges\/}.
+
+Since $t$ is odd, there's an odd number of consecutive basins for which
+$j-i$ is odd. Each phase of Eastman's algorithm retains exactly one boundary
+point in the range between such basins, and deletes all the others.
+The retained point is the smallest $k=i+2l$ such that $y_k>y_{k+1}$.
+
+(For example, suppose $i=2$ and $j=9$ are consecutive basins. Then we have
+$y_1>y_2\le y_3\le\cdots\le y_q>y_{q+1}>\cdots>y_9\le y_{10}$, for some
+range element $2<q<9$. We choose $k=4$ if $q=3$ or $q=4$,
+$k=6$ if $q=5$ or $q=6$, and $k=8$ if $q=7$ or $q=8$.)
+
+\Y\B\4\X3:Do Eastman's algorithm\X${}\E{}$\6
+\X4:Initialize\X;\6
+\&{for} ${}(\|p\K\T{1},\39\|t\K\|n;{}$ ${}\|t>\T{1};{}$ ${}\|t\K\\{tt},\39\|p%
+\PP){}$\1\5
+\X6:Do one phase of Eastman's algorithm, putting \PB{\\{tt}} boundary points
+into \PB{\\{bb}}\X;\2\par
+\U1.\fi
+
+\M{4}\B\X4:Initialize\X${}\E{}$\6
+\&{for} ${}(\|j\K\|n;{}$ ${}\|j<\|n+\|n+\|n;{}$ ${}\|j\PP){}$\1\5
+${}\|x[\|j]\K\|x[\|j-\|n];{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n+\|n+\|n;{}$ ${}\|j\PP){}$\1\5
+${}\|b[\|j]\K\|j;{}$\2\6
+${}\|t\K\|n{}$;\par
+\U3.\fi
+
+\M{5}Here's a basic subroutine that returns 1 if subword $y_{i-1}$ exceeds
+subword~$y_i$, otherwise it returns~0.
+
+\Y\B\4\X5:Subroutines\X${}\E{}$\6
+\&{int} \\{compare}(\&{register} \&{int} \|i)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j;\7
+\&{if} ${}(\|b[\|i]-\|b[\|i-\T{1}]\E\|b[\|i+\T{1}]-\|b[\|i]){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|b[\|i]+\|j<\|b[\|i+\T{1}];{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|x[\|b[\|i-\T{1}]+\|j]\E\|x[\|b[\|i]+\|j]){}$\1\5
+\&{continue};\2\6
+\&{return} ${}(\|x[\|b[\|i-\T{1}]+\|j]>\|x[\|b[\|i]+\|j]);{}$\6
+\4${}\}{}$\2\6
+\&{return} \T{0};\C{ $y_{i-1}=y_i$ }\6
+\4${}\}{}$\2\6
+\&{return} ${}(\|b[\|i]-\|b[\|i-\T{1}]>\|b[\|i+\T{1}]-\|b[\|i]);{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{6}\B\X6:Do one phase of Eastman's algorithm, putting \PB{\\{tt}} boundary
+points into \PB{\\{bb}}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\\{tt}\K\T{0},\39\|i\K\T{1};{}$ ${}\|i\Z\|t;{}$ ${}\|i\PP){}$\1\6
+\&{if} (\\{compare}(\|i))\1\5
+\&{break};\2\2\6
+\&{if} ${}(\|i>\|t){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"The\ input\ is\ cyclic}\)\.{!\\n"});{}$\6
+${}\\{exit}({-}\T{666});{}$\6
+\4${}\}{}$\2\6
+\&{for} ( ; ${}\\{compare}(\|i+\T{1});{}$ ${}\|i\PP){}$\1\5
+;\C{ advance to the first basin }\2\6
+\&{for} ( ; ${}\|i\Z\|t;{}$ ${}\|i\K\|j){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|q\K\|i+\T{1};{}$ ${}\\{compare}(\|q+\T{1})\E\T{0};{}$ ${}\|q%
+\PP){}$\1\5
+;\C{ climb the range }\2\6
+\&{for} ${}(\|j\K\|q+\T{1};{}$ ${}\\{compare}(\|j+\T{1});{}$ ${}\|j\PP){}$\1\5
+;\C{ advance to the next basin }\2\6
+\&{if} ${}((\|j-\|i)\AND\T{1}){}$\1\5
+\X7:Choose a boundary point to retain\X;\2\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"Phase\ \%d\ leaves"},\39\|p);{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{tt};{}$ ${}\|k\PP){}$\1\5
+${}\|b[\|k]\K\\{bb}[\|k],\39\\{printf}(\.{"\ \%d"},\39\\{bb}[\|k]);{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\&{for} ( ; ${}\|b[\|k-\\{tt}]<\|n+\|n;{}$ ${}\|k\PP){}$\1\5
+${}\|b[\|k]\K\|b[\|k-\\{tt}]+\|n;{}$\2\6
+\4${}\}{}$\2\par
+\U3.\fi
+
+\M{7}\B\X7:Choose a boundary point to retain\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}((\|q-\|i)\AND\T{1}){}$\1\5
+${}\|q\PP;{}$\2\6
+\&{if} ${}(\|q<\|t){}$\1\5
+${}\\{bb}[\\{tt}\PP]\K\|b[\|q];{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\\{tt}\PP;{}$ ${}\|k>\T{0};{}$ ${}\|k\MM){}$\1\5
+${}\\{bb}[\|k]\K\\{bb}[\|k-\T{1}];{}$\2\6
+${}\\{bb}[\T{0}]\K\|b[\|q-\|t];{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U6.\fi
+
+\N{1}{8}Index.
+\fi
+
+\inx
+\fin
+\con

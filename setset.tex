@@ -1,0 +1,697 @@
+\input cwebmac
+\datethis
+\def\SET/{{\mc SET\null}}
+
+
+\N{1}{1}Introduction. This program finds all nonisomorphic sets of \SET/ cards
+that contain no \SET/s.
+
+In case you don't know what that means, a \SET/ card is a vector
+$(x_1,x_2,x_3,x_4)$ where each $x_i$ is 1, 2, or~3. Thus there are 81
+possible \SET/ cards. A~\SET/ is a set of three \SET/ cards that sums
+to $(0,0,0,0)$ modulo~3. Equivalently, the numbers in each coordinate
+position of the three vectors in a \SET/ are either all the same or all
+different. (It's kind of a 4-dimensional tic-tac-toe with wraparound.)
+
+There are $4!\times 3!^4=31104$ isomorphisms, since we can permute the
+coordinates in $4!$ ways and we can permute the individual values of
+each coordinate position in $3!$ ways.
+
+A web page of David Van Brink states that you can't have more than 20 \SET/
+cards without having a \SET/. He says that he proved this in 1997 with a
+computer program that took about one week to run on a 90MHz Pentium machine.
+I'm hoping to get the result faster by using ideas of isomorph rejection,
+meanwhile also discovering all of the $k$-element \SET/-less solutions
+for $k\le20$.
+
+The theorem about at most 20 \SET/-free cards was actually proved in much
+stronger form by G. Pellegrino, {\sl Matematiche\/ \bf25} (1971), 149--157,
+without using computers. Pellegrino showed that any set of 21 points in
+the projective space of $81+27+9+3+1$ elements, represented by nonzero
+5-tuples in which $x$ and $-x$ are considered equivalent, has three
+collinear points; this would correspond to sets of three distinct points
+in which the third is the sum or difference of the first two.
+
+[\SET/ is a registered trademark of SET Enterprises, Inc.]
+
+\Y\B\4\D$\\{maps}$ \5
+$(\T{6}*\T{6}*\T{6}*\T{6}{}$)\C{ this many ways to permute individual
+coordinates }\par
+\B\4\D$\\{isos}$ \5
+$(\T{24}*\\{maps}{}$)\C{ this many automorphisms altogether }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\X3:Type definitions\X\6
+\X4:Global variables\X\6
+\X15:Subroutines\X\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\X18:Local variables\X\6
+\X6:Initialize\X;\6
+\X16:Enumerate and print all solutions\X;\6
+\X36:Print the totals\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}Our basic approach is to define a linear ordering on solutions, and to
+look only for solutions that are smallest in their isomorphism class.
+In other words, we will count the sets $S$ such that $S\le\alpha S$ for
+all automorphisms~$\alpha$. We'll also count the number $t$ of cases where
+$S=\alpha S$; then the number of distinct solutions isomorphic to~$S$
+is $31104/t$, so we will essentially have also enumerated the distinct
+solutions.
+
+The ordering we use is standard: Vectors are ordered lexicographically,
+so that $(1,1,1,1)$ is the smallest \SET/ card and $(3,3,3,3)$ is the largest.
+Also, when $S$ and $T$ both are sets of $k$ \SET/ cards, we define
+$S\le T$ by first sorting the vectors into order so that $s_1<\cdots<s_k$ and
+$t_1<\cdots<t_k$, then we compare $(s_1,\ldots,s_k)$ lexicographically
+to $(t_1,\ldots,t_k)$. (Equivalently, we compare the smallest elements
+of $S$ and~$T$; if they are equal, we compare the second-smallest elements,
+and so on, until we've either found inequality or established that $S=T$.)
+
+For example, the set $\{(1,2,2,3),\;(2,2,3,3)\}$ is isomorphic to the
+set $\{(1,1,1,1),\;(1,1,2,2)\}$, because we can interchange coordinates
+1 and~4, then map $3\mapsto1$ in coordinate~1, $2\mapsto1$ in coordinate~2,
+and $(2,3)\mapsto(1,2)$ in coordinate~3. The set $\{(1,1,1,1),\;(1,1,2,2)\}$
+has 32 automorphisms, hence $31104/32=972$ sets are isomorphic to it.
+
+We will generate the elements of a $k$-set in order. If we have
+$s_1<\cdots<s_k$ and $\{s_1,\ldots,s_k\}\le\{\alpha s_1,\ldots,\alpha s_k\}$
+for all $\alpha$, it is not hard to prove that $\{s_1,\ldots,s_j\}\le\{\alpha
+s_1,\ldots,\alpha s_j\}$ for all $\alpha$ and $1\le j\le k$.
+(The reason is that $S<T$ and $t\ge\max T$ implies
+$S\cup\{s\}<S\cup\{\infty\}<T\cup\{t\}$, for all $s$.)
+Therefore every canonical $k$-set is obtained by extending a unique
+canonical $(k-1)$-set.
+
+\fi
+
+\N{1}{3}Data structures.
+It's convenient to represent \SET/ card vectors in a compact code,
+as an integer between 0 and 80.
+
+\Y\B\4\X3:Type definitions\X${}\E{}$\6
+\&{typedef} \&{char} \&{SETcard};\C{ a \SET/ card $(x_1+1,x_2+1,x_3+1,x_4+1)$
+    represented as $((x_1 x_2 x_3 x_4)_3$ }\par
+\A9.
+\U1.\fi
+
+\M{4}When we output a \SET/ card, however, we prefer a hexadecimal code.
+
+\Y\B\4\X4:Global variables\X${}\E{}$\6
+\&{int} \\{hexform}[\T{81}]${}\K\{\T{\^1111},\39\T{\^1112},\39\T{\^1113},\39\T{%
+\^1121},\39\T{\^1122},\39\T{\^1123},\39\T{\^1131},\39\T{\^1132},\39\T{\^1133},%
+\3{-1}\39\T{\^1211},\39\T{\^1212},\39\T{\^1213},\39\T{\^1221},\39\T{\^1222},\39%
+\T{\^1223},\39\T{\^1231},\39\T{\^1232},\39\T{\^1233},\3{-1}\39\T{\^1311},\39\T{%
+\^1312},\39\T{\^1313},\39\T{\^1321},\39\T{\^1322},\39\T{\^1323},\39\T{\^1331},%
+\39\T{\^1332},\39\T{\^1333},\3{-1}\39\T{\^2111},\39\T{\^2112},\39\T{\^2113},\39%
+\T{\^2121},\39\T{\^2122},\39\T{\^2123},\39\T{\^2131},\39\T{\^2132},\39\T{%
+\^2133},\3{-1}\39\T{\^2211},\39\T{\^2212},\39\T{\^2213},\39\T{\^2221},\39\T{%
+\^2222},\39\T{\^2223},\39\T{\^2231},\39\T{\^2232},\39\T{\^2233},\3{-1}\39\T{%
+\^2311},\39\T{\^2312},\39\T{\^2313},\39\T{\^2321},\39\T{\^2322},\39\T{\^2323},%
+\39\T{\^2331},\39\T{\^2332},\39\T{\^2333},\3{-1}\39\T{\^3111},\39\T{\^3112},\39%
+\T{\^3113},\39\T{\^3121},\39\T{\^3122},\39\T{\^3123},\39\T{\^3131},\39\T{%
+\^3132},\39\T{\^3133},\3{-1}\39\T{\^3211},\39\T{\^3212},\39\T{\^3213},\39\T{%
+\^3221},\39\T{\^3222},\39\T{\^3223},\39\T{\^3231},\39\T{\^3232},\39\T{\^3233},%
+\3{-1}\39\T{\^3311},\39\T{\^3312},\39\T{\^3313},\39\T{\^3321},\39\T{\^3322},\39%
+\T{\^3323},\39\T{\^3331},\39\T{\^3332},\39\T{\^3333}\}{}$;\par
+\As5, 8, 10, 12, 13, 17\ETs35.
+\U1.\fi
+
+\M{5}We will frequently need to find the third card of a \SET/,
+given any two distinct cards $x$ and $y$, so we store the answers
+in a precomputed table.
+
+\Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \|z[\T{3}][\T{3}]${}\K\{\{\T{0},\39\T{2},\39\T{1}\},\39\{\T{2},\39%
+\T{1},\39\T{0}\},\39\{\T{1},\39\T{0},\39\T{2}\}\}{}$;\C{ $x+y+z\equiv0$ (mod 3)
+}\6
+\&{char} \\{third}[\T{81}][\T{81}];\par
+\fi
+
+\M{6}\B\D$\\{pack}(\|a,\|b,\|c,\|d)$ \5
+$((((\|a)*\T{3}+(\|b))*\T{3}+(\|c))*\T{3}+(\|d){}$)\par
+\Y\B\4\X6:Initialize\X${}\E{}$\6
+${}\{{}$\1\6
+\&{int} \|a${},{}$ \|b${},{}$ \|c${},{}$ \|d${},{}$ \|e${},{}$ \|f${},{}$ %
+\|g${},{}$ \|h;\7
+\&{for} ${}(\|a\K\T{0};{}$ ${}\|a<\T{3};{}$ ${}\|a\PP){}$\1\6
+\&{for} ${}(\|b\K\T{0};{}$ ${}\|b<\T{3};{}$ ${}\|b\PP){}$\1\6
+\&{for} ${}(\|c\K\T{0};{}$ ${}\|c<\T{3};{}$ ${}\|c\PP){}$\1\6
+\&{for} ${}(\|d\K\T{0};{}$ ${}\|d<\T{3};{}$ ${}\|d\PP){}$\1\6
+\&{for} ${}(\|e\K\T{0};{}$ ${}\|e<\T{3};{}$ ${}\|e\PP){}$\1\6
+\&{for} ${}(\|f\K\T{0};{}$ ${}\|f<\T{3};{}$ ${}\|f\PP){}$\1\6
+\&{for} ${}(\|g\K\T{0};{}$ ${}\|g<\T{3};{}$ ${}\|g\PP){}$\1\6
+\&{for} ${}(\|h\K\T{0};{}$ ${}\|h<\T{3};{}$ ${}\|h\PP){}$\1\5
+${}\\{third}[\\{pack}(\|a,\39\|b,\39\|c,\39\|d)][\\{pack}(\|e,\39\|f,\39\|g,\39%
+\|h)]\K\\{pack}(\|z[\|a][\|e],\39\|z[\|b][\|f],\39\|z[\|c][\|g],\39\|z[\|d][%
+\|h]);{}$\2\2\2\2\2\2\2\2\6
+\4${}\}{}$\2\par
+\As7, 11\ETs14.
+\U1.\fi
+
+\M{7}An even bigger table comes next: We precompute the permutation of \SET/
+cards
+for each of the 31104 potential automorphisms.
+
+And, what the heck, we compute the inverse permutation too; it's only
+another 2.5 megabytes.
+
+\Y\B\4\D$\\{pmap}(\|d)$ \5
+\\{trit}[\\{perm}[\|p][\|d]]\par
+\B\4\D$\\{ppack}(\|p,\|a,\|b,\|c,\|d)$ \5
+$(((((\|p)*\T{6}+(\|a))*\T{6}+(\|b))*\T{6}+(\|c))*\T{6}+(\|d){}$)\par
+\Y\B\4\X6:Initialize\X${}\mathrel+\E{}$\6
+${}\{{}$\1\6
+\&{int} \|a${},{}$ \|b${},{}$ \|c${},{}$ \|d${},{}$ \|e${},{}$ \|f${},{}$ %
+\|g${},{}$ \|h${},{}$ \|p${},{}$ \|s${},{}$ \|t;\7
+\&{for} ${}(\|p\K\T{0};{}$ ${}\|p<\T{24};{}$ ${}\|p\PP){}$\1\6
+\&{for} ${}(\|a\K\T{0};{}$ ${}\|a<\T{6};{}$ ${}\|a\PP){}$\1\6
+\&{for} ${}(\|b\K\T{0};{}$ ${}\|b<\T{6};{}$ ${}\|b\PP){}$\1\6
+\&{for} ${}(\|c\K\T{0};{}$ ${}\|c<\T{6};{}$ ${}\|c\PP){}$\1\6
+\&{for} ${}(\|d\K\T{0};{}$ ${}\|d<\T{6};{}$ ${}\|d\PP){}$\1\6
+\&{for} ${}(\|e\K\T{0};{}$ ${}\|e<\T{3};{}$ ${}\|e\PP){}$\1\6
+\&{for} ${}(\|f\K\T{0};{}$ ${}\|f<\T{3};{}$ ${}\|f\PP){}$\1\6
+\&{for} ${}(\|g\K\T{0};{}$ ${}\|g<\T{3};{}$ ${}\|g\PP){}$\1\6
+\&{for} ${}(\|h\K\T{0};{}$ ${}\|h<\T{3};{}$ ${}\|h\PP{}$)\1\6
+${}\\{trit}[\T{0}]\K\\{perm}[\|a][\|e],\39\\{trit}[\T{1}]\K\\{perm}[\|b][\|f],%
+\3{-1}\39\\{trit}[\T{2}]\K\\{perm}[\|c][\|g],\39\\{trit}[\T{3}]\K\\{perm}[\|d][%
+\|h],\3{-1}\39\\{alf}\K\\{ppack}(\|p,\39\|a,\39\|b,\39\|c,\39\|d),\3{-1}\39\|s%
+\K\\{pack}(\|e,\39\|f,\39\|g,\39\|h),\39\|t\K\\{pack}(\\{pmap}(\T{0}),\39%
+\\{pmap}(\T{1}),\39\\{pmap}(\T{2}),\39\\{pmap}(\T{3})),\3{-1}\39\\{aut}[%
+\\{alf}][\|s]\K\|t,\39\\{tua}[\\{alf}][\|t]\K\|s;{}$\2\2\2\2\2\2\2\2\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{8}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \\{trit}[\T{4}];\C{ four ternary digits }\6
+\&{char} \\{perm}[\T{24}][\T{4}]${}\K\{\{\T{0},\39\T{1},\39\T{2},\39\T{3}\},\39%
+\{\T{0},\39\T{2},\39\T{1},\39\T{3}\},\39\{\T{1},\39\T{0},\39\T{2},\39\T{3}\},%
+\39\{\T{1},\39\T{2},\39\T{0},\39\T{3}\},\39\{\T{2},\39\T{0},\39\T{1},\39\T{3}%
+\},\39\{\T{2},\39\T{1},\39\T{0},\39\T{3}\},\3{-1}\39\{\T{0},\39\T{1},\39\T{3},%
+\39\T{2}\},\39\{\T{0},\39\T{3},\39\T{1},\39\T{2}\},\39\{\T{1},\39\T{0},\39%
+\T{3},\39\T{2}\},\39\{\T{1},\39\T{3},\39\T{0},\39\T{2}\},\39\{\T{3},\39\T{0},%
+\39\T{1},\39\T{2}\},\39\{\T{3},\39\T{1},\39\T{0},\39\T{2}\},\3{-1}\39\{\T{0},%
+\39\T{2},\39\T{3},\39\T{1}\},\39\{\T{0},\39\T{3},\39\T{2},\39\T{1}\},\39\{%
+\T{2},\39\T{0},\39\T{3},\39\T{1}\},\39\{\T{2},\39\T{3},\39\T{0},\39\T{1}\},\39%
+\{\T{3},\39\T{0},\39\T{2},\39\T{1}\},\39\{\T{3},\39\T{2},\39\T{0},\39\T{1}\},%
+\3{-1}\39\{\T{1},\39\T{2},\39\T{3},\39\T{0}\},\39\{\T{1},\39\T{3},\39\T{2},\39%
+\T{0}\},\39\{\T{2},\39\T{1},\39\T{3},\39\T{0}\},\39\{\T{2},\39\T{3},\39\T{1},%
+\39\T{0}\},\39\{\T{3},\39\T{1},\39\T{2},\39\T{0}\},\39\{\T{3},\39\T{2},\39%
+\T{1},\39\T{0}\}\};{}$\6
+\&{char} \\{aut}[\T{31104}][\T{81}]${},{}$ \\{tua}[\T{31104}][\T{81}];\C{ basic
+permutation tables }\par
+\fi
+
+\M{9}Cards of a set are linked together cyclically in order of their values,
+with an ``infinite'' card at the head.
+
+We also maintain an array of 31104 elements, one for each automorphism of
+a given element $s_l$ of the canonical set $\{s_1,\ldots,s_l\}$ that
+we're working with. Such an array is called a ``node.''
+In essence, the nodes for $(s_1,\ldots,s_l)$ represent an array
+of 31104 sets $\{\alpha s_1,\ldots,\alpha s_l\}$,
+each isomorphic to $\{s_1,\ldots,s_l\}$.
+
+Each element $\alpha s_k$ at level $k$ also has a threshold level \PB{%
+\\{tlevel}},
+which can be understood as follows: Suppose $S=\{s_1,\ldots,s_l\}$ is the
+current canonical $l$-set of interest,
+so that $\alpha S=\{\alpha s_1,\ldots,\alpha s_l\}\ge S$ for all $\alpha$.
+If $\alpha S>S$, there is a smallest index $i$ such that $t_i>s_i$,
+where $t_i$ is the $i$th smallest element of $\alpha S$; in that case
+we say that the threshold value of $\alpha s_k$ is $s_i$, and
+the threshold level is~$i$. A tentative value of
+$s_{l+1}$ can be immediately rejected if $\alpha s_{l+1}$ is less than
+$s_i$, because such a set $\{s_1,\ldots,s_{l+1}\}$ would not
+be canonical. On the other hand, if $\alpha s_{l+1}$ is greater than
+$s_i$, no action needs to be taken since the threshold
+stays the same in this case.
+
+The threshold level is considered to be $l+1$ if $\alpha S=S$. In that
+case, we say by convention that the threshold value is unknown.
+
+\Y\B\4\X3:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} \&{elt\_struct} ${}\{{}$\1\6
+\&{SETcard} \\{val};\C{ value of this element }\6
+\&{char} \\{tlevel};\C{ the level of the threshold value }\6
+\&{char} \\{level};\C{ the level when the threshold was set }\6
+\&{struct} \&{elt\_struct} ${}{*}\\{link}{}$;\C{ next larger element of a set }%
+\6
+\&{struct} \&{elt\_struct} ${}{*}\\{next}{}$;\C{ next element waiting for the
+same threshold }\6
+\&{struct} \&{elt\_struct} ${}{*}\\{fixer}{}$;\C{ the link to change when the
+threshold is hit }\2\6
+${}\}{}$ \&{element};\7
+\&{typedef} \&{struct} ${}\{{}$\1\6
+\&{SETcard} \|v;\C{ $s_l$ }\6
+\&{element} \\{image}[\\{isos}];\C{ $\alpha s_l$ for each automorphism $\alpha$
+}\2\6
+${}\}{}$ \&{node};\par
+\fi
+
+\M{10}The node for $s_l$ is called \PB{\\{current}[\|l]}, and \PB{\\{current}[%
+\T{0}]} contains
+the header nodes of circular lists.
+
+\Y\B\4\D$\\{head}$ \5
+\\{current}[\T{0}]\par
+\B\4\D$\\{curval}(\|i)$ \5
+$\\{current}[\|i].{}$\|v\C{ $s_i$ }\par
+\Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{node} \\{current}[\T{22}];\C{ the nodes for $s_1$, $s_2$, etc. }\par
+\fi
+
+\M{11}\B\D$\\{infty}$ \5
+\T{81}\C{ larger than any \PB{\&{SETcard}} value }\par
+\Y\B\4\X6:Initialize\X${}\mathrel+\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{isos};{}$ ${}\|j\PP){}$\1\5
+${}\\{head}.\\{image}[\|j].\\{val}\K\\{infty},\39\\{head}.\\{image}[\|j].%
+\\{tlevel}\K\T{1},\3{-1}\39\\{head}.\\{image}[\|j].\\{link}\K\\{head}.%
+\\{image}[\|j].\\{fixer}\K{\AND}\\{head}.\\{image}[\|j]{}$;\2\par
+\fi
+
+\M{12}Each pair $(s_i,s_j)$ for $1\le i<j\le l$ defines a third \SET/ card $t$
+that must not be appended to the set $\{s_1,\ldots,s_l\}$. The auxiliary
+table \PB{\\{tab}[\|t]} tells how many such pairs exist for a given $t$.
+This table also counts cards that are forbidden because they would
+produce values $\alpha s_{l+1}$ less than the threshold for some~$\alpha$.
+
+Another auxiliary table, called \PB{\\{here}}, records the cards that are
+present
+in the current set.
+
+\Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{unsigned} \&{int} \\{tab}[\T{82}];\C{ nonzero for forbidden cards }\6
+\&{char} \\{here}[\T{81}];\C{ nonzero for cards in $\{s_1,\ldots,s_l\}$ }\par
+\fi
+
+\M{13}We keep lists of all elements that need to be updated when a particular
+value~$s$ is appended to the current set. Such a list begins at
+\PB{\\{top}[\|s]}. The list beginning at \PB{\\{top}[\\{infty}]} is the one for
+unknown
+thresholds, namely for all elements such that $\alpha$ is an automorphism
+of $\{s_1,\ldots,s_l\}$.
+
+When an element is removed from a list as part of the updating at level~$l$,
+it is placed on list \PB{\\{back}[\|l]}, so that everything can be downdated
+when we backtrack. A separate list \PB{\\{aback}[\|l]} is for elements removed
+from \PB{\\{top}[\\{infty}]}.
+
+\Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{element} ${}{*}\\{top}[\T{82}]{}$;\C{ elements waiting for a particular card
+}\6
+\&{element} ${}{*}\\{oldtop}[\T{22}][\T{81}]{}$;\C{ saved values of \PB{%
+\\{top}} }\6
+\&{element} ${}{*}\\{back}[\T{22}],{}$ ${}{*}\\{aback}[\T{22}]{}$;\C{ lists for
+undoing }\par
+\fi
+
+\M{14}Automorphism 0 is the identity, and we need not bother updating its
+entries.
+
+\Y\B\4\X6:Initialize\X${}\mathrel+\E{}$\6
+$\\{head}.\|v\K{-}\T{1};{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\\{isos}-\T{1};{}$ ${}\|k\PP){}$\1\5
+${}\\{head}.\\{image}[\|k].\\{next}\K{\AND}\\{head}.\\{image}[\|k+\T{1}];{}$\2\6
+${}\\{top}[\\{infty}]\K{\AND}\\{head}.\\{image}[\T{1}]{}$;\par
+\fi
+
+\M{15}Here's a subroutine that might facilitate debugging: It simply
+counts the elements of a list.
+
+\Y\B\4\X15:Subroutines\X${}\E{}$\6
+\&{int} \\{count}(\&{element} ${}{*}\|p){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|c;\6
+\&{register} \&{element} ${}{*}\|q;{}$\7
+\&{for} ${}(\|q\K\|p,\39\|c\K\T{0};{}$ \|q; ${}\|q\K\|q\MG\\{next}){}$\1\5
+${}\|c\PP;{}$\2\6
+\&{return} \|c;\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\N{1}{16}Backtracking. Now we're ready to construct the tree of all canonical
+\SET/-free sets $\{s_1,\ldots,s_l\}$.
+
+\Y\B\4\X16:Enumerate and print all solutions\X${}\E{}$\6
+$\|l\K\T{0}{}$;\5
+${}\|j\K\T{0};{}$\6
+\4\\{moveup}:\5
+\&{while} (\\{tab}[\|j])\1\5
+${}\|j\PP;{}$\2\6
+\&{if} ${}(\|j\E\\{infty}){}$\1\5
+\&{goto} \\{big\_backup};\2\6
+${}\|l\PP,\39\\{curval}(\|l)\K\|j,\39\\{here}[\|j]\K\T{1};{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{infty};{}$ ${}\|k\PP){}$\1\5
+${}\\{oldtop}[\|l][\|k]\K\\{top}[\|k];{}$\2\6
+${}\\{auts}\K\T{1},\39\\{newauts}\K\NULL;{}$\6
+\X21:Update the data structures for all elements whose threshold is $j$, or
+backup\X;\6
+\X29:Update the data structures for all elements whose threshold is unknown, or
+backup\X;\6
+\X34:Record the current canonical $l$-set as a solution\X;\6
+\X19:Update \PB{\\{tab}}\X;\6
+${}\|j\K\\{curval}(\|l)+\T{1}{}$;\5
+\&{goto} \\{moveup};\6
+\4\\{big\_backup}:\5
+\X20:Downdate \PB{\\{tab}}\X;\6
+${}\|j\K\\{curval}(\|l);{}$\6
+\X30:Downdate the data structures for all elements whose threshold was unknown%
+\X;\6
+\X28:Downdate the data structures for all elements whose threshold was $j$\X;\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{infty};{}$ ${}\|k\PP){}$\1\5
+${}\\{top}[\|k]\K\\{oldtop}[\|l][\|k];{}$\2\6
+${}\\{here}[\|j]\K\T{0};{}$\6
+${}\|j\PP,\39\|l\MM;{}$\6
+\&{if} (\|l)\1\5
+\&{goto} \\{moveup};\2\par
+\U1.\fi
+
+\M{17}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{auts};\C{ automorphisms of the current $l$-set }\6
+\&{element} ${}{*}\\{newauts}{}$;\C{ the list of nontrivial automorphisms at
+level $l$ }\par
+\fi
+
+\M{18}\B\X18:Local variables\X${}\E{}$\6
+\&{int} \|l;\C{ the current level }\6
+\&{register} \&{int} \|j${},{}$ \|k;\C{ miscellaneous indices; usually $j=s_l$
+}\par
+\A22.
+\U1.\fi
+
+\M{19}\B\X19:Update \PB{\\{tab}}\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|l;{}$ ${}\|j\PP){}$\1\5
+${}\\{tab}[\\{third}[\\{curval}(\|j)][\\{curval}(\|l)]]\PP{}$;\2\par
+\U16.\fi
+
+\M{20}\B\X20:Downdate \PB{\\{tab}}\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|l;{}$ ${}\|j\PP){}$\1\5
+${}\\{tab}[\\{third}[\\{curval}(\|j)][\\{curval}(\|l)]]\MM{}$;\2\par
+\U16.\fi
+
+\M{21}Now we come to the main point of this program, the part where
+elements $\alpha s$ are incorporated into the data structures because
+their threshold value has occurred.
+
+\Y\B\4\X21:Update the data structures for all elements whose threshold is $j$,
+or backup\X${}\E{}$\6
+\&{for} ${}(\\{pp}\K\NULL,\39\|p\K\\{top}[\|j];{}$ \|p; ${}\|r\K\|p\MG\\{next},%
+\39\|p\MG\\{next}\K\\{pp},\39\\{pp}\K\|p,\39\|p\K\|r){}$\5
+${}\{{}$\1\6
+${}\\{ll}\K\|p\MG\\{level};{}$\6
+${}\\{alf}\K\|p-{\AND}\\{current}[\\{ll}].\\{image}[\T{0}];{}$\6
+\X23:Make quick check for easy cases that become dormant\X;\6
+\X24:Bring \PB{$\\{current}[\|k].\\{image}[\\{alf}]$} up to date for \PB{$%
+\\{ll}<\|k\Z\|l$}\X;\6
+\X25:Compute the new threshold for $\alpha$, or backup\X;\6
+\4${}\}{}$\2\6
+${}\\{top}[\|j]\K\NULL,\39\\{back}[\|l]\K\\{pp}{}$;\par
+\U16.\fi
+
+\M{22}\B\X18:Local variables\X${}\mathrel+\E{}$\6
+\&{element} ${}{*}\|p,{}$ ${}{*}\\{pp}{}$;\C{ element of list and its
+predecessor }\6
+\&{int} \\{ll};\C{ a previous or future level number }\6
+\&{int} \\{alf};\C{ the current automorphism of interest }\6
+\&{register} \&{element} ${}{*}\|q,{}$ ${}{*}\|r{}$;\C{ registers for list
+manipulations }\6
+\&{int} \\{jj};\C{ another convenient integer variable }\par
+\fi
+
+\M{23}The list of elements waiting for $j$ to occur will, I believe, consist
+mostly of the 384 elements inserted on level~1, namely those $\alpha$ for which
+$\alpha j=0$. Once we have set $s_l=j$, the next question is almost
+always, ``What is the value of $j'$ for which $\alpha j'=1$?,'' because
+we usually have $s_0=0$ and $s_1=0$. More generally, if we are waiting
+for $j$ because $\alpha j=s_i$, we will next be interested in the
+value $j'$ for which $\alpha j'=s_{i+1}$. If that value of $j'$ is
+less than~$j$ (which equals $s_l$) but not already present,
+or if \PB{\\{tab}}[$j'$] is nonzero,
+we know that $j'$ will never be added to the current set, so we need not
+consider $\alpha$ any further.
+
+We can save a significant amount of work in such cases,
+especially when \PB{\|l} is rather large, so the following code is
+useful even though not strictly necessary.
+
+\Y\B\4\X23:Make quick check for easy cases that become dormant\X${}\E{}$\6
+$\\{jj}\K\\{tua}[\\{alf}][\\{curval}(\|p\MG\\{tlevel}+\T{1})];{}$\6
+\&{if} ${}(\\{tab}[\\{jj}]\V(\\{jj}<\|j\W\R\\{here}[\\{jj}])){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\\{jj}\K\\{curval}(\|p\MG\\{tlevel})+\T{1};{}$ ${}\\{jj}<%
+\\{curval}(\|p\MG\\{tlevel}+\T{1});{}$ ${}\\{jj}\PP){}$\5
+${}\{{}$\1\6
+${}\|k\K\\{tua}[\\{alf}][\\{jj}];{}$\6
+\&{if} ${}(\|k>\|j){}$\1\5
+${}\\{tab}[\|k]\PP;{}$\2\6
+\&{else} \&{if} (\\{here}[\|k])\1\5
+\X33:Begin backing up in Case A\X;\C{ $(s_1,\ldots,s_l)$ isn't canonical }\2\6
+\4${}\}{}$\2\6
+\&{continue};\C{ no need to update since \PB{\\{jj}} won't occur }\6
+\4${}\}{}$\2\par
+\U21.\fi
+
+\M{24}\B\D$\\{succ}(\|p)$ \5
+(\&{element} ${}{*})({}$(\&{char} ${}{*}){}$ \|p${}+\&{sizeof}(\&{node}){}$)\par
+\Y\B\4\X24:Bring \PB{$\\{current}[\|k].\\{image}[\\{alf}]$} up to date for %
+\PB{$\\{ll}<\|k\Z\|l$}\X${}\E{}$\6
+\&{for} ${}(\\{ll}\PP,\39\|q\K\\{succ}(\|p);{}$ ${}\|q<{\AND}\\{current}[\|l].%
+\\{image}[\T{0}];{}$ ${}\\{ll}\PP,\39\|q\K\\{succ}(\|q)){}$\5
+${}\{{}$\1\6
+${}\|q\MG\\{val}\K\\{aut}[\\{alf}][\\{curval}(\\{ll})];{}$\6
+\&{for} ${}(\|r\K\|p\MG\\{fixer};{}$ ${}\|r\MG\\{link}\MG\\{val}<\|q\MG%
+\\{val};{}$ ${}\|r\K\|r\MG\\{link}){}$\1\5
+;\2\6
+${}\|q\MG\\{link}\K\|r\MG\\{link};{}$\6
+${}\|r\MG\\{link}\K\|q{}$;\C{ we have inserted \PB{$\|q\MG\\{val}$} into the
+sorted list for $\alpha$ }\6
+\4${}\}{}$\2\6
+${}\|q\MG\\{val}\K\\{curval}(\|p\MG\\{tlevel}),\39\|q\MG\\{link}\K\|p\MG%
+\\{fixer}\MG\\{link},\39\|p\MG\\{fixer}\MG\\{link}\K\|q{}$;\par
+\U21.\fi
+
+\M{25}\B\X25:Compute the new threshold for $\alpha$, or backup\X${}\E{}$\6
+\&{for} ${}(\|r\K\|q,\39\\{ll}\K\|p\MG\\{tlevel}+\T{1};{}$ ${}\|r\MG\\{link}\MG%
+\\{val}\E\\{curval}(\\{ll});{}$ ${}\|r\K\|r\MG\\{link},\39\\{ll}\PP){}$\1\5
+;\2\6
+\&{if} ${}(\|r\MG\\{link}\MG\\{val}<\\{curval}(\\{ll}){}$)\C{ oops, $(s_1,%
+\ldots,s_l)$ isn't canonical }\1\6
+\X32:Begin backing up in Case B\X;\2\6
+${}\|q\MG\\{tlevel}\K\\{ll},\39\|q\MG\\{fixer}\K\|r;{}$\6
+\X26:Tabulate newly forbidden values\X;\6
+\&{if} ${}(\\{ll}>\|l){}$\1\5
+${}\\{auts}\PP,\39\|q\MG\\{next}\K\\{newauts},\39\\{newauts}\K\|q;{}$\2\6
+\&{else}\1\5
+${}\\{jj}\K\\{tua}[\\{alf}][\\{curval}(\\{ll})],\39\|q\MG\\{level}\K\|l,\39\|q%
+\MG\\{next}\K\\{top}[\\{jj}],\39\\{top}[\\{jj}]\K\|q{}$;\2\par
+\U21.\fi
+
+\M{26}If \PB{$\|p\MG\\{tlevel}\K\|i$}, we have already used \PB{\\{tab}} to
+forbid all $s$ values
+such that $\alpha s<s_i$ and $\alpha s\notin\{s_1,\ldots,s_i\}$.
+At this point we essentially want to increase~$i$ to the new threshold
+level~\PB{\\{ll}}. If \PB{$\\{ll}>\|l$}, however, we forbid values only up to
+$s_l$,
+because $\alpha$ is an automorphism of the full set $\{s_1,\ldots,s_l\}$
+in this case.
+
+\Y\B\4\X26:Tabulate newly forbidden values\X${}\E{}$\6
+\&{for} ${}(\\{jj}\K(\\{ll}>\|l\?\|j:\\{curval}(\\{ll}))-\T{1};{}$ ${}\\{jj}>%
+\\{curval}(\|p\MG\\{tlevel});{}$ ${}\\{jj}\MM){}$\5
+${}\{{}$\1\6
+${}\|k\K\\{tua}[\\{alf}][\\{jj}];{}$\6
+\&{if} ${}(\|k>\|j){}$\1\5
+${}\\{tab}[\|k]\PP;{}$\2\6
+\4${}\}{}$\2\par
+\U25.\fi
+
+\M{27}Later we'll want to undo that last step.
+
+\Y\B\4\X27:Untabulate values that were considered newly forbidden\X${}\E{}$\6
+\&{for} ${}(\\{jj}\K(\\{ll}>\|l\?\|j:\\{curval}(\\{ll}))-\T{1};{}$ ${}\\{jj}>%
+\\{curval}(\|p\MG\\{tlevel});{}$ ${}\\{jj}\MM){}$\5
+${}\{{}$\1\6
+${}\|k\K\\{tua}[\\{alf}][\\{jj}];{}$\6
+\&{if} ${}(\|k>\|j){}$\1\5
+${}\\{tab}[\|k]\MM;{}$\2\6
+\4${}\}{}$\2\par
+\U28.\fi
+
+\M{28}Indeed, in a backtrack program, everything we do that affects subsequent
+decisions must eventually be undone.
+
+The main thing we must undo at this point is to remove the \PB{$\|l-\\{ll}$}
+elements that were sorted in to the list $\{s_1,\ldots,s_l\}$.
+
+\Y\B\4\X28:Downdate the data structures for all elements whose threshold was
+$j$\X${}\E{}$\6
+$\\{pp}\K\NULL,\39\|p\K\\{back}[\|l];{}$\6
+\4\\{backup\_a}:\5
+\&{while} (\|p)\5
+${}\{{}$\1\6
+${}\\{alf}\K\|p-{\AND}\\{current}[\|p\MG\\{level}].\\{image}[\T{0}];{}$\6
+\&{if} ${}(\|p\MG\\{fixer}\MG\\{link}<{\AND}\\{current}[\|l].\\{image}[%
+\T{0}]){}$\5
+${}\{{}$\C{ the ``quick check'' worked }\1\6
+\&{for} ${}(\\{jj}\K\\{curval}(\|p\MG\\{tlevel})+\T{1};{}$ ${}\\{jj}<%
+\\{curval}(\|p\MG\\{tlevel}+\T{1});{}$ ${}\\{jj}\PP){}$\5
+${}\{{}$\1\6
+${}\|k\K\\{tua}[\\{alf}][\\{jj}];{}$\6
+\&{if} ${}(\|k>\|j){}$\1\5
+${}\\{tab}[\|k]\MM;{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\\{ll}\K\\{current}[\|l].\\{image}[\\{alf}].\\{tlevel};{}$\6
+\X27:Untabulate values that were considered newly forbidden\X;\6
+\4\\{backup\_b}:\5
+${}\\{ll}\K\|p\MG\\{level};{}$\6
+\&{for} ${}(\|r\K\|p\MG\\{fixer},\39\\{jj}\K\|l-\\{ll};{}$ \\{jj}; ${}\|r\K\|r%
+\MG\\{link}){}$\1\6
+\&{if} ${}(\|r\MG\\{link}>\|p){}$\1\5
+${}\\{jj}\MM,\39\|r\MG\\{link}\K\|r\MG\\{link}\MG\\{link};{}$\2\2\6
+\4${}\}{}$\2\6
+${}\|r\K\|p\MG\\{next},\39\|p\MG\\{next}\K\\{pp},\39\\{pp}\K\|p,\39\|p\K\|r;{}$%
+\6
+\4${}\}{}$\2\par
+\U16.\fi
+
+\M{29}\B\X29:Update the data structures for all elements whose threshold is
+unknown, or backup\X${}\E{}$\6
+\&{for} ${}(\\{pp}\K\NULL,\39\|p\K\\{top}[\\{infty}];{}$ \|p; ${}\|r\K\|p\MG%
+\\{next},\39\|p\MG\\{next}\K\\{pp},\39\\{pp}\K\|p,\39\|p\K\|r){}$\5
+${}\{{}$\1\6
+${}\\{alf}\K\|p-{\AND}\\{current}[\|l-\T{1}].\\{image}[\T{0}];{}$\6
+${}\\{jj}\K\\{aut}[\\{alf}][\|j];{}$\6
+\&{if} ${}(\\{jj}<\|j){}$\1\5
+\X31:Begin backing up in Case C\X;\2\6
+${}\|q\K\\{succ}(\|p);{}$\6
+${}\|q\MG\\{link}\K\|p\MG\\{fixer}\MG\\{link},\39\|p\MG\\{fixer}\MG\\{link}\K%
+\|q;{}$\6
+\&{if} ${}(\\{jj}>\|j){}$\5
+${}\{{}$\1\6
+${}\|q\MG\\{val}\K\\{jj},\39\|q\MG\\{level}\K\|l,\39\|q\MG\\{tlevel}\K\|l,\39%
+\|q\MG\\{fixer}\K\|p\MG\\{fixer};{}$\6
+${}\\{jj}\K\\{tua}[\\{alf}][\|j],\39\|q\MG\\{next}\K\\{top}[\\{jj}],\39\\{top}[%
+\\{jj}]\K\|q;{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\|q\MG\\{val}\K\\{jj},\39\|q\MG\\{tlevel}\K\|l+\T{1},\39\|q\MG\\{fixer}\K%
+\|q;{}$\6
+${}\\{auts}\PP,\39\|q\MG\\{next}\K\\{newauts},\39\\{newauts}\K\|q;{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\\{jj}\K\\{curval}(\|l-\T{1})+\T{1};{}$ ${}\\{jj}<\|j;{}$ ${}\\{jj}%
+\PP){}$\5
+${}\{{}$\1\6
+${}\|k\K\\{tua}[\\{alf}][\\{jj}];{}$\6
+\&{if} ${}(\|k>\|j){}$\1\5
+${}\\{tab}[\|k]\PP;{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\\{top}[\\{infty}]\K\\{newauts},\39\\{aback}[\|l]\K\\{pp}{}$;\par
+\U16.\fi
+
+\M{30}\B\X30:Downdate the data structures for all elements whose threshold was
+unknown\X${}\E{}$\6
+$\\{pp}\K\NULL,\39\|p\K\\{aback}[\|l];{}$\6
+\4\\{backup\_c}:\5
+\&{while} (\|p)\5
+${}\{{}$\1\6
+${}\\{alf}\K\|p-{\AND}\\{current}[\|l-\T{1}].\\{image}[\T{0}];{}$\6
+${}\|q\K\\{succ}(\|p);{}$\6
+${}\|p\MG\\{fixer}\MG\\{link}\K\|q\MG\\{link};{}$\6
+\&{for} ${}(\\{jj}\K\\{curval}(\|l-\T{1})+\T{1};{}$ ${}\\{jj}<\|j;{}$ ${}\\{jj}%
+\PP){}$\5
+${}\{{}$\1\6
+${}\|k\K\\{tua}[\\{alf}][\\{jj}];{}$\6
+\&{if} ${}(\|k>\|j){}$\1\5
+${}\\{tab}[\|k]\MM;{}$\2\6
+\4${}\}{}$\2\6
+${}\|r\K\|p\MG\\{next},\39\|p\MG\\{next}\K\\{pp},\39\\{pp}\K\|p,\39\|p\K\|r;{}$%
+\6
+\4${}\}{}$\2\6
+${}\\{top}[\\{infty}]\K\\{pp}{}$;\par
+\U16.\fi
+
+\M{31}It's slightly tricky to begin backing up when we're in the middle of
+updating a data structure.
+
+\Y\B\4\X31:Begin backing up in Case C\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|r\K\|p,\39\|p\K\\{pp},\39\\{pp}\K\|r;{}$\6
+\&{goto} \\{backup\_c};\6
+\4${}\}{}$\2\par
+\U29.\fi
+
+\M{32}This is one of those fairly rare occasions when it's OK to
+jump into the middle of a loop.
+
+\Y\B\4\X32:Begin backing up in Case B\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|r\K\|p\MG\\{next},\39\|p\MG\\{next}\K\\{pp},\39\\{pp}\K\|r;{}$\6
+\&{goto} \\{backup\_b};\6
+\4${}\}{}$\2\par
+\U25.\fi
+
+\M{33}\B\X33:Begin backing up in Case A\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\\{jj}\MM;{}$ ${}\\{jj}>\\{curval}(\|p\MG\\{tlevel});{}$ ${}\\{jj}%
+\MM){}$\5
+${}\{{}$\1\6
+${}\|k\K\\{tua}[\\{alf}][\\{jj}];{}$\6
+\&{if} ${}(\|k>\|j){}$\1\5
+${}\\{tab}[\|k]\MM;{}$\2\6
+\4${}\}{}$\2\6
+${}\|r\K\|p,\39\|p\K\\{pp},\39\\{pp}\K\|r;{}$\6
+\&{goto} \\{backup\_a};\6
+\4${}\}{}$\2\par
+\U23.\fi
+
+\N{1}{34}The totals. While we're at it, we might as well determine exactly
+how many \SET/-less $k$ sets are possible. Then we'll know the
+precise odds of having no \SET/ in a random deal.
+
+\Y\B\4\X34:Record the current canonical $l$-set as a solution\X${}\E{}$\6
+\&{if} ${}(\\{verbose}\V\|l\Z\T{8}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|l;{}$ ${}\|j\PP){}$\1\5
+\\{printf}(\.{"."});\2\6
+${}\\{printf}(\.{"\%04x\ (\%d)\\n"},\39\\{hexform}[\\{curval}(\|l)],\39%
+\\{auts});{}$\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\|l\G\T{20}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|l;{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\ \%x"},\39\\{hexform}[\\{curval}(\|j)]);{}$\2\6
+${}\\{printf}(\.{"\ (\%d)\\n"},\39\\{auts});{}$\6
+\4${}\}{}$\2\6
+${}\\{non\_iso\_count}[\|l]\PP;{}$\6
+${}\\{total\_count}[\|l]\MRL{+{\K}}\T{31104.0}/{}$(\&{double}) \\{auts};\par
+\U16.\fi
+
+\M{35}Integers of 32 bits are insufficient to hold the numbers we're counting,
+but double precision floating point turns out to be good enough
+for exact values in this problem.
+
+\Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{non\_iso\_count}[\T{30}];\C{ number of canonical solutions }\6
+\&{double} \\{total\_count}[\T{30}];\C{ total number of solutions }\6
+\&{int} \\{verbose}${}\K\T{0}{}$;\C{ set nonzero for debugging }\par
+\fi
+
+\M{36}\B\X36:Print the totals\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\T{21};{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\%20.20g\ SETless\ \%d-}\)\.{sets\ (\%d\ cases)\\n"},\39%
+\\{total\_count}[\|j],\39\|j,\39\\{non\_iso\_count}[\|j]){}$;\2\par
+\U1.\fi
+
+\N{1}{37}Index.
+\fi
+
+\inx
+\fin
+\con
