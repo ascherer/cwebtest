@@ -1,0 +1,168 @@
+\I\X102:Assign \PB{\|q} as the new value of \PB{$\|v\MG\\{repl}$}\X
+\U128.
+\I\X126:Assign \PB{\|r} to $f_k$, where \PB{$\|k\K\\{lhs}$}\X
+\U120.
+\I\X146:Bubble sort to reestablish the natural variable order\X
+\U114.
+\I\X60:Build the shadow memory\X
+\U58.
+\I\X63:Check that \PB{\|p} is findable in the unique table\X
+\U60.
+\I\X69:Check the cache\X
+\U58.
+\I\X3:Check the command line\X
+\U2.
+\I\X64:Check the list of free nodes\X
+\U60.
+\I\X70:Check the list of free pages\X
+\U58.
+\I\X66:Check the reference counts\X
+\U58.
+\I\X68:Check the unique tables\X
+\U58.
+\I\X103:Clear out the time stamps\X
+\U156.
+\I\X65:Compute the ghost index fields\X
+\U60.
+\I\X31:Create a new node and return it\X
+\U26.
+\I\X135:Create a new unique table for $x_u$ and move the remote nodes to it\X
+\U133.
+\I\X139:Create a new unique table for $x_v$ and move the solitary nodes to it\X
+\U133.
+\I\X142:Create a newbie and return it\X
+\U141.
+\I\X28:Create a unique table for variable \PB{\\{hv}} with size 2\X
+\U24.
+\I\X133:Declare the \PB{\\{swap}} subroutine\X
+\U145.
+\I\X143:Delete the lists of solitary, tangled, and hidden nodes\X
+\U133.
+\I\X127:Dereference the left-hand side\X
+\U121.
+\I\X47:Double the cache size\X
+\U46.
+\I\X32:Double the table size and \PB{\&{goto} \\{restart}}\X
+\Us31, 138\ETs142.
+\I\X50:Downsize the cache if it has now become too sparse\X
+\U49.
+\I\X37:Downsize the table if only a few entries are left\X
+\U35.
+\I\X125:Evaluate the right-hand side and put the answer in \PB{\|r}\X
+\U120.
+\I\X150:Explore in the downward direction\X
+\U148.
+\I\X149:Explore in the upward direction\X
+\U148.
+\I\X113:Fill \PB{\\{buf}} with the next command, or \PB{\&{goto} \\{alldone}}\X
+\U110.
+\I\X98:Find $(f\land g)\(E)h$ recursively\X
+\U97.
+\I\X92:Find $(f{?}\ g{:}\ h)$ recursively\X
+\U91.
+\I\X94:Find $\langle fgh\rangle$ recursively\X
+\U93.
+\I\X105:Find $f(y_0,\ldots{})$ recursively\X
+\U104.
+\I\X85:Find $f\(A)g$ recursively\X
+\U84.
+\I\X87:Find $f\(D)g$ recursively\X
+\U86.
+\I\X83:Find $f\(E)g$ recursively\X
+\U82.
+\I\X89:Find $f\(Y)g$ or $f\(N)g$ recursively\X
+\U88.
+\I\X80:Find $f\downarrow g$ recursively\X
+\U79.
+\I\X74:Find $f\land g$ recursively\X
+\U73.
+\I\X96:Find $f\land g\land h$ recursively\X
+\U95.
+\I\X76:Find $f\lor g$ recursively\X
+\U75.
+\I\X78:Find $f\oplus g$ recursively\X
+\U77.
+\I\X163:Generate Mathematica outputs for variable \PB{\|v}\X
+\U162.
+\I\X164:Generate a Mathematica line for node \PB{\|q}\X
+\U163.
+\I\X116:Get ready to read a new input file\X
+\U114.
+\I\X121:Get the first operand, \PB{\|p}\X
+\U120.
+\I\X122:Get the operator, \PB{\\{curop}}\X
+\U120.
+\I\X123:Get the second operand, \PB{\|q}\X
+\Us120\ET128.
+\I\X4, 8, 13, 22, 30, 40, 42, 51, 59, 101, 112, 132, 136, 154, 158, 161:Global
+variables\X
+\U2.
+\I\X124:If the operator is ternary, get the third operand, \PB{\|r}\X
+\U120.
+\I\X17:If there are at least three free pages and at least three free nodes, %
+\PB{\&{break}}\X
+\U111.
+\I\X5, 9, 12, 23, 44, 62:Initialize everything\X
+\U2.
+\I\X153:Invoke autosifting\X
+\U111.
+\I\X19, 115:Local variables\X
+\U2.
+\I\X111:Make sure the coast is clear\X
+\U110.
+\I\X118:Output a function\X
+\U114.
+\I\X120:Parse and execute an assignment to $f_k$\X
+\U114.
+\I\X128:Parse and execute an assignment to $y_k$\X
+\U114.
+\I\X114:Parse the command and execute it\X
+\U110.
+\I\X29:Periodically try to conserve space\X
+\U26.
+\I\X160:Print a Mathematica program for a generating function\X
+\U114.
+\I\X117:Print a function or its profile\X
+\U114.
+\I\X6:Print statistics about this run\X
+\Us2\ET159.
+\I\X119:Print the current variable ordering\X
+\U114.
+\I\X57:Print the number of marked nodes that branch on \PB{\|v}\X
+\U56.
+\I\X18:Print total memory usage\X
+\U6.
+\I\X110:Read a command and obey it; \PB{\&{goto} \\{alldone}} if done\X
+\U2.
+\I\X48:Recache the items in the bottom half\X
+\U47.
+\I\X34:Rehash everything in the low half\X
+\U32.
+\I\X38:Rehash everything in the upper half\X
+\U37.
+\I\X36:Remove entry \PB{\|k} from the hash table\X
+\U35.
+\I\X33:Reserve new all-\PB{$\NULL$} pages for the bigger table\X
+\U32.
+\I\X152:Reset the reorder trigger\X
+\U114.
+\I\X129:Reset \PB{\\{tvar}}\X
+\U114.
+\I\X134:Separate the solitary nodes from the tangled nodes\X
+\U133.
+\I\X147:Sift on variable $x_k$\X
+\U114.
+\I\X7, 14, 15, 16, 24, 26, 35, 41, 43, 45, 46, 49, 52, 53, 54, 55, 56, 58, 67,
+71, 72, 73, 75, 77, 79, 82, 84, 86, 88, 91, 93, 95, 97, 104, 106, 108, 109,
+131, 137, 138, 141, 145, 148, 151, 156, 159, 162:Subroutines\X
+\U2.
+\I\X144:Swap names, projections, and replacement functions\X
+\U133.
+\I\X130:Swap variable $x_k$ with its predecessor\X
+\U114.
+\I\X25, 27, 90, 107:Templates for subroutines\X
+\U2.
+\I\X140:Transmogrify the tangled nodes and insert them in their new guise\X
+\U133.
+\I\X10, 11, 20, 39:Type definitions\X
+\U2.

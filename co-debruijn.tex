@@ -1,0 +1,187 @@
+\input cwebmac
+
+\N{1}{1}Introduction. This program implements the coroutines of Algorithms
+7.2.1.1R and 7.2.1.1D, in the important case $m=2$.
+
+\Y\B\4\D$\\{nn}$ \5
+\T{10}\C{ we will test this value of \PB{\|n} }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\&{int} \|p[\\{nn}];\C{ program locations }\6
+\&{int} \|x[\\{nn}]${},{}$ \|y[\\{nn}]${},{}$ \|t[\\{nn}]${},{}$ \\{xp}[%
+\\{nn}]${},{}$ \\{yp}[\\{nn}]${},{}$ \\{tp}[\\{nn}];\C{ local variables }\6
+\&{int} \|n[\\{nn}];\C{ the value of `\PB{\|n}' in each coroutine }\7
+\X2:Subroutines\X;\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k${},{}$ \\{kp};\7
+\X3:Initialize the coroutines\X;\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<(\T{1}\LL\\{nn});{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\.{"\%d"},\39\\{co}(\\{nn}-\T{1}));{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}We simulate the behavior of recursive coroutines, in such a way that
+repeated calls on \PB{$\\{co}(\|n-\T{1})$} will yield a
+cyclic sequence of period~$2^{nn}$ in which each $nn$-tuple
+occurs exactly once.
+
+The coroutines are of types S (simple), R (recursive), and
+D (doubly recursive), as explained in the book. There are $nn-1$
+coroutines altogether (see exercise 96); the main one will
+be number \PB{$\\{nn}-\T{1}$}.
+
+Each coroutine \PB{\|q}, for $1\le q<nn$, has a current position \PB{\|p[\|q]},
+as well as local variables \PB{\|x[\|q]}, \PB{\|y[\|q]}, and so on; and it
+generates a de Bruijn sequence of length $2^{n[q]}$.
+
+If $n=2$, the coroutine for order~$n$ simply outputs the sequence 0, 0, 1, 1.
+Otherwise, if $n$ is odd, coroutine \PB{$\|q\K\|n-\T{1}$} invokes coroutine
+\PB{$\|q-\T{1}\K\|n-\T{2}$} and doubles its length.
+Otherwise coroutine $q=2n'-1$ invokes coroutines
+$q-1=2n'-2$ and $(q-1)/2=n'-1$, where coroutines $2n'-1$ through
+$n'$ are ``clones'' of coroutines $n'-1$ through~1; the effect
+is to square the length of the cycles output by those coroutines.
+
+\Y\B\4\D$\|S$ \5
+\T{0}\C{ base for positions of an S coroutine }\par
+\B\4\D$\|R$ \5
+\T{10}\C{ base for positions of an R coroutine }\par
+\B\4\D$\|D$ \5
+\T{20}\C{ base for positions of a D coroutine }\par
+\Y\B\4\X2:Subroutines\X${}\E{}$\6
+\&{void} \\{init}(\&{int} \|r)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \|q${}\K\|r-\T{1};{}$\7
+${}\|n[\|q]\K\|r;{}$\6
+\&{if} ${}(\|r\E\T{2}){}$\1\5
+${}\|p[\|q]\K\|S+\T{1};{}$\2\6
+\&{else} \&{if} ${}(\|r\AND\T{1}){}$\5
+${}\{{}$\1\6
+${}\|p[\|q]\K\|R;{}$\6
+${}\|x[\|q]\K\T{0};{}$\6
+\\{init}(\|q);\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{register} \&{int} \|k${},{}$ \\{qq};\7
+${}\\{qq}\K\|q\GG\T{1};{}$\6
+${}\|p[\|q]\K\|D+\T{1};{}$\6
+${}\|x[\|q]\K\\{xp}[\|q]\K\T{2};{}$\6
+${}\\{init}(\\{qq}+\T{1});{}$\6
+\&{for} ${}(\|k\K\|q-\T{1};{}$ ${}\|k>\\{qq};{}$ ${}\|k\MM){}$\1\5
+${}\|p[\|k]\K\|p[\|k-\\{qq}],\39\|x[\|k]\K\|x[\|k-\\{qq}],\39\\{xp}[\|k]\K%
+\\{xp}[\|k-\\{qq}],\39\|n[\|k]\K\|n[\|k-\\{qq}];{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\A4.
+\U1.\fi
+
+\M{3}\B\X3:Initialize the coroutines\X${}\E{}$\6
+\\{init}(\\{nn});\par
+\U1.\fi
+
+\M{4}Now here's how we invoke a coroutine and obtain its next value.
+
+\Y\B\4\X2:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{co}(\&{int} \|q)\1\1\2\2\6
+${}\{{}$\1\6
+\&{switch} (\|p[\|q])\5
+${}\{{}$\1\6
+\X5:Cases for individual coroutines\X\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{5}Each coroutine resets its \PB{\|p} before returning a value.
+For example, type S is the simplest.
+
+\Y\B\4\X5:Cases for individual coroutines\X${}\E{}$\6
+\4\&{case} \|S${}+\T{1}{}$:\5
+${}\|p[\|q]\K\|S+\T{2}{}$;\5
+\&{return} \T{0};\6
+\4\&{case} \|S${}+\T{2}{}$:\5
+${}\|p[\|q]\K\|S+\T{3}{}$;\5
+\&{return} \T{0};\6
+\4\&{case} \|S${}+\T{3}{}$:\5
+${}\|p[\|q]\K\|S+\T{4}{}$;\5
+\&{return} \T{1};\6
+\4\&{case} \|S${}+\T{4}{}$:\5
+${}\|p[\|q]\K\|S+\T{1}{}$;\5
+\&{return} \T{1};\par
+\As6\ET7.
+\U4.\fi
+
+\M{6}Type R is next in difficulty. I change the numbering slightly here,
+so that case \PB{\|R} does the first part of the text's step R1.
+The text's \PB{\|n} is \PB{$\|n[\|q-\T{1}]$} in this code, because of the
+initialization we've done.
+
+\Y\B\4\X5:Cases for individual coroutines\X${}\mathrel+\E{}$\6
+\4\.{R1}:\5
+\&{case} \|R:\5
+${}\|p[\|q]\K\|R+\T{1}{}$;\5
+\&{return} \|x[\|q];\6
+\4\&{case} \|R${}+\T{1}{}$:\5
+\&{if} ${}(\|x[\|q]\I\T{0}\W\|t[\|q]\G\|n[\|q-\T{1}]){}$\1\5
+\&{goto} \.{R3};\2\6
+\4\.{R2}:\5
+${}\|y[\|q]\K\\{co}(\|q-\T{1});{}$\6
+\4\.{R3}:\5
+${}\|t[\|q]\K(\|y[\|q]\E\T{1}\?\|t[\|q]+\T{1}:\T{0});{}$\6
+\4\.{R4}:\5
+\&{if} ${}(\|t[\|q]\E\|n[\|q-\T{1}]\W\|x[\|q]\I\T{0}){}$\1\5
+\&{goto} \.{R2};\2\6
+\4\.{R5}:\5
+${}\|x[\|q]\K(\|x[\|q]+\|y[\|q])\AND\T{1}{}$;\5
+\&{goto} \.{R1};\par
+\fi
+
+\M{7}And finally there's the coroutine of type D. Again the text's parameter~%
+\PB{\|n}
+is our variable~\PB{$\|n[\|q-\T{1}]$}.
+
+\Y\B\4\X5:Cases for individual coroutines\X${}\mathrel+\E{}$\6
+\4\.{D1}:\5
+\&{case} \|D${}+\T{1}{}$:\5
+\&{if} ${}(\|t[\|q]\I\|n[\|q-\T{1}]\V\|x[\|q]\G\T{2}){}$\1\5
+${}\|y[\|q]\K\\{co}(\|q-(\|n[\|q]\GG\T{1}));{}$\2\6
+\4\.{D2}:\5
+\&{if} ${}(\|x[\|q]\I\|y[\|q]){}$\1\5
+${}\|x[\|q]\K\|y[\|q],\39\|t[\|q]\K\T{1}{}$;\5
+\2\&{else}\1\5
+${}\|t[\|q]\PP;{}$\2\6
+\4\.{D3}:\5
+${}\|p[\|q]\K\|D+\T{4}{}$;\5
+\&{return} \|x[\|q];\6
+\4\.{D4}:\5
+\&{case} \|D${}+\T{4}{}$:\5
+${}\\{yp}[\|q]\K\\{co}(\|q-\T{1});{}$\6
+\4\.{D5}:\5
+\&{if} ${}(\\{xp}[\|q]\I\\{yp}[\|q]){}$\1\5
+${}\\{xp}[\|q]\K\\{yp}[\|q],\39\\{tp}[\|q]\K\T{1}{}$;\5
+\2\&{else}\1\5
+${}\\{tp}[\|q]\PP;{}$\2\6
+\4\.{D6}:\5
+\&{if} ${}(\\{tp}[\|q]\E\|n[\|q-\T{1}]\W\\{xp}[\|q]<\T{2}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|t[\|q]<\|n[\|q-\T{1}]\V\\{xp}[\|q]<\|x[\|q]){}$\1\5
+\&{goto} \.{D4};\2\6
+\&{if} ${}(\\{xp}[\|q]\E\|x[\|q]){}$\1\5
+\&{goto} \.{D3};\2\6
+\4${}\}{}$\2\6
+\4\.{D7}:\5
+${}\|p[\|q]\K\|D+\T{8}{}$;\5
+\&{return} (\\{xp}[\|q]);\6
+\4\&{case} \|D${}+\T{8}{}$:\5
+\&{if} ${}(\\{tp}[\|q]\E\|n[\|q-\T{1}]\W\\{xp}[\|q]<\T{2}){}$\1\5
+\&{goto} \.{D3};\2\6
+\&{goto} \.{D1};\par
+\fi
+
+\N{1}{8}Index.
+\fi
+
+\inx
+\fin
+\con

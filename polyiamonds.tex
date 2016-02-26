@@ -1,0 +1,296 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Data for dancing. This program creates data suitable for the {\mc
+DANCE}
+routine, given the description of a board to be covered and
+a set of polyiamond shapes.
+
+The first line of input names all the board positions, in any order. Each
+position is a two-digit number representing $x$ and $y$ coordinates,
+or a two-digit number followed by an asterisk;
+each ``digit'' is a single character, \.0--\.9 or \.a--\.z representing
+the numbers 0--35. The asterisk denotes a triangle with point down.
+For example,
+$$\.{00 00* 01 10}$$
+is one way to describe a triangular board, two units on a side.
+
+The second line of input names all the pieces. Each piece name consists of
+at most three characters; the name should also be distinguishable from a
+board position. (The program does not check this.)
+
+The remaining lines of input describe the polyiamonds. First comes the
+name, followed by
+two integers $s$ and $t$, meaning that the shape should appear
+in $s$ rotations and $t$ transpositions. Then come two-digit coordinates
+for each cell of the shape. For example, the line
+$$\.{G 6 2 00* 01 01* 10 10* 20}$$
+describes a hexiamond that can appear in 12 orientations.
+(See the analogous program for polyominoes.)
+
+\Y\B\4\D$\\{max\_pieces}$ \5
+\T{100}\C{ at most this many shapes }\par
+\B\4\D$\\{buf\_size}$ \5
+$\T{36}*\T{36}*\T{3}+{}$\T{8}\C{ upper bound on line length }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<ctype.h>}\6
+\X4:Global variables\X\6
+\X3:Subroutines\X;\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{char} ${}{*}\|p,{}$ ${}{*}\|q;{}$\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|n${},{}$ \|x${},{}$ \|y${},{}$ %
+\|z;\7
+\X2:Read and output the board\X;\6
+\X5:Read and output the piece names\X;\6
+\X6:Read and output the pieces\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\D$\\{panic}(\|m)$ \6
+${}\{{}$\5
+\1${}\\{fprintf}(\\{stderr},\39\.{"\%s!\\n\%s"},\39\|m,\39\\{buf}){}$;\5
+${}\\{exit}({-}\T{1}){}$;\5
+${}\}{}$\2\par
+\Y\B\4\X2:Read and output the board\X${}\E{}$\6
+$\\{fgets}(\\{buf},\39\\{buf\_size},\39\\{stdin});{}$\6
+\&{if} ${}(\\{buf}[\\{strlen}(\\{buf})-\T{1}]\I\.{'\\n'}){}$\1\5
+\\{panic}(\.{"Input\ line\ too\ long}\)\.{"});\2\6
+${}\\{bxmin}\K\\{bymin}\K\T{35}{}$;\5
+${}\\{bxmax}\K\\{bymax}\K\T{0};{}$\6
+\&{for} ${}(\|p\K\\{buf};{}$ ${}{*}\|p;{}$ ${}\|p\MRL{+{\K}}\T{3}){}$\5
+${}\{{}$\1\6
+\&{while} ${}(\\{isspace}({*}\|p)){}$\1\5
+${}\|p\PP;{}$\2\6
+\&{if} ${}(\R{*}\|p){}$\1\5
+\&{break};\2\6
+${}\|x\K\\{decode}({*}\|p);{}$\6
+\&{if} ${}(\|x<\T{0}){}$\1\5
+\\{panic}(\.{"Bad\ x\ coordinate"});\2\6
+${}\|y\K\\{decode}({*}(\|p+\T{1}));{}$\6
+\&{if} ${}(\|y<\T{0}){}$\1\5
+\\{panic}(\.{"Bad\ y\ coordinate"});\2\6
+\&{if} ${}({*}(\|p+\T{2})\E\.{'*'}){}$\1\5
+${}\|p\PP,\39\|z\K\T{1}{}$;\5
+\2\&{else}\1\5
+${}\|z\K\T{0};{}$\2\6
+\&{if} ${}(\R\\{isspace}({*}(\|p+\T{2}))){}$\1\5
+\\{panic}(\.{"Bad\ board\ position"});\2\6
+\&{if} (\\{board}[\|x][\|y][\|z])\1\5
+\\{panic}(\.{"Duplicate\ board\ pos}\)\.{ition"});\2\6
+\&{if} ${}(\|x<\\{bxmin}){}$\1\5
+${}\\{bxmin}\K\|x;{}$\2\6
+\&{if} ${}(\|x>\\{bxmax}){}$\1\5
+${}\\{bxmax}\K\|x;{}$\2\6
+\&{if} ${}(\|y<\\{bymin}){}$\1\5
+${}\\{bymin}\K\|y;{}$\2\6
+\&{if} ${}(\|y>\\{bymax}){}$\1\5
+${}\\{bymax}\K\|y;{}$\2\6
+${}\\{board}[\|x][\|y][\|z]\K\T{1};{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{bxmin}>\\{bxmax}){}$\1\5
+\\{panic}(\.{"Empty\ board"});\2\6
+${}\\{fwrite}(\\{buf},\39\T{1},\39\\{strlen}(\\{buf})-\T{1},\39\\{stdout}){}$;%
+\C{ output all but the newline }\par
+\U1.\fi
+
+\M{3}\B\X3:Subroutines\X${}\E{}$\6
+\&{int} \\{decode}(\|c)\1\1\6
+\&{char} \|c;\2\2\6
+${}\{{}$\1\6
+\&{if} ${}(\|c\Z\.{'9'}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|c\G\.{'0'}){}$\1\5
+\&{return} \|c${}-\.{'0'};{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\|c\G\.{'a'}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|c\Z\.{'z'}){}$\1\5
+\&{return} \|c${}+\T{10}-\.{'a'};{}$\2\6
+\4${}\}{}$\2\6
+\&{return} ${}{-}\T{1};{}$\6
+\4${}\}{}$\2\par
+\A12.
+\U1.\fi
+
+\M{4}\B\X4:Global variables\X${}\E{}$\6
+\&{char} \\{buf}[\\{buf\_size}];\6
+\&{int} \\{board}[\T{36}][\T{36}][\T{2}];\C{ cells present }\6
+\&{int} \\{bxmin}${},{}$ \\{bxmax}${},{}$ \\{bymin}${},{}$ \\{bymax};\C{ used
+portion of the board }\par
+\A7.
+\U1.\fi
+
+\M{5}\B\X5:Read and output the piece names\X${}\E{}$\6
+\&{if} ${}(\R\\{fgets}(\\{buf},\39\\{buf\_size},\39\\{stdin})){}$\1\5
+\\{panic}(\.{"No\ piece\ names"});\2\6
+${}\\{printf}(\.{"\ \%s"},\39\\{buf}){}$;\C{ just pass the piece names through
+}\par
+\U1.\fi
+
+\M{6}\B\X6:Read and output the pieces\X${}\E{}$\6
+\&{while} ${}(\\{fgets}(\\{buf},\39\\{buf\_size},\39\\{stdin})){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{buf}[\\{strlen}(\\{buf})-\T{1}]\I\.{'\\n'}){}$\1\5
+\\{panic}(\.{"Input\ line\ too\ long}\)\.{"});\2\6
+\&{for} ${}(\|p\K\\{buf};{}$ ${}\\{isspace}({*}\|p);{}$ ${}\|p\PP){}$\1\5
+;\2\6
+\&{if} ${}(\R{*}\|p){}$\1\5
+\\{panic}(\.{"Empty\ line"});\2\6
+\&{for} ${}(\|q\K\|p+\T{1};{}$ ${}\R\\{isspace}({*}\|q);{}$ ${}\|q\PP){}$\1\5
+;\2\6
+\&{if} ${}(\|q>\|p+\T{3}){}$\1\5
+\\{panic}(\.{"Piece\ name\ too\ long}\)\.{"});\2\6
+\&{for} ${}(\|q\K\\{name};{}$ ${}\R\\{isspace}({*}\|p);{}$ ${}\|p\PP,\39\|q%
+\PP){}$\1\5
+${}{*}\|q\K{*}\|p;{}$\2\6
+${}{*}\|q\K\.{'\\0'};{}$\6
+\&{for} ${}(\|p\PP;{}$ ${}\\{isspace}({*}\|p);{}$ ${}\|p\PP){}$\1\5
+;\2\6
+${}\|s\K{*}\|p-\.{'0'};{}$\6
+\&{if} ${}((\|s\I\T{1}\W\|s\I\T{2}\W\|s\I\T{3}\W\|s\I\T{6})\V\R\\{isspace}({*}(%
+\|p+\T{1}))){}$\1\5
+\\{panic}(\.{"Bad\ s\ value"});\2\6
+\&{for} ${}(\|p\MRL{+{\K}}\T{2};{}$ ${}\\{isspace}({*}\|p);{}$ ${}\|p\PP){}$\1\5
+;\2\6
+${}\|t\K{*}\|p-\.{'0'};{}$\6
+\&{if} ${}((\|t\I\T{1}\W\|t\I\T{2})\V\R\\{isspace}({*}(\|p+\T{1}))){}$\1\5
+\\{panic}(\.{"Bad\ t\ value"});\2\6
+${}\|n\K\T{0};{}$\6
+${}\\{xmin}\K\\{ymin}\K\T{35}{}$;\5
+${}\\{xmax}\K\\{ymax}\K\T{0};{}$\6
+\&{for} ${}(\|p\MRL{+{\K}}\T{2};{}$ ${}{*}\|p;{}$ ${}\|p\MRL{+{\K}}\T{3},\39\|n%
+\PP){}$\5
+${}\{{}$\1\6
+\&{while} ${}(\\{isspace}({*}\|p)){}$\1\5
+${}\|p\PP;{}$\2\6
+\&{if} ${}(\R{*}\|p){}$\1\5
+\&{break};\2\6
+${}\|x\K\\{decode}({*}\|p);{}$\6
+\&{if} ${}(\|x<\T{0}){}$\1\5
+\\{panic}(\.{"Bad\ x\ coordinate"});\2\6
+${}\|y\K\\{decode}({*}(\|p+\T{1}));{}$\6
+\&{if} ${}(\|y<\T{0}){}$\1\5
+\\{panic}(\.{"Bad\ y\ coordinate"});\2\6
+\&{if} ${}({*}(\|p+\T{2})\E\.{'*'}){}$\1\5
+${}\|p\PP,\39\|z\K\T{1}{}$;\5
+\2\&{else}\1\5
+${}\|z\K\T{0};{}$\2\6
+\&{if} ${}(\R\\{isspace}({*}(\|p+\T{2}))){}$\1\5
+\\{panic}(\.{"Bad\ board\ position"});\2\6
+\&{if} ${}(\|n\E\T{36}*\T{36}*\T{2}){}$\1\5
+\\{panic}(\.{"Pigeonhole\ principl}\)\.{e\ says\ you\ repeated\ }\)\.{a\
+position"});\2\6
+${}\\{xx}[\|n]\K\|x,\39\\{yy}[\|n]\K\|y,\39\\{zz}[\|n]\K\|z;{}$\6
+\&{if} ${}(\|x<\\{xmin}){}$\1\5
+${}\\{xmin}\K\|x;{}$\2\6
+\&{if} ${}(\|x>\\{xmax}){}$\1\5
+${}\\{xmax}\K\|x;{}$\2\6
+\&{if} ${}(\|y<\\{ymin}){}$\1\5
+${}\\{ymin}\K\|y;{}$\2\6
+\&{if} ${}(\|y>\\{ymax}){}$\1\5
+${}\\{ymax}\K\|y;{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|n\E\T{0}){}$\1\5
+\\{panic}(\.{"Empty\ piece"});\2\6
+\X8:Generate the possible piece placements\X;\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{7}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \\{name}[\T{4}];\C{ name of current piece }\6
+\&{int} \|s${},{}$ \|t;\C{ symmetry type of current piece }\6
+\&{int} ${}\\{xx}[\T{36}*\T{36}*\T{2}],{}$ ${}\\{yy}[\T{36}*\T{36}*\T{2}],{}$
+${}\\{zz}[\T{36}*\T{36}*\T{2}]{}$;\C{ coordinates of current piece }\6
+\&{int} \\{xmin}${},{}$ \\{xmax}${},{}$ \\{ymin}${},{}$ \\{ymax};\C{ range of
+coordinates }\par
+\fi
+
+\M{8}\B\X8:Generate the possible piece placements\X${}\E{}$\6
+\&{while} (\|t)\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\T{6};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|k\Z\|s){}$\1\5
+\X11:Output translates of the current piece\X;\2\6
+\X10:Rotate the current piece\X;\6
+\4${}\}{}$\2\6
+\X9:Transpose the current piece\X;\6
+${}\|t\MM;{}$\6
+\4${}\}{}$\2\par
+\U6.\fi
+
+\M{9}\B\X9:Transpose the current piece\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|z\K\\{xx}[\|j];{}$\6
+${}\\{xx}[\|j]\K\\{yy}[\|j];{}$\6
+${}\\{yy}[\|j]\K\|z;{}$\6
+\4${}\}{}$\2\6
+${}\|z\K\\{xmin}{}$;\5
+${}\\{xmin}\K\\{ymin}{}$;\5
+${}\\{ymin}\K\|z;{}$\6
+${}\|z\K\\{xmax}{}$;\5
+${}\\{xmax}\K\\{ymax}{}$;\5
+${}\\{ymax}\K\|z{}$;\par
+\U8.\fi
+
+\M{10}\B\X10:Rotate the current piece\X${}\E{}$\6
+$\\{xmin}\K\\{ymin}\K\T{1000}{}$;\5
+${}\\{xmax}\K\\{ymax}\K{-}\T{1000};{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|z\K\\{xx}[\|j];{}$\6
+${}\\{xx}[\|j]\K\|z+\\{yy}[\|j]+\\{zz}[\|j];{}$\6
+${}\\{yy}[\|j]\K{-}\|z;{}$\6
+${}\\{zz}[\|j]\K\T{1}-\\{zz}[\|j];{}$\6
+\&{if} ${}(\\{xx}[\|j]<\\{xmin}){}$\1\5
+${}\\{xmin}\K\\{xx}[\|j];{}$\2\6
+\&{if} ${}(\\{xx}[\|j]>\\{xmax}){}$\1\5
+${}\\{xmax}\K\\{xx}[\|j];{}$\2\6
+\&{if} ${}(\\{yy}[\|j]<\\{ymin}){}$\1\5
+${}\\{ymin}\K\\{yy}[\|j];{}$\2\6
+\&{if} ${}(\\{yy}[\|j]>\\{ymax}){}$\1\5
+${}\\{ymax}\K\\{yy}[\|j];{}$\2\6
+\4${}\}{}$\2\par
+\U8.\fi
+
+\M{11}\B\X11:Output translates of the current piece\X${}\E{}$\6
+\&{for} ${}(\|x\K\\{bxmin}-\\{xmin};{}$ ${}\|x\Z\\{bxmax}-\\{xmax};{}$ ${}\|x%
+\PP){}$\1\6
+\&{for} ${}(\|y\K\\{bymin}-\\{ymin};{}$ ${}\|y\Z\\{bymax}-\\{ymax};{}$ ${}\|y%
+\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\R\\{board}[\|x+\\{xx}[\|j]][\|y+\\{yy}[\|j]][\\{zz}[\|j]]){}$\1\5
+\&{goto} \\{nope};\2\2\6
+\\{printf}(\\{name});\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\ \%c\%c"},\39\\{encode}(\|x+\\{xx}[\|j]),\39\\{encode}(\|y+%
+\\{yy}[\|j]));{}$\6
+\&{if} (\\{zz}[\|j])\1\5
+\\{printf}(\.{"*"});\2\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4\\{nope}:\5
+;\6
+\4${}\}{}$\2\2\par
+\U8.\fi
+
+\M{12}\B\X3:Subroutines\X${}\mathrel+\E{}$\6
+\&{char} \\{encode}(\|x)\1\1\6
+\&{int} \|x;\2\2\6
+${}\{{}$\1\6
+\&{if} ${}(\|x<\T{10}){}$\1\5
+\&{return} \.{'0'}${}+\|x;{}$\2\6
+\&{return} \.{'a'}${}-\T{10}+\|x;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{13}Index.
+\fi
+
+\inx
+\fin
+\con

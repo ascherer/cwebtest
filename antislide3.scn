@@ -1,0 +1,82 @@
+\I\X37:Add new constraints; \PB{\&{goto} \\{unmark}} if previous choices are
+disallowed\X
+\U34.
+\I\X25:Backtrack through all solutions\X
+\U1.
+\I\X26:Choose the moves at level \PB{\|l}\X
+\U25.
+\I\X34:Compute the new constraint list; \PB{\&{goto} \\{unmark}} if previous
+choices are disallowed\X
+\U26.
+\I\X40:Compute the new symcheck list; \PB{\&{goto} \\{unmark}} if $a_1\,a_2%
+\ldots a_l$ is rejected\X
+\U26.
+\I\X38:Copy former constraints that are still unsatisfied\X
+\U34.
+\I\X35:Delete current cell from the constraint list, possibly forcing other
+cells to be nonempty\X
+\U34.
+\I\X39:Delete the new forcing table entries\X
+\U26.
+\I\X10:Fill in the symmetry pointers of \PB{\|c}\X
+\U9.
+\I\X36:Force \PB{\\{constraint}[\\{kk}]} to be nonempty\X
+\U35.
+\I\X2, 5, 7, 23:Global variables\X
+\U1.
+\I\X44:Handle diagnostic info\X
+\U25.
+\I\X46:Initialize for level 0\X
+\U25.
+\I\X24:Local variables\X
+\U1.
+\I\X47:Make redundancy checks to see if the backtracking was consistent\X
+\U1.
+\I\X20:Map to \PB{\\{blockx}} nodes\X
+\U19.
+\I\X21:Map to \PB{\\{blocky}} nodes\X
+\U19.
+\I\X22:Map to \PB{\\{blockz}} nodes\X
+\U19.
+\I\X32:Mark the newly covered elements\X
+\U26.
+\I\X45:Print a profile of the search tree\X
+\U1.
+\I\X42:Record a solution\X
+\U25.
+\I\X29:Remove options that cover cells other than \PB{\\{best\_cell}[\|l]}\X
+\U25.
+\I\X31:Select \PB{$\|c\K\\{best\_cell}[\|l]$}, or \PB{\&{goto} \\{solution}} if
+all cells are covered\X
+\U26.
+\I\X41:Set $a_l$ to the empty option of \PB{\|c}; \PB{\&{goto} \\{try\_again}}
+if that option isn't allowed\X
+\U26.
+\I\X8:Set up data structures for antisliding blocks\X
+\U1.
+\I\X9:Set up the cells\X
+\U8.
+\I\X15:Set up the nodes\X
+\U8.
+\I\X11:Set up the options\X
+\U8.
+\I\X16:Set up the \PB{\\{blockx}} nodes\X
+\U15.
+\I\X17:Set up the \PB{\\{blocky}} nodes\X
+\U15.
+\I\X18:Set up the \PB{\\{blockz}} nodes\X
+\U15.
+\I\X12:Set up the \PB{\\{optx}} options\X
+\U11.
+\I\X13:Set up the \PB{\\{opty}} options\X
+\U11.
+\I\X14:Set up the \PB{\\{optz}} options\X
+\U11.
+\I\X19, 27, 28, 43:Subroutines\X
+\U1.
+\I\X3, 4, 6:Type definitions\X
+\U1.
+\I\X33:Unmark the newly covered elements\X
+\U26.
+\I\X30:Unremove options that cover cells other than \PB{\\{best\_cell}[\|l]}\X
+\U25.

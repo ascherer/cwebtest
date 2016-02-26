@@ -1,0 +1,1284 @@
+\input cwebmac
+\datethis
+\input epsf
+\def\lab#1:#2/{$\.{#1}_{#2}$}
+
+
+\N{1}{1}Introduction. The purpose of this program is to enumerate polyominoes
+of up to 30 cells. The method---possibly new?---is based on a sequence of
+diagonal slices through the shape, proceeding from the upper left to
+the lower right. For example, the curious polyomino
+$$\epsfbox{polyomino.1}$$
+has 20 diagonal slices, which we will call
+$$\vbox{\halign{\lab#/,\hfil\cr
+1002:2\cr
+1002:4\cr
+1002:6\cr
+10002:8\cr
+10223004:13\cr
+112022003:19\cr
+1010101002:24\cr
+100010010023:29\cr
+1000100010022:34\cr
+10001000100202:39\cr
+100010000102002:44\cr
+10200103001405446:54\cr
+100022033003004:61\cr
+10230340000005:67\cr
+1220020000003:72\cr
+100010000002:75\cr
+1000002:77\cr
+100023:80\cr
+12344:85\cr
+1111:89\cr
+}}$$
+respectively.
+(This polyomino obviously has more than 30 cells, but large examples will help
+clarify the concepts needed in the program below.)
+
+Each slice name consists of a string of hexadecimal digits, beginning and
+ending with a nonzero digit; it also has a numeric subscript (in decimal).
+The subscript counts the cells that lie on and above this diagonal slice.
+The nonzero hexadecimal digits represent cells in the current diagonal;
+such cells have the same digit if and only if they are rookwise connected
+as a consequence of the cells seen so far.
+
+The main virtue of such an approach is that many polyominoes have identical
+slice names, hence they are essentially equivalent to each other with respect
+to the lower part of the diagram. For example, $2^{29}$ of the fixed
+30-ominoes have the simple slice sequence \lab1:1/, \lab1:2/,
+\dots,~\lab1:30/. The total number of possible slices will therefore be
+substantially smaller than the total number of possible polyominoes.
+
+This program enumerates polyominoes in fixed position, because the task
+of correcting such counts to take account of symmetries takes much
+less time.
+
+Actually this program doesn't do the whole job of enumeration;
+it only outputs the edges of a certain directed acyclic graph.
+Another program reads that graph and computes the number of
+paths through it.
+
+\Y\B\4\D$\\{nmax}$ \5
+\T{30}\C{ the size of polyominoes being counted, must not exceed 30 }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\X10:Type definitions\X\6
+\X6:Global variables\X\6
+\X2:Subroutines\X\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\X20:Local variables\X;\6
+\X4:Scan the command line\X;\6
+\X19:Initialize\X;\6
+\X49:Compute\X;\6
+\X62:Print the results\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Subroutines\X${}\E{}$\6
+\&{void} \\{panic}(\&{char} ${}{*}\\{mess}){}$\1\1\2\2\6
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"\%s!\\n"},\39\\{mess});{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\par
+\As5, 15, 35, 52, 53, 54\ETs59.
+\U1.\fi
+
+\M{3}The base name of the output file should be given as a command-line
+argument. This name will actually be extended by \.{.0}, \.{.1}, \dots,
+as explained below, because there might be an enormous amount of output.
+
+\fi
+
+\M{4}\B\X4:Scan the command line\X${}\E{}$\6
+\&{if} ${}(\\{argc}\I\T{2}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ outfilena}\)\.{me\\n"},\39%
+\\{argv}[\T{0}]);{}$\6
+\4${}\}{}$\2\6
+${}\\{base\_name}\K\\{argv}[\T{1}]{}$;\par
+\U1.\fi
+
+\N{1}{5}Connectivity. By definition, a polyomino is a rookwise connected
+set of cells. We'll want to restrict consideration to slices that can
+actually lead to a 30-omino; this means that we reject any slice for which
+one cannot connect all the so-far-unconnected pieces with \PB{$\T{30}-\|m$}
+cells that lie below the \PB{\|m} cells already accounted for.
+
+Fortunately a simple algorithm is available to compute the
+minimum number of cells needed for connection. For example,
+a hexadecimal pattern like \.{1002} needs 5 such cells, and \.{10203} needs~6.
+A~more complex pattern like \.{1002000301} also needs~6; and in general
+the subpattern $\.1\.0^{g_1}\.2\.0^{g_2}\ldots\.k\.0^{g_k}\.1$ needs
+$\sum_{j=1}^k (2g_j+\nobreak1) - \max_{j=1}^k (2g_j+1)$,
+after which that entire
+subpattern can effectively be replaced by the single digit~\.1.
+
+Equal digits are always nested, in the sense that we cannot have
+a pattern like `\.{...1...2...1...2...}'. Therefore a simple
+stack-like approach suffices for the computation, given the
+hexadecimal digits \PB{\|a[\T{0}]}, \PB{\|a[\T{1}]}, \dots,~\PB{$\|a[\\{len}-%
+\T{1}]$}.
+
+\Y\B\4\X2:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{conn\_distance}(\&{int} \\{len}${},\39{}$\&{char} ${}{*}\|a){}$\1\1%
+\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|m${},{}$ \\{acc}${}\K\T{0};{}$\7
+${}\\{stk}[\T{0}]\K\|a[\T{0}],\39\|m\K\T{0};{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\\{len};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|a[\|j]\E\T{0};{}$ ${}\|j\PP){}$\1\5
+${}\|k\MRL{+{\K}}\T{2};{}$\2\6
+${}\\{acc}\MRL{+{\K}}\|k;{}$\6
+\&{if} ${}(\|a[\|j]>\\{stk}[\|m]){}$\5
+${}\{{}$\1\6
+${}\\{dst}[\|m]\K\|k;{}$\6
+${}\\{stk}[\PP\|m]\K\|a[\|j];{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{while} ${}(\|a[\|j]<\\{stk}[\|m]){}$\5
+${}\{{}$\1\6
+${}\|m\MM;{}$\6
+\&{if} ${}(\\{dst}[\|m]>\|k){}$\1\5
+${}\|k\K\\{dst}[\|m];{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|a[\|j]\I\\{stk}[\|m]){}$\1\5
+\\{panic}(\.{"Oops,\ the\ program\ l}\)\.{ogic\ is\ screwed\ up"});\2\6
+${}\\{acc}\MRL{-{\K}}\|k;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{return} \\{acc};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{6}\B\X6:Global variables\X${}\E{}$\6
+\&{char} \\{stk}[\T{16}]${},{}$ \\{dst}[\T{16}];\C{ stacks for component
+numbers and distances }\par
+\As13, 14, 18, 21, 31, 34, 37, 40, 48, 51, 58\ETs63.
+\U1.\fi
+
+\M{7}The \PB{\\{conn\_distance}} of an initial, totally disconnected slice like
+\lab102300400056:6/, having $k$ nonzero digits and length~$l$, is $2l-1-k$.
+Thus we see that the set of all 30-ominoes has exactly $2^{14}$ possible
+initial states, corresponding to the bits of the odd numbers less
+than~$2^{15}$.
+
+(Also, if we ignore connectivity but consider only the on-off pattern of
+cells, the same set of $2^{14}$ patterns accounts for all interior slices.
+The reason is that \PB{\\{conn\_distance}} also computes the minimum number of
+cells either above or below {\it or both\/} that will connect up a
+given pattern: Folding does not decrease connectivity.
+
+\Y\B\4\D$\\{maxlen}$ \5
+$((\\{nmax}+\T{1})\GG\T{1}{}$)\C{ usable patterns won't be longer than this }%
+\par
+\Y\B\4\X7:Place the initial slices\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<(\T{1}\LL\\{maxlen});{}$ ${}\|k\MRL{+{\K}}%
+\T{2}){}$\1\5
+\X47:Place the initial slice corresponding to the binary number \PB{\|k}\X;\2%
+\par
+\U49.\fi
+
+\N{1}{8}Successive slices. Before we choose data structures for the main part
+of the
+computation, let's look at the key problem that faces us, namely the
+determination of all feasible slices that can follow a given slice.
+Ignoring the subscripts for the moment, what are the possible successors of a
+slice like, say, \.{1020032014}?
+
+That hypothetical slice has 6 cells, namely 6 nonzero hexadecimal digits,
+and they are adjacent to 10 cells in the slice that
+comes immediately below. We must occupy at least one cell that is adjacent
+to each of the component classes \.1, \.2, \.3, and \.4, lest the whole
+polyomino be disconnected. Choosing the cell between the \.3 and the~\.2,
+and/or the cell between the \.1 and the~\.4,
+will kill two birds with one stone; so
+we can get by with as few as 2 cells in the slice that follows \.{1020032014},
+and in such a case its pattern will be \.{1002}.
+The principle of inclusion and exclusion tells us how many ways there are to
+fulfill the connectivity constraint, namely
+$$2^{10}-2^6-2^6-2^8-2^8+2^2+2^4+2^5+2^5+2^4+2^6-2^1-2^1-2^3-2^3+2^0=529.$$
+
+For each of these ways to occupy the 10 adjacent cells, we can also add
+new cells that are not connected to any of the previous ones. For example,
+we could put a cell midway between the \.2 and the \.3 in \.{2003};
+we could also occupy cells that lie off to the left or the right.
+
+The calculations for outlying cells are the same for all slices: A pattern
+of $k$ cells that extends $l$ positions left of the cells adjacent to a given
+slice adds $2l-k$ to the \\{conn\_distance}, plus a constant that depends only
+on the position of the leftmost occupied adjacent cell.
+A similar situation applies at the right.
+
+It's important to notice that some successors of a slice will occur
+more than once. For example, there are five ways to go from \lab1011:8/ to
+\lab1:9/. This is one of the reasons I have such high hopes for the slice
+method.
+
+\fi
+
+\M{9}Several slices will have the same pattern of digits but different
+subscripts. In such cases both slices have the same successors, except for
+cutoffs based on the subscripts.
+
+Closer study of this situation reveals, in fact, that each pattern in a slice
+with subscript~$m$ occurs also with subscript~$m+1$, unless its
+\PB{\\{conn\_distance}} equals \PB{$\\{nmax}-\|m$}. The reason is that we could
+have added one
+more cell above the topmost slice.
+
+Therefore each pattern has a definite ``lifetime'': It is born at a certain
+level~$m$, and it dies after level \PB{$\\{nmax}-\|d$}, where $d$ is its
+\PB{\\{conn\_distance}}.
+
+Our job then is to consider every pattern that is born at level~$m$ and to
+compute all successor patterns of cost at most \PB{$\\{nmax}-\|m$}, where
+``cost'' is the
+cell-count~$w$ plus the connection distance~$d$. Such a successor will be born
+at level $m+w$. We output this information to a file, so that a postprocessor
+can rapidly count the number of paths through the network of possible slices.
+
+If \PB{\\{nmax}} is not too large, we could easily build the network ourselves
+and
+avoid any postprocessing stage. For example, the author's first attempt at
+such a program enumerated all fixed polynomials of size at most \PB{$\\{nmax}\K%
+\T{15}$}
+in less than half a second. And even when \PB{\\{nmax}} is 25, the
+number of patterns turns out to be less than 300,000 and the number of
+slices less than 600,000. But the number of arcs between slices is
+19 million, and these numbers grow exponentially as \PB{\\{nmax}} increases.
+
+\fi
+
+\N{1}{10}Data structures. If you've been reading this commentary sequentially
+instead
+of hypertextually, you will now understand that the task of designing
+efficient data structures for our network of slices is
+quite interesting, although elementary.
+
+Our program will go through the list of all slices with subscript~$m$ and
+successively generate their successors. I have a hunch that the total number
+of different slices will fit comfortably in memory. (In theory, a pattern
+of $k$ cells can appear with ${2k\choose k}{1\over k+1}$ different sequences
+of connection numbers, but in practice most of those sequences never arise. For
+example, a pattern like \.{1213} or \.{10213} is impossible.)
+
+Therefore each pattern like \.{100201} has its own \&{pattern} node in the
+program below; that node can be addressed via a hash table.
+
+The first digit of a pattern is always \.1, so we can omit it. We won't need
+patterns of length more than 15, so each pattern can be represented as
+a hexadecimal number with 14 digits (and trailing zeros). An additional
+byte is prepended, containing the pattern length;
+thus \.{100201} is actually represented by the 64-bit hexadecimal number
+\PB{\T{\^0600201000000000}}. To make this program work on 32-bit machines,
+a special type is declared in which we use 8 bytes instead of 16 nybbles.
+
+\Y\B\4\D$\\{length}(\\{pk})$ \5
+$\\{pk}.\\{bytes}{}$[\T{0}]\par
+\Y\B\4\X10:Type definitions\X${}\E{}$\6
+\&{typedef} \&{struct} ${}\{{}$\1\6
+\&{unsigned} \&{char} \\{bytes}[\T{8}];\2\6
+${}\}{}$ \&{patkey};\par
+\As11\ET12.
+\U1.\fi
+
+\M{11}In the present program I'm also putting an \PB{\\{aux}} field into each
+pattern
+node, with the aim of eliminating a potentially long search when deciding
+whether a pattern has appeared before as a successor. This field takes
+up space, but it probably saves enough time to make it worthwhile.
+
+\Y\B\4\X10:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} \&{patt\_struct} ${}\{{}$\1\6
+\&{patkey} \\{key};\C{ the hexadecimal pattern of connection digits }\6
+\&{struct} \&{succ\_struct} ${}{*}\\{aux}{}$;\C{ reference from a predecessor }%
+\6
+\&{struct} \&{patt\_struct} ${}{*}\\{link}{}$;\C{ chain pointer used by \PB{%
+\\{lookup}} }\6
+\&{struct} \&{patt\_struct} ${}{*}\\{next}{}$;\C{ previous pattern with the
+same birthdate }\2\6
+${}\}{}$ \&{patt};\par
+\fi
+
+\M{12}Each successor to the current pattern
+has a table entry telling its weight, date of death,
+and the number of ways in which it succeeds.
+
+\Y\B\4\X10:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} \&{succ\_struct} ${}\{{}$\1\6
+\&{patt} ${}{*}\\{pat}{}$;\C{ the successor pattern }\6
+\&{char} \\{weight};\C{ the number of cells it contains }\6
+\&{char} \\{degree};\C{ the replication number }\6
+\&{char} \\{death};\C{ level at which it last appears }\2\6
+${}\}{}$ \&{succ};\par
+\fi
+
+\M{13}Here I use a generous upper bound on the number of possible successors of
+any pattern that might arise.
+
+\Y\B\4\D$\\{succ\_size}$ \5
+$(\\{maxlen}*(\T{1}\LL\\{maxlen}){}$)\par
+\Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{succ} \\{succ\_table}[\\{succ\_size}];\C{ successors of the current pattern
+}\6
+\&{succ} ${}{*}\\{succ\_ptr}{}$;\C{ the first unused slot in \PB{\\{succ%
+\_table}} }\par
+\fi
+
+\M{14}The pattern table is the big memory hog; when \PB{$\\{nmax}\K\T{30}$},
+more than
+three million patterns are involved.
+
+\Y\B\4\D$\\{patt\_size}$ \5
+\T{3002000}\C{ must exceed the number of patterns generated }\par
+\Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{patt} \\{patt\_table}[\\{patt\_size}];\C{ the patterns }\6
+\&{patt} ${}{*}\\{patt\_list}[\\{nmax}+\T{1}]{}$;\C{ lists of patterns sorted
+by birthdate }\6
+\&{int} ${}\\{patt\_count}[\\{nmax}+\T{1}]{}$;\C{ lengths of those lists }\6
+\&{patt} ${}{*}\\{patt\_ptr}\K\\{patt\_table}{}$;\C{ the first unused slot in %
+\PB{\\{patt\_table}} }\6
+\&{patt} ${}{*}\\{bad\_patt}\K\\{patt\_table}+\\{patt\_size}-\T{1}{}$;\C{ the
+first unusable slot }\par
+\fi
+
+\M{15}The \PB{\\{lookup}} routine finds a node given its pattern.
+I'm using separate chains because I want patterns to be encoded as consecutive
+numbers in the output.
+
+Parameters \PB{\\{len}} and \PB{\|a} are the pattern length and digits, as in
+the
+\PB{\\{conn\_distance}} routine. Parameter \PB{\|m} is the birthdate of the
+pattern, if it
+happens to be new.
+
+\Y\B\4\X2:Subroutines\X${}\mathrel+\E{}$\6
+\&{patt} ${}{*}{}$\\{lookup}(\&{int} \\{len}${},\39{}$\&{char} ${}{*}\|a,\39{}$%
+\&{int} \|m)\1\1\2\2\6
+${}\{{}$\1\6
+\&{patkey} \\{key};\6
+\&{register} \&{int} \|j${},{}$ \|l;\6
+\&{register} \&{unsigned} \&{int} \|h;\6
+\&{register} \&{patt} ${}{*}\|p;{}$\6
+\&{register} \&{unsigned} \&{char} ${}{*}\|q;{}$\7
+\X17:Pack and hash the \PB{\\{key}} from \PB{\|a} and \PB{\\{len}}\X;\6
+${}\|p\K\\{hash\_table}[\|h];{}$\6
+\&{if} ${}(\R\|p){}$\1\5
+${}\\{hash\_table}[\|h]\K\\{patt\_ptr};{}$\2\6
+\&{else}\5
+\1\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{0},\39\|q\K{\AND}(\|p\MG\\{key}.\\{bytes}[\T{0}]);{}$ ${}%
+\|j<\|l;{}$ ${}\|j\PP,\39\|q\PP){}$\1\6
+\&{if} ${}({*}\|q\I\\{key}.\\{bytes}[\|j]){}$\1\5
+\&{goto} \\{mismatch};\2\2\6
+\&{return} \|p;\C{ successful search, the key matches }\6
+\4\\{mismatch}:\5
+\&{if} ${}(\R\|p\MG\\{link}){}$\5
+${}\{{}$\1\6
+${}\|p\MG\\{link}\K\\{patt\_ptr}{}$;\5
+\&{break};\6
+\4${}\}{}$\2\6
+${}\|p\K\|p\MG\\{link};{}$\6
+\4${}\}{}$\2\2\6
+\X16:Insert a new pattern into \PB{\\{patt\_table}} and return\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{16}\B\X16:Insert a new pattern into \PB{\\{patt\_table}} and return\X${}%
+\E{}$\6
+\&{if} ${}(\\{patt\_ptr}\E\\{bad\_patt}){}$\1\5
+\\{panic}(\.{"Pattern\ memory\ over}\)\.{flow"});\2\6
+${}\\{patt\_ptr}\MG\\{key}\K\\{key};{}$\6
+${}\\{patt\_ptr}\MG\\{next}\K\\{patt\_list}[\|m];{}$\6
+${}\\{patt\_list}[\|m]\K\\{patt\_ptr};{}$\6
+${}\\{patt\_count}[\|m]\PP;{}$\6
+\&{return} \\{patt\_ptr}${}\PP{}$;\par
+\U15.\fi
+
+\M{17}``Universal hashing'' (TAOCP exercise 6.4--72) is used to get a good hash
+function, because most of the key bits are zero.
+
+\Y\B\4\D$\\{hash\_width}$ \5
+\T{20}\C{ lg of hash table size }\par
+\B\4\D$\\{hash\_mask}$ \5
+$((\T{1}\LL\\{hash\_width})-\T{1}{}$)\par
+\Y\B\4\X17:Pack and hash the \PB{\\{key}} from \PB{\|a} and \PB{\\{len}}\X${}%
+\E{}$\6
+$\|a[\\{len}]\K\T{0},\39\|h\K\\{len}\LL(\\{hash\_width}-\T{4});{}$\6
+\&{for} ${}(\|l\K\T{1};{}$ ${}\|l+\|l\Z\\{len};{}$ ${}\|l\PP){}$\5
+${}\{{}$\1\6
+${}\\{key}.\\{bytes}[\|l]\K(\|a[\|l+\|l-\T{1}]\LL\T{4})+\|a[\|l+\|l];{}$\6
+${}\|h\MRL{+{\K}}\\{hash}[\|l][\\{key}.\\{bytes}[\|l]];{}$\6
+\4${}\}{}$\2\6
+${}\\{length}(\\{key})\K\\{len};{}$\6
+${}\|h\MRL{\AND{\K}}\\{hash\_mask}{}$;\par
+\U15.\fi
+
+\M{18}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{patt} ${}{*}\\{hash\_table}[\\{hash\_mask}+\T{1}]{}$;\C{ heads of the chains
+}\6
+\&{unsigned} \&{int} \\{hash}[\T{8}][\T{256}];\C{ random bits for universal
+hashing }\par
+\fi
+
+\M{19}The random number generator used here doesn't have to be of sensational
+quality.
+
+\Y\B\4\X19:Initialize\X${}\E{}$\6
+$\|m\K\T{314159265};{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\T{8};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{256};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|m\K\T{69069}*\|m+\T{1};{}$\6
+${}\\{hash}[\|j][\|k]\K\|m\GG(\T{32}-\\{hash\_width});{}$\6
+\4${}\}{}$\2\2\par
+\As24\ET55.
+\U1.\fi
+
+\M{20}\B\X20:Local variables\X${}\E{}$\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|l${},{}$ \|m;\par
+\As23\ET45.
+\U1.\fi
+
+\N{1}{21}Computing the successors. Now let's turn to the details of the
+procedure sketched earlier. We will want some special data structures
+for that, in addition to the major structures used for patterns.
+
+The cells of a possible successor slice will be numbered from 0 to 49,
+with cell 16 being adjacent-to-and-left-of the initial \.1 in the
+slice whose successors are being found. (Any number exceeding
+$3\times\PB{\\{nmax}}/2$ will do in place of~50; we will have fewer than
+15 new elements to the left of the pattern and fewer than 15 to the right,
+hence we have plenty of elbow room.) Cell $j$ will be occupied if and only if
+\PB{\\{occ}[\|j]} is nonzero. Cell~0 is permanently unoccupied.
+
+The cells adjacent to the previous pattern are \PB{\\{adjcell}[\T{0}]}, \PB{%
+\\{adjcell}[\T{1}]},
+\dots, terminating with~0. The cells interior to but not adjacent to
+the previous pattern are \PB{\\{intcell}[\T{0}]}, \PB{\\{intcell}[\T{1}]}, %
+\dots, again terminating
+with~0. The nonadjacent cells to the left of the pattern are 15, 14, \dots,
+and the nonadjacent cells to the right are \PB{\\{rightend}}, \PB{$%
+\\{rightend}+\T{1}$}, \dots.
+The array \PB{\\{dig}} contains the hexadecimal pattern digits.
+The array \PB{\\{touched}} tells how many occupied cells are adjacent to a
+given connected component. Finally, there's an array \PB{\\{first}}
+with a slightly tricky meaning: \PB{$\\{first}[\|j]\K\|k$} if \PB{\\{dig}[\|j]}
+was
+the leftmost appearance of component~\PB{\|k}.
+
+For example, with pattern \.{1020032014}, we have
+\PB{$\\{dig}[\T{16}]\K\T{1}$}, \PB{$\\{dig}[\T{17}]\K\T{0}$}, \PB{$\\{dig}[%
+\T{18}]\K\T{2}$}, \dots, \PB{$\\{dig}[\T{25}]\K\T{4}$};
+also \PB{$\\{adjcell}[\T{0}]\K\T{16}$}, \PB{$\\{adjcell}[\T{1}]\K\T{17}$}, %
+\dots, \PB{$\\{adjcell}[\T{9}]\K\T{26}$}, \PB{$\\{adjcell}[\T{10}]\K\T{0}$};
+and \PB{$\\{intcell}[\T{0}]\K\T{20}$}, \PB{$\\{intcell}[\T{1}]\K\T{0}$}, \PB{$%
+\\{rightend}\K\T{27}$}.
+The values of \PB{\\{first}} are zero except that \PB{$\\{first}[\T{16}]\K%
+\T{1}$},
+\PB{$\\{first}[\T{18}]\K\T{2}$}, \PB{$\\{first}[\T{21}]\K\T{3}$}, and \PB{$%
+\\{first}[\T{25}]\K\T{4}$}.
+If \PB{$\\{occ}[\T{14}]\K\\{occ}[\T{16}]\K\\{occ}[\T{19}]\K\\{occ}[\T{20}]\K%
+\\{occ}[\T{25}]\K\T{1}$} and other entries of \PB{\\{occ}} are
+zero, we will have \PB{$\\{touched}[\T{1}]\K\T{2}$}, \PB{$\\{touched}[\T{2}]\K%
+\T{1}$}, \PB{$\\{touched}[\T{3}]\K\T{0}$}, and
+\PB{$\\{touched}[\T{4}]\K\T{1}$}.
+
+\Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \\{dig}[\T{50}];\C{ component numbers in previous slice }\6
+\&{char} \\{adjcell}[\T{17}];\C{ cells adjacent to the previous slice }\6
+\&{char} \\{intcell}[\T{13}];\C{ nonadjacent cells between adjacent ones }\6
+\&{char} \\{first}[\T{50}];\C{ initial appearances of components that mustn't
+die }\6
+\&{char} \\{occ}[\T{50}];\C{ is this cell occupied? }\6
+\&{char} \\{touched}[\T{16}];\C{ occupied cells adjacent to components }\6
+\&{char} \\{appeared}[\T{16}];\C{ auxiliary record of component appearances }\6
+\&{char} \\{rightend};\C{ the smallest nonadjacent cell at the right of the
+pattern }\6
+\&{char} \\{leftbound}${},{}$ \\{rightbound};\C{ first and last occupied cells
+}\par
+\fi
+
+\M{22}Given a pattern \PB{\|p} whose successors need to be found,
+we begin by initializing the structures just mentioned.
+
+Later we will mention a \PB{\\{leader}} table, which might as well be
+initialized while we're setting up the other things.
+Any cell that is not adjacent to the
+previous slice should have \PB{$\\{leader}[\|j]\K\|j$}.
+
+The program in this step does not clear \PB{\\{dig}[\\{rightend}]} to zero.
+No harm is done, because subsequent steps never look at \PB{\\{dig}[\|j]} for
+\PB{$\|j\G\\{rightend}$}.
+
+\Y\B\4\X22:Unpack and massage the pattern \PB{$\|p\MG\\{key}$}\X${}\E{}$\6
+$\|l\K\\{length}(\|p\MG\\{key});{}$\6
+\&{for} ${}(\|j\K\T{2};{}$ ${}\|j\Z\|l;{}$ ${}\|j\MRL{+{\K}}\T{2}){}$\5
+${}\{{}$\1\6
+${}\|k\K\|p\MG\\{key}.\\{bytes}[(\|j\GG\T{1})];{}$\6
+${}\\{dig}[\|j+\T{15}]\K\|k\GG\T{4},\39\\{dig}[\|j+\T{16}]\K\|k\AND\T{\^f};{}$\6
+\4${}\}{}$\2\6
+${}\\{dig}[\|l+\T{16}]\K\T{0};{}$\6
+${}\\{rightend}\K\|l+\T{17};{}$\6
+\&{for} ${}(\|j\K\\{rightend};{}$ ${}\|j\Z\T{31};{}$ ${}\|j\PP){}$\1\5
+${}\\{leader}[\|j]\K\|j;{}$\2\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|l;{}$ ${}\|j\PP){}$\1\5
+${}\\{touched}[\|j]\K\\{appeared}[\|j]\K\T{0};{}$\2\6
+\&{for} ${}(\|j\K\T{16},\39\|k\K\|l\K\T{0};{}$ ${}\|j<\\{rightend};{}$ ${}\|j%
+\PP){}$\5
+${}\{{}$\1\6
+${}\\{first}[\|j]\K\T{0};{}$\6
+\&{if} (\\{dig}[\|j])\5
+${}\{{}$\1\6
+\&{if} ${}(\\{dig}[\|j-\T{1}]\E\T{0}){}$\1\5
+${}\\{adjcell}[\|k\PP]\K\|j;{}$\2\6
+${}\\{adjcell}[\|k\PP]\K\|j+\T{1};{}$\6
+\&{if} ${}(\R\\{appeared}[\\{dig}[\|j]]){}$\1\5
+${}\\{first}[\|j]\K\\{dig}[\|j],\39\\{appeared}[\\{dig}[\|j]]\K\T{1};{}$\2\6
+\4${}\}{}$\2\6
+\&{else} \&{if} ${}(\\{dig}[\|j-\T{1}]\E\T{0}){}$\1\5
+${}\\{intcell}[\|l\PP]\K\|j,\39\\{leader}[\|j]\K\|j;{}$\2\6
+\4${}\}{}$\2\6
+${}\\{adjcell}[\|k]\K\\{intcell}[\|l]\K\T{0}{}$;\par
+\U27.\fi
+
+\M{23}\B\X20:Local variables\X${}\mathrel+\E{}$\6
+\&{register} \&{patt} ${}{*}\|p{}$;\par
+\fi
+
+\M{24}\B\X19:Initialize\X${}\mathrel+\E{}$\6
+$\\{dig}[\T{16}]\K\T{1};{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\T{16};{}$ ${}\|j\PP){}$\1\5
+${}\\{leader}[\|j]\K\|j;{}$\2\6
+\&{for} ${}(\|j\K\T{31};{}$ ${}\|j<\T{50};{}$ ${}\|j\PP){}$\1\5
+${}\\{leader}[\|j]\K\|j{}$;\2\par
+\fi
+
+\M{25}A setting of the \PB{\\{occ}} array for adjacent cells is valid if and
+only
+if each component is adjacent to at least one occupied cell. The
+simple algorithm in this step moves from one valid setting to the
+colexicographically next one, or does a \PB{\&{break}} if the last valid
+setting has been considered.
+
+It is convenient to set \PB{\\{touched}[\T{0}]} to such a large value that it
+cannot become zero.
+
+\Y\B\4\X25:Move to the next valid pattern of adjacent cells, or \PB{\&{break}}%
+\X${}\E{}$\6
+$\\{touched}[\T{0}]\K\T{128};{}$\6
+\&{for} ${}(\|k\K\T{0};{}$  ; ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|j\K\\{adjcell}[\|k];{}$\6
+\&{if} (\\{occ}[\|j])\1\5
+${}\\{touched}[\\{dig}[\|j-\T{1}]]\MM,\39\\{touched}[\\{dig}[\|j]]\MM,\39%
+\\{occ}[\|j]\K\T{0};{}$\2\6
+\&{else}\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\R\|j){}$\1\5
+\&{break};\C{ all were occupied, but now \PB{\\{occ}} is entirely zero }\2\6
+${}\\{touched}[\\{dig}[\|j-\T{1}]]\PP,\39\\{touched}[\\{dig}[\|j]]\PP,\39%
+\\{occ}[\|j]\K\T{1};{}$\6
+\X26:Move up to the next valid setting\X;\par
+\U27.\fi
+
+\M{26}We have essentially added 1 in binary notation, clearing \PB{\\{occ}}
+bits
+to zero when ``carrying.'' Now we might have to reset some of them
+in order to keep components alive.
+
+(This computation is done also when we're getting started. Then \PB{\\{occ}} is
+identically zero and \PB{\|k} is at the end of the list of adjacent cells.
+In that case it finds the colexicographically smallest valid configuration.)
+
+\Y\B\4\X26:Move up to the next valid setting\X${}\E{}$\6
+\&{for} ${}(\|k\MM;{}$ ${}\|k\G\T{0};{}$ ${}\|k\MM){}$\5
+${}\{{}$\1\6
+${}\|j\K\\{adjcell}[\|k];{}$\6
+\&{if} ${}(\R\\{touched}[\\{first}[\|j]]){}$\1\5
+${}\\{touched}[\\{dig}[\|j-\T{1}]]\PP,\39\\{touched}[\\{dig}[\|j]]\PP,\39%
+\\{occ}[\|j]\K\T{1};{}$\2\6
+\4${}\}{}$\2\par
+\Us25\ET27.\fi
+
+\M{27}Fans of top-down programming will have noticed that we've recently been
+working bottom-up. Now let's get back in balance by giving an outline of
+the successor generation process.
+
+When this code is performed, \PB{\|m} will be the current slice's subscript,
+namely
+the number of cells on and above the slice whose successor is being
+found.
+
+The canonization process below will set \PB{\|l} to the cost of the new
+pattern.
+
+\Y\B\4\X27:Generate all successors to \PB{\|p}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{succ\_ptr}\K\\{succ\_table};{}$\6
+\X22:Unpack and massage the pattern \PB{$\|p\MG\\{key}$}\X;\6
+${}\\{touched}[\T{0}]\K\T{128};{}$\6
+\X26:Move up to the next valid setting\X;\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\X41:Canonize the new pattern based on adjacent occupied cells\X;\6
+\&{if} ${}(\|m+\|l>\\{nmax}){}$\1\5
+\&{goto} \\{move};\C{ prune it away, it makes only big polyominoes }\2\6
+\X44:Insert the new pattern into the successor list\X;\6
+\X28:Run through all patterns of nonadjacent cells that might be relevant\X;\6
+\4\\{move}:\5
+\X25:Move to the next valid pattern of adjacent cells, or \PB{\&{break}}\X;\6
+\4${}\}{}$\2\6
+\X46:List also the null successor, if appropriate\X;\6
+\4${}\}{}$\2\par
+\U49.\fi
+
+\M{28}\B\X28:Run through all patterns of nonadjacent cells that might be
+relevant\X${}\E{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\X29:Run through all patterns of nonadjacent cells at the left\X;\6
+\4\\{advance}:\5
+\&{for} ${}(\|k\K\T{0};{}$  ; ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|j\K\\{intcell}[\|k];{}$\6
+\&{if} (\\{occ}[\|j])\1\5
+${}\\{occ}[\|j]\K\T{0};{}$\2\6
+\&{else}\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\R\|j){}$\1\5
+\&{break};\2\6
+${}\\{occ}[\|j]\K\T{1};{}$\6
+\X42:Canonize the new pattern based on adjacent and interior occupied cells\X;\6
+\&{if} ${}(\|m+\|l>\\{nmax}){}$\1\5
+\&{goto} \\{advance};\2\6
+\X44:Insert the new pattern into the successor list\X;\6
+\4${}\}{}$\2\par
+\U27.\fi
+
+\M{29}Here I make use of Mathematics, although it saves only a little
+computation: When the \&{while} loop in this section ends,
+\PB{\\{occ}[\|j]} will be zero
+for $\PB{\\{leftbound}}<j<16$, because of a property of the \PB{\\{conn%
+\_distance}}
+function that was mentioned earlier.
+
+\Y\B\4\X29:Run through all patterns of nonadjacent cells at the left\X${}\E{}$\6
+$\\{save\_leftbound}\K\\{leftbound};{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\X30:Run through all patterns of nonadjacent cells at the right\X;\6
+\&{for} ${}(\|j\K\T{15};{}$  ; ${}\|j\MM){}$\5
+${}\{{}$\1\6
+\&{if} (\\{occ}[\|j])\1\5
+${}\\{occ}[\|j]\K\T{0};{}$\2\6
+\&{else}\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+${}\\{occ}[\|j]\K\T{1};{}$\6
+\&{if} ${}(\|j<\\{leftbound}){}$\1\5
+${}\\{leftbound}\K\|j;{}$\2\6
+\&{if} ${}(\\{rightbound}-\\{leftbound}\G\\{maxlen}){}$\1\5
+\&{break};\2\6
+\X43:Canonize the new pattern based on all occupied cells\X;\6
+\&{if} ${}(\|m+\|l>\\{nmax}){}$\1\5
+\&{break};\2\6
+\X44:Insert the new pattern into the successor list\X;\6
+\4${}\}{}$\2\6
+${}\\{occ}[\\{leftbound}]\K\T{0}{}$;\C{ this clears out the whole left end }\6
+${}\\{leftbound}\K\\{save\_leftbound}{}$;\par
+\U28.\fi
+
+\M{30}\B\X30:Run through all patterns of nonadjacent cells at the right\X${}%
+\E{}$\6
+$\\{save\_rightbound}\K\\{rightbound};{}$\6
+${}\\{rightbound}\K\\{rightend};{}$\6
+${}\\{occ}[\\{rightend}]\K\T{1};{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{if} ${}(\\{rightbound}-\\{leftbound}\G\\{maxlen}){}$\1\5
+\&{break};\2\6
+\X43:Canonize the new pattern based on all occupied cells\X;\6
+\&{if} ${}(\|m+\|l>\\{nmax}){}$\1\5
+\&{break};\2\6
+\X44:Insert the new pattern into the successor list\X;\6
+\&{for} ${}(\|j\K\\{rightend};{}$  ; ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{if} (\\{occ}[\|j])\1\5
+${}\\{occ}[\|j]\K\T{0};{}$\2\6
+\&{else}\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+${}\\{occ}[\|j]\K\T{1};{}$\6
+\&{if} ${}(\|j>\\{rightbound}){}$\1\5
+${}\\{rightbound}\K\|j;{}$\2\6
+\4${}\}{}$\2\6
+${}\\{occ}[\\{rightbound}]\K\T{0}{}$;\C{ this clears out the whole right end }\6
+${}\\{rightbound}\K\\{save\_rightbound}{}$;\par
+\U29.\fi
+
+\M{31}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \\{save\_leftbound}${},{}$ \\{save\_rightbound};\C{ boundaries within
+the previous pattern }\par
+\fi
+
+\N{1}{32}Canonization. Once a sequence of occupied cells has been proposed, we
+need
+to represent it in canonical form as a sequence of component digits. For
+example, if we occupy the four cells marked \.x in
+$$\vbox{\halign{\hfil\.{#}\hfil\cr
+1020032014\cr
+\noalign{\vskip-3pt}
+x00000x00xx\cr}}$$
+then the components \.{23} and \.{14} are merged, so the new digits are
+\.{10000020011}. (A canonical sequence always numbers the components
+\.1, \.2, \dots~in order as they appear from left to right.)
+
+Our first task is trivial: We occasionally need to locate the leftmost and
+rightmost occupied cells.
+
+\Y\B\4\X32:Find the proper \PB{\\{leftbound}} and \PB{\\{rightbound}}\X${}\E{}$%
+\6
+\&{for} ${}(\|j\K\T{16};{}$ ${}\R\\{occ}[\|j];{}$ ${}\|j\PP){}$\1\5
+;\2\6
+${}\\{leftbound}\K\|j;{}$\6
+\&{for} ${}(\|j\K\\{rightend}-\T{1};{}$ ${}\R\\{occ}[\|j];{}$ ${}\|j\MM){}$\1\5
+;\2\6
+${}\\{rightbound}\K\|j{}$;\par
+\Us41\ET42.\fi
+
+\M{33}Our next job is more interesting: After changing the status of
+adjacent cells, we need to merge components that are being joined.
+
+A simple ``union--find'' algorithm is appropriate for this task.
+Each occupied cell will point to the smallest cell in its class,
+and the cells of a class are also circularly linked.
+
+However, we make a quick exit to \PB{\\{done}} if the cost is obviously so high
+that the rest of the calculation cannot succeed.
+
+\Y\B\4\X33:Find the new classes, or \PB{\&{goto} \\{done}}\X${}\E{}$\6
+\&{for} ${}(\|j\K\\{leftbound}-\T{1},\39\|l\K\|m;{}$ ${}\|j\Z\\{rightbound};{}$
+${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{if} (\\{occ}[\|j])\1\5
+${}\|l\PP,\39\\{circ}[\|j]\K\\{leader}[\|j]\K\|j;{}$\2\6
+\&{if} (\\{dig}[\|j])\5
+${}\{{}$\1\6
+\&{if} (\\{occ}[\|j])\1\5
+${}\\{appeared}[\\{dig}[\|j]]\K\|j;{}$\2\6
+\&{else} \&{if} ${}(\\{occ}[\|j+\T{1}]){}$\1\5
+${}\\{appeared}[\\{dig}[\|j]]\K\|j+\T{1};{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|l>\\{nmax}){}$\1\5
+\&{goto} \\{done};\C{ pointless to continue }\2\6
+\&{for} ${}(\|j\K\\{leftbound}-\T{1};{}$ ${}\|j\Z\\{rightbound};{}$ ${}\|j%
+\PP){}$\1\6
+\&{if} ${}((\|k\K\\{dig}[\|j])){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{occ}[\|j]\W\\{leader}[\|j]\I\\{leader}[\\{appeared}[\|k]]){}$\1\5
+${}\\{merge}(\\{leader}[\|j],\39\\{leader}[\\{appeared}[\|k]]);{}$\2\6
+\&{if} ${}(\\{occ}[\|j+\T{1}]\W\\{leader}[\|j+\T{1}]\I\\{leader}[\\{appeared}[%
+\|k]]){}$\1\5
+${}\\{merge}(\\{leader}[\|j+\T{1}],\39\\{leader}[\\{appeared}[\|k]]);{}$\2\6
+\4${}\}{}$\2\2\par
+\U41.\fi
+
+\M{34}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \\{circ}[\T{50}];\C{ circular links for component classes }\6
+\&{char} \\{leader}[\T{50}];\C{ class representatives }\par
+\fi
+
+\M{35}\B\X2:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{merge}(\&{int} \|j${},\39{}$\&{int} \|k)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|p${},{}$ \|t;\7
+\&{if} ${}(\|j<\|k){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|p\K\|t\K\\{circ}[\|k];{}$ ${}\|p\I\|k;{}$ ${}\|p\K\\{circ}[%
+\|p]){}$\1\5
+${}\\{leader}[\|p]\K\|j;{}$\2\6
+${}\\{leader}[\|p]\K\|j;{}$\6
+${}\\{circ}[\|p]\K\\{circ}[\|j],\39\\{circ}[\|j]\K\|t;{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{for} ${}(\|p\K\|t\K\\{circ}[\|j];{}$ ${}\|p\I\|j;{}$ ${}\|p\K\\{circ}[%
+\|p]){}$\1\5
+${}\\{leader}[\|p]\K\|k;{}$\2\6
+${}\\{leader}[\|p]\K\|k;{}$\6
+${}\\{circ}[\|p]\K\\{circ}[\|k],\39\\{circ}[\|k]\K\|t;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{36}The \PB{\\{newpat}} array, which contains the canonical component
+numbers starting with~\.1, can now be written down without further ado.
+
+\Y\B\4\X36:Establish the \PB{\\{newpat}} array\X${}\E{}$\6
+\&{for} ${}(\|j\K\\{leftbound},\39\|k\K\|l\K\T{0};{}$ ${}\|j\Z%
+\\{rightbound};{}$ ${}\|j\PP,\39\|k\PP){}$\1\6
+\&{if} ${}(\R\\{occ}[\|j]){}$\1\5
+${}\\{newpat}[\|k]\K\T{0};{}$\2\6
+\&{else} \&{if} ${}(\\{leader}[\|j]<\|j){}$\1\5
+${}\\{newpat}[\|k]\K\\{class}[\\{leader}[\|j]];{}$\2\6
+\&{else}\1\5
+${}\\{newpat}[\|k]\K\\{class}[\|j]\K\PP\|l{}$;\2\2\par
+\U39.\fi
+
+\M{37}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \\{class}[\T{50}];\C{ canonical component number }\par
+\fi
+
+\M{38}We aren't done yet, however. The reverse of a pattern is
+computationally equivalent to the pattern itself; so we gain
+a factor of roughly two (in both time and space)
+by switching to the reverse pattern when
+it is lexicographically smaller.
+
+\Y\B\4\X38:Establish the \PB{\\{backpat}} array\X${}\E{}$\6
+\&{for} ${}(\|j\K\\{rightbound},\39\|k\K\|l\K\T{0};{}$ ${}\|j\G%
+\\{leftbound};{}$ ${}\|j\MM,\39\|k\PP){}$\1\6
+\&{if} ${}(\R\\{occ}[\|j]){}$\1\5
+${}\\{backpat}[\|k]\K\T{0};{}$\2\6
+\&{else} \&{if} ${}(\\{class}[\\{leader}[\|j]]\AND\T{\^10}){}$\1\5
+${}\\{backpat}[\|k]\K\\{class}[\\{leader}[\|j]]\AND\T{\^f};{}$\2\6
+\&{else}\1\5
+${}\\{backpat}[\|k]\K\PP\|l,\39\\{class}[\\{leader}[\|j]]\K\|l+\T{\^10}{}$;\2\2%
+\par
+\U39.\fi
+
+\M{39}Here then is how we compute the cost of a purported successor.
+(Again we bypass computation when a detailed calculation would be fruitless.)
+
+\Y\B\4\X39:Determine the cost of the new pattern\X${}\E{}$\6
+\&{for} ${}(\|j\K\\{leftbound},\39\|l\K\T{0};{}$ ${}\|j\Z\\{rightbound};{}$ ${}%
+\|j\PP){}$\1\6
+\&{if} (\\{occ}[\|j])\1\5
+${}\|l\PP;{}$\2\2\6
+\&{if} ${}(\|m+\|l\Z\\{nmax}){}$\5
+${}\{{}$\1\6
+${}\\{weight}\K\|l;{}$\6
+\X36:Establish the \PB{\\{newpat}} array\X;\6
+\X38:Establish the \PB{\\{backpat}} array\X;\6
+${}\\{len}\K\|k{}$;\C{ at this point \PB{\|k} is the pattern length }\6
+${}\\{bestpat}\K\\{newpat};{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|k;{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\\{newpat}[\|j]<\\{backpat}[\|j]){}$\1\5
+\&{break};\2\6
+\&{else} \&{if} ${}(\\{newpat}[\|j]>\\{backpat}[\|j]){}$\5
+${}\{{}$\1\6
+${}\\{bestpat}\K\\{backpat};{}$\6
+\&{break};\6
+\4${}\}{}$\2\2\6
+${}\|k\K\\{conn\_distance}(\|k,\39\\{bestpat});{}$\6
+${}\|l\K\\{weight}+\|k;{}$\6
+\4${}\}{}$\2\par
+\Us41, 42\ETs43.\fi
+
+\M{40}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \\{newpat}[\T{16}];\C{ canonical sequence for the new pattern }\6
+\&{char} \\{backpat}[\T{16}];\C{ canonical sequence for its reversal }\6
+\&{char} ${}{*}\\{bestpat}{}$;\C{ the lexicographically smaller }\6
+\&{int} \\{weight};\C{ the number of occupied cells }\par
+\fi
+
+\M{41}\B\X41:Canonize the new pattern based on adjacent occupied cells\X${}%
+\E{}$\6
+\X32:Find the proper \PB{\\{leftbound}} and \PB{\\{rightbound}}\X;\6
+\&{if} ${}(\\{rightbound}-\\{leftbound}\G\\{maxlen}){}$\5
+${}\{{}$\1\6
+${}\|l\K\\{nmax}{}$;\5
+\&{goto} \\{done};\C{ too long, so we make the cost huge  }\6
+\4${}\}{}$\2\6
+\X33:Find the new classes, or \PB{\&{goto} \\{done}}\X;\6
+\X39:Determine the cost of the new pattern\X;\6
+\4\\{done}:\par
+\U27.\fi
+
+\M{42}At this point the new classes of adjacent cells have already been
+determined.
+Interior cells cannot make \PB{$\\{rightbound}-\\{leftbound}\G\\{maxlen}$}.
+
+\Y\B\4\X42:Canonize the new pattern based on adjacent and interior occupied
+cells\X${}\E{}$\6
+\X32:Find the proper \PB{\\{leftbound}} and \PB{\\{rightbound}}\X;\6
+\X39:Determine the cost of the new pattern\X;\par
+\U28.\fi
+
+\M{43}And at this point the \PB{\\{leftbound}} and \PB{\\{rightbound}} are
+already known.
+
+\Y\B\4\X43:Canonize the new pattern based on all occupied cells\X${}\E{}$\6
+\X39:Determine the cost of the new pattern\X;\par
+\Us29\ET30.\fi
+
+\N{1}{44}Loose ends. We have finished the complicated decision-making that goes
+into listing all successors of a given slice, but we still haven't
+actually generated any successors. Now we're ready to do that simple task,
+thereby unmasking the mystery of \PB{\\{aux}}.
+
+\Y\B\4\X44:Insert the new pattern into the successor list\X${}\E{}$\6
+$\|q\K\\{lookup}(\\{len},\39\\{bestpat},\39\|m+\\{weight});{}$\6
+\&{if} ${}(\|q\MG\\{aux}){}$\1\5
+${}\|q\MG\\{aux}\MG\\{degree}\PP{}$;\C{ been there, done that }\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|s\K\\{succ\_ptr}\PP;{}$\6
+${}\|s\MG\\{pat}\K\|q;{}$\6
+${}\|q\MG\\{aux}\K\|s;{}$\6
+${}\|s\MG\\{degree}\K\T{1};{}$\6
+${}\|s\MG\\{weight}\K\\{weight};{}$\6
+${}\|s\MG\\{death}\K\\{nmax}-\|l+\\{weight};{}$\6
+\4${}\}{}$\2\par
+\Us27, 28, 29\ETs30.\fi
+
+\M{45}\B\X20:Local variables\X${}\mathrel+\E{}$\6
+\&{register} \&{patt} ${}{*}\|q;{}$\6
+\&{register} \&{succ} ${}{*}\|s{}$;\par
+\fi
+
+\M{46}The special successor pattern \PB{$\NULL$}, of cost 0, is added to the
+list
+if slice \PB{\|p} had only one component. This will be true if and only
+if \PB{\\{appeared}[\T{2}]} is zero. It means, ``We can stop now if we like,
+having
+generated a polyomino of weight~\PB{\|m}.''
+
+\Y\B\4\X46:List also the null successor, if appropriate\X${}\E{}$\6
+\&{if} ${}(\R\\{appeared}[\T{2}]){}$\5
+${}\{{}$\1\6
+${}\|s\K\\{succ\_ptr}\PP;{}$\6
+${}\|s\MG\\{pat}\K\NULL,\39\|s\MG\\{degree}\K\T{1},\39\|s\MG\\{weight}\K\T{0},%
+\39\|s\MG\\{death}\K\|m;{}$\6
+\4${}\}{}$\2\par
+\U27.\fi
+
+\M{47}Placing initial slices is complicated by the fact that we want to gain
+a factor of two by symmetry. Thus if \PB{\|k} is palindromic, we start with
+pattern \PB{\|k} itself; otherwise we consider \PB{\|k} and its reflection but
+with double weight. The latter case is essentially the same as a degree-2
+transition from the null state.
+
+The total number of initial transitions, which is also the total number of
+slices that will appear at level \PB{\\{nmax}}, is
+$$2^{t-2}+\cases{ 2^{t/2}-1,&if $t$ is even,\cr
+\noalign{\smallskip} 2^{(t-1)/2}+2^{(t-3)/2}-1,&if $t$ is odd,\cr}$$
+where $t=\PB{\\{maxlen}}=\lceil\PB{\\{nmax}}/2\rceil$. For example, when \PB{%
+\\{nmax}} is 30
+this number is 8383.
+
+\Y\B\4\X47:Place the initial slice corresponding to the binary number \PB{\|k}%
+\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|m\K\|k;{}$\6
+\&{for} ${}(\|j\K\|l\K\T{0};{}$ \|m; ${}\|j\PP,\39\|m\MRL{{\GG}{\K}}\T{1}){}$\1%
+\6
+\&{if} ${}(\|m\AND\T{1}){}$\1\5
+${}\\{newpat}[\|j]\K\PP\|l;{}$\2\6
+\&{else}\1\5
+${}\\{newpat}[\|j]\K\T{0};{}$\2\2\6
+${}\\{len}\K\|j;{}$\6
+${}\\{weight}\K\|l;{}$\6
+\&{for} ${}(\|j\MM;{}$ ${}\|j\G\T{0};{}$ ${}\|j\MM,\39\|m\PP){}$\1\6
+\&{if} (\\{newpat}[\|j])\1\5
+${}\\{backpat}[\|m]\K\|l+\T{1}-\\{newpat}[\|j];{}$\2\6
+\&{else}\1\5
+${}\\{backpat}[\|m]\K\T{0};{}$\2\2\6
+${}\\{mult}\K\T{1};{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\\{len};{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\\{newpat}[\|j]<\\{backpat}[\|j]){}$\5
+${}\{{}$\1\6
+${}\\{mult}\K\T{2};{}$\6
+\&{break};\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\\{newpat}[\|j]>\\{backpat}[\|j]){}$\1\5
+\&{goto} \\{bypass};\2\2\6
+\X57:Record an initial transition to \PB{\\{newpat}} with degree \PB{\\{mult}}%
+\X;\6
+\4\\{bypass}:\6
+\4${}\}{}$\2\par
+\U7.\fi
+
+\M{48}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{len};\C{ the pattern length }\6
+\&{int} \\{mult};\C{ its multiplicity }\par
+\fi
+
+\M{49}The heart of the computation is, of course, the process of generating the
+non-initial slices.
+
+\Y\B\4\X49:Compute\X${}\E{}$\6
+\X7:Place the initial slices\X;\6
+\&{for} ${}(\|m\K\T{1};{}$  ; ${}\|m\PP){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\ \%d\ new\ patterns\ on}\)\.{\ level\ \%d\ (\%d,\%d)\\n"},%
+\39\\{patt\_count}[\|m],\39\|m,\39\\{patt\_ptr}-\\{patt\_table},\39%
+\\{arcs});{}$\6
+\X56:Record the arrival of a new \PB{\|m}\X;\6
+\&{if} ${}(\|m\E\\{nmax}){}$\1\5
+\&{break};\2\6
+\&{for} ${}(\|p\K\\{patt\_list}[\|m];{}$ \|p; ${}\|p\K\|p\MG\\{next}){}$\5
+${}\{{}$\1\6
+\X27:Generate all successors to \PB{\|p}\X;\6
+\X50:Output all transitions from \PB{\|p}\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{50}\B\X50:Output all transitions from \PB{\|p}\X${}\E{}$\6
+\X60:Record \PB{\|p} as the current predecessor\X;\6
+\&{for} ${}(\|s\K\\{succ\_table};{}$ ${}\|s<\\{succ\_ptr};{}$ ${}\|s\PP){}$\5
+${}\{{}$\1\6
+\X61:Record a transition to \PB{\|s}\X;\6
+\&{if} ${}(\|s\MG\\{pat}){}$\1\5
+${}\|s\MG\\{pat}\MG\\{aux}\K\NULL;{}$\2\6
+\4${}\}{}$\2\par
+\U49.\fi
+
+\N{1}{51}Output. Finally we must deal with transition records,
+which are sent to a file for subsequent processing.
+That file might be huge,
+so it is generated in a compact binary format.
+Each sequence of transitions from a pattern is specified by one word
+identifying that pattern followed by one word for each successor pattern.
+
+In fact several gigabytes of output are generated when \PB{$\\{nmax}\K\T{30}$},
+and my Linux system frowns on files of length greater than
+$2^{31}-1=2147483647$. Therefore this program breaks the output up
+into a sequence of files called \.{foo.0}, \.{foo.1}, \dots, each
+at most one large gigabyte in size. (That's one GGbyte${}=2^{30}$~bytes.)
+
+If the special variable \PB{\\{verbose}} is nonzero, transitions are
+also displayed in symbolic form on standard output.
+
+\Y\B\4\D$\\{filelength\_threshold}$ \5
+\T{\^10000000}\C{ in tetrabytes }\par
+\Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{verbose}${}\K\T{0}{}$;\C{ set nonzero for debugging }\6
+\&{FILE} ${}{*}\\{out\_file}{}$;\C{ the output file }\6
+\&{unsigned} \&{int} \\{buf};\C{ place for binary output }\6
+\&{int} \\{words\_out};\C{ the number of tetrabytes output in current output
+file }\6
+\&{int} \\{file\_extension};\C{ the number of GGbytes output }\6
+\&{char} ${}{*}\\{base\_name},{}$ \\{filename}[\T{100}];\par
+\fi
+
+\M{52}\B\X2:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{open\_it}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+${}\\{sprintf}(\\{filename},\39\.{"\%.90s.\%d"},\39\\{base\_name},\39\\{file%
+\_extension});{}$\6
+${}\\{out\_file}\K\\{fopen}(\\{filename},\39\.{"wb"});{}$\6
+\&{if} ${}(\R\\{out\_file}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ can't\ open\ file\ \%}\)\.{s"},\39%
+\\{filename});{}$\6
+\\{panic}(\.{"\ for\ output"});\6
+\4${}\}{}$\2\6
+${}\\{words\_out}\K\T{0};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{53}\B\X2:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{close\_it}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{if} ${}(\\{fclose}(\\{out\_file})\I\T{0}){}$\1\5
+\\{panic}(\.{"I\ couldn't\ close\ th}\)\.{e\ output\ file"});\2\6
+${}\\{printf}(\.{"[\%d\ bytes\ written\ o}\)\.{n\ file\ \%s.]\\n"},\39\T{4}*%
+\\{words\_out},\39\\{filename});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{54}\B\X2:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{out\_it}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{if} ${}(\\{words\_out}\E\\{filelength\_threshold}){}$\5
+${}\{{}$\1\6
+\\{close\_it}(\,);\6
+${}\\{file\_extension}\PP;{}$\6
+\\{open\_it}(\,);\6
+\4${}\}{}$\2\6
+${}\\{words\_out}\PP;{}$\6
+\&{return} \\{fwrite}${}({\AND}\\{buf},\39{}$\&{sizeof}(\&{unsigned} %
+\&{int})${},\39\T{1},\39\\{out\_file})\E\T{1};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{55}\B\X19:Initialize\X${}\mathrel+\E{}$\6
+\\{open\_it}(\,);\par
+\fi
+
+\M{56}How should we encode the binary output? Each transition has a
+multiplicity,
+and the multiplicity can get as large as~30.
+Therefore we will devote 5~bits to that piece of information.
+We can also give special meaning to the code numbers 0 and 31
+if they happen to appear in the high-order 5 bits of a 32-bit word.
+
+(At first I thought the maximum multiplicity was 16, because of examples like
+\lab1020304050607:7/${}\to{}$\lab1:30/ or
+\lab11223344556677:21/${}\to{}$\lab1:30/ or
+\lab101010101010101:29/${}\to{}$\lab1:30/.
+But then I realized that there are 28 ways
+to go from \lab1:1/ to \lab10203040506007:8/ or to \lab10203040506077:9/,
+because of the way we collapse symmetric slices together.
+Still later I encountered the examples
+\lab11:3/${}\to{}$\lab10002003004005:8/,
+\lab11:3/${}\to{}$\lab10020003004005:8/,
+\lab1011:7/${}\to{}$\lab100000200003:10/,
+\lab1111:7/${}\to{}$\lab100000200003:10/.
+I~believe these are the only four cases of degree $\ge30$, but the
+program now checks explicitly to make sure that I haven't miscalculated again.)
+
+For the main body of information, we can take advantage of the fact that
+new patterns arise consecutively. Thus if bit~6 is~0, it means,
+``The successor is the next new pattern; here are its birth and death dates.''
+But if bit~6 is~1 it means, ``The low-order 26 bits are the serial number of
+the successor pattern, whose birth and death dates you already know.''
+
+\Y\B\4\D$\\{new\_pred\_code}$ \5
+\T{0}\C{ high 5 when new slice is the predecessor }\par
+\B\4\D$\\{new\_level\_code}$ \5
+\T{31}\C{ high 5 when $m$ increases }\par
+\Y\B\4\X56:Record the arrival of a new \PB{\|m}\X${}\E{}$\6
+$\\{buf}\K(\\{new\_level\_code}\LL\T{27})+\|m;{}$\6
+\&{if} ${}(\R\\{out\_it}(\,)){}$\1\5
+\\{panic}(\.{"Bad\ write\ of\ newlev}\)\.{el\ message"});\2\par
+\U49.\fi
+
+\M{57}The first pattern has serial number 1, not 0, because we let 0 stand for
+the sink vertex.
+
+\Y\B\4\D$\\{patt\_code}(\|q)$ \5
+$(((\|q)-\\{patt\_table})+\T{1}{}$)\par
+\Y\B\4\X57:Record an initial transition to \PB{\\{newpat}} with degree \PB{%
+\\{mult}}\X${}\E{}$\6
+$\|l\K\\{nmax}-\\{conn\_distance}(\\{len},\39\\{newpat});{}$\6
+${}\|q\K\\{lookup}(\\{len},\39\\{newpat},\39\\{weight});{}$\6
+\&{if} ${}(\\{patt\_code}(\|q)\I\PP\\{prev\_pat}){}$\1\5
+\\{panic}(\.{"Out\ of\ sync"});\2\6
+\&{if} (\\{verbose})\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"-\%s>"},\39\\{mult}\E\T{2}\?\.{"2"}:\\{mult}\I\T{1}\?\.{"?"}:%
+\.{""});{}$\6
+${}\\{print\_slice}(\|q,\39\\{weight},\39\|l);{}$\6
+\4${}\}{}$\2\6
+${}\\{buf}\K(\\{mult}\LL\T{27})+(\\{weight}\LL\T{8})+\|l{}$;\C{ multiplicity,
+birth, death }\6
+\&{if} ${}(\R\\{out\_it}(\,)){}$\1\5
+\\{panic}(\.{"Bad\ write\ of\ initia}\)\.{l\ transition"});\2\6
+${}\\{slices}\MRL{+{\K}}\|l-\\{weight}+\T{1}{}$;\par
+\U47.\fi
+
+\M{58}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{prev\_pat};\C{ the number of patterns encountered so far }\par
+\fi
+
+\M{59}The verbose output marks the first appearance of a slice by
+printing both birth and death dates as a range of subscripts.
+Later it will use a single subscript within that interval. (For
+example, if \PB{$\\{nmax}\K\T{30}$} the simple pattern \.1 will be shown
+first as `\.{1:1..30}', and the pattern \.{12} will be shown
+first as `\.{12:2..29}'. But later when \.1 occurs as a successor
+of pattern \.{12}, it will show up as `\.{1:3}', meaning that \lab1:3/
+is a successor of \lab12:2/, \lab1:4/ is a successor of \lab12:3/, etc.)
+
+\Y\B\4\X2:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_slice}(\&{patt} ${}{*}\|p,\39{}$\&{int} \|m${},\39{}$\&{int}
+\\{death})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j;\7
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{length}(\|p\MG\\{key});{}$ ${}\|j\PP){}$\1%
+\5
+${}\\{printf}(\.{"\%x"},\39\|j\E\T{0}\?\T{1}:\|j\AND\T{1}\?\|p\MG\\{key}.%
+\\{bytes}[(\|j+\T{1})\GG\T{1}]\GG\T{4}:\|p\MG\\{key}.\\{bytes}[\|j\GG\T{1}]\AND%
+\T{\^f});{}$\2\6
+\&{if} (\\{death})\1\5
+${}\\{printf}(\.{":\%d..\%d\\n"},\39\|m,\39\\{death});{}$\2\6
+\&{else}\1\5
+${}\\{printf}(\.{":\%d\\n"},\39\|m);{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{60}\B\X60:Record \PB{\|p} as the current predecessor\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} (\\{verbose})\1\5
+${}\\{print\_slice}(\|p,\39\|m,\39\T{0});{}$\2\6
+${}\\{buf}\K(\\{new\_pred\_code}\LL\T{27})+\\{patt\_code}(\|p);{}$\6
+\&{if} ${}(\R\\{out\_it}(\,)){}$\1\5
+\\{panic}(\.{"Bad\ write\ of\ predec}\)\.{essor\ pattern"});\2\6
+\4${}\}{}$\2\par
+\U50.\fi
+
+\M{61}\B\X61:Record a transition to \PB{\|s}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} (\\{verbose})\5
+${}\{{}$\1\6
+\&{if} ${}(\|s\MG\\{degree}\E\T{1}){}$\1\5
+\\{printf}(\.{"->"});\2\6
+\&{else}\1\5
+${}\\{printf}(\.{"-\%d>"},\39\|s\MG\\{degree});{}$\2\6
+\&{if} ${}(\R\|s\MG\\{pat}){}$\1\5
+${}\\{printf}(\.{"0:\%d\\n"},\39\|m);{}$\2\6
+\&{else}\1\5
+${}\\{print\_slice}(\|s\MG\\{pat},\39\|m+\|s\MG\\{weight},\39\\{patt\_code}(\|s%
+\MG\\{pat})>\\{prev\_pat}\?\|s\MG\\{death}:\T{0});{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|s\MG\\{degree}>\T{30}){}$\1\5
+\\{panic}(\.{"Surprisingly\ large\ }\)\.{arc\ multiplicity"});\2\6
+\&{if} ${}(\R\|s\MG\\{pat}){}$\1\5
+${}\\{buf}\K(\T{1}\LL\T{27})+(\T{1}\LL\T{26});{}$\2\6
+\&{else} \&{if} ${}(\\{patt\_code}(\|s\MG\\{pat})\Z\\{prev\_pat}){}$\1\5
+${}\\{buf}\K(\|s\MG\\{degree}\LL\T{27})+(\T{1}\LL\T{26})+\\{patt\_code}(\|s\MG%
+\\{pat});{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{prev\_pat}\PP,\39\\{buf}\K(\|s\MG\\{degree}\LL\T{27})+((\|s\MG\\{weight}+%
+\|m)\LL\T{8})+\|s\MG\\{death};{}$\6
+${}\\{slices}\MRL{+{\K}}\|s\MG\\{death}-(\|s\MG\\{weight}+\|m)+\T{1};{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\R\\{out\_it}(\,)){}$\1\5
+\\{panic}(\.{"Bad\ write\ of\ transi}\)\.{tion"});\2\6
+${}\\{arcs}\PP;{}$\6
+\4${}\}{}$\2\par
+\U50.\fi
+
+\M{62}Hooray, we are done.
+
+\Y\B\4\X62:Print the results\X${}\E{}$\6
+\&{if} ${}(\\{patt\_ptr}\I\\{patt\_table}+\\{prev\_pat}){}$\1\5
+\\{panic}(\.{"Output\ out\ of\ sync"});\2\6
+\\{printf}(\.{"All\ done!\\n"});\6
+${}\\{printf}(\.{"\ \%d\ patterns\ genera}\)\.{ted,"},\39\\{prev\_pat});{}$\6
+${}\\{printf}(\.{"\ \%d\ slices,"},\39\\{slices});{}$\6
+${}\\{printf}(\.{"\ \%d\ arcs.\\n"},\39\\{arcs});{}$\6
+\\{close\_it}(\,);\par
+\U1.\fi
+
+\M{63}Multiplicity of arcs is not taken into account.
+
+\Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{slices};\C{ total number of slices }\6
+\&{int} \\{arcs};\C{ total number of arcs (double precision) }\par
+\fi
+
+\M{64}Note, added two weeks later: This program, though interesting, is
+obsolete. See the much better {\mc POLYNUM}, which runs hundreds of
+times faster when $n=30$ and faster yet for larger values of $n$.
+
+\fi
+
+\N{1}{65}Index.
+\fi
+
+\inx
+\fin
+\con

@@ -1,0 +1,32 @@
+\I\X16, 17:Basic subroutines needed by \PB{\\{intersect}}\X
+\U11.
+\I\X8:Construct the OBDD for all perfect matchings\X
+\U1.
+\I\X18:Construct the reduced OBDD in lower memory, using the template\X
+\U11.
+\I\X13:Construct the template in upper memory\X
+\U11.
+\I\X21:Count and report the number of such matchings\X
+\U1.
+\I\X6:Create the OBDD for matching black vertices\X
+\U8.
+\I\X27:Do the inner traversal\X
+\U24.
+\I\X2:Generate the list of edges\X
+\U1.
+\I\X3, 5, 12, 14, 20, 26:Global variables\X
+\U1.
+\I\X15:Initialize the tables for template construction\X
+\U13.
+\I\X4, 10, 25:Local variables\X
+\U1.
+\I\X9:Modify the OBDD so that red vertex \PB{\|v} is matched exactly once\X
+\U8.
+\I\X28:Record a solution\X
+\U27.
+\I\X23:Remove null right branches\X
+\U24.
+\I\X7, 11:Subroutines\X
+\U1.
+\I\X24:Traverse and count Hamiltonian cycles\X
+\U1.

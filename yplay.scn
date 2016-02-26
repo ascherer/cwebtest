@@ -1,0 +1,6 @@
+\I\X3:Compute \PB{\|a[\|k]} from \PB{$\|a[\|k-\T{1}]$}\X
+\U1.
+\I\X4:Print the results\X
+\U1.
+\I\X2:Read the input into a[0], determining \PB{\|n}\X
+\U1.

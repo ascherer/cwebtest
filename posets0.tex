@@ -1,0 +1,70 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. Sequence M1805, posets with linear order $1\ldots n$.
+Same as upper triangular $n\times n$ Boolean matrices $B$
+with zeros on diagonal and $B^2\subseteq B$.
+
+The unique(?) thing here is that I use $2^k$ as an index, not $k$;
+therefore I can also use $2^k+2^l$ as an index into a triangular matrix!
+
+\Y\B\4\D$\\{maxn}$ \5
+\T{9}\par
+\B\4\D$\\{maxnn}$ \5
+$(\T{1}\LL(\\{maxn}-\T{1}){}$)\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\&{int} ${}\\{row}[\\{maxnn}+\T{1}]{}$;\C{ \PB{$\\{row}[\T{1}\LL(\|n-\|j)]$} is
+$j$th row of $B$ }\6
+\&{int} ${}\\{mask}[\\{maxnn}+(\\{maxnn}\GG\T{1})+\T{1}]{}$;\C{ \PB{$\\{mask}[%
+\T{1}\LL(\|n-\|j)]$} shows bits that must be zero in $j$th row }\6
+\&{int} \\{sols};\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|l${},{}$ \|x${},{}$ \|y${},{}$ \|z;\6
+\&{int} \|n${},{}$ \\{nn};\7
+\&{for} ${}(\|n\K\T{3};{}$ ${}\|n\Z\\{maxn};{}$ ${}\|n\PP){}$\5
+${}\{{}$\1\6
+${}\\{sols}\K\T{0};{}$\6
+${}\|l\K\\{nn}\K\T{1}\LL(\|n-\T{1});{}$\6
+\&{for} ${}(\|x\K\T{2};{}$ ${}\|x\Z\|l;{}$ ${}\|x\MRL{{\LL}{\K}}\T{1}){}$\1\5
+${}\\{mask}[\|x]\K\T{0};{}$\2\6
+\4\\{newlev}:\5
+\&{if} ${}(\|l\E\T{2}){}$\5
+${}\{{}$\1\6
+${}\\{sols}\MRL{+{\K}}\T{2}-(\\{mask}[\T{2}]\AND\T{1});{}$\6
+\&{goto} \\{backtrack};\6
+\4${}\}{}$\2\6
+${}\\{mask}[\|l]\MRL{\AND{\K}}\|l-\T{1};{}$\6
+${}\\{row}[\|l]\K\T{0};{}$\6
+${}\|l\MRL{{\GG}{\K}}\T{1};{}$\6
+\&{goto} \\{newlev};\6
+\4\\{backtrack}:\5
+${}\|l\MRL{{\LL}{\K}}\T{1},\39\|x\K\\{row}[\|l];{}$\6
+\&{for} ${}(\|y\K\|x\AND(\|x+\T{1});{}$ \|y; ${}\|y\MRL{-{\K}}\|z){}$\1\5
+${}\|z\K\|y\AND{-}\|y,\39\\{mask}[\|z]\K\\{mask}[\|l+\|z];{}$\2\6
+${}\|x\K(\|x\OR\\{mask}[\|l])+\T{1};{}$\6
+\&{if} ${}(\|x\G\|l){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|l\E\\{nn}){}$\1\5
+\&{goto} \\{done};\2\6
+\&{goto} \\{backtrack};\6
+\4${}\}{}$\2\6
+${}\\{row}[\|l]\K\|x\K\|x\AND\CM\\{mask}[\|l];{}$\6
+\&{for} ${}(\|y\K\|x\AND(\|x+\T{1}),\39\|x\K\|x\XOR{-}\T{1};{}$ \|y; ${}\|y%
+\MRL{-{\K}}\|z){}$\1\5
+${}\|z\K\|y\AND{-}\|y,\39\\{mask}[\|l+\|z]\K\\{mask}[\|z],\39\\{mask}[\|z]%
+\MRL{{\OR}{\K}}\|x;{}$\2\6
+${}\|l\MRL{{\GG}{\K}}\T{1};{}$\6
+\&{goto} \\{newlev};\6
+\4\\{done}:\5
+${}\\{printf}(\.{"\%d\ solutions\ for\ \%d}\)\.{.\\n"},\39\\{sols},\39\|n);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{2}Index.
+\fi
+
+\inx
+\fin
+\con

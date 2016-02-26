@@ -1,0 +1,8 @@
+\I\X5:Go through the list of lists\X
+\U3.
+\I\X4:Put \PB{\|k} onto the list for \PB{\|q}\X
+\U3.
+\I\X3:Reduce and output\X
+\U1.
+\I\X2:Store all the input in \PB{\\{lo}} and \PB{\\{hi}}\X
+\U1.

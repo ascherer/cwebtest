@@ -1,0 +1,33 @@
+\I\X6, 7, 8, 12:Cases for coroutine states\X
+\U5.
+\I\X20:Delete the children of \PB{\|p} from the fringe\X
+\U15.
+\I\X9:Generate the strings with a coroutine implementation\X
+\U1.
+\I\X15:Generate the strings with a loopless implementation\X
+\U1.
+\I\X3, 11, 17:Global variables\X
+\U1.
+\I\X10:Initialize the cnode structure\X
+\U9.
+\I\X16:Initialize the lnode structure, putting all roots into the fringe\X
+\U15.
+\I\X19:Insert the children of \PB{\|p} after \PB{\|p} in the fringe\X
+\U15.
+\I\X21:Make node \PB{\|p} passive\X
+\U15.
+\I\X13:Print out all the current cnode bits\X
+\U12.
+\I\X22:Print out all the current lnode bits\X
+\U15.
+\I\X23:Print out the whole lnode structure\X
+\I\X2:Process the command line, parsing the given forest\X
+\U1.
+\I\X5:Repeatedly switch to the proper part of the current coroutine\X
+\U9.
+\I\X18:Set \PB{\|p} to the rightmost active node of the fringe, and activate
+everything to its right\X
+\U15.
+\I\X4, 14:Type definitions\X
+\U1.
+

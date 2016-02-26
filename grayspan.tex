@@ -1,0 +1,511 @@
+\input cwebmac
+\datethis
+
+
+
+
+\N{1}{1}Intro. This program was written (somewhat hastily) in order to
+experiment
+with an algorithm that generates all spanning trees of a given graph,
+changing only one edge at a time. Most of the basic ideas are adapted from
+Malcolm Smith's M.S. thesis, ``Generating spanning trees'' (University
+of Victoria, 1997), which also contains more complex variations that
+guarantee better asymptotic performance. I intend to experiment with
+those additional bells and whistles later.
+
+The first command line argument is the name of a file that specifies
+an undirected graph in Stanford GraphBase
+{\mc SAVE\_GRAPH} format; the graph may have
+repeated edges, but it must not contain loops. Additional command line
+arguments are ignored except that they cause more verbose output.
+The least verbose output contains only overall statistics about the total
+number of spanning trees found and the total number of mems used.
+
+\Y\B\4\D$\\{verbose}$ \5
+$(\\{argc}>\T{2}{}$)\par
+\B\4\D$\\{extraverbose}$ \5
+$(\\{argc}>\T{3}{}$)\par
+\B\4\D$\|o$ \5
+$\\{mems}\PP{}$\par
+\B\4\D$\\{oo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{2}\par
+\B\4\D$\\{ooo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{3}\par
+\B\4\D$\\{oooo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{4}\par
+\B\4\D$\\{ooooo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{5}\par
+\Y\B\8\#\&{include} \.{"gb\_graph.h"}\6
+\8\#\&{include} \.{"gb\_save.h"}\6
+\ATH\6
+\&{double} \\{mems};\C{ memory references made }\6
+\&{double} \\{count};\C{ trees found }\7
+\X5:Subroutines\X\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\X3:Local variables\X;\6
+\X2:Input the graph\X;\6
+\X16:Initialize the algorithm\X;\6
+\X7:Generate all spanning trees\X;\6
+${}\\{printf}(\.{"Altogether\ \%.15g\ sp}\)\.{anning\ trees,\ using\ }\)\.{%
+\%.15g\ mems.\\n"},\39\\{count},\39\\{mems});{}$\6
+\\{exit}(\T{0});\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Input the graph\X${}\E{}$\6
+\&{if} ${}(\\{argc}<\T{2}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ foo.gb\ [[}\)\.{gory]\ details]%
+\\n"},\39\\{argv}[\T{0}]);{}$\6
+\\{exit}(\T{1});\6
+\4${}\}{}$\2\6
+${}\|g\K\\{restore\_graph}(\\{argv}[\T{1}]);{}$\6
+\&{if} ${}(\R\|g){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ can't\ create}\)\.{\ the\ graph\ from\
+file}\)\.{\ \%s!\ (error\ code\ \%d)}\)\.{\\n"},\39\\{argv}[\T{1}],\39\\{panic%
+\_code});{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+${}\|n\K\|g\MG\|n;{}$\6
+\X4:Check the graph for validity and prepare it for action\X;\par
+\U1.\fi
+
+\M{3}\B\X3:Local variables\X${}\E{}$\6
+\&{register} \&{Graph} ${}{*}\|g{}$;\C{ the graph we're dealing with }\6
+\&{register} \&{int} \|n;\C{ the number of vertices }\6
+\&{register} \&{int} \|k;\C{ current integer of interest }\6
+\&{register} \&{Vertex} ${}{*}\|u,{}$ ${}{*}\|v,{}$ ${}{*}\|w{}$;\C{ current
+vertices of interest }\6
+\&{register} \&{Arc} ${}{*}\|e,{}$ ${}{*}\\{ee},{}$ ${}{*}\|f,{}$ ${}{*}%
+\\{ff}{}$;\C{ current edges of interest }\par
+\A8.
+\U1.\fi
+
+\N{1}{4}Graph preparation.
+While we're checking to see that the graph meets certain minimal standards, we
+might as well also compute the degree of each vertex, since our algorithm
+will be using that information. We also ensure that the SGB ``edge trick''
+works on our computer.
+
+In this program we deviate from normal conventions of the Stanford GraphBase
+by using a {\it doubly\/} linked list of arcs from each vertex \PB{\|v}.
+Namely,
+\PB{$\|v\MG\\{arcs}$} points to a header node \PB{\|h}, and the arcs from \PB{%
+\|v} are
+\PB{$\|h\MG\\{next}$}, \PB{$\|h\MG\\{next}\MG\\{next}$}, etc., until returning
+to \PB{\|h} again. All
+arc nodes \PB{\|e} in this list have \PB{$\|e\MG\\{next}\MG\\{prev}\K\|e\MG%
+\\{prev}\MG\\{next}\K\|e$}. The
+header node is distinguished by the property \PB{$\|h\MG\\{tip}\K\NULL$}.
+
+The ``length'' of each edge is changed to an identifying number
+for use in printouts.
+
+\Y\B\4\D$\\{deg}$ \5
+$\|u.{}$\|I\C{ utility field \PB{\|u} of each vertex holds its current degree }%
+\par
+\B\4\D$\\{prev}$ \5
+$\|a.{}$\|A\C{ utility field \PB{\|a} of each arc holds its backpointer }\par
+\B\4\D$\\{mate}(\|e)$ \5
+$(\\{edge\_trick}\AND(\&{siz\_t})(\|e)\?(\|e)-\T{1}:(\|e)+\T{1}{}$)\par
+\Y\B\4\X4:Check the graph for validity and prepare it for action\X${}\E{}$\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"Graph\ \%s\ has\ the\ fo}\)\.{llowing\ edges:\\n"},\39\|g\MG%
+\\{id});{}$\2\6
+\&{for} ${}(\|v\K\|g\MG\\{vertices},\39\|k\K\T{0};{}$ ${}\|v<\|g\MG%
+\\{vertices}+\|n;{}$ ${}\|v\PP){}$\5
+${}\{{}$\1\6
+${}\|f\K\\{gb\_virgin\_arc}(\,);{}$\6
+${}\|f\MG\\{next}\K\|v\MG\\{arcs}{}$;\C{ the new header node }\6
+\&{for} ${}(\|v\MG\\{deg}\K\T{0},\39\|e\K\|v\MG\\{arcs},\39\|v\MG\\{arcs}\K%
+\|f;{}$ \|e; ${}\|v\MG\\{deg}\PP,\39\|f\K\|e,\39\|e\K\|e\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|e\MG\\{prev}\K\|f;{}$\6
+${}\|u\K\|e\MG\\{tip};{}$\6
+\&{if} ${}(\|u\E\|v){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Oops,\ there's\ a\ loo}\)\.{p\ from\ \%s\ to\
+itself!}\)\.{\\n"},\39\|v\MG\\{name});{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{mate}(\|e)\MG\\{tip}\I\|v){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Oops:\ There's\ an\ ar}\)\.{c\ from\ \%s\ to\ %
+\%s,\\n"},\39\|u\MG\\{name},\39\|v\MG\\{name});{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ but\ the\ edge\ trick}\)\.{\ doesn't\ find\
+the\ op}\)\.{posite\ arc!\\n"});{}$\6
+${}\\{exit}({-}\T{4});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|u>\|v){}$\5
+${}\{{}$\1\6
+${}\|e\MG\\{len}\K\\{mate}(\|e)\MG\\{len}\K\PP\|k;{}$\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"\ \%d:\ \%s\ --\ \%s\\n"},\39\|k,\39\|v\MG\\{name},\39\|u\MG%
+\\{name});{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\|v\MG\\{arcs}\MG\\{prev}\K\|f,\39\|f\MG\\{next}\K\|v\MG\\{arcs}{}$;\C{
+complete the double linking }\6
+\&{if} ${}(\|v\MG\\{deg}\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Graph\ \%s\ has\ an\ iso}\)\.{lated\ vertex\ %
+\%s!\\n"},\39\|g\MG\\{id},\39\|v\MG\\{name});{}$\6
+${}\\{exit}({-}\T{5});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{5}Here's something I might like to use when debugging.
+
+\Y\B\4\X5:Subroutines\X${}\E{}$\6
+\&{void} \\{print\_arcs}(\&{Vertex} ${}{*}\|v){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{Arc} ${}{*}\|a;{}$\7
+${}\\{printf}(\.{"Arcs\ leading\ from\ \%}\)\.{s:\\n"},\39\|v\MG\\{name});{}$\6
+\&{for} ${}(\|a\K\|v\MG\\{arcs}\MG\\{next};{}$ ${}\|a\MG\\{tip};{}$ ${}\|a\K\|a%
+\MG\\{next}){}$\1\5
+${}\\{printf}(\.{"\ \%d\ (to\ \%s)\\n"},\39\|a\MG\\{len},\39\|a\MG\\{tip}\MG%
+\\{name});{}$\2\6
+\4${}\}{}$\2\par
+\A17.
+\U1.\fi
+
+\N{1}{6}The method. Let $G$ be a graph with $n>1$ vertices.
+The basic idea of Smith's algorithm is to generate all spanning trees of~$G$
+in such a way that the first one includes a given {\it near-tree}, namely
+a set of $n-2$ edges that don't contain a cycle. This task is easy if $n=2$:
+We simply list all the edges.
+
+If $n>2$ and if the near-tree is $\{e_1,\ldots,e_{n-2}\}$, we proceed as
+follows: First form the graph $G\cdot e_1$ by shrinking edge~$e_1$ (making its
+endpoints identical). All spanning trees of~$G$ that include~$e_1$ are
+obtained by appending $e_1$ to a spanning tree of $G\cdot e_1$; so we
+proceed recursively to generate all spanning trees of $G\cdot e_1$,
+beginning with the near-tree $\{e_2,\ldots,e_{n-2}\}$. If no such
+trees exist, we stop; in this case $G\cdot e_1$ is not connected,
+so $G$ is not connected and it has no spanning trees.
+Otherwise, suppose the last spanning tree found
+for $G\cdot e_1$ is $f_1\ldots f_{n-2}$. Then we complete our task by
+deleting edge $e_1$ and generating all spanning trees in the resulting
+graph $G\setminus e_1$, starting with the near-tree $\{f_1,\ldots,f_{n-2}\}$.
+
+\fi
+
+\M{7}This program implements the recursion directly by maintaining an array
+of edges $a_1\ldots a_n$. When we enter level~$l$, positions $a_1\ldots
+a_{l-1}$ contain edges to include in the tree, and those edges have
+been shrunk in the current graph. Position~$a_l$ is effectively blank,
+and the remaining positions $a_{l+1}\ldots a_{n-1}$ contain the edges
+of a near-tree that should be part of the next spanning tree generated.
+
+We don't delete an edge that is a ``bridge,'' whose removal
+would disconnect the current graph. When a non-bridge edge \PB{\|e} is deleted
+at
+level~\PB{\|l}, we set \PB{$\\{change\_e}\K\|e$}. If the previously
+found spanning tree was $a_1\ldots a_{n-1}$, the next tree found
+will be $a_1\ldots a_{l-1}a_{l+1}\ldots a_{n-1}e'$ for some new edge~$e'$;
+thus it will differ from its predecessor by removing edge \PB{\\{change\_e}}
+and replacing it with~$e'$.
+
+It's convenient to keep array element $a_l$ in a utility field within
+the vertex array, represented by \PB{\\{aa}(\|l)}. Another such utility field,
+\PB{\\{del}(\|l)}, points to a stack of the edges deleted before coming
+to a bridge; edges on this list are linked together via a \PB{\\{link}} field.
+
+Experienced readers will not be shocked by the fact that this part of
+the program has a \PB{\&{goto}} leading from one loop into another.
+
+\Y\B\4\D$\\{aa}(\|l)$ \5
+$(\|g\MG\\{vertices}+\|l)\MG\|z.{}$\|A\C{ the edge $a_l$ }\par
+\B\4\D$\\{del}(\|l)$ \5
+$(\|g\MG\\{vertices}+\|l)\MG\|y.{}$\|A\C{ the most recent edge deleted on level
+\PB{\|l} }\par
+\B\4\D$\\{link}$ \5
+$\|b.{}$\|A\C{ points from one edge to another }\par
+\Y\B\4\X7:Generate all spanning trees\X${}\E{}$\6
+$\\{change\_e}\K\NULL;{}$\6
+${}\|v\K\|g\MG\\{vertices}{}$;\C{ this instruction needed only if $n=2$ }\6
+\&{for} ${}(\|l\K\T{1};{}$ ${}\|l<\|n-\T{1};{}$ ${}\|l\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{del}(\|l)\K\NULL;{}$\6
+\4\\{enter}:\5
+${}\\{ooo},\39\|e\K\\{aa}(\|l+\T{1}),\39\|u\K\|e\MG\\{tip},\39\|v\K\\{mate}(%
+\|e)\MG\\{tip};{}$\6
+\&{if} ${}(\\{oo},\39\|u\MG\\{deg}>\|v\MG\\{deg}){}$\1\5
+${}\|v\K\|u,\39\|e\K\\{mate}(\|e),\39\|u\K\|e\MG\\{tip};{}$\2\6
+\X10:Shrink \PB{\|e} by changing \PB{\|u} to \PB{\|v}\X;\6
+${}\|o,\39\\{aa}(\|l)\K\|e;{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|o,\39\|e\K\|v\MG\\{arcs}\MG\\{next};{}$ \|o${},\39\|e\MG%
+\\{tip};{}$ \|o${},\39\|e\K\|e\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{aa}(\|l)\K\|e;{}$\6
+\X9:Produce a new spanning tree by changing \PB{\\{change\_e}} to \PB{\|e}\X;\6
+${}\\{change\_e}\K\|e;{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|l\MM;{}$ \|l; ${}\|l\MM){}$\5
+${}\{{}$\1\6
+${}\|e\K\\{aa}(\|l),\39\|u\K\|e\MG\\{tip},\39\|v\K\\{mate}(\|e)\MG\\{tip};{}$\6
+\X11:Unshrink \PB{\|e} by restoring \PB{\|u}\X;\6
+\X12:If \PB{\|e} is not a bridge, delete it, set \PB{$\\{change\_e}\K\|e$}, and
+\PB{\&{goto} \\{enter}}\X;\6
+\X15:Undelete all edges deleted since entering level \PB{\|l}\X;\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{8}\B\X3:Local variables\X${}\mathrel+\E{}$\6
+\&{register} \&{int} \|l;\C{ the current level }\6
+\&{Arc} ${}{*}\\{change\_e}{}$;\C{ edge that may change next }\par
+\fi
+
+\M{9}\B\X9:Produce a new spanning tree by changing \PB{\\{change\_e}} to \PB{%
+\|e}\X${}\E{}$\6
+$\\{count}\PP;{}$\6
+\&{if} (\\{verbose})\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{change\_e}\V\\{extraverbose}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\%.15g:"},\39\\{count});{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\|n;{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\.{"\ \%d"},\39\\{aa}(\|k)\MG\\{len});{}$\2\6
+\&{if} ${}(\\{extraverbose}\W\\{change\_e}){}$\1\5
+${}\\{printf}(\.{"\ (-\%d+\%d)\\n"},\39\\{change\_e}\MG\\{len},\39\|e\MG%
+\\{len});{}$\2\6
+\&{else}\1\5
+\\{printf}(\.{"\\n"});\2\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\\{printf}(\.{"\%.15g:\ -\%d+\%d\\n"},\39\\{count},\39\\{change\_e}\MG%
+\\{len},\39\|e\MG\\{len});{}$\2\6
+\4${}\}{}$\2\par
+\U7.\fi
+
+\M{10}To shrink an edge between \PB{\|u} and \PB{\|v}, we insert \PB{\|u}'s
+adjacency list
+into \PB{\|v}'s, changing all references to \PB{\|u} into references to~\PB{%
+\|v};
+those references occur in \PB{\\{tip}} fields of mates of the arcs in
+\PB{\|u}'s list.
+
+We also delete all former edges between \PB{\|u} and \PB{\|v},
+since those would otherwise become loops. Those former edges are
+linked together via their \PB{\\{link}} fields, so that we can restore them
+later.
+
+Note that \PB{$\|e\MG\\{tip}\K\|u$}, so \PB{\|e} appears in the \PB{\|v} list
+while \PB{\\{mate}(\|e)} appears
+in the \PB{\|u} list.
+
+\Y\B\4\D$\\{delete}(\|e)$ \5
+$\\{ee}\K\|e,\39\\{oooo},\39\\{ee}\MG\\{prev}\MG\\{next}\K\\{ee}\MG\\{next},\39%
+\\{ee}\MG\\{next}\MG\\{prev}\K\\{ee}\MG{}$\\{prev}\par
+\Y\B\4\X10:Shrink \PB{\|e} by changing \PB{\|u} to \PB{\|v}\X${}\E{}$\6
+$\\{oo},\39\|k\K\|u\MG\\{deg}+\|v\MG\\{deg};{}$\6
+\&{for} ${}(\|o,\39\|f\K\|u\MG\\{arcs}\MG\\{next},\39\\{ff}\K\NULL;{}$ \|o${},%
+\39\|f\MG\\{tip};{}$ \|o${},\39\|f\K\|f\MG\\{next}){}$\1\6
+\&{if} ${}(\|f\MG\\{tip}\E\|v){}$\1\5
+${}\\{delete}(\|f),\39\\{delete}(\\{mate}(\|f)),\39\|k\MRL{-{\K}}\T{2},\39\|o,%
+\39\|f\MG\\{link}\K\\{ff},\39\\{ff}\K\|f;{}$\2\6
+\&{else}\1\5
+${}\|o,\39\\{mate}(\|f)\MG\\{tip}\K\|v;{}$\2\2\6
+${}\\{oo},\39\|e\MG\\{link}\K\\{ff},\39\|v\MG\\{deg}\K\|k;{}$\6
+\&{if} (\\{extraverbose})\1\5
+${}\\{printf}(\.{"level\ \%d:\ Shrinking}\)\.{\ \%d;\ now\ \%s\ has\ degr}\)%
+\.{ee\ \%d\\n"},\39\|l,\39\|e\MG\\{len},\39\|v\MG\\{name},\39\|v\MG\\{deg});{}$%
+\2\6
+${}\|o,\39\\{ff}\K\|v\MG\\{arcs}{}$;\C{ now \PB{$\|f\K\|u\MG\\{arcs}$}; we will
+merge the two lists }\6
+${}\\{oooo},\39\|f\MG\\{prev}\MG\\{next}\K\\{ff}\MG\\{next},\39\\{ff}\MG%
+\\{next}\MG\\{prev}\K\|f\MG\\{prev};{}$\6
+${}\\{ooo},\39\|f\MG\\{next}\MG\\{prev}\K\\{ff},\39\\{ff}\MG\\{next}\K\|f\MG%
+\\{next}{}$;\par
+\U7.\fi
+
+\M{11}Unshrinking uses the principle of ``dancing links,'' whereby we exploit
+the fact that previously deleted nodes still have good information in
+their \PB{\\{prev}} and \PB{\\{next}} fields, provided that we undelete in
+reverse order.
+
+\Y\B\4\D$\\{undelete}(\|e)$ \5
+$\\{ee}\K\|e,\39\\{oooo},\39\\{ee}\MG\\{next}\MG\\{prev}\K\\{ee},\39\\{ee}\MG%
+\\{prev}\MG\\{next}\K{}$\\{ee}\par
+\Y\B\4\X11:Unshrink \PB{\|e} by restoring \PB{\|u}\X${}\E{}$\6
+$\\{oo},\39\|f\K\|u\MG\\{arcs},\39\\{ff}\K\|v\MG\\{arcs};{}$\6
+${}\\{ooo},\39\\{ff}\MG\\{next}\K\|f\MG\\{prev}\MG\\{next};{}$\6
+${}\|o,\39\\{ff}\MG\\{next}\MG\\{prev}\K\\{ff};{}$\6
+${}\\{ooo},\39\|f\MG\\{prev}\MG\\{next}\K\|f,\39\|f\MG\\{next}\MG\\{prev}\K%
+\|f;{}$\6
+\&{for} ${}(\|f\K\|f\MG\\{prev};{}$ \|o${},\39\|f\MG\\{tip};{}$ \|o${},\39\|f\K%
+\|f\MG\\{prev}){}$\1\5
+${}\|o,\39\\{mate}(\|f)\MG\\{tip}\K\|u;{}$\2\6
+\&{for} ${}(\\{oo},\39\|f\K\|e\MG\\{link},\39\|k\K\|v\MG\\{deg};{}$ \|f; %
+\|o${},\39\|f\K\|f\MG\\{link}){}$\1\5
+${}\|k\MRL{+{\K}}\T{2},\39\\{undelete}(\\{mate}(\|f)),\39\\{undelete}(\|f);{}$%
+\2\6
+${}\\{oo},\39\|v\MG\\{deg}\K\|k-\|u\MG\\{deg};{}$\6
+\&{if} (\\{extraverbose})\1\5
+${}\\{printf}(\.{"level\ \%d:\ Unshrinki}\)\.{ng\ \%d;\ now\ \%s\ has\ de}\)%
+\.{gree\ \%d\\n"},\39\|l,\39\|e\MG\\{len},\39\|v\MG\\{name},\39\|v\MG%
+\\{deg}){}$;\2\par
+\U7.\fi
+
+\M{12}For bridge detection, we try a heuristic that often gives a quick answer
+when the graph is sparse (namely, to test if \PB{\|u} has degree~1).
+Or if \PB{$\|e\MG\\{link}\MG\\{link}\I\NULL$}, there was another edge between %
+\PB{\|u} and \PB{\|v}.
+Otherwise we resort to brute-force breadth-first, testing whether
+one can get from \PB{\|u} to \PB{\|v} without \PB{\|e}.
+
+When I put this algorithm in a book, I'll probably leave out the
+two quick-try heuristics, in order to keep the algorithm shorter;
+breadth-first search will resolve both cases without too much additional
+calculation. But for now I'm trying to see how useful they are.
+
+\Y\B\4\D$\\{bfs}$ \5
+$\|v.{}$\|V\C{ link for the breadth-first search: nonnull if vertex seen }\par
+\Y\B\4\X12:If \PB{\|e} is not a bridge, delete it, set \PB{$\\{change\_e}\K%
+\|e$}, and \PB{\&{goto} \\{enter}}\X${}\E{}$\6
+\&{if} ${}(\|o,\39\|u\MG\\{deg}\E\T{1}){}$\5
+${}\{{}$\1\6
+\&{if} (\\{extraverbose})\1\5
+${}\\{printf}(\.{"level\ \%d:\ \%d\ is\ a\ b}\)\.{ridge\ with\ endpoint\ }\)\.{%
+\%s\\n"},\39\|l,\39\|e\MG\\{len},\39\|u\MG\\{name});{}$\2\6
+\&{goto} \\{bridge};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|o,\39\|e\MG\\{link}\MG\\{link}){}$\5
+${}\{{}$\1\6
+\&{if} (\\{extraverbose})\1\5
+${}\\{printf}(\.{"level\ \%d:\ \%d\ is\ par}\)\.{allel\ to\ \%d\\n"},\39\|l,\39%
+\|e\MG\\{len},\39\|e\MG\\{link}\MG\\{len}\I\|e\MG\\{len}\?\|e\MG\\{link}\MG%
+\\{len}:\|e\MG\\{link}\MG\\{link}\MG\\{len});{}$\2\6
+\&{goto} \\{nonbridge};\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|o,\39\|u\MG\\{bfs}\K\|v,\39\|w\K\|u;{}$ ${}\|u\I\|v;{}$ \|o${},%
+\39\|u\K\|u\MG\\{bfs}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\\{oo},\39\|f\K\|u\MG\\{arcs}\MG\\{next};{}$ \|o${},\39\|f\MG%
+\\{tip};{}$ \|o${},\39\|f\K\|f\MG\\{next}){}$\1\6
+\&{if} ${}(\|o,\39\|f\MG\\{tip}\MG\\{bfs}\E\NULL){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|f\MG\\{tip}\E\|v){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|f\I\\{mate}(\|e)){}$\1\5
+\X13:Nullify all \PB{\\{bfs}} links and \PB{\&{goto} \\{nonbridge}}\X;\2\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\\{oo},\39\|f\MG\\{tip}\MG\\{bfs}\K\|v,\39\|w\MG\\{bfs}\K\|f\MG\\{tip},\39%
+\|w\K\|f\MG\\{tip};{}$\2\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\6
+\&{if} (\\{extraverbose})\1\5
+${}\\{printf}(\.{"level\ \%d:\ \%d\ is\ a\ b}\)\.{ridge\\n"},\39\|l,\39\|e\MG%
+\\{len});{}$\2\6
+\&{for} ${}(\|o,\39\|u\K\|e\MG\\{tip};{}$ ${}\|u\I\|v;{}$ \|o${},\39\|u\MG%
+\\{bfs}\K\NULL,\39\|u\K\|w){}$\1\5
+${}\|o,\39\|w\K\|u\MG\\{bfs};{}$\2\6
+\&{goto} \\{bridge};\6
+\4\\{nonbridge}:\5
+${}\\{change\_e}\K\|e;{}$\6
+\X14:Delete \PB{\|e} and \PB{\&{goto} \\{enter}}\X;\6
+\4\\{bridge}:\par
+\U7.\fi
+
+\M{13}\B\X13:Nullify all \PB{\\{bfs}} links and \PB{\&{goto} \\{nonbridge}}%
+\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|o,\39\|u\K\|e\MG\\{tip};{}$ ${}\|u\I\|v;{}$ \|o${},\39\|u\MG%
+\\{bfs}\K\NULL,\39\|u\K\|w){}$\1\5
+${}\|o,\39\|w\K\|u\MG\\{bfs};{}$\2\6
+\&{goto} \\{nonbridge};\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{14}\B\X14:Delete \PB{\|e} and \PB{\&{goto} \\{enter}}\X${}\E{}$\6
+\&{if} (\\{extraverbose})\1\5
+${}\\{printf}(\.{"level\ \%d:\ deleting\ }\)\.{\%d\\n"},\39\|l,\39\|e\MG%
+\\{len});{}$\2\6
+${}\\{ooo},\39\|e\MG\\{link}\K\\{del}(\|l),\39\\{del}(\|l)\K\|e;{}$\6
+${}\\{delete}(\|e),\39\\{delete}(\\{mate}(\|e)),\39\\{oo},\39\|e\MG\\{tip}\MG%
+\\{deg}\MM,\39\|v\MG\\{deg}\MM;{}$\6
+\&{goto} \\{enter};\par
+\U12.\fi
+
+\M{15}\B\X15:Undelete all edges deleted since entering level \PB{\|l}\X${}\E{}$%
+\6
+\&{for} ${}(\|o,\39\|e\K\\{del}(\|l);{}$ \|e; \|o${},\39\|e\K\|e\MG\\{link}){}$%
+\5
+${}\{{}$\1\6
+${}\\{oooo},\39\\{mate}(\|e)\MG\\{tip}\MG\\{deg}\PP,\39\|e\MG\\{tip}\MG\\{deg}%
+\PP,\39\\{undelete}(\\{mate}(\|e)),\39\\{undelete}(\|e);{}$\6
+\&{if} (\\{extraverbose})\1\5
+${}\\{printf}(\.{"undeleting\ \%d\\n"},\39\|e\MG\\{len});{}$\2\6
+\4${}\}{}$\2\par
+\U7.\fi
+
+\N{1}{16}Getting started. We're done, except for one embarrassing detail:
+It is necessary to prime the pump by setting up the original
+near-tree $a_2\ldots a_{n-1}$. For this purpose I'll use
+depth-first search, since it seems a bit faster than the alternatives.
+And I might as well check that the graph is connected.
+
+\Y\B\4\D$\\{sentinel}$ \5
+$(\|g\MG\\{vertices}{}$)\par
+\Y\B\4\X16:Initialize the algorithm\X${}\E{}$\6
+\&{for} ${}(\|v\K\|g\MG\\{vertices}+\T{1};{}$ ${}\|v<\|g\MG\\{vertices}+\|n;{}$
+${}\|v\PP){}$\1\5
+${}\|v\MG\\{bfs}\K\NULL;{}$\2\6
+\&{for} ${}(\|k\K\|n-\T{1},\39\|o,\39\|w\K\|v\K\|g\MG\\{vertices},\39\|w\MG%
+\\{bfs}\K\\{sentinel};{}$  ; \|o${},\39\|v\K\|w,\39\|w\K\|w\MG\\{bfs}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\\{oo},\39\|e\K\|v\MG\\{arcs}\MG\\{next};{}$ \|o${},\39\|u\K\|e\MG%
+\\{tip};{}$ \|o${},\39\|e\K\|e\MG\\{next}){}$\1\6
+\&{if} ${}(\|o,\39\|u\MG\\{bfs}\E\NULL){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{aa}(\|k)\K\|e,\39\|k\MM;{}$\6
+\&{if} ${}(\|k\E\T{0}){}$\1\5
+\&{goto} \\{connected};\2\6
+${}\|o,\39\|u\MG\\{bfs}\K\|w,\39\|w\K\|u;{}$\6
+\4${}\}{}$\2\2\6
+\&{if} ${}(\|w\E\\{sentinel}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"Oops,\ the\ graph\ isn}\)\.{'t\ connected!\\n"});\5
+\\{exit}(\T{0});\6
+\4\\{connected}:\6
+\&{for} ${}(\|u\K\|g\MG\\{vertices};{}$ ${}\|u<\|g\MG\\{vertices}+\|n;{}$ ${}%
+\|u\PP){}$\1\5
+${}\|o,\39\|u\MG\\{bfs}\K\NULL;{}$\2\6
+\&{if} (\\{extraverbose})\5
+${}\{{}$\1\6
+\\{printf}(\.{"Depth-first\ search\ }\)\.{yields\ the\ following}\)\.{\
+spanning\ tree:\\n"});\6
+\\{print\_a}(\|g);\6
+\4${}\}{}$\2\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"(\%.15g\ mems\ for\ ini}\)\.{tialization)\\n"},\39%
+\\{mems}){}$;\2\par
+\U1.\fi
+
+\M{17}One final debugging aid.
+
+\Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_a}(\&{register} \&{Graph} ${}{*}\|g){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k;\7
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\|g\MG\|n;{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\.{"\ a\%d=\%d\ (\%s\ --\ \%s)\\}\)\.{n"},\39\|k,\39\\{aa}(\|k)%
+\MG\\{len},\39\\{aa}(\|k)\MG\\{tip}\MG\\{name},\39\\{mate}(\\{aa}(\|k))\MG%
+\\{tip}\MG\\{name});{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{18}Index.
+
+\fi
+
+
+\inx
+\fin
+\con

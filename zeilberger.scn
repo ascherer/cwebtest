@@ -1,0 +1,20 @@
+\I\X14:Check the inverse bijection\X
+\U2.
+\I\X13:Check the pruning order and Strahler number\X
+\U2.
+\I\X9:Do Zeilberger's Case 2\X
+\U8.
+\I\X10:Do Zeilberger's Case 3\X
+\U8.
+\I\X6:Find the binary tree \PB{$(\\{ll},\\{rr})$} corresponding to the forest %
+\PB{$(\|l,\|r)$}\X
+\U2.
+\I\X3:Move to the next forest \PB{$(\|l,\|r)$}, or \PB{\&{break}}\X
+\U2.
+\I\X5, 8, 12, 15:Subroutines\X
+\U2.
+\I\X17:Undo Zeilberger's Case 2\X
+\U15.
+\I\X16:Undo Zeilberger's Case 3\X
+\U15.
+

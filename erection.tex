@@ -1,0 +1,346 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. This is a transcription of my ``random matroid'' program in %
+\#P72.
+
+Standard input contains a sequence of integers. The first of these is
+the universe size, $n$, which should be at most 16.
+Then comes, for $r=1$, 2, \dots, a list of sets that are stipulated to have
+rank $\le r$. Sets are specified in hexadecimal notation, and each
+list is terminated by 0. Thus, the $\pi$-based example in my paper
+corresponds to the standard input
+$$\.{10 1a 222 64 128 288 10c}$$
+because $\PB{\T{\^1a}}=2^4+2^3+2^1$ represents the set $\{1,3,4\}$, and
+\PB{\T{\^222}} represents $\{1,5,9\}$, etc. The program appends zeros
+to the data on standard input if necessary, so trailing zeros can
+be omitted. Similarly, the standard input
+$$\.{5 7 0 1e}$$
+specifies a five-point matroid in
+which $\{0,1,2\}$ has rank $\le2$ and $\{1,2,3,4\}$ has rank~$\le3$.
+
+\Y\B\4\D$\\{nmax}$ \5
+\T{16}\C{ to go higher, extend \PB{\\{print\_set}} to larger-than-hex digits }%
+\par
+\B\4\D$\\{lmax}$ \5
+\T{25742}\C{ $2({16\choose8}+1)$, a safe upper bound on list size }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\&{int} \|n;\C{ number of elements in the universe }\6
+\&{int} \\{mask};\C{ $2^n-1$ }\6
+\&{int} ${}\|S[\\{lmax}+\T{1}],{}$ ${}\|L[\\{lmax}+\T{1}]{}$;\C{ list memory }\6
+\&{int} \|r;\C{ the current rank }\6
+\&{int} \|h;\C{ head of circular list of closed sets for rank \PB{\|r} }\6
+\&{int} \\{nh};\C{ head of circular list being formed for rank \PB{$\|r+\T{1}$}
+}\6
+\&{int} \\{avail};\C{ beginning the list of available space }\6
+\&{int} \\{unused};\C{ the first unused slot in \PB{\|S} and \PB{\|L} arrays }\6
+\&{int} \|x;\C{ a set used to communicate with the \PB{\\{insert}} routine }\6
+\&{int} ${}\\{rank}[\T{1}\LL\\{nmax}]{}$;\C{ $\rm 100+cardinality$, or assigned
+rank }\7
+\X8:Subroutines\X\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k;\7
+\&{if} ${}(\\{scanf}(\.{"\%d"},\39{\AND}\|n)\I\T{1}\V\|n>\T{16}\V\|n<\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ I\ can't\ deal}\)\.{\ with\ a\
+universe\ of\ }\)\.{size\ \%d.\\n"},\39\|n);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+${}\\{mask}\K(\T{1}\LL\|n)-\T{1};{}$\6
+\X2:Set initial contents of \PB{\\{rank}} table\X;\6
+\X3:Initialize list memory to available\X;\6
+${}\\{rank}[\T{0}]\K\T{0},\39\|r\K\T{0};{}$\6
+\&{while} ${}(\\{rank}[\\{mask}]>\|r){}$\1\5
+\X4:Pass from rank $r$ to $r+1$\X;\2\6
+\\{print\_circuits}(\,);\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Set initial contents of \PB{\\{rank}} table\X${}\E{}$\6
+$\|k\K\T{1};{}$\6
+${}\\{rank}[\T{0}]\K\T{100};{}$\6
+\&{while} ${}(\|k\Z\\{mask}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|k;{}$ ${}\|i\PP){}$\1\5
+${}\\{rank}[\|k+\|i]\K\\{rank}[\|i]+\T{1};{}$\2\6
+${}\|k\K\|k+\|k;{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}The published paper had a comparatively inefficient algorithm here;
+it initialized thousands of links that usually remained unused.
+
+\Y\B\4\X3:Initialize list memory to available\X${}\E{}$\6
+$\|L[\T{1}]\K\T{2};{}$\6
+${}\|L[\T{2}]\K\T{1};{}$\6
+${}\|S[\T{2}]\K\T{0};{}$\6
+${}\|h\K\T{1}{}$;\C{ list containing the empty set }\6
+${}\\{unused}\K\T{3}{}$;\par
+\U1.\fi
+
+\M{4}\B\X4:Pass from rank $r$ to $r+1$\X${}\E{}$\6
+${}\{{}$\1\6
+\X5:Create empty list\X;\6
+\\{generate}(\,);\6
+\&{if} (\|r)\1\5
+\\{enlarge}(\,);\2\6
+\X6:Return list \PB{\|h} to available storage\X;\6
+${}\|r\PP;{}$\6
+${}\|h\K\\{nh};{}$\6
+\\{sort}(\,);\C{ optional }\6
+\\{print\_list}(\|h);\6
+\X7:Assign rank to sets and print independent ones\X;\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{5}\B\X5:Create empty list\X${}\E{}$\6
+$\\{nh}\K\\{avail};{}$\6
+\&{if} (\\{nh})\1\5
+${}\\{avail}\K\|L[\\{nh}];{}$\2\6
+\&{else}\1\5
+${}\\{nh}\K\\{unused}\PP;{}$\2\6
+${}\|L[\\{nh}]\K\\{nh}{}$;\par
+\U4.\fi
+
+\M{6}\B\X6:Return list \PB{\|h} to available storage\X${}\E{}$\6
+\&{for} ${}(\|j\K\|h;{}$ ${}\|L[\|j]\I\|h;{}$ ${}\|j\K\|L[\|j]){}$\1\5
+;\2\6
+${}\|L[\|j]\K\\{avail};{}$\6
+${}\\{avail}\K\|h{}$;\par
+\U4.\fi
+
+\M{7}\B\X7:Assign rank to sets and print independent ones\X${}\E{}$\6
+$\\{printf}(\.{"Independent\ sets\ fo}\)\.{r\ rank\ \%d:"},\39\|r);{}$\6
+\&{for} ${}(\|j\K\|L[\|h];{}$ ${}\|j\I\|h;{}$ ${}\|j\K\|L[\|j]){}$\1\5
+\\{mark}(\|S[\|j]);\2\6
+\\{printf}(\.{"\\n"});\par
+\U4.\fi
+
+\M{8}The \PB{\\{generate}} procedure inserts minimal closed sets for rank \PB{$%
+\|r+\T{1}$}
+into a circular list headed by \PB{\\{nh}}. (It corresponds to ``Step 2'' in
+the published algorithm.)
+
+\Y\B\4\X8:Subroutines\X${}\E{}$\6
+\&{void} \\{insert}(\&{void});\C{ details coming soon }\7
+\&{void} \\{generate}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|t${},{}$ \|v${},{}$ \|y${},{}$ \|j${},{}$ \|k;\7
+\&{for} ${}(\|j\K\|L[\|h];{}$ ${}\|j\I\|h;{}$ ${}\|j\K\|L[\|j]){}$\5
+${}\{{}$\1\6
+${}\|y\K\|S[\|j]{}$;\C{ a closed set of rank \PB{\|r} }\6
+${}\|t\K\\{mask}-\|y;{}$\6
+\X9:Find all sets in list \PB{\\{nh}} that already contain \PB{\|y} and remove
+excess elements from \PB{\|t}\X;\6
+\X10:Insert $y\cup a$ for each $a\in t$\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\As11, 12, 13, 14, 15, 16, 17\ETs18.
+\U1.\fi
+
+\M{9}\B\X9:Find all sets in list \PB{\\{nh}} that already contain \PB{\|y} and
+remove excess elements from \PB{\|t}\X${}\E{}$\6
+\&{for} ${}(\|k\K\|L[\\{nh}];{}$ ${}\|k\I\\{nh};{}$ ${}\|k\K\|L[\|k]){}$\1\6
+\&{if} ${}((\|S[\|k]\AND\|y)\E\|y){}$\1\5
+${}\|t\MRL{\AND{\K}}\CM\|S[\|k]{}$;\2\2\par
+\U8.\fi
+
+\M{10}\B\X10:Insert $y\cup a$ for each $a\in t$\X${}\E{}$\6
+\&{while} (\|t)\5
+${}\{{}$\1\6
+${}\|x\K\|y\OR(\|t\AND{-}\|t);{}$\6
+\\{insert}(\,);\C{ insert \PB{\|x} into \PB{\\{nh}}, possibly enlarging \PB{%
+\|x} }\6
+${}\|t\MRL{\AND{\K}}\CM\|x;{}$\6
+\4${}\}{}$\2\par
+\U8.\fi
+
+\M{11}The following key procedure basically inserts the set \PB{\|x} into list %
+\PB{\\{nh}}.
+But it augments \PB{\|x} if necessary (and deletes existing entries of the
+list)
+so that no two entries have an intersection of rank greater than~\PB{\|r}.
+Thus it incorporates the idea of ``Step 4,'' but it is more efficient than a
+brute force implementation of that step.
+
+\Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{insert}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k;\7
+${}\|j\K\\{nh};{}$\6
+\4\\{store}:\5
+${}\|S[\\{nh}]\K\|x;{}$\6
+\4\\{loop}:\5
+${}\|k\K\|j;{}$\6
+\4\\{continu}:\5
+${}\|j\K\|L[\|k];{}$\6
+\&{if} ${}(\\{rank}[\|S[\|j]\AND\|x]\Z\|r){}$\1\5
+\&{goto} \\{loop};\2\6
+\&{if} ${}(\|j\I\\{nh}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|x\E(\|x\OR\|S[\|j])){}$\5
+${}\{{}$\C{ remove from list and continue }\1\6
+${}\|L[\|k]\K\|L[\|j],\39\|L[\|j]\K\\{avail},\39\\{avail}\K\|j;{}$\6
+\&{goto} \\{continu};\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\C{ augment \PB{\|x} and go around again }\1\6
+${}\|x\MRL{{\OR}{\K}}\|S[\|j],\39\\{nh}\K\|j;{}$\6
+\&{goto} \\{store};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\|j\K\\{avail};{}$\6
+\&{if} (\|j)\1\5
+${}\\{avail}\K\|L[\|j];{}$\2\6
+\&{else}\1\5
+${}\|j\K\\{unused}\PP;{}$\2\6
+${}\|L[\|j]\K\|L[\\{nh}];{}$\6
+${}\|L[\\{nh}]\K\|j;{}$\6
+${}\|S[\|j]\K\|x;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{12}The \PB{\\{enlarge}} procedure inserts sets that are read from standard
+input
+until encountering an empty set.
+(It corresponds to ``Step~3.'')
+
+\Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{enlarge}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+${}\|x\K\T{0};{}$\6
+${}\\{scanf}(\.{"\%x"},\39{\AND}\|x);{}$\6
+\&{if} ${}(\R\|x){}$\1\5
+\&{return};\2\6
+\&{if} ${}(\\{rank}[\|x]>\|r){}$\1\5
+\\{insert}(\,);\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{13}We don't output a set as a hexadecimal number according to the
+convention used on standard input; instead, we print an increasing sequence
+of hexadecimal digits that name the actual set elements.
+For example, the set that was input as \.{1a} would be output as \.{134}.
+
+\Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_set}(\&{int} \|t)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k;\7
+\\{printf}(\.{"\ "});\6
+\&{for} ${}(\|j\K\T{1},\39\|k\K\T{0};{}$ ${}\|j\Z\|t;{}$ ${}\|j\MRL{{\LL}{\K}}%
+\T{1},\39\|k\PP){}$\1\6
+\&{if} ${}(\|t\AND\|j){}$\1\5
+${}\\{printf}(\.{"\%x"},\39\|k);{}$\2\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{14}\B\X8:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_list}(\&{int} \|h)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j;\7
+${}\\{printf}(\.{"Closed\ sets\ for\ ran}\)\.{k\ \%d:"},\39\|r);{}$\6
+\&{for} ${}(\|j\K\|L[\|h];{}$ ${}\|j\I\|h;{}$ ${}\|j\K\|L[\|j]){}$\1\5
+\\{print\_set}(\|S[\|j]);\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\fi
+
+\M{15}The subroutine \PB{\\{mark}(\|m)} sets $\PB{\\{rank}}[m']=r$ for all
+subsets $m'\subseteq m$
+whose rank is not already $\le r$, and outputs $m'$ if it is independent
+(that is, if its rank equals its cardinality).
+
+\Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{mark}(\&{int} \|m)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|t${},{}$ \|v;\7
+\&{if} ${}(\\{rank}[\|m]>\|r){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{rank}[\|m]\E\T{100}+\|r){}$\1\5
+\\{print\_set}(\|m);\2\6
+${}\\{rank}[\|m]\K\|r;{}$\6
+\&{for} ${}(\|t\K\|m;{}$ \|t; ${}\|t\K\|v){}$\5
+${}\{{}$\1\6
+${}\|v\K\|t\AND(\|t-\T{1});{}$\6
+${}\\{mark}(\|m-\|t+\|v);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{16}I've added a \PB{\\{tl}} array to the data structure, to speed up and
+shorten
+this routine.
+
+\Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{sort}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k;\6
+\&{int} ${}\\{hd}[\T{101}+\\{nmax}],{}$ ${}\\{tl}[\T{101}+\\{nmax}];{}$\7
+\&{for} ${}(\|i\K\T{100};{}$ ${}\|i\Z\T{100}+\|n;{}$ ${}\|i\PP){}$\1\5
+${}\\{hd}[\|i]\K{-}\T{1};{}$\2\6
+${}\|j\K\|L[\|h];{}$\6
+${}\|L[\|h]\K\|h;{}$\6
+\&{while} ${}(\|j\I\|h){}$\5
+${}\{{}$\1\6
+${}\|i\K\\{rank}[\|S[\|j]];{}$\6
+${}\|k\K\|L[\|j];{}$\6
+${}\|L[\|j]\K\\{hd}[\|i];{}$\6
+\&{if} ${}(\|L[\|j]<\T{0}){}$\1\5
+${}\\{tl}[\|i]\K\|j;{}$\2\6
+${}\\{hd}[\|i]\K\|j;{}$\6
+${}\|j\K\|k;{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|i\K\T{100};{}$ ${}\|i\Z\T{100}+\|n;{}$ ${}\|i\PP){}$\1\6
+\&{if} ${}(\\{hd}[\|i]\G\T{0}){}$\1\5
+${}\|L[\\{tl}[\|i]]\K\|L[\|h],\39\|L[\|h]\K\\{hd}[\|i];{}$\2\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{17}The parameter \PB{\\{card}} is 100 plus the cardinality of \PB{\|m}
+in the following subroutine.
+
+\Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{unmark}(\&{int} \|m${},\39{}$\&{int} \\{card})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \|t${},{}$ \|v;\7
+\&{if} ${}(\\{rank}[\|m]<\T{100}){}$\5
+${}\{{}$\1\6
+${}\\{rank}[\|m]\K\\{card};{}$\6
+\&{for} ${}(\|t\K\\{mask}-\|m;{}$ \|t; ${}\|t\K\|v){}$\5
+${}\{{}$\1\6
+${}\|v\K\|t\AND(\|t-\T{1});{}$\6
+${}\\{unmark}(\|m+\|t-\|v,\39\\{card}+\T{1});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{18}\B\X8:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_circuits}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|k;\7
+\\{printf}(\.{"The\ circuits\ are:"});\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\\{mask};{}$ ${}\|k\MRL{+{\K}}\|k){}$\1\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|k;{}$ ${}\|i\PP){}$\1\6
+\&{if} ${}(\\{rank}[\|k+\|i]\E\\{rank}[\|i]){}$\5
+${}\{{}$\1\6
+${}\\{print\_set}(\|k+\|i);{}$\6
+${}\\{unmark}(\|k+\|i,\39\\{rank}[\|i]+\T{101});{}$\6
+\4${}\}{}$\2\2\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{19}Index.
+
+\fi
+
+
+\inx
+\fin
+\con

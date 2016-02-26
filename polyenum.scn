@@ -1,0 +1,69 @@
+\I\X42:Canonize the new pattern based on adjacent and interior occupied cells\X
+\U28.
+\I\X41:Canonize the new pattern based on adjacent occupied cells\X
+\U27.
+\I\X43:Canonize the new pattern based on all occupied cells\X
+\Us29\ET30.
+\I\X49:Compute\X
+\U1.
+\I\X39:Determine the cost of the new pattern\X
+\Us41, 42\ETs43.
+\I\X38:Establish the \PB{\\{backpat}} array\X
+\U39.
+\I\X36:Establish the \PB{\\{newpat}} array\X
+\U39.
+\I\X33:Find the new classes, or \PB{\&{goto} \\{done}}\X
+\U41.
+\I\X32:Find the proper \PB{\\{leftbound}} and \PB{\\{rightbound}}\X
+\Us41\ET42.
+\I\X27:Generate all successors to \PB{\|p}\X
+\U49.
+\I\X6, 13, 14, 18, 21, 31, 34, 37, 40, 48, 51, 58, 63:Global variables\X
+\U1.
+\I\X19, 24, 55:Initialize\X
+\U1.
+\I\X16:Insert a new pattern into \PB{\\{patt\_table}} and return\X
+\U15.
+\I\X44:Insert the new pattern into the successor list\X
+\Us27, 28, 29\ETs30.
+\I\X46:List also the null successor, if appropriate\X
+\U27.
+\I\X20, 23, 45:Local variables\X
+\U1.
+\I\X25:Move to the next valid pattern of adjacent cells, or \PB{\&{break}}\X
+\U27.
+\I\X26:Move up to the next valid setting\X
+\Us25\ET27.
+\I\X50:Output all transitions from \PB{\|p}\X
+\U49.
+\I\X17:Pack and hash the \PB{\\{key}} from \PB{\|a} and \PB{\\{len}}\X
+\U15.
+\I\X47:Place the initial slice corresponding to the binary number \PB{\|k}\X
+\U7.
+\I\X7:Place the initial slices\X
+\U49.
+\I\X62:Print the results\X
+\U1.
+\I\X61:Record a transition to \PB{\|s}\X
+\U50.
+\I\X57:Record an initial transition to \PB{\\{newpat}} with degree \PB{%
+\\{mult}}\X
+\U47.
+\I\X56:Record the arrival of a new \PB{\|m}\X
+\U49.
+\I\X60:Record \PB{\|p} as the current predecessor\X
+\U50.
+\I\X29:Run through all patterns of nonadjacent cells at the left\X
+\U28.
+\I\X30:Run through all patterns of nonadjacent cells at the right\X
+\U29.
+\I\X28:Run through all patterns of nonadjacent cells that might be relevant\X
+\U27.
+\I\X4:Scan the command line\X
+\U1.
+\I\X2, 5, 15, 35, 52, 53, 54, 59:Subroutines\X
+\U1.
+\I\X10, 11, 12:Type definitions\X
+\U1.
+\I\X22:Unpack and massage the pattern \PB{$\|p\MG\\{key}$}\X
+\U27.

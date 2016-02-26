@@ -1,0 +1,54 @@
+\I\X27:Blacken the top $\lfloor s\rfloor$ pixels of the dot\X
+\U24.
+\I\X33:Compute the answer\X
+\U1.
+\I\X22:Distribute the error to dot neighbors\X
+\U21.
+\I\X20:Distribute the error to near neighbors\X
+\U18.
+\I\X24:Do ARIES\X
+\U33.
+\I\X12:Do Floyd-Steinberg\X
+\U33.
+\I\X18:Do dot diffusion\X
+\U33.
+\I\X15:Do ordered dither\X
+\U33.
+\I\X21:Do smooth dot diffusion\X
+\U33.
+\I\X5:Generate and print the base matrix, if any\X
+\U1.
+\I\X6, 8, 14, 16, 19, 26:Global variables\X
+\U1.
+\I\X3:Input the image\X
+\U1.
+\I\X11:Install the vertices and arcs of the control graph\X
+\U5.
+\I\X30:Output the header of the EPS file\X
+\U29.
+\I\X31:Output the image\X
+\U29.
+\I\X32:Output the trailer of the EPS file\X
+\U29.
+\I\X28:Print ARIES lossage\X
+\U34.
+\I\X17:Print accumulated lossage\X
+\U34.
+\I\X23:Print baronial lossage\X
+\U34.
+\I\X13:Print boundary leakage and extreme values\X
+\U34.
+\I\X34:Print relevant statistics\X
+\U1.
+\I\X10:Print the board\X
+\U5.
+\I\X2:Scan the command line, give help if necessary\X
+\U1.
+\I\X9:Set up the board for dot diffusion\X
+\U5.
+\I\X4:Sharpen if requested\X
+\U1.
+\I\X29:Spew out the answers\X
+\U1.
+\I\X7, 25:Subroutines\X
+\U1.

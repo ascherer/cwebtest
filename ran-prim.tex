@@ -1,0 +1,104 @@
+\input cwebmac
+\datethis
+
+
+\N{1}{1}Primitive sorting networks at random. This program is a quick-and-dirty
+implementation of the random process studied in exercise 5.3.4--40:
+Start with the permutation $n\,\ldots\,2\,1$ and
+randomly interchange adjacent elements that are out of order,
+until reaching $1\,2\,\ldots n$. I~want to know if the
+upper bound of $4n^2$ steps, proved in that exercise, is optimum.
+
+This Monte Carlo program computes a number $c$ such that $c(n-1)$ random
+adjacent comparators would have sufficed to complete the sorting.
+This number is the sum of $1/t_k$ during the $n\choose2$ steps of sorting,
+where $t$ is the number of adjacent out-of-order pairs before the $k$th step.
+If $c$ is consistently less than $4n$, the exercise's upper bound is too high.
+
+In fact, ten experiments with $n=10000$ all gave $19904<c<20017$; hence
+it is extremely likely that the true asymptotic behavior is $\sim 2n^2$.
+
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<math.h>}\6
+\8\#\&{include} \.{"gb\_flip.h"}\6
+\&{int} ${}{*}\\{perm};{}$\6
+\&{int} ${}{*}\\{list};{}$\6
+\&{int} \\{seed};\C{ random number seed }\6
+\&{int} \|n;\C{ this many elements }\7
+${}\\{main}(\\{argc},\39\\{argv}){}$\1\1\6
+\&{int} \\{argc};\6
+\&{char} ${}{*}\\{argv}[\,];\2\2{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|t${},{}$ \|x${},{}$ %
+\|y;\6
+\&{register} \&{double} \|s;\7
+\X2:Scan the command line\X;\6
+\X3:Initialize everything\X;\6
+\&{while} (\|t)\1\5
+\X4:Move\X;\2\6
+\X5:Print the results\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Scan the command line\X${}\E{}$\6
+\&{if} ${}(\\{argc}\I\T{3}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
+\|n)\I\T{1}\V\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}\\{seed})\I%
+\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ n\ seed\\n"},\39\\{argv}[%
+\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}We maintain the following invariants: the indices \PB{\|i} where
+\PB{$\\{perm}[\|i]>\\{perm}[\|i+\T{1}]$} are \PB{\\{list}[\|j]} for $0\le j<t$.
+
+\Y\B\4\X3:Initialize everything\X${}\E{}$\6
+\\{gb\_init\_rand}(\\{seed});\6
+${}\\{perm}\K{}$(\&{int} ${}{*}){}$ \\{malloc}${}(\T{4}*(\|n+\T{2}));{}$\6
+${}\\{list}\K{}$(\&{int} ${}{*}){}$ \\{malloc}${}(\T{4}*(\|n-\T{1}));{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\1\5
+${}\\{perm}[\|k]\K\|n+\T{1}-\|k;{}$\2\6
+${}\\{perm}[\T{0}]\K\T{0}{}$;\5
+${}\\{perm}[\|n+\T{1}]\K\|n+\T{1};{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\|n;{}$ ${}\|k\PP){}$\1\5
+${}\\{list}[\|k-\T{1}]\K\|k;{}$\2\6
+${}\|t\K\|n-\T{1};{}$\6
+${}\|s\K\T{0.0}{}$;\par
+\U1.\fi
+
+\M{4}\B\X4:Move\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|s\MRL{+{\K}}\T{1.0}/{}$(\&{double}) \|t;\6
+${}\|j\K\\{gb\_unif\_rand}(\|t);{}$\6
+${}\|i\K\\{list}[\|j];{}$\6
+${}\|t\MM;{}$\6
+${}\\{list}[\|j]\K\\{list}[\|t];{}$\6
+${}\|x\K\\{perm}[\|i]{}$;\5
+${}\|y\K\\{perm}[\|i+\T{1}];{}$\6
+${}\\{perm}[\|i]\K\|y{}$;\5
+${}\\{perm}[\|i+\T{1}]\K\|x;{}$\6
+\&{if} ${}(\\{perm}[\|i-\T{1}]>\|y\W\\{perm}[\|i-\T{1}]<\|x){}$\1\5
+${}\\{list}[\|t\PP]\K\|i-\T{1};{}$\2\6
+\&{if} ${}(\\{perm}[\|i+\T{2}]<\|x\W\\{perm}[\|i+\T{2}]>\|y){}$\1\5
+${}\\{list}[\|t\PP]\K\|i+\T{1};{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{5}Is this program simple, or what?
+
+\Y\B\4\X5:Print the results\X${}\E{}$\6
+$\\{printf}(\.{"\%g\ =\ \%gn\\n"},\39\|s,\39\|s/{}$(\&{double}) \|n);\par
+\U1.\fi
+
+\N{1}{6}Index.
+
+
+
+\fi
+
+
+\inx
+\fin
+\con

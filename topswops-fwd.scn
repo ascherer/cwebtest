@@ -1,0 +1,6 @@
+\I\X2:Go up a level, except \PB{\&{goto} \\{infeas}} if $j$ is infeasible\X
+\U1.
+\I\X4:Print the stats\X
+\U1.
+\I\X3:Record and print the solution\X
+\U2.

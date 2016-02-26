@@ -1,0 +1,37 @@
+\I\X7:Backtrack until $l(n)$ is known\X
+\U1.
+\I\X5:Find an upper bound; or in simple cases, set $l(n)$ and \PB{\&{goto} %
+\\{done}}\X
+\U1.
+\I\X12:Find bounds $(\PB{\\{lbp}},\PB{\\{ubp}})$ and $(\PB{\\{lbq}},\PB{%
+\\{ubq}})$ on where \PB{\|p} and \PB{\|q} can be inserted; but go to \PB{%
+\\{failpq}} if they can't both be accommodated\X
+\U9.
+\I\X4:Input the next lower bound, \PB{\\{lb}}\X
+\U1.
+\I\X15:Make forced moves if \PB{\|p} has a special form\X
+\U14.
+\I\X17:Make forced moves if \PB{\|q} has a special form\X
+\U16.
+\I\X3:Output the value of $l(n)$\X
+\U1.
+\I\X2:Process the command line\X
+\U1.
+\I\X10:Put local variables on the stack and update outdegrees\X
+\U9.
+\I\X14:Put \PB{\|p} into the chain at location \PB{\\{ubp}}; \PB{\&{goto} %
+\\{failp}} if there's a problem\X
+\U9.
+\I\X16:Put \PB{\|q} into the chain at location \PB{\\{ubq}}; \PB{\&{goto} %
+\\{failq}} if there's a problem\X
+\U9.
+\I\X11:Restore local variables from the stack and downdate outdegrees\X
+\U9.
+\I\X6:Try reducing \PB{\\{ub}} with the factor method\X
+\U5.
+\I\X9:Try to fix the rest of the chain; \PB{\&{goto} \\{done}} if it's possible%
+\X
+\U7.
+\I\X13:Undo a change\X
+\U9.
+

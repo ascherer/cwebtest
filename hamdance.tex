@@ -1,0 +1,1092 @@
+\input cwebmac
+\datethis
+
+
+
+\N{1}{1}Introduction. This little program finds all the Hamiltonian circuits
+of a given graph, using an interesting algorithm that illustrates
+the technique of ``dancing links'' [see my paper in {\sl Millennial
+Perspectives in Computer Science}, edited by Jim Davies, Bill Roscoe,
+and Jim Woodcock (Houndmills, Basingstoke, Hampshire:\ Palgrave, 2000),
+187--214]. The idea is to allow long paths to
+grow in segments that gradually merge together, instead of to build such
+paths strictly in order from beginning to end. At each stage in the decision
+process, certain edges have been chosen to be in the final circuit, with no
+three touching any vertex; we repeatedly choose further edges, preserving this
+condition while not completing any cycles that are too short.
+
+\Y\B\8\#\&{include} \.{"gb\_graph.h"}\C{ use the Stanford GraphBase conventions
+}\6
+\8\#\&{include} \.{"gb\_save.h"}\C{ and its routine for inputting graphs }\6
+\ATH\6
+\X3:Global variables\X\7
+\&{Graph} ${}{*}\|g{}$;\C{ the given graph }\7
+\X5:Subroutines\X\7
+\&{int} \\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1%
+\2\2\6
+${}\{{}$\1\6
+\&{register} \&{Vertex} ${}{*}\|u,{}$ ${}{*}\|v,{}$ ${}{*}\|w;{}$\6
+\&{register} \&{Arc} ${}{*}\|a;{}$\6
+\&{int} \|k${},{}$ \|d;\7
+\X2:Process the command line, inputting the graph\X;\6
+\X9:Prepare the graph for backtracking\X;\6
+\X14:Backtrack through all solutions\X;\6
+\X13:Print the results\X;\6
+\\{exit}(\T{0});\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}The given graph should be in Stanford GraphBase format, in a file
+like \PB{\.{"foo.gb"}} named on the command line. This file name can optionally
+be followed by a modulus \PB{\|m}, which causes every $\vert m\vert$th solution
+to be printed.
+If a third command line argument appears, the output will be extremely verbose.
+
+The modulus \PB{\|m} might be negative; this indicates that solutions should be
+printed showing edges in the order they were discovered, rather than in the
+natural circuit order.
+
+\Y\B\4\D$\\{max\_n}$ \5
+\T{100}\C{ our arrays will accommodate this many vertices at most }\par
+\B\4\D$\\{infty}$ \5
+\T{1000000000}\C{ infinity (approximately) }\par
+\Y\B\4\X2:Process the command line, inputting the graph\X${}\E{}$\6
+\&{if} ${}(\\{argc}>\T{1}){}$\1\5
+${}\|g\K\\{restore\_graph}(\\{argv}[\T{1}]){}$;\5
+\2\&{else}\1\5
+${}\|g\K\NULL;{}$\2\6
+\&{if} ${}(\\{argc}<\T{3}\V\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}%
+\\{modulus})\I\T{1}){}$\1\5
+${}\\{modulus}\K\\{infty};{}$\2\6
+\&{if} ${}(\R\|g\V\\{modulus}\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ foo.gb\ [[}\)\.{-]modulus]\
+[verbose]}\)\.{\\n"},\39\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|g\MG\|n>\\{max\_n}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ I'm\ set\ up\ t}\)\.{o\ handle\ at\
+most\ \%d\ }\)\.{vertices!\\n"},\39\\{max\_n});{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{argc}>\T{3}){}$\1\5
+${}\\{verbose}\K\T{1}{}$;\2\par
+\U1.\fi
+
+\M{3}The \PB{\\{verbose}} variable is declared in \.{gb\_graph.h}.
+
+\Y\B\4\X3:Global variables\X${}\E{}$\6
+\&{int} \\{modulus};\C{ how often we should show solutions }\par
+\As4, 8, 10, 11\ETs35.
+\U1.\fi
+
+\N{1}{4}Data structures. Each vertex is either \PB{\\{bare}} (touching none of
+the chosen
+edges) or \PB{\\{outer}} (touching just one) or \PB{\\{inner}} (touching two).
+An \PB{\\{outer}}
+vertex has a \PB{\\{mate}}, which is the vertex at the other end of the path of
+chosen vertices that it belongs to.  All nonchosen edges that touch inner
+vertices have effectively been removed from the graph. Any edge that runs from
+a vertex to its mate has also effectively been removed.
+
+The degree \PB{\\{deg}} of a \PB{\\{bare}} or \PB{\\{outer}} vertex is the
+number of edges that
+currently touch it. All vertices begin \PB{\\{bare}} and end up \PB{\\{inner}}.
+A bare
+vertex of degree~2 is converted to an inner vertex, since its two edges
+must be in the final circuit; this mechanism causes \PB{\\{outer}} vertices to
+spring up more or less spontaneously, and it helps in the decision-making.
+At moments when all bare vertices have degree~3 or more, we choose an
+end vertex of minimum degree, and make it inner in all possible ways.
+
+The main data structure is a doubly linked list of all the \PB{\\{outer}}
+vertices.
+Links in this list are called \PB{\\{llink}} and \PB{\\{rlink}}. When a vertex
+is
+removed from the list, its \PB{\\{llink}} and \PB{\\{rlink}} retain important
+information
+about how to undo this operation when backtracking; this idea makes
+the links ``dance.'' Similarly, when an \PB{\\{outer}} vertex becomes \PB{%
+\\{inner}},
+its \PB{\\{mate}} field retains the name of its former mate, so that we needn't
+recompute mates when undoing previous changes to the data structures.
+
+The \PB{\\{mate}} field of a vertex that was promoted directly from \PB{%
+\\{bare}} to
+\PB{\\{inner}} is one of its two neighbors. The other neighbor is stored
+in another field called \PB{\\{comate}}.
+
+Utility fields \PB{\|u}, \PB{\|v}, \PB{\|w}, \PB{\|x}, \PB{\|y}, and \PB{\|z}
+of a \PB{\&{Vertex}}
+are used to hold the \PB{\\{type}}, \PB{\\{deg}}, \PB{\\{llink}}, \PB{%
+\\{rlink}}, \PB{\\{mate}}, and \PB{\\{comate}}.
+
+\Y\B\4\D$\\{bare}$ \5
+\T{2}\par
+\B\4\D$\\{outer}$ \5
+\T{1}\par
+\B\4\D$\\{inner}$ \5
+\T{0}\par
+\B\4\D$\\{type}$ \5
+$\|u.{}$\|I\C{ either \PB{\\{bare}}, \PB{\\{outer}}, or \PB{\\{inner}} }\par
+\B\4\D$\\{deg}$ \5
+$\|v.{}$\|I\C{ current degree, for non-\PB{\\{inner}} vertices }\par
+\B\4\D$\\{llink}$ \5
+$\|w.{}$\|V\C{ link to the left in the basic list }\par
+\B\4\D$\\{rlink}$ \5
+$\|x.{}$\|V\C{ link to the right in the basic list }\par
+\B\4\D$\\{mate}$ \5
+$\|y.{}$\|V\C{ the mate of an \PB{\\{outer}} vertex }\par
+\B\4\D$\\{comate}$ \5
+$\|z.{}$\|V\C{ neighbor of fast-promoted \PB{\\{inner}} vertex }\par
+\B\4\D$\\{head}$ \5
+$({\AND}\\{list\_head}{}$)\par
+\Y\B\4\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{Vertex} \\{list\_head};\C{ the doubly linked list starts here }\6
+\&{char} ${}{*}\\{decode}[\T{3}]\K\{\.{"inner"},\39\.{"outer"},\39\.{"bare"}%
+\}{}$;\par
+\fi
+
+\M{5}Here's a routine that should be useful for debugging: It displays
+the fields of a given vertex symbolically.
+
+\Y\B\4\X5:Subroutines\X${}\E{}$\6
+\&{void} \\{print\_vert}(\&{Vertex} ${}{*}\|v){}$\1\1\2\2\6
+${}\{{}$\1\6
+${}\\{printf}(\.{"\%s:\ \%s,\ deg=\%d"},\39\|v\MG\\{name},\39\\{decode}[\|v\MG%
+\\{type}],\39\|v\MG\\{deg});{}$\6
+\&{if} ${}(\|v\MG\\{llink}){}$\1\5
+${}\\{printf}(\.{",\ llink=\%s"},\39\|v\MG\\{llink}\MG\\{name});{}$\2\6
+\&{if} ${}(\|v\MG\\{rlink}){}$\1\5
+${}\\{printf}(\.{",\ rlink=\%s"},\39\|v\MG\\{rlink}\MG\\{name});{}$\2\6
+\&{if} ${}(\|v\MG\\{mate}){}$\1\5
+${}\\{printf}(\.{",\ mate=\%s"},\39\|v\MG\\{mate}\MG\\{name});{}$\2\6
+\&{if} ${}(\|v\MG\\{comate}){}$\1\5
+${}\\{printf}(\.{",\ comate=\%s"},\39\|v\MG\\{comate}\MG\\{name});{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\As6, 7\ETs12.
+\U1.\fi
+
+\M{6}And if we want to see them all:
+
+\Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_verts}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{Vertex} ${}{*}\|v;{}$\7
+\&{for} ${}(\|v\K\|g\MG\\{vertices};{}$ ${}\|v<\|g\MG\\{vertices}+\|g\MG\|n;{}$
+${}\|v\PP){}$\1\5
+\\{print\_vert}(\|v);\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{7}Even more important for debugging is the \PB{\\{sanity\_check}} routine,
+which painstakingly makes sure that I haven't let the data structure get
+out of sync with itself. (Vertex \PB{\\{vv}} is either \PB{$\NULL$} or an \PB{%
+\\{inner}}
+vertex whose mate is currently \PB{\\{outer}}. In the latter case, some of
+the sanity checks are not made.)
+
+\Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{sanity\_check}(\&{Vertex} ${}{*}\\{vv}){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{Vertex} ${}{*}\|u,{}$ ${}{*}\|v,{}$ ${}{*}\|w;{}$\6
+\&{register} \&{Arc} ${}{*}\|a;{}$\6
+\&{register} \&{int} \|c${},{}$ \|d;\7
+\&{for} ${}(\|v\K\|g\MG\\{vertices},\39\|c\K\T{0};{}$ ${}\|v<\|g\MG%
+\\{vertices}+\|g\MG\|n;{}$ ${}\|v\PP){}$\5
+${}\{{}$\1\6
+${}\|w\K\|v\MG\\{mate};{}$\6
+\&{if} ${}(\|v\MG\\{type}\E\\{bare}\W\|w\I\NULL){}$\1\5
+${}\\{printf}(\.{"Bare\ vertex\ \%s\ shou}\)\.{ldn't\ have\ mate\ \%s!\\}\)%
+\.{n"},\39\|v\MG\\{name},\39\|w\MG\\{name});{}$\2\6
+\&{if} ${}(\|v\MG\\{type}\E\\{outer}){}$\1\5
+${}\|c\PP;{}$\2\6
+\&{if} ${}(\|v\MG\\{type}\E\\{outer}\W(\|w\MG\\{mate}\I\|v\V\|w\MG\\{type}\I%
+\\{outer})){}$\1\6
+\&{if} ${}(\|w\I\\{vv}\V\|w\MG\\{type}\I\\{inner}){}$\1\5
+${}\\{printf}(\.{"Outer\ vertex\ \%s\ has}\)\.{\ mate\ problem\ vis-a-}\)\.{vis%
+\ \%s!\\n"},\39\|v\MG\\{name},\39\|w\MG\\{name});{}$\2\2\6
+\&{for} ${}(\|a\K\|v\MG\\{arcs},\39\|d\K\T{0};{}$ \|a; ${}\|a\K\|a\MG%
+\\{next}){}$\5
+${}\{{}$\1\6
+${}\|u\K\|a\MG\\{tip};{}$\6
+\&{if} ${}(\|u\MG\\{type}\I\\{inner}\W\|u\I\|w){}$\1\5
+${}\|d\PP;{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|v\MG\\{type}\I\\{inner}\W\|v\MG\\{deg}\I\|d\W\\{ocount}\I\|g\MG%
+\|n-\T{1}){}$\1\5
+${}\\{printf}(\.{"Vertex\ \%s\ should\ ha}\)\.{ve\ degree\ \%d,\ not\ \%d}\)%
+\.{!\\n"},\39\|v\MG\\{name},\39\|d,\39\|v\MG\\{deg});{}$\2\6
+\&{if} ${}(\|v\MG\\{type}\E\\{bare}\W\|d<\T{3}\W\\{vv}\E\NULL){}$\1\5
+${}\\{printf}(\.{"Vertex\ \%s\ (degree\ \%}\)\.{d)\ should\ not\ be\ bar}\)%
+\.{e!\\n"},\39\|v\MG\\{name},\39\|d);{}$\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|v\K\\{head}\MG\\{rlink};{}$ ${}\|c>\T{0};{}$ ${}\|c\MM,\39\|v\K%
+\|v\MG\\{rlink}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|v\MG\\{type}\I\\{outer}){}$\1\5
+${}\\{printf}(\.{"Vertex\ \%s\ (\%s)\ shou}\)\.{ldn't\ be\ in\ the\ list}\)\.{!%
+\\n"},\39\|v\MG\\{name},\39\\{decode}[\|v\MG\\{type}]);{}$\2\6
+\&{if} ${}(\|v\MG\\{llink}\MG\\{rlink}\I\|v\V\|v\MG\\{rlink}\MG\\{llink}\I%
+\|v){}$\1\5
+${}\\{printf}(\.{"Double-link\ failure}\)\.{\ at\ vertex\ \%s!\\n"},\39\|v\MG%
+\\{name});{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|v\I\\{head}){}$\1\5
+\\{printf}(\.{"The\ list\ doesn't\ co}\)\.{ntain\ all\ the\ outer\ }\)%
+\.{vertices!\\n"});\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{8}The next most interesting data structure is the \PB{\\{barelist}},
+which receives the names of \PB{\\{bare}} vertices at the moment their
+degree drops to~2. Such vertices must be clothed before we advance
+to a new level of backtracking.
+
+\Y\B\4\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{Vertex} ${}{*}\\{barelist}[\\{max\_n}];{}$\6
+\&{int} \\{bcount};\C{ the current number of entries in \PB{\\{barelist}} }\6
+\&{int} \\{curb}[\\{max\_n}];\C{ value of \PB{\\{bcount}} at the beginning of
+each level }\6
+\&{int} \\{curbb}[\\{max\_n}];\C{ value of \PB{\\{bcount}} in mid-level }\6
+\&{Vertex} ${}{*}\\{bareback}[\\{max\_n}]{}$;\C{ used for undoing \PB{%
+\\{barelist}} manipulations }\par
+\fi
+
+\M{9}\B\X9:Prepare the graph for backtracking\X${}\E{}$\6
+$\|d\K\\{infty};{}$\6
+${}\\{bcount}\K\\{ocount}\K\T{0};{}$\6
+\&{for} ${}(\|v\K\|g\MG\\{vertices};{}$ ${}\|v<\|g\MG\\{vertices}+\|g\MG\|n;{}$
+${}\|v\PP){}$\5
+${}\{{}$\1\6
+${}\|v\MG\\{type}\K\\{bare};{}$\6
+\&{for} ${}(\|a\K\|v\MG\\{arcs},\39\|k\K\T{0};{}$ \|a; ${}\|a\K\|a\MG%
+\\{next}){}$\1\5
+${}\|k\PP;{}$\2\6
+${}\|v\MG\\{deg}\K\|k;{}$\6
+\&{if} ${}(\|k\E\T{2}){}$\1\5
+${}\\{barelist}[\\{bcount}\PP]\K\|v;{}$\2\6
+\&{if} ${}(\|k<\|d){}$\1\5
+${}\|d\K\|k,\39\\{curv}[\T{0}]\K\|v;{}$\2\6
+${}\|v\MG\\{llink}\K\|v\MG\\{rlink}\K\|v\MG\\{mate}\K\|v\MG\\{comate}\K%
+\NULL;{}$\6
+\4${}\}{}$\2\6
+${}\\{head}\MG\\{rlink}\K\\{head}\MG\\{llink}\K\\{head};{}$\6
+${}\\{head}\MG\\{name}\K\.{"head"};{}$\6
+\&{if} ${}(\|d<\T{2}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"There\ are\ no\ Hamilt}\)\.{onian\ circuits,\ beca}\)\.{use\ %
+\%s\ has\ degree\ \%d}\)\.{!\\n"},\39\\{curv}[\T{0}]\MG\\{name},\39\|d);{}$\6
+\\{exit}(\T{0});\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{10}The arcs currently chosen appear in lists called \PB{\\{source}} and \PB{%
+\\{dest}}.
+Some arcs are chosen when a bare vertex is being clothed; others are
+chosen at a level of backtracking when an outer vertex becomes inner.
+
+\Y\B\4\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{Vertex} ${}{*}\\{source}[\\{max\_n}],{}$ ${}{*}\\{dest}[\\{max\_n}]{}$;\C{
+the answers }\6
+\&{int} \\{ocount};\C{ the current number of entries in \PB{\\{source}} and %
+\PB{\\{dest}} }\6
+\&{int} \\{curo}[\\{max\_n}];\C{ value of \PB{\\{ocount}} at the beginning of
+each level }\par
+\fi
+
+\M{11}Finally, a few other minor structures help us with backtracking or
+when we want to assess the progress of a potentially long calculation.
+
+\Y\B\4\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{Vertex} ${}{*}\\{curv}[\\{max\_n}]{}$;\C{ outer vertex chosen for branching
+}\6
+\&{Arc} ${}{*}\\{cura}[\\{max\_n}]{}$;\C{ edge chosen for branching }\6
+\&{int} \\{curi}[\\{max\_n}];\C{ index of the choice }\6
+\&{int} \\{maxi}[\\{max\_n}];\C{ total number of choices }\6
+\&{int} \\{profile}[\\{max\_n}];\C{ number of times we reached this level }\6
+\&{int} \|l;\C{ the current level of backtracking }\6
+\&{int} \\{maxl};\C{ the largest \PB{\|l} seen so far }\6
+\&{unsigned} \&{int} \\{total};\C{ this many solutions so far }\par
+\fi
+
+\M{12}Hamiltonian path problems often take a long time. The following
+subroutine can be called with an online debugger, to assess how
+far the work has progressed.
+
+\Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_state}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k;\7
+\&{for} ${}(\|j\K\|k\K\T{0};{}$ ${}\|k\Z\|l;{}$ ${}\|j\PP,\39\|k\PP){}$\5
+${}\{{}$\1\6
+\&{while} ${}(\|j<\\{curo}[\|k]){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\ \ \ \ \ \ \%s--\%s\\n"},\39\\{source}[\|j]\MG\\{name},\39%
+\\{dest}[\|j]\MG\\{name});{}$\6
+${}\|j\PP;{}$\6
+\4${}\}{}$\2\6
+\&{if} (\|k)\5
+${}\{{}$\1\6
+\&{if} ${}(\|j<\|g\MG\|n){}$\1\5
+${}\\{printf}(\.{"\ \%3d:\ \%s--\%s\ (\%d\ of}\)\.{\ \%d)\\n"},\39\|k,\39%
+\\{source}[\|j]\MG\\{name},\39\\{dest}[\|j]\MG\\{name},\39\\{curi}[\|k],\39%
+\\{maxi}[\|k]);{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+\X39:Print the state line for the bottom level\X;\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{13}\B\X13:Print the results\X${}\E{}$\6
+$\\{printf}(\.{"Altogether\ \%u\ solut}\)\.{ions.\\n"},\39\\{total});{}$\6
+\&{if} (\\{verbose})\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\\{maxl};{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\.{"\%3d:\ \%d\\n"},\39\|k,\39\\{profile}[\|k]);{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\N{1}{14}Marching forward. Here we follow the usual pattern of a backtrack
+process
+(and I follow my usual practice of \PB{\&{goto}}-ing). In this particular case
+it's a bit tricky to get the whole process started, so I'm deferring
+that bootstrap calculation until the program for levels \PB{$\|l\G\T{1}$} is in
+place and
+understood.
+
+\Y\B\4\X14:Backtrack through all solutions\X${}\E{}$\6
+\X36:Bootstrap the backtrack process\X;\6
+\4\\{advance}:\5
+\X18:Clothe everything on the bare list\X;\C{ here I said \PB{$\\{sanity%
+\_check}(\NULL)$} when debugging }\6
+${}\|l\PP;{}$\6
+\&{if} (\\{verbose})\5
+${}\{{}$\1\6
+\&{if} ${}(\|l>\\{maxl}){}$\1\5
+${}\\{maxl}\K\|l;{}$\2\6
+${}\\{printf}(\.{"Entering\ level\ \%d:"},\39\|l);{}$\6
+${}\\{profile}[\|l]\PP;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{ocount}\G\|g\MG\|n-\T{1}){}$\1\5
+\X32:Check for solution and \PB{\&{goto} \\{backup}}\X;\2\6
+\X15:Choose an outer vertex \PB{\|v} of minimum degree \PB{\|d}\X;\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"\ choosing\ \%s(\%d)\\n"},\39\|v\MG\\{name},\39\|d);{}$\2\6
+\&{if} ${}(\|d\E\T{0}){}$\1\5
+\&{goto} \\{backup};\2\6
+${}\\{curv}[\|l]\K\|v,\39\\{curi}[\|l]\K\T{1},\39\\{maxi}[\|l]\K\|d,\39%
+\\{curb}[\|l]\K\\{bcount},\39\\{curo}[\|l]\K\\{ocount};{}$\6
+${}\\{source}[\\{ocount}]\K\|v;{}$\6
+${}\|w\K\|v\MG\\{mate};{}$\6
+\X16:Promote \PB{\|v} from \PB{\\{outer}} to \PB{\\{inner}}\X;\6
+${}\|a\K\|v\MG\\{arcs};{}$\6
+\4\\{try\_move}:\5
+\&{for} ( ;  ; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|u\K\|a\MG\\{tip};{}$\6
+\&{if} ${}(\|u\MG\\{type}\I\\{inner}\W\|u\I\|w){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+${}\\{cura}[\|l]\K\|a;{}$\6
+\X17:Update data structures to account for choosing edge \PB{\\{cura}[\|l]}\X;\6
+\&{goto} \\{advance};\6
+\4\\{backup}:\5
+${}\|l\MM;{}$\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"\ back\ to\ level\ \%d:\\}\)\.{n"},\39\|l);{}$\2\6
+\X25:Unclothe everything clothed on level \PB{\|l}\X;\6
+\&{if} (\|l)\5
+${}\{{}$\1\6
+\X30:Downdate data structures to deaccount for choosing edge \PB{\\{cura}[\|l]}%
+\X;\C{ here I said \PB{\\{sanity\_check}(\|v)} when debugging }\6
+\&{if} ${}(\\{curi}[\|l]<\\{maxi}[\|l]){}$\5
+${}\{{}$\1\6
+${}\\{curi}[\|l]\PP;{}$\6
+${}\|w\K\|v\MG\\{mate}{}$;\5
+${}\|a\K\\{cura}[\|l]\MG\\{next};{}$\6
+\&{goto} \\{try\_move};\6
+\4${}\}{}$\2\6
+\X31:Demote \PB{\|v} from \PB{\\{inner}} to \PB{\\{outer}}\X;\6
+\&{if} ${}(\|l>\T{1}){}$\1\5
+\&{goto} \\{backup};\2\6
+\4${}\}{}$\2\6
+\X38:Advance at bottom level\X;\par
+\U1.\fi
+
+\M{15}All the outer vertices are in the doubly linked list, and it
+is not empty.
+
+\Y\B\4\X15:Choose an outer vertex \PB{\|v} of minimum degree \PB{\|d}\X${}\E{}$%
+\6
+\&{for} ${}(\|u\K\\{head}\MG\\{rlink},\39\|d\K\\{infty};{}$ ${}\|u\I%
+\\{head};{}$ ${}\|u\K\|u\MG\\{rlink}){}$\5
+${}\{{}$\1\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"\ \%s(\%d)"},\39\|u\MG\\{name},\39\|u\MG\\{deg});{}$\2\6
+\&{if} ${}(\|u\MG\\{deg}<\|d){}$\1\5
+${}\|d\K\|u\MG\\{deg},\39\|v\K\|u;{}$\2\6
+\4${}\}{}$\2\par
+\U14.\fi
+
+\M{16}At the beginning of a level, when we're about to choose a
+neighbor for the outer vertex \PB{\|v}, we convert \PB{\|v} to \PB{\\{inner}}
+type
+because this conversion will be valid regardless of which edge we choose.
+
+\Y\B\4\D$\\{dancing\_delete}(\|u)$ \5
+$\|u\MG\\{llink}\MG\\{rlink}\K\|u\MG\\{rlink},\39\|u\MG\\{rlink}\MG\\{llink}\K%
+\|u\MG{}$\\{llink}\par
+\B\4\D$\\{decrease\_deg}(\|u,\|w)$ \6
+\&{if} ${}(\|u\MG\\{type}\E\\{bare}){}$\5
+${}\{{}$\1\6
+${}\|u\MG\\{deg}\MM;{}$\6
+\&{if} ${}(\|u\MG\\{deg}\E\T{2}){}$\1\5
+${}\\{barelist}[\\{bcount}\PP]\K\|u;{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\|u\I\|w)$ $\|u\MG\\{deg}\MM{}$\C{ \PB{\|u} is an \PB{%
+\\{outer}} neighbor of \PB{\|v} with \PB{$\|v\MG\\{mate}\K\|w$} }\par
+\Y\B\4\X16:Promote \PB{\|v} from \PB{\\{outer}} to \PB{\\{inner}}\X${}\E{}$\6
+\&{for} ${}(\|a\K\|v\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|u\K\|a\MG\\{tip};{}$\6
+\&{if} ${}(\|u\MG\\{type}>\\{inner}){}$\1\5
+${}\\{decrease\_deg}(\|u,\39\|w);{}$\2\6
+\4${}\}{}$\2\6
+${}\|v\MG\\{type}\K\\{inner};{}$\6
+\\{dancing\_delete}(\|v);\6
+${}\\{curbb}[\|l]\K\\{bcount}{}$;\par
+\U14.\fi
+
+\M{17}At this point, \PB{\|v} is a formerly outer vertex that we're joining to
+vertex~\PB{\|u}. Also, \PB{$\|w\K\|v\MG\\{mate}$}.
+
+If \PB{\|u} is type \PB{\\{outer}}, we're joining two segments into one, making
+\PB{\|u} of type \PB{\\{inner}}.
+But if \PB{\|u} is bare, we're lengthening a segment, and \PB{\|u} becomes \PB{%
+\\{outer}}.
+
+\Y\B\4\D$\\{make\_outer}(\|u)$ \6
+${}\{{}$\1\6
+${}\|u\MG\\{rlink}\K\\{head}\MG\\{rlink},\39\\{head}\MG\\{rlink}\MG\\{llink}\K%
+\|u;{}$\6
+${}\|u\MG\\{llink}\K\\{head},\39\\{head}\MG\\{rlink}\K\|u;{}$\6
+${}\|u\MG\\{type}\K\\{outer};{}$\6
+\4${}\}{}$\2\par
+\B\4\D$\\{vprint}()$ \5
+\&{if} (\\{verbose}) $\\{printf}(\.{"\ \%s--\%s\\n"},\39\\{source}[\\{ocount}-%
+\T{1}]\MG\\{name},\39\\{dest}[\\{ocount}-\T{1}]\MG\\{name}{}$)\par
+\Y\B\4\X17:Update data structures to account for choosing edge \PB{\\{cura}[%
+\|l]}\X${}\E{}$\6
+$\\{dest}[\\{ocount}\PP]\K\|u{}$;\5
+\\{vprint}(\,);\6
+\&{if} ${}(\|u\MG\\{type}\E\\{outer}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|a\K\|w\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\1\6
+\&{if} ${}(\|a\MG\\{tip}\E\|u\MG\\{mate}){}$\5
+${}\{{}$\1\6
+${}\|u\MG\\{mate}\MG\\{deg}\MM,\39\|w\MG\\{deg}\MM;{}$\6
+\&{break};\6
+\4${}\}{}$\2\2\6
+${}\|w\MG\\{mate}\K\|u\MG\\{mate},\39\|u\MG\\{mate}\MG\\{mate}\K\|w;{}$\6
+\\{dancing\_delete}(\|u);\6
+${}\|u\MG\\{type}\K\\{inner};{}$\6
+\&{for} ${}(\|a\K\|u\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|w\K\|a\MG\\{tip};{}$\6
+\&{if} ${}(\|w\MG\\{type}>\\{inner}){}$\1\5
+${}\\{decrease\_deg}(\|w,\39\|u\MG\\{mate});{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\C{ \PB{$\|u\MG\\{type}\E\\{bare}$} }\1\6
+\&{for} ${}(\|a\K\|w\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\1\6
+\&{if} ${}(\|a\MG\\{tip}\E\|u){}$\5
+${}\{{}$\1\6
+${}\|u\MG\\{deg}\MM,\39\|w\MG\\{deg}\MM;{}$\6
+\&{break};\6
+\4${}\}{}$\2\2\6
+${}\|w\MG\\{mate}\K\|u,\39\|u\MG\\{mate}\K\|w;{}$\6
+\\{make\_outer}(\|u);\6
+\4${}\}{}$\2\par
+\U14.\fi
+
+\M{18}The situation might have changed since a vertex entered the bare list,
+because its type and/or degree may have been altered.
+
+Also, giving clothes to one bare vertex might have a ripple effect, causing
+other vertices to enter the bare list. The value of \PB{\\{bcount}} in the
+following
+loop might therefore be a moving target.
+
+One case needs to handled with special care: If the two neighbors of \PB{\|v}
+are mates of each other, we are forced to complete a cycle. This is
+legitimate only if the cycle includes all vertices.
+
+\Y\B\4\X18:Clothe everything on the bare list\X${}\E{}$\6
+\&{for} ${}(\|k\K\\{curb}[\|l];{}$ ${}\|k<\\{bcount};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|v\K\\{barelist}[\|k];{}$\6
+\&{if} ${}(\|v\MG\\{type}\I\\{bare}){}$\1\5
+${}\\{bareback}[\|k]\K\|v,\39\\{barelist}[\|k]\K\NULL;{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\|v\MG\\{deg}\I\T{2}){}$\5
+${}\{{}$\1\6
+\&{if} (\\{verbose})\1\5
+\\{printf}(\.{"(oops,\ low\ degree;\ }\)\.{backing\ up)\\n"});\2\6
+\&{goto} \\{emergency\_backup};\C{ see below }\6
+\4${}\}{}$\2\6
+\X19:Find the two neighbors, \PB{\|u} and \PB{\|w}, of vertex \PB{\|v}\X;\6
+\&{if} ${}(\|u\MG\\{mate}\E\|w\W\\{ocount}\I\|g\MG\|n-\T{2}){}$\5
+${}\{{}$\1\6
+\&{if} (\\{verbose})\1\5
+\\{printf}(\.{"(oops,\ short\ cycle;}\)\.{\ backing\ up)\\n"});\2\6
+\&{goto} \\{emergency\_backup};\6
+\4${}\}{}$\2\6
+${}\|v\MG\\{mate}\K\|u,\39\|v\MG\\{comate}\K\|w;{}$\6
+${}\|v\MG\\{type}\K\\{inner};{}$\6
+${}\\{source}[\\{ocount}]\K\|u,\39\\{dest}[\\{ocount}\PP]\K\|v{}$;\5
+\\{vprint}(\,);\6
+${}\\{source}[\\{ocount}]\K\|v,\39\\{dest}[\\{ocount}\PP]\K\|w{}$;\5
+\\{vprint}(\,);\6
+\&{if} ${}(\|u\MG\\{type}\E\\{bare}){}$\1\6
+\&{if} ${}(\|w\MG\\{type}\E\\{bare}){}$\1\5
+\X20:Promote BBB to OIO\X\2\6
+\&{else}\1\5
+\X21:Promote BBO to OII\X\2\2\6
+\&{else} \&{if} ${}(\|w\MG\\{type}\E\\{bare}){}$\1\5
+\X22:Promote OBB to IIO\X\2\6
+\&{else}\1\5
+\X23:Promote OBO to III\X;\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U14.\fi
+
+\M{19}\B\X19:Find the two neighbors, \PB{\|u} and \PB{\|w}, of vertex \PB{\|v}%
+\X${}\E{}$\6
+\&{for} ${}(\|a\K\|v\MG\\{arcs};{}$  ; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|u\K\|a\MG\\{tip};{}$\6
+\&{if} ${}(\|u\MG\\{type}\I\\{inner}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|a\K\|a\MG\\{next};{}$  ; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|w\K\|a\MG\\{tip};{}$\6
+\&{if} ${}(\|w\MG\\{type}\I\\{inner}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\par
+\U18.\fi
+
+\M{20}The clothing process involves four similar subcases (which, I admit,
+are slightly boring). We will see, however, that all of these manipulations
+are easily undone; and that fact, to me, is interesting indeed, almost
+climactic.
+
+\Y\B\4\X20:Promote BBB to OIO\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|u\MG\\{deg}\MM,\39\|w\MG\\{deg}\MM;{}$\6
+\\{make\_outer}(\|u);\6
+\\{make\_outer}(\|w);\6
+${}\|u\MG\\{mate}\K\|w,\39\|w\MG\\{mate}\K\|u;{}$\6
+\&{for} ${}(\|a\K\|u\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\1\6
+\&{if} ${}(\|a\MG\\{tip}\E\|w){}$\5
+${}\{{}$\1\6
+${}\|u\MG\\{deg}\MM,\39\|w\MG\\{deg}\MM;{}$\6
+\&{break};\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\par
+\U18.\fi
+
+\M{21}\B\X21:Promote BBO to OII\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|u\MG\\{deg}\MM;{}$\6
+\\{make\_outer}(\|u);\6
+${}\|u\MG\\{mate}\K\|w\MG\\{mate},\39\|w\MG\\{mate}\MG\\{mate}\K\|u;{}$\6
+\&{for} ${}(\|a\K\|u\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\1\6
+\&{if} ${}(\|a\MG\\{tip}\E\|w\MG\\{mate}){}$\5
+${}\{{}$\1\6
+${}\|u\MG\\{deg}\MM,\39\|w\MG\\{mate}\MG\\{deg}\MM;{}$\6
+\&{break};\6
+\4${}\}{}$\2\2\6
+\&{for} ${}(\|a\K\|w\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|v\K\|a\MG\\{tip};{}$\6
+\&{if} ${}(\|v\MG\\{type}\I\\{inner}){}$\1\5
+${}\\{decrease\_deg}(\|v,\39\|w\MG\\{mate});{}$\2\6
+\4${}\}{}$\2\6
+${}\|w\MG\\{type}\K\\{inner};{}$\6
+\\{dancing\_delete}(\|w);\6
+\4${}\}{}$\2\par
+\U18.\fi
+
+\M{22}\B\X22:Promote OBB to IIO\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|w\MG\\{deg}\MM;{}$\6
+\\{make\_outer}(\|w);\6
+${}\|w\MG\\{mate}\K\|u\MG\\{mate},\39\|u\MG\\{mate}\MG\\{mate}\K\|w;{}$\6
+\&{for} ${}(\|a\K\|w\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\1\6
+\&{if} ${}(\|a\MG\\{tip}\E\|u\MG\\{mate}){}$\5
+${}\{{}$\1\6
+${}\|w\MG\\{deg}\MM,\39\|u\MG\\{mate}\MG\\{deg}\MM;{}$\6
+\&{break};\6
+\4${}\}{}$\2\2\6
+\&{for} ${}(\|a\K\|u\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|v\K\|a\MG\\{tip};{}$\6
+\&{if} ${}(\|v\MG\\{type}\I\\{inner}){}$\1\5
+${}\\{decrease\_deg}(\|v,\39\|u\MG\\{mate});{}$\2\6
+\4${}\}{}$\2\6
+${}\|u\MG\\{type}\K\\{inner};{}$\6
+\\{dancing\_delete}(\|u);\6
+\4${}\}{}$\2\par
+\U18.\fi
+
+\M{23}\B\X23:Promote OBO to III\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|a\K\|u\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|v\K\|a\MG\\{tip};{}$\6
+\&{if} ${}(\|v\MG\\{type}\I\\{inner}){}$\1\5
+${}\\{decrease\_deg}(\|v,\39\|u\MG\\{mate});{}$\2\6
+\4${}\}{}$\2\6
+${}\|u\MG\\{type}\K\\{inner};{}$\6
+\\{dancing\_delete}(\|u);\6
+\&{for} ${}(\|a\K\|w\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|v\K\|a\MG\\{tip};{}$\6
+\&{if} ${}(\|v\MG\\{type}\I\\{inner}){}$\1\5
+${}\\{decrease\_deg}(\|v,\39\|w\MG\\{mate});{}$\2\6
+\4${}\}{}$\2\6
+${}\|w\MG\\{type}\K\\{inner};{}$\6
+\\{dancing\_delete}(\|w);\6
+\&{if} ${}(\|u\MG\\{mate}\I\|w){}$\5
+${}\{{}$\1\6
+${}\|u\MG\\{mate}\MG\\{mate}\K\|w\MG\\{mate},\39\|w\MG\\{mate}\MG\\{mate}\K\|u%
+\MG\\{mate};{}$\6
+\&{for} ${}(\|a\K\|u\MG\\{mate}\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$%
+\1\6
+\&{if} ${}(\|a\MG\\{tip}\E\|w\MG\\{mate}){}$\5
+${}\{{}$\1\6
+${}\|u\MG\\{mate}\MG\\{deg}\MM,\39\|w\MG\\{mate}\MG\\{deg}\MM;{}$\6
+\&{break};\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U18.\fi
+
+\N{1}{24}Backtracking.
+The fascinating thing about dancing links is the almost magical way in which
+the linked data structures snap back into place when we
+run the updating algorithm backwards. We do need constant vigilance,
+though, because the validity of the algorithms hangs by a slender thread.
+
+\Y\B\4\D$\\{dancing\_undelete}(\|v)$ \5
+$\|v\MG\\{llink}\MG\\{rlink}\K\|v\MG\\{rlink}\MG\\{llink}\K{}$\|v\par
+\B\4\D$\\{make\_bare}(\|v)$ \5
+$\\{dancing\_delete}(\|v),\39\|v\MG\\{type}\K\\{bare},\39\|v\MG\\{mate}\K%
+\NULL{}$\par
+\fi
+
+\M{25}The \PB{\\{emergency\_backup}} label in this section provides
+an interesting example of a case where it is right and proper to
+\PB{\&{goto}} a statement in the middle of one loop from the middle of another.
+[See the discussion in Examples 6c and 7a of my paper ``Structured programming
+with {\bf go to} statements, {\sl Computing Surveys\/~\bf6} (December 1974),
+261--301.] The program jumps to \PB{\\{emergency\_backup}} when it is running
+through the bare list and finds a situation that cannot be completed
+to a Hamiltonian circuit; it will then undo whatever actions it had
+completed so far in the clothing loop, because the unclothing loop
+operates in reverse order.
+
+\Y\B\4\X25:Unclothe everything clothed on level \PB{\|l}\X${}\E{}$\6
+\&{for} ${}(\|k\K\\{bcount}-\T{1};{}$ ${}\|k\G\\{curb}[\|l];{}$ ${}\|k\MM){}$\5
+${}\{{}$\1\6
+${}\|v\K\\{barelist}[\|k];{}$\6
+\&{if} ${}(\R\|v){}$\1\5
+${}\\{barelist}[\|k]\K\\{bareback}[\|k];{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|u\K\|v\MG\\{mate},\39\|w\K\|v\MG\\{comate};{}$\6
+${}\|v\MG\\{type}\K\\{bare},\39\|v\MG\\{mate}\K\NULL;{}$\6
+${}\|v\MG\\{comate}\K\NULL{}$;\C{ this isn't necessary, but I'm feeling tidy
+today }\6
+\&{if} ${}(\|u\MG\\{type}\E\\{outer}){}$\1\6
+\&{if} ${}(\|w\MG\\{type}\E\\{outer}){}$\1\5
+\X26:Demote OIO to BBB\X\2\6
+\&{else}\1\5
+\X27:Demote OII to BBO\X\2\2\6
+\&{else} \&{if} ${}(\|w\MG\\{type}\E\\{outer}){}$\1\5
+\X28:Demote IIO to OBB\X\2\6
+\&{else}\1\5
+\X29:Demote III to OBO\X;\2\6
+\4${}\}{}$\2\6
+\4\\{emergency\_backup}:\5
+;\6
+\4${}\}{}$\2\par
+\U14.\fi
+
+\M{26}\B\X26:Demote OIO to BBB\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|u\MG\\{deg}\PP,\39\|w\MG\\{deg}\PP;{}$\6
+\\{make\_bare}(\|u);\6
+\\{make\_bare}(\|w);\6
+\&{for} ${}(\|a\K\|u\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\1\6
+\&{if} ${}(\|a\MG\\{tip}\E\|w){}$\5
+${}\{{}$\1\6
+${}\|u\MG\\{deg}\PP,\39\|w\MG\\{deg}\PP;{}$\6
+\&{break};\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\par
+\U25.\fi
+
+\M{27}The first statement here, `\PB{$\|v\MG\\{deg}\MM$}', compensates for the
+spurious
+increases that will occur because \PB{\|v} is a neighbor of \PB{\|w} and \PB{$%
+\|v\MG\\{type}$}
+is no longer \PB{\\{inner}}.
+
+\Y\B\4\X27:Demote OII to BBO\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|v\MG\\{deg}\MM;{}$\6
+${}\|w\MG\\{mate}\MG\\{mate}\K\|w;{}$\6
+\\{dancing\_undelete}(\|w);\6
+${}\|w\MG\\{type}\K\\{outer};{}$\6
+\&{for} ${}(\|a\K\|u\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\1\6
+\&{if} ${}(\|a\MG\\{tip}\E\|w\MG\\{mate}){}$\5
+${}\{{}$\1\6
+${}\|u\MG\\{deg}\PP,\39\|w\MG\\{mate}\MG\\{deg}\PP;{}$\6
+\&{break};\6
+\4${}\}{}$\2\2\6
+\&{for} ${}(\|a\K\|w\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|v\K\|a\MG\\{tip};{}$\6
+\&{if} ${}(\|v\MG\\{type}\I\\{inner}\W\|v\I\|w\MG\\{mate}){}$\1\5
+${}\|v\MG\\{deg}\PP;{}$\2\6
+\4${}\}{}$\2\6
+${}\|u\MG\\{deg}\PP;{}$\6
+\\{make\_bare}(\|u);\6
+\4${}\}{}$\2\par
+\U25.\fi
+
+\M{28}\B\X28:Demote IIO to OBB\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|v\MG\\{deg}\MM;{}$\6
+${}\|u\MG\\{mate}\MG\\{mate}\K\|u;{}$\6
+\\{dancing\_undelete}(\|u);\6
+${}\|u\MG\\{type}\K\\{outer};{}$\6
+\&{for} ${}(\|a\K\|w\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\1\6
+\&{if} ${}(\|a\MG\\{tip}\E\|u\MG\\{mate}){}$\5
+${}\{{}$\1\6
+${}\|w\MG\\{deg}\PP,\39\|u\MG\\{mate}\MG\\{deg}\PP;{}$\6
+\&{break};\6
+\4${}\}{}$\2\2\6
+\&{for} ${}(\|a\K\|u\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|v\K\|a\MG\\{tip};{}$\6
+\&{if} ${}(\|v\MG\\{type}\I\\{inner}\W\|v\I\|u\MG\\{mate}){}$\1\5
+${}\|v\MG\\{deg}\PP;{}$\2\6
+\4${}\}{}$\2\6
+${}\|w\MG\\{deg}\PP;{}$\6
+\\{make\_bare}(\|w);\6
+\4${}\}{}$\2\par
+\U25.\fi
+
+\M{29}\B\X29:Demote III to OBO\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|v\MG\\{deg}\MRL{-{\K}}\T{2}{}$;\C{ compensate for two spurious increases
+below }\6
+\&{if} ${}(\|u\MG\\{mate}\I\|w){}$\5
+${}\{{}$\1\6
+${}\|u\MG\\{mate}\MG\\{mate}\K\|u,\39\|w\MG\\{mate}\MG\\{mate}\K\|w;{}$\6
+\&{for} ${}(\|a\K\|u\MG\\{mate}\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$%
+\1\6
+\&{if} ${}(\|a\MG\\{tip}\E\|w\MG\\{mate}){}$\5
+${}\{{}$\1\6
+${}\|u\MG\\{mate}\MG\\{deg}\PP,\39\|w\MG\\{mate}\MG\\{deg}\PP;{}$\6
+\&{break};\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\6
+\\{dancing\_undelete}(\|w);\6
+${}\|w\MG\\{type}\K\\{outer};{}$\6
+\&{for} ${}(\|a\K\|w\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|v\K\|a\MG\\{tip};{}$\6
+\&{if} ${}(\|v\MG\\{type}\I\\{inner}\W\|v\I\|w\MG\\{mate}){}$\1\5
+${}\|v\MG\\{deg}\PP;{}$\2\6
+\4${}\}{}$\2\6
+\\{dancing\_undelete}(\|u);\6
+${}\|u\MG\\{type}\K\\{outer};{}$\6
+\&{for} ${}(\|a\K\|u\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|v\K\|a\MG\\{tip};{}$\6
+\&{if} ${}(\|v\MG\\{type}\I\\{inner}\W\|v\I\|u\MG\\{mate}){}$\1\5
+${}\|v\MG\\{deg}\PP;{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U25.\fi
+
+\M{30}A somewhat subtle point deserve special mention here:
+We want to reset \PB{\\{bcount}} to \PB{\\{curbb}[\|l]}, not to \PB{\\{curb}[%
+\|l]},
+because entries that were put onto the \PB{\\{barelist}} while \PB{\|v} was
+becoming \PB{\\{inner}} should remain there.
+
+\Y\B\4\X30:Downdate data structures to deaccount for choosing edge \PB{%
+\\{cura}[\|l]}\X${}\E{}$\6
+$\|v\K\\{curv}[\|l];{}$\6
+${}\\{ocount}\K\\{curo}[\|l];{}$\6
+${}\|u\K\\{dest}[\\{ocount}]{}$;\C{ \PB{$\\{cura}[\|l]\MG\\{tip}$} }\6
+\&{if} ${}(\|u\MG\\{type}\E\\{inner}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|a\K\|u\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|w\K\|a\MG\\{tip};{}$\6
+\&{if} ${}(\|w\MG\\{type}\I\\{inner}\W\|w\I\|u\MG\\{mate}){}$\1\5
+${}\|w\MG\\{deg}\PP;{}$\2\6
+\4${}\}{}$\2\6
+${}\|u\MG\\{type}\K\\{outer};{}$\6
+\\{dancing\_undelete}(\|u);\6
+${}\|w\K\|v\MG\\{mate};{}$\6
+${}\|u\MG\\{mate}\MG\\{mate}\K\|u,\39\|w\MG\\{mate}\K\|v;{}$\6
+\&{for} ${}(\|a\K\|w\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\1\6
+\&{if} ${}(\|a\MG\\{tip}\E\|u\MG\\{mate}){}$\5
+${}\{{}$\1\6
+${}\|u\MG\\{mate}\MG\\{deg}\PP,\39\|w\MG\\{deg}\PP;{}$\6
+\&{break};\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\C{ \PB{$\|u\MG\\{type}\E\\{outer}$} }\1\6
+\\{make\_bare}(\|u);\6
+${}\|w\K\|v\MG\\{mate};{}$\6
+${}\|w\MG\\{mate}\K\|v;{}$\6
+\&{for} ${}(\|a\K\|w\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\1\6
+\&{if} ${}(\|a\MG\\{tip}\E\|u){}$\5
+${}\{{}$\1\6
+${}\|u\MG\\{deg}\PP,\39\|w\MG\\{deg}\PP;{}$\6
+\&{break};\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\6
+${}\\{bcount}\K\\{curbb}[\|l]{}$;\par
+\U14.\fi
+
+\M{31}\B\X31:Demote \PB{\|v} from \PB{\\{inner}} to \PB{\\{outer}}\X${}\E{}$\6
+$\\{bcount}\K\\{curb}[\|l];{}$\6
+\\{dancing\_undelete}(\|v);\6
+${}\|v\MG\\{type}\K\\{outer};{}$\6
+\&{for} ${}(\|a\K\|v\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|u\K\|a\MG\\{tip};{}$\6
+\&{if} ${}(\|u\MG\\{type}\I\\{inner}\W\|u\I\|w){}$\1\5
+${}\|u\MG\\{deg}\PP;{}$\2\6
+\4${}\}{}$\2\par
+\U14.\fi
+
+\N{1}{32}Reaping the rewards. Once all vertices have been connected up,
+no more decisions need to be made. In most such cases, we'll have found a
+valid Hamiltonian circuit, although its last link usually still needs
+to be filled in.
+
+\Y\B\4\X32:Check for solution and \PB{\&{goto} \\{backup}}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{ocount}<\|g\MG\|n){}$\1\5
+\X33:If the two \PB{\\{outer}} vertices aren't adjacent, \PB{\&{goto} %
+\\{backup}}\X;\2\6
+${}\\{total}\PP;{}$\6
+\&{if} ${}(\\{total}\MOD\\{abs}(\\{modulus})\E\T{0}\V\\{verbose}){}$\5
+${}\{{}$\1\6
+${}\\{curo}[\|l]\K\\{ocount};{}$\6
+${}\\{source}[\\{ocount}]\K\\{head}\MG\\{rlink},\39\\{dest}[\\{ocount}]\K%
+\\{head}\MG\\{llink};{}$\6
+${}\\{curi}[\|l]\K\\{maxi}[\|l]\K\T{1};{}$\6
+\&{if} ${}(\\{modulus}<\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\\n\%d:\\n"},\39\\{total}){}$;\5
+\\{print\_state}(\,);\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+\X34:Unscramble and print the current solution\X;\2\6
+\4${}\}{}$\2\6
+\&{goto} \\{backup};\6
+\4${}\}{}$\2\par
+\U14.\fi
+
+\M{33}At this point we've formed a Hamiltonian path, which will be a
+Hamiltonian circuit if and only if its two \PB{\\{outer}} vertices are
+neighbors.
+
+\Y\B\4\X33:If the two \PB{\\{outer}} vertices aren't adjacent, \PB{\&{goto} %
+\\{backup}}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|u\K\\{head}\MG\\{llink},\39\|v\K\\{head}\MG\\{rlink};{}$\6
+\&{for} ${}(\|a\K\|u\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\1\6
+\&{if} ${}(\|a\MG\\{tip}\E\|v){}$\1\5
+\&{goto} \\{yes};\2\2\6
+\&{goto} \\{backup};\6
+\4\\{yes}:\5
+;\6
+\4${}\}{}$\2\par
+\U32.\fi
+
+\M{34}\B\D$\\{index}(\|v)$ \5
+$((\|v)-\|g\MG\\{vertices}{}$)\par
+\Y\B\4\X34:Unscramble and print the current solution\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k;\7
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|g\MG\|n;{}$ ${}\|k\PP){}$\1\5
+${}\\{v1}[\|k]\K{-}\T{1};{}$\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|g\MG\|n;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|i\K\\{index}(\\{source}[\|k]);{}$\6
+${}\|j\K\\{index}(\\{dest}[\|k]);{}$\6
+\&{if} ${}(\\{v1}[\|i]<\T{0}){}$\1\5
+${}\\{v1}[\|i]\K\|j;{}$\2\6
+\&{else}\1\5
+${}\\{v2}[\|i]\K\|j;{}$\2\6
+\&{if} ${}(\\{v1}[\|j]<\T{0}){}$\1\5
+${}\\{v1}[\|j]\K\|i;{}$\2\6
+\&{else}\1\5
+${}\\{v2}[\|j]\K\|i;{}$\2\6
+\4${}\}{}$\2\6
+${}\\{path}[\T{0}]\K\T{0},\39\\{path}[\T{1}]\K\\{v1}[\T{0}];{}$\6
+\&{for} ${}(\|k\K\T{2};{}$  ; ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{v1}[\\{path}[\|k-\T{1}]]\E\\{path}[\|k-\T{2}]){}$\1\5
+${}\\{path}[\|k]\K\\{v2}[\\{path}[\|k-\T{1}]];{}$\2\6
+\&{else}\1\5
+${}\\{path}[\|k]\K\\{v1}[\\{path}[\|k-\T{1}]];{}$\2\6
+\&{if} ${}(\\{path}[\|k]\E\T{0}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{if} (\\{verbose})\1\5
+\\{printf}(\.{"\\n"});\2\6
+${}\\{printf}(\.{"\%d:"},\39\\{total});{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\|g\MG\|n;{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\.{"\ \%s"},\39(\|g\MG\\{vertices}+\\{path}[\|k])\MG\\{name});{}$%
+\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\U32.\fi
+
+\M{35}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{v1}[\\{max\_n}]${},{}$ \\{v2}[\\{max\_n}];\C{ the neighbors of a
+given vertex }\6
+\&{int} ${}\\{path}[\\{max\_n}+\T{1}]{}$;\C{ the Hamiltonian circuit, in order
+}\par
+\fi
+
+\N{1}{36}Getting started. Our program is almost complete, but we still need to
+figure out how to get the ball rolling by setting things up properly
+at backtrack level~0.
+
+There's no problem if the graph has at least one vertex of degree 2,
+because the \PB{\\{barelist}} will provide us with at least two \PB{\\{outer}}
+vertices
+in such a case. But if all vertices have degree 3 or more, we've got to
+have some \PB{\\{outer}} vertices as seeds for the rest of the computation.
+
+In the former (easy) case, we set \PB{$\\{maxi}[\T{0}]\K\T{0}$}. In the latter
+case,
+we take a vertex \PB{\|v} of minimum degree \PB{\|d}; we set \PB{$\\{maxi}[%
+\T{0}]\K\|d-\T{1}$},
+and try each neighbor of \PB{\|v} in turn. (More precisely, after we've found
+all Hamiltonian cycles that contain an edge from \PB{\|v} to some other vertex,
+\PB{\|u}, we'll remove that edge physically from the graph, and repeat
+the process until \PB{\|v} or some other vertex has only two neighbors left.)
+
+\Y\B\4\X36:Bootstrap the backtrack process\X${}\E{}$\6
+$\|l\K\T{0};{}$\6
+\&{if} ${}(\|d>\T{2}){}$\5
+${}\{{}$\1\6
+${}\\{maxi}[\T{0}]\K\|d-\T{1};{}$\6
+${}\\{source}[\T{0}]\K\|v\K\\{curv}[\T{0}];{}$\6
+\\{make\_outer}(\|v);\6
+\4\\{force}:\5
+${}\\{cura}[\T{0}]\K\|a\K\|v\MG\\{arcs};{}$\6
+${}\|v\MG\\{arcs}\K\|a\MG\\{next};{}$\6
+${}\\{curi}[\T{0}]\PP;{}$\6
+${}\\{dest}[\T{0}]\K\|u\K\|a\MG\\{tip};{}$\6
+${}\\{ocount}\K\T{1}{}$;\5
+\\{vprint}(\,);\6
+\\{make\_outer}(\|u);\6
+${}\|v\MG\\{deg}\MM;{}$\6
+${}\|u\MG\\{deg}\MM;{}$\6
+\X37:Remove the arc from \PB{\|u} to \PB{\|v}\X;\6
+${}\|v\MG\\{mate}\K\|u,\39\|u\MG\\{mate}\K\|v;{}$\6
+\4${}\}{}$\2\par
+\U14.\fi
+
+\M{37}\B\X37:Remove the arc from \PB{\|u} to \PB{\|v}\X${}\E{}$\6
+\&{if} ${}(\|u\MG\\{arcs}\MG\\{tip}\E\|v){}$\1\5
+${}\|u\MG\\{arcs}\K\|u\MG\\{arcs}\MG\\{next};{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{for} ${}(\|a\K\|u\MG\\{arcs};{}$ ${}\|a\MG\\{next}\MG\\{tip}\I\|v;{}$ ${}\|a%
+\K\|a\MG\\{next}){}$\1\5
+;\2\6
+${}\|a\MG\\{next}\K\|a\MG\\{next}\MG\\{next};{}$\6
+\4${}\}{}$\2\par
+\U36.\fi
+
+\M{38}When the edge between \PB{\|u} and \PB{\|v} is removed, and \PB{\|u}
+reverts to a
+\PB{\\{bare}} vertex, it might now have degree~2. In such cases we don't
+need \PB{\|v} as a seed vertex, so we revert to the simpler algorithm.
+
+\Y\B\4\X38:Advance at bottom level\X${}\E{}$\6
+\&{if} ${}(\\{curi}[\T{0}]<\\{maxi}[\T{0}]){}$\5
+${}\{{}$\1\6
+\&{if} (\\{verbose})\1\5
+\\{printf}(\.{"\ back\ to\ level\ 0:\\n}\)\.{"});\2\6
+${}\|l\K\T{0};{}$\6
+${}\\{ocount}\K\T{0};{}$\6
+${}\|u\K\\{dest}[\T{0}];{}$\6
+\\{dancing\_delete}(\|u);\6
+${}\|u\MG\\{type}\K\\{bare};{}$\6
+\&{if} ${}(\|u\MG\\{deg}\E\T{2}){}$\1\5
+${}\\{barelist}[\T{0}]\K\|u,\39\\{bcount}\K\T{1};{}$\2\6
+\&{else}\1\5
+${}\\{bcount}\K\T{0}{}$;\C{ we never undo \PB{\\{barelist}} conversions at
+level zero }\2\6
+${}\|v\K\\{source}[\T{0}];{}$\6
+\&{if} ${}(\|v\MG\\{deg}\E\T{2}){}$\5
+${}\{{}$\1\6
+${}\|v\MG\\{type}\K\\{bare};{}$\6
+\\{dancing\_delete}(\|v);\6
+${}\\{barelist}[\\{bcount}\PP]\K\|v;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{bcount}\E\T{0}){}$\1\5
+\&{goto} \\{force};\2\6
+${}\\{maxi}[\T{0}]\K\\{curi}[\T{0}]\K\\{curi}[\T{0}]+\T{1}{}$;\C{ cut to the
+chase }\6
+${}\\{cura}[\T{0}]\K\NULL;{}$\6
+\&{goto} \\{advance};\6
+\4${}\}{}$\2\par
+\U14.\fi
+
+\M{39}\B\X39:Print the state line for the bottom level\X${}\E{}$\6
+\&{if} (\\{cura}[\T{0}])\1\5
+${}\\{printf}(\.{"\ \%3d:\ \%s--\%s\ (\%d\ of}\)\.{\ \%d)\\n"},\39\T{0},\39%
+\\{source}[\T{0}]\MG\\{name},\39\\{dest}[\T{0}]\MG\\{name},\39\\{curi}[\T{0}],%
+\39\\{maxi}[\T{0}]);{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|j\K{-}\T{1}{}$;\C{ this trick will make \PB{\\{source}[\T{0}]} and \PB{%
+\\{dest}[\T{0}]} appear }\6
+\&{if} (\\{maxi}[\T{0}])\1\5
+${}\\{printf}(\.{"\ \%3d:\ (\%d\ of\ \%d)\\n"},\39\T{0},\39\\{curi}[\T{0}],\39%
+\\{maxi}[\T{0}]);{}$\2\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\N{1}{40}Index.
+\fi
+
+\inx
+\fin
+\con

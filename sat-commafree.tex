@@ -1,0 +1,130 @@
+\input cwebmac
+
+\N{1}{1}Intro. Find a comma-free block code of length $n$, having one code
+in each cyclic equivalence class, if one exists.
+
+Codewords are represented as hexadecimal numbers.
+
+\Y\B\4\D$\\{maxn}$ \5
+\T{25}\C{ must be at most 32, to keep the variable names small }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\&{int} \|n;\C{ command-line parameter }\6
+\&{char} ${}\|a[\\{maxn}+\T{1}];{}$\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k;\6
+\&{register} \&{unsigned} \&{int} \|x${},{}$ \|y${},{}$ \|z;\6
+\&{register} \&{unsigned} \&{long} \&{long} \|m${},{}$ \\{acc}${},{}$ \\{xy};\7
+\X2:Process the command line\X;\6
+\X3:Generate the positive clauses\X;\6
+\X5:Generate the negative clauses\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Process the command line\X${}\E{}$\6
+\&{if} ${}(\\{argc}\I\T{2}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
+\|n)\I\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ n\\n"},\39\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|n<\T{2}\V\|n>\\{maxn}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"n\ should\ be\ between}\)\.{\ 2\ and\ \%d,\
+not\ \%d!\\n}\)\.{"},\39\\{maxn},\39\|n);{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"\~\ sat-commafree\ \%d\\}\)\.{n"},\39\|n){}$;\par
+\U1.\fi
+
+\M{3}Here I use Algorithm 7.2.1.1F to find the prime binary strings.
+
+\Y\B\4\X3:Generate the positive clauses\X${}\E{}$\6
+\4\\{f1}:\5
+${}\|a[\T{0}]\K{-}\T{1},\39\|j\K\T{1};{}$\6
+\4\\{f2}:\5
+\&{if} ${}(\|j\E\|n){}$\1\5
+\X4:Visit the prime string $a_1\ldots a_n$\X;\2\6
+\4\\{f3}:\5
+\&{for} ${}(\|j\K\|n;{}$ ${}\|a[\|j]\E\T{1};{}$ ${}\|j\MM){}$\1\5
+;\2\6
+\4\\{f4}:\5
+\&{if} (\|j)\5
+${}\{{}$\1\6
+${}\|a[\|j]\K\T{1};{}$\6
+\4\\{f5}:\5
+\&{for} ${}(\|k\K\|j+\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\1\5
+${}\|a[\|k]\K\|a[\|k-\|j];{}$\2\6
+\&{goto} \\{f2};\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{4}\B\X4:Visit the prime string $a_1\ldots a_n$\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|n;{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|x\K\T{0},\39\|k\K\T{0};{}$ ${}\|k<\|n;{}$ ${}\|k\PP){}$\1\5
+${}\|x\K(\|x\LL\T{1})+\|a[\T{1}+((\|i+\|k)\MOD\|n)];{}$\2\6
+${}\\{printf}(\.{"\ \%x"},\39\|x);{}$\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\U3.\fi
+
+\M{5}\B\X5:Generate the negative clauses\X${}\E{}$\6
+$\|m\K(\T{1\$L\$L}\LL\|n)-\T{1};{}$\6
+\&{for} ${}(\|x\K\T{0};{}$ ${}\|x<(\T{1}\LL\|n);{}$ ${}\|x\PP){}$\5
+${}\{{}$\1\6
+\X6:If \PB{\|x} is cyclic, \PB{\&{continue}}\X;\6
+\&{for} ${}(\|y\K\T{0};{}$ ${}\|y<(\T{1}\LL\|n);{}$ ${}\|y\PP){}$\5
+${}\{{}$\1\6
+\X7:If \PB{\|y} is cyclic, \PB{\&{continue}}\X;\6
+\X9:Generate the clauses for \PB{\|x} followed by \PB{\|y}\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{6}\B\X6:If \PB{\|x} is cyclic, \PB{\&{continue}}\X${}\E{}$\6
+$\\{acc}\K{}$(((\&{unsigned} \&{long} \&{long}) \|x)${}\LL\|n)+\|x;{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\|n;{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(((\\{acc}\GG\|k)\AND\|m)\E\|x){}$\1\5
+\&{break};\2\2\6
+\&{if} ${}(\|k<\|n){}$\1\5
+\&{continue};\2\par
+\U5.\fi
+
+\M{7}\B\X7:If \PB{\|y} is cyclic, \PB{\&{continue}}\X${}\E{}$\6
+$\\{acc}\K{}$(((\&{unsigned} \&{long} \&{long}) \|y)${}\LL\|n)+\|y;{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\|n;{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(((\\{acc}\GG\|k)\AND\|m)\E\|y){}$\1\5
+\&{break};\2\2\6
+\&{if} ${}(\|k<\|n){}$\1\5
+\&{continue};\2\par
+\U5.\fi
+
+\M{8}\B\X8:If \PB{\|z} is cyclic, \PB{\&{continue}}\X${}\E{}$\6
+$\\{acc}\K{}$(((\&{unsigned} \&{long} \&{long}) \|z)${}\LL\|n)+\|z;{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\|n;{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(((\\{acc}\GG\|k)\AND\|m)\E\|z){}$\1\5
+\&{break};\2\2\6
+\&{if} ${}(\|k<\|n){}$\1\5
+\&{continue};\2\par
+\U9.\fi
+
+\M{9}\B\X9:Generate the clauses for \PB{\|x} followed by \PB{\|y}\X${}\E{}$\6
+$\\{xy}\K{}$(((\&{unsigned} \&{long} \&{long}) \|x)${}\LL\|n)+\|y;{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|z\K(\\{xy}\GG\|j)\AND\|m;{}$\6
+\X8:If \PB{\|z} is cyclic, \PB{\&{continue}}\X;\6
+${}\\{printf}(\.{"\~\%x\ \~\%x\ \~\%x\\n"},\39\|x,\39\|y,\39\|z);{}$\6
+\4${}\}{}$\2\par
+\U5.\fi
+
+\N{1}{10}Index.
+\fi
+
+\inx
+\fin
+\con

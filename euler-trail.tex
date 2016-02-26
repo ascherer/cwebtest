@@ -1,0 +1,98 @@
+\input cwebmac
+
+
+
+
+\N{1}{1}Intro. We output an Eulerian trail of the (undirected) graph named on
+the
+command line. (Each edge is considered to be two directed arcs; thus it
+is traversed in both directions.)
+
+If the graph isn't connected, we consider only the vertices that are
+reachable from the first one, \PB{$\|g\MG\\{vertices}$}.
+
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\8\#\&{include} \.{"gb\_graph.h"}\6
+\8\#\&{include} \.{"gb\_save.h"}\6
+\X3:Subroutine\X\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k;\6
+\&{Graph} ${}{*}\|g;{}$\6
+\&{Vertex} ${}{*}\|u,{}$ ${}{*}\|v;{}$\6
+\&{Arc} ${}{*}\|a;{}$\7
+\X2:Input the graph\X;\6
+\X4:Traverse depth first\X;\6
+\X5:Output the trail\X;\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Input the graph\X${}\E{}$\6
+\&{if} ${}(\\{argc}\I\T{2}\V\R(\|g\K\\{restore\_graph}(\\{argv}[\T{1}]))){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ foo.gb\\n"},\39\\{argv}[%
+\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"OK,\ I've\ input\ `\%s'}\)\.{.\\n"},\39%
+\\{argv}[\T{1}]);{}$\6
+${}\\{gb\_new\_edge}(\|g\MG\\{vertices},\39\|g\MG\\{vertices}+\|g\MG\|n,\39%
+\T{0}){}$;\C{ dummy edge }\par
+\U1.\fi
+
+\M{3}Subroutine \PB{$\\{dfs}(\|u,\|v)$} sets \PB{$\|v\MG\\{parent}\K\|u$} and %
+\PB{$\|v\MG\\{nav}$} to the vertex
+that follows \PB{\|u} in \PB{\|v}'s adjacency list. It also explores all
+vertices reachable from \PB{\|v} that haven't already been seen.
+
+\Y\B\4\D$\\{parent}$ \5
+$\|v.{}$\|V\par
+\B\4\D$\\{nav}$ \5
+$\|w.{}$\|A\par
+\Y\B\4\X3:Subroutine\X${}\E{}$\6
+\&{void} \\{dfs}(\&{register} \&{Vertex} ${}{*}\|u,\39{}$\&{register} %
+\&{Vertex} ${}{*}\|v){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{Vertex} ${}{*}\|w;{}$\6
+\&{register} \&{Arc} ${}{*}\|a;{}$\7
+${}\|v\MG\\{parent}\K\|u;{}$\6
+\&{for} ${}(\|a\K\|v\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|w\K\|a\MG\\{tip};{}$\6
+\&{if} ${}(\|w\E\|u){}$\1\5
+${}\|v\MG\\{nav}\K\|a\MG\\{next};{}$\2\6
+\&{else} \&{if} ${}(\|w\MG\\{parent}\E\NULL){}$\1\5
+${}\\{dfs}(\|v,\39\|w);{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{4}\B\X4:Traverse depth first\X${}\E{}$\6
+$\\{dfs}(\|g\MG\\{vertices}+\|g\MG\|n,\39\|g\MG\\{vertices}){}$;\par
+\U1.\fi
+
+\M{5}Now the Eulerian traversal is beautifully simple.
+
+\Y\B\4\X5:Output the trail\X${}\E{}$\6
+\&{for} ${}(\|v\K\|g\MG\\{vertices};{}$ ${}\|v\I\|g\MG\\{vertices}+\|g\MG%
+\|n;{}$ \,)\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\ \%s"},\39\|v\MG\\{name});{}$\6
+${}\|a\K\|v\MG\\{nav};{}$\6
+\&{if} ${}(\R\|a){}$\1\5
+${}\|a\K\|v\MG\\{arcs};{}$\2\6
+${}\|v\MG\\{nav}\K\|a\MG\\{next};{}$\6
+${}\|v\K\|a\MG\\{tip};{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\N{1}{6}Index.
+
+\fi
+
+
+\inx
+\fin
+\con

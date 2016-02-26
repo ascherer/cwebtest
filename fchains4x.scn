@@ -1,0 +1,22 @@
+\I\X12:Answer queries\X
+\U1.
+\I\X3:Combine all functions of costs \PB{\|k} and \PB{$\|r-\T{1}-\|k$}\X
+\U1.
+\I\X9:Initialize the functions of cost 0\X
+\U8.
+\I\X10:Initialize the functions of cost 1\X
+\U8.
+\I\X8:Initialize the tables\X
+\U1.
+\I\X2:Read the initial functions\X
+\U1.
+\I\X6:Try for breakthru and \PB{\&{goto} \\{pqdone}}\X
+\U3.
+\I\X4:Try for new function\X
+\U3.
+\I\X11:Update for cost 1\X
+\U10.
+\I\X7:Update the table for cost \PB{$\|r-\T{1}$}\X
+\U6.
+\I\X5:Update the table for cost \PB{\|r}\X
+\U4.

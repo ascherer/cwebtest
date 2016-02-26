@@ -1,0 +1,160 @@
+\I\X41:Allocate the main arrays\X
+\U40.
+\I\X52, 82:Allocate the subsidiary arrays\X
+\U40.
+\I\X45:Check consistency\X
+\U40.
+\I\X36:Check the \PB{\\{avail}} list\X
+\U33.
+\I\X58:Choose a literal $l\in c$ on which to branch\X
+\U57.
+\I\X65:Clear the strengthened stack\X
+\Us83, 91, 93\ETs94.
+\I\X53:Clear the to-do stack\X
+\U65.
+\I\X42:Copy all the temporary cells to the \PB{\\{mem}} array in proper format\X
+\U40.
+\I\X44:Copy all the temporary variable nodes to the \PB{\\{vmem}} array in
+proper format\X
+\U40.
+\I\X71:Copy \PB{\\{uu}} and move \PB{\\{vv}} left\X
+\U66.
+\I\X72:Copy \PB{\|u} and move both \PB{\|v} and \PB{\\{vv}} left\X
+\U66.
+\I\X70:Copy \PB{\|u} and move \PB{\|v} left\X
+\U66.
+\I\X79:Decide whether \PB{\|c} belongs to $\alpha^{(0)}$ or $\alpha^{(1)}$\X
+\U78.
+\I\X64:Decrease \PB{\\{size}(\\{cc})}\X
+\U63.
+\I\X56:Delete all clauses that contain \PB{\|l}\X
+\U53.
+\I\X54:Delete \PB{\\{bar}(\|l)} from all clauses\X
+\U53.
+\I\X80:Discard the new resolvents and \PB{\&{goto} \\{elim\_done}}\X
+\U78.
+\I\X93:Do a round of subsumption/strengthening on the new clauses\X
+\U91.
+\I\X78:Either generate the clauses to eliminate variable \PB{\|x}, or \PB{%
+\&{goto} \\{elim\_done}}\X
+\U83.
+\I\X85:Eliminate variable \PB{\|x}, replacing its clauses by the new resolvents%
+\X
+\U83.
+\I\X17:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash table at \PB{\|p}\X
+\U12.
+\I\X46:Finish building the cell data structures\X
+\U40.
+\I\X50:Force literal \PB{\|w} to be true\X
+\Us49, 54, 64\ETs90.
+\I\X4, 8, 39, 81:Global variables\X
+\U3.
+\I\X18:Handle a duplicate literal\X
+\U12.
+\I\X76:If the complements of all other literals in \PB{\|c} are stamped, set %
+\PB{$\\{beta0}\K\|c$} and \PB{\&{break}}\X
+\U74.
+\I\X62:If \PB{\|c} is contained in \PB{\\{cc}}, except for~\PB{\|u}, make \PB{$%
+\|l\Z\\{ll}$}\X
+\U61.
+\I\X59:If \PB{\|c} is contained in \PB{\\{cc}}, make \PB{$\|l\Z\\{ll}$}\X
+\U57.
+\I\X9, 15:Initialize everything\X
+\U3.
+\I\X11:Input the clause in \PB{\\{buf}}\X
+\U10.
+\I\X10:Input the clauses\X
+\U3.
+\I\X43:Insert the cells for the literals of clause \PB{\|c}\X
+\U42.
+\I\X14:Install a new \PB{\&{chunk}}\X
+\U12.
+\I\X13:Install a new \PB{\&{vchunk}}\X
+\U12.
+\I\X90:Install \PB{\\{last\_new}} into position \PB{\|c}\X
+\U89.
+\I\X94:Maybe try to strengthen with \PB{\|c}\X
+\U93.
+\I\X69:Move both \PB{\|v} and \PB{\\{vv}} left\X
+\Us66\ET72.
+\I\X20:Move \PB{\\{cur\_cell}} backward to the previous cell\X
+\Us19\ET43.
+\I\X21:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary variable\X
+\U44.
+\I\X68:Move \PB{\\{vv}} left\X
+\Us69\ET71.
+\I\X67:Move \PB{\|v} left\X
+\Us69\ET70.
+\I\X97:Output the simplified clauses\X
+\U3.
+\I\X74:Partition the $\alpha$'s and $\beta$'s if a simple functional dependency
+is found\X
+\U78.
+\I\X84:Place candidates for elimination into buckets\X
+\U83.
+\I\X91:Preprocess until everything is stable\X
+\U3.
+\I\X5:Process the command line\X
+\U3.
+\I\X92:Put all clauses into the strengthened stack\X
+\U91.
+\I\X16:Put the variable name beginning at \PB{\\{buf}[\|j]} in \PB{$\\{cur\_tmp%
+\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X
+\U12.
+\I\X55:Recompute \PB{\\{clssig}(\|c)}\X
+\U54.
+\I\X88:Recycle the cells of clauses that involve \PB{\|v}\X
+\U85.
+\I\X95:Reject \PB{\|u} unless it fills special conditions\X
+\U61.
+\I\X19:Remove all variables of the current clause\X
+\U11.
+\I\X57:Remove clauses subsumed by \PB{\|c}\X
+\Us65\ET93.
+\I\X60:Remove the subsumed clause \PB{\\{cc}}\X
+\U57.
+\I\X63:Remove \PB{\\{bar}(\|u)} from \PB{\\{cc}}\X
+\U61.
+\I\X89:Replace clause \PB{\|c} by a new resolvent, if any\X
+\U87.
+\I\X87:Replace the clauses of \PB{\|v} by new resolvents\X
+\U85.
+\I\X22:Report the successful completion of the input phase\X
+\U3.
+\I\X66:Resolve \PB{\|c} and \PB{\\{cc}} with respect to \PB{\|l}\X
+\U78.
+\I\X73:Return a tautology\X
+\U66.
+\I\X12:Scan and record a variable; negate it if \PB{$\|i\E\T{1}$}\X
+\U11.
+\I\X51:Set literal \PB{\|w} to \PB{\\{false}} unless it's already set\X
+\Us47, 56, 60, 63\ETs88.
+\I\X49:Set the \PB{\\{right}} links for \PB{\|c}, and its signature and size\X
+\U46.
+\I\X47:Set the \PB{\\{up}} links for \PB{\|l} and the \PB{\\{left}} links of
+its cells\X
+\U46.
+\I\X40:Set up the main data structures\X
+\U3.
+\I\X48:Set \PB{\\{litsig}(\|l)}\X
+\U47.
+\I\X75:Stamp all literals that appear with \PB{\|l} in binary clauses\X
+\U74.
+\I\X77:Stamp the literals of clause \PB{\\{beta0}}\X
+\U74.
+\I\X61:Strengthen clauses that \PB{\|c} can improve\X
+\Us65\ET94.
+\I\X26, 30, 31, 32, 33, 37, 38, 98:Subroutines\X
+\U3.
+\I\X83:Try to eliminate variables\X
+\U91.
+\I\X6, 7, 25, 27, 28, 29:Type definitions\X
+\U3.
+\I\X86:Update the \.{erp} file for the elimination of \PB{\|x}\X
+\U85.
+\I\X96:Update \PB{\\{newsize}} info for \PB{\|l}'s clauses\X
+\U93.
+\I\X35:Verify the cells for clause \PB{\|c}\X
+\U33.
+\I\X34:Verify the cells for literal \PB{\|l}\X
+\U33.

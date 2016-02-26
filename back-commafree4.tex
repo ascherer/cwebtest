@@ -1,0 +1,1183 @@
+\input cwebmac
+
+\datethis
+
+
+\N{1}{1}Intro. This is a somewhat nontrivial example of backtrack programming,
+intended to exhibit basic ideas as well as perhaps to solve an open problem.
+
+The problem is to find the largest possible comma-free code of length~4
+on an $m$-letter alphabet, where $m=5$. It was solved for $m\le4$
+in the 60s, so I have some hope. On the other hand, the running time
+might also be worse than exponential in~$m$, so I must keep my fingers crossed.
+
+The theory was set out by Golomb, Gordon, and Welch in {\sl Canadian
+Journal of Mathematics\/ \bf10} (1958), 202--209. There are $m^4$
+four-letter words, and $m^2$ of them are ``cyclic'' (like \.{dodo}).
+The others are divided into $(m^4-m^2)/4$ equivalence classes,
+where a word is considered equivalent to its cyclic shifts. Our
+problem is to choose as many codewords as possible such that,
+if $x_1x_2x_3x_4$ and $x_5x_6x_7x_8$ are codewords,
+then $x_2x_3x_4x_5$ and $x_3x_4x_5x_5$ and $x_4x_5x_6x_7$ are {\it not\/}
+codewords. In particular, when $x_1x_2x_3x_4=x_5x_6x_7x_8$ this condition
+tells us that we can choose at most one codeword from each equivalence class.
+
+The number of equivalence classes is 3, 18, 60, and 150 when $m=2$, 3,
+4, and~5. This maximum code size is achievable for $m=2$ and $m=3$;
+but a computer program by Lee Laxdal in 1963 showed that the largest sets
+for $m=4$ have 57 codewords, not 60.
+
+I think there's an interesting way to reproduce that result (namely
+by the methods below), and perhaps to go further.
+
+Note (written after completing this program): I haven't time to follow up
+on an afterthought that might be able to help crack the case \PB{$\|m\K\T{5}$}.
+Please see the detailed remarks near the beginning of
+\PB{$\X40:Find \PB{\|x} that maximizes the ``kill'' potential~\PB{\|s}\X$}.
+
+\Y\B\4\D$\\{maxm}$ \5
+\T{7}\C{ unfortunately however it turns out that \PB{$\|m\K\T{5}$} is already
+too slow }\par
+\B\4\D$\\{maxmmmm}$ \5
+$(\\{maxm}*\\{maxm}*\\{maxm}*\\{maxm}{}$)\par
+\B\4\D$\\{maxclasses}$ \5
+$((\\{maxmmmm}-\\{maxm}*\\{maxm})/\T{4}{}$)\par
+\B\4\D$\\{ustacksize}$ \5
+\T{1000000}\par
+\B\4\D$\|o$ \5
+$\\{mems}\PP{}$\par
+\B\4\D$\\{oo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{2}\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\&{int} \|m${},{}$ \\{goal};\C{ command-line parameters }\6
+\&{typedef} \&{unsigned} \&{long} \&{long} \&{ull};\7
+\X28:Type definitions\X;\7
+\&{ull} \\{mems};\C{ 8-byte memory accesses }\6
+\&{ull} \\{nodes};\C{ size of search tree }\6
+\&{ull} \\{thresh}${}\K\T{10000000000}{}$;\C{ reporting time }\6
+\&{ull} ${}\\{profile}[\\{maxclasses}+\T{3}]{}$;\C{ width of search tree levels
+}\6
+\&{int} \\{count};\C{ number of solutions found }\6
+\&{int} \\{maxstack}${},{}$ \\{maxpoison};\C{ how big have these lists gotten?
+}\6
+\&{int} \\{vbose};\C{ level of verbosity }\7
+\X6:Global variables\X;\6
+\X4:Subroutines\X;\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|a${},{}$ \|b${},{}$ \|c${},{}$ \|d${},{}$ \|i${},{}$ %
+\|j${},{}$ \|k${},{}$ \|l${},{}$ \|p${},{}$ \|q${},{}$ \|r${},{}$ \|s${},{}$ %
+\\{pp}${},{}$ \|x${},{}$ \|y${},{}$ \\{yy}${},{}$ \|z${},{}$ \\{zz}${},{}$ %
+\\{alpha}${},{}$ \\{ploc}${},{}$ \\{cls}${},{}$ \\{slack};\7
+\X3:Process the command line\X;\6
+\X10:Initialize the tables\X;\6
+\X32:Backtrack through all solutions\X;\6
+${}\\{fprintf}(\\{stderr},\39\.{"Altogether\ \%d\ solut}\)\.{ions\ (\%lld\
+mems,\ \%ll}\)\.{d\ nodes)\\n"},\39\\{count},\39\\{mems},\39\\{nodes});{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"(maxstack=\%d,maxpoi}\)\.{son=\%d)\\n"},\39%
+\\{maxstack},\39(\\{maxpoison}-\\{poison})/\T{2});{}$\6
+\&{if} (\\{vbose})\1\5
+\X2:Print the profile\X;\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Print the profile\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Profile:\ \ \ \ \ \ \ \ \ \ 1}\)\.{\\n"});{}$\6
+\&{for} ${}(\|k\K\T{2};{}$ ${}\|k\Z\\{maxl}+\T{1};{}$ ${}\|k\PP){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\%19lld\\n"},\39\\{profile}[\|k]);{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}\B\X3:Process the command line\X${}\E{}$\6
+\&{if} ${}(\\{argc}<\T{3}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
+\|m)\I\T{1}\V\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}\\{goal})\I%
+\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ m\ goal\ [p}\)\.{rofile]\
+[verbose]\ [e}\)\.{xtraverbose]\\n"},\39\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|m<\T{2}\V\|m>\\{maxm}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"m\ should\ be\ between}\)\.{\ 2\ and\ \%d,\
+not\ \%d!\\n}\)\.{"},\39\\{maxm},\39\|m);{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+${}\\{vbose}\K\\{argc}-\T{3}{}$;\par
+\U1.\fi
+
+\M{4}\B\X4:Subroutines\X${}\E{}$\6
+\&{void} \\{confusion}(\&{char} ${}{*}\|s){}$\1\1\2\2\6
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I'm\ confused\ (\%s)!\\}\)\.{n"},\39\|s);{}$\6
+${}\\{exit}({-}\T{666});{}$\6
+\4${}\}{}$\2\par
+\As5, 18, 19, 20, 21, 31\ETs42.
+\U1.\fi
+
+\N{1}{5}Infrastructure. This program keeps its state information in an
+array \PB{\\{mem}} of 16-bit quantities. Everything in \PB{\\{mem}} also has a
+16-bit address. Thus I can undo the changes made at one level
+if I maintain a stack that holds 32-bit items, $(\rm address,oldvalue)$.
+
+In this implementation I use a ``stamp'' to see whether the
+former \PB{\\{mem}} value has already been saved. This makes the
+cost $2r+5$~mems when we store $r>0$ times into a location,
+rather than $5r$~mems; so it saves time if $r$ is usually greater than~1.
+
+(With a change file I can try removing the stamps, to see what
+happens in practice.)
+
+\Y\B\4\X4:Subroutines\X${}\mathrel+\E{}$\6
+\&{inline} \&{void} \\{store}(\&{register} \&{short} \|a${},\39{}$\&{register} %
+\&{short} \|x)\1\1\2\2\6
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\\{stamp}[\|a]\I\\{curstamp}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{stamp}[\|a]\K\\{curstamp};{}$\6
+${}\\{oo},\39\\{undo}[\\{uptr}\PP]\K(\|a\LL\T{16})+\\{mem}[\|a];{}$\6
+\&{if} ${}(\\{uptr}>\\{maxstack}){}$\5
+${}\{{}$\1\6
+${}\\{maxstack}\K\\{uptr};{}$\6
+\&{if} ${}(\\{maxstack}\G\\{ustacksize}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Stack\ overflow\ (ust}\)\.{acksize=\%d)!\\n"},%
+\39\\{ustacksize});{}$\6
+${}\\{exit}({-}\T{9});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\|o,\39\\{mem}[\|a]\K\|x;{}$\6
+\4${}\}{}$\2\7
+\&{inline} \&{void} \\{unstore}(\&{register} \&{int} \\{ptr})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{unsigned} \&{int} \|x;\7
+\&{while} ${}(\\{uptr}>\\{ptr}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|x\K\\{undo}[\MM\\{uptr}];{}$\6
+${}\|o,\39\\{mem}[\|x\GG\T{16}]\K\|x\AND\T{\^ffff}{}$;\C{ everything snaps back
+to its former value }\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{6}\B\X6:Global variables\X${}\E{}$\6
+\&{unsigned} ${}\\{mem}[\T{1}\LL\T{16}];{}$\6
+\&{unsigned} \&{int} \\{undo}[\\{ustacksize}];\6
+\&{int} \\{uptr};\C{ this many entries are currently in \PB{\\{undo}} }\6
+\&{unsigned} \&{int} ${}\\{stamp}[\T{1}\LL\T{16}];{}$\6
+\&{unsigned} \&{int} \\{curstamp};\par
+\As9, 14, 24\ETs29.
+\U1.\fi
+
+\M{7}Here's what we do when we need a new current stamp.
+
+Incidentally, my first draft of this step had a noteworthy bug: I knew that
+\PB{\\{curstamp}} won't actually overflow in this program; still, this program
+is
+intended as a model for more complicated ones in which overflow really
+might happen. So I somewhat grudgingly added code to cover the case of
+overflow. But I noticed that I could save one (1) line, aha, by
+leaving \PB{$\\{curstamp}\K\T{0}$} after overflow, and setting all the
+remaining
+stamps to \PB{\T{\^ffffffff}}. Reason: The purpose is to have \PB{$\\{stamp}[%
+\|x]\I\\{curstamp}$} for
+all~\PB{\|x} after bumping. Fallacy: Later on, when \PB{\\{curstamp}} rises for
+the second time to
+\PB{\T{\^ffffffff}}, that invariant relation might no longer hold. A better
+invariant
+is to say that \PB{$\\{stamp}[\|x]<\\{curstamp}$} for all~\PB{\|x} after
+bumping.
+
+\Y\B\4\X7:Bump \PB{\\{curstamp}}\X${}\E{}$\6
+\&{if} ${}(\PP\\{curstamp}\E\T{0}){}$\5
+${}\{{}$\C{ whoops, \PB{\\{curstamp}} has overflowed! cancel all stamps }\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<(\T{1}\LL\T{16});{}$ ${}\|k\PP){}$\1\5
+${}\|o,\39\\{stamp}[\|k]\K\T{0};{}$\2\6
+${}\\{curstamp}\K\T{1};{}$\6
+\4${}\}{}$\2\par
+\U32.\fi
+
+\M{8}This program also makes use of numerous sequential lists, kept in~\PB{%
+\\{mem}},
+for which the basic operations are to append a new item, or to remove
+an item given its name.
+
+Suppose \PB{\|p} points to the first empty spot at the current end of a list.
+To append a new item~$x$, knowing that it isn't already present,
+the operation is \PB{${*}\|p\K\|x$} followed by \PB{$\|i[\|x]\K\|p\PP$}, where %
+\PB{\|i} is an
+inverse list. To delete item $x$, knowing that it is present,
+we set \PB{$\|q\K\|i[\|x]$} and test if \PB{$\MM\|p\E\|q$}. If so, we're done.
+If not,
+we set \PB{$\|y\K{*}\|p$} and \PB{${*}\|q\K\|y$} and \PB{$\|i[\|y]\K\|q$}.
+
+\fi
+
+\N{1}{9}Memory layout. Let $\alpha$ be a four-letter word $abcd$. We will
+think of $\alpha$ as the radix-$m$ integer $(abcd)_m$,
+although it will also be represented in memory as the hexadecimal
+integer $(abcd)_{16}$ since that's convenient for programming
+and debugging.
+
+\Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{int} ${}\\{hexconv}[\T{1}\LL\T{16}]{}$;\C{ table to convert from hex to
+radix $m$ }\6
+\&{int} \\{mconv}[\\{maxmmmm}];\C{ and vice versa (used only in diagnostics) }%
+\par
+\fi
+
+\M{10}\B\X10:Initialize the tables\X${}\E{}$\6
+\&{for} ${}(\|a\K\T{0};{}$ ${}\|a<\|m;{}$ ${}\|a\PP){}$\1\6
+\&{for} ${}(\|b\K\T{0};{}$ ${}\|b<\|m;{}$ ${}\|b\PP){}$\1\6
+\&{for} ${}(\|c\K\T{0};{}$ ${}\|c<\|m;{}$ ${}\|c\PP){}$\1\6
+\&{for} ${}(\|d\K\T{0};{}$ ${}\|d<\|m;{}$ ${}\|d\PP){}$\1\5
+${}\|o,\39\\{hexconv}[(\|a\LL\T{12})+(\|b\LL\T{8})+(\|c\LL\T{4})+\|d]\K((\|a*%
+\|m+\|b)*\|m+\|c)*\|m+\|d,\39\\{mconv}[((\|a*\|m+\|b)*\|m+\|c)*\|m+\|d]\K(\|a%
+\LL\T{12})+(\|b\LL\T{8})+(\|c\LL\T{4})+\|d{}$;\2\2\2\2\par
+\As17, 25\ETs30.
+\U1.\fi
+
+\M{11}During the backtrack process, every word $\alpha$ will be in
+one of three states, which I'll call green, red, and blue.
+(i)~Green words have been chosen (tentatively) to be in the code.
+(ii)~Red words have been ruled out, either because they're incompatible
+with the words that are currently green or because all solutions
+in which they're green have already been considered. (iii)~The remaining
+words, feeling blue, are still in limbo.
+The current state of word $\alpha$ is in \PB{\\{mem}}$[\alpha]$.
+
+\Y\B\4\D$\\{green}$ \5
+\T{2}\par
+\B\4\D$\\{red}$ \5
+\T{0}\par
+\B\4\D$\\{blue}$ \5
+\T{1}\par
+\fi
+
+\M{12}Let $p_1(\alpha)=(a000)_m$, $p_2(\alpha)=(ab00)_m$, $p_3(%
+\alpha)=(abc0)_m$
+be the three proper prefixes of~$\alpha=abcd$, and let
+$s_1(\alpha)=(d000)_m$, $s_2(\alpha)=(cd00)_m$, $s_3(\alpha)=(bcd0)_m$
+be the (shifted) proper suffixes.
+
+Every blue word $\alpha=abcd$ appears in six lists, corresponding
+to those suffixes.
+For example, $p_1(\alpha)$ corresponds to the list of all blue words that begin
+with~$a$, and $s_2(\alpha)$ corresponds to the list of all blue words that
+end with $cd$. List $p_1(\alpha)$ begins at \PB{\\{mem}} location
+$\PB{\\{p1offset}}+p_1(\alpha)$; its current pointer is at \PB{\\{mem}}
+location
+$\PB{\\{p1offset}}+m^4+p_1(\alpha)$; and $\alpha$'s location in the list is
+maintained in \PB{\\{mem}} location $\PB{\\{p1offset}}-m^4+\alpha$. Similar
+conventions apply to the other five lists, whose offsets are
+\PB{\\{p2offset}}, \dots,~\PB{\\{s3offset}}.
+
+\Y\B\4\D$\\{p1}(\|x)$ \5
+$(\|o,\39\\{hexconv}[(\|x)\AND\T{\^f000}]{}$)\par
+\B\4\D$\\{p2}(\|x)$ \5
+$(\|o,\39\\{hexconv}[(\|x)\AND\T{\^ff00}]{}$)\par
+\B\4\D$\\{p3}(\|x)$ \5
+$(\|o,\39\\{hexconv}[(\|x)\AND\T{\^fff0}]{}$)\par
+\B\4\D$\\{s1}(\|x)$ \5
+$(\|o,\39\\{hexconv}[((\|x)\AND\T{\^000f})\LL\T{12}]{}$)\par
+\B\4\D$\\{s2}(\|x)$ \5
+$(\|o,\39\\{hexconv}[((\|x)\AND\T{\^00ff})\LL\T{8}]{}$)\par
+\B\4\D$\\{s3}(\|x)$ \5
+$(\|o,\39\\{hexconv}[((\|x)\AND\T{\^0fff})\LL\T{4}]{}$)\par
+\Y\B\4\X12:Create empty prefix and suffix lists\X${}\E{}$\6
+\&{for} ${}(\|a\K\T{0};{}$ ${}\|a<\|m;{}$ ${}\|a\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{mem}[\\{p1offset}+\\{mmmm}+\|a*\|m*\|m*\|m]\K\\{p1offset}+\|a*\|m*%
+\|m*\|m;{}$\6
+${}\|o,\39\\{mem}[\\{s1offset}+\\{mmmm}+\|a*\|m*\|m*\|m]\K\\{s1offset}+\|a*\|m*%
+\|m*\|m;{}$\6
+\&{for} ${}(\|b\K\T{0};{}$ ${}\|b<\|m;{}$ ${}\|b\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{mem}[\\{p2offset}+\\{mmmm}+(\|a*\|m+\|b)*\|m*\|m]\K\\{p2offset}+(%
+\|a*\|m+\|b)*\|m*\|m;{}$\6
+${}\|o,\39\\{mem}[\\{s2offset}+\\{mmmm}+(\|a*\|m+\|b)*\|m*\|m]\K\\{s2offset}+(%
+\|a*\|m+\|b)*\|m*\|m;{}$\6
+\&{for} ${}(\|c\K\T{0};{}$ ${}\|c<\|m;{}$ ${}\|c\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{mem}[\\{p3offset}+\\{mmmm}+((\|a*\|m+\|b)*\|m+\|c)*\|m]\K%
+\\{p3offset}+((\|a*\|m+\|b)*\|m+\|c)*\|m;{}$\6
+${}\|o,\39\\{mem}[\\{s3offset}+\\{mmmm}+((\|a*\|m+\|b)*\|m+\|c)*\|m]\K%
+\\{s3offset}+((\|a*\|m+\|b)*\|m+\|c)*\|m;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U17.\fi
+
+\M{13}The following instructions serve to populate the lists at the beginning.
+Here \PB{\\{alpha}} is the $m$-ary number, and \PB{\|x} is its hexadecimal
+representation;
+\PB{\\{del}} is a truncated version of \PB{\\{alpha}}, identifying where the
+list
+begins within its offset region.
+
+\Y\B\4\D$\\{insert}(\|x,\\{alpha},\\{del},\\{off})$ \6
+${}\{{}$\1\6
+${}\\{ploc}\K(\\{del})+(\\{off}){}$;\C{ the list begins here }\6
+${}\|o,\39\|p\K\\{mem}[\\{ploc}+\\{mmmm}]{}$;\C{ \PB{\|p} is its current
+pointer }\6
+${}\|o,\39\\{mem}[\|p]\K\|x{}$;\C{ we put the hex form into the list }\6
+${}\|o,\39\\{mem}[(\\{off})-\\{mmmm}+\\{alpha}]\K\|p{}$;\C{ and remember it in
+the inverse list }\6
+${}\|o,\39\\{mem}[\\{ploc}+\\{mmmm}]\K\|p+\T{1}{}$;\C{ and update the list size
+}\6
+\4${}\}{}$\2\par
+\Y\B\4\X13:Put \PB{\\{alpha}} into all of its prefix and suffix lists\X${}\E{}$%
+\6
+$\\{insert}(\|x,\39\\{alpha},\39\\{p1}(\|x),\39\\{p1offset});{}$\6
+${}\\{insert}(\|x,\39\\{alpha},\39\\{p2}(\|x),\39\\{p2offset});{}$\6
+${}\\{insert}(\|x,\39\\{alpha},\39\\{p3}(\|x),\39\\{p3offset});{}$\6
+${}\\{insert}(\|x,\39\\{alpha},\39\\{s1}(\|x),\39\\{s1offset});{}$\6
+${}\\{insert}(\|x,\39\\{alpha},\39\\{s2}(\|x),\39\\{s2offset});{}$\6
+${}\\{insert}(\|x,\39\\{alpha},\39\\{s3}(\|x),\39\\{s3offset}){}$;\par
+\U16.\fi
+
+\M{14}The cyclic equivalence classes of words are given identification numbers
+from
+0 to $(m^4-m^2)/4-1$. The number of $\alpha$'s class is precomputed in
+the \PB{\\{cl}} table.
+
+Every blue word also appears in the list of all currently blue words
+in its class. That list, for class $k$, begins at \PB{\\{mem}} location
+$\PB{\\{cloffset}}+4k$. Its pointer is in \PB{\\{mem}} location
+$\PB{\\{cloffset}}+m^4+4k$, and $\alpha$'s position in that list
+is maintained in \PB{\\{mem}} location $\PB{\\{cloffset}}-m^4+\alpha$.
+
+\Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{mmmm};\C{ $m^4$ }\6
+\&{int} \\{maxl};\C{ $(m^4-m^2)/4$ }\6
+\&{int} \\{p1offset}${},{}$ \\{p2offset}${},{}$ \\{p3offset}${},{}$ %
+\\{s1offset}${},{}$ \\{s2offset}${},{}$ \\{s3offset}${},{}$ \\{cloffset};\6
+\&{char} \\{aa}[\T{5}];\C{ the working array for Algorithm 7.2.1.1F }\6
+\&{int} \\{cl}[\\{maxmmmm}];\C{ class identification numbers }\6
+\&{int} \\{clrep}[\\{maxclasses}];\C{ class representatives (as hexadecimal
+numbers) }\6
+\&{int} \\{classes};\C{ the number of classes found so far }\par
+\fi
+
+\M{15}Here I use Algorithm 7.2.1.1F to find the prime binary strings.
+
+\Y\B\4\X15:Compute the classes and initialize their lists\X${}\E{}$\6
+\4\\{f1}:\5
+${}\|o,\39\\{aa}[\T{0}]\K{-}\T{1},\39\|j\K\T{1},\39\\{classes}\K\T{0};{}$\6
+\4\\{f2}:\5
+\&{if} ${}(\|j\E\T{4}){}$\1\5
+\X16:Visit the prime string $a_1\ldots a_4$\X;\2\6
+\4\\{f3}:\5
+\&{for} ${}(\|j\K\T{4};{}$ \|o${},\39\\{aa}[\|j]\E\|m-\T{1};{}$ ${}\|j\MM){}$\1%
+\5
+;\2\6
+\4\\{f4}:\5
+\&{if} (\|j)\5
+${}\{{}$\1\6
+${}\|o,\39\\{aa}[\|j]\PP;{}$\6
+\4\\{f5}:\5
+\&{for} ${}(\|k\K\|j+\T{1};{}$ ${}\|k\Z\T{4};{}$ ${}\|k\PP){}$\1\5
+${}\\{oo},\39\\{aa}[\|k]\K\\{aa}[\|k-\|j];{}$\2\6
+\&{goto} \\{f2};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{classes}\I\\{maxl}){}$\1\5
+\\{confusion}(\.{"classes"});\2\par
+\U17.\fi
+
+\M{16}\B\X16:Visit the prime string $a_1\ldots a_4$\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{4};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|x\K\T{0},\39\|k\K\T{0};{}$ ${}\|k<\T{4};{}$ ${}\|k\PP){}$\1\5
+${}\|x\K(\|x\LL\T{4})+\\{aa}[\T{1}+((\|i+\|k)\MOD\T{4})];{}$\2\6
+${}\|o,\39\\{alpha}\K\\{hexconv}[\|x];{}$\6
+\&{if} ${}(\|i\E\T{0}){}$\1\5
+${}\\{clrep}[\\{classes}]\K\|x;{}$\2\6
+\&{if} ${}(\|x\I\T{\^0100}\W\|x\I\T{\^1000}){}$\5
+${}\{{}$\C{ see below }\1\6
+${}\|o,\39\\{mem}[\\{alpha}]\K\\{blue};{}$\6
+${}\|o,\39\\{mem}[\|i+\T{4}*\\{classes}+\\{cloffset}]\K\|x;{}$\6
+${}\|o,\39\\{mem}[\\{cloffset}-\\{mmmm}+\\{alpha}]\K\|i+\T{4}*\\{classes}+%
+\\{cloffset};{}$\6
+\X13:Put \PB{\\{alpha}} into all of its prefix and suffix lists\X;\6
+\4${}\}{}$\2\6
+${}\|o,\39\\{cl}[\\{alpha}]\K\\{classes};{}$\6
+\4${}\}{}$\2\6
+${}\|o,\39\\{mem}[\\{cloffset}+\\{mmmm}+\T{4}*\\{classes}]\K\\{cloffset}+\T{4}*%
+\\{classes}+(\\{classes}\?\T{4}:\T{2});{}$\6
+${}\\{classes}\PP;{}$\6
+\4${}\}{}$\2\par
+\U15.\fi
+
+\M{17}Notice that we've already allocated $22m^4$ cells of \PB{\\{mem}}.
+Fortunately that's only 52822 when $m=7$, comfortably less than 65536.
+
+\Y\B\4\X10:Initialize the tables\X${}\mathrel+\E{}$\6
+$\\{mmmm}\K\|m*\|m*\|m*\|m;{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{mmmm};{}$ ${}\|k\PP){}$\1\5
+${}\|o,\39\\{mem}[\|k]\K\\{red};{}$\2\6
+${}\\{maxl}\K(\\{mmmm}-\|m*\|m)\GG\T{2};{}$\6
+\&{if} ${}(\\{goal}<\\{maxl}-\|m*(\|m-\T{1})\V\\{goal}>\\{maxl}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"The\ goal\ should\ be\ }\)\.{between\ \%d\ and%
+\ \%d,\ n}\)\.{ot\ \%d!\\n"},\39\\{maxl}-\|m*(\|m-\T{1}),\39\\{maxl},\39%
+\\{goal});{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+${}\\{p1offset}\K\T{2}*\\{mmmm},\39\\{p2offset}\K\T{5}*\\{mmmm},\39\\{p3offset}%
+\K\T{8}*\\{mmmm};{}$\6
+${}\\{s1offset}\K\T{11}*\\{mmmm},\39\\{s2offset}\K\T{14}*\\{mmmm},\39%
+\\{s3offset}\K\T{17}*\\{mmmm};{}$\6
+${}\\{cloffset}\K\T{20}*\\{mmmm};{}$\6
+\X12:Create empty prefix and suffix lists\X;\6
+\X15:Compute the classes and initialize their lists\X;\par
+\fi
+
+\M{18}Diagnostic information is helped by a symbolic indication of
+each list name.
+
+\Y\B\4\X4:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{decode\_list}(\&{int} \|p)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|x${},{}$ \\{alpha};\7
+${}\\{alpha}\K\|p\MOD\\{mmmm},\39\|x\K\\{mconv}[\\{alpha}];{}$\6
+\&{switch} ${}(\|p/\\{mmmm}){}$\5
+${}\{{}$\1\6
+\4\&{case} \T{2}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"\%x..."},\39\|x\GG\T{12}){}$;\5
+\&{break};\6
+\4\&{case} \T{5}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"\%02x.."},\39\|x\GG\T{8}){}$;\5
+\&{break};\6
+\4\&{case} \T{8}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"\%03x."},\39\|x\GG\T{4}){}$;\5
+\&{break};\6
+\4\&{case} \T{11}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"...\%x"},\39\|x\GG\T{12}){}$;\5
+\&{break};\6
+\4\&{case} \T{14}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"..\%02x"},\39\|x\GG\T{8}){}$;\5
+\&{break};\6
+\4\&{case} \T{17}:\5
+${}\\{fprintf}(\\{stderr},\39\.{".\%03x"},\39\|x\GG\T{4}){}$;\5
+\&{break};\6
+\4\&{case} \T{20}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"[\%04x]"},\39\\{clrep}[\\{alpha}/\T{4}]){}$;\5
+\&{break};\6
+\4\&{default}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"???"});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{19}We will actually maintain all of these lists only when none of
+the list elements is green. As soon as a green element appears in a list
+that begins at location~\PB{\|p}, we set the corresponding pointer to
+$p+m^4-1$, as if the list length were~$-1$, and call the list ``closed.''
+That pointer value serves
+as a sentinel to tell us that we needn't update the list any further.
+
+\Y\B\4\X4:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_list}(\&{int} \|p)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|q${},{}$ \|r;\7
+${}\|q\K\\{mem}[\|p+\\{mmmm}];{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"List\ "});{}$\6
+\\{decode\_list}(\|p);\6
+${}\\{fprintf}(\\{stderr},\39\.{":"});{}$\6
+\&{if} ${}(\|q<\|p){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ ."});{}$\2\6
+\&{else}\1\6
+\&{for} ${}(\|r\K\|p;{}$ ${}\|r<\|q;{}$ ${}\|r\PP){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ \%04x"},\39\\{mem}[\|r]);{}$\2\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{20}\B\X4:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_all\_lists}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|a${},{}$ \|b${},{}$ \|c${},{}$ \|k;\7
+\&{for} ${}(\|a\K\T{0};{}$ ${}\|a<\|m;{}$ ${}\|a\PP){}$\5
+${}\{{}$\1\6
+${}\\{print\_list}(\\{p1offset}+\|a*\|m*\|m*\|m);{}$\6
+${}\\{print\_list}(\\{s1offset}+\|a*\|m*\|m*\|m);{}$\6
+\&{for} ${}(\|b\K\T{0};{}$ ${}\|b<\|m;{}$ ${}\|b\PP){}$\5
+${}\{{}$\1\6
+${}\\{print\_list}(\\{p2offset}+(\|a*\|m+\|b)*\|m*\|m);{}$\6
+${}\\{print\_list}(\\{s2offset}+(\|a*\|m+\|b)*\|m*\|m);{}$\6
+\&{for} ${}(\|c\K\T{0};{}$ ${}\|c<\|m;{}$ ${}\|c\PP){}$\5
+${}\{{}$\1\6
+${}\\{print\_list}(\\{p3offset}+((\|a*\|m+\|b)*\|m+\|c)*\|m);{}$\6
+${}\\{print\_list}(\\{s3offset}+((\|a*\|m+\|b)*\|m+\|c)*\|m);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{maxl};{}$ ${}\|k\PP){}$\1\5
+${}\\{print\_list}(\\{cloffset}+\T{4}*\|k);{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{21}Sanity checking. Whenever data structures are highly redundant,
+we want to monitor them carefully until we're confident that our
+program isn't messing them up. The \PB{\\{sanity}} routine is intended to
+nip bugs in the bud.
+
+\Y\B\4\D$\\{sanity\_checking}$ \5
+\T{0}\C{ set this to 1 if you suspect a bug }\par
+\Y\B\4\X4:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{sanity}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|a${},{}$ \|b${},{}$ \|c${},{}$ \|j${},{}$ \|k${},{}$ %
+\|p${},{}$ \|q${},{}$ \|r${},{}$ \|x${},{}$ \\{alpha};\7
+\X22:Check that the relevant lists contain only blue words\X;\6
+\X23:Check that all blue words appear in all relevant lists\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{22}Here we check also the inverse property of the inverse lists.
+
+\Y\B\4\D$\\{bluecheck}(\\{loc},\\{off})$ \6
+${}\{{}$\1\6
+\&{for} ${}(\|p\K\\{loc}+\\{off},\39\|q\K\\{mem}[\\{loc}+\\{mmmm}];{}$ ${}\|p<%
+\|q;{}$ ${}\|p\PP){}$\5
+${}\{{}$\1\6
+${}\|x\K\\{mem}[\|p],\39\\{alpha}\K\\{hexconv}[\|x];{}$\6
+\&{if} ${}(\\{mem}[\\{alpha}]\I\\{blue}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ \%04x\ in\ list\ \%d\ is}\)\.{\ \%s!\\n"},%
+\39\|x,\39\\{loc}+\\{off},\39\\{mem}[\\{alpha}]\E\\{green}\?\.{"green"}:%
+\.{"red"});{}$\2\6
+\&{if} ${}(\\{mem}[\\{off}-\\{mmmm}+\\{alpha}]\I\|p){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ inverse\ index\ for\ }\)\.{\%04x\ in\ list\ %
+\%d\ shou}\)\.{ld\ be\ \%d,\ not\ \%d!\\n"},\39\|x,\39\\{loc}+\\{off},\39\|p,%
+\39\\{mem}[\\{off}-\\{mmmm}+\\{alpha}]);{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\Y\B\4\X22:Check that the relevant lists contain only blue words\X${}\E{}$\6
+\&{for} ${}(\|a\K\T{0};{}$ ${}\|a<\|m;{}$ ${}\|a\PP){}$\5
+${}\{{}$\1\6
+${}\\{bluecheck}(\|a*\|m*\|m*\|m,\39\\{p1offset});{}$\6
+${}\\{bluecheck}(\|a*\|m*\|m*\|m,\39\\{s1offset});{}$\6
+\&{for} ${}(\|b\K\T{0};{}$ ${}\|b<\|m;{}$ ${}\|b\PP){}$\5
+${}\{{}$\1\6
+${}\\{bluecheck}((\|a*\|m+\|b)*\|m*\|m,\39\\{p2offset});{}$\6
+${}\\{bluecheck}((\|a*\|m+\|b)*\|m*\|m,\39\\{s2offset});{}$\6
+\&{for} ${}(\|c\K\T{0};{}$ ${}\|c<\|m;{}$ ${}\|c\PP){}$\5
+${}\{{}$\1\6
+${}\\{bluecheck}(((\|a*\|m+\|b)*\|m+\|c)*\|m,\39\\{p3offset});{}$\6
+${}\\{bluecheck}(((\|a*\|m+\|b)*\|m+\|c)*\|m,\39\\{s3offset});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{maxl};{}$ ${}\|k\PP){}$\1\5
+${}\\{bluecheck}(\T{4}*\|k,\39\\{cloffset}){}$;\2\par
+\U21.\fi
+
+\M{23}Here we check green words also, to make sure that their lists have
+been ``closed.''
+
+\Y\B\4\D$\\{appcheck}(\|x,\\{alpha},\\{del},\\{off})$ \6
+${}\{{}$\1\6
+${}\|p\K(\\{del})+(\\{off}){}$;\C{ the list starts here }\6
+${}\|q\K\\{mem}[\|p+\\{mmmm}]{}$;\C{ the list currently ends here }\6
+\&{if} ${}(\|q\I\|p-\T{1}){}$\5
+${}\{{}$\C{ it's not closed }\1\6
+\&{if} ${}(\\{mem}[\\{alpha}]\E\\{green}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ list\ "}){}$;\5
+\\{decode\_list}(\|p);\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ for\ \%x\ isn't\ close}\)\.{d!\\n"},\39%
+\|x);{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\|r\K\\{mem}[\\{off}-\\{mmmm}+\\{alpha}]{}$;\C{ where \PB{\|x} supposedly is
+}\6
+\&{if} ${}(\|r<\|p\V\|r\G\|q){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ \%x\ isn't\ in\ list\ "},\39\|x);{}$\6
+\\{decode\_list}(\|p);\5
+${}\\{fprintf}(\\{stderr},\39\.{"!\\n"});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\Y\B\4\X23:Check that all blue words appear in all relevant lists\X${}\E{}$\6
+\&{for} ${}(\\{alpha}\K\T{0};{}$ ${}\\{alpha}<\\{mmmm};{}$ ${}\\{alpha}\PP){}$%
+\1\6
+\&{if} ${}(\\{mem}[\\{alpha}]\I\\{red}){}$\5
+${}\{{}$\1\6
+${}\|x\K\\{mconv}[\\{alpha}];{}$\6
+${}\\{appcheck}(\|x,\39\\{alpha},\39\\{p1}(\|x),\39\\{p1offset});{}$\6
+${}\\{appcheck}(\|x,\39\\{alpha},\39\\{p2}(\|x),\39\\{p2offset});{}$\6
+${}\\{appcheck}(\|x,\39\\{alpha},\39\\{p3}(\|x),\39\\{p3offset});{}$\6
+${}\\{appcheck}(\|x,\39\\{alpha},\39\\{s1}(\|x),\39\\{s1offset});{}$\6
+${}\\{appcheck}(\|x,\39\\{alpha},\39\\{s2}(\|x),\39\\{s2offset});{}$\6
+${}\\{appcheck}(\|x,\39\\{alpha},\39\\{s3}(\|x),\39\\{s3offset});{}$\6
+${}\\{appcheck}(\|x,\39\\{alpha},\39\T{4}*\\{cl}[\\{alpha}],\39%
+\\{cloffset});{}$\6
+\4${}\}{}$\2\2\par
+\U21.\fi
+
+\N{1}{24}The poison list. We also need to maintain another interesting data
+structure, which remembers forbidden suffix-prefix pairs. Whenever
+we've chosen $abcd$ to be a codeword, we want to remember that
+no future codeword that ends with $a$ can be simultaneously present
+with a codeword that begins with $bcd$. The first time either of those
+events happens, we want to redden all of the blue words on the other side.
+So we'll add the item `$a/bcd$' to the current poison list when $abcd$ becomes
+green.
+
+The suffix-prefix pairs $ab/cd$ and $abc/d$ are forbidden in the same way.
+
+The poison list is kept within \PB{\\{mem}}, beginning at location \PB{%
+\\{poison}};
+its pointer is in \PB{\\{mem}} location \PB{$\\{poison}-\T{1}$}. Each item on
+this list occupies
+two consecutive \PB{\\{mem}} positions, one pointing a the suffix and the other
+to the corresponding prefix.
+
+An item will be removed from the poison list whenever we discover that one
+or both of the lists that it points to has become empty.
+
+\Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{poison};\par
+\fi
+
+\M{25}\B\X10:Initialize the tables\X${}\mathrel+\E{}$\6
+$\\{poison}\K\T{22}*\\{mmmm}+\T{1};{}$\6
+${}\\{mem}[\\{poison}-\T{1}]\K\\{poison}{}$;\C{ empty list }\par
+\fi
+
+\M{26}When the following code is performed, \PB{\\{pp}} will point to the
+current end of the poison list.
+
+\Y\B\4\X26:Delete entry \PB{\|p} from the poison list\X${}\E{}$\6
+$\\{pp}\MRL{-{\K}}\T{2};{}$\6
+\&{if} ${}(\|p\I\\{pp}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{store}(\|p,\39\\{mem}[\\{pp}]);{}$\6
+${}\\{store}(\|p+\T{1},\39\\{mem}[\\{pp}+\T{1}]){}$;\C{ \PB{\\{mem}[\\{pp}]}
+and \PB{$\\{mem}[\\{pp}+\T{1}]$} are in the same octabyte }\6
+\4${}\}{}$\2\par
+\Us39\ET40.\fi
+
+\M{27}\B\X27:Append \PB{\|y} and \PB{\|z} to the poison list\X${}\E{}$\6
+$\\{store}(\\{pp},\39\|y),\39\\{store}(\\{pp}+\T{1},\39\|z),\39\\{mems}\MM;{}$\6
+${}\\{pp}\MRL{+{\K}}\T{2};{}$\6
+\&{if} ${}(\\{pp}>\\{maxpoison}){}$\1\5
+${}\\{maxpoison}\K\\{pp}{}$;\C{ the poison list can't overflow }\2\par
+\U38.\fi
+
+\N{1}{28}Lists outside of \PB{\\{mem}}. Some of the state information is
+sufficiently
+static and well-behaved that we needn't keep it in \PB{\\{mem}}. For example,
+at every level we have a ``frame'' of vital data, telling for instance
+what class was involved, what word was chosen in that class, and how big
+the undo stack was when our data structures were stable.
+
+\Y\B\4\X28:Type definitions\X${}\E{}$\6
+\&{typedef} \&{struct} \&{frame\_struct} ${}\{{}$\1\6
+\&{int} \\{cls};\C{ the class number involved at this level }\6
+\&{int} \|x;\C{ the word of that class, or $-1$ if this class not included }\6
+\&{int} \\{slack};\C{ how many classes are we still allowed to omit? }\6
+\&{int} \\{uptr};\C{ how many items should we retain on \PB{\\{undo}} after
+backtracking? }\2\6
+${}\}{}$ \&{frame};\par
+\U1.\fi
+
+\M{29}We also maintain a list called \PB{\\{clfree}}, of the classes not yet
+chosen.
+It will contain \PB{$\\{maxl}-\|l$} items when we're on level~\PB{\|l}; but I
+maintain the
+redundant variable \PB{\\{freeptr}}, so that I don't have to worry about
+transient moments as \PB{\|l} is changing. There's also
+an inverse list \PB{\\{ifree}}.
+
+\Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{frame} ${}\\{move}[\\{maxclasses}+\T{1}]{}$;\C{ basic info at each level }\6
+\&{int} \\{clfree}[\\{maxclasses}];\C{ which classes are free? }\6
+\&{int} \\{freeptr};\C{ the number of free classes }\6
+\&{int} \\{ifree}[\\{maxclasses}];\C{ where is this class in \PB{\\{free}}? }%
+\par
+\fi
+
+\M{30}\B\X10:Initialize the tables\X${}\mathrel+\E{}$\6
+\&{for} ${}(\|k\K\T{0},\39\\{freeptr}\K\\{maxl};{}$ ${}\|k<\\{maxl};{}$ ${}\|k%
+\PP){}$\1\5
+${}\\{oo},\39\\{clfree}[\|k]\K\\{ifree}[\|k]\K\|k{}$;\2\par
+\fi
+
+\M{31}\B\X4:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_moves}(\&{int} \\{lev})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|l;\7
+\&{for} ${}(\|l\K\T{1};{}$ ${}\|l\Z\\{lev};{}$ ${}\|l\PP){}$\1\6
+\&{if} ${}(\\{move}[\|l].\|x\G\T{0}){}$\1\5
+${}\\{printf}(\.{"\ \%04x"},\39\\{move}[\|l].\|x);{}$\2\6
+\&{else}\1\5
+${}\\{printf}(\.{"\ (\%04x)"},\39\\{clrep}[\\{move}[\|l].\\{cls}]);{}$\2\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{32}Doing it. OK, we're (hopefully) ready now for the big climax.
+
+\Y\B\4\X32:Backtrack through all solutions\X${}\E{}$\6
+$\|l\K\T{1};{}$\6
+${}\\{cls}\K\T{0},\39\|x\K\T{\^0001},\39\\{slack}\K\\{maxl}-\\{goal};{}$\6
+${}\\{nodes}\K\\{profile}[\T{1}]\K\T{1};{}$\6
+${}\\{uptr}\K\T{0};{}$\6
+\&{goto} \\{tryit};\6
+\4\\{enter}:\5
+${}\\{profile}[\|l]\PP,\39\\{nodes}\PP;{}$\6
+\X33:Report the current profile, if \PB{$\\{mems}\G\\{thresh}$}\X;\6
+\&{if} ${}(\|l>\\{maxl}){}$\1\5
+\X46:Report a solution and \PB{\&{goto} \\{backup}}\X;\2\6
+\4\\{choose}:\5
+\&{if} (\\{sanity\_checking})\1\5
+\\{sanity}(\,);\2\6
+\X34:Choose a potential move \PB{\|x}\X;\6
+\4\\{tryit}:\5
+\&{if} ${}(\\{vbose}>\T{1}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|x\G\T{0}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Level\ \%d,\ trying\ \%0}\)\.{4x\ (\%lld\
+mems)\\n"},\39\|l,\39\|x,\39\\{mems});{}$\2\6
+\&{else}\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Level\ \%d,\ trying\ (\%}\)\.{04x)\ (\%lld\
+mems)\\n"},\39\|l,\39\\{clrep}[\\{cls}],\39\\{mems});{}$\2\6
+\4${}\}{}$\2\6
+${}\|o,\39\\{move}[\|l].\\{uptr}\K\\{uptr}{}$;\5
+\X7:Bump \PB{\\{curstamp}}\X;\6
+\&{if} ${}(\|x\G\T{0}){}$\1\5
+\X36:Update the data structures for new codeword \PB{\|x}\X\2\6
+\&{else} \&{if} ${}(\\{slack}\E\T{0}\V\|l\E\T{1}){}$\1\5
+\&{goto} \\{backup};\C{ disallow slack move at root level }\2\6
+\&{else}\1\5
+${}\\{slack}\MM;{}$\2\6
+${}\|o,\39\\{move}[\|l].\|x\K\|x,\39\\{move}[\|l].\\{cls}\K\\{cls}{}$;\C{ both
+in same octabyte, so 1 mem }\6
+${}\|o,\39\\{move}[\|l].\\{slack}\K\\{slack};{}$\6
+\X44:Update the free list\X;\6
+${}\|l\PP{}$;\5
+\&{goto} \\{enter};\6
+\4\\{try\_again}:\5
+${}\|o,\39\\{unstore}(\\{move}[\|l].\\{uptr});{}$\6
+\&{if} ${}(\\{vbose}>\T{1}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Level\ \%d,\ forbiddin}\)\.{g\ \%04x\ (\%lld\
+mems)\\n}\)\.{"},\39\|l,\39\|x,\39\\{mems});{}$\2\6
+\X7:Bump \PB{\\{curstamp}}\X;\6
+\X43:Update the data structures to forbid \PB{\|x}\X;\6
+\&{goto} \\{choose};\6
+\4\\{backup}:\5
+\&{if} ${}(\MM\|l){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|x\K\\{move}[\|l].\|x,\39\\{cls}\K\\{move}[\|l].\\{cls};{}$\6
+\X45:Downdate the free list\X;\6
+\&{if} ${}(\|x<\T{0}){}$\1\5
+\&{goto} \\{backup};\C{ omitting a class was the last resort }\2\6
+${}\\{slack}\K\\{move}[\|l].\\{slack}{}$;\C{ this mem is covered at \PB{\\{try%
+\_again}} }\6
+\&{goto} \\{try\_again};\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{33}\B\X33:Report the current profile, if \PB{$\\{mems}\G\\{thresh}$}\X${}%
+\E{}$\6
+\&{if} ${}(\\{mems}\G\\{thresh}){}$\5
+${}\{{}$\1\6
+${}\\{thresh}\MRL{+{\K}}\T{10000000000};{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"After\ \%lld\ mems:"},\39\\{mems});{}$\6
+\&{for} ${}(\|k\K\T{2};{}$ ${}\|k\Z\|l;{}$ ${}\|k\PP){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ \%lld"},\39\\{profile}[\|k]);{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
+\4${}\}{}$\2\par
+\U32.\fi
+
+\M{34}Two strategies are used to decide which possibility to explore next.
+First we try to find a free class that has the smallest remaining
+number of blue words. If that number is 0 or~1, we choose it.
+
+Otherwise we look at the poison list, and look for a choice that
+is guaranteed to redden as many blue words as possible. If such
+a choice exceeds a certain threshold, we make it, under the
+assumption that this choice will soon be proved unsatisfactory,
+thus giving us a new red word at comparatively little cost.
+
+(In a sense, our goal is to make words red, because we are done
+when enough of them have become red.)
+
+The threshold is a compile-time parameter, because I'm going to be
+running this program only a few times.
+
+\Y\B\4\D$\\{sthresh}$ \5
+\T{1}\C{ must be positive }\par
+\Y\B\4\X34:Choose a potential move \PB{\|x}\X${}\E{}$\6
+\X35:Find a class \PB{\\{cls}} with fewest blue words~\PB{\|r}\X;\6
+\&{if} ${}(\|r>\T{1}){}$\5
+${}\{{}$\1\6
+\X40:Find \PB{\|x} that maximizes the ``kill'' potential~\PB{\|s}\X;\6
+\&{if} ${}(\|s\G\\{sthresh}){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39\\{cls}\K\\{cl}[\\{hexconv}[\|x]];{}$\6
+\&{goto} \\{done};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|r\E\T{0}){}$\1\5
+${}\|x\K{-}\T{1};{}$\2\6
+\&{else}\1\5
+${}\|o,\39\|x\K\\{mem}[\T{4}*\\{cls}+\\{cloffset}];{}$\2\6
+\\{done}:\par
+\U32.\fi
+
+\M{35}\B\X35:Find a class \PB{\\{cls}} with fewest blue words~\PB{\|r}\X${}%
+\E{}$\6
+\&{if} ${}(\\{vbose}>\T{3}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ class\ sizes"});{}$\2\6
+\&{for} ${}(\|r\K\T{5},\39\|k\K\T{0};{}$ ${}\|k<\\{freeptr};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|c\K\\{clfree}[\|k];{}$\6
+${}\|o,\39\|j\K\\{mem}[\T{4}*\|c+\\{cloffset}+\\{mmmm}]-(\T{4}*\|c+%
+\\{cloffset});{}$\6
+\&{if} ${}(\\{vbose}>\T{3}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ \%04x:\%d"},\39\\{clrep}[\|c],\39\|j);{}$\2\6
+\&{if} ${}(\|j<\|r){}$\5
+${}\{{}$\1\6
+${}\|r\K\|j,\39\\{cls}\K\|c;{}$\6
+\&{if} ${}(\|r\E\T{0}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{vbose}>\T{3}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\\n"}){}$;\2\par
+\U34.\fi
+
+\M{36}I should perhaps have added the phrase `or \PB{\&{goto} \\{try\_again}}'
+to the title
+of this module, because we might find a reason to reject~\PB{\|x}.
+
+\Y\B\4\X36:Update the data structures for new codeword \PB{\|x}\X${}\E{}$\6
+${}\{{}$\1\6
+\X37:Make \PB{\|x} green and close the lists it's in\X;\6
+${}\|o,\39\\{pp}\K\\{mem}[\\{poison}-\T{1}]{}$;\C{ temporarily keep poison list
+size in a register }\6
+\X38:Append \PB{\|x}'s innards to the poison list\X;\6
+\X39:Update the poison list, or \PB{\&{goto} \\{try\_again}}\X;\6
+${}\\{store}(\\{poison}-\T{1},\39\\{pp});{}$\6
+\4${}\}{}$\2\par
+\U32.\fi
+
+\M{37}\B\D$\\{closelist}(\\{del},\\{off})$ \6
+${}\{{}$\1\6
+${}\|p\K(\\{del})+(\\{off});{}$\6
+${}\|o,\39\|q\K\\{mem}[\|p+\\{mmmm}];{}$\6
+\&{if} ${}(\|q\I\|p-\T{1}){}$\1\5
+${}\\{store}(\|p+\\{mmmm},\39\|p-\T{1});{}$\2\6
+\4${}\}{}$\2\par
+\Y\B\4\X37:Make \PB{\|x} green and close the lists it's in\X${}\E{}$\6
+$\|o,\39\\{alpha}\K\\{hexconv}[\|x];{}$\6
+${}\\{store}(\\{alpha},\39\\{green});{}$\6
+${}\\{closelist}(\\{p1}(\|x),\39\\{p1offset});{}$\6
+${}\\{closelist}(\\{p2}(\|x),\39\\{p2offset});{}$\6
+${}\\{closelist}(\\{p3}(\|x),\39\\{p3offset});{}$\6
+${}\\{closelist}(\\{s1}(\|x),\39\\{s1offset});{}$\6
+${}\\{closelist}(\\{s2}(\|x),\39\\{s2offset});{}$\6
+${}\\{closelist}(\\{s3}(\|x),\39\\{s3offset});{}$\6
+${}\|o,\39\|k\K\\{cl}[\\{alpha}];{}$\6
+${}\\{closelist}(\T{4}*\|k,\39\\{cloffset});{}$\6
+\&{for} ${}(\|r\K\\{cloffset}+\T{4}*\|k;{}$ ${}\|r<\|q;{}$ ${}\|r\PP){}$\1\6
+\&{if} ${}(\|o,\39\\{mem}[\|r]\I\|x){}$\1\5
+\\{redden}(\\{mem}[\|r]);\2\2\par
+\U36.\fi
+
+\M{38}\B\X38:Append \PB{\|x}'s innards to the poison list\X${}\E{}$\6
+$\|y\K\\{p1}(\|x)+\\{s1offset};{}$\6
+${}\|z\K\\{s3}(\|x)+\\{p3offset};{}$\6
+\X27:Append \PB{\|y} and \PB{\|z} to the poison list\X;\6
+${}\|y\K\\{p2}(\|x)+\\{s2offset};{}$\6
+${}\|z\K\\{s2}(\|x)+\\{p2offset};{}$\6
+\X27:Append \PB{\|y} and \PB{\|z} to the poison list\X;\6
+${}\|y\K\\{p3}(\|x)+\\{s3offset};{}$\6
+${}\|z\K\\{s1}(\|x)+\\{p1offset};{}$\6
+\X27:Append \PB{\|y} and \PB{\|z} to the poison list\X;\par
+\U36.\fi
+
+\M{39}This section is more or less the heart of the entire program.
+Or maybe it's better described as the ``nerve center.'' Anyway,
+it enforces the comma-free condition, when you translate all of
+this esoteric logic into common sense terms.
+
+After an entry on the poison list causes words to become red, previous
+entries of that list might become deletable. We don't go back and delete
+them, however; we can do that later, when we traverse the poison list again.
+
+When I first wrote this part, I thought the case \PB{$\\{yy}<\|y\W\\{zz}<\|z$}
+would be
+impossible. But I first saw it occur legitimately when codewords \.{0001}
+and \.{1011} had been chosen at levels 1 and~2, then \.{0011} was tried
+at level~3. In that case, lists \.{.001} and \.{1...} were both closed.
+
+\Y\B\4\X39:Update the poison list, or \PB{\&{goto} \\{try\_again}}\X${}\E{}$\6
+\&{for} ${}(\|p\K\\{poison};{}$ ${}\|p<\\{pp};{}$ \,)\5
+${}\{{}$\1\6
+${}\|o,\39\|y\K\\{mem}[\|p],\39\|z\K\\{mem}[\|p+\T{1}]{}$;\C{ \PB{\|y} and \PB{%
+\|z} are pointers to lists }\6
+${}\|o,\39\\{yy}\K\\{mem}[\|y+\\{mmmm}];{}$\6
+\&{if} ${}(\\{yy}\E\|y){}$\1\5
+\&{goto} \\{delete};\C{ delete poison list entry that cites an empty list }\2\6
+${}\|o,\39\\{zz}\K\\{mem}[\|z+\\{mmmm}];{}$\6
+\&{if} ${}(\\{zz}\E\|z){}$\1\5
+\&{goto} \\{delete};\C{ delete poison list entry that cites an empty list }\2\6
+\&{if} ${}(\\{yy}<\|y\W\\{zz}<\|z){}$\1\5
+\&{goto} \\{try\_again};\2\6
+\&{if} ${}(\\{yy}>\|y\W\\{zz}>\|z){}$\5
+${}\{{}$\1\6
+${}\|p\MRL{+{\K}}\T{2}{}$;\5
+\&{continue};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{yy}<\|y){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{vbose}>\T{3}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ killing\ "}){}$;\5
+\\{decode\_list}(\|z);\5
+${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
+\4${}\}{}$\2\6
+${}\\{store}(\|z+\\{mmmm},\39\|z){}$;\C{ make list \PB{\|z} empty }\6
+\&{for} ${}(\|r\K\|z;{}$ ${}\|r<\\{zz};{}$ ${}\|r\PP){}$\1\5
+${}\|o,\39\\{redden}(\\{mem}[\|r]);{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\\{vbose}>\T{3}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ killing\ "}){}$;\5
+\\{decode\_list}(\|y);\5
+${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
+\4${}\}{}$\2\6
+${}\\{store}(\|y+\\{mmmm},\39\|y){}$;\C{ make list \PB{\|y} empty }\6
+\&{for} ${}(\|r\K\|y;{}$ ${}\|r<\\{yy};{}$ ${}\|r\PP){}$\1\5
+${}\|o,\39\\{redden}(\\{mem}[\|r]);{}$\2\6
+\4${}\}{}$\2\6
+\4\\{delete}:\5
+\X26:Delete entry \PB{\|p} from the poison list\X;\6
+\4${}\}{}$\2\par
+\U36.\fi
+
+\M{40}Items in the poison list pair a suffix with a prefix, where the suffix
+list
+has \PB{$\\{yy}-\|y$} elements and the prefix class has \PB{$\\{zz}-\|z$}
+elements. The larger of
+these lists can be killed off by choosing \PB{\|x} in the other list.
+
+(Here's an unimplemented
+afterthought, which potentially could be more powerful; unfortunately I
+have no time to explore it: Suppose we've chosen a word $abcd$. Hence we will
+have made an entry for ${*}{*}{*}a$ and $bcd{*}$ in the poison list, and it
+will be nice if the $bcd{*}$ list is nonempty because any such word will
+wipe out all of ${*}{*}{*}a$. However, that latter list may {\it already\/}
+be empty, in which case we'll drop this item from the poison list.
+The new idea is that any item $bcdz$ on list $bcd{*}$ will {\it also\/}
+wipe out the entire list $z{*}{*}{*}$, which might well be huge for
+at least one~$z$.
+Similarly, any item $cdyz$ on list $cd{*}{*}$ will wipe out
+$yz{*}{*}$; any item $zabc$ on list ${*}abc$ will wipe out ${*}{*}{*}z$;
+etc. These six cases are not currently considered, because they aren't
+easily detected within the present data structures.)
+
+\Y\B\4\X40:Find \PB{\|x} that maximizes the ``kill'' potential~\PB{\|s}\X${}%
+\E{}$\6
+$\|s\K\T{0};{}$\6
+\&{if} ${}(\\{vbose}>\T{3}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ kills"});{}$\2\6
+${}\|o,\39\\{pp}\K\\{mem}[\\{poison}-\T{1}]{}$;\C{ temporarily keep poison list
+size in a register }\6
+\&{for} ${}(\|p\K\\{poison};{}$ ${}\|p<\\{pp};{}$ \,)\5
+${}\{{}$\1\6
+${}\|o,\39\|y\K\\{mem}[\|p],\39\|z\K\\{mem}[\|p+\T{1}];{}$\6
+${}\|o,\39\\{yy}\K\\{mem}[\|y+\\{mmmm}];{}$\6
+\&{if} ${}(\\{yy}\E\|y){}$\1\5
+\&{goto} \\{deleet};\2\6
+${}\|o,\39\\{zz}\K\\{mem}[\|z+\\{mmmm}];{}$\6
+\&{if} ${}(\\{zz}\E\|z){}$\1\5
+\&{goto} \\{deleet};\2\6
+\&{if} ${}(\\{yy}<\|y\V\\{zz}<\|z){}$\1\5
+\\{confusion}(\.{"poison\ remnant"});\2\6
+\&{if} ${}(\\{vbose}>\T{3}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ \%d"},\39\\{yy}-\|y);{}$\6
+\\{decode\_list}(\|y);\6
+${}\\{fprintf}(\\{stderr},\39\.{"|"});{}$\6
+\\{decode\_list}(\|z);\6
+${}\\{fprintf}(\\{stderr},\39\.{"\%d"},\39\\{zz}-\|z);{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{yy}-\|y\G\\{zz}-\|z){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{yy}-\|y>\|s){}$\1\5
+${}\|o,\39\|s\K\\{yy}-\|y,\39\|x\K\\{mem}[\|z];{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\\{zz}-\|z>\|s){}$\1\5
+${}\|o,\39\|s\K\\{zz}-\|z,\39\|x\K\\{mem}[\|y];{}$\2\6
+${}\|p\MRL{+{\K}}\T{2};{}$\6
+\&{continue};\6
+\4\\{deleet}:\5
+\X26:Delete entry \PB{\|p} from the poison list\X;\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{vbose}>\T{3}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\2\6
+${}\\{store}(\\{poison}-\T{1},\39\\{pp}){}$;\par
+\Q1.
+\U34.\fi
+
+\M{41}Here I want to mention some code that was deleted from an earlier
+version,
+because it introduced a sneaky bug. I'd once had a mechanism in the \PB{%
+\&{frame}} structure
+designed to break symmetry by confining solutions to ``restricted growth
+sequences.''
+
+Namely, I had originally said this:
+\smallskip
+{\leftskip=10pt\rightskip=10pt
+
+One of the frame elements, called \PB{\\{rgs}}, is used to avoid repeating
+choices that are equivalent under symmetry. The term `\PB{\\{rgs}}' stands
+for ``restricted growth string''; it names the largest digit seen so
+far among the chosen codewords. We shall insist that the codeword for
+level~1 is either \.{0001} or \.{0010}. Henceforth the next digit
+greater than~\.1 must be \.2, and the next digit greater than~\.2
+must be~\.3, etc.
+
+(Subtle(?)\ point: If the class is, say, \.{0312} and \PB{$\\{rgs}\K\T{1}$},
+we will allow only the representatives \.{1203} and \.{2031}, not
+\.{0312} or \.{3120}, because \.2 must precede~\.3.)
+
+}
+\smallskip\noindent And the code below was activated just before
+making~\PB{\|x} green, if \PB{\\{rgs}} was $m-2$ or less.
+
+However, I'd missed an even more subtle point. This \PB{\\{rgs}} logic must
+be done earlier, in the move-choosing sections: Those sections should
+not choose an~\PB{\|x} that will be rejected on \PB{\\{rgs}} grounds. For if
+they do,
+\PB{\|x} will be permanently blacklisted (actually redlisted) even after
+the \PB{\\{rgs}} condition is no longer relevant. Instead, when choosing an
+\PB{\|x} on the basis of a killing strategy, one must find an \PB{\|x} that
+is \PB{\\{rgs}}-legitimate. And when choosing an element of a class with few
+blue elements, one must be sure that the element is \PB{\\{rgs}}-safe.
+
+I could have corrected the logic. But the program would have been
+quite a lot more complicated, and I already knew from experience that
+I wouldn't be able to solve the case \PB{$\|m\K\T{5}$} even with the faulty
+strategy that eliminated too much.
+
+Furthermore, the best way to break the symmetry in hard cases is
+probably to prespecify the first few levels of the search tree.
+
+So I've opted to record here the lesson that I learned, but {\it not\/} to use
+any form of the following rejected-rejection code:
+
+\Y\B\4\X41:Reject \PB{\|x} if it violates the restricted growth condition\X${}%
+\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{12};{}$ ${}\|i\G\T{0};{}$ ${}\|i\MRL{-{\K}}\T{4}){}$\5
+${}\{{}$\1\6
+${}\|y\K(\|x\GG\|i)\AND\T{\^f};{}$\6
+\&{if} ${}(\|y>\\{rgs}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|y>\\{rgs}+\T{1}){}$\1\5
+\&{goto} \\{try\_again};\2\6
+${}\\{rgs}\K\|y;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{42}\B\D$\\{rem}(\\{alpha},\\{del},\\{off})$ \6
+${}\{{}$\1\6
+${}\|p\K(\\{del})+(\\{off});{}$\6
+${}\|o,\39\|q\K\\{mem}[\|p+\\{mmmm}]-\T{1};{}$\6
+\&{if} ${}(\|q\G\|p){}$\5
+${}\{{}$\C{ list is nonempty }\1\6
+${}\\{store}(\|p+\\{mmmm},\39\|q){}$;\C{ shorten the list }\6
+${}\|o,\39\|t\K\\{mem}[(\\{off})-\\{mmmm}+\\{alpha}]{}$;\C{ where does \PB{\|x}
+appear? }\6
+\&{if} ${}(\|t\I\|q){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|y\K\\{mem}[\|q]{}$;\C{ get item to move }\6
+${}\\{store}(\|t,\39\|y){}$;\C{ put \PB{\|y} in place of \PB{\|x} }\6
+${}\|o,\39\\{store}((\\{off})-\\{mmmm}+\\{hexconv}[\|y],\39\|t){}$;\C{ update
+the inverse index }\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\Y\B\4\X4:Subroutines\X${}\mathrel+\E{}$\6
+\&{inline} \&{void} \\{redden}(\&{register} \&{int} \|x)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \\{alpha}${},{}$ \|p${},{}$ \|q${},{}$ \|t${},{}$ \|y;\7
+\&{if} ${}(\\{vbose}>\T{2}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ red\ \%04x\\n"},\39\|x);{}$\2\6
+${}\|o,\39\\{alpha}\K\\{hexconv}[\|x];{}$\6
+\&{if} ${}(\\{mem}[\\{alpha}]\I\\{blue}){}$\1\5
+\\{confusion}(\.{"redden"});\2\6
+${}\\{store}(\\{alpha},\39\\{red});{}$\6
+${}\\{rem}(\\{alpha},\39\\{p1}(\|x),\39\\{p1offset}){}$;\C{ remove \PB{\|x}
+from its \PB{\\{p1}} list }\6
+${}\\{rem}(\\{alpha},\39\\{p2}(\|x),\39\\{p2offset}){}$;\C{ remove \PB{\|x}
+from its \PB{\\{p2}} list }\6
+${}\\{rem}(\\{alpha},\39\\{p3}(\|x),\39\\{p3offset}){}$;\C{ remove \PB{\|x}
+from its \PB{\\{p3}} list }\6
+${}\\{rem}(\\{alpha},\39\\{s1}(\|x),\39\\{s1offset}){}$;\C{ remove \PB{\|x}
+from its \PB{\\{s1}} list }\6
+${}\\{rem}(\\{alpha},\39\\{s2}(\|x),\39\\{s2offset}){}$;\C{ remove \PB{\|x}
+from its \PB{\\{s2}} list }\6
+${}\\{rem}(\\{alpha},\39\\{s3}(\|x),\39\\{s3offset}){}$;\C{ remove \PB{\|x}
+from its \PB{\\{s3}} list }\6
+${}\|o,\39\|t\K\\{cl}[\\{alpha}];{}$\6
+${}\\{rem}(\\{alpha},\39\T{4}*\|t,\39\\{cloffset}){}$;\C{ remove \PB{\|x} from
+its class list }\6
+\4${}\}{}$\2\par
+\fi
+
+\M{43}\B\X43:Update the data structures to forbid \PB{\|x}\X${}\E{}$\6
+\\{redden}(\|x);\par
+\U32.\fi
+
+\M{44}\B\X44:Update the free list\X${}\E{}$\6
+$\\{freeptr}\MM;{}$\6
+${}\|o,\39\|p\K\\{ifree}[\\{cls}];{}$\6
+\&{if} ${}(\|p\I\\{freeptr}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|y\K\\{clfree}[\\{freeptr}];{}$\6
+${}\|o,\39\\{clfree}[\|p]\K\|y;{}$\6
+${}\|o,\39\\{ifree}[\|y]\K\|p;{}$\6
+${}\|o,\39\\{clfree}[\\{freeptr}]\K\\{cls};{}$\6
+${}\|o,\39\\{ifree}[\\{cls}]\K\\{freeptr};{}$\6
+\4${}\}{}$\2\par
+\U32.\fi
+
+\M{45}\B\X45:Downdate the free list\X${}\E{}$\6
+$\\{freeptr}\PP{}$;\par
+\U32.\fi
+
+\M{46}And we close with a happy moment.
+
+\Y\B\4\X46:Report a solution and \PB{\&{goto} \\{backup}}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{count}\PP;{}$\6
+${}\\{printf}(\.{"\%d:"},\39\\{count});{}$\6
+\\{print\_moves}(\\{maxl});\6
+\&{goto} \\{backup};\6
+\4${}\}{}$\2\par
+\U32.\fi
+
+\N{1}{47}Index.
+\fi
+
+\inx
+\fin
+\con

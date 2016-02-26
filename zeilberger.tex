@@ -1,0 +1,446 @@
+\input cwebmac
+% (c) 2005 D E Knuth; use and enjoy, but please don't blame me for mistakes...
+\datethis
+\def\title{ZEILBERGER}
+\def\[#1]{[\hbox{$\mkern1mu\thickmuskip=\thinmuskip#1\mkern1mu$}]} % Iverson
+
+
+\N{1}{1}Introduction. This little program implements Zeilberger's bijection
+between $n$-node forests with pruning order~$s$ and
+$n$-node binary trees with Strahler number~$s$. [Doron Zeilberger,
+``A bijection from ordered trees to binary trees that sends the
+pruning order to the Strahler number,'' {\sl Discrete Mathematics\/
+\bf82} (1990), 89--92.]
+
+As Zeilberger says in his paper, ``First, definitions!''
+I won't define forests
+(by which I always mean {\it ordered forests}, as in {\sl The Art of
+Computer Programming\/}), nor need I define binary trees.
+But I should explain the
+concepts of pruning order and Strahler number, since they are
+less familiar.
+
+A {\it filament\/} of a forest is a sequence of one or more nodes
+$x_1$, \dots,~$x_k$, where $x_{j+1}$ is the only child of $x_j$ for
+$1\le j<k$, and where $x_k$ is a leaf. Given a forest, we can {\it prune\/}
+it by removing all of its filaments. The number of times we must
+do this before reaching the empty forest is called the {\it pruning
+order\/} of the original forest.
+
+The {\it Strahler number\/} of a binary tree is 0 if the binary
+tree is empty; otherwise it is $\max(s_l,s_r)+\[s_l=s_r]$,
+when $s_l$ and~$s_r$ are the Strahler numbers of the
+left and right binary subtrees of the root.
+
+Zeilberger's bijection proves constructively the remarkable fact,
+discovered by Mireille Vauchaussade de Chaumont in her thesis (Bordeaux,
+1985), that the pruning order and Strahler number have precisely
+the same distribution, when forests and binary trees are chosen
+uniformly at random.
+
+Furthermore, as we shall see, his bijection has
+another significant property: When forests are represented in the
+natural way within a computer, as binary trees with left links to
+the leftmost child of a node and with right links to a node's right
+sibling, Zeilberger's transformation preserves all of the left links:
+Node $x$ is the leftmost child of~$y$ in the original forest
+if and only if $x$ is the left child of~$y$ in the binary tree that is
+produced by Zeilberger's procedure. In particular, the number
+of leaves in the forest equals the number of ``left leaves'' in the
+corresponding binary tree.
+
+This programs runs through all forests with a given number of nodes,
+and computes the corresponding binary tree. It checks that the
+pruning order of the former equals the Strahler number of the latter;
+and then it applies the inverse bijection, thus verifying that
+the original forest can indeed be uniquely reconstructed.
+
+\vfill\eject
+
+\fi
+
+\M{2}Skarbek's algorithm (Algorithm 7.2.1.6B in {\sl The Art of
+Computer Programming}, Volume~4) is used to run through
+all linked binary trees, thereby running through all forests
+in their natural representation.
+
+\Y\B\4\D$\|n$ \5
+\T{17}\C{ nodes in the forest }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\&{int} ${}\|l[\|n+\T{2}],{}$ ${}\|r[\|n+\T{1}]{}$;\C{ leftmost child and right
+sibling }\6
+\&{int} ${}\\{ll}[\|n+\T{1}],{}$ ${}\\{rr}[\|n+\T{1}]{}$;\C{ links of the
+binary tree }\6
+\&{int} ${}\\{lll}[\|n+\T{1}],{}$ ${}\\{rrr}[\|n+\T{1}]{}$;\C{ links of the
+inverse forest }\6
+\&{int} ${}\|q[\|n+\T{1}],{}$ ${}\|s[\|n+\T{1}]{}$;\C{ data needed by
+Zeilberger's algorithm }\6
+\&{int} \\{serial};\C{ total number of cases checked }\6
+\&{int} \\{count}[\T{10}];\C{ individual counts by pruning order }\7
+\X5:Subroutines\X\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|y${},{}$ \|p;\7
+${}\\{printf}(\.{"Checking\ all\ forest}\)\.{s\ with\ \%d\ nodes...\\n}\)\.{"},%
+\39\|n);{}$\6
+${}\|q[\T{0}]\K\T{0},\39\|s[\T{0}]\K\T{1000000}{}$;\C{ see below }\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\|n;{}$ ${}\|k\PP){}$\1\5
+${}\|l[\|k]\K\|k+\T{1},\39\|r[\|k]\K\T{0};{}$\2\6
+${}\|l[\|n]\K\|r[\|n]\K\T{0}{}$;\C{ we start with the 1-filament forest }\6
+${}\|l[\|n+\T{1}]\K\T{1}{}$;\C{ now Skarbek's algorithm is ready to go }\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\X6:Find the binary tree \PB{$(\\{ll},\\{rr})$} corresponding to the forest %
+\PB{$(\|l,\|r)$}\X;\6
+\X13:Check the pruning order and Strahler number\X;\6
+\X14:Check the inverse bijection\X;\6
+\X3:Move to the next forest \PB{$(\|l,\|r)$}, or \PB{\&{break}}\X\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|p\K\T{1};{}$ \\{count}[\|p]; ${}\|p\PP){}$\1\5
+${}\\{printf}(\.{"Altogether\ \%d\ cases}\)\.{\ with\ pruning\ order\ }\)\.{%
+\%d.\\n"},\39\\{count}[\|p],\39\|p);{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{3}\B\X3:Move to the next forest \PB{$(\|l,\|r)$}, or \PB{\&{break}}\X${}%
+\E{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\R\|l[\|j];{}$ ${}\|j\PP){}$\1\5
+${}\|r[\|j]\K\T{0},\39\|l[\|j]\K\|j+\T{1};{}$\2\6
+\&{if} ${}(\|j>\|n){}$\1\5
+\&{break};\2\6
+\&{for} ${}(\|k\K\T{0},\39\|y\K\|l[\|j];{}$ \|r[\|y]; ${}\|k\K\|y,\39\|y\K\|r[%
+\|y]){}$\1\5
+;\2\6
+\&{if} ${}(\|k>\T{0}){}$\1\5
+${}\|r[\|k]\K\T{0}{}$;\5
+\2\&{else}\1\5
+${}\|l[\|j]\K\T{0};{}$\2\6
+${}\|r[\|y]\K\|r[\|j],\39\|r[\|j]\K\|y{}$;\par
+\U2.\fi
+
+\N{1}{4}The main algorithm. The nodes in the forest are represented by
+positive integers, according to their rank in preorder. For each
+node~$x>0$, we let $l[x]$ be its leftmost child (namely $x+1$),
+if it has one, but $l[x]=0$ when $x$ is childless. Similarly,
+$r[x]$ is $x$'s right sibling, or $r[x]=0$ when $x$ is rightmost
+in its family.
+
+Zeilberger's method implicitly begins by
+determining the pruning order of the given forest and its
+principal subforests. We can carry this out by defining three numbers
+$p[x]$, $q[x]$, and $s[x]$ for each node~$x$; here $p[x]$ is
+the pruning order of the subtree rooted at~$x$,
+$q[x]$ is the maximum pruning order of $x$ and all of its right siblings,
+and $s[x]$ is the number of nodes in which that maximum occurs.
+(Zeilberger called $s[l[x]]$ the number of ``skewers'' of~$x$.)
+
+Formally, we can compute $p[x]$, $q[x]$, and $s[x]$ via
+the following recursive definitions, if we set $q[0]=0$ and $s[0]=\infty$:
+$$\openup1\jot\eqalign{
+p[x]&=q[l[x]]+\[s[l[x]]>1];\cr
+q[x]&=\max(p[x],q[r[x]]);\cr
+s[x]&=\cases{1,&if $p[x]>q[r[x]]$;\cr
+s[r[x]]+1,&if $p[x]=q[r[x]]$;\cr
+s[r[x]],&if $p[x]<q[r[x]]$.\cr}\cr}$$
+
+\fi
+
+\M{5}The following recursive procedure computes
+$(p[x],q[x],s[x])$ at each node~$x$ of the forest. It turns out
+that $p[x]$ need not be stored in memory.
+
+\Y\B\4\X5:Subroutines\X${}\E{}$\6
+\&{void} \\{label}(\&{register} \&{int} \|x)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|p${},{}$ \\{qr};\7
+\&{if} (\|l[\|x])\1\5
+\\{label}(\|l[\|x]);\2\6
+\&{if} (\|r[\|x])\1\5
+\\{label}(\|r[\|x]);\2\6
+${}\|p\K\|q[\|l[\|x]]+(\|s[\|l[\|x]]>\T{1});{}$\6
+${}\\{qr}\K\|q[\|r[\|x]];{}$\6
+\&{if} ${}(\|p>\\{qr}){}$\1\5
+${}\|q[\|x]\K\|p,\39\|s[\|x]\K\T{1};{}$\2\6
+\&{else}\1\5
+${}\|q[\|x]\K\\{qr},\39\|s[\|x]\K\|s[\|r[\|x]]+(\|p\E\\{qr});{}$\2\6
+\4${}\}{}$\2\par
+\As8, 12\ETs15.
+\U2.\fi
+
+\M{6}Zeilberger's bijection is recursively defined too, and we will
+implement it by writing another recursive procedure. But before
+we do so, let's examine how that procedure will be invoked in the program.
+
+\Y\B\4\X6:Find the binary tree \PB{$(\\{ll},\\{rr})$} corresponding to the
+forest \PB{$(\|l,\|r)$}\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\1\5
+${}\\{ll}[\|k]\K\|l[\|k],\39\\{rr}[\|k]\K\|r[\|k]{}$;\C{ clone the forest }\2\6
+\\{label}(\T{1});\C{ compute all the $q$'s and $s$'s }\6
+\\{zeil}(\T{1});\C{ transform the binary tree }\par
+\U2.\fi
+
+\M{7}When subroutine \PB{\\{zeil}(\|x)} is called, \PB{\|x} is a node of a
+forest, represented
+via left-child and right-sibling links \PB{\\{ll}} and \PB{\\{rr}}. The mission
+of \PB{\\{zeil}(\|x)} is to transform that forest in such a way that \PB{\|x}
+will
+be a node of the final binary tree, while \PB{\\{ll}[\|x]} and \PB{\\{rr}[\|x]}
+will
+be the binary subtrees that are obtained by applying \PB{\\{zeil}} to
+two subforests.
+
+Zeilberger's paper considered three cases, depending on the relative
+sizes of \PB{\|q[\|x]}, \PB{\|q[\\{ll}[\|x]]}, and \PB{\|q[\\{rr}[\|x]]}. In
+Case 1, no change
+is needed; in Case 2, some of \PB{\|x}'s children are promoted to be
+siblings of~\PB{\|x}; in Case 3, some of \PB{\|x}'s children swap places with
+all of the right siblings.
+
+\fi
+
+\M{8}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{zeil}(\&{register} \&{int} \|x)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k${},{}$ \\{ql}${},{}$ \\{qr}${},{}$ \|p${},{}$ %
+\|y${},{}$ \\{yy}${},{}$ \|z${},{}$ \\{zz}${},{}$ \\{ss};\7
+${}\|k\K\|q[\|x],\39\\{ql}\K\|q[\\{ll}[\|x]],\39\\{qr}\K\|q[\\{rr}[\|x]];{}$\6
+\&{if} ${}(\\{ql}\E\|k){}$\1\5
+\X10:Do Zeilberger's Case 3\X\2\6
+\&{else} \&{if} ${}(\\{qr}<\|k-\T{1}){}$\1\5
+\X9:Do Zeilberger's Case 2\X;\C{ otherwise we do Zeilberger's Case 1, which
+involves no action }\2\6
+\&{if} (\\{ll}[\|x])\1\5
+\\{zeil}(\\{ll}[\|x]);\2\6
+\&{if} (\\{rr}[\|x])\1\5
+\\{zeil}(\\{rr}[\|x]);\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{9}Case 2, the tricky case, detaches all but the first of \PB{\|x}'s
+``skewers.''
+
+When right links change, we must update the \PB{\|q} and \PB{\|s}
+numbers in each subnode of~\PB{\|x} before applying \PB{\\{zeil}} to
+the new subforests.
+In particular, we must recompute all the \PB{\|q}'s and \PB{\|s}'s for
+the children of~\PB{\|x} that lie between the first and second skewer,
+because those nodes will no longer lie in the shadow of the
+second skewer.
+
+This recomputation is a bit tricky because
+it must be done bottom-up, while our links go downward.
+An auxiliary recursive procedure could be introduced at this point,
+in order to achieve bottom-up behavior.
+But there's a more efficient (and more fun) way to do the job,
+namely to reverse the links temporarily
+as we descend the chain, and to reverse them again as we go back up.
+
+\Y\B\4\X9:Do Zeilberger's Case 2\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|y\K\\{ll}[\|x],\39\\{ss}\K\|s[\|y];{}$ ${}\|s[\|y]\E\\{ss};{}$
+${}\\{yy}\K\|y,\39\|y\K\\{rr}[\\{yy}]){}$\1\5
+${}\|s[\|y]\K\T{1}{}$;\C{ at this point node \PB{\\{yy}} is the first skewer of
+\PB{\|x} }\2\6
+\&{for} ${}(\|z\K\\{yy},\39\\{ss}\MM;{}$ ${}\|s[\\{rr}[\|y]]\E\\{ss}\W\|q[%
+\\{rr}[\|y]]\E\\{ql};\3{-1}{}$ ${}\\{yy}\K\|z,\39\|z\K\|y,\39\|y\K\\{rr}[\|z],%
+\39\\{rr}[\|z]\K\\{yy}){}$\1\5
+;\C{ reverse links }\2\6
+\hbox{}\C{ now node \PB{\|y} is the second skewer of \PB{\|x} }\6
+\hbox{}\C{ its left sibling, \PB{\|z}, will become the last child of \PB{\|x} }%
+\6
+\&{if} ${}(\|z\E\\{yy}){}$\1\5
+${}\\{rr}[\|z]\K\T{0}{}$;\C{ easy case: the skewers were adjacent }\2\6
+\&{else}\5
+\1\&{for} ${}(\\{zz}\K\T{0};{}$ ${}\\{rr}[\|z]\I\\{zz};{}$ ${}\\{yy}\K\\{zz},%
+\39\\{zz}\K\|z,\39\|z\K\\{rr}[\\{zz}],\39\\{rr}[\\{zz}]\K\\{yy}){}$\5
+${}\{{}$\1\6
+${}\|p\K\|q[\\{ll}[\|z]]+(\|s[\\{ll}[\|z]]>\T{1}){}$;\C{ we will recompute \PB{%
+\|q[\|z]} and \PB{\|s[\|z]} }\6
+\&{if} ${}(\|p>\|q[\\{zz}]){}$\1\5
+${}\|q[\|z]\K\|p,\39\|s[\|z]\K\T{1};{}$\2\6
+\&{else}\1\5
+${}\|q[\|z]\K\|q[\\{zz}],\39\|s[\|z]\K\|s[\\{zz}]+(\|p\E\|q[\\{zz}]);{}$\2\6
+\4${}\}{}$\2\2\6
+\&{for} ${}(\\{zz}\K\|x,\39\|z\K\\{rr}[\\{zz}];{}$ \|z; ${}\\{zz}\K\|z,\39\|z\K%
+\\{rr}[\\{zz}]){}$\1\5
+${}\|q[\|z]\K\\{ql},\39\|s[\|z]\K\\{ss};{}$\2\6
+${}\\{rr}[\\{zz}]\K\|y{}$;\C{ \PB{\|y} and its right siblings become \PB{\|x}'s
+final siblings }\6
+\4${}\}{}$\2\par
+\U8.\fi
+
+\M{10}In Case 3, \PB{\|x} has only one skewer. But the transformation
+in this case demotes siblings to children, where they might become
+additional skewers. It also might promote some children to siblings.
+
+\Y\B\4\X10:Do Zeilberger's Case 3\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{qr}\E\|k){}$\1\5
+${}\\{ss}\K\|s[\\{rr}[\|x]]+\T{1}{}$;\5
+\2\&{else}\1\5
+${}\\{ss}\K\T{1};{}$\2\6
+\&{for} ${}(\|y\K\\{ll}[\|x];{}$ ${}\|q[\|y]\E\|k;{}$ ${}\\{yy}\K\|y,\39\|y\K%
+\\{rr}[\\{yy}]){}$\1\5
+${}\|s[\|y]\K\\{ss};{}$\2\6
+${}\\{rr}[\\{yy}]\K\\{rr}[\|x],\39\\{rr}[\|x]\K\|y;{}$\6
+\4${}\}{}$\2\par
+\U8.\fi
+
+\N{1}{11}Checking the Strahler number. If our implementation of Zeilberger's
+transformation is correct, it will have set \PB{\|q[\|x]} to the Strahler
+number of the binary subtree rooted at \PB{\|x} with respect to the
+\PB{\\{ll}} and \PB{\\{rr}} links, for every node~\PB{\|x}.
+
+Therefore we want to check this condition. And we might as well
+do the checking by brute force, so that the evidence is convincing.
+
+\fi
+
+\M{12}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{strahler}(\&{register} \&{int} \|x)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \\{sl}${},{}$ \\{sr}${},{}$ \|s;\7
+\&{if} (\\{ll}[\|x])\1\5
+${}\\{sl}\K\\{strahler}(\\{ll}[\|x]);{}$\2\6
+\&{else}\1\5
+${}\\{sl}\K\T{0};{}$\2\6
+\&{if} (\\{rr}[\|x])\1\5
+${}\\{sr}\K\\{strahler}(\\{rr}[\|x]);{}$\2\6
+\&{else}\1\5
+${}\\{sr}\K\T{0};{}$\2\6
+${}\|s\K(\\{sl}>\\{sr}\?\\{sl}:\\{sl}<\\{sr}\?\\{sr}:\\{sl}+\T{1});{}$\6
+\&{if} ${}(\|q[\|x]\I\|s){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"I\ goofed\ at\ binary\ }\)\.{tree\ node\ \%d,\
+case\ \%}\)\.{d.\\n"},\39\|x,\39\\{serial});{}$\2\6
+\&{return} \|s;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{13}\B\X13:Check the pruning order and Strahler number\X${}\E{}$\6
+$\\{count}[\\{strahler}(\T{1})]\PP;{}$\6
+${}\\{serial}\PP{}$;\par
+\U2.\fi
+
+\N{1}{14}The inverse algorithm. The evidence of correctness is mounting.
+But our argument in favor of Zeilberger's algorithm
+is still not compelling, because there are lots
+of ways to convert a forest
+with pruning order~$s$ into a binary tree with Strahler number~$s$.
+For example, we need only compute the pruning order, then choose
+our favorite binary tree that has the desired Strahler number.
+
+A bijection must do more than this: It must not destroy information. We
+must be able to go back from each binary tree to the original forest
+that produced it. Thus, our implementation of Zeilberger's procedure is
+incomplete until we have also implemented its inverse, \PB{\\{unzeil}}.
+
+Our \PB{\\{unzeil}} algorithm will recreate the forest in new arrays \PB{%
+\\{lll}} and \PB{\\{rrr}},
+just to emphasize that no cheating is going on.
+
+\Y\B\4\X14:Check the inverse bijection\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\1\5
+${}\\{lll}[\|k]\K\\{ll}[\|k],\39\\{rrr}[\|k]\K\\{rr}[\|k],\39\|q[\|k]\K\|s[\|k]%
+\K\T{0}{}$;\C{ clone the binary tree }\2\6
+\\{unzeil}(\T{1});\C{ attempt to recreate the original forest }\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\\{lll}[\|k]\I\|l[\|k]\V\\{rrr}[\|k]\I\|r[\|k]){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Rejection\ at\ node\ \%}\)\.{d\ of\ case\ \%d!%
+\\n"},\39\|k,\39\\{serial}){}$;\2\2\par
+\U2.\fi
+
+\M{15}The \PB{\\{unzeil}} procedure also computes the \PB{\|q} and \PB{\|s}
+values at each node
+of the reconstructed forest.
+
+\Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{unzeil}(\&{register} \&{int} \|x)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \\{ql}${},{}$ \\{qr}${},{}$ \|p${},{}$ \|y${},{}$ %
+\\{yy}${},{}$ \|z${},{}$ \\{zz}${},{}$ \\{ss};\7
+\&{if} (\\{rrr}[\|x])\1\5
+\\{unzeil}(\\{rrr}[\|x]);\2\6
+\&{if} (\\{lll}[\|x])\1\5
+\\{unzeil}(\\{lll}[\|x]);\2\6
+${}\\{ql}\K\|q[\\{lll}[\|x]],\39\\{qr}\K\|q[\\{rrr}[\|x]];{}$\6
+\&{if} ${}(\\{ql}>\\{qr}){}$\1\5
+\X16:Undo Zeilberger's Case 3\X\2\6
+\&{else} \&{if} ${}(\\{ql}\E\\{qr}\W\|s[\\{lll}[\|x]]\E\T{1}){}$\1\5
+\X17:Undo Zeilberger's Case 2\X;\C{ otherwise we undo Zeilberger's Case 1,
+which involves no action }\2\6
+${}\|p\K\\{ql}+(\|s[\\{lll}[\|x]]>\T{1});{}$\6
+\&{if} ${}(\|p>\\{qr}){}$\1\5
+${}\|q[\|x]\K\|p,\39\|s[\|x]\K\T{1};{}$\2\6
+\&{else}\1\5
+${}\|q[\|x]\K\\{qr},\39\|s[\|x]\K\|s[\\{rrr}[\|x]]+(\|p\E\\{qr});{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{16}\B\X16:Undo Zeilberger's Case 3\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\|s[\\{lll}[\|x]]>\T{1}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|y\K\\{lll}[\|x];{}$ ${}\|s[\\{rrr}[\|y]]\E\|s[\|y];{}$ ${}\|y\K%
+\\{rrr}[\|y]){}$\1\5
+${}\|s[\|y]\K\T{1};{}$\2\6
+${}\|s[\|y]\K\T{1};{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+\1\&{for} ${}(\|y\K\\{lll}[\|x];{}$ ${}\|q[\\{rrr}[\|y]]\E\|q[\|y];{}$ ${}\|y\K%
+\\{rrr}[\|y]){}$\1\5
+;\2\2\6
+${}\\{yy}\K\\{rrr}[\|y],\39\\{rrr}[\|y]\K\\{rrr}[\|x],\39\\{rrr}[\|x]\K%
+\\{yy}{}$;\C{ swap siblings with children }\6
+${}\\{qr}\K\|q[\\{yy}]{}$;\C{ the subsequent program assumes that \PB{$\\{qr}\K%
+\|q[\\{rrr}[\|x]]$} }\6
+\4${}\}{}$\2\par
+\U15.\fi
+
+\M{17}We have saved the other tricky case for last:
+Again we do a double-reversal in order to recompute any \PB{\|q}'s and \PB{%
+\|s}'s
+that have been obliterated. In this case the recomputation affects
+the near siblings of~\PB{\|x}.
+
+\Y\B\4\X17:Undo Zeilberger's Case 2\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|z\K\\{rrr}[\|x],\39\\{zz}\K\|x;{}$ ${}\|s[\\{rrr}[\|z]]\E\|s[\|z]%
+\W\|q[\\{rrr}[\|z]]\E\|q[\|z];\3{-1}{}$ ${}\\{yy}\K\\{zz},\39\\{zz}\K\|z,\39\|z%
+\K\\{rrr}[\\{zz}],\39\\{rrr}[\\{zz}]\K\\{yy}){}$\1\5
+;\2\6
+\&{if} ${}(\\{zz}\E\|x){}$\1\5
+${}\\{yy}\K\\{rrr}[\|x]\K\T{0};{}$\2\6
+\&{else}\5
+\1\&{for} ${}(\\{yy}\K\T{0};{}$ ${}\\{zz}\I\|x;{}$ ${}\|y\K\\{zz},\39\\{zz}\K%
+\\{rrr}[\|y],\39\\{rrr}[\|y]\K\\{yy},\39\\{yy}\K\|y){}$\5
+${}\{{}$\1\6
+${}\|p\K\|q[\\{lll}[\\{zz}]]+(\|s[\\{lll}[\\{zz}]]>\T{1}){}$;\C{ we will
+recompute \PB{\|q[\\{zz}]} and \PB{\|s[\\{zz}]} }\6
+\&{if} ${}(\|p>\|q[\\{yy}]){}$\1\5
+${}\|q[\\{zz}]\K\|p,\39\|s[\\{zz}]\K\T{1};{}$\2\6
+\&{else}\1\5
+${}\|q[\\{zz}]\K\|q[\\{yy}],\39\|s[\\{zz}]\K\|s[\\{yy}]\K(\|p\E\|q[\\{yy}]);{}$%
+\2\6
+\4${}\}{}$\C{ \PB{\|x}'s former siblings are now undone }\2\2\6
+${}\\{qr}\K\|q[\\{yy}],\39\\{ss}\K\|s[\|z]+\T{1}{}$;\C{ at this point \PB{$%
+\\{yy}\K\\{rrr}[\|x]$} }\6
+\&{for} ${}(\\{yy}\K\\{lll}[\|x],\39\|y\K\\{rrr}[\\{yy}];{}$ \|y; ${}\\{yy}\K%
+\|y,\39\|y\K\\{rrr}[\\{yy}]){}$\5
+${}\{{}$\1\6
+${}\|s[\\{yy}]\K\\{ss};{}$\6
+\&{if} ${}(\|q[\\{yy}]\E\\{ql}){}$\1\5
+${}\\{ss}\MM;{}$\2\6
+\4${}\}{}$\2\6
+${}\|s[\\{yy}]\K\\{ss},\39\\{rrr}[\\{yy}]\K\|z{}$;\C{ unpromote \PB{\|x}'s
+former children }\6
+\4${}\}{}$\2\par
+\U15.\fi
+
+\N{1}{18}Index.
+
+\fi
+
+
+\inx
+\fin
+\con

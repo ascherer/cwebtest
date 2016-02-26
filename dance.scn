@@ -1,0 +1,28 @@
+\I\X12:Backtrack through all solutions\X
+\U1.
+\I\X17:Cover all other columns of \PB{\\{cur\_node}}\X
+\U12.
+\I\X2, 8, 14:Global variables\X
+\U1.
+\I\X7:Initialize the data structures\X
+\U1.
+\I\X10, 13, 20:Local variables\X
+\U1.
+\I\X23:Print a profile of the search tree\X
+\U1.
+\I\X22:Print column lengths, to make sure everything has been restored\X
+\U12.
+\I\X9:Read the column names\X
+\U7.
+\I\X11:Read the rows\X
+\U7.
+\I\X21:Record solution and \PB{\&{goto} \\{recover}}\X
+\U12.
+\I\X19:Set \PB{\\{best\_col}} to the best column for branching\X
+\U12.
+\I\X6, 15, 16:Subroutines\X
+\U1.
+\I\X3, 4:Type definitions\X
+\U1.
+\I\X18:Uncover all other columns of \PB{\\{cur\_node}}\X
+\U12.

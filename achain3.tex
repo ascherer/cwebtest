@@ -1,0 +1,531 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. This program is a sequel to {\mc ACHAIN2}, which you should
+read first. I'm experimenting with a brand-new way to find shortest
+addition chains. Maybe it will be good, maybe not; but in either
+case the results should be interesting (at least to me).
+At the end of this program I shall discuss the observed running time.
+
+The new idea is to generalize the problem to $l_k(n)$, the minimum length
+of an addition chain for which $a_j=2^j$ for $0\le j\le k$,
+assuming that $n\ge2^k$. Clearly $l_0(n)=l_1(n)=l(n)$ is the ordinary
+function, and we have $l_k(n)\le l_{k+1}(n)$. Furthermore the
+dual of the binary method (exercise 4.6.3--34) shows that
+$l_k(n)\le\lfloor\lg n\rfloor+\nu n-1$. A slightly less obvious fact is
+the inequality $l_{k+1}(2n)\le l_k(n)+1$; because if
+1, 2, \dots, $2^k$, $a_{k+1}$, \dots,~$n$ is an addition chain, so is
+1, 2, \dots, $2^k$, $2^{k+1}$, $2a_{k+1}$, \dots,~$2n$.
+
+When I first thought of defining $l_k(n)$, I conjectured that
+$l_{k+1}(n)\le l_k(n)+1$; but I'm tending to believe this less and less,
+the more I think about it. If it fails, we would have
+$l_{k+1}(n)>l_{k+1}(2n)$, by the previous inequality; but addition
+chains are full of surprises.
+
+Two parameters are given on the given line. If they are \.{foo} and
+\.{bar}, this program reads from files \.{foo-1}, \.{foo-2}, etc.,
+and writes to files \.{bar-1}, \.{bar-2}, etc., with bytes of
+the $k$th file giving values of $f_k(n)$ for $n=2^k$, $2^k+1$, $2^k+2$, etc.
+An input file that doesn't exist, or that is too short to contain information
+about the number $n$ being worked on, is simply disregarded; but if
+data is present in an input file, it is believed to be true without
+further checking.
+
+\Y\B\4\D$\\{nmax}$ \5
+$(\T{1}\LL\T{20}{}$)\C{ should be less than $2^{24}$ on a 32-bit machine }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\8\#\&{include} \.{<time.h>}\6
+\&{char} \|l[\T{20}][\\{nmax}];\6
+\&{int} \|a[\T{128}]${},{}$ \|b[\T{128}];\6
+\&{unsigned} \&{int} ${}\\{undo}[\T{128}*\T{128}];{}$\6
+\&{int} \\{ptr};\C{ this many items of the \PB{\\{undo}} stack are in use }\6
+\&{struct} ${}\{{}$\1\6
+\&{int} \\{lbp}${},{}$ \\{lbq}${},{}$ \\{ubq}${},{}$ \|r${},{}$ \\{ptrp}${},{}$
+\\{ptrq};\2\6
+${}\}{}$ \\{stack}[\T{128}];\6
+\&{int} \\{tail}[\T{128}]${},{}$ \\{outdeg}[\T{128}]${},{}$ \\{outsum}[%
+\T{128}]${},{}$ \\{limit}[\T{128}];\6
+\&{FILE} ${}{*}\\{infile}[\T{64}],{}$ ${}{*}\\{outfile}[\T{64}];{}$\6
+\&{char} \\{buf}[\T{100}];\7
+\&{int} \\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1%
+\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|n${},{}$ \|p${},{}$ \|q${},{}$ %
+\|r${},{}$ \|s${},{}$ \\{ubq}${},{}$ \\{lbp}${},{}$ \\{lbq}${},{}$ %
+\\{ptrp}${},{}$ \\{ptrq};\6
+\&{int} \\{lg2n}${},{}$ \\{kk}${},{}$ \\{lb}${},{}$ \\{ub}${},{}$ \\{timer}${}%
+\K\T{0};{}$\7
+\X2:Process the command line\X;\6
+${}\|a[\T{0}]\K\|b[\T{0}]\K\T{1},\39\|a[\T{1}]\K\|b[\T{1}]\K\T{2}{}$;\C{ an
+addition chain always begins like this }\6
+\&{for} ${}(\|n\K\T{2};{}$ ${}\|n<\\{nmax};{}$ ${}\|n\PP){}$\5
+${}\{{}$\1\6
+\X5:Determine $\lfloor\lg n\rfloor$ and the binary upper bound\X;\6
+\&{for} ${}(\\{kk}\K\\{lg2n};{}$ \\{kk}; ${}\\{kk}\MM){}$\5
+${}\{{}$\1\6
+\X4:Try to input $l_k(n)$; \PB{\&{goto} \\{done}} if successful\X;\6
+\X6:Backtrack until $l_k(n)$ is known\X;\6
+\4\\{done}:\5
+\X3:Output the value of $l_k(n)$\X;\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|n\MOD\T{1000}\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\|j\K\\{clock}(\,);{}$\6
+${}\\{printf}(\.{"\%d..\%d\ done\ in\ \%.5g}\)\.{\ minutes\\n"},\39\|n-\T{999},%
+\39\|n,\39(\&{double})(\|j-\\{timer})/(\T{60}*\.{CLOCKS\_PER\_SEC}));{}$\6
+${}\\{timer}\K\|j;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Process the command line\X${}\E{}$\6
+\&{if} ${}(\\{argc}\I\T{3}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ foo\ bar\\n}\)\.{"},\39\\{argv}[%
+\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}\B\X3:Output the value of $l_k(n)$\X${}\E{}$\6
+\&{if} ${}(\R\\{outfile}[\\{kk}]){}$\5
+${}\{{}$\1\6
+${}\\{sprintf}(\\{buf},\39\.{"\%s-\%d"},\39\\{argv}[\T{2}],\39\\{kk});{}$\6
+${}\\{outfile}[\\{kk}]\K\\{fopen}(\\{buf},\39\.{"w"});{}$\6
+\&{if} ${}(\R\\{outfile}[\\{kk}]){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Can't\ open\ file\ `\%s}\)\.{'\ for\ writing!%
+\\n"},\39\\{buf});{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\\{fprintf}(\\{outfile}[\\{kk}],\39\.{"\%c"},\39\|l[\\{kk}][\|n]+\.{'\
+'});{}$\6
+\\{fflush}(\\{outfile}[\\{kk}]);\C{ make sure the result is viewable
+immediately }\par
+\U1.\fi
+
+\M{4}Note that the input file for $l_1(n)$ starts with $n=2$, not $n=1$ as
+in the previous programs.
+
+\Y\B\4\X4:Try to input $l_k(n)$; \PB{\&{goto} \\{done}} if successful\X${}\E{}$%
+\6
+\&{if} ${}(\R\\{infile}[\\{kk}]){}$\5
+${}\{{}$\1\6
+${}\\{sprintf}(\\{buf},\39\.{"\%s-\%d"},\39\\{argv}[\T{1}],\39\\{kk});{}$\6
+${}\\{infile}[\\{kk}]\K\\{fopen}(\\{buf},\39\.{"r"});{}$\6
+\&{if} ${}(\R\\{infile}[\\{kk}]){}$\1\5
+${}\\{infile}[\\{kk}]\K{}$(\&{FILE} ${}{*}){}$ \T{1};\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{infile}[\\{kk}]\I{}$(\&{FILE} ${}{*}){}$ \T{1})\5
+${}\{{}$\1\6
+${}\|l[\\{kk}][\|n]\K\\{fgetc}(\\{infile}[\\{kk}])-\.{'\ '};{}$\6
+\&{if} ${}(\|l[\\{kk}][\|n]\Z\T{0}){}$\1\5
+${}\\{infile}[\\{kk}]\K{}$(\&{FILE} ${}{*}){}$ \T{1};\C{ shut down input when
+something fails }\2\6
+\&{goto} \\{done};\C{ accept the input value unquestioningly }\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{5}\B\X5:Determine $\lfloor\lg n\rfloor$ and the binary upper bound\X${}\E{}$%
+\6
+\&{for} ${}(\|q\K\|n,\39\|i\K{-}\T{1},\39\|j\K\T{0};{}$ \|q; ${}\|q\MRL{{\GG}{%
+\K}}\T{1},\39\|i\PP){}$\1\5
+${}\|j\MRL{+{\K}}\|q\AND\T{1};{}$\2\6
+${}\\{lg2n}\K\|i,\39\\{ub}\K\|i+\|j-\T{1}{}$;\par
+\U1.\fi
+
+\N{1}{6}The interesting part.
+The canonical-chain reduction of {\mc ACHAIN2} works for $l_k(n)$ as
+well as for $l(n)$, because the first $k$ steps of an $l_k$~chain
+are always reduced in the digraph. So I've taken it over here without
+change.
+
+Well, there is one change: In the former method, I started with a lower
+bound and worked upward until achieving success;
+now I'm going to start at an upper-bound-less-1 and continue until
+failing (as in {\mc ACHAIN0}). This switch causes only minor
+modifications, in spite of what I believed when I wrote {\mc ACHAIN1}.
+
+At the top level, when $k=\lfloor\lg n\rfloor$, there's nothing to do,
+because \PB{\\{ub}} clearly contains the optimal value.
+For smaller values of~$k$, we start at $l_{k+1}(n)-1$, and we
+also set $b[k+1]\gets2^{k+1}-$, because we know that the value
+$2^{k+1}$ has been ruled out.
+
+\Y\B\4\X6:Backtrack until $l_k(n)$ is known\X${}\E{}$\6
+\4\\{loop}:\5
+${}\|l[\\{kk}][\|n]\K\\{ub};{}$\6
+\&{if} ${}(\\{kk}\E\\{lg2n}){}$\1\5
+\&{goto} \\{done};\2\6
+${}\\{lb}\K\\{ub}-\T{1}{}$;\C{ \PB{\\{lb}} isn't really a lower bound, it's
+just a holdover from {\mc ACHAIN2} }\6
+\&{if} ${}(\\{lb}\Z\\{kk}+\T{1}){}$\1\5
+\&{goto} \\{done};\2\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i\Z\\{lb};{}$ ${}\|i\PP){}$\1\5
+${}\\{outdeg}[\|i]\K\\{outsum}[\|i]\K\T{0};{}$\2\6
+${}\|a[\\{lb}]\K\|b[\\{lb}]\K\|n;{}$\6
+\&{for} ${}(\|i\K\T{2};{}$ ${}\|i\Z\\{kk};{}$ ${}\|i\PP){}$\1\5
+${}\|a[\|i]\K\|b[\|i]\K\T{1}\LL\|i;{}$\2\6
+${}\|a[\|i]\K\|a[\\{kk}]+\T{1},\39\|b[\|i]\K(\T{1}\LL\|i)-\T{1};{}$\6
+\&{for} ${}(\|i\PP;{}$ ${}\|i<\\{lb};{}$ ${}\|i\PP){}$\1\5
+${}\|a[\|i]\K\|a[\|i-\T{1}]+\T{1},\39\|b[\|i]\K\|b[\|i-\T{1}]\LL\T{1};{}$\2\6
+\&{for} ${}(\|i\K\\{lb}-\T{1};{}$ ${}\|i>\\{kk};{}$ ${}\|i\MM){}$\5
+${}\{{}$\1\6
+\&{if} ${}((\|a[\|i]\LL\T{1})<\|a[\|i+\T{1}]){}$\1\5
+${}\|a[\|i]\K(\|a[\|i+\T{1}]+\T{1})\GG\T{1};{}$\2\6
+\&{if} ${}(\|b[\|i]\G\|b[\|i+\T{1}]){}$\1\5
+${}\|b[\|i]\K\|b[\|i+\T{1}]-\T{1};{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|a[\\{lb}-\T{1}]>\|b[\\{lb}-\T{1}]){}$\1\5
+\&{goto} \\{done};\2\6
+\X7:Try to fix the rest of the chain; \PB{\&{goto} \\{done}} if it's impossible%
+\X;\6
+${}\\{ub}\K\\{lb};{}$\6
+\&{goto} \\{loop};\par
+\U1.\fi
+
+\M{7}The only change to this algorithm for {\mc ACHAIN2} occurs when we happen
+to encounter an empty slot (namely when \PB{$\\{outdeg}[\|s]\E\T{0}$} and \PB{%
+\|s}
+isn't the top level). Then we simply reject the current solution.
+Reason: If it could be completed with the empty slot, that's great; but
+we'll discover the fact later. Meanwhile there certainly are canonical
+solutions with all slots nonempty, and they should be easy to find.
+
+\Y\B\4\X7:Try to fix the rest of the chain; \PB{\&{goto} \\{done}} if it's
+impossible\X${}\E{}$\6
+$\\{ptr}\K\T{0}{}$;\C{ clear the \PB{\\{undo}} stack }\6
+\&{for} ${}(\|r\K\|s\K\\{lb};{}$ ${}\|s>\\{kk};{}$ ${}\|s\MM){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{outdeg}[\|s]\E\T{0}\W\|s<\\{lb}){}$\1\5
+\&{goto} \\{backup};\2\6
+\&{if} ${}(\\{outdeg}[\|s]\E\T{1}){}$\1\5
+${}\\{limit}[\|s]\K\\{tail}[\\{outsum}[\|s]]{}$;\5
+\2\&{else}\1\5
+${}\\{limit}[\|s]\K\T{1};{}$\2\6
+\&{for} ( ; ${}\|r>\T{1}\W\|a[\|r-\T{1}]\E\|b[\|r-\T{1}];{}$ ${}\|r\MM){}$\1\5
+;\2\6
+\&{if} ${}(\\{outdeg}[\|s-\T{1}]\E\T{0}\W(\|a[\|s]\AND\T{1})){}$\1\5
+${}\|q\K\|a[\|s]/\T{3}{}$;\5
+\2\&{else}\1\5
+${}\|q\K\|a[\|s]\GG\T{1};{}$\2\6
+\&{for} ${}(\|p\K\|a[\|s]-\|q;{}$ ${}\|p\Z\|b[\|s-\T{1}];{}$ \,)\5
+${}\{{}$\1\6
+\&{if} ${}(\|p>\|b[\|r-\T{1}]){}$\5
+${}\{{}$\1\6
+\&{while} ${}(\|p>\|a[\|r]){}$\1\5
+${}\|r\PP{}$;\C{ this step keeps \PB{$\|r<\|s$} }\2\6
+${}\|p\K\|a[\|r],\39\|q\K\|a[\|s]-\|p,\39\|r\PP;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|q<\\{limit}[\|s]){}$\1\5
+\&{goto} \\{backup};\2\6
+\X10:Find bounds $(\PB{\\{lbp}},\PB{\\{ubq}})$ and $(\PB{\\{lbq}},\PB{%
+\\{ubq}})$ on where \PB{\|p} and \PB{\|q} can be inserted; but go to \PB{%
+\\{failpq}} if they can't both be accommodated\X;\6
+${}\\{ptrp}\K\\{ptr};{}$\6
+\&{for} ( ; ${}\\{ubq}\G\\{lbp};{}$ ${}\\{ubq}\MM){}$\5
+${}\{{}$\1\6
+\X12:Put \PB{\|p} into the chain at location \PB{\\{ubq}}; \PB{\&{goto} %
+\\{failp}} if there's a problem\X;\6
+\&{if} ${}(\|p\E\|q){}$\1\5
+\&{goto} \\{happiness};\2\6
+\&{if} ${}(\\{ubq}\G\\{ubq}){}$\1\5
+${}\\{ubq}\K\\{ubq}-\T{1};{}$\2\6
+${}\\{ptrq}\K\\{ptr};{}$\6
+\&{for} ( ; ${}\\{ubq}\G\\{lbq};{}$ ${}\\{ubq}\MM){}$\5
+${}\{{}$\1\6
+\X14:Put \PB{\|q} into the chain at location \PB{\\{ubq}}; \PB{\&{goto} %
+\\{failq}} if there's a problem\X;\6
+\4\\{happiness}:\5
+\X8:Put local variables on the stack and update outdegrees\X;\6
+\&{goto} \\{onward};\C{ now \PB{\|a[\|s]} is covered; try to fill in \PB{$\|a[%
+\|s-\T{1}]$} }\6
+\4\\{backup}:\5
+${}\|s\PP;{}$\6
+\&{if} ${}(\|s>\\{lb}){}$\1\5
+\&{goto} \\{done};\2\6
+\X9:Restore local variables from the stack and downdate outdegrees\X;\6
+\&{if} ${}(\|p\E\|q){}$\1\5
+\&{goto} \\{failp};\2\6
+\4\\{failq}:\5
+\&{while} ${}(\\{ptr}>\\{ptrq}){}$\1\5
+\X11:Undo a change\X;\2\6
+\4${}\}{}$\2\6
+\4\\{failp}:\5
+\&{while} ${}(\\{ptr}>\\{ptrp}){}$\1\5
+\X11:Undo a change\X;\2\6
+\4${}\}{}$\2\6
+\4\\{failpq}:\5
+\&{if} ${}(\|p\E\|q){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{outdeg}[\|s-\T{1}]\E\T{0}){}$\1\5
+${}\|q\K\|a[\|s]/\T{3}+\T{1}{}$;\C{ will be decreased momentarily }\2\6
+\&{if} ${}(\|q>\|b[\|s-\T{2}]){}$\1\5
+${}\|q\K\|b[\|s-\T{2}];{}$\2\6
+\&{else}\1\5
+${}\|q\MM;{}$\2\6
+${}\|p\K\|a[\|s]-\|q;{}$\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\|p\PP,\39\|q\MM;{}$\2\6
+\4${}\}{}$\2\6
+\&{goto} \\{backup};\6
+\4\\{onward}:\5
+\&{continue};\6
+\4${}\}{}$\2\6
+\\{possible}:\par
+\U6.\fi
+
+\M{8}\B\X8:Put local variables on the stack and update outdegrees\X${}\E{}$\6
+$\\{tail}[\|s]\K\|q,\39\\{stack}[\|s].\|r\K\|r;{}$\6
+${}\\{outdeg}[\\{ubq}]\PP,\39\\{outsum}[\\{ubq}]\MRL{+{\K}}\|s;{}$\6
+${}\\{outdeg}[\\{ubq}]\PP,\39\\{outsum}[\\{ubq}]\MRL{+{\K}}\|s;{}$\6
+${}\\{stack}[\|s].\\{lbp}\K\\{lbp},\39\\{stack}[\|s].\\{ubq}\K\\{ubq};{}$\6
+${}\\{stack}[\|s].\\{lbq}\K\\{lbq},\39\\{stack}[\|s].\\{ubq}\K\\{ubq};{}$\6
+${}\\{stack}[\|s].\\{ptrp}\K\\{ptrp},\39\\{stack}[\|s].\\{ptrq}\K\\{ptrq}{}$;%
+\par
+\U7.\fi
+
+\M{9}\B\X9:Restore local variables from the stack and downdate outdegrees\X${}%
+\E{}$\6
+$\\{ptrq}\K\\{stack}[\|s].\\{ptrq},\39\\{ptrp}\K\\{stack}[\|s].\\{ptrp};{}$\6
+${}\\{lbq}\K\\{stack}[\|s].\\{lbq},\39\\{ubq}\K\\{stack}[\|s].\\{ubq};{}$\6
+${}\\{lbp}\K\\{stack}[\|s].\\{lbp},\39\\{ubq}\K\\{stack}[\|s].\\{ubq};{}$\6
+${}\\{outdeg}[\\{ubq}]\MM,\39\\{outsum}[\\{ubq}]\MRL{-{\K}}\|s;{}$\6
+${}\\{outdeg}[\\{ubq}]\MM,\39\\{outsum}[\\{ubq}]\MRL{-{\K}}\|s;{}$\6
+${}\|q\K\\{tail}[\|s],\39\|p\K\|a[\|s]-\|q,\39\|r\K\\{stack}[\|s].\|r{}$;\par
+\U7.\fi
+
+\M{10}After the test in this step is passed, we'll have \PB{$\\{ubq}>\\{ubq}$}
+and \PB{$\\{lbp}>\\{lbq}$}.
+
+\Y\B\4\X10:Find bounds $(\PB{\\{lbp}},\PB{\\{ubq}})$ and $(\PB{\\{lbq}},\PB{%
+\\{ubq}})$ on where \PB{\|p} and \PB{\|q} can be inserted; but go to \PB{%
+\\{failpq}} if they can't both be accommodated\X${}\E{}$\6
+$\\{lbp}\K\|l[\\{kk}][\|p];{}$\6
+\&{if} ${}(\\{lbp}\G\\{lb}){}$\1\5
+\&{goto} \\{failpq};\2\6
+\&{while} ${}(\|b[\\{lbp}]<\|p){}$\1\5
+${}\\{lbp}\PP;{}$\2\6
+\&{if} ${}(\|a[\\{lbp}]>\|p){}$\1\5
+\&{goto} \\{failpq};\2\6
+\&{for} ${}(\\{ubq}\K\\{lbp};{}$ ${}\|a[\\{ubq}+\T{1}]\Z\|p;{}$ ${}\\{ubq}%
+\PP){}$\1\5
+;\2\6
+\&{if} ${}(\\{ubq}\E\|s-\T{1}){}$\1\5
+${}\\{lbp}\K\\{ubq};{}$\2\6
+\&{if} ${}(\|p\E\|q){}$\1\5
+${}\\{lbq}\K\\{lbp},\39\\{ubq}\K\\{ubq};{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{lbq}\K\|l[\\{kk}][\|q];{}$\6
+\&{if} ${}(\\{lbq}\G\\{ubq}){}$\1\5
+\&{goto} \\{failpq};\2\6
+\&{while} ${}(\|b[\\{lbq}]<\|q){}$\1\5
+${}\\{lbq}\PP;{}$\2\6
+\&{if} ${}(\\{lbq}\G\\{ubq}){}$\1\5
+\&{goto} \\{failpq};\2\6
+\&{if} ${}(\|a[\\{lbq}]>\|q){}$\1\5
+\&{goto} \\{failpq};\2\6
+\&{for} ${}(\\{ubq}\K\\{lbq};{}$ ${}\|a[\\{ubq}+\T{1}]\Z\|q\W\\{ubq}+\T{1}<%
+\\{ubq};{}$ ${}\\{ubq}\PP){}$\1\5
+;\2\6
+\&{if} ${}(\\{lbp}\E\\{lbq}){}$\1\5
+${}\\{lbp}\PP;{}$\2\6
+\4${}\}{}$\2\par
+\U7.\fi
+
+\M{11}The undoing mechanism is very simple: When changing \PB{\|a[\|j]}, we
+put \PB{$(\|j\LL\T{24})+\|x$} on the \PB{\\{undo}} stack, where \PB{\|x} was
+the former value.
+Similarly, when changing \PB{\|b[\|j]}, we stack the value \PB{$(\T{1}\LL%
+\T{31})+(\|j\LL\T{24})+\|x$}.
+
+\Y\B\4\D$\\{newa}(\|j,\|y)$ \5
+$\\{undo}[\\{ptr}\PP]\K(\|j\LL\T{24})+\|a[\|j],\39\|a[\|j]\K{}$\|y\par
+\B\4\D$\\{newb}(\|j,\|y)$ \5
+$\\{undo}[\\{ptr}\PP]\K(\T{1}\LL\T{31})+(\|j\LL\T{24})+\|b[\|j],\39\|b[\|j]%
+\K{}$\|y\par
+\Y\B\4\X11:Undo a change\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|i\K\\{undo}[\MM\\{ptr}];{}$\6
+\&{if} ${}(\|i\G\T{0}){}$\1\5
+${}\|a[\|i\GG\T{24}]\K\|i\AND\T{\^ffffff};{}$\2\6
+\&{else}\1\5
+${}\|b[(\|i\AND\T{\^3fffffff})\GG\T{24}]\K\|i\AND\T{\^ffffff};{}$\2\6
+\4${}\}{}$\2\par
+\U7.\fi
+
+\M{12}At this point we know that $a[ubq]\le p\le b[ubq]$.
+
+\Y\B\4\X12:Put \PB{\|p} into the chain at location \PB{\\{ubq}}; \PB{\&{goto} %
+\\{failp}} if there's a problem\X${}\E{}$\6
+\&{if} ${}(\|a[\\{ubq}]\I\|p){}$\5
+${}\{{}$\1\6
+${}\\{newa}(\\{ubq},\39\|p);{}$\6
+\&{for} ${}(\|j\K\\{ubq}-\T{1};{}$ ${}(\|a[\|j]\LL\T{1})<\|a[\|j+\T{1}];{}$ ${}%
+\|j\MM){}$\5
+${}\{{}$\1\6
+${}\|i\K(\|a[\|j+\T{1}]+\T{1})\GG\T{1};{}$\6
+\&{if} ${}(\|i>\|b[\|j]){}$\1\5
+\&{goto} \\{failp};\2\6
+${}\\{newa}(\|j,\39\|i);{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\\{ubq}+\T{1};{}$ ${}\|a[\|j]\Z\|a[\|j-\T{1}];{}$ ${}\|j%
+\PP){}$\5
+${}\{{}$\1\6
+${}\|i\K\|a[\|j-\T{1}]+\T{1};{}$\6
+\&{if} ${}(\|i>\|b[\|j]){}$\1\5
+\&{goto} \\{failp};\2\6
+${}\\{newa}(\|j,\39\|i);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|b[\\{ubq}]\I\|p){}$\5
+${}\{{}$\1\6
+${}\\{newb}(\\{ubq},\39\|p);{}$\6
+\&{for} ${}(\|j\K\\{ubq}-\T{1};{}$ ${}\|b[\|j]\G\|b[\|j+\T{1}];{}$ ${}\|j%
+\MM){}$\5
+${}\{{}$\1\6
+${}\|i\K\|b[\|j+\T{1}]-\T{1};{}$\6
+\&{if} ${}(\|i<\|a[\|j]){}$\1\5
+\&{goto} \\{failp};\2\6
+${}\\{newb}(\|j,\39\|i);{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\\{ubq}+\T{1};{}$ ${}\|b[\|j]>\|b[\|j-\T{1}]\LL\T{1};{}$ ${}%
+\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|i\K\|b[\|j-\T{1}]\LL\T{1};{}$\6
+\&{if} ${}(\|i<\|a[\|j]){}$\1\5
+\&{goto} \\{failp};\2\6
+${}\\{newb}(\|j,\39\|i);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\X13:Make forced moves if \PB{\|p} has a special form\X;\par
+\U7.\fi
+
+\M{13}If, say, we've just set \PB{$\|a[\T{8}]\K\|b[\T{8}]\K\T{132}$}, special
+considerations apply,
+because the only addition chains of length~8 for 132 are
+$$\eqalign{
+&1,2,4,8,16,32,64,128,132;\cr
+&1,2,4,8,16,32,64,68,132;\cr
+&1,2,4,8,16,32,64,66,132;\cr
+&1,2,4,8,16,32,34,66,132;\cr
+&1,2,4,8,16,32,33,66,132;\cr
+&1,2,4,8,16,17,33,66,132.\cr}$$
+The values of \PB{\|a[\T{4}]} and \PB{\|b[\T{4}]} must therefore be 16; and
+then, of course,
+we also must have \PB{$\|a[\T{3}]\K\|b[\T{3}]\K\T{8}$}, etc. Similar reasoning
+applies
+whenever we set $a[j]=b[j]=2^j+2^k$ for $k\le j-4$.
+
+Such cases may seem extremely special. But they are especially
+useful in ruling out cases that have no good $l_k(n)$.
+
+\Y\B\4\X13:Make forced moves if \PB{\|p} has a special form\X${}\E{}$\6
+$\|i\K\|p-(\T{1}\LL(\\{ubq}-\T{1}));{}$\6
+\&{if} ${}(\|i\W((\|i\AND(\|i-\T{1}))\E\T{0})\W(\|i\LL\T{4})<\|p){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\\{ubq}-\T{2};{}$ ${}(\|i\AND\T{1})\E\T{0};{}$ ${}\|i\MRL{{%
+\GG}{\K}}\T{1},\39\|j\MM){}$\1\5
+;\2\6
+\&{if} ${}(\|b[\|j]<(\T{1}\LL\|j)){}$\1\5
+\&{goto} \\{failp};\2\6
+\&{for} ( ; ${}\|a[\|j]<(\T{1}\LL\|j);{}$ ${}\|j\MM){}$\1\5
+${}\\{newa}(\|j,\39\T{1}\LL\|j);{}$\2\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{14}At this point we had better not assume that $a[ubq]\le q\le b[ubq]$,
+because \PB{\|p} has just been inserted. That insertion can mess up the
+bounds that we looked at when \PB{\\{lbq}} and \PB{\\{ubq}} were computed.
+
+\Y\B\4\X14:Put \PB{\|q} into the chain at location \PB{\\{ubq}}; \PB{\&{goto} %
+\\{failq}} if there's a problem\X${}\E{}$\6
+\&{if} ${}(\|a[\\{ubq}]\I\|q){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|a[\\{ubq}]>\|q){}$\1\5
+\&{goto} \\{failq};\2\6
+${}\\{newa}(\\{ubq},\39\|q);{}$\6
+\&{for} ${}(\|j\K\\{ubq}-\T{1};{}$ ${}(\|a[\|j]\LL\T{1})<\|a[\|j+\T{1}];{}$ ${}%
+\|j\MM){}$\5
+${}\{{}$\1\6
+${}\|i\K(\|a[\|j+\T{1}]+\T{1})\GG\T{1};{}$\6
+\&{if} ${}(\|i>\|b[\|j]){}$\1\5
+\&{goto} \\{failq};\2\6
+${}\\{newa}(\|j,\39\|i);{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\\{ubq}+\T{1};{}$ ${}\|a[\|j]\Z\|a[\|j-\T{1}];{}$ ${}\|j%
+\PP){}$\5
+${}\{{}$\1\6
+${}\|i\K\|a[\|j-\T{1}]+\T{1};{}$\6
+\&{if} ${}(\|i>\|b[\|j]){}$\1\5
+\&{goto} \\{failq};\2\6
+${}\\{newa}(\|j,\39\|i);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|b[\\{ubq}]\I\|q){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|b[\\{ubq}]<\|q){}$\1\5
+\&{goto} \\{failq};\2\6
+${}\\{newb}(\\{ubq},\39\|q);{}$\6
+\&{for} ${}(\|j\K\\{ubq}-\T{1};{}$ ${}\|b[\|j]\G\|b[\|j+\T{1}];{}$ ${}\|j%
+\MM){}$\5
+${}\{{}$\1\6
+${}\|i\K\|b[\|j+\T{1}]-\T{1};{}$\6
+\&{if} ${}(\|i<\|a[\|j]){}$\1\5
+\&{goto} \\{failq};\2\6
+${}\\{newb}(\|j,\39\|i);{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\\{ubq}+\T{1};{}$ ${}\|b[\|j]>\|b[\|j-\T{1}]\LL\T{1};{}$ ${}%
+\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|i\K\|b[\|j-\T{1}]\LL\T{1};{}$\6
+\&{if} ${}(\|i<\|a[\|j]){}$\1\5
+\&{goto} \\{failq};\2\6
+${}\\{newb}(\|j,\39\|i);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\X15:Make forced moves if \PB{\|q} has a special form\X;\par
+\U7.\fi
+
+\M{15}\B\X15:Make forced moves if \PB{\|q} has a special form\X${}\E{}$\6
+$\|i\K\|q-(\T{1}\LL(\\{ubq}-\T{1}));{}$\6
+\&{if} ${}(\|i\W((\|i\AND(\|i-\T{1}))\E\T{0})\W(\|i\LL\T{4})<\|q){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\\{ubq}-\T{2};{}$ ${}(\|i\AND\T{1})\E\T{0};{}$ ${}\|i\MRL{{%
+\GG}{\K}}\T{1},\39\|j\MM){}$\1\5
+;\2\6
+\&{if} ${}(\|b[\|j]<(\T{1}\LL\|j)){}$\1\5
+\&{goto} \\{failq};\2\6
+\&{for} ( ; ${}\|a[\|j]<(\T{1}\LL\|j);{}$ ${}\|j\MM){}$\1\5
+${}\\{newa}(\|j,\39\T{1}\LL\|j);{}$\2\6
+\4${}\}{}$\2\par
+\U14.\fi
+
+\M{16}The bottom line: Alas, this method turns out to be by far the
+slowest of all. But maybe somebody will find a use for it?
+The most interesting thing I noticed is that $l_1(n)=l_2(n)$
+for $4\le n<14759$; in other words, when $n$ is small there's
+always a way to get by without using `3' in the chain.
+But all four addition chains of length 17 for $n=14759$
+start with 1,~2,~3. For example, one of them is
+1, 2, 3, 5, 10, 13, 23, 46, 92, 184, 368, 736, 1472, 2944, 2957, 5901, 8858,
+14759.
+
+(I learned subsequently that Sch\"onhage had conjectured $l_1(n)=l_2(n)$
+in 1975. Moreover, Bleichenbacher and Flammenkamp mentioned
+the first three counterexamples in an unpublished preprint of 1997.)
+
+\fi
+
+\N{1}{17}Index.
+\fi
+
+\inx
+\fin
+\con

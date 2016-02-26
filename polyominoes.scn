@@ -1,0 +1,18 @@
+\I\X8:Generate the possible piece placements\X
+\U6.
+\I\X4, 7:Global variables\X
+\U1.
+\I\X11:Output translates of the current piece\X
+\U8.
+\I\X2:Read and output the board\X
+\U1.
+\I\X5:Read and output the piece names\X
+\U1.
+\I\X6:Read and output the pieces\X
+\U1.
+\I\X10:Rotate the current piece\X
+\U8.
+\I\X3, 12:Subroutines\X
+\U1.
+\I\X9:Transpose the current piece\X
+\U8.

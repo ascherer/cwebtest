@@ -1,0 +1,145 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. This program was written (somewhat hastily) in order to
+experiment
+with sandpiles.
+
+The first command line argument is the name of a file that specifies
+an undirected graph in Stanford GraphBase
+{\mc SAVE\_GRAPH} format; the graph may have
+repeated edges, but it must not contain loops.
+It should be connected. It shouldn't have more than 100 vertices.
+I don't check these assumptions.
+
+An optional second argument is the number of the root vertex.
+
+\Y\B\8\#\&{include} \.{"gb\_graph.h"}\6
+\8\#\&{include} \.{"gb\_save.h"}\6
+\ATH\6
+\&{int} \\{vec}[\T{1000}][\T{1000}];\6
+\&{int} \|x[\T{1000}]${},{}$ \|d[\T{1000}]${},{}$ \|t[\T{1000}];\6
+\&{int} \|n${},{}$ \|r;\7
+\X4:Subroutines\X\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k;\7
+${}\\{Vertex}*\|v;{}$\6
+${}\\{Arc}*\|a;{}$\6
+${}\\{Graph}*\|g;{}$\6
+\X2:Input the graph\X;\6
+\X3:Prepare the \PB{\\{vec}} table\X;\6
+\X5:Reduce the vector \PB{\|d}\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Input the graph\X${}\E{}$\6
+\&{if} ${}(\\{argc}<\T{2}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ foo.gb\ [r}\)\.{]\\n"},\39%
+\\{argv}[\T{0}]);{}$\6
+\\{exit}(\T{1});\6
+\4${}\}{}$\2\6
+${}\|g\K\\{restore\_graph}(\\{argv}[\T{1}]);{}$\6
+\&{if} ${}(\R\|g){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ can't\ create}\)\.{\ the\ graph\ from\
+file}\)\.{\ \%s!\ (error\ code\ \%d)}\)\.{\\n"},\39\\{argv}[\T{1}],\39\\{panic%
+\_code});{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+${}\|n\K\|g\MG\|n;{}$\6
+\&{if} ${}(\\{argc}>\T{2}){}$\1\5
+${}\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}\|r){}$;\2\par
+\U1.\fi
+
+\M{3}\B\X3:Prepare the \PB{\\{vec}} table\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|v\K\|g\MG\\{vertices}+\|j;{}$\6
+\&{for} ${}(\|a\K\|v\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|k\K\|a\MG\\{tip}-\|g\MG\\{vertices};{}$\6
+${}\|d[\|j]\PP;{}$\6
+${}\\{vec}[\|j][\|k]\MM;{}$\6
+\4${}\}{}$\2\6
+${}\\{vec}[\|j][\|j]\K\|d[\|j];{}$\6
+\4${}\}{}$\2\6
+\&{if} (\|r)\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\1\5
+${}\|k\K\\{vec}[\T{0}][\|j],\39\\{vec}[\T{0}][\|j]\K\\{vec}[\|r][\|j],\39%
+\\{vec}[\|r][\|j]\K\|k;{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\1\5
+${}\|k\K\\{vec}[\|j][\T{0}],\39\\{vec}[\|j][\T{0}]\K\\{vec}[\|j][\|r],\39%
+\\{vec}[\|j][\|r]\K\|k;{}$\2\6
+${}\|k\K\|d[\T{0}],\39\|d[\T{0}]\K\|d[\|r],\39\|d[\|r]\K\|k;{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{4}The \PB{\\{reduce}} subroutine topples a given vector \PB{\|x} until it is
+stable.
+
+\Y\B\4\X4:Subroutines\X${}\E{}$\6
+\&{void} \\{reduce}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|h;\7
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+${}\|h\K\T{0};{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\|x[\|j]\G\|d[\|j]){}$\5
+${}\{{}$\1\6
+${}\|h\K\T{1};{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\|n;{}$ ${}\|k\PP){}$\1\5
+${}\|x[\|k]\MRL{-{\K}}\\{vec}[\|j][\|k];{}$\2\6
+\4${}\}{}$\2\2\6
+\&{if} ${}(\|h\E\T{0}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{5}\B\X5:Reduce the vector \PB{\|d}\X${}\E{}$\6
+\\{printf}(\.{"The\ d\ vector\ is"});\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|x[\|j]\K\|d[\|j];{}$\6
+${}\\{printf}(\.{"\ \%d"},\39\|x[\|j]);{}$\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n\ and\ it\ reduces\ t}\)\.{o"});\6
+\\{reduce}(\,);\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\ \%d"},\39\|x[\|j]);{}$\6
+${}\|x[\|j]\K\|d[\|j]-\|x[\|j];{}$\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\nThe\ t\ vector\ is"});\6
+\\{reduce}(\,);\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\ \%d"},\39\|x[\|j]);{}$\6
+${}\|x[\|j]\K\|d[\|j]+\|d[\|j];{}$\6
+\4${}\}{}$\2\6
+\\{reduce}(\,);\6
+\\{printf}(\.{"\\nThe\ double-d\ vect}\)\.{or\ reduces\ to"});\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\ \%d"},\39\|x[\|j]);{}$\6
+${}\|x[\|j]\K\|d[\|j]+\|d[\|j]-\|x[\|j];{}$\6
+\4${}\}{}$\2\6
+\\{reduce}(\,);\6
+\\{printf}(\.{"\\n\ and\ the\ zero\ vec}\)\.{tor\ is"});\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\ \%d"},\39\|x[\|j]);{}$\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n"});\par
+\U1.\fi
+
+\N{1}{6}Index.
+\fi
+
+\inx
+\fin
+\con

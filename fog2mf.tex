@@ -1,0 +1,229 @@
+\input cwebmac
+\datethis
+\font\logo=logo10
+\def\MF{{\logo META}\-{\logo FONT}}
+
+
+\N{1}{1}Introduction. This program is a quick-and-dirty hack to convert
+Fontographer Type~3 font output to \MF\ code. I assume that the input
+file has been hand-converted to a mixture of the \.{afm} file and
+the \.{ps} file output by Fontographer; I also assume that the output
+file will be hand-tailored to make a complete \MF\ program.
+
+More precisely, this program reads blocks of material like
+$$\vbox{\halign{\tt#\cr
+C 33 ; WX 220 ; N exclam ; B 34 442 187 664 ;\cr
+/exclam\char`\{220 0 4.0426 422.858 217.66 683.983 Cache\cr
+187.702 623.194 moveto\cr
+-0.297607 -29.4158 -111.106 -124.124 -24 -28 rrcurveto\cr
+-19 10 rlineto\cr
+16.42 45.8054 35.7433 110.536 23 36 rrcurveto\cr
+8.12329 12.7366 11.0454 6.84058 15.4363 -0.159424 rrcurveto\cr
+23.3605 -0.159424 21.7024 -18.0087 -0.297607 -23.8059 rrcurveto\cr
+closepath\cr
+0 FillStroke\cr
+\char`\}def\cr
+}}$$
+and writes corresponding blocks of material like
+$$\vbox{\halign{\tt#\cr
+beginchar(33,220u\char`#,664u\char`#,0u\char`#);\cr
+stroke (188,623)\cr
+\ ...(187,594,76,470,52,442)\cr
+\ --(33,452)\cr
+\ ...(50,497,85,608,108,644)\cr
+\ ...(117,657,128,664,143,663)\cr
+\ ...(166,663,188,645,188,621)\cr
+\ --cycle;\cr
+endchar;\cr
+}}$$
+(operating from standard input to standard output).
+
+It does absolutely nothing fancy.
+
+On a closed shape like the letter O, the user has to change some \.{stroke}
+commands to \.{unstroke}, because Fontographer gives the outside contour and
+then the inside contour (in opposite directions). The inside contour needs
+to be erased, not filled, so we want to \.{unstroke} it.
+
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\&{char} \\{buffer}[\T{100}]${},{}$ ${}{*}\\{pos}\K\\{buffer};{}$\6
+\&{char} \\{token}[\T{100}];\7
+\X2:Subroutines for input\X\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k;\6
+\&{double} \|x${},{}$ \|y${},{}$ \|z;\6
+\&{register} \&{char} ${}{*}\|p,{}$ ${}{*}\|q;{}$\7
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\X4:Process font metric info\X;\6
+\X5:Process stroke info\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{2}Low-level input. At the bottom I need a way to parse the input into
+tokens.
+A token is either a number or a string of nonblank characters.
+
+To make things simple, \PB{\\{get\_token}} just finds a string of nonblank
+characters. The calling routine will easily be able to convert a numeric
+string to the actual number.
+
+\Y\B\4\D$\\{get\_token}$ \5
+\\{gtok}(\,)\par
+\Y\B\4\X2:Subroutines for input\X${}\E{}$\6
+\\{gtok}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{char} ${}{*}\|p;{}$\7
+\&{if} ${}({*}\\{pos}\E\T{0}\V{*}\\{pos}\E\.{'\\n'}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{fgets}(\\{buffer},\39\T{100},\39\\{stdin})){}$\1\5
+\\{exit}(\T{0});\C{ normal exit at end of file }\2\6
+${}\\{pos}\K\\{buffer};{}$\6
+\4${}\}{}$\2\6
+\&{for} ( ; ${}{*}\\{pos}\E\.{'\ '};{}$ ${}\\{pos}\PP){}$\1\5
+;\C{ move to next nonspace }\2\6
+\&{for} ${}(\|p\K\\{token};{}$ ${}{*}\\{pos}\I\.{'\ '}\W{*}\\{pos}\W{*}\\{pos}%
+\I\.{'\\n'};{}$ ${}\|p\PP,\39\\{pos}\PP){}$\1\5
+${}{*}\|p\K{*}\\{pos};{}$\2\6
+${}{*}\|p\K\T{0};{}$\6
+\&{for} ( ; ${}{*}\\{pos}\E\.{'\ '};{}$ ${}\\{pos}\PP){}$\1\5
+;\2\6
+\4${}\}{}$\2\par
+\A3.
+\U1.\fi
+
+\M{3}If the input contains any surprises, we give up immediately.
+
+\Y\B\4\D$\\{get\_num}$ \5
+\\{gnum}(\,)\par
+\B\4\D$\\{panic}(\\{str})$ \6
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Oops!\ \%s:\\n\%s"},\39\\{str},\39%
+\\{buffer});{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\par
+\Y\B\4\X2:Subroutines for input\X${}\mathrel+\E{}$\6
+\&{double} \\{gnum}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{double} \\{xx};\7
+\&{if} ${}(\\{sscanf}(\\{token},\39\.{"\%lf"},\39{\AND}\\{xx})\I\T{1}){}$\1\5
+\\{panic}(\.{"Unreadable\ number"});\2\6
+\&{return} \\{xx};\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{4}Reading the font metrics. If the first line of the input is, say,
+$$\.{C 36 ; WX 482 ; N dollar ; B 23 -205 437 751 ;}$$
+we want to define character number 36, whose width is 482 units.
+The name of the character is unimportant (Fontographer assigned it
+based solely of the character number). The bounding box is also
+mostly unimportant except for the $y$ coordinates; in this example
+we give the character a depth of 205 units and a height of 751.
+
+Another line such as
+$$\.{/dollar\char`\{482 0 -44.1428 -260.8 504.143 806.8 Cache}$$
+immediately follows in the input, but we totally ignore it.
+
+\Y\B\4\D$\\{check}(\\{str},\\{err})$ \6
+${}\{{}$\1\6
+\\{get\_token};\6
+\&{if} ${}(\\{strcmp}(\\{token},\39\\{str})\I\T{0}){}$\1\5
+\\{panic}(\\{err});\2\6
+\4${}\}{}$\2\par
+\Y\B\4\X4:Process font metric info\X${}\E{}$\6
+$\\{check}(\.{"C"},\39\.{"Expected\ `C'"});{}$\6
+\\{get\_token};\6
+${}\\{printf}(\.{"beginchar(\%s,"},\39\\{token});{}$\6
+${}\\{check}(\.{";"},\39\.{"Expected\ `;'"});{}$\6
+${}\\{check}(\.{"WX"},\39\.{"Expected\ `WX'"})\\{get\_token};{}$\6
+${}\\{printf}(\.{"\%su\#,"},\39\\{token});{}$\6
+${}\\{check}(\.{";"},\39\.{"Expected\ `;'"});{}$\6
+${}\\{check}(\.{"N"},\39\.{"Expected\ `N'"});{}$\6
+\\{get\_token};\6
+${}\\{check}(\.{";"},\39\.{"Expected\ `;'"});{}$\6
+${}\\{check}(\.{"B"},\39\.{"Expected\ `B'"});{}$\6
+\\{get\_token};\6
+\\{get\_token};\6
+${}\|k\K(\&{int})(\\{get\_num}+\T{.5});{}$\6
+\&{if} ${}(\|k>\T{0}){}$\1\5
+${}\|k\K\T{0};{}$\2\6
+\&{else}\1\5
+${}\|k\K{-}\|k;{}$\2\6
+\\{get\_token};\6
+\\{get\_token};\6
+${}\\{printf}(\.{"\%su\#,\%du\#);\\n"},\39\\{token},\39\|k);{}$\6
+${}\\{check}(\.{";"},\39\.{"Expected\ `;'"});{}$\6
+\\{get\_token};\6
+${}\\{check}(\.{"0"},\39\.{"Expected\ `0'"});{}$\6
+\\{get\_token};\6
+\\{get\_token};\6
+\\{get\_token};\6
+\\{get\_token};\6
+${}\\{check}(\.{"Cache"},\39\.{"Expected\ `Cache'"}){}$;\par
+\U1.\fi
+
+\N{1}{5}The strokes. Each shape to be filled is presented as a sequence
+of lines beginning with `$x$ $y$ \.{moveto}' and followed by lines
+that say either `$x$ $y$ \.{rlineto}' or `$x_1$ $y_1$ $x_2$ $y_2$ $x_3$ $y_3$
+\.{rrcurveto}'; finally `\.{closepath}' ends the shape.
+Each pair $(x,y)$ is an increment to be added to the previous coordinates.
+
+The final stroke is followed by `\.{0} \.{Fillstroke} \.{\char`\}def}'.
+
+\Y\B\4\X5:Process stroke info\X${}\E{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\\{get\_token};\6
+${}\|x\K\\{get\_num};{}$\6
+\\{get\_token};\6
+\&{if} ${}(\\{strcmp}(\\{token},\39\.{"FillStroke"})\E\T{0}){}$\1\5
+\&{break};\2\6
+${}\|y\K\\{get\_num};{}$\6
+${}\\{check}(\.{"moveto"},\39\.{"Expected\ `moveto'"});{}$\6
+${}\\{printf}(\.{"stroke\ (\%d,\%d)\\n"},\39(\&{int})(\|x+\T{.5}),\39(\&{int})(%
+\|y+\T{.5}));{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\\{get\_token};\6
+\&{if} ${}(\\{strcmp}(\\{token},\39\.{"closepath"})\E\T{0}){}$\1\5
+\&{break};\2\6
+${}\|x\MRL{+{\K}}\\{get\_num};{}$\6
+\\{get\_token};\6
+${}\|y\MRL{+{\K}}\\{get\_num};{}$\6
+\\{get\_token};\6
+\&{if} ${}(\\{strcmp}(\\{token},\39\.{"rlineto"})\E\T{0}){}$\1\5
+${}\\{printf}(\.{"\ --(\%d,\%d)\\n"},\39(\&{int})(\|x+\T{.5}),\39(\&{int})(\|y+%
+\T{.5}));{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\ ...(\%d,\%d"},\39(\&{int})(\|x+\T{.5}),\39(\&{int})(\|y+%
+\T{.5}));{}$\6
+${}\|x\MRL{+{\K}}\\{get\_num};{}$\6
+\\{get\_token};\6
+${}\|y\MRL{+{\K}}\\{get\_num};{}$\6
+${}\\{printf}(\.{",\%d,\%d"},\39(\&{int})(\|x+\T{.5}),\39(\&{int})(\|y+%
+\T{.5}));{}$\6
+\\{get\_token};\6
+${}\|x\MRL{+{\K}}\\{get\_num};{}$\6
+\\{get\_token};\6
+${}\|y\MRL{+{\K}}\\{get\_num};{}$\6
+${}\\{printf}(\.{",\%d,\%d)\\n"},\39(\&{int})(\|x+\T{.5}),\39(\&{int})(\|y+%
+\T{.5}));{}$\6
+${}\\{check}(\.{"rrcurveto"},\39\.{"Expected\ `rrcurveto}\)\.{'"});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+;\6
+\\{printf}(\.{"\ --cycle;\\n"});\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"endchar;\\n"});\6
+${}\\{check}(\.{"\}def"},\39\.{"Expected\ `\}def'"}){}$;\par
+\U1.\fi
+
+\N{1}{6}Index.
+\fi
+
+\inx
+\fin
+\con

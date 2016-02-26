@@ -1,0 +1,84 @@
+\I\X6:Allocate additional storage\X
+\U2.
+\I\X37:Build branch with branch\X
+\U31.
+\I\X36:Build branch with leaf\X
+\U31.
+\I\X35:Build leaf with branch\X
+\U31.
+\I\X34:Build leaf with leaf\X
+\U31.
+\I\X49:Change \PB{$\|b\MG\\{des}$} and visit a new spanning tree\X
+\U47.
+\I\X18:Check the graph for validity and prepare it for action\X
+\U2.
+\I\X16:Declare the recursive routine \PB{\\{bondsanity}}\X
+\U12.
+\I\X15:Do a sanity check on the action list\X
+\U12.
+\I\X13:Do a sanity check on the graph\X
+\U12.
+\I\X17:Do a sanity check on the tree list\X
+\U12.
+\I\X14:Do a sanity check on \PB{\|v}'s bond list\X
+\U13.
+\I\X47:Do the {\mc SPSPAN} algorithm on the action list\X
+\U25.
+\I\X41:Downdate \PB{\\{aa}} and \PB{\\{bb}} from an old parallel bond\X
+\U39.
+\I\X40:Downdate \PB{\\{aa}} and \PB{\\{bb}} from an old series bond\X
+\U39.
+\I\X21:Eliminate \PB{\|v}, then \PB{\&{goto} \\{trivialgraph}} if only one
+vertex is left\X
+\U19.
+\I\X25:Generate all spanning trees\X
+\U1.
+\I\X7:Global variables\X
+\U1.
+\I\X27:If \PB{\|e} is not a bridge, delete it, set \PB{$\\{outbond}\K\|e\MG%
+\\{bond}$}, and \PB{\&{goto} \\{reduce}}\X
+\U25.
+\I\X2:Input the graph\X
+\U1.
+\I\X3:Local variables\X
+\U1.
+\I\X28:Nullify all \PB{\\{bfs}} links, delete \PB{\|e}, and \PB{\&{goto} %
+\\{reduce}}\X
+\U27.
+\I\X30:Obtain a new spanning tree by changing \PB{\\{outbond}} and \PB{%
+\\{inbond}}\X
+\U25.
+\I\X20:Parallelize duplicate bonds from \PB{\|v}\X
+\U19.
+\I\X48:Passivate \PB{\|b}\X
+\U47.
+\I\X19:Reduce the graph until it's trivial\X
+\U25.
+\I\X22:Require the bond from \PB{\|v}\X
+\U21.
+\I\X46:Restore one or two deleted bonds and \PB{\&{return}}\X
+\U39.
+\I\X23:Serialize the bonds from \PB{\|v}\X
+\U21.
+\I\X24:Shrink bond \PB{\|e}\X
+\U19.
+\I\X9, 10, 11, 12, 31, 38, 39:Subroutines\X
+\U1.
+\I\X5:Type definitions\X
+\U1.
+\I\X45:Unbuild branch with branch\X
+\U39.
+\I\X44:Unbuild branch with leaf\X
+\U39.
+\I\X43:Unbuild leaf with branch\X
+\U39.
+\I\X42:Unbuild leaf with leaf\X
+\U39.
+\I\X29:Undo all changes to the graph since entering level \PB{\|l}\X
+\U25.
+\I\X26:Unshrink bond \PB{\|e}\X
+\U25.
+\I\X33:Update \PB{\\{aa}} and \PB{\\{bb}} for a new parallel bond\X
+\U31.
+\I\X32:Update \PB{\\{aa}} and \PB{\\{bb}} for a new series bond\X
+\U31.

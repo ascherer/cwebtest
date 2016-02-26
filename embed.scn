@@ -1,0 +1,24 @@
+\I\X17:Classify \PB{\|u} as rank 1 or rank 2\X
+\U15.
+\I\X4:Compute all distances from \PB{\\{start\_vertex}}\X
+\U10.
+\I\X3:Doubly link all adjacency lists\X
+\U10.
+\I\X15:Find and delete all edges equivalent to $r\adj s$\X
+\U11.
+\I\X16:Find the mate of \PB{\|v} and delete the corresponding edge\X
+\U15.
+\I\X2, 5, 12:Global variables\X
+\U1.
+\I\X9:Make each edge its own anonymous equivalence class\X
+\U10.
+\I\X18:Note an equivalence if \PB{\|u} has rank 1\X
+\U15.
+\I\X10:Prepare the data structures\X
+\U1.
+\I\X14:Print out the embedding codes\X
+\U1.
+\I\X13:Record \PB{\|r} and \PB{\|s} for postprocessing\X
+\U11.
+\I\X6, 7, 8, 11:Subroutines\X
+\U1.
