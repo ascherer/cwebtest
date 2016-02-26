@@ -1,0 +1,604 @@
+This is CTANGLE (Version 3.64)
+*1*3*12
+Writing the output file (15puzzle-korf0.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*3*25
+Writing the output file (15puzzle-korf1.c):.....500....
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*7*11
+Writing the output file (achain0.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*7*13
+Writing the output file (achain1.c):..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*7*18
+Writing the output file (achain2.c):..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*6*17
+Writing the output file (achain3.c):..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*8*23
+Writing the output file (achain4.c):...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*4*21
+Writing the output file (achain-all.c):...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*2
+Writing the output file (achain-decode.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*4*18*21*63*69*71*74*92*104*116*140*154*159*177*183*193*200*201.
+Writing the output file (advent.c):....500.....1000.....1500.....2000.....2500.....3000....
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*3*7*23*48
+Writing the output file (antislide3.c):.....500
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*2*10*27
+Writing the output file (antislide.c):...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*4*12*18*56
+Writing the output file (back-20q.c):.....500.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5*9*21*24*28*32*47
+Writing the output file (back-commafree4.c):.....500.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5*12*23*43
+Writing the output file (back-dissect.c):.....500
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*12
+Writing the output file (back-mxn-words-mxn.c):..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*12
+Writing the output file (back-mxn-words-new.c):..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*4*11*23
+Writing the output file (back-pdi.c):..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*6*12*19*35*41
+Writing the output file (back-skeleton-shortest.c):....
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*3*8*15*20*29
+Writing the output file (bdd12.c):...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*11*20*39*51*73*81*91*99*106*110*130*156*160*165.
+Writing the output file (bdd14.c):....500.....1000.....1500.....2000....
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*12*20*40*52*74*97*105*108*128*153*157*162.
+Writing the output file (bdd15.c):....500.....1000.....1500.....2000.....2500
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*2
+Writing the output file (bddl-rgrowth.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*23
+Writing the output file (celtic-paths.c):...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*8
+Writing the output file (co-debruijn.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*3*9
+Writing the output file (commafree-eastman-new.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*3*8
+Writing the output file (commafree-eastman.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*3*7*12*24
+Writing the output file (dance.c):..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*2*8*12*29*38
+Writing the output file (decagon.c):....
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5
+Writing the output file (dimacs-to-sat.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*7
+Writing the output file (domination.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*7*10*15*18
+Writing the output file (dot-diff.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*27*37*40
+Writing the output file (dragon-calc.c):.....500..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*2*11*19
+Writing the output file (embed.c):..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*19
+Writing the output file (erection.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*6
+Writing the output file (euler-trail.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*13
+Writing the output file (fchains4x.c):...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*2*4*5*6
+Writing the output file (fog2mf.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*6*9*10
+Writing the output file (francon.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*9
+Writing the output file (garsia-wachs.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+
+! No program text was specified.
+(Did you see the warning message above?)
+This is CTANGLE (Version 3.64)
+*1*3*7*12*24*28*29
+Writing the output file (gdance.c):...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*7
+Writing the output file (graph-sig-v0.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*4*6*16*18
+Writing the output file (grayspan.c):..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*4*9*18*19*25*31*39*47*51
+Writing the output file (grayspspan.c):.....500...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*8*13
+Writing the output file (halftone.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*4*14*24*32*36*40
+Writing the output file (hamdance.c):.....500.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*4*10
+Writing the output file (ham.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*7*20
+Writing the output file (horn-count.c):...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*3*7*11
+Writing the output file (hulls.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*3*10*19
+Writing the output file (hulltr.c):...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*3*10*17
+Writing the output file (hullt.c):...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*3*8*13
+Writing the output file (hull.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*3*10*17
+Writing the output file (hwb-fast.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*2*10*13*17*18*19*20
+Writing the output file (hyperbolic.c):..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*4*14*24
+Writing the output file (koda-ruskey.c):..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*9
+Writing the output file (lagfib.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*4
+Writing the output file (linked-trees.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*17*20*29*46*58*62*63
+Writing the output file (li-ruskey.c):....
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5*13*19*21*25
+Writing the output file (lp.c):..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*4
+Writing the output file (macmahon-triangles-sym-tile.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*6*10
+Writing the output file (maxcliques.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5*11*20*22*29*30
+Writing the output file (obdd.c):...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5*8*10*21*32*44*51*65
+Writing the output file (polyenum.c):.....500..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*13
+Writing the output file (polyiamonds.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*8*19*53*77*84*97*105*109*114
+Writing the output file (polynum.c):.....500.....1000.....1500....
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*13
+Writing the output file (polyominoes.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*7*17*26*30
+Writing the output file (polyslave.c):...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*13
+Writing the output file (polysticks.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*2
+Writing the output file (posets0.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*10
+Writing the output file (posets.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5*13*22*26*27*33
+Writing the output file (prime-sieve-sparse.c):....
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5*12*20
+Writing the output file (prime-sieve.c):..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*7
+Writing the output file (queens.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*7
+Writing the output file (random-ternary.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*6
+Writing the output file (ran-prim.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+
+Writing the output file (reflect.c):...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*10
+Writing the output file (rost.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*6
+Writing the output file (sand.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5*22*30*39*46
+Writing the output file (sat0.c):.....500
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5*22*30*36*40
+Writing the output file (sat0w.c):.....500
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5*23*33*40*50
+Writing the output file (sat10.c):.....500...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5*23*36*48*59*80*87*103*115*122*139*150*153
+Writing the output file (sat11.c):.....500.....1000.....1500.....2000.....2500.....3000.....3500....
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*4*22*30
+Writing the output file (sat12-erp.c):.....500
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*6*23*40*53*57*61*65*66*91*99
+Writing the output file (sat12.c):.....500.....1000.....1500.....2000.....2500.....3000.....3500
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*9*26*45*58*70*85*99*109*124*141
+Writing the output file (sat13.c):.....500.....1000.....1500.....2000.....2500....
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*6*23*29*37*49
+Writing the output file (sat8.c):.....500.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*6*23*28*35*42*55
+Writing the output file (sat9.c):.....500...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*10
+Writing the output file (sat-commafree.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*15
+Writing the output file (sat-life.c):..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*4*21*26
+Writing the output file (sat-to-dimacs.c):...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5*19*39*45*48
+Writing the output file (setset-all.c):....
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5
+Writing the output file (setset-random.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*3*16*34*37
+Writing the output file (setset.c):...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5*11
+Writing the output file (sham.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5*16
+Writing the output file (simpath-directed-cycles.c):..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*6
+Writing the output file (simpath-reduce.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5*17
+Writing the output file (simpath.c):..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*7*14*25*36*39*51*67
+Writing the output file (skew-ternary-calc.c):.....500
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*6*19*39*42*46*58
+Writing the output file (sliding.c):.....500..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*8
+Writing the output file (spgraph.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*14*24*34
+Writing the output file (spiders.c):...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*2*16*21*29*32*33
+Writing the output file (spspan.c):..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*7
+Writing the output file (squaregraph-rand.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*3*7*11*23*26
+Writing the output file (squaregraph.c):..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*6*11*16*20
+Writing the output file (straighten.c):..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*2*7*11*18*23
+Writing the output file (strongchain.c):..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5
+Writing the output file (sudoku.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*2*11*17*21*26*28*44*50*60*64
+Writing the output file (tcalc.c):.....500..
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*12*15*18*24*29*33*35
+Writing the output file (togpap.c):...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5
+Writing the output file (topswops-fwd.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*2
+Writing the output file (topswops.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5*14
+Writing the output file (treeprobs.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*7
+Writing the output file (ulam.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*7
+Writing the output file (unavoidable2.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*7
+Writing the output file (unavoidable.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*13
+Writing the output file (vacillate.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*6*10*14
+Writing the output file (viennot.c):.
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*3*7*12*24*28*29
+Writing the output file (xgdance.c):...
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*5
+Writing the output file (yplay.c):
+Done.
+(No errors were found.)
+This is CTANGLE (Version 3.64)
+*1*4*11*14*18
+Writing the output file (zeilberger.c):.
+Done.
+(No errors were found.)
