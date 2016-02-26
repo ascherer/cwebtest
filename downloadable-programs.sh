@@ -10,7 +10,7 @@ for FILE in sham.w obdd.w.gz reflect.w.gz reflect.ch.gz hull.w hulls.w hullt.w \
 	halftone.w dot-diff.w togpap.w dance.w polyominoes.w \
 	polyiamonds.w polysticks.w queens.w sudoku.w dance-random.ch \
 	gdance.w macmahon-triangles-sym-tile.w xgdance.w gdance-cutoff.ch \
-	hamdance.w ham.w polynum.w polyslave.w polynum-restart.ch \
+	hamdance.w ham.w polynum.w polyslave.w polynum-restart.ch polyenum.w \
 	polyslave-restart.ch advent.w.gz rost.w ran-prim.w strongchain.w \
 	koda-ruskey.w li-ruskey.w spiders.w topswops.w topswops-fwd.w \
 	co-debruijn.w posets0.w posets.w erection.w unavoidable.w \
@@ -18,7 +18,7 @@ for FILE in sham.w obdd.w.gz reflect.w.gz reflect.ch.gz hull.w hulls.w hullt.w \
 	sand.w zeilberger.w francon.w viennot.w linked-trees.w vacillate.w \
 	embed.w lp.w horn-count.w 15puzzle-korf0.w 15puzzle-korf1.w \
 	achain0.w achain1.w achain2.w achain3.w achain4.w achain-all.w \
-	hyperbolic.w fchains4x.w fchains4x-dontcares.ch \
+	achain-decode.w hyperbolic.w fchains4x.w fchains4x-dontcares.ch \
 	tictactoe.tgz prime-sieve.w prime-sieve-sparse.w prime-sieve-boot.ch \
 	maxcliques.w ulam.w ulam-longlong.ch hwb-fast.w yplay.w bdd12.w \
 	bdd14.w bddl-rgrowth.w bdd15.w simpath.w simpath-reduce.w \
