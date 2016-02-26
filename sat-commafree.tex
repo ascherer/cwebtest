@@ -1,6 +1,8 @@
 \input cwebmac
+\srcloctrue
 
-\N{1}{1}Intro. Find a comma-free block code of length $n$, having one code
+\N[1 sat-commafree.w]{1}{1}Intro. Find a comma-free block code of length $n$,
+having one code
 in each cyclic equivalence class, if one exists.
 
 Codewords are represented as hexadecimal numbers.
@@ -22,7 +24,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Process the command line\X${}\E{}$\6
+\M[22 sat-commafree.w]{2}\B\X2:Process the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{2}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
 \|n)\I\T{1}){}$\5
 ${}\{{}$\1\6
@@ -38,7 +40,8 @@ ${}\\{exit}({-}\T{2});{}$\6
 ${}\\{printf}(\.{"\~\ sat-commafree\ \%d\\}\)\.{n"},\39\|n){}$;\par
 \U1.\fi
 
-\M{3}Here I use Algorithm 7.2.1.1F to find the prime binary strings.
+\M[33 sat-commafree.w]{3}Here I use Algorithm 7.2.1.1F to find the prime binary
+strings.
 
 \Y\B\4\X3:Generate the positive clauses\X${}\E{}$\6
 \4\\{f1}:\5
@@ -60,7 +63,8 @@ ${}\|a[\|k]\K\|a[\|k-\|j];{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{4}\B\X4:Visit the prime string $a_1\ldots a_n$\X${}\E{}$\6
+\M[45 sat-commafree.w]{4}\B\X4:Visit the prime string $a_1\ldots a_n$\X${}\E{}$%
+\6
 ${}\{{}$\1\6
 \&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|n;{}$ ${}\|i\PP){}$\5
 ${}\{{}$\1\6
@@ -72,7 +76,7 @@ ${}\\{printf}(\.{"\ \%x"},\39\|x);{}$\6
 \4${}\}{}$\2\par
 \U3.\fi
 
-\M{5}\B\X5:Generate the negative clauses\X${}\E{}$\6
+\M[55 sat-commafree.w]{5}\B\X5:Generate the negative clauses\X${}\E{}$\6
 $\|m\K(\T{1\$L\$L}\LL\|n)-\T{1};{}$\6
 \&{for} ${}(\|x\K\T{0};{}$ ${}\|x<(\T{1}\LL\|n);{}$ ${}\|x\PP){}$\5
 ${}\{{}$\1\6
@@ -85,7 +89,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{6}\B\X6:If \PB{\|x} is cyclic, \PB{\&{continue}}\X${}\E{}$\6
+\M[65 sat-commafree.w]{6}\B\X6:If \PB{\|x} is cyclic, \PB{\&{continue}}\X${}%
+\E{}$\6
 $\\{acc}\K{}$(((\&{unsigned} \&{long} \&{long}) \|x)${}\LL\|n)+\|x;{}$\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\|n;{}$ ${}\|k\PP){}$\1\6
 \&{if} ${}(((\\{acc}\GG\|k)\AND\|m)\E\|x){}$\1\5
@@ -94,7 +99,8 @@ $\\{acc}\K{}$(((\&{unsigned} \&{long} \&{long}) \|x)${}\LL\|n)+\|x;{}$\6
 \&{continue};\2\par
 \U5.\fi
 
-\M{7}\B\X7:If \PB{\|y} is cyclic, \PB{\&{continue}}\X${}\E{}$\6
+\M[71 sat-commafree.w]{7}\B\X7:If \PB{\|y} is cyclic, \PB{\&{continue}}\X${}%
+\E{}$\6
 $\\{acc}\K{}$(((\&{unsigned} \&{long} \&{long}) \|y)${}\LL\|n)+\|y;{}$\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\|n;{}$ ${}\|k\PP){}$\1\6
 \&{if} ${}(((\\{acc}\GG\|k)\AND\|m)\E\|y){}$\1\5
@@ -103,7 +109,8 @@ $\\{acc}\K{}$(((\&{unsigned} \&{long} \&{long}) \|y)${}\LL\|n)+\|y;{}$\6
 \&{continue};\2\par
 \U5.\fi
 
-\M{8}\B\X8:If \PB{\|z} is cyclic, \PB{\&{continue}}\X${}\E{}$\6
+\M[77 sat-commafree.w]{8}\B\X8:If \PB{\|z} is cyclic, \PB{\&{continue}}\X${}%
+\E{}$\6
 $\\{acc}\K{}$(((\&{unsigned} \&{long} \&{long}) \|z)${}\LL\|n)+\|z;{}$\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\|n;{}$ ${}\|k\PP){}$\1\6
 \&{if} ${}(((\\{acc}\GG\|k)\AND\|m)\E\|z){}$\1\5
@@ -112,7 +119,8 @@ $\\{acc}\K{}$(((\&{unsigned} \&{long} \&{long}) \|z)${}\LL\|n)+\|z;{}$\6
 \&{continue};\2\par
 \U9.\fi
 
-\M{9}\B\X9:Generate the clauses for \PB{\|x} followed by \PB{\|y}\X${}\E{}$\6
+\M[83 sat-commafree.w]{9}\B\X9:Generate the clauses for \PB{\|x} followed by %
+\PB{\|y}\X${}\E{}$\6
 $\\{xy}\K{}$(((\&{unsigned} \&{long} \&{long}) \|x)${}\LL\|n)+\|y;{}$\6
 \&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
 ${}\{{}$\1\6
@@ -122,7 +130,7 @@ ${}\\{printf}(\.{"\~\%x\ \~\%x\ \~\%x\\n"},\39\|x,\39\|y,\39\|z);{}$\6
 \4${}\}{}$\2\par
 \U5.\fi
 
-\N{1}{10}Index.
+\N[92 sat-commafree.w]{1}{10}Index.
 \fi
 
 \inx

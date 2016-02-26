@@ -1,4 +1,5 @@
 \input cwebmac
+\srcloctrue
 \datethis
 \def\sqprod{\setbox0=\hbox{\kern-.13em$\times$\kern-.13em}
      \dimen0=\ht0 \advance\dimen0 -.09em \ht0=\dimen0
@@ -8,7 +9,8 @@
        \hrule}}}
 
 
-\N{1}{1}Intro. This program enumerates biconnected squaregraphs of small order,
+\N[9 squaregraph.w]{1}{1}Intro. This program enumerates biconnected
+squaregraphs of small order,
 more or less by brute force.
 
 Every such graph of perimeter $2p$ is definable by a set partition of
@@ -94,7 +96,7 @@ two canonical sequences.
 
 \fi
 
-\M{2}OK, here we go.
+\M[93 squaregraph.w]{2}OK, here we go.
 
 One simplification is obvious: The first element $\delta_0$ of the delta
 sequence can't be~1, because that would produce an articulation point.
@@ -153,7 +155,7 @@ ${}\\{printf}(\.{"\%d\ (\%d\ labeled)\ wit}\)\.{h\ \%d\ squares.\\n"},\39%
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{3}Generating the deltas.
+\N[142 squaregraph.w]{1}{3}Generating the deltas.
 The delta sequence is stored in array \PB{\\{del}}, and another array \PB{%
 \\{occ}}
 records the cells of the implicit restricted growth string that are
@@ -168,13 +170,14 @@ for $0<j<p$.
 \A12.
 \U2.\fi
 
-\M{4}\B\X4:Initialize the delta sequence, with $\delta_0=j$\X${}\E{}$\6
+\M[154 squaregraph.w]{4}\B\X4:Initialize the delta sequence, with $\delta_0=j$%
+\X${}\E{}$\6
 $\\{del}[\T{0}]\K\|j,\39\\{del}[\|j]\K\\{pp}-\|j;{}$\6
 ${}\\{occ}[\T{0}]\K\\{occ}[\|j]\K\T{1};{}$\6
 ${}\|k\K\T{1},\39\|s\K\T{0}{}$;\par
 \U2.\fi
 
-\M{5}This program is one of those backtrack jobs
+\M[159 squaregraph.w]{5}This program is one of those backtrack jobs
 where I still like to use \PB{\&{goto}} statements,
 forty years after the ``structured programming revolution.''
 
@@ -219,7 +222,7 @@ ${}\|l\K\|k+\\{del}[\|k],\39\\{occ}[\|l]\K\T{0},\39\|l\PP;{}$\6
 ${}\\{occ}[\|j]\K\T{0}{}$;\par
 \U2.\fi
 
-\M{6}\B\X6:Subroutines\X${}\E{}$\6
+\M[190 squaregraph.w]{6}\B\X6:Subroutines\X${}\E{}$\6
 \&{int} \\{abcabc}(\&{int} \|k${},\39{}$\&{int} \|l)\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{int} \|i${},{}$ \|j;\7
@@ -244,7 +247,8 @@ ${}\{{}$\1\6
 \As13, 15, 18, 19\ETs20.
 \U2.\fi
 
-\N{1}{7}Testing canonicity. We want to reject a delta sequence that isn't
+\N[205 squaregraph.w]{1}{7}Testing canonicity. We want to reject a delta
+sequence that isn't
 canonical, namely when it (or its reflection) has a cyclic shift
 that's smaller. While we're doing this we can also determine any
 automorphisms (symmetries) that are present.
@@ -269,8 +273,8 @@ two symmetries, exhibited by \PB{$\\{rfl}\K\T{1}$} and \PB{$\\{rot}\K\T{1}$}.
 
 \fi
 
-\M{8}\B\X8:Print the current \PB{\\{del}} table if it's a solution, then \PB{%
-\&{goto} \\{next}}\X${}\E{}$\6
+\M[225 squaregraph.w]{8}\B\X8:Print the current \PB{\\{del}} table if it's a
+solution, then \PB{\&{goto} \\{next}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \X9:Determine the automorphisms, but \PB{\&{goto} \\{next}} if \PB{\\{del}}
 isn't canonical\X;\6
@@ -283,8 +287,8 @@ problem\X;\6
 \4${}\}{}$\2\par
 \U5.\fi
 
-\M{9}\B\X9:Determine the automorphisms, but \PB{\&{goto} \\{next}} if \PB{%
-\\{del}} isn't canonical\X${}\E{}$\6
+\M[235 squaregraph.w]{9}\B\X9:Determine the automorphisms, but \PB{\&{goto} %
+\\{next}} if \PB{\\{del}} isn't canonical\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{pp};{}$ ${}\|k\PP){}$\1\5
 ${}\\{del}[\\{pp}+\|k]\K\\{del}[\|k];{}$\2\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\\{pp};{}$ ${}\|k\PP){}$\5
@@ -302,7 +306,8 @@ ${}\\{rot}\K\\{pp}/\|k{}$;\C{ \PB{\\{pp}} is a multiple of \PB{\|k} }\6
 \par
 \U8.\fi
 
-\M{10}The reflected sequence is unchanged by a $k$-shift if and only if the
+\M[245 squaregraph.w]{10}The reflected sequence is unchanged by a $k$-shift if
+and only if the
 unreflected sequence is.
 
 \Y\B\4\D$\\{rdel}(\|x)$ \5
@@ -325,7 +330,8 @@ ${}\\{rfl}\K\T{1};{}$\6
 \4${}\}{}$\2\par
 \U9.\fi
 
-\N{1}{11}Constructing the graph. Now comes the fun part, where we actually
+\N[260 squaregraph.w]{1}{11}Constructing the graph. Now comes the fun part,
+where we actually
 build the squaregraph vertices and edges, by constructing the regions
 defined by the chords.
 
@@ -348,7 +354,7 @@ with the number of the region to which it belongs.
 
 \fi
 
-\M{12}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\M[280 squaregraph.w]{12}\B\X3:Global variables\X${}\mathrel+\E{}$\6
 \&{struct} ${}\{{}$\1\6
 \&{int} \\{succ};\C{ index of the next edge in this region }\6
 \&{int} \\{from}${},{}$ \\{to};\C{ points that define the chord, if internal }\6
@@ -357,7 +363,7 @@ ${}\}{}$ ${}\|e[\T{2}*\\{maxp}*\\{maxp}];{}$\6
 \&{int} \\{eptr};\C{ address of first unused entry in \PB{\|e} }\par
 \fi
 
-\M{13}New edges are allocated in mated pairs.
+\M[288 squaregraph.w]{13}New edges are allocated in mated pairs.
 
 The \PB{\|e} array, with \PB{$\T{2}*\\{maxp}*\\{maxp}$} entries, should have
 plenty of
@@ -379,15 +385,16 @@ ${}\\{exit}({-}\T{2});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{14}For convenience we assume that \PB{\\{eptr}} is always even, so that the
-mate
+\M[306 squaregraph.w]{14}For convenience we assume that \PB{\\{eptr}} is always
+even, so that the mate
 of edge~$k$ is obtained by simply complementing the units bit of~$k$.
 
 \Y\B\4\D$\\{mate}(\|k)$ \5
 $((\|k)\XOR\T{1}{}$)\par
 \fi
 
-\M{15}We could have made the region lists doubly linked, but they tend to
+\M[311 squaregraph.w]{15}We could have made the region lists doubly linked, but
+they tend to
 be short. Therefore it probably doesn't hurt to search sequentially
 for the predecessor of an edge.
 
@@ -402,7 +409,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{16}The task of building the graph consists of starting with just the
+\M[322 squaregraph.w]{16}The task of building the graph consists of starting
+with just the
 enclosing circle, then inserting the chords one by one.
 
 \Y\B\4\X16:Construct the graph corresponding to the chords of \PB{\\{del}}\X${}%
@@ -416,7 +424,7 @@ ${}\\{newchord}(\|k,\39(\|k+\\{del}[\|k])\MOD\\{pp});{}$\6
 \4${}\}{}$\2\par
 \U8.\fi
 
-\M{17}\B\X17:Initialize for chord placement\X${}\E{}$\6
+\M[332 squaregraph.w]{17}\B\X17:Initialize for chord placement\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\\{pp};{}$ ${}\|k\PP){}$\1\5
 ${}\|e[\|k].\\{succ}\K\|k+\T{1},\39\|e[\|k].\\{reg}\K\T{0};{}$\2\6
 ${}\|e[\\{pp}].\\{succ}\K\T{1},\39\|e[\\{pp}].\\{reg}\K\T{0};{}$\6
@@ -426,8 +434,8 @@ ${}\|e[\\{pp}+\T{1}].\\{reg}\K{-}\T{1}{}$;\C{ make the discarded edge unusable
 }\par
 \U16.\fi
 
-\M{18}The \PB{\\{newchord}} subroutine, which inserts a chord from point \PB{%
-\|s} to
+\M[338 squaregraph.w]{18}The \PB{\\{newchord}} subroutine, which inserts a
+chord from point \PB{\|s} to
 point~\PB{\|t}, is the heart of the computation. It subdivides existing regions
 that are crossed by the new chord.
 
@@ -455,7 +463,8 @@ ${}\|e[\|t+\T{1}].\\{succ}\K\|m+\T{1},\39\|e[\|q].\\{succ}\K\|m;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{19}A more complex operation is needed when we split a region by introducing
+\M[359 squaregraph.w]{19}A more complex operation is needed when we split a
+region by introducing
 an interior vertex. Then we need to create two new pairs of mated edges.
 One of these, from \PB{\|t} to~\PB{\|s}, becomes the successor of some
 {\it interior\/} edge~\PB{\|p}, which is being cut into two edges; its mate,
@@ -485,7 +494,7 @@ ${}\|e[\|p].\\{succ}\K\|m+\T{1},\39\|e[\|q].\\{succ}\K\|m,\39\|e[\\{ppp}].%
 \4${}\}{}$\2\par
 \fi
 
-\M{20}Now we're ready to insert a new chord in its entirety.
+\M[381 squaregraph.w]{20}Now we're ready to insert a new chord in its entirety.
 
 We use the fact that points $(a,b,c)$ are ``cyclically ordered'' if and
 only if $(b-a)\bmod\PB{\\{pp}}<(c-a)\bmod\PB{\\{pp}}$.
@@ -527,7 +536,8 @@ ${}\\{finishchord}(\|q,\39\|s,\39\|t);{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{21}The situation that arises when the \PB{\\{internalchord}} routine is
+\M[408 squaregraph.w]{21}The situation that arises when the \PB{%
+\\{internalchord}} routine is
 called in the loop above needs some justification and further explanation.
 
 Edge \PB{\|p} is an internal edge that goes from $s'$ to $t'$, say. We also
@@ -559,7 +569,8 @@ are in cyclic order. Think about it.
 
 \fi
 
-\M{22}Once we've inserted the chords, we can construct the graph by
+\M[438 squaregraph.w]{22}Once we've inserted the chords, we can construct the
+graph by
 giving each region an identifying number.
 
 At the same time we can reject cases with articulation points ---
@@ -591,7 +602,7 @@ ${}\|e[\|q].\\{reg}\K\|l;{}$\6
 \4${}\}{}$\2\2\par
 \U8.\fi
 
-\N{1}{23}Finishing up. The rest of this program is easy.
+\N[461 squaregraph.w]{1}{23}Finishing up. The rest of this program is easy.
 
 When we're ready to print a delta sequence, we know the total number
 of vertices in the corresponding squarefree graph, \PB{\|l}. The total number
@@ -614,7 +625,7 @@ that's vertices, edges, internal vertices, and squares }\6
 \X24:Print the graph\X;\2\par
 \U8.\fi
 
-\M{24}\B\X24:Print the graph\X${}\E{}$\6
+\M[479 squaregraph.w]{24}\B\X24:Print the graph\X${}\E{}$\6
 \&{for} ${}(\|k\K\|q\K\T{1};{}$ ${}\|k\Z\|l;{}$ ${}\|k\PP){}$\5
 ${}\{{}$\1\6
 \&{register} \&{int} \|r;\7
@@ -633,7 +644,7 @@ ${}\\{printf}(\.{"\ \%d"},\39\|e[\\{mate}(\|r)].\\{reg});{}$\6
 \4${}\}{}$\2\par
 \U23.\fi
 
-\M{25}\B\X25:Update the totals\X${}\E{}$\6
+\M[492 squaregraph.w]{25}\B\X25:Update the totals\X${}\E{}$\6
 $\|q\K\\{pp}/\\{rot};{}$\6
 \&{if} ${}(\\{rfl}\E\T{0}){}$\1\5
 ${}\|q\MRL{{\LL}{\K}}\T{1}{}$;\C{ now \PB{\|q} is the number of labeled
@@ -645,7 +656,7 @@ ${}\\{stot}[(\\{eptr}\GG\T{2})-\|p]\PP;{}$\6
 ${}\\{sltot}[(\\{eptr}\GG\T{2})-\|p]\MRL{+{\K}}\|q{}$;\par
 \U8.\fi
 
-\N{1}{26}Index.
+\N[501 squaregraph.w]{1}{26}Index.
 \fi
 
 \inx

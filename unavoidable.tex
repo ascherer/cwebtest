@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. A quickie to find a longest string that avoids the interesting
+\N[2 unavoidable.w]{1}{1}Intro. A quickie to find a longest string that avoids
+the interesting
 set of ``unavoidable'' $m$-ary strings of length $n$ constructed by
 Champarnaud, Hansel, and Perrin.
 
@@ -44,7 +46,8 @@ degree drops to zero\X\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}Algorithm 7.2.1.1F gives us the relevant prime powers here.
+\M[40 unavoidable.w]{2}Algorithm 7.2.1.1F gives us the relevant prime powers
+here.
 
 \Y\B\4\X2:Compute the \PB{\\{avoid}} and \PB{\\{deg}} tables\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{space};{}$ ${}\|j\PP){}$\1\5
@@ -70,7 +73,7 @@ ${}\\{printf}(\.{"m=\%d,\ n=\%d:\ avoidin}\)\.{g\ one\ arc\ in\ each\ of}\)\.{\
 \%d\ disjoint\ cycles\\}\)\.{n"},\39\|m,\39\|n,\39\|d){}$;\par
 \U1.\fi
 
-\M{3}At this point $\lambda=a_1\ldots a_j$ is a prime string
+\M[56 unavoidable.w]{3}At this point $\lambda=a_1\ldots a_j$ is a prime string
 and $\alpha=a_1\ldots a_n=\lambda^{n/j}$.
 The crux of the Champarnaud/Hansel/Perrin method is to
 find the shortest prime $\mu$ such that $\alpha$ has the form
@@ -110,7 +113,8 @@ ${}\\{code}\K\|m*\\{code}+\|a[\|k];{}$\2\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{4}\B\X4:Avoid the $n$-tuple encoded by \PB{\\{code}}\X${}\E{}$\6
+\M[87 unavoidable.w]{4}\B\X4:Avoid the $n$-tuple encoded by \PB{\\{code}}\X${}%
+\E{}$\6
 $\\{avoid}[\\{code}]\K\T{1};{}$\6
 ${}\|q\K\\{code}/\|m;{}$\6
 ${}\\{deg}[\|q]\MM;{}$\6
@@ -119,8 +123,8 @@ ${}\\{deg}[\|q]\K{-}\T{1},\39\\{link}[\|q]\K\\{top},\39\\{top}\K\|q,\39%
 \\{count}\PP{}$;\2\par
 \U3.\fi
 
-\M{5}\B\X5:Decrease the degree of \PB{\|l}'s predecessors, and stack them if
-their degree drops to zero\X${}\E{}$\6
+\M[93 unavoidable.w]{5}\B\X5:Decrease the degree of \PB{\|l}'s predecessors,
+and stack them if their degree drops to zero\X${}\E{}$\6
 \&{for} ${}(\|j\K\|m-\T{1};{}$ ${}\|j\G\T{0};{}$ ${}\|j\MM){}$\5
 ${}\{{}$\1\6
 ${}\|k\K\|l+\|j*\\{space};{}$\6
@@ -135,7 +139,7 @@ ${}\\{deg}[\|q]\K\|l,\39\\{link}[\|q]\K\\{top},\39\\{top}\K\|q,\39\\{count}%
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{6}Here I apologize for using a dirty trick:
+\M[103 unavoidable.w]{6}Here I apologize for using a dirty trick:
 The current value of \PB{\|k} happens to be the most recent value of \PB{\|l},
 a vertex with no predecessors.
 
@@ -154,7 +158,7 @@ ${}\|k\K\\{deg}[\|k];{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{7}Index.
+\N[119 unavoidable.w]{1}{7}Index.
 
 
 

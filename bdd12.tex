@@ -1,9 +1,10 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
 
-\N{1}{1}Intro. This program is the twelfth in a series of exploratory studies
-by
+\N[4 bdd12.w]{1}{1}Intro. This program is the twelfth in a series of
+exploratory studies by
 which I'm attempting to gain first-hand experience with OBDD structures, as I
 prepare Section 7.1.4 of {\sl The Art of Computer Programming}.
 Again it's quite different from its predecessors: This one implements a
@@ -82,12 +83,13 @@ ${}\\{printf}(\.{"Altogether\ \%llu\ mem}\)\.{s.\\n"},\39\\{mems});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Type definitions\X${}\E{}$\6
+\M[62 bdd12.w]{2}\B\X2:Type definitions\X${}\E{}$\6
 \&{typedef} \&{unsigned} \&{long} \&{long} \&{octa};\C{ an octabyte }\par
 \A8.
 \U1.\fi
 
-\N{1}{3}QDD representation. The quasi-reduced binary decision decision
+\N[65 bdd12.w]{1}{3}QDD representation. The quasi-reduced binary decision
+decision
 for a Boolean function of $n$ variables has $q_k$ nodes on level~$k$,
 for $0\le k\le n$, one for every distinct subfunction that can arise
 by hard-wiring constant values for the initial variables
@@ -133,8 +135,8 @@ And there's one node at level~0, namely
 \As9, 13, 15, 20, 24\ETs28.
 \U1.\fi
 
-\M{4}To launch this structure, we first need to allocate the \PB{\\{node}}
-arrays.
+\M[103 bdd12.w]{4}To launch this structure, we first need to allocate the \PB{%
+\\{node}} arrays.
 They are actually created only for levels \PB{$\\{topvar}-\T{1}$} through \PB{%
 \\{botvar}}.
 
@@ -159,7 +161,8 @@ ${}\\{exit}({-}\T{2});{}$\6
 \As6, 16\ETs22.
 \U1.\fi
 
-\M{5}The packing policy is slightly unusual because I'm squeezing 65 bits
+\M[118 bdd12.w]{5}The packing policy is slightly unusual because I'm squeezing
+65 bits
 into 64. The \PB{\\{dep}} field represents the state of up to 25 variables,
 but only 24 bits are available.
 
@@ -190,7 +193,8 @@ $(\|k\E\T{0}\?\\{lofield}(\\{node}[\T{0}][\|j])\I\\{hifield}(\\{node}[\T{0}][%
 \|j]):\T{0}{}$)\par
 \fi
 
-\M{6}Once the \PB{\\{node}} arrays exist, we can set up the initial QDD.
+\M[141 bdd12.w]{6}Once the \PB{\\{node}} arrays exist, we can set up the
+initial QDD.
 Here I implement the familiar function
 $$M_m(x_1,\ldots,x_m;x_{m+1},\ldots,x_{m+2^m})\;=\;
 x_{m+1+(x_1\ldots x_m)_2}.$$
@@ -231,7 +235,8 @@ been initialized }\2\6
 \X14:Compute the \PB{\\{dep}} fields of the initial QDD\X;\par
 \fi
 
-\M{7}For diagnostic purposes, I might want to pretty-print the current QDD.
+\M[172 bdd12.w]{7}For diagnostic purposes, I might want to pretty-print the
+current QDD.
 
 \Y\B\4\X7:Subroutines\X${}\E{}$\6
 \&{void} \\{print\_level}(\&{int} \|k)\1\1\2\2\6
@@ -253,7 +258,8 @@ ${}\{{}$\1\6
 \As10\ET11.
 \U1.\fi
 
-\N{1}{8}Reduction. Restructurings of the QDD are implemented with the help
+\N[189 bdd12.w]{1}{8}Reduction. Restructurings of the QDD are implemented with
+the help
 of a work area, capable of holding twice as many nodes
 as needed on any particular level.
 
@@ -278,12 +284,13 @@ must therefore be less than \PB{$\\{qq}[\|k+\T{1}]$}.
 \2${}\}{}$ \&{pair};\par
 \fi
 
-\M{9}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\M[210 bdd12.w]{9}\B\X3:Global variables\X${}\mathrel+\E{}$\6
 \&{pair} ${}\\{work}[\T{2}*\\{worksize}],{}$ \\{head}[\\{worksize}];\C{ the big
 workspace }\par
 \fi
 
-\M{10}We use \PB{$\|j+\T{1}$} to link to entry \PB{\|j}, so that null links are
+\M[213 bdd12.w]{10}We use \PB{$\|j+\T{1}$} to link to entry \PB{\|j}, so that
+null links are
 distinguishable from links to entry~0.
 
 \Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
@@ -300,7 +307,8 @@ ${}\\{printf}(\.{"\ \%d,\%d\\n"},\39\\{lo},\39\\{work}[\\{hi}-\T{1}].\|l);{}$\2%
 \4${}\}{}$\2\par
 \fi
 
-\M{11}The key subroutine we need is called \PB{\\{reduce}}. It finds the
+\M[225 bdd12.w]{11}The key subroutine we need is called \PB{\\{reduce}}. It
+finds the
 unique combinations \PB{$(\\{lo},\\{hi})$} in the
 work area, and places them into \PB{\\{node}[\|k]} with proper \PB{\\{dep}}
 fields.
@@ -349,7 +357,7 @@ ${}\|o,\39\\{qq}[\|k]\K\|q;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{12}\B\X12:Create a new entry in \PB{\\{node}[\|k]}\X${}\E{}$\6
+\M[259 bdd12.w]{12}\B\X12:Create a new entry in \PB{\\{node}[\|k]}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\|q\G\\{worksize}){}$\5
 ${}\{{}$\1\6
@@ -369,11 +377,12 @@ ${}\|o,\39\\{head}[\\{hi}].\|l\K\PP\|q;{}$\6
 \4${}\}{}$\2\par
 \U11.\fi
 
-\M{13}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\M[274 bdd12.w]{13}\B\X3:Global variables\X${}\mathrel+\E{}$\6
 \&{int} ${}\\{clone}[\T{2}*\\{worksize}]{}$;\C{ the new node addresses }\par
 \fi
 
-\M{14}Let's illustrate \PB{\\{reduce}} by using it to tidy up the initial QDD.
+\M[277 bdd12.w]{14}Let's illustrate \PB{\\{reduce}} by using it to tidy up the
+initial QDD.
 The main point of interest is that we must remap the pointers on level~$k-1$
 after level~$k$ has been reduced.
 
@@ -401,7 +410,8 @@ ${}\\{ooo},\39\\{node}[\|k-\T{1}][\|j]\K\\{pack}(\\{clone}[\\{lofield}(\|x)],%
 \4${}\}{}$\2\par
 \U6.\fi
 
-\N{1}{15}Jumping. Our chief goal is to study what happens when the variables
+\N[297 bdd12.w]{1}{15}Jumping. Our chief goal is to study what happens when the
+variables
 of our function are permuted. We'll see later that only $2^{n-1}$
 of the $n!$ permutations need to be examined, and that each of them
 can be obtained from its predecessor by a simple ``jump-up'' operation.
@@ -428,13 +438,14 @@ $\{\PB{\\{map}}[0],\ldots,\PB{\\{map}}[k-1]\}$.
 \&{int} \\{bitmap}[\\{nnn}];\C{ its initial dependency sets }\par
 \fi
 
-\M{16}\B\X4:Initialize everything\X${}\mathrel+\E{}$\6
+\M[321 bdd12.w]{16}\B\X4:Initialize everything\X${}\mathrel+\E{}$\6
 \&{for} ${}(\|j\K\|k\K\T{0};{}$ ${}\|j<\\{nnn};{}$ ${}\|k\MRL{+{\K}}\T{1}\LL%
 \|j,\39\|j\PP){}$\1\5
 ${}\|o,\39\\{map}[\|j]\K\|j,\39\\{bitmap}[\|j]\K\|k{}$;\2\par
 \fi
 
-\M{17}The basic idea for jumping up is quite simple. We essentially make
+\M[324 bdd12.w]{17}The basic idea for jumping up is quite simple. We
+essentially make
 two copies of levels $j$ thru~$k-1$, one for the case when $x_{k+1}=0$
 and one for the case when $x_{k+1}=1$. Those copies are moved to
 levels $j+1$ thru~$k$, and reduced to eliminate duplicates.
@@ -459,7 +470,7 @@ ${}\\{oo},\39\\{bitmap}[\|k]\K\\{bitmap}[\|k-\T{1}]\OR(\T{1}\LL\\{var});{}$\6
 \X19:Remake level \PB{\\{jj}}\X;\par
 \U21.\fi
 
-\M{18}Simple but cool list processing does the trick here.
+\M[347 bdd12.w]{18}Simple but cool list processing does the trick here.
 
 \Y\B\4\X18:Make two copies of level \PB{$\|k-\T{1}$} in the work area\X${}\E{}$%
 \6
@@ -487,7 +498,8 @@ ${}\\{ooo},\39\\{makework}(\|j+\|j+\T{1},\39\\{lo},\39\\{hi});{}$\6
 \4${}\}{}$\2\par
 \U17.\fi
 
-\M{19}As mentioned earlier, we needn't worry about the integrity of the
+\M[365 bdd12.w]{19}As mentioned earlier, we needn't worry about the integrity
+of the
 \PB{\\{dep}} fields in levels less than \PB{\\{jj}}.
 
 \Y\B\4\X19:Remake level \PB{\\{jj}}\X${}\E{}$\6
@@ -509,8 +521,8 @@ ${}\\{ooo},\39\\{node}[\\{jj}-\T{1}][\|j]\K\\{pack}(\\{clone}[\\{lofield}(%
 \4${}\}{}$\2\2\par
 \U17.\fi
 
-\N{1}{20}The algorithm. OK, we've now got a beautiful infrastructure to work
-with.
+\N[380 bdd12.w]{1}{20}The algorithm. OK, we've now got a beautiful
+infrastructure to work with.
 But the reader may well wonder why we've been building it.
 
 Perhaps I should have presented this program in a top-down way,
@@ -562,7 +574,8 @@ $\sum\{2^{i-1}\mid x_i\in X\}$.
 \&{int} ${}\|b[\T{1}\LL\\{nnn}][\\{nnn}]{}$;\C{ transition data for BDDs }\par
 \fi
 
-\M{21}Now I must explain a beautiful pattern: There's a simple way to produce
+\M[431 bdd12.w]{21}Now I must explain a beautiful pattern: There's a simple way
+to produce
 all the QDDs we need, using a relatively short sequence of jump-ups.
 
 In essence, we want a sequence of permutations with the
@@ -597,7 +610,7 @@ ${}\|k\MRL{\AND{\K}}\|k-\T{1}{}$;\C{ compute $\nu k$ }\2\6
 \X23:Gather statistics from level \PB{\|k} of the current QDD\X;\2\par
 \U1.\fi
 
-\M{22}We also need to gather statistics from the initial QDD.
+\M[461 bdd12.w]{22}We also need to gather statistics from the initial QDD.
 
 \Y\B\4\X4:Initialize everything\X${}\mathrel+\E{}$\6
 \X26:Gather statistics from level 0 of the current QDD\X;\6
@@ -605,8 +618,8 @@ ${}\|k\MRL{\AND{\K}}\|k-\T{1}{}$;\C{ compute $\nu k$ }\2\6
 \X23:Gather statistics from level \PB{\|k} of the current QDD\X;\2\par
 \fi
 
-\M{23}Every node in \PB{\\{node}[\|k]} is marked with a \PB{\\{dep}} field,
-telling which
+\M[468 bdd12.w]{23}Every node in \PB{\\{node}[\|k]} is marked with a \PB{%
+\\{dep}} field, telling which
 of the remaining variables it depends on. More precisely, if the \PB{\\{dep}}
 contains the bit \PB{$\T{1}\LL\|i$}, there's a dependency on $x_j$, where \PB{$%
 \|j\K\\{map}[\|i]$}.
@@ -693,12 +706,13 @@ ${}\\{oo},\39\\{count3}[(\|x\GG\T{40})\AND\T{\^ff}]\PP;{}$\6
 \4${}\}{}$\2\par
 \Us21\ET22.\fi
 
-\M{24}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\M[521 bdd12.w]{24}\B\X3:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{count1}[\T{256}]${},{}$ \\{count2}[\T{256}]${},{}$ \\{count3}[%
 \T{256}];\C{ bit pattern counts }\par
 \fi
 
-\M{25}\B\X25:Gather stats for variable \PB{\|j} at level \PB{\|k}\X${}\E{}$\6
+\M[524 bdd12.w]{25}\B\X25:Gather stats for variable \PB{\|j} at level \PB{\|k}%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|l\K\T{1}\LL((\|j-\T{1})\AND\T{\^7}),\39\|i\K\T{0};{}$\6
 \&{if} ${}(\|j<\T{9}){}$\5
@@ -721,8 +735,8 @@ ${}\\{oooo},\39\|b[\\{bitmap}[\|k]][\\{map}[\|j]]\K\|i;{}$\6
 \4${}\}{}$\2\par
 \U23.\fi
 
-\M{26}At this point we have the initial QDD, with \PB{$\\{map}[\|j]\K\|j$} for
-all \PB{\|j}.
+\M[535 bdd12.w]{26}At this point we have the initial QDD, with \PB{$\\{map}[%
+\|j]\K\|j$} for all \PB{\|j}.
 
 \Y\B\4\X26:Gather statistics from level 0 of the current QDD\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{qq}[\T{0}];{}$ ${}\|j\PP){}$\5
@@ -734,7 +748,8 @@ ${}\|o,\39\|b[\T{0}][\|k]\MRL{+{\K}}(\|i\GG\|k)\AND\T{1};{}$\2\6
 \4${}\}{}$\2\par
 \U22.\fi
 
-\M{27}At last comes the final reckoning: We can compute the minimum cost
+\M[543 bdd12.w]{27}At last comes the final reckoning: We can compute the
+minimum cost
 that can be achieved when subset \PB{\|X} occurs at the top of the BDD,
 for $1\le X<2^n$.
 
@@ -785,14 +800,14 @@ ${}\\{printf}(\.{"\ level\ \%d,\ x\%d\ (\%d)}\)\.{\\n"},\39\|j,\39\\{routing}[%
 \|k]]){}$;\2\par
 \U1.\fi
 
-\M{28}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\M[577 bdd12.w]{28}\B\X3:Global variables\X${}\mathrel+\E{}$\6
 \&{int} ${}\\{cost}[\T{1}\LL\\{nnn}]{}$;\C{ the optimum node count for each
 bitmap }\6
 \&{char} ${}\\{routing}[\T{1}\LL\\{nnn}]{}$;\C{ the variable to put last in the
 optimum order }\par
 \fi
 
-\N{1}{29}Index.
+\N[581 bdd12.w]{1}{29}Index.
 \fi
 
 \inx

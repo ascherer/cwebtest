@@ -1,9 +1,11 @@
 \input cwebmac
+\srcloctrue
 \datethis
 \font\logo=logo10
 
 
-\N{1}{1}Intro. This is an interactive program to do calculations
+\N[4 dragon-calc.w]{1}{1}Intro. This is an interactive program to do
+calculations
 associated with Dekking's generalized dragon curves and the associated
 calculus of tiles, as described in my notes on ``diamonds and dragons.''
 
@@ -91,7 +93,7 @@ because of many other commitments.
 
 \fi
 
-\M{2}Here we go.
+\M[90 dragon-calc.w]{2}Here we go.
 
 \Y\B\4\D$\\{maxm}$ \5
 $(\T{1}\LL\T{15}{}$)\C{ length of longest path allowed }\par
@@ -160,12 +162,14 @@ ${}\\{printf}(\.{"Junk\ at\ end\ of\ comm}\)\.{and\ has\ been\ ignored}\)\.{:\ %
 \4${}\}{}$\2\par
 \fi
 
-\M{3}\B\X3:Reset the current path to the unit path\X${}\E{}$\6
+\M[141 dragon-calc.w]{3}\B\X3:Reset the current path to the unit path\X${}\E{}$%
+\6
 $\|s\K\T{1},\39\|z.\|x\K\T{1},\39\|z.\|y\K\T{0};{}$\6
 \X4:Clear the current auxiliary tables\X;\par
 \Us2\ET9.\fi
 
-\M{4}We compute the \PB{\\{poly}} table only when it's needed. After it has
+\M[145 dragon-calc.w]{4}We compute the \PB{\\{poly}} table only when it's
+needed. After it has
 been computed, \PB{\\{poly}[\T{0}]} will be \PB{$\{\T{1},\T{0}\}$}. Similarly,
 we compute
 the \PB{\\{congclass}} and \PB{\\{fill}} tables only when necessary.
@@ -175,7 +179,7 @@ $\\{poly}[\T{0}].\|x\K\T{0},\39\\{congclass}[\T{0}][\T{0}]\K{-}\T{1};{}$\6
 ${}\\{fill}[\T{0}]\K{-}\T{1}{}$;\par
 \Us3\ET9.\fi
 
-\M{5}\B\X5:Prompt the user for a new command\X${}\E{}$\6
+\M[152 dragon-calc.w]{5}\B\X5:Prompt the user for a new command\X${}\E{}$\6
 ${}\{{}$\1\6
 \\{printf}(\.{">\ "});\5
 \\{fflush}(\\{stdout});\6
@@ -183,7 +187,8 @@ ${}\\{fgets}(\\{buf},\39\\{bufsize},\39\\{stdin});{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{6}\B\X6:Read a new command from \PB{\\{infile}}\X${}\E{}$\6
+\M[158 dragon-calc.w]{6}\B\X6:Read a new command from \PB{\\{infile}}\X${}\E{}$%
+\6
 ${}\{{}$\1\6
 \&{if} ${}(\R\\{fgets}(\\{buf},\39\\{bufsize},\39\\{infile})){}$\5
 ${}\{{}$\1\6
@@ -193,7 +198,7 @@ ${}\\{including}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{7}\B\X7:Do the command in \PB{\\{buf}}\X${}\E{}$\6
+\M[166 dragon-calc.w]{7}\B\X7:Do the command in \PB{\\{buf}}\X${}\E{}$\6
 \&{for} ${}(\|p\K\\{buf};{}$ ${}{*}\|p\E\.{'\ '};{}$ ${}\|p\PP){}$\1\5
 ;\2\6
 \&{if} ${}({*}\|p\E\.{'\\n'}){}$\5
@@ -237,7 +242,7 @@ ${}\\{vbose}\K\|k{}$;\5
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{8}\B\X8:Scan an integer to \PB{\|k}\X${}\E{}$\6
+\M[190 dragon-calc.w]{8}\B\X8:Scan an integer to \PB{\|k}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{while} ${}({*}\|p\E\.{'\ '}){}$\1\5
 ${}\|p\PP;{}$\2\6
@@ -253,7 +258,7 @@ ${}\|k\K{-}\|k;{}$\2\6
 \4${}\}{}$\2\par
 \Us7, 20, 25, 30\ETs34.\fi
 
-\M{9}\B\X9:Cases for nontrivial commands\X${}\E{}$\6
+\M[199 dragon-calc.w]{9}\B\X9:Cases for nontrivial commands\X${}\E{}$\6
 \4\&{case} \.{'p'}:\5
 \&{for} ${}(\|s\K\T{0},\39\|z.\|x\K\|z.\|y\K\T{0},\39\|p\PP;{}$ ${}{*}\|p\G%
 \.{'0'}\W{*}\|p\Z\.{'3'};{}$ ${}\|s\PP,\39\|p\PP){}$\5
@@ -292,12 +297,13 @@ ${}\\{printf}(\.{"\ s=\%d,\ z="},\39\|s);{}$\6
 \As14, 17, 20, 25, 30, 34\ETs37.
 \U7.\fi
 
-\M{10}\B\X10:Print the current folds\X${}\E{}$\6
+\M[226 dragon-calc.w]{10}\B\X10:Print the current folds\X${}\E{}$\6
 \&{if} ${}(\\{vbose}\AND\\{verbose\_folds}){}$\1\5
 ${}\\{printf}(\.{"\ \%s,"},\39\\{fold}){}$;\2\par
 \Us9\ET18.\fi
 
-\M{11}\B\X11:Set \PB{\\{dir}[\|s]} and update \PB{\|z}\X${}\E{}$\6
+\M[229 dragon-calc.w]{11}\B\X11:Set \PB{\\{dir}[\|s]} and update \PB{\|z}\X${}%
+\E{}$\6
 \&{if} ${}(\|s<\\{maxm}){}$\1\5
 ${}\\{dir}[\|s]\K{*}\|p-\.{'0'};{}$\2\6
 \&{switch} ${}({*}\|p){}$\5
@@ -317,7 +323,7 @@ ${}\|z.\|y\MM{}$;\5
 \4${}\}{}$\2\par
 \U9.\fi
 
-\M{12}\B\X12:Print the complex number \PB{\|z}\X${}\E{}$\6
+\M[238 dragon-calc.w]{12}\B\X12:Print the complex number \PB{\|z}\X${}\E{}$\6
 \&{if} ${}(\|z.\|x){}$\1\5
 ${}\\{printf}(\.{"\%ld"},\39\|z.\|x);{}$\2\6
 \&{else} \&{if} ${}(\R\|z.\|y){}$\1\5
@@ -335,14 +341,15 @@ ${}\\{printf}(\.{"-\%ldi"},\39{-}\|z.\|y);{}$\2\6
 \4${}\}{}$\2\par
 \U9.\fi
 
-\M{13}\B\X13:Convert the directions to folds\X${}\E{}$\6
+\M[248 dragon-calc.w]{13}\B\X13:Convert the directions to folds\X${}\E{}$\6
 \&{for} ${}(\|j\K\|k\K\T{0};{}$ ${}\|j<\|s-\T{1};{}$ ${}\|j\PP){}$\1\5
 ${}\\{fold}[\|j]\K((\\{dir}[\|j+\T{1}]-\\{dir}[\|j])\AND\T{\^2}\?\.{'U'}:%
 \.{'D'});{}$\2\6
 ${}\\{fold}[\|j]\K\.{'\\0'}{}$;\par
 \U9.\fi
 
-\M{14}\B\X9:Cases for nontrivial commands\X${}\mathrel+\E{}$\6
+\M[253 dragon-calc.w]{14}\B\X9:Cases for nontrivial commands\X${}\mathrel+\E{}$%
+\6
 \4\&{case} \.{'D'}:\5
 \&{case} \.{'U'}:\5
 \&{for} ${}(\|s\K\T{0};{}$ ${}{*}\|p\E\.{'D'}\V{*}\|p\E\.{'U'};{}$ ${}\|s\PP,%
@@ -357,7 +364,7 @@ ${}\\{fold}[\|s]\K{*}\|p;{}$\2\2\6
 \&{goto} \\{print\_path\_params};\par
 \fi
 
-\M{15}\B\X15:Print the current directions\X${}\E{}$\6
+\M[260 dragon-calc.w]{15}\B\X15:Print the current directions\X${}\E{}$\6
 \&{if} ${}(\\{vbose}\AND\\{verbose\_dirs}){}$\5
 ${}\{{}$\1\6
 \\{printf}(\.{"\ "});\6
@@ -366,7 +373,7 @@ ${}\\{printf}(\.{"\%d"},\39\\{dir}[\|k]);{}$\2\6
 \4${}\}{}$\2\par
 \Us14\ET19.\fi
 
-\M{16}\B\X16:Convert the folds to directions\X${}\E{}$\6
+\M[266 dragon-calc.w]{16}\B\X16:Convert the folds to directions\X${}\E{}$\6
 \&{for} ${}(\|j\K\|k\K\T{0},\39\|z.\|x\K\|z.\|y\K\T{0};{}$ ${}\|k<\|s;{}$ ${}%
 \|k\PP){}$\5
 ${}\{{}$\1\6
@@ -390,7 +397,8 @@ ${}\|j\K(\|j+(\\{fold}[\|k]\E\.{'D'}\?\T{1}:{-}\T{1}))\AND\T{\^3};{}$\6
 \4${}\}{}$\2\par
 \Us14\ET19.\fi
 
-\M{17}\B\X9:Cases for nontrivial commands\X${}\mathrel+\E{}$\6
+\M[278 dragon-calc.w]{17}\B\X9:Cases for nontrivial commands\X${}\mathrel+\E{}$%
+\6
 \4\&{case} \.{'*'}:\5
 ${}\|p\PP;{}$\6
 \&{if} ${}({*}\|p\E\.{'D'}\V{*}\|p\E\.{'U'}){}$\1\5
@@ -404,7 +412,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{18}\B\X18:Multiply by a folding sequence\X${}\E{}$\6
+\M[287 dragon-calc.w]{18}\B\X18:Multiply by a folding sequence\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|k\K\|j\K\|s-\T{1};{}$ ${}{*}\|p\E\.{'D'}\V{*}\|p\E\.{'U'};{}$ ${}%
 \|p\PP){}$\5
@@ -425,7 +433,7 @@ ${}\\{fold}[\|k]\K\.{'\\0'},\39\|s\K\|k+\T{1};{}$\6
 \4${}\}{}$\2\par
 \U17.\fi
 
-\M{19}\B\X19:Multiply by a direction sequence\X${}\E{}$\6
+\M[300 dragon-calc.w]{19}\B\X19:Multiply by a direction sequence\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|k\K\|j\K\|s-\T{1},\39\|p\PP;{}$ ${}{*}\|p\G\.{'0'}\W{*}\|p\Z%
 \.{'3'}\W(({*}\|p\XOR{*}(\|p-\T{1}))\AND\T{\^1});{}$ ${}\|p\PP){}$\5
@@ -447,7 +455,7 @@ ${}\\{fold}[\|k]\K\.{'\\0'},\39\|s\K\|k+\T{1};{}$\6
 \4${}\}{}$\2\par
 \U17.\fi
 
-\M{20}\B\D$\\{must\_see}(\|c)$ \6
+\M[314 dragon-calc.w]{20}\B\D$\\{must\_see}(\|c)$ \6
 \&{while} ${}({*}\|p\E\.{'\ '}){}$\1\5
 ${}\|p\PP{}$;\5
 \2\&{if} ${}({*}\|p\PP\I\|c)$ \&{goto} \\{bad\_command}\par
@@ -491,14 +499,14 @@ ${}\\{printf}(\.{"\ \%ld,\%ld\\n"},\39\|u.\|x,\39\|u.\|y);{}$\6
 \&{break};\par
 \fi
 
-\M{21}\B\X21:Compute $u=v*w$\X${}\E{}$\6
+\M[343 dragon-calc.w]{21}\B\X21:Compute $u=v*w$\X${}\E{}$\6
 \X22:Set \PB{\|d} to the type of \PB{\|w} and \PB{\|e} to the triply even
 neighbor\X;\6
 ${}\|u\K\\{sum}(\\{prod}(\\{ipower}[({-}\|d)\AND\T{\^3}],\39\|v),\39\\{prod}(%
 \|z,\39\|e)){}$;\par
 \Us20\ET25.\fi
 
-\M{22}\B\D$\\{typ}(\|w)$ \5
+\M[347 dragon-calc.w]{22}\B\D$\\{typ}(\|w)$ \5
 $(((\|w.\|x\AND\T{\^1})+((\|w.\|x+\|w.\|y)\AND\T{\^2})+\T{3})\AND\T{\^3}{}$)\C{
 yes it works! }\par
 \Y\B\4\X22:Set \PB{\|d} to the type of \PB{\|w} and \PB{\|e} to the triply even
@@ -507,7 +515,8 @@ $\|d\K\\{typ}(\|w);{}$\6
 ${}\|e\K\\{sum}(\|w,\39\\{ipower}[(\T{2}-\|d)\AND\T{\^3}]){}$;\par
 \U21.\fi
 
-\M{23}Complex addition, subtraction, and multiplication are easy.
+\M[353 dragon-calc.w]{23}Complex addition, subtraction, and multiplication are
+easy.
 
 \Y\B\4\X23:Subroutines\X${}\E{}$\6
 \&{pair} \\{sum}(\&{pair} \|a${},\39{}$\&{pair} \|b)\1\1\2\2\6
@@ -534,7 +543,8 @@ ${}\\{res}.\|y\K\|a.\|x*\|b.\|y+\|a.\|y*\|b.\|x;{}$\6
 \A24.
 \U2.\fi
 
-\M{24}We also need complex division, but only when it is known to be exact.
+\M[377 dragon-calc.w]{24}We also need complex division, but only when it is
+known to be exact.
 
 \Y\B\4\D$\\{norm}(\|z)$ \5
 $(\|z.\|x*\|z.\|x+\|z.\|y*\|z.\|y{}$)\par
@@ -549,7 +559,8 @@ ${}\\{res}.\|y\K({-}\|a.\|x*\|b.\|y+\|a.\|y*\|b.\|x)/\|n;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{25}\B\X9:Cases for nontrivial commands\X${}\mathrel+\E{}$\6
+\M[390 dragon-calc.w]{25}\B\X9:Cases for nontrivial commands\X${}\mathrel+\E{}$%
+\6
 \4\&{case} \.{'a'}:\5
 \X26:Make sure \PB{\\{poly}} is uptodate\X;\6
 ${}\|p\PP;{}$\6
@@ -570,7 +581,7 @@ ${}\\{printf}(\.{"\ \%ld,\%ld"},\39\|u.\|x,\39\|u.\|y);{}$\6
 \&{break};\par
 \fi
 
-\M{26}\B\X26:Make sure \PB{\\{poly}} is uptodate\X${}\E{}$\6
+\M[408 dragon-calc.w]{26}\B\X26:Make sure \PB{\\{poly}} is uptodate\X${}\E{}$\6
 \&{if} ${}(\R\\{poly}[\T{0}].\|x){}$\5
 ${}\{{}$\1\6
 \&{for} ${}(\|k\K\T{0},\39\|u.\|x\K\|u.\|y\K\T{0};{}$ ${}\|k<\|s;{}$ ${}\|k%
@@ -597,7 +608,8 @@ ${}\\{poly}[\|k]\K\\{sum}(\|u,\39\|v);{}$\6
 \4${}\}{}$\2\par
 \Us25, 32\ETs33.\fi
 
-\N{1}{27}Congruence classes. Finally we get to the most interesting part of the
+\N[422 dragon-calc.w]{1}{27}Congruence classes. Finally we get to the most
+interesting part of the
 program, which determines whether tiles are congruent.
 
 Let $Z=(2+2i)z=A+Bi$, and let $D=\gcd(A,B)$. The first task, when we
@@ -639,7 +651,8 @@ ${}\|c\PP;{}$\6
 \4${}\}{}$\2\par
 \Us30\ET33.\fi
 
-\M{28}We essentially do Euclid's algorithm on the imaginary parts here.
+\M[454 dragon-calc.w]{28}We essentially do Euclid's algorithm on the imaginary
+parts here.
 The roles of $D$ and $(A^2+B^2)/D$ in the formulas above are played by
 \PB{$\\{vv}.\|y$} and \PB{$\\{uu}.\|x$}, respectively.
 
@@ -660,7 +673,7 @@ ${}\|w\K\\{vv},\39\\{vv}\K\\{uu},\39\\{uu}\K\|w;{}$\6
 ${}\\{uu}.\|x\K{-}\\{uu}.\|x{}$;\2\par
 \U27.\fi
 
-\M{29}\B\X29:Reduce \PB{\|w} mod $Z$\X${}\E{}$\6
+\M[468 dragon-calc.w]{29}\B\X29:Reduce \PB{\|w} mod $Z$\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\|w.\|y<\T{0}){}$\5
 ${}\{{}$\1\6
@@ -687,7 +700,8 @@ ${}\|w.\|x\MRL{-{\K}}\\{qq}*\\{uu}.\|x;{}$\6
 \4${}\}{}$\2\par
 \Us27, 31, 33\ETs35.\fi
 
-\M{30}\B\X9:Cases for nontrivial commands\X${}\mathrel+\E{}$\6
+\M[486 dragon-calc.w]{30}\B\X9:Cases for nontrivial commands\X${}\mathrel+\E{}$%
+\6
 \4\&{case} \.{'c'}:\5
 \X27:Make sure \PB{\\{congclass}} is uptodate\X;\6
 ${}\|p\PP;{}$\6
@@ -707,14 +721,16 @@ ${}\|w.\|y\K\|k;{}$\6
 \&{break};\par
 \fi
 
-\M{31}\B\X31:Show the congruence class and type of \PB{\|w}\X${}\E{}$\6
+\M[501 dragon-calc.w]{31}\B\X31:Show the congruence class and type of \PB{\|w}%
+\X${}\E{}$\6
 $\|v\K\|w;{}$\6
 \X29:Reduce \PB{\|w} mod $Z$\X;\6
 ${}\\{printf}(\.{"\ \%ld,\%ld\ is\ \%d\_\%d\\n}\)\.{"},\39\|v.\|x,\39\|v.\|y,%
 \39\\{classof}(\|w),\39\\{typ}(\|v)){}$;\par
 \Us30\ET32.\fi
 
-\M{32}\B\X32:Show congruence classes for all of \PB{\\{poly}}\X${}\E{}$\6
+\M[506 dragon-calc.w]{32}\B\X32:Show congruence classes for all of \PB{%
+\\{poly}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \X26:Make sure \PB{\\{poly}} is uptodate\X;\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|s;{}$ ${}\|k\PP){}$\5
@@ -725,7 +741,8 @@ ${}\|w\K\\{poly}[\|k];{}$\6
 \4${}\}{}$\2\par
 \U30.\fi
 
-\M{33}A plane-filling path has the property that $s=\vert z\vert^2$
+\M[515 dragon-calc.w]{33}A plane-filling path has the property that $s=\vert z%
+\vert^2$
 and all of its tiles are incongruent. In such cases
 we set \PB{$\\{fill}[\|j]\K\|k$} when \PB{\\{poly}[\|k]} has class \PB{\|j}.
 
@@ -750,7 +767,8 @@ ${}\\{fill}[\\{classof}(\|w)]\K\|k;{}$\6
 \4${}\}{}$\2\par
 \U34.\fi
 
-\M{34}\B\X9:Cases for nontrivial commands\X${}\mathrel+\E{}$\6
+\M[534 dragon-calc.w]{34}\B\X9:Cases for nontrivial commands\X${}\mathrel+\E{}$%
+\6
 \4\&{case} \.{'f'}:\5
 \&{case} \.{'F'}:\5
 ${}\|q\K\|p\PP;{}$\6
@@ -779,7 +797,8 @@ ${}\|u\K\|w;{}$\6
 \&{break};\par
 \fi
 
-\M{35}See my diamonds-and-dragons notes for the theory used here.
+\M[556 dragon-calc.w]{35}See my diamonds-and-dragons notes for the theory used
+here.
 
 \Y\B\4\X35:Factor \PB{\|u}\X${}\E{}$\6
 $\|w\K\|u;{}$\6
@@ -793,8 +812,8 @@ ${}\\{printf}(\.{"\ \%ld,\%ld\ =\ \%ld,\%ld\ }\)\.{*\ \%ld,\%ld\\n"},\39\|u.%
 \|x,\39\|u.\|y,\39\|v.\|x,\39\|v.\|y,\39\|w.\|x,\39\|w.\|y){}$;\par
 \U34.\fi
 
-\M{36}The element in \PB{\\{cyc}[\T{0}]} always has the smallest magnitude
-we've seen so far.
+\M[567 dragon-calc.w]{36}The element in \PB{\\{cyc}[\T{0}]} always has the
+smallest magnitude we've seen so far.
 If $\vert w\vert=1$, we're done, because $1*w=w$ in that case.
 
 \Y\B\4\X36:If we're in a cycle, \PB{\&{break}}\X${}\E{}$\6
@@ -813,7 +832,8 @@ ${}\\{cycptr}\PP;{}$\6
 \4${}\}{}$\2\par
 \U34.\fi
 
-\N{1}{37}Graphic output. Finally, we have a rudimentary way to visualize
+\N[579 dragon-calc.w]{1}{37}Graphic output. Finally, we have a rudimentary way
+to visualize
 general dragon curves, via {\logo METAPOST}.
 
 \Y\B\4\X9:Cases for nontrivial commands\X${}\mathrel+\E{}$\6
@@ -831,7 +851,8 @@ ${}\\{fprintf}(\\{outfile},\39\.{";\\nendfig;\\n"});{}$\6
 \&{break};\par
 \fi
 
-\M{38}\B\X38:Make sure that \PB{\\{outfile}} is open\X${}\E{}$\6
+\M[593 dragon-calc.w]{38}\B\X38:Make sure that \PB{\\{outfile}} is open\X${}%
+\E{}$\6
 \&{if} ${}(\R\\{outfile}){}$\5
 ${}\{{}$\1\6
 ${}\\{outfile}\K\\{fopen}(\\{metapost\_name},\39\.{"w"});{}$\6
@@ -854,7 +875,8 @@ enddef;}\)\.{\\n"});{}$\6
 \4${}\}{}$\2\par
 \U37.\fi
 
-\M{39}\B\X39:Make sure that \PB{\\{outfile}} is closed\X${}\E{}$\6
+\M[612 dragon-calc.w]{39}\B\X39:Make sure that \PB{\\{outfile}} is closed\X${}%
+\E{}$\6
 \&{if} (\\{outfile})\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{outfile},\39\.{"\\nbye.\\n"});{}$\6
@@ -865,7 +887,7 @@ ${}\\{outfile}\K\NULL;{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\N{1}{40}Index.
+\N[621 dragon-calc.w]{1}{40}Index.
 
 \fi
 

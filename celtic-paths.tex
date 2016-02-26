@@ -1,9 +1,11 @@
 \input cwebmac
+\srcloctrue
 \input epsf
 \font\celtica=celtica13 \font\celticb=celticb13
 \datethis
 
-\N{1}{1}Intro. This quick-and-dirty program prepares \TeX\ files for use with
+\N[4 celtic-paths.w]{1}{1}Intro. This quick-and-dirty program prepares \TeX\
+files for use with
 the weird fonts {\mc CELTICA} and {\mc CELTICB}. You can use it to print
 amazing pictures that look like stylized Celtic knots. Sometimes the
 resulting pictures look very elegant.
@@ -91,7 +93,8 @@ $$\advance\abovedisplayskip-8pt\vcenter{
 
 \fi
 
-\M{2}Whenever a tile contains a segment through some boundary point,
+\M[89 celtic-paths.w]{2}Whenever a tile contains a segment through some
+boundary point,
 the neighboring tiles must also contain a segment through that common point.
 For example, tile `\.{35}' can be used only if its neighbor to the right
 uses its point~\.7, and only if its neighbor below uses its point~\.1.
@@ -105,7 +108,8 @@ don't lie completely outside of all paths.
 
 \fi
 
-\M{3}OK, let's get going. This program ought to be fun, once we get through
+\M[101 celtic-paths.w]{3}OK, let's get going. This program ought to be fun,
+once we get through
 the tedious details of preparing font tables and of
 reading/checking the input.
 
@@ -138,7 +142,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{4}(Begin tedium.)
+\M[128 celtic-paths.w]{4}(Begin tedium.)
 Fonts {\mc CELTICA} and {\mc CELTICB} have a peculiar encoding scheme,
 not terribly systematic, governed by a mapping from tile specs (in
 hexadecimal) to character positions (in octal).
@@ -182,7 +186,8 @@ ${}\\{codetable}[\T{\^0300}]\K\T{\~44},\39\\{codetable}[\T{\^0500}]\K\T{\~46},%
 \K\T{\~360},\39\\{codetable}[\T{\^3647}]\K\T{\~364}{}$;\par
 \U3.\fi
 
-\M{5}(More tedium. I do try to check carefully for errors, because the task
+\M[197 celtic-paths.w]{5}(More tedium. I do try to check carefully for errors,
+because the task
 of preparing the input is even more tedious than the task of writing
 this code.)
 
@@ -239,7 +244,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"OK,\ I've\ successful}\)\.{ly\ read\ \%d\ rows%
 \X7:Check for consistency\X;\par
 \U3.\fi
 
-\M{6}\B\X6:Parse the entry for row \PB{\|m} and column \PB{\|j}\X${}\E{}$\6
+\M[237 celtic-paths.w]{6}\B\X6:Parse the entry for row \PB{\|m} and column \PB{%
+\|j}\X${}\E{}$\6
 \&{for} ${}(\\{jj}\K\T{0};{}$ ${}\\{jj}<\T{4};{}$ ${}\\{jj}\PP){}$\1\5
 ${}\\{entry}[\\{jj}]\K\\{buf}[\T{5}*\|j+\\{jj}];{}$\2\6
 \&{if} ${}(\\{entry}[\T{0}]\E\.{'\ '}){}$\5
@@ -285,7 +291,7 @@ ${}\\{exit}({-}\T{4});{}$\6
 \4${}\}{}$\2\par
 \U5.\fi
 
-\M{7}\B\D$\\{eqbit}(\|k,\\{kk})$ \5
+\M[262 celtic-paths.w]{7}\B\D$\\{eqbit}(\|k,\\{kk})$ \5
 $(((\|i\GG\|k)\XOR(\\{ii}\GG\\{kk}))\AND\T{1}{}$)\par
 \Y\B\4\X7:Check for consistency\X${}\E{}$\6
 $\|t\K\T{0};{}$\6
@@ -325,7 +331,8 @@ ${}\\{exit}({-}\T{69});{}$\6
 \4${}\}{}$\2\par
 \U5.\fi
 
-\M{8}OK, now the fun begins: We've got decent input, and we want to figure out
+\M[289 celtic-paths.w]{8}OK, now the fun begins: We've got decent input, and we
+want to figure out
 how to typeset it.
 
 The given loops partition the plane into regions, and the key idea is to
@@ -358,7 +365,8 @@ ${}\\{bw}[\|i][\|j][\|k]\K(\|b[\|i][\|j]\AND(\T{1}\LL\|k)\?\T{1}:\T{0})\XOR%
 \4${}\}{}$\2\2\par
 \U3.\fi
 
-\M{9}The inside/outside coloring is trickier, because connectivity to the
+\M[317 celtic-paths.w]{9}The inside/outside coloring is trickier, because
+connectivity to the
 outside can twist around, and because three-region tiles behave
 differently from four-region tiles.
 
@@ -387,7 +395,8 @@ ${}\\{pop}(\|i,\39\|j,\39\|k);{}$\6
 \4${}\}{}$\2\par
 \U3.\fi
 
-\M{10}The neighbors of a subregion within a tile are either in an adjacent tile
+\M[338 celtic-paths.w]{10}The neighbors of a subregion within a tile are either
+in an adjacent tile
 or in the same tile.
 
 \Y\B\4\X10:Push all unseen neighbors of subregion \PB{[\|i][\|j][\|k]} onto the
@@ -423,7 +432,8 @@ ${}\\{push}(\|i,\39\|j,\39\\{kk}){}$;\C{ move clockwise }\2\6
 \X12:Check neighbors in three-region tiles\X;\par
 \U9.\fi
 
-\M{11}A tile that contains two nonintersecting segments consists of a
+\M[353 celtic-paths.w]{11}A tile that contains two nonintersecting segments
+consists of a
 middle region and two others. The middle region needs to be identified
 so that we can ``jump'' from one of its edges to the other.
 
@@ -448,7 +458,8 @@ order for processing.
 \A22.
 \U3.\fi
 
-\M{12}\B\X12:Check neighbors in three-region tiles\X${}\E{}$\6
+\M[380 celtic-paths.w]{12}\B\X12:Check neighbors in three-region tiles\X${}%
+\E{}$\6
 $\\{kk}\K\\{codetable}[\|a[\|i][\|j]]-\T{\~100};{}$\6
 \&{if} ${}(\\{kk}<\T{\~70}\W\\{kk}\G\T{0}){}$\5
 ${}\{{}$\1\6
@@ -463,7 +474,8 @@ ${}\\{push}(\|i,\39\|j,\39\\{magic}[\\{kk}+\T{3}]);{}$\2\6
 \4${}\}{}$\2\par
 \U10.\fi
 
-\M{13}And at last, when every subregion has been colored in both of the
+\M[389 celtic-paths.w]{13}And at last, when every subregion has been colored in
+both of the
 bicolorings, we come to the {\it denouement\/}:
 Typesetting can proceed.
 
@@ -494,7 +506,7 @@ are worked out below.
 \X15:Publish the postamble\X;\par
 \U3.\fi
 
-\M{14}\B\X14:Publish the preamble\X${}\E{}$\6
+\M[417 celtic-paths.w]{14}\B\X14:Publish the preamble\X${}\E{}$\6
 \\{printf}(\.{"\%\%\ begin\ output\ of\ }\)\.{CELTIC-PATHS\\n"});\6
 \\{printf}(\.{"\\\\font\\\\celtica=cel}\)\.{tica13\ \\\\font\\\\celti}\)%
 \.{cb=celticb13\\n\\n"});\6
@@ -510,11 +522,11 @@ are worked out below.
 \.{\\hfil\\n"});\par
 \U13.\fi
 
-\M{15}\B\X15:Publish the postamble\X${}\E{}$\6
+\M[427 celtic-paths.w]{15}\B\X15:Publish the postamble\X${}\E{}$\6
 \\{printf}(\.{"\}\\\\endgroup\\n"});\par
 \U13.\fi
 
-\M{16}\B\X16:Publish row \PB{\|i}\X${}\E{}$\6
+\M[430 celtic-paths.w]{16}\B\X16:Publish row \PB{\|i}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|s\K\T{0}{}$;\C{ \PB{\|s} holds the number of accumulated blanks }\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\1\5
@@ -523,7 +535,7 @@ ${}\|s\K\T{0}{}$;\C{ \PB{\|s} holds the number of accumulated blanks }\6
 \4${}\}{}$\2\par
 \U13.\fi
 
-\M{17}\B\X17:Typeset tile $(i,j)$\X${}\E{}$\6
+\M[437 celtic-paths.w]{17}\B\X17:Typeset tile $(i,j)$\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{kk}\K\\{codetable}[\|a[\|i][\|j]];{}$\6
 ${}\\{ii}\K\\{bw}[\|i][\|j][\T{0}];{}$\6
@@ -544,7 +556,7 @@ ${}\\{printf}(\.{"\%c\%03o"},\39\\{ii}\?\.{'+'}:\.{'-'},\39\\{kk});{}$\6
 \4${}\}{}$\2\par
 \U16.\fi
 
-\M{18}\B\X18:Handle a blank tile\X${}\E{}$\6
+\M[452 celtic-paths.w]{18}\B\X18:Handle a blank tile\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} (\\{inout}[\|i][\|j][\T{0}])\5
 ${}\{{}$\C{ normal case, blank and outside }\1\6
@@ -554,7 +566,7 @@ ${}\|s\PP{}$;\5
 \4${}\}{}$\2\par
 \U17.\fi
 
-\M{19}\B\X19:Handle a two-region tile\X${}\E{}$\6
+\M[459 celtic-paths.w]{19}\B\X19:Handle a two-region tile\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{8};{}$ ${}\|k\PP){}$\1\6
 \&{if} (\\{inout}[\|i][\|j][\|k])\5
@@ -565,7 +577,8 @@ ${}\\{kk}\PP{}$;\5
 \4${}\}{}$\2\par
 \U17.\fi
 
-\M{20}The fonts treat \.{1537} as a special case in which all sixteen
+\M[466 celtic-paths.w]{20}The fonts treat \.{1537} as a special case in which
+all sixteen
 combinations of black/white backgrounds are permissible.
 Only four of them can actually occur in the output of this program,
 because adjacent regions cannot both be `outside'.
@@ -578,8 +591,8 @@ ${}\\{kk}\K(\\{inout}[\|i][\|j][\T{1}]\?\T{1}:\T{0})+(\\{inout}[\|i][\|j][%
 \4${}\}{}$\2\par
 \U17.\fi
 
-\M{21}In the most complex case, we walk clockwise around the edge of the tile
-and
+\M[479 celtic-paths.w]{21}In the most complex case, we walk clockwise around
+the edge of the tile and
 note the pattern of four inside/outside regions that we see. Four patterns
 are possible (either 0000, 1000, 0010, or 1010 in {\mc CELTICA}, and
 either 0000, 0001, 0100, or 0101 in {\mc CELTICB}); they cause us to
@@ -598,13 +611,13 @@ ${}\\{kk}\MRL{+{\K}}\\{offset}[\|t];{}$\6
 \4${}\}{}$\2\par
 \U17.\fi
 
-\M{22}\B\X11:Declare the magic tables\X${}\mathrel+\E{}$\6
+\M[495 celtic-paths.w]{22}\B\X11:Declare the magic tables\X${}\mathrel+\E{}$\6
 \&{char} \\{offset}[\T{16}]${}\K\{\T{0},\39\T{1},\39\T{2},\39\T{0},\39\T{2},\39%
 \T{3},\39\T{0},\39\T{0},\39\T{1},\39\T{0},\39\T{3},\39\T{0},\39\T{0},\39\T{0},%
 \39\T{0},\39\T{0}\}{}$;\par
 \fi
 
-\N{1}{23}Index.
+\N[498 celtic-paths.w]{1}{23}Index.
 \fi
 
 \inx

@@ -1,11 +1,12 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
 
 
 
-\N{1}{1}Symmetric Hamiltonian cycles. This program finds all Hamiltonian cycles
-of
+\N[4 sham.w]{1}{1}Symmetric Hamiltonian cycles. This program finds all
+Hamiltonian cycles of
 an undirected graph in which the mapping $v\mapsto N-1-v$ is an
 automorphism, such that the same automorphism also applies to the cycle.
 
@@ -62,7 +63,8 @@ ${}\\{printf}(\.{"\ \%d"},\39\|v\MG\\{deg});{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}We identify each vertex with its symmetric mate, and set the length
+\M[47 sham.w]{2}We identify each vertex with its symmetric mate, and set the
+length
 of an arc to 1 if the arc crosses to the mate instead of staying in the
 same class.
 
@@ -89,8 +91,8 @@ ${}\|a\MG\\{tip}\K\|u;{}$\6
 ${}\|g\MG\|n\MRL{{/}{\K}}\T{2}{}$;\par
 \U1.\fi
 
-\M{3}Self-loops caused a subtle bug (my test for \PB{$\|v\MG\\{deg}\E\T{1}$}
-below
+\M[69 sham.w]{3}Self-loops caused a subtle bug (my test for \PB{$\|v\MG\\{deg}%
+\E\T{1}$} below
 failed), and they are of no interest in Hamiltonian circuits. So
 I'm now getting rid of them.
 
@@ -110,7 +112,8 @@ ${}\|v\MG\\{arcs}\K\|a\MG\\{next};{}$\2\6
 ${}\\{aa}\K\|a{}$;\2\2\2\par
 \U4.\fi
 
-\M{4}Vertices that have already appeared in the path are ``taken,'' and
+\M[81 sham.w]{4}Vertices that have already appeared in the path are ``taken,''
+and
 their \PB{\\{taken}} field is nonzero. Initially we make all those fields zero.
 
 \Y\B\4\D$\\{taken}$ \5
@@ -132,7 +135,8 @@ ${}\\{dmin}\K\|d,\39\|x\K\|v;{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{5}The data structures. I use one simple rule to cut off unproductive
+\N[97 sham.w]{1}{5}The data structures. I use one simple rule to cut off
+unproductive
 branches of the search tree: If one of the vertices we could move to next
 is adjacent to only one other unused vertex, we must move to it now.
 
@@ -169,9 +173,9 @@ was entered\X;\6
 \\{done}:\par
 \U1.\fi
 
-\M{6}\B\X6:Increase \PB{\|t} and update the data structures to show that vertex
-\PB{\|v} is now taken; \PB{\&{goto} \\{backtrack}} if no further moves are
-possible\X${}\E{}$\6
+\M[126 sham.w]{6}\B\X6:Increase \PB{\|t} and update the data structures to show
+that vertex \PB{\|v} is now taken; \PB{\&{goto} \\{backtrack}} if no further
+moves are possible\X${}\E{}$\6
 $\|t\MG\\{ark}\K\|a;{}$\6
 ${}\|t\PP;{}$\6
 ${}\|v\K\|a\MG\\{tip};{}$\6
@@ -205,15 +209,15 @@ ${}\|a\MG\\{len}\MRL{+{\K}}\T{4};{}$\6
 ${}\|a\K\|v\MG\\{arcs}{}$;\par
 \U5.\fi
 
-\M{7}\B\X7:Downdate the data structures to the state they were in when level %
-\PB{\|t} was entered\X${}\E{}$\6
+\M[152 sham.w]{7}\B\X7:Downdate the data structures to the state they were in
+when level \PB{\|t} was entered\X${}\E{}$\6
 \&{for} ${}(\|a\K(\|t-\T{1})\MG\\{ark}\MG\\{tip}\MG\\{arcs};{}$ ${}\|a\I%
 \\{aa};{}$ ${}\|a\K\|a\MG\\{next}){}$\1\5
 ${}\|a\MG\\{tip}\MG\\{deg}\PP{}$;\2\par
 \U5.\fi
 
-\M{8}\B\X8:Look at edge \PB{\|a} and its successors, advancing if it is a valid
-move\X${}\E{}$\6
+\M[156 sham.w]{8}\B\X8:Look at edge \PB{\|a} and its successors, advancing if
+it is a valid move\X${}\E{}$\6
 \&{while} (\|a)\5
 ${}\{{}$\1\6
 \&{if} ${}(\|a\MG\\{tip}\MG\\{taken}\E\T{0}){}$\5
@@ -229,7 +233,8 @@ ${}\\{aa}\K\NULL{}$;\C{ all moves tried; we fall through to \PB{\\{restore}} }%
 \par
 \U5.\fi
 
-\M{9}Here we come to a subtle point. When a forced move is a duplicated arc,
+\M[166 sham.w]{9}Here we come to a subtle point. When a forced move is a
+duplicated arc,
 we want to continue with the duplicate arc; we don't want to backtrack!
 
 But that isn't the most subtle part. It turns out that we want to
@@ -264,7 +269,7 @@ ${}\|a\K\\{aa};{}$\6
 \&{goto} \\{restore\_all};\C{ the move was forced }\par
 \U5.\fi
 
-\M{10}\B\X10:Record a solution\X${}\E{}$\6
+\M[195 sham.w]{10}\B\X10:Record a solution\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{int} \|s${}\K\T{0};{}$\7
 \&{for} ${}(\|u\K\|g\MG\\{vertices};{}$ ${}\|u<\\{tmax};{}$ ${}\|u\PP){}$\1\5
@@ -296,7 +301,7 @@ ${}\\{printf}(\.{"\%s\%s"},\39\|u\MG\\{ark}\MG\\{len}\AND\T{1}\?\.{"*"}:\.{"\
 \4${}\}{}$\2\par
 \U6.\fi
 
-\N{1}{11}Index.
+\N[217 sham.w]{1}{11}Index.
 \fi
 
 \inx

@@ -1,10 +1,11 @@
 \input cwebmac
+\srcloctrue
 \datethis
 \hyphenation{pre-selected pre-select pre-selection}
 
 
-\N{1}{1}Intro. This program is part of a series of ``SAT-solvers'' that I'm
-putting
+\N[14 sat11.w]{1}{1}Intro. This program is part of a series of ``SAT-solvers''
+that I'm putting
 together for my own education as I prepare to write Section 7.2.2.2 of
 {\sl The Art of Computer Programming}. My intent is to have a variety of
 compatible programs on which I can run experiments to learn how different
@@ -85,7 +86,7 @@ input or to format the output.)
 
 \fi
 
-\M{2}So here's the structure of the program. (Skip ahead if you are
+\M[93 sat11.w]{2}So here's the structure of the program. (Skip ahead if you are
 impatient to see the interesting stuff.)
 
 \Y\B\4\D$\|o$ \5
@@ -135,7 +136,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"Altogether\ "}\|O\.{"llu+"}\|O\.{"llu\ mems,\
 \4${}\}{}$\2\par
 \fi
 
-\M{3}The default values of parameters below have been tuned for
+\M[129 sat11.w]{3}The default values of parameters below have been tuned for
 random {\mc 3SAT} instances, based on tests by Holger Hoos in 2015.
 
 \Y\B\4\D$\\{show\_basics}$ \5
@@ -199,7 +200,8 @@ trigger }\par
 \As7, 24, 36, 48, 60, 67, 89, 91, 107, 119, 123, 131\ETs139.
 \U2.\fi
 
-\M{4}On the command line one can specify any or all of the following options:
+\M[170 sat11.w]{4}On the command line one can specify any or all of the
+following options:
 \smallskip
 \item{$\bullet$}
 `\.v$\langle\,$integer$\,\rangle$' to enable various levels of verbose
@@ -373,8 +375,8 @@ ${}\\{exit}({-}\T{1});{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\N{1}{5}The I/O wrapper. The following routines read the input and absorb it
-into
+\N[274 sat11.w]{1}{5}The I/O wrapper. The following routines read the input and
+absorb it into
 temporary data areas from which all of the ``real'' data structures
 can readily be initialized. My intent is to incorporate these routines into all
 of the SAT-solvers in this series. Therefore I've tried to make the code
@@ -415,7 +417,8 @@ ${}\}{}$ \&{vchunk};\par
 \As6, 26, 27, 28, 34, 35, 88, 106\ETs118.
 \U2.\fi
 
-\M{6}Each clause in the temporary tables is represented by a sequence of
+\M[311 sat11.w]{6}Each clause in the temporary tables is represented by a
+sequence of
 one or more pointers to the \PB{\&{tmp\_var}} nodes of the literals involved.
 A negated literal is indicated by adding~1 to such a pointer.
 The first literal of a clause is indicated by adding~2.
@@ -432,7 +435,7 @@ any) }\6
 ${}\}{}$ \&{chunk};\par
 \fi
 
-\M{7}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\M[326 sat11.w]{7}\B\X3:Global variables\X${}\mathrel+\E{}$\6
 \&{char} ${}{*}\\{buf}{}$;\C{ buffer for reading the lines (clauses) of \PB{%
 \\{stdin}} }\6
 \&{tmp\_var} ${}{*}{*}\\{hash}{}$;\C{ heads of the hash lists }\6
@@ -458,7 +461,7 @@ a new \PB{\&{chunk}} }\6
 \&{int} \\{non\_clause};\C{ is the current clause ignorable? }\par
 \fi
 
-\M{8}\B\X8:Initialize everything\X${}\E{}$\6
+\M[344 sat11.w]{8}\B\X8:Initialize everything\X${}\E{}$\6
 \\{gb\_init\_rand}(\\{random\_seed});\6
 ${}\\{buf}\K{}$(\&{char} ${}{*}){}$ \\{malloc}${}(\\{buf\_size}*\&{sizeof}(%
 \&{char}));{}$\6
@@ -481,7 +484,8 @@ ${}\\{hash}[\|h]\K\NULL{}$;\2\par
 \A15.
 \U2.\fi
 
-\M{9}The hash address of each variable name has $h$ bits, where $h$ is the
+\M[360 sat11.w]{9}The hash address of each variable name has $h$ bits, where
+$h$ is the
 value of the adjustable parameter \PB{\\{hbits}}.
 Thus the average number of variables per hash list is $n/2^h$ when there
 are $n$ different variables. A warning is printed if this average number
@@ -552,8 +556,8 @@ ${}\\{exit}({-}\T{666});{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{10}We input from \PB{\\{primary\_file}} just as if it were the standard
-input
+\M[412 sat11.w]{10}We input from \PB{\\{primary\_file}} just as if it were the
+standard input
 file, except that all ``clauses'' are discarded. (Line numbers in
 error messages are zero.) The effect is to place
 the primary variables first in the list of all variables: A variable
@@ -587,7 +591,7 @@ from\ "}\|O\.{"s)\\n"},\39\\{primary\_vars},\39\\{primary\_name});{}$\2\6
 \4${}\}{}$\2\par
 \U9.\fi
 
-\M{11}\B\X11:Input the clause in \PB{\\{buf}}\X${}\E{}$\6
+\M[439 sat11.w]{11}\B\X11:Input the clause in \PB{\\{buf}}\X${}\E{}$\6
 \&{for} ${}(\|j\K\|k\K\\{non\_clause}\K\T{0};{}$ ${}\R\\{non\_clause};{}$ \,)\5
 ${}\{{}$\1\6
 \&{while} ${}(\\{buf}[\|j]\E\.{'\ '}){}$\1\5
@@ -631,7 +635,8 @@ ${}\\{ternaries}\PP;{}$\2\6
 ${}\\{cells}\MRL{+{\K}}\|k{}$;\par
 \Us9\ET10.\fi
 
-\M{12}We need a hack to insert the bit codes 1 and/or 2 into a pointer value.
+\M[468 sat11.w]{12}We need a hack to insert the bit codes 1 and/or 2 into a
+pointer value.
 
 \Y\B\4\D$\\{hack\_in}(\|q,\|t)$ \5
 (\&{tmp\_var} ${}{*})(\|t\OR{}$(\&{ullng}) \|q)\par
@@ -665,7 +670,7 @@ ${}\\{cur\_cell}\PP,\39\|k\PP;{}$\6
 \4${}\}{}$\2\par
 \U11.\fi
 
-\M{13}\B\X13:Install a new \PB{\&{vchunk}}\X${}\E{}$\6
+\M[493 sat11.w]{13}\B\X13:Install a new \PB{\&{vchunk}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{vchunk} ${}{*}\\{new\_vchunk};{}$\7
 ${}\\{new\_vchunk}\K{}$(\&{vchunk} ${}{*}){}$ \\{malloc}(\&{sizeof}(%
@@ -684,7 +689,7 @@ ${}\\{bad\_tmp\_var}\K{\AND}\\{new\_vchunk}\MG\\{var}[\\{vars\_per%
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{14}\B\X14:Install a new \PB{\&{chunk}}\X${}\E{}$\6
+\M[506 sat11.w]{14}\B\X14:Install a new \PB{\&{chunk}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{chunk} ${}{*}\\{new\_chunk};{}$\7
 ${}\\{new\_chunk}\K{}$(\&{chunk} ${}{*}){}$ \\{malloc}(\&{sizeof}(\&{chunk}));\6
@@ -701,7 +706,8 @@ ${}\\{bad\_cell}\K{\AND}\\{new\_chunk}\MG\\{cell}[\\{cells\_per\_chunk}];{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{15}The hash code is computed via ``universal hashing,'' using the following
+\M[519 sat11.w]{15}The hash code is computed via ``universal hashing,'' using
+the following
 precomputed tables of random bits.
 
 \Y\B\4\X8:Initialize everything\X${}\mathrel+\E{}$\6
@@ -710,8 +716,9 @@ precomputed tables of random bits.
 ${}\\{hash\_bits}[\|j][\|k]\K\\{gb\_next\_rand}(\,){}$;\2\2\par
 \fi
 
-\M{16}\B\X16:Put the variable name beginning at \PB{\\{buf}[\|j]} in \PB{$%
-\\{cur\_tmp\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X${}\E{}$\6
+\M[526 sat11.w]{16}\B\X16:Put the variable name beginning at \PB{\\{buf}[\|j]}
+in \PB{$\\{cur\_tmp\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X${}%
+\E{}$\6
 $\\{cur\_tmp\_var}\MG\\{name}.\\{lng}\K\T{0};{}$\6
 \&{for} ${}(\|h\K\|l\K\T{0};{}$ ${}\\{buf}[\|j+\|l]>\.{'\ '}\W\\{buf}[\|j+\|l]%
 \Z\.{'\~'};{}$ ${}\|l\PP){}$\5
@@ -732,8 +739,8 @@ ${}\\{non\_clause}\K\T{1}{}$;\C{ `\.\~' by itself is like `true' }\2\6
 ${}\|j\MRL{+{\K}}\|l,\39\|h\MRL{\AND{\K}}(\T{1}\LL\\{hbits})-\T{1}{}$;\2\par
 \U12.\fi
 
-\M{17}\B\X17:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash table at \PB{%
-\|p}\X${}\E{}$\6
+\M[541 sat11.w]{17}\B\X17:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash
+table at \PB{\|p}\X${}\E{}$\6
 \&{for} ${}(\|p\K\\{hash}[\|h];{}$ \|p; ${}\|p\K\|p\MG\\{next}){}$\1\6
 \&{if} ${}(\|p\MG\\{name}.\\{lng}\E\\{cur\_tmp\_var}\MG\\{name}.\\{lng}){}$\1\5
 \&{break};\2\2\6
@@ -746,8 +753,8 @@ ${}\|p\MG\\{stamp}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{18}The most interesting aspect of the input phase is probably the
-``unwinding''
+\M[551 sat11.w]{18}The most interesting aspect of the input phase is probably
+the ``unwinding''
 that we might need to do when encountering a literal more than once
 in the same clause.
 
@@ -758,8 +765,8 @@ ${}\\{non\_clause}\K\T{1}{}$;\C{ tautology }\2\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{19}An input line that begins with `\.{\~\ }' is silently treated as a
-comment.
+\M[560 sat11.w]{19}An input line that begins with `\.{\~\ }' is silently
+treated as a comment.
 Otherwise redundant clauses are logged, in case they were unintentional.
 (One can, however, intentionally
 use redundant clauses to force the order of the variables.)
@@ -779,7 +786,8 @@ ${}\\{nullclauses}\PP;{}$\6
 \4${}\}{}$\2\par
 \Us10\ET11.\fi
 
-\M{20}\B\X20:Move \PB{\\{cur\_cell}} backward to the previous cell\X${}\E{}$\6
+\M[576 sat11.w]{20}\B\X20:Move \PB{\\{cur\_cell}} backward to the previous cell%
+\X${}\E{}$\6
 \&{if} ${}(\\{cur\_cell}>{\AND}\\{cur\_chunk}\MG\\{cell}[\T{0}]){}$\1\5
 ${}\\{cur\_cell}\MM;{}$\2\6
 \&{else}\5
@@ -792,8 +800,8 @@ ${}\\{cur\_cell}\K\\{bad\_cell}-\T{1};{}$\6
 \4${}\}{}$\2\par
 \Us19\ET41.\fi
 
-\M{21}Here I must omit `\PB{\\{free}(\\{old\_vchunk})}' from the code that's
-usually
+\M[585 sat11.w]{21}Here I must omit `\PB{\\{free}(\\{old\_vchunk})}' from the
+code that's usually
 in this section, because the variable data will be used later.
 
 \Y\B\4\X21:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary
@@ -811,13 +819,14 @@ ${}\\{cur\_tmp\_var}\K\\{bad\_tmp\_var}-\T{1};{}$\6
 \4${}\}{}$\2\par
 \U46.\fi
 
-\M{22}\B\X22:Report the successful completion of the input phase\X${}\E{}$\6
+\M[597 sat11.w]{22}\B\X22:Report the successful completion of the input phase%
+\X${}\E{}$\6
 $\\{fprintf}(\\{stderr},\39\.{"("}\|O\.{"lld\ variables,\ "}\|O\.{"lld\
 clauses,\ "}\|O\.{"llu\ literals\ succes}\)\.{sfully\ read)\\n"},\39\\{vars},%
 \39\\{clauses},\39\\{cells}){}$;\par
 \U2.\fi
 
-\N{1}{23}SAT solving, version 11.
+\N[602 sat11.w]{1}{23}SAT solving, version 11.
 A lookahead solver explores a binary tree of possibilities by choosing, at
 every decision node, a variable $x$ for which the node's subtrees correspond
 to asserting $x$ or $\bar x$. Several more-or-less independent activities are
@@ -848,8 +857,8 @@ throw code at the problem.
 
 \fi
 
-\M{24}Quite a few cooperating data structures are needed to do all these things
-at
+\M[631 sat11.w]{24}Quite a few cooperating data structures are needed to do all
+these things at
 high speed. I shall therefore try to summarize the main ones here.
 
 First, we need to represent the fact that variable $x$ is true, false,
@@ -941,8 +950,8 @@ memory }\6
 \&{variable} ${}{*}\\{vmem}{}$;\C{ attributes of variables }\par
 \fi
 
-\M{25}The variables are numbered 1, 2, \dots, $n$, and the literals
-corresponding
+\M[703 sat11.w]{25}The variables are numbered 1, 2, \dots, $n$, and the
+literals corresponding
 to variable~$x$ are $2x$ and $2x+1$ (namely $x$ and $\bar x$). Thus the
 variable that corresponds to literal~$l$ is \PB{$\|l\GG\T{1}$}, and the
 complement
@@ -971,8 +980,8 @@ $((\|x)\LL\T{1}{}$)\C{ the literal $x$ }\par
 $(((\|x)\LL\T{1})+\T{1}{}$)\C{ the literal $\bar x$ }\par
 \fi
 
-\M{26}An entry in the \PB{\\{bimp}} table has four parts: \PB{\\{addr}} is the
-address in \PB{\\{mem}}
+\M[722 sat11.w]{26}An entry in the \PB{\\{bimp}} table has four parts: \PB{%
+\\{addr}} is the address in \PB{\\{mem}}
 where the list of implications begins; \PB{\\{size}} is the current length of
 that list; \PB{\\{alloc}} is the number of memory positions currently available
 at the given address; and \PB{\\{alloc}} always equals $2^k$, where \PB{\|k} is
@@ -1007,8 +1016,8 @@ changed }\6
 ${}\}{}$ \&{idata};\par
 \fi
 
-\M{27}An entry in \PB{\\{timp}} has two parts: \PB{\\{addr}} is the address in %
-\PB{\\{tmem}} where
+\M[749 sat11.w]{27}An entry in \PB{\\{timp}} has two parts: \PB{\\{addr}} is
+the address in \PB{\\{tmem}} where
 the list of implication pairs begins; \PB{\\{size}} is the current length
 of that list.
 
@@ -1035,7 +1044,7 @@ ${}\}{}$ \&{tdata};\C{ one octabyte }\6
 ${}\}{}$ \&{tpair};\C{ two octabytes }\par
 \fi
 
-\M{28}An entry in \PB{\\{nstack}} has the following fields:
+\M[772 sat11.w]{28}An entry in \PB{\\{nstack}} has the following fields:
 \PB{\\{decision}} records the literal whose truth is being tentatively
 asserted;
 \PB{\\{branch}} is 0 in the first branch, or 1 if that branch failed;
@@ -1054,7 +1063,8 @@ pointers }\2\6
 ${}\}{}$ \&{ndata};\par
 \fi
 
-\M{29}Here is a subroutine that prints the binary implicant data for
+\M[787 sat11.w]{29}Here is a subroutine that prints the binary implicant data
+for
 a given literal. (Used only when debugging.)
 
 \Y\B\4\X29:Subroutines\X${}\E{}$\6
@@ -1071,8 +1081,8 @@ ${}\\{printf}(\.{"\ "}\|O\.{"s"}\|O\.{".8s"},\39\\{litname}(\\{mem}[%
 \As30, 31, 33, 50, 61, 93\ETs152.
 \U2.\fi
 
-\M{30}Similarly, the current ternary implicant data gives useful diagnostic
-info.
+\M[799 sat11.w]{30}Similarly, the current ternary implicant data gives useful
+diagnostic info.
 
 \Y\B\4\X29:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_timp}(\&{int} \|l)\1\1\2\2\6
@@ -1106,7 +1116,8 @@ ${}\\{printf}(\.{"\ "}\|O\.{"s"}\|O\.{".8s|"}\|O\.{"s"}\|O\.{".8s"},\39%
 \4${}\}{}$\2\par
 \fi
 
-\M{31}Speaking of debugging, here's a routine to check if the redundant
+\M[823 sat11.w]{31}Speaking of debugging, here's a routine to check if the
+redundant
 parts of our data structure have gone awry.
 
 \Y\B\4\D$\\{sanity\_checking}$ \5
@@ -1140,7 +1151,8 @@ vars="}\|O\.{"lld\\n"},\39\\{rptr},\39\\{freevars},\39\\{vars});{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{32}\B\X32:Check the sanity of \PB{\\{timp}} and \PB{\\{tmem}}\X${}\E{}$\6
+\M[848 sat11.w]{32}\B\X32:Check the sanity of \PB{\\{timp}} and \PB{\\{tmem}}%
+\X${}\E{}$\6
 \&{for} ${}(\|l\K\T{2};{}$ ${}\|l<\\{badlit};{}$ ${}\|l\PP){}$\5
 ${}\{{}$\1\6
 ${}\\{la}\K\\{timp}[\|l].\\{addr},\39\\{ls}\K\\{timp}[\|l].\\{size},\39\\{los}%
@@ -1172,7 +1184,8 @@ has\ unassigned\ "}\|O\.{"d\ and\ "}\|O\.{"d!\\n"},\39\|l,\39\|u,\39\|v);{}$\2\6
 \4${}\}{}$\2\par
 \U31.\fi
 
-\M{33}In long runs it's helpful to know how far we've gotten. A numeric code
+\M[871 sat11.w]{33}In long runs it's helpful to know how far we've gotten. A
+numeric code
 summarizes each decision made so far:
 0 or 1 means that we're trying to set a variable
 true or false, on the first branch of a node (``branch~0'');
@@ -1213,7 +1226,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{34}Each literal has an entry in \PB{\\{lmem}}, containing many fields.
+\M[901 sat11.w]{34}Each literal has an entry in \PB{\\{lmem}}, containing many
+fields.
 We will introduce them from time to time as we use them.
 
 \Y\B\4\X5:Type definitions\X${}\mathrel+\E{}$\6
@@ -1238,8 +1252,8 @@ force this }\6
 ${}\}{}$ \&{literal};\par
 \fi
 
-\M{35}Similarly, each variable has an entry in \PB{\\{vmem}}, where three
-fields appear.
+\M[920 sat11.w]{35}Similarly, each variable has an entry in \PB{\\{vmem}},
+where three fields appear.
 
 \Y\B\4\D$\\{litname}(\|l)$ \5
 $(\|l)\AND\T{1}\?\.{"\~"}:\.{""},\39\\{vmem}[\\{thevar}(\|l)].\\{name}.{}$%
@@ -1252,7 +1266,7 @@ search tree }\2\6
 ${}\}{}$ \&{variable};\par
 \fi
 
-\N{1}{36}Initializing the real data structures.
+\N[930 sat11.w]{1}{36}Initializing the real data structures.
 We're ready now to convert the temporary chunks of data into the
 form we want, and to recycle those chunks. The code below is, of course,
 similar to what has worked in previous programs of this series.
@@ -1262,7 +1276,7 @@ similar to what has worked in previous programs of this series.
 \&{uint} \\{badlit};\C{ one more than the highest literal number }\par
 \fi
 
-\M{37}\B\X37:Set up the main data structures\X${}\E{}$\6
+\M[939 sat11.w]{37}\B\X37:Set up the main data structures\X${}\E{}$\6
 $\\{lits}\K\\{vars}\LL\T{1},\39\\{badlit}\K\\{lits}+\T{2};{}$\6
 ${}\\{last\_vchunk}\K\\{cur\_vchunk};{}$\6
 \X38:Allocate the main arrays\X;\6
@@ -1274,8 +1288,8 @@ format\X;\6
 \X58:Allocate special arrays\X;\par
 \U2.\fi
 
-\M{38}We randomize the initial order of \PB{\\{freevars}}, so that different
-seeds
+\M[948 sat11.w]{38}We randomize the initial order of \PB{\\{freevars}}, so that
+different seeds
 can produce different results (for instance on satisfiable problems).
 
 \Y\B\4\X38:Allocate the main arrays\X${}\E{}$\6
@@ -1350,7 +1364,8 @@ ${}\\{freevars}\K\\{vars}{}$;\par
 \A39.
 \U37.\fi
 
-\M{39}Although the \PB{\\{rstack}} is used rather heavily, for breadth-first
+\M[1002 sat11.w]{39}Although the \PB{\\{rstack}} is used rather heavily, for
+breadth-first
 searches, a literal and its complement never both appear. Therefore
 the total size of the \PB{\\{rstack}} should never exceed the number of
 variables.
@@ -1406,8 +1421,9 @@ ${}\\{exit}({-}\T{10});{}$\6
 ${}\\{bytes}\MRL{+{\K}}\\{vars}*\&{sizeof}(\&{uint}){}$;\par
 \fi
 
-\M{40}\B\X40:Copy all the temporary cells to the \PB{\\{bimp}}, \PB{\\{mem}}, %
-\PB{\\{timp}}, and \PB{\\{tmem}} arrays in proper format\X${}\E{}$\6
+\M[1043 sat11.w]{40}\B\X40:Copy all the temporary cells to the \PB{\\{bimp}}, %
+\PB{\\{mem}}, \PB{\\{timp}}, and \PB{\\{tmem}} arrays in proper format\X${}%
+\E{}$\6
 $\\{forcedlits}\K\T{0}{}$;\C{ prepare for possible unary clauses }\6
 \&{for} ${}(\|l\K\T{2};{}$ ${}\|l<\\{badlit};{}$ ${}\|l\PP){}$\1\5
 ${}\|o,\39\\{timp}[\|l].\\{addr}\K\\{timp}[\|l].\\{size}\K\T{0}{}$;\C{ clear
@@ -1421,7 +1437,8 @@ ${}\{{}$\1\6
 \\{fflush}(\\{out\_file});\C{ complete the copy of input clauses }\2\par
 \U37.\fi
 
-\M{41}The basic idea is to ``unwind'' the steps that we went through while
+\M[1053 sat11.w]{41}The basic idea is to ``unwind'' the steps that we went
+through while
 building up the chunks.
 
 \Y\B\4\D$\\{hack\_out}(\|q)$ \5
@@ -1456,7 +1473,8 @@ ${}\\{fprintf}(\\{out\_file},\39\.{"\\n"});{}$\6
 \X44:Store a ternary clause in \PB{\\{tmem}}\X;\2\par
 \U40.\fi
 
-\M{42}Unary clauses in the input might be repeated or contradictory.
+\M[1077 sat11.w]{42}Unary clauses in the input might be repeated or
+contradictory.
 Thus we must be careful not to overstep the bounds of the \PB{\\{forcedlit}}
 array.
 The \PB{\\{addr}} fields in \PB{\\{timp}} are borrowed here, temporarily, so
@@ -1481,7 +1499,7 @@ ${}\|o,\39\\{forcedlit}[\\{forcedlits}\PP]\K\|u;{}$\6
 \4${}\}{}$\2\par
 \U41.\fi
 
-\M{43}\B\X43:Store a binary clause in \PB{\\{bimp}}\X${}\E{}$\6
+\M[1096 sat11.w]{43}\B\X43:Store a binary clause in \PB{\\{bimp}}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|o,\39\\{la}\K\\{bimp}[\\{bar}(\|u)].\\{addr},\39\\{ls}\K\\{bimp}[\\{bar}(%
 \|u)].\\{size};{}$\6
@@ -1500,7 +1518,7 @@ ${}\\{oo},\39\\{mem}[\\{la}+\\{ls}]\K\|u,\39\\{bimp}[\\{bar}(\|v)].\\{size}\K%
 \4${}\}{}$\2\par
 \U41.\fi
 
-\M{44}During the preliminary ``counting'' pass,
+\M[1108 sat11.w]{44}During the preliminary ``counting'' pass,
 we put ternary clauses sequentially into the spare slots of \PB{\\{tmem}}.
 
 \Y\B\4\X44:Store a ternary clause in \PB{\\{tmem}}\X${}\E{}$\6
@@ -1514,8 +1532,8 @@ ${}\|k\MRL{+{\K}}\T{3};{}$\6
 \4${}\}{}$\2\par
 \U41.\fi
 
-\M{45}\B\X45:Build \PB{\\{timp}} and \PB{\\{tmem}} from the stored ternary
-clauses\X${}\E{}$\6
+\M[1120 sat11.w]{45}\B\X45:Build \PB{\\{timp}} and \PB{\\{tmem}} from the
+stored ternary clauses\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{0},\39\|l\K\\{badlit}-\T{1};{}$ ${}\|l\G\T{2};{}$ ${}\|l%
 \MM){}$\5
 ${}\{{}$\1\6
@@ -1549,8 +1567,8 @@ ${}\|o,\39\\{tmem}[\\{ww}].\\{link}\K\\{uu};{}$\6
 \4${}\}{}$\2\par
 \U40.\fi
 
-\M{46}\B\X46:Copy all the temporary variable nodes to the \PB{\\{vmem}} array
-in proper format\X${}\E{}$\6
+\M[1143 sat11.w]{46}\B\X46:Copy all the temporary variable nodes to the \PB{%
+\\{vmem}} array in proper format\X${}\E{}$\6
 \&{for} ${}(\|c\K\\{vars};{}$ \|c; ${}\|c\MM){}$\5
 ${}\{{}$\1\6
 \X21:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary variable\X;%
@@ -1562,7 +1580,8 @@ prefix }\6
 \4${}\}{}$\2\par
 \U37.\fi
 
-\M{47}We should now have unwound all the temporary data chunks back to their
+\M[1150 sat11.w]{47}We should now have unwound all the temporary data chunks
+back to their
 beginnings.
 
 \Y\B\4\X47:Check consistency\X${}\E{}$\6
@@ -1579,7 +1598,8 @@ ${}\\{last\_vchunk}\K\\{cur\_vchunk}\MG\\{prev};{}$\6
 \4${}\}{}$\2\par
 \U37.\fi
 
-\N{1}{48}Buddy system redux. Here's a version of Algorithms 2.5R and 2.5D that
+\N[1164 sat11.w]{1}{48}Buddy system redux. Here's a version of Algorithms 2.5R
+and 2.5D that
 is appropriate for the operations we need to do in \PB{\\{bimp}}.
 
 Each block of \PB{\\{mem}} has size $2^k$ for some $k>1$, and it begins at
@@ -1628,7 +1648,8 @@ $(((\|k)-\T{2})\LL\T{2}{}$)\par
 \\{mem}} }\par
 \fi
 
-\M{49}\B\X49:Check the sanity of \PB{\\{bimp}} and \PB{\\{mem}}\X${}\E{}$\6
+\M[1201 sat11.w]{49}\B\X49:Check the sanity of \PB{\\{bimp}} and \PB{\\{mem}}%
+\X${}\E{}$\6
 \&{for} ${}(\|l\K\T{2};{}$ ${}\|l<\\{badlit};{}$ ${}\|l\PP){}$\5
 ${}\{{}$\1\6
 ${}\\{la}\K\\{bimp}[\|l].\\{addr},\39\|k\K\\{bimp}[\|l].\|k;{}$\6
@@ -1685,8 +1706,8 @@ avail("}\|O\.{"d)!\\n"},\39\|p,\39\|k);{}$\2\6
 \4${}\}{}$\2\par
 \U31.\fi
 
-\M{50}The \PB{\\{resize}} procedure does the main work of dynamic storage
-allocation.
+\M[1244 sat11.w]{50}The \PB{\\{resize}} procedure does the main work of dynamic
+storage allocation.
 Given a literal~\PB{\|l}, it doubles the current allocation \PB{$\\{bimp}[\|l].%
 \\{alloc}$}.
 
@@ -1712,8 +1733,8 @@ ${}\|o,\39\\{bimp}[\|l].\\{alloc}\K\|s+\|s,\39\\{bimp}[\|l].\|k\K\|k+\T{1};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{51}Here the buddy of block \PB{\|a} is \PB{\|p}, and it has turned out to be
-free.
+\M[1262 sat11.w]{51}Here the buddy of block \PB{\|a} is \PB{\|p}, and it has
+turned out to be free.
 In the most favorable case, \PB{\|p} will actually be in exactly the right
 place so
 that we won't have to recopy any data.
@@ -1732,13 +1753,15 @@ ${}\|o,\39\\{bimp}[\|l].\\{addr}\K\|p;{}$\6
 \4${}\}{}$\2\par
 \U50.\fi
 
-\M{52}\B\X52:Remove \PB{\|p} from its \PB{\\{avail}} list\X${}\E{}$\6
+\M[1275 sat11.w]{52}\B\X52:Remove \PB{\|p} from its \PB{\\{avail}} list\X${}%
+\E{}$\6
 $\|q\K\CM\\{linkb}(\|p),\39\|r\K\CM\\{linkf}(\|p){}$;\C{ no mem cost, we've
 already accessed \PB{\\{mem}[\|p]} }\6
 ${}\\{oo},\39\\{linkf}(\|q)\K\CM\|r,\39\\{linkb}(\|r)\K\CM\|q{}$;\par
 \Us51\ET54.\fi
 
-\M{53}In the more difficult case, we must find a block of twice the size,
+\M[1279 sat11.w]{53}In the more difficult case, we must find a block of twice
+the size,
 and copy the data there; then we free up the present block.
 
 \Y\B\4\X53:Resize when the buddy is reserved\X${}\E{}$\6
@@ -1754,7 +1777,8 @@ ${}\|o,\39\\{bimp}[\|l].\\{addr}\K\|p;{}$\6
 \4${}\}{}$\2\par
 \U50.\fi
 
-\M{54}\B\X54:Allocate a block \PB{\|p} of size \PB{$\|s+\|s$}\X${}\E{}$\6
+\M[1291 sat11.w]{54}\B\X54:Allocate a block \PB{\|p} of size \PB{$\|s+\|s$}%
+\X${}\E{}$\6
 \&{for} ${}(\\{kk}\K\|k+\T{1};{}$ ${}\\{kk}<\\{memk};{}$ ${}\\{kk}\PP){}$\1\6
 \&{if} ${}(\|o,\39\\{linkf}(\\{avail}(\\{kk}))\I\CM\\{avail}(\\{kk})){}$\5
 ${}\{{}$\C{ nonempty list found }\1\6
@@ -1783,8 +1807,8 @@ ${}\\{bytes}\MRL{+{\K}}\|p*\&{sizeof}(\&{uint}),\39\\{memk}\PP;{}$\6
 \\{kk}$}\X;\2\par
 \U53.\fi
 
-\M{55}\B\X55:Make \PB{$\|p+(\T{1}\LL\\{kk})$} a free block of size \PB{$\T{1}%
-\LL\\{kk}$}\X${}\E{}$\6
+\M[1311 sat11.w]{55}\B\X55:Make \PB{$\|p+(\T{1}\LL\\{kk})$} a free block of
+size \PB{$\T{1}\LL\\{kk}$}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|o,\39\|q\K\CM\\{linkf}(\\{avail}(\\{kk})),\39\|r\K\|p+(\T{1}\LL\\{kk});{}$%
 \6
@@ -1794,8 +1818,8 @@ ${}\\{oo},\39\\{linkb}(\|r)\K\CM\\{avail}(\\{kk}),\39\\{linkf}(\|r)\K\CM\|q,\39%
 \4${}\}{}$\2\par
 \U54.\fi
 
-\M{56}Since the buddy of \PB{\|a} is not free, we needn't try to ``collapse''
-adjacent
+\M[1318 sat11.w]{56}Since the buddy of \PB{\|a} is not free, we needn't try to
+``collapse'' adjacent
 buddies together.
 
 \Y\B\4\X56:Make \PB{\|a} a free block of size \PB{$\T{1}\LL\|k$}\X${}\E{}$\6
@@ -1805,7 +1829,8 @@ ${}\\{oo},\39\\{linkb}(\|a)\K\CM\\{avail}(\|k),\39\\{linkf}(\|a)\K\CM\|q,\39%
 \\{kval}(\|a)\K\|k{}$;\par
 \U53.\fi
 
-\M{57}We need to get these data structures off to a good start at the very
+\M[1326 sat11.w]{57}We need to get these data structures off to a good start at
+the very
 beginning. Here's how that is done, given \PB{\\{lits}} and \PB{\\{memk\_max}},
 after the arrays \PB{\\{mem}} and \PB{\\{bimp}} have been allocated:
 
@@ -1856,7 +1881,8 @@ ${}\|o,\39\\{kval}(\\{avail}(\|k))\K\|k;{}$\6
 \4${}\}{}$\2\par
 \U38.\fi
 
-\M{58}The \PB{\\{istack}} can grow rather large in the worst case. But
+\M[1360 sat11.w]{58}The \PB{\\{istack}} can grow rather large in the worst
+case. But
 it can't exceed the size of \PB{\\{mem}}, since each entry in \PB{\\{istack}}
 represents
 an increase in a \PB{\\{bimp}} table entry.
@@ -1877,7 +1903,7 @@ ${}\\{iptr\_max}\K\T{1}\LL\\{memk}{}$;\par
 \As90, 92, 108, 120\ETs132.
 \U37.\fi
 
-\N{1}{59}Updating the data structures.
+\N[1374 sat11.w]{1}{59}Updating the data structures.
 When we've decided to assign a value to a literal, we must deduce and record
 all of the consequences of that decision. The following part of the
 program comes into play when we're beginning the calculation at a new
@@ -1931,8 +1957,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"Level\ "}\|O\.{"d:\ no\ branch\\n"},\39%
 \\{level}){}$;\2\par
 \U150.\fi
 
-\M{60}Recall that the ``current stamp'' \PB{\\{cs}} is an even number that
-represents
+\M[1412 sat11.w]{60}Recall that the ``current stamp'' \PB{\\{cs}} is an even
+number that represents
 the level of truth for assignments that are currently being made.
 Any variable \PB{\|x} with \PB{$\\{stamp}[\|x]<\\{cs}$} is assumed to be free
 (unassigned);
@@ -1967,7 +1993,7 @@ $(\|o,\39\\{stamp}[\\{thevar}(\|l)]\K\\{cs}+(\|l\AND\T{1}){}$)\par
 breadth-first search }\par
 \fi
 
-\M{61}Here's a simple routine for use in debugging. It prints out
+\M[1436 sat11.w]{61}Here's a simple routine for use in debugging. It prints out
 all literals that are true with respect to a given stamping level.
 
 \Y\B\4\X29:Subroutines\X${}\mathrel+\E{}$\6
@@ -2012,8 +2038,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{62}In the present part of the program, we set \PB{$\\{cs}\K\\{near%
-\_truth}$}. This
+\M[1468 sat11.w]{62}In the present part of the program, we set \PB{$\\{cs}\K%
+\\{near\_truth}$}. This
 level means that the literal is on the \PB{\\{rstack}} but its full
 consequences
 haven't yet been explored.
@@ -2043,8 +2069,8 @@ ${}\\{forcedlits}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U59.\fi
 
-\M{63}\B\X63:Promote near-truth to real-truth; but \PB{\&{goto} \\{conflict}}
-if a contradiction arises\X${}\E{}$\6
+\M[1492 sat11.w]{63}\B\X63:Promote near-truth to real-truth; but \PB{\&{goto} %
+\\{conflict}} if a contradiction arises\X${}\E{}$\6
 \&{while} ${}(\\{fptr}<\\{eptr}){}$\5
 ${}\{{}$\1\6
 ${}\|o,\39\\{ll}\K\\{rstack}[\\{fptr}\PP];{}$\6
@@ -2054,7 +2080,8 @@ ${}\|o,\39\\{ll}\K\\{rstack}[\\{fptr}\PP];{}$\6
 ${}\\{rptr}\K\\{eptr}{}$;\C{ accept all the propagations }\par
 \U62.\fi
 
-\M{64}The forced literals act as ``seeds'' for another bread-first search.
+\M[1500 sat11.w]{64}The forced literals act as ``seeds'' for another
+bread-first search.
 
 If the input had unary clauses, the computation actually begins here,
 so that the implications of those clauses are perceived early.
@@ -2080,8 +2107,8 @@ contradiction arises\X;\6
 \4${}\}{}$\2\par
 \U59.\fi
 
-\M{65}The \PB{\\{istamp}} field of literal \PB{\|l} is marked with the current
-value of the
+\M[1520 sat11.w]{65}The \PB{\\{istamp}} field of literal \PB{\|l} is marked
+with the current value of the
 global variable \PB{\\{istamp}} when
 \PB{\|l} gets its first \PB{\\{istack}} entry during a particular phase of the
 search;
@@ -2101,8 +2128,8 @@ ${}\|o,\39\\{lmem}[\|l].\\{istamp}\K\T{0};{}$\2\6
 \4${}\}{}$\2\par
 \Us62\ET64.\fi
 
-\M{66}The \PB{\\{bstamp}} field of literal \PB{\|l} is similar to \PB{%
-\\{istamp}}, but it is used
+\M[1536 sat11.w]{66}The \PB{\\{bstamp}} field of literal \PB{\|l} is similar to
+\PB{\\{istamp}}, but it is used
 for a different purpose: We mark it when \PB{\|l} is known to be implied
 by some other literal of interest.
 
@@ -2115,14 +2142,14 @@ ${}\|o,\39\\{lmem}[\|l].\\{bstamp}\K\T{0};{}$\2\6
 \4${}\}{}$\2\par
 \Us73\ET105.\fi
 
-\M{67}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\M[1546 sat11.w]{67}\B\X3:Global variables\X${}\mathrel+\E{}$\6
 \&{uint} \\{istamp};\C{ used for unique identifications }\6
 \&{uint} \\{bstamp}${}\K\T{32}{}$;\C{ used for unique identifications of
 another kind }\par
 \fi
 
-\M{68}The code in this section is part of the inner loop, so we want it to be
-fast.
+\M[1550 sat11.w]{68}The code in this section is part of the inner loop, so we
+want it to be fast.
 Fortunately the task is fairly simple: When one literal is asserted to be true
 at the current \PB{\\{cs}} level, all the literals in its \PB{\\{bimp}} list
 are also asserted. And we continue until no more can be asserted,
@@ -2173,7 +2200,8 @@ ${}\|o,\39\\{rstack}[\\{eptr}\PP]\K\\{lp};{}$\6
 \4${}\}{}$\2\par
 \Us62, 64, 72\ETs73.\fi
 
-\M{69}We get to this part of the program when a literal loses its freedom and
+\M[1588 sat11.w]{69}We get to this part of the program when a literal loses its
+freedom and
 becomes fully assigned to truth or falsity at the highest possible level.
 
 \Y\B\4\X69:Update data structures for the real truth of \PB{\\{ll}}; but \PB{%
@@ -2200,8 +2228,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\ \ "}\|O\.{"s"}\|O\.{".8s->"}\|O\.{"s"}\|O%
 \4${}\}{}$\2\par
 \U63.\fi
 
-\M{70}\B\X70:Remove \PB{\\{thevar}(\\{ll})} from the \PB{\\{freevar}} list\X${}%
-\E{}$\6
+\M[1608 sat11.w]{70}\B\X70:Remove \PB{\\{thevar}(\\{ll})} from the \PB{%
+\\{freevar}} list\X${}\E{}$\6
 $\|x\K\\{thevar}(\\{ll});{}$\6
 ${}\|o,\39\|y\K\\{freevar}[\MM\\{freevars}];{}$\6
 \&{if} ${}(\|x\I\|y){}$\5
@@ -2214,7 +2242,8 @@ ${}\|o,\39\\{freevar}[\\{freevars}]\K\|x;{}$\6
 \4${}\}{}$\2\par
 \U69.\fi
 
-\M{71}The pairs in \PB{\\{timp}} become inactive when any of their variables
+\M[1619 sat11.w]{71}The pairs in \PB{\\{timp}} become inactive when any of
+their variables
 become ``really'' fixed (whether true or false). Here we run through all
 active occurrences of \PB{\\{tll}} or its complement, moving them to the
 inactive
@@ -2284,7 +2313,8 @@ ${}\\{oo},\39\\{tmem}[\\{pv}].\|u\K\\{bar}(\\{tll}),\39\\{tmem}[\\{pv}].\|v\K%
 \4${}\}{}$\2\par
 \U69.\fi
 
-\M{72}When a ternary clause reduces to the binary clause $u\lor v$,
+\M[1664 sat11.w]{72}When a ternary clause reduces to the binary clause $u\lor
+v$,
 the ``real'' truth status of \PB{\|u} and \PB{\|v} is not yet known; but they
 might be ``nearly'' true or false. (In the latter case, we'll be
 setting them really true or false as we continue our
@@ -2345,7 +2375,8 @@ contradiction arises\X;\6
 \4${}\}{}$\2\par
 \U69.\fi
 
-\M{73}Now we've made some definite progress, by deducing a ``new'' binary
+\M[1707 sat11.w]{73}Now we've made some definite progress, by deducing a
+``new'' binary
 clause $u\lor v$, and we hope to capitalize on it. Three
 opportunities, not mutually exclusive, may present themselves at this point:
 \smallskip
@@ -2426,7 +2457,8 @@ ${}\\{oo},\39\\{mem}[\\{av}]\K\|u,\39\\{bimp}[\\{bar}(\|v)].\\{size}\K\\{sv}+%
 \4${}\}{}$\2\par
 \U72.\fi
 
-\M{74}At this point \PB{$\\{su}\K\\{bimp}[\\{bar}(\|u)].\\{size}$}.
+\M[1765 sat11.w]{74}At this point \PB{$\\{su}\K\\{bimp}[\\{bar}(\|u)].%
+\\{size}$}.
 
 \Y\B\4\X74:Make sure that \PB{\\{bar}(\|u)} has an \PB{\\{istack}} entry\X${}%
 \E{}$\6
@@ -2439,7 +2471,7 @@ ${}\|o,\39\\{istack}[\\{iptr}].\\{lit}\K\\{bar}(\|u),\39\\{istack}[\\{iptr}].%
 \4${}\}{}$\2\par
 \Us73, 127\ETs135.\fi
 
-\M{75}\B\X75:Increase \PB{\\{iptr}}\X${}\E{}$\6
+\M[1774 sat11.w]{75}\B\X75:Increase \PB{\\{iptr}}\X${}\E{}$\6
 $\\{iptr}\PP;{}$\6
 \&{if} ${}(\\{iptr}\E\\{iptr\_max}){}$\5
 ${}\{{}$\1\6
@@ -2448,8 +2480,8 @@ ${}\\{iptr\_max}\MRL{{\LL}{\K}}\T{1};{}$\6
 \4${}\}{}$\2\par
 \Us74, 77, 78\ETs136.\fi
 
-\M{76}At this point all implications of \PB{\\{bar}(\|u)} are stamped with \PB{%
-\\{bstamp}},
+\M[1781 sat11.w]{76}At this point all implications of \PB{\\{bar}(\|u)} are
+stamped with \PB{\\{bstamp}},
 including \PB{\\{bar}(\|u)} itself. And since $u\lor v$ is true, we know that
 $v$ is also implied by \PB{\\{bar}(\|u)}. Therefore any literal~$w$ implied
 by~$v$
@@ -2495,8 +2527,8 @@ ${}\|o,\39\\{mem}[\\{aw}+\\{sw}]\K\|u{}$;\C{ $\bar w$ implies $u$ }\6
 \4${}\}{}$\2\par
 \U73.\fi
 
-\M{77}At this point \PB{$\\{sv}\K\\{bimp}[\\{bar}(\|v)].\\{size}$}; we do for %
-\PB{\|v} as we did for \PB{\|u}.
+\M[1813 sat11.w]{77}At this point \PB{$\\{sv}\K\\{bimp}[\\{bar}(\|v)].%
+\\{size}$}; we do for \PB{\|v} as we did for \PB{\|u}.
 
 \Y\B\4\X77:Make sure that \PB{\\{bar}(\|v)} has an \PB{\\{istack}} entry\X${}%
 \E{}$\6
@@ -2509,7 +2541,7 @@ ${}\|o,\39\\{istack}[\\{iptr}].\\{lit}\K\\{bar}(\|v),\39\\{istack}[\\{iptr}].%
 \4${}\}{}$\2\par
 \U73.\fi
 
-\M{78}Here \PB{$\\{sw}\K\\{bimp}[\\{bar}(\|w)].\\{size}$}.
+\M[1822 sat11.w]{78}Here \PB{$\\{sw}\K\\{bimp}[\\{bar}(\|w)].\\{size}$}.
 
 \Y\B\4\X78:Make sure that \PB{\\{bar}(\|w)} has an \PB{\\{istack}} entry\X${}%
 \E{}$\6
@@ -2522,7 +2554,8 @@ ${}\|o,\39\\{istack}[\\{iptr}].\\{lit}\K\\{bar}(\|w),\39\\{istack}[\\{iptr}].%
 \4${}\}{}$\2\par
 \Us76\ET79.\fi
 
-\M{79}This is the kind of program that cannot be written well when loud music
+\M[1831 sat11.w]{79}This is the kind of program that cannot be written well
+when loud music
 is playing.
 
 \Y\B\4\X79:Add compensation resolvents from \PB{\\{bar}(\|v)}; but \PB{\&{goto}
@@ -2558,8 +2591,8 @@ ${}\|o,\39\\{mem}[\\{aw}+\\{sw}]\K\|v{}$;\C{ $\bar w$ implies $v$ }\6
 \4${}\}{}$\2\par
 \U73.\fi
 
-\N{1}{80}Downdating the data structures. When a contradiction arises,
-backtracking
+\N[1855 sat11.w]{1}{80}Downdating the data structures. When a contradiction
+arises, backtracking
 becomes necessary: Everything that went up must come down.
 
 Fortunately the task of undoing isn't too tough.
@@ -2583,7 +2616,8 @@ ${}\|o,\39\\{bimp}[\|l].\\{size}\K\\{sl};{}$\6
 \4${}\}{}$\2\par
 \U84.\fi
 
-\M{81}The \PB{\\{rstack}} entries come in two parts, one easy and the other
+\M[1874 sat11.w]{81}The \PB{\\{rstack}} entries come in two parts, one easy and
+the other
 a bit tricky. The literals on \PB{\\{rstack}[\|j]} for
 \PB{$\\{fptr}\Z\|j<\\{eptr}$} are the nice guys; they've become nearly true,
 but we haven't
@@ -2595,8 +2629,8 @@ unset those tentative assignments.
 ${}\\{oo},\39\\{stamp}[\\{thevar}(\\{rstack}[\|j])]\K\T{0}{}$;\2\par
 \U84.\fi
 
-\M{82}The literals on \PB{\\{rstack}[\|j]} for \PB{$\\{rptr}\Z\|j<\\{fptr}$}
-have become really true,
+\M[1883 sat11.w]{82}The literals on \PB{\\{rstack}[\|j]} for \PB{$\\{rptr}\Z%
+\|j<\\{fptr}$} have become really true,
 and the ripple effects of those settings require more attention.
 Of principal importance is the fact that the ternary clauses in which
 those literals or their complements appear have become inactive,
@@ -2641,8 +2675,8 @@ ${}\|o,\39\\{stamp}[\\{thevar}(\\{ll})]\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U84.\fi
 
-\M{83}\B\X83:Reactivate the inactive ternaries implied by \PB{\\{tll}}\X${}%
-\E{}$\6
+\M[1922 sat11.w]{83}\B\X83:Reactivate the inactive ternaries implied by \PB{%
+\\{tll}}\X${}\E{}$\6
 \&{for} ${}(\|o,\39\\{ls}\K\\{timp}[\\{tll}].\\{size},\39\\{la}\K\\{timp}[%
 \\{tll}].\\{addr}+\\{ls}-\T{1};{}$ \\{ls}; ${}\\{ls}\MM,\39\\{la}\MM){}$\5
 ${}\{{}$\1\6
@@ -2652,7 +2686,7 @@ ${}\\{oo},\39\\{timp}[\\{bar}(\|v)].\\{size}\PP;{}$\6
 \4${}\}{}$\2\par
 \U82.\fi
 
-\M{84}\B\X84:Recover from conflicts\X${}\E{}$\6
+\M[1929 sat11.w]{84}\B\X84:Recover from conflicts\X${}\E{}$\6
 \4\\{dl\_contra}:\5
 \X146:Recover from a double lookahead contradiction\X;\6
 \4\\{contra}:\5
@@ -2692,8 +2726,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"!SAT!\\n"});{}$\2\6
 \4${}\}{}$\2\par
 \U150.\fi
 
-\M{85}A binary string is implicitly associated with every node of the search
-tree:
+\M[1952 sat11.w]{85}A binary string is implicitly associated with every node of
+the search tree:
 At level~0, before we've done any branching at all, the string is empty.
 Branch~0 of every node appends 0 to the parent string, and branch~1 appends~1.
 The length of the string is therefore \PB{\\{level}}. We also maintain the
@@ -2713,7 +2747,8 @@ ${}\\{prefix}\MRL{+{\K}}\T{1}\LL(\T{31}-\\{level});{}$\2\6
 \4${}\}{}$\2\par
 \U84.\fi
 
-\M{86}A variable $x$ is said to ``participate'' at a branch node if it
+\M[1969 sat11.w]{86}A variable $x$ is said to ``participate'' at a branch node
+if it
 occurs in one of the nonbinary clauses that is produced in that node or in
 one of that node's ancestors. If $x$ has already become a participant, the
 string specified by \PB{$\\{vmem}[\|x].\\{pfx}$} and \PB{$\\{vmem}[\|x].%
@@ -2761,7 +2796,8 @@ ${}\|o,\39\\{vmem}[\|x].\\{pfx}\K\\{prefix},\39\\{vmem}[\|x].\\{len}\K%
 \\{plevel}{}$;\2\par
 \U69.\fi
 
-\N{1}{87}Preselection. The main purpose of lookahead is to choose the best
+\N[1997 sat11.w]{1}{87}Preselection. The main purpose of lookahead is to choose
+the best
 free variable on which to branch. Of course we have limited foreknowledge,
 so we must make guesses. And we don't have time to explore {\it every\/}
 variable that remains free, except in trivial ways, unless
@@ -2780,8 +2816,8 @@ contradiction\X;\6
 \X116:Construct a suitable forest\X;\par
 \U122.\fi
 
-\M{88}The candidates are collected and identified in an array \PB{\\{cand}},
-whose
+\M[2013 sat11.w]{88}The candidates are collected and identified in an array %
+\PB{\\{cand}}, whose
 entries have two fields, \PB{\\{var}} and \PB{\\{rating}}.
 
 \Y\B\4\X5:Type definitions\X${}\mathrel+\E{}$\6
@@ -2791,7 +2827,7 @@ entries have two fields, \PB{\\{var}} and \PB{\\{rating}}.
 ${}\}{}$ \&{cdata};\par
 \fi
 
-\M{89}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\M[2022 sat11.w]{89}\B\X3:Global variables\X${}\mathrel+\E{}$\6
 \&{cdata} ${}{*}\\{cand}{}$;\C{ list of candidates for lookahead }\6
 \&{int} \\{cands};\C{ the number of candidates in \PB{\\{cand}} }\6
 \&{float} \\{sum};\C{ accumulator for computing the ratings }\6
@@ -2804,7 +2840,7 @@ for branching }\6
 node }\par
 \fi
 
-\M{90}\B\X58:Allocate special arrays\X${}\mathrel+\E{}$\6
+\M[2032 sat11.w]{90}\B\X58:Allocate special arrays\X${}\mathrel+\E{}$\6
 $\\{cand}\K{}$(\&{cdata} ${}{*}){}$ \\{malloc}${}(\\{vars}*\&{sizeof}(%
 \&{cdata}));{}$\6
 \&{if} ${}(\R\\{cand}){}$\5
@@ -2825,7 +2861,8 @@ ${}\\{exit}({-}\T{10});{}$\6
 ${}\\{bytes}\MRL{+{\K}}(\\{vars}+\T{1})*\&{sizeof}(\&{float}){}$;\par
 \fi
 
-\M{91}The first stage of preselection {\it does\/} examine all the free
+\M[2046 sat11.w]{91}The first stage of preselection {\it does\/} examine all
+the free
 variables, in order to get enough data to choose the candidates.
 Thus it constitutes one of the inner loops for which we
 hope to do everything rapidly. The general idea is to compute a
@@ -2873,7 +2910,7 @@ into? }\6
 \\{hmem}} }\par
 \fi
 
-\M{92}\B\X58:Allocate special arrays\X${}\mathrel+\E{}$\6
+\M[2088 sat11.w]{92}\B\X58:Allocate special arrays\X${}\mathrel+\E{}$\6
 $\\{hmem}\K{}$(\&{float} ${}{*}){}$ \\{malloc}${}(\\{lits}*(\\{hlevel\_max}+%
 \T{1})*\&{sizeof}(\&{float}));{}$\6
 \&{if} ${}(\R\\{hmem}){}$\5
@@ -2888,8 +2925,8 @@ ${}\\{bytes}\MRL{+{\K}}\\{lits}*\T{3}*\&{sizeof}(\&{float});{}$\6
 ${}\|o,\39\\{hmem}[\|k]\K\T{1.0}{}$;\2\par
 \fi
 
-\M{93}The subroutine \PB{\\{hscores}} converts $h$ values to $h'$ values
-according
+\M[2098 sat11.w]{93}The subroutine \PB{\\{hscores}} converts $h$ values to $h'$
+values according
 to the equation above. It also makes sure that $h'(l)$ doesn't
 exceed \PB{\\{max\_score}} (which is 25.0 by default). Furthermore, it computes
 \PB{$\\{rating}[\\{thevar}(\|l)]\K\\{hp}(\|l)*\\{hp}(\\{bar}(\|l))$}, a number
@@ -2937,7 +2974,8 @@ ${}\|o,\39\\{rating}[\\{thevar}(\|l)]\K\\{pos}*\\{neg};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{94}\B\X94:Compute \PB{\\{sum}}, the score of \PB{\|l}\X${}\E{}$\6
+\M[2134 sat11.w]{94}\B\X94:Compute \PB{\\{sum}}, the score of \PB{\|l}\X${}%
+\E{}$\6
 \&{for} ${}(\|o,\39\\{la}\K\\{bimp}[\|l].\\{addr},\39\\{ls}\K\\{bimp}[\|l].%
 \\{size},\39\\{sum}\K\T{0.0};{}$ \\{ls}; ${}\\{la}\PP,\39\\{ls}\MM){}$\5
 ${}\{{}$\1\6
@@ -2954,8 +2992,8 @@ ${}\\{oo},\39\\{tsum}\MRL{+{\K}}\|h[\|u]*\|h[\|v];{}$\6
 ${}\\{sum}\K\T{0.1}+\\{sum}*\\{afactor}+\\{tsum}*\\{sqfactor}{}$;\par
 \U93.\fi
 
-\M{95}Here we compute the relevant scores, and set the global variable \PB{%
-\\{heur}}
+\M[2145 sat11.w]{95}Here we compute the relevant scores, and set the global
+variable \PB{\\{heur}}
 to point within \PB{\\{hmem}} in such a way that \PB{\\{heur}[\|l]} will be the
 appropriate $h(l)$ for the lookahead we're about to do.
 
@@ -2994,7 +3032,8 @@ ${}\\{heur}\K\\{htable}(\\{hlevel\_max}){}$;\C{ and use it }\6
 \4${}\}{}$\2\par
 \U96.\fi
 
-\M{96}The maximum number of candidates permitted, in this implementation,
+\M[2168 sat11.w]{96}The maximum number of candidates permitted, in this
+implementation,
 depends on the current level rather than on the number of variables
 or clauses in the problem: We calculate \PB{\\{maxcand}} = the maximum
 of \PB{$\\{levelcand}/\\{level}$} and \PB{\\{mincutoff}}, where \PB{$%
@@ -3029,7 +3068,8 @@ ${}\\{maxcand}\K\\{mincutoff};{}$\2\6
 \X100:Pare down the candidates to at most \PB{\\{maxcand}}\X;\par
 \U87.\fi
 
-\M{97}The next stage in this winnowing-down process tries to avoid any variable
+\M[2197 sat11.w]{97}The next stage in this winnowing-down process tries to
+avoid any variable
 that hasn't participated in a ternary clause that has been reduced;
 otherwise we might find ourselves trying to solve several independent
 problems at the same time. In order to weed out ``newbies'' (nonparticipants),
@@ -3081,8 +3121,8 @@ ${}\\{no\_newbies}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U96.\fi
 
-\M{98}\B\X98:If all clauses are satisfied, \PB{\&{goto} \\{satisfied}}\X${}%
-\E{}$\6
+\M[2233 sat11.w]{98}\B\X98:If all clauses are satisfied, \PB{\&{goto} %
+\\{satisfied}}\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{freevars};{}$ ${}\|j\PP){}$\5
 ${}\{{}$\1\6
 ${}\|o,\39\|x\K\\{freevar}[\|j];{}$\6
@@ -3095,8 +3135,8 @@ ${}\|l\PP;{}$\6
 \4\\{nogood}:\par
 \U97.\fi
 
-\M{99}\B\X99:If \PB{\|l} implies any unsatisfied clauses, \PB{\&{goto} %
-\\{nogood}}\X${}\E{}$\6
+\M[2244 sat11.w]{99}\B\X99:If \PB{\|l} implies any unsatisfied clauses, \PB{%
+\&{goto} \\{nogood}}\X${}\E{}$\6
 \&{if} ${}(\|o,\39\\{timp}[\|l].\\{size}){}$\1\5
 \&{goto} \\{nogood};\C{ all active timps are unsatisfied }\2\6
 \&{for} ${}(\|o,\39\\{la}\K\\{bimp}[\|l].\\{addr},\39\\{ls}\K\\{bimp}[\|l].%
@@ -3109,8 +3149,8 @@ ${}\|o,\39\|u\K\\{mem}[\\{la}];{}$\6
 \4${}\}{}$\2\par
 \U98.\fi
 
-\M{100}At this point we've got \PB{\\{cands}} candidates in the \PB{\\{cand}}
-array,
+\M[2251 sat11.w]{100}At this point we've got \PB{\\{cands}} candidates in the %
+\PB{\\{cand}} array,
 and \PB{\\{sum}} is the sum of their ratings. The next task is to eliminate
 low-rated candidates, if we have too many to handle.
 
@@ -3134,8 +3174,8 @@ advance \PB{\|j}, discard a loser }\2\6
 \\{confusion}(\.{"cands"});\2\par
 \U96.\fi
 
-\M{101}Here we make the \PB{\\{cand}} array into a heap, with low-rated
-elements
+\M[2266 sat11.w]{101}Here we make the \PB{\\{cand}} array into a heap, with
+low-rated elements
 in the lowest positions. Then we delete the ones we don't want.
 (See Algorithm 5.2.3H. The heap condition is
 $$\hbox{\PB{$\\{cand}[\|i].\\{rating}\Z\\{cand}[\T{2}*\|i+\T{1}].\\{rating}$}%
@@ -3163,7 +3203,7 @@ ${}\\{oo},\39\\{cand}[\T{0}]\K\\{cand}[\MM\\{cands}]{}$;\C{ discard a loser }\6
 \4${}\}{}$\2\par
 \U100.\fi
 
-\M{102}\B\X102:Sift \PB{\\{cand}[\|j]} up\X${}\E{}$\6
+\M[2287 sat11.w]{102}\B\X102:Sift \PB{\\{cand}[\|j]} up\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{float} \|r;\6
 \&{cdata} \|c;\7
@@ -3183,7 +3223,8 @@ ${}\|o,\39\\{cand}[\|i]\K\|c;{}$\2\6
 \4${}\}{}$\2\par
 \U101.\fi
 
-\N{1}{103}Strong components. If the binary implication graph has a nontrivial
+\N[2300 sat11.w]{1}{103}Strong components. If the binary implication graph has
+a nontrivial
 strong component, all literals in that component are locked together:
 Any one of their values determines all the rest. Therefore we don't want
 to bother looking ahead on two variables that have literals in the
@@ -3264,7 +3305,7 @@ ${}\|l\PP{}$;\5
 \X104:Print the strong components\X;\2\par
 \U87.\fi
 
-\M{104}\B\X104:Print the strong components\X${}\E{}$\6
+\M[2370 sat11.w]{104}\B\X104:Print the strong components\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Strong\ components:\\}\)\.{n"});{}$\6
 \&{for} ${}(\|l\K\\{settled};{}$ \|l; ${}\|l\K\\{lmem}[\|l].\\{link}){}$\5
@@ -3286,8 +3327,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{""}\|O\.{".4g\\n"},\39\\{rating}[\\{thevar}(%
 \4${}\}{}$\2\par
 \U103.\fi
 
-\M{105}Candidates are marked with \PB{\\{bstamp}} here so that they can be
-distinguished
+\M[2387 sat11.w]{105}Candidates are marked with \PB{\\{bstamp}} here so that
+they can be distinguished
 from non-candidates. Then we make a new copy of the \PB{\\{bimp}} data,
 abbreviating it so that only the candidates are listed.
 
@@ -3323,21 +3364,22 @@ ${}\\{active}\K\\{settled}\K\T{0}{}$;\C{ the active and settled stacks are
 empty }\par
 \U103.\fi
 
-\M{106}\B\X5:Type definitions\X${}\mathrel+\E{}$\6
+\M[2414 sat11.w]{106}\B\X5:Type definitions\X${}\mathrel+\E{}$\6
 \&{typedef} \&{struct} \&{arc\_struct} ${}\{{}$\1\6
 \&{uint} \\{tip};\C{ the implied literal }\6
 \&{int} \\{next};\C{ next arc from the implier literal, or $-1$ }\2\6
 ${}\}{}$ \&{arc};\par
 \fi
 
-\M{107}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\M[2420 sat11.w]{107}\B\X3:Global variables\X${}\mathrel+\E{}$\6
 \&{arc} ${}{*}\\{cand\_arc}{}$;\C{ the arcs in a reduced digraph }\6
 \&{int} \\{cand\_arc\_alloc};\C{ how many arc slots have we used so far? }\6
 \&{int} \\{active};\C{ top of the linked stack of active vertices }\6
 \&{int} \\{settled};\C{ top of the linked stack of settled vertices }\par
 \fi
 
-\M{108}The number of \PB{\\{bytes}} used will be adjusted dynamically.
+\M[2426 sat11.w]{108}The number of \PB{\\{bytes}} used will be adjusted
+dynamically.
 
 \Y\B\4\X58:Allocate special arrays\X${}\mathrel+\E{}$\6
 $\\{max\_prelook\_arcs}\MRL{\AND{\K}}{-}\T{2}{}$;\C{ make sure \PB{\\{max%
@@ -3352,7 +3394,8 @@ ${}\\{exit}({-}\T{10});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{109}\B\X109:Copy all the relevant arcs to \PB{\\{cand\_arc}}\X${}\E{}$\6
+\M[2436 sat11.w]{109}\B\X109:Copy all the relevant arcs to \PB{\\{cand\_arc}}%
+\X${}\E{}$\6
 \&{for} ${}(\|j\K\|i\K\T{0};{}$ ${}\|i<\\{cands};{}$ ${}\|i\PP){}$\5
 ${}\{{}$\1\6
 ${}\|o,\39\|l\K\\{poslit}(\\{cand}[\|i].\\{var});{}$\6
@@ -3367,7 +3410,7 @@ ${}\\{bytes}\MRL{+{\K}}(\|j-\\{cand\_arc\_alloc})*\&{sizeof}(\&{arc}),\39%
 \\{cand\_arc\_alloc}\K\|j{}$;\2\par
 \U105.\fi
 
-\M{110}Beware: We {\it reverse\/} the ordering here, placing an
+\M[2446 sat11.w]{110}Beware: We {\it reverse\/} the ordering here, placing an
 arc $u\to v$ into \PB{\\{cand\_arc}} when there's an implication $v\to u$
 in the \PB{\\{bimp}} table. This switcheroo will produce strong components
 in a more desirable order.
@@ -3404,8 +3447,9 @@ ${}\|o,\39\\{lmem}[\\{bar}(\|l)].\\{arcs}\K\\{lmem}[\\{bar}(\|l)].\\{untagged}%
 \K\|p{}$;\par
 \U109.\fi
 
-\M{111}\B\X111:Perform a depth-first search with \PB{\|l} as root, finding the
-strong components of all vertices reachable from \PB{\|l}\X${}\E{}$\6
+\M[2471 sat11.w]{111}\B\X111:Perform a depth-first search with \PB{\|l} as
+root, finding the strong components of all vertices reachable from \PB{\|l}%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|v\K\|l;{}$\6
 ${}\|o,\39\\{lmem}[\|l].\\{parent}\K\T{0};{}$\6
@@ -3417,14 +3461,14 @@ another current vertex and calling it~\PB{\|v}\X\5
 \4${}\}{}$\2\par
 \U103.\fi
 
-\M{112}\B\X112:Make vertex \PB{\|v} active\X${}\E{}$\6
+\M[2481 sat11.w]{112}\B\X112:Make vertex \PB{\|v} active\X${}\E{}$\6
 $\|o,\39\\{lmem}[\|v].\\{rank}\K\PP\|k;{}$\6
 ${}\\{lmem}[\|v].\\{link}\K\\{active},\39\\{active}\K\|v;{}$\6
 ${}\|o,\39\\{lmem}[\|v].\\{min}\K\|v{}$;\par
 \Us111\ET113.\fi
 
-\M{113}Minor point: No mem is charged for setting \PB{$\\{lmem}[\|v].\\{min}\K%
-\|u$} here,
+\M[2486 sat11.w]{113}Minor point: No mem is charged for setting \PB{$\\{lmem}[%
+\|v].\\{min}\K\|u$} here,
 because \PB{$\\{lmem}[\|v].\\{untagged}$} could have been set at the same time.
 
 \Y\B\4\X113:Explore one step from the current vertex \PB{\|v}, possibly moving
@@ -3470,8 +3514,8 @@ ${}\|v\K\|u{}$;\C{ the former parent of \PB{\|v} becomes the new current vertex
 \4${}\}{}$\2\par
 \U111.\fi
 
-\M{114}When \PB{\|v} is the representative of a strong component, all vertices
-of
+\M[2517 sat11.w]{114}When \PB{\|v} is the representative of a strong component,
+all vertices of
 that component henceforth regard \PB{\|v} as their parent.
 
 If \PB{\|v} represents the strong component of \PB{\|u} and if \PB{\|w}
@@ -3518,7 +3562,7 @@ ${}\\{oo},\39\\{lmem}[\|v].\\{vcomp}\K\\{bar}(\\{lmem}[\\{lmem}[\\{bar}(\|v)].%
 \4${}\}{}$\2\par
 \U113.\fi
 
-\N{1}{115}The lookahead forest.
+\N[2552 sat11.w]{1}{115}The lookahead forest.
 Now we come to what is probably the nicest part of this whole program,
 an elegant mechanism by which much of the potential lookahead computation
 is avoided.
@@ -3600,7 +3644,8 @@ in unusual cases.
 
 \fi
 
-\M{116}When the program below begins its work, we will have reduced the
+\M[2632 sat11.w]{116}When the program below begins its work, we will have
+reduced the
 strong components of the candidates' digraph and placed the component
 representatives into topological order. That order isn't necessarily
 the one we seek for the oriented forest, but it facilitates the
@@ -3618,8 +3663,8 @@ digraph.
 \X121:Construct the \PB{\\{look}} table\X;\par
 \U87.\fi
 
-\M{117}If \PB{\|u} represents a strong component we will change \PB{$\\{lmem}[%
-\|u].\\{untagged}$} to a
+\M[2648 sat11.w]{117}If \PB{\|u} represents a strong component we will change %
+\PB{$\\{lmem}[\|u].\\{untagged}$} to a
 height value; and we'll also make \PB{$\\{lmem}[\|u].\\{min}$} point to child
 of~\PB{\|u}
 in the forest being constructed.
@@ -3672,7 +3717,8 @@ ${}\|o,\39\\{lmem}[\|w].\\{child}\K\|u;{}$\6
 \4${}\}{}$\2\par
 \U116.\fi
 
-\M{118}The results of our oriented forest computation are placed into
+\M[2683 sat11.w]{118}The results of our oriented forest computation are placed
+into
 an array of \PB{\\{ldata}} called \PB{\\{look}}.
 The lookahead process will
 examine literals \PB{$\\{look}[\T{0}].\\{lit}$}, \PB{$\\{look}[\T{1}].%
@@ -3694,13 +3740,13 @@ of candidates.)
 ${}\}{}$ \&{ldata};\par
 \fi
 
-\M{119}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\M[2702 sat11.w]{119}\B\X3:Global variables\X${}\mathrel+\E{}$\6
 \&{ldata} ${}{*}\\{look}{}$;\C{ specification of the oriented forest for
 lookaheads }\6
 \&{int} \\{looks};\C{ the number of current entries in \PB{\\{look}} }\par
 \fi
 
-\M{120}\B\X58:Allocate special arrays\X${}\mathrel+\E{}$\6
+\M[2706 sat11.w]{120}\B\X58:Allocate special arrays\X${}\mathrel+\E{}$\6
 $\\{look}\K{}$(\&{ldata} ${}{*}){}$ \\{malloc}${}(\\{lits}*\&{sizeof}(%
 \&{ldata}));{}$\6
 \&{if} ${}(\R\\{look}){}$\5
@@ -3712,7 +3758,8 @@ ${}\\{exit}({-}\T{10});{}$\6
 ${}\\{bytes}\MRL{+{\K}}\\{lits}*\&{sizeof}(\&{ldata}){}$;\par
 \fi
 
-\M{121}Here's a standard ``double order'' traversal [{\sl TAOCP\/} exercise
+\M[2714 sat11.w]{121}Here's a standard ``double order'' traversal [{\sl TAOCP%
+\/} exercise
 2.3.1--18] as we list the literals in preorder while filling in their offsets
 according to postorder.
 
@@ -3762,7 +3809,8 @@ ${}\\{looks}\K\|k;{}$\6
 \\{confusion}(\.{"looks"});\2\par
 \U116.\fi
 
-\N{1}{122}Looking ahead. The lookahead process has much in common with what
+\N[2745 sat11.w]{1}{122}Looking ahead. The lookahead process has much in common
+with what
 we do when making a decision at a branch node, except that we
 don't make drastic changes to the data structures. We don't
 assign any truth values at levels higher than \PB{\\{proto\_truth}}; and
@@ -3813,8 +3861,8 @@ ${}\\{base}\MRL{+{\K}}\T{2}*\\{looks}{}$;\C{ forget small truths }\6
 \\{look\_done}:\par
 \U59.\fi
 
-\M{123}The \PB{\\{base}} keeps rising during a lookahead, never decreasing
-again.
+\M[2783 sat11.w]{123}The \PB{\\{base}} keeps rising during a lookahead, never
+decreasing again.
 We had better use 64 bits for it, so that overflow won't be overlooked
 in large instances.
 
@@ -3830,7 +3878,7 @@ offsets from \PB{\\{look}} }\6
 }\par
 \fi
 
-\M{124}Again we want a fast way to make literals ``snap into
+\M[2796 sat11.w]{124}Again we want a fast way to make literals ``snap into
 place'' when they're directly implied by an assumption that we're making.
 
 Here we clone the former binary propagation loop for purposes of lookahead:
@@ -3895,7 +3943,8 @@ ${}\|o,\39\\{rstack}[\\{eptr}\PP]\K\\{lp};{}$\6
 \4${}\}{}$\2\par
 \Us130\ET134.\fi
 
-\M{125}An example will make it easier to visualize the current context.
+\M[2842 sat11.w]{125}An example will make it easier to visualize the current
+context.
 Suppose the relevant binary clauses are
 $(\bar b\lor a)\land(\bar c\lor a)\land(\bar d\lor c)$.
 Then the \PB{\\{look}} array might contain the sequence $\bar b$, $a$, $b$,
@@ -3938,7 +3987,8 @@ ${}\|o,\39\\{lmem}[\\{looklit}].\\{wnb}\MRL{+{\K}}\\{weighted\_new%
 \4${}\}{}$\2\par
 \U122.\fi
 
-\M{126}Here we implement an extension of the classical ``pure literal'' rule:
+\M[2872 sat11.w]{126}Here we implement an extension of the classical ``pure
+literal'' rule:
 We have just looked at all the consequences obtainable by repeated propagation
 of unit clauses when \PB{\\{looklit}} is assumed to be true, and we've
 found no contradiction. Suppose we've also
@@ -3980,8 +4030,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\ autarky\ "}\|O\.{"s"}\|O\.{".8s\ ->\ "}\|O%
 \4${}\}{}$\2\par
 \U125.\fi
 
-\M{127}Furthermore, if \PB{$\\{lmem}[\\{looklit}].\\{wnb}$} is nonzero, we know
-that we
+\M[2908 sat11.w]{127}Furthermore, if \PB{$\\{lmem}[\\{looklit}].\\{wnb}$} is
+nonzero, we know that we
 set it to \PB{$\\{lmem}[\\{ll}].\\{wnb}$} where \PB{\\{ll}} is the parent of %
 \PB{\\{looklit}}.
 In that case, if the assertion of \PB{\\{looklit}} gives no new weighted
@@ -4028,8 +4078,8 @@ ${}\\{oo},\39\\{stamp}[\\{thevar}(\\{looklit})]\K\\{stamp}[\\{thevar}(\\{ll})]%
 \4${}\}{}$\2\par
 \U126.\fi
 
-\M{128}\B\X128:Force \PB{\\{looklit}} to be (proto) false, and complement it%
-\X${}\E{}$\6
+\M[2941 sat11.w]{128}\B\X128:Force \PB{\\{looklit}} to be (proto) false, and
+complement it\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{looklit}\K\\{bar}(\\{looklit});{}$\6
 ${}\\{forcedlit}[\\{forcedlits}\PP]\K\\{looklit};{}$\6
@@ -4040,7 +4090,8 @@ ${}\\{cs}\K\\{look\_cs};{}$\6
 \4${}\}{}$\2\par
 \Us125, 126, 129\ETs137.\fi
 
-\M{129}When we get to label \PB{\\{contra}}, we execute the following
+\M[2950 sat11.w]{129}When we get to label \PB{\\{contra}}, we execute the
+following
 instructions, which will ``fall through'' to label \PB{\\{look\_bad}} if
 \PB{$\\{cs}\K\\{proto\_truth}$}.
 
@@ -4057,8 +4108,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U84.\fi
 
-\M{130}A new breadth-first search is launched here, as we assert \PB{%
-\\{looklit}}
+\M[2965 sat11.w]{130}A new breadth-first search is launched here, as we assert %
+\PB{\\{looklit}}
 at truth level~\PB{\\{cs}} and derive the ramifications of that assertion.
 If, for example, \PB{$\\{cs}\K\T{50}$}, we will make \PB{\\{looklit}} (and all
 other literals
@@ -4087,7 +4138,7 @@ ${}\|o,\39\\{ll}\K\\{rstack}[\\{fptr}\PP];{}$\6
 \X135:Convert the windfalls to binary implications from \PB{\\{looklit}}\X;\par
 \Us125\ET128.\fi
 
-\M{131}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\M[2988 sat11.w]{131}\B\X3:Global variables\X${}\mathrel+\E{}$\6
 \&{uint} ${}{*}\\{wstack}{}$;\C{ place to store windfalls that result from \PB{%
 \\{looklit}} }\6
 \&{int} \\{wptr};\C{ the number of entries currently in \PB{\\{wstack}} }\6
@@ -4095,7 +4146,7 @@ ${}\|o,\39\\{ll}\K\\{rstack}[\\{fptr}\PP];{}$\6
 uncover }\par
 \fi
 
-\M{132}\B\X58:Allocate special arrays\X${}\mathrel+\E{}$\6
+\M[2993 sat11.w]{132}\B\X58:Allocate special arrays\X${}\mathrel+\E{}$\6
 $\\{wstack}\K{}$(\&{uint} ${}{*}){}$ \\{malloc}${}(\\{lits}*\&{sizeof}(%
 \&{uint}));{}$\6
 \&{if} ${}(\R\\{wstack}){}$\5
@@ -4107,8 +4158,8 @@ ${}\\{exit}({-}\T{10});{}$\6
 ${}\\{bytes}\MRL{+{\K}}\\{lits}*\&{sizeof}(\&{uint}){}$;\par
 \fi
 
-\M{133}\B\X133:Update lookahead data structures for the truth of \PB{\\{ll}};
-but \PB{\&{goto} \\{contra}} if a contradiction arises\X${}\E{}$\6
+\M[3001 sat11.w]{133}\B\X133:Update lookahead data structures for the truth of %
+\PB{\\{ll}}; but \PB{\&{goto} \\{contra}} if a contradiction arises\X${}\E{}$\6
 \&{for} ${}(\|o,\39\\{tla}\K\\{timp}[\\{ll}].\\{addr},\39\\{tls}\K\\{timp}[%
 \\{ll}].\\{size};{}$ \\{tls}; ${}\\{tla}\PP,\39\\{tls}\MM){}$\5
 ${}\{{}$\1\6
@@ -4122,8 +4173,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\ \ looking\ "}\|O\.{"s"}\|O\.{".8s->"}\|O%
 \4${}\}{}$\2\par
 \U130.\fi
 
-\M{134}Windfalls and the weighted potentials of new binaries are discovered
-here.
+\M[3011 sat11.w]{134}Windfalls and the weighted potentials of new binaries are
+discovered here.
 
 \Y\B\4\X134:Update lookahead structures for a potentially new binary clause $u%
 \lor v$\X${}\E{}$\6
@@ -4163,7 +4214,8 @@ ${}\\{weighted\_new\_binaries}\MRL{+{\K}}\\{heur}[\|u]*\\{heur}[\|v];{}$\2\6
 \4${}\}{}$\2\par
 \U133.\fi
 
-\M{135}Windfalls are analogous to the compensation resolvents we saw before.
+\M[3034 sat11.w]{135}Windfalls are analogous to the compensation resolvents we
+saw before.
 
 \Y\B\4\X135:Convert the windfalls to binary implications from \PB{\\{looklit}}%
 \X${}\E{}$\6
@@ -4195,8 +4247,8 @@ ${}\|o,\39\\{bimp}[\\{bar}(\|u)].\\{size}\K\\{su}+\T{1};{}$\6
 \4${}\}{}$\2\par
 \Us130\ET141.\fi
 
-\M{136}\B\X136:Make sure that \PB{\\{looklit}} has an \PB{\\{istack}} entry%
-\X${}\E{}$\6
+\M[3056 sat11.w]{136}\B\X136:Make sure that \PB{\\{looklit}} has an \PB{%
+\\{istack}} entry\X${}\E{}$\6
 \&{if} ${}(\|o,\39\\{lmem}[\\{looklit}].\\{istamp}\I\\{istamp}){}$\5
 ${}\{{}$\1\6
 ${}\|o,\39\\{lmem}[\\{looklit}].\\{istamp}\K\\{istamp};{}$\6
@@ -4206,8 +4258,8 @@ ${}\|o,\39\\{istack}[\\{iptr}].\\{lit}\K\\{looklit},\39\\{istack}[\\{iptr}].%
 \4${}\}{}$\2\par
 \U135.\fi
 
-\M{137}Let \PB{$\|l\K\\{looklit}$}. If our assumption that $l$ is true has
-allowed us
+\M[3063 sat11.w]{137}Let \PB{$\|l\K\\{looklit}$}. If our assumption that $l$ is
+true has allowed us
 to conclude the truth of some other literal~$l'$, but only at a
 level less than \PB{\\{proto\_truth}}, we are allowed to promote this to
 \PB{\\{proto\_truth}} if we also have $\bar l\to l'$. If we're lucky,
@@ -4233,8 +4285,8 @@ against a change in \PB{\\{ola}} }\6
 \4${}\}{}$\2\par
 \U125.\fi
 
-\M{138} Now we're ready to select \PB{\\{bestlit}}, representing our guess
-about
+\M[3084 sat11.w]{138} Now we're ready to select \PB{\\{bestlit}}, representing
+our guess about
 the best literal on which to branch.
 
 (More precisely, \PB{\\{thevar}(\\{bestlit})} is the variable on which we shall
@@ -4287,7 +4339,8 @@ ${}\\{bestlit}\K\T{0};{}$\2\6
 \4${}\}{}$\2\par
 \U59.\fi
 
-\N{1}{139}Double-looking ahead. Sometimes we really go out on a limb and
+\N[3125 sat11.w]{1}{139}Double-looking ahead. Sometimes we really go out on a
+limb and
 look ahead {\it two\/} steps before making a decision. The goal of such a
 second look is to detect a branch that dies off early, resulting
 in a forced literal $\bar l$ when looking at sufficiently many consequences
@@ -4322,8 +4375,8 @@ double-looking }\6
 truth }\par
 \fi
 
-\M{140}\B\X140:Do a double lookahead from \PB{\\{looklit}}, if that seems
-advisable\X${}\E{}$\6
+\M[3154 sat11.w]{140}\B\X140:Do a double lookahead from \PB{\\{looklit}}, if
+that seems advisable\X${}\E{}$\6
 \&{if} ${}(\\{level}\W(\|o,\39\\{lmem}[\\{looklit}].\\{dl\_fail}\I%
 \\{istamp})){}$\5
 ${}\{{}$\1\6
@@ -4346,8 +4399,8 @@ so that it we'll eventually try again }\2\6
 \4${}\}{}$\2\par
 \U125.\fi
 
-\M{141}The new settings of \PB{\\{base}}, \PB{\\{last\_base}}, and \PB{\\{dl%
-\_truth}} in this step
+\M[3169 sat11.w]{141}The new settings of \PB{\\{base}}, \PB{\\{last\_base}},
+and \PB{\\{dl\_truth}} in this step
 are slightly subtle: On the first iteration, some literals may be fixed true
 (stampwise) because of information gained before we've started to doublelook,
 but only if they are implied by \PB{\\{looklit}}. Those literals will be
@@ -4384,7 +4437,8 @@ ordinary lookahead\X;\6
 \X135:Convert the windfalls to binary implications from \PB{\\{looklit}}\X;\par
 \U140.\fi
 
-\M{142}The code here and in the following sections parallels the corresponding
+\M[3201 sat11.w]{142}The code here and in the following sections parallels the
+corresponding
 routines in lookahead and in the basic solver, but at an even hazier and more
 tentative level---further removed from reality.
 
@@ -4416,8 +4470,8 @@ ${}\\{base}\K\\{last\_base},\39\\{cs}\K\\{dl\_truth}{}$;\C{ retain only \PB{%
 \\{dl\_truth}} data }\par
 \U141.\fi
 
-\M{143}\B\X143:Propagate binary doublelookahead implications of \PB{\|l}; \PB{%
-\&{goto} \\{dl\_contra}} if a contradiction arises\X${}\E{}$\6
+\M[3222 sat11.w]{143}\B\X143:Propagate binary doublelookahead implications of %
+\PB{\|l}; \PB{\&{goto} \\{dl\_contra}} if a contradiction arises\X${}\E{}$\6
 \&{if} (\\{isfixed}(\|l))\5
 ${}\{{}$\1\6
 \&{if} (\\{iscontrary}(\|l))\1\5
@@ -4468,8 +4522,8 @@ ${}\|o,\39\\{rstack}[\\{eptr}\PP]\K\\{lp};{}$\6
 \4${}\}{}$\2\par
 \Us141, 147\ETs149.\fi
 
-\M{144}\B\X144:Doublelook ahead at consequences of \PB{\|l}, and \PB{\&{goto} %
-\\{contra}} if a contradiction is found\X${}\E{}$\6
+\M[3255 sat11.w]{144}\B\X144:Doublelook ahead at consequences of \PB{\|l}, and %
+\PB{\&{goto} \\{contra}} if a contradiction is found\X${}\E{}$\6
 $\\{dlooklit}\K\|l;{}$\6
 \&{if} ${}(\\{verbose}\AND\\{show\_doubly\_gory\_details}){}$\1\5
 ${}\\{fprintf}(\\{stderr},\39\.{"dlooking\ at\ "}\|O\.{"s"}\|O\.{".8s\ ("}\|O%
@@ -4486,7 +4540,8 @@ but \PB{\&{goto} \\{dl\_contra}} if a contradiction arises\X;\6
 \4${}\}{}$\2\par
 \U142.\fi
 
-\M{145}The variable \PB{\\{dl\_last\_change}}, which keeps us doublelooking,
+\M[3269 sat11.w]{145}The variable \PB{\\{dl\_last\_change}}, which keeps us
+doublelooking,
 changes only here.
 
 \Y\B\4\X145:Force \PB{\\{dlooklit}} to be (dl) false, and complement it\X${}%
@@ -4502,7 +4557,8 @@ ${}\\{wstack}[\\{wptr}\PP]\K\\{dlooklit};{}$\6
 \4${}\}{}$\2\par
 \Us144\ET146.\fi
 
-\M{146}When we get to label \PB{\\{dl\_contra}}, we execute the following
+\M[3282 sat11.w]{146}When we get to label \PB{\\{dl\_contra}}, we execute the
+following
 instructions, which will ``fall through'' to label \PB{\\{contra}} if
 \PB{$\\{cs}\K\\{dl\_truth}$}.
 
@@ -4524,9 +4580,9 @@ ${}\\{base}\K\\{last\_base}{}$;\C{ forget all truths less than \PB{\\{dl%
 \_truth}} }\par
 \U84.\fi
 
-\M{147}\B\X147:Update dlookahead data structures for consequences of \PB{%
-\\{dlooklit}}; but \PB{\&{goto} \\{dl\_contra}} if a contradiction arises\X${}%
-\E{}$\6
+\M[3300 sat11.w]{147}\B\X147:Update dlookahead data structures for consequences
+of \PB{\\{dlooklit}}; but \PB{\&{goto} \\{dl\_contra}} if a contradiction
+arises\X${}\E{}$\6
 $\\{fptr}\K\\{eptr}\K\\{rptr};{}$\6
 ${}\|l\K\\{dlooklit};{}$\6
 \X143:Propagate binary doublelookahead implications of \PB{\|l}; \PB{\&{goto} %
@@ -4539,8 +4595,9 @@ ${}\|o,\39\\{ll}\K\\{rstack}[\\{fptr}\PP];{}$\6
 \4${}\}{}$\2\par
 \Us144\ET145.\fi
 
-\M{148}\B\X148:Update dlookahead data structures for the truth of \PB{\\{ll}};
-but \PB{\&{goto} \\{dl\_contra}} if a contradiction arises\X${}\E{}$\6
+\M[3310 sat11.w]{148}\B\X148:Update dlookahead data structures for the truth of
+\PB{\\{ll}}; but \PB{\&{goto} \\{dl\_contra}} if a contradiction arises\X${}%
+\E{}$\6
 \&{for} ${}(\|o,\39\\{tla}\K\\{timp}[\\{ll}].\\{addr},\39\\{tls}\K\\{timp}[%
 \\{ll}].\\{size};{}$ \\{tls}; ${}\\{tla}\PP,\39\\{tls}\MM){}$\5
 ${}\{{}$\1\6
@@ -4554,8 +4611,8 @@ v$\X;\6
 \4${}\}{}$\2\par
 \U147.\fi
 
-\M{149}\B\X149:Update dlookahead structures for a potentially new binary clause
-$u\lor v$\X${}\E{}$\6
+\M[3321 sat11.w]{149}\B\X149:Update dlookahead structures for a potentially new
+binary clause $u\lor v$\X${}\E{}$\6
 \&{if} (\\{isfixed}(\|u))\5
 ${}\{{}$\C{ equivalently, \PB{\&{if} $(\|o,$ $\\{stamp}[\\{thevar}(\|u)]\G%
 \\{cs}$} }\1\6
@@ -4588,8 +4645,8 @@ ${}\|l\K\|u;{}$\6
 \4${}\}{}$\2\par
 \U148.\fi
 
-\N{1}{150}Doing it. Finally we just need to put the pieces of this program
-together.
+\N[3340 sat11.w]{1}{150}Doing it. Finally we just need to put the pieces of
+this program together.
 
 \Y\B\4\X150:Solve the problem\X${}\E{}$\6
 $\\{level}\K\T{0};{}$\6
@@ -4608,7 +4665,7 @@ ${}\\{level}\PP;{}$\6
 \X84:Recover from conflicts\X;\par
 \U2.\fi
 
-\M{151}\B\X151:Print the solution found\X${}\E{}$\6
+\M[3355 sat11.w]{151}\B\X151:Print the solution found\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{rptr};{}$ ${}\|k\PP){}$\5
 ${}\{{}$\1\6
 ${}\\{printf}(\.{"\ "}\|O\.{"s"}\|O\.{".8s"},\39\\{litname}(\\{rstack}[%
@@ -4638,7 +4695,7 @@ ${}\\{fprintf}(\\{out\_file},\39\.{"\ "}\|O\.{".8s"},\39\\{vmem}[\\{freevar}[%
 ${}\\{fprintf}(\\{out\_file},\39\.{"\\n"}){}$;\2\par
 \U84.\fi
 
-\M{152}\B\X29:Subroutines\X${}\mathrel+\E{}$\6
+\M[3371 sat11.w]{152}\B\X29:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{confusion}(\&{char} ${}{*}\\{id}){}$\1\1\2\2\6
 ${}\{{}$\C{ an assertion has failed }\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"This\ can't\ happen\ (}\)\.{"}\|O\.{"s)!\\n"},%
@@ -4651,7 +4708,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"You\ rang("}\|O\.{"d)?\\n"},\39\\{foo});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{153}Index.
+\N[3381 sat11.w]{1}{153}Index.
 \fi
 
 \inx

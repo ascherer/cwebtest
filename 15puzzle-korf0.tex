@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Introduction. This program finds a minimum-move solution to the famous
+\N[2 15puzzle-korf0.w]{1}{1}Introduction. This program finds a minimum-move
+solution to the famous
 ``15 puzzle,'' using a method introduced by Richard E. Korf
 [{\sl Artificial Intelligence\/ \bf27} (1985), 97--109]. It's the
 first (well, really the zeroth)
@@ -56,7 +58,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}Let's regard the 16 cell positions as two-digit numbers in quaternary
+\M[57 15puzzle-korf0.w]{2}Let's regard the 16 cell positions as two-digit
+numbers in quaternary
 (radix-4) notation:
 $$\vcenter{\halign{&\enspace#\cr
 00&01&02&03\cr
@@ -143,7 +146,7 @@ start\ position!}\)\.{\\n"});\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{3}Korf's method.
+\N[121 15puzzle-korf0.w]{1}{3}Korf's method.
 If piece $(r,c)$ is currently in board position $(r',c')$, it must make
 at least $\vert r-r'\vert+\vert c-c'\vert$ moves before it reaches home.
 The sum of these numbers, over all fifteen pieces, is called~$h$;
@@ -191,7 +194,8 @@ takes empirically about 5.7 times as long as the previous case.
 
 \fi
 
-\M{4}Saving memory means that the computation lives entirely within the
+\M[167 15puzzle-korf0.w]{4}Saving memory means that the computation lives
+entirely within the
 computer's high-speed cache. Furthermore, we can optimize the
 inner loop, as shown in the {\mc 15PUZZLE-KORF1}, the next
 program in this series. But here I'm using the most straightforward
@@ -217,7 +221,8 @@ current quota }\6
 \4\\{win}:\par
 \U1.\fi
 
-\M{5}\B\X5:Set \PB{\\{moves}} to the minimum number of happy moves\X${}\E{}$\6
+\M[188 15puzzle-korf0.w]{5}\B\X5:Set \PB{\\{moves}} to the minimum number of
+happy moves\X${}\E{}$\6
 \&{for} ${}(\|j\K\\{moves}\K\T{0};{}$ ${}\|j<\T{16};{}$ ${}\|j\PP){}$\1\6
 \&{if} ${}(\\{start}[\|j]\G\T{0}){}$\5
 ${}\{{}$\1\6
@@ -228,7 +233,8 @@ ${}\\{moves}\MRL{+{\K}}(\\{del}<\T{0}\?{-}\\{del}:\\{del});{}$\6
 \4${}\}{}$\2\2\par
 \U4.\fi
 
-\M{6}The main control routine is typical for backtracking.
+\M[196 15puzzle-korf0.w]{6}The main control routine is typical for
+backtracking.
 Directions are encoded as follows: $\rm east=0$, $\rm north=1$,
 $\rm west=2$, $\rm south=3$. (Think of powers of~$i$ in the complex
 plane.)
@@ -303,8 +309,8 @@ ${}\|q\K\\{pos}[\|l],\39\\{board}[\|p]\K\\{board}[\|q],\39\|p\K\|q,\39\|q\K%
 \4${}\}{}$\2\par
 \U4.\fi
 
-\M{7}We're going to move the {\it empty\/} cell east, by moving \PB{\\{piece}}
-west.
+\M[246 15puzzle-korf0.w]{7}We're going to move the {\it empty\/} cell east, by
+moving \PB{\\{piece}} west.
 
 \Y\B\4\X7:Prepare to move east, then \PB{\&{break}}\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -314,7 +320,8 @@ ${}\\{del}\K(\\{col}(\\{piece})<\\{col}(\|q)\?\T{\^1}:\T{\^100});{}$\6
 \4${}\}{}$\2\par
 \U6.\fi
 
-\M{8}\B\X8:Prepare to move north, then \PB{\&{break}}\X${}\E{}$\6
+\M[255 15puzzle-korf0.w]{8}\B\X8:Prepare to move north, then \PB{\&{break}}%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|q\K\|p-\T{4},\39\\{piece}\K\\{board}[\|q];{}$\6
 ${}\\{del}\K(\\{row}(\\{piece})>\\{row}(\|q)\?\T{\^1}:\T{\^100});{}$\6
@@ -322,7 +329,8 @@ ${}\\{del}\K(\\{row}(\\{piece})>\\{row}(\|q)\?\T{\^1}:\T{\^100});{}$\6
 \4${}\}{}$\2\par
 \U6.\fi
 
-\M{9}\B\X9:Prepare to move west, then \PB{\&{break}}\X${}\E{}$\6
+\M[262 15puzzle-korf0.w]{9}\B\X9:Prepare to move west, then \PB{\&{break}}\X${}%
+\E{}$\6
 ${}\{{}$\1\6
 ${}\|q\K\|p-\T{1},\39\\{piece}\K\\{board}[\|q];{}$\6
 ${}\\{del}\K(\\{col}(\\{piece})>\\{col}(\|q)\?\T{\^1}:\T{\^100});{}$\6
@@ -330,7 +338,8 @@ ${}\\{del}\K(\\{col}(\\{piece})>\\{col}(\|q)\?\T{\^1}:\T{\^100});{}$\6
 \4${}\}{}$\2\par
 \U6.\fi
 
-\M{10}\B\X10:Prepare to move south, then \PB{\&{break}}\X${}\E{}$\6
+\M[269 15puzzle-korf0.w]{10}\B\X10:Prepare to move south, then \PB{\&{break}}%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|q\K\|p+\T{4},\39\\{piece}\K\\{board}[\|q];{}$\6
 ${}\\{del}\K(\\{row}(\\{piece})<\\{row}(\|q)\?\T{\^1}:\T{\^100});{}$\6
@@ -338,7 +347,8 @@ ${}\\{del}\K(\\{row}(\\{piece})<\\{row}(\|q)\?\T{\^1}:\T{\^100});{}$\6
 \4${}\}{}$\2\par
 \U6.\fi
 
-\M{11}Hey, we have a winner! The \PB{\\{pos}} entries tell us how we got here,
+\M[276 15puzzle-korf0.w]{11}Hey, we have a winner! The \PB{\\{pos}} entries
+tell us how we got here,
 so that we can easily give the user instructions about which piece
 should be pushed at each step.
 
@@ -359,7 +369,7 @@ ${}\\{printf}(\.{"\ (\%d\ sec)\\n"},\39\\{time}(\T{0})-\\{timer});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{12}Index.
+\N[292 15puzzle-korf0.w]{1}{12}Index.
 \fi
 
 \inx

@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This program generates clauses for the transition relation
+\N[2 sat-life.w]{1}{1}Intro. This program generates clauses for the transition
+relation
 from time $t$ to time $t+1$ in Conway's Game of Life, assuming that
 all of the potentially live cells at time $t$ belong to a pattern
 that's specified in \PB{\\{stdin}}. The pattern is defined by one or more
@@ -90,7 +92,7 @@ respectively, except at the boundaries.
 
 \fi
 
-\M{2}So here's the overall outline of the program.
+\M[89 sat-life.w]{2}So here's the overall outline of the program.
 
 \Y\B\4\D$\\{maxx}$ \5
 \T{20}\C{ maximum number of lines in the pattern supplied by \PB{\\{stdin}} }%
@@ -136,7 +138,7 @@ ${}\\{zprime}(\|x,\39\|y);{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{3}\B\X3:Process the command line\X${}\E{}$\6
+\M[124 sat-life.w]{3}\B\X3:Process the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{2}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
 \\{tt})\I\T{1}){}$\5
 ${}\{{}$\1\6
@@ -151,7 +153,7 @@ ${}\\{exit}({-}\T{2});{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{4}\B\X4:Input the pattern\X${}\E{}$\6
+\M[134 sat-life.w]{4}\B\X4:Input the pattern\X${}\E{}$\6
 \&{for} ${}(\|x\K\T{1};{}$  ; ${}\|x\PP){}$\5
 ${}\{{}$\1\6
 \&{if} ${}(\R\\{fgets}(\\{buf},\39\\{maxy}+\T{2},\39\\{stdin})){}$\1\5
@@ -192,7 +194,7 @@ ${}\\{exit}({-}\T{5});{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{5}\B\D$\\{pp}(\\{xx},\\{yy})$ \5
+\M[161 sat-life.w]{5}\B\D$\\{pp}(\\{xx},\\{yy})$ \5
 $((\\{xx})\G\T{0}\W(\\{yy})\G\T{0}\?\|p[\\{xx}][\\{yy}]:\T{0}{}$)\par
 \Y\B\4\X5:If cell $(x,y)$ is obviously dead at time $t+1$, \PB{\&{continue}}%
 \X${}\E{}$\6
@@ -203,7 +205,8 @@ $((\\{xx})\G\T{0}\W(\\{yy})\G\T{0}\?\|p[\\{xx}][\\{yy}]:\T{0}{}$)\par
 \&{continue};\2\par
 \U2.\fi
 
-\M{6}Clauses are assembled in the \PB{\\{clause}} array (surprise), where we
+\M[168 sat-life.w]{6}Clauses are assembled in the \PB{\\{clause}} array
+(surprise), where we
 put encoded literals.
 
 The code for a literal is an unsigned 32-bit quantity, where the leading
@@ -260,7 +263,8 @@ ${}\\{clauseptr}\K\T{0};{}$\6
 \As7, 8, 9, 10, 11, 12, 13\ETs14.
 \U2.\fi
 
-\M{7}And here's another, which puts a type-0 literal into \PB{\\{clause}}.
+\M[213 sat-life.w]{7}And here's another, which puts a type-0 literal into \PB{%
+\\{clause}}.
 
 \Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{applit}(\&{int} \|x${},\39{}$\&{int} \|y${},\39{}$\&{int} %
@@ -275,7 +279,8 @@ ${}\\{clause}[\\{clauseptr}\PP]\K(\\{bar}\?\\{sign}:\T{0})+(\|k\LL\T{25})+(\|x%
 \4${}\}{}$\2\par
 \fi
 
-\M{8}The \PB{\|d} and \PB{\|e} subroutines are called for only one-fourth
+\M[222 sat-life.w]{8}The \PB{\|d} and \PB{\|e} subroutines are called for only
+one-fourth
 of all cell addresses $(x,y)$. Indeed, one can show that
 $x$ is always odd, and that $y\bmod4<2$.
 
@@ -336,7 +341,8 @@ ${}\\{have\_e}[\|x][\|y]\K\\{tt}+\T{1};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{9}The \PB{\|f} subroutine can't be shared quite so often. But we
+\M[259 sat-life.w]{9}The \PB{\|f} subroutine can't be shared quite so often.
+But we
 do save a factor of~2, because $x+y$ is always even.
 
 \Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
@@ -365,7 +371,8 @@ ${}\\{have\_f}[\|x][\|y]\K\\{tt}+\T{1};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{10}The \PB{\|g} subroutine cleans up the dregs, by somewhat tediously
+\M[276 sat-life.w]{10}The \PB{\|g} subroutine cleans up the dregs, by somewhat
+tediously
 locating the two neighbors that weren't handled by \PB{\|d}, \PB{\|e}, or~\PB{%
 \|f}.
 No sharing is possible here.
@@ -397,8 +404,8 @@ ${}\\{applit}(\\{x2},\39\\{y2},\39\T{0},\39\T{0}),\39\\{newcomplit}(\|x,\39\|y,%
 \4${}\}{}$\2\par
 \fi
 
-\M{11}Fortunately the \PB{\|b} subroutine {\it can\/} be shared (since \PB{\|x}
-is always
+\M[293 sat-life.w]{11}Fortunately the \PB{\|b} subroutine {\it can\/} be shared
+(since \PB{\|x} is always
 odd), thus saving half of the sixteen clauses generated.
 
 \Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
@@ -432,7 +439,8 @@ ${}\\{have\_b}[\|x][\|y]\K\\{tt}+\T{1};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{12}The (unshared) \PB{\|c} subroutine handles the other four neighbors,
+\M[316 sat-life.w]{12}The (unshared) \PB{\|c} subroutine handles the other four
+neighbors,
 by working with \PB{\|f} and \PB{\|g} instead of \PB{\|d} and~\PB{\|e}.
 
 \Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
@@ -466,7 +474,8 @@ ${}\\{newcomplit}(\|x,\39\|y,\39\T{3},\39\T{5}-\|j-\|k){}$;\C{ $c_{5-j-k}$ }\6
 \4${}\}{}$\2\par
 \fi
 
-\M{13}Totals over all eight neighbors are then deduced by the \PB{\|a}
+\M[338 sat-life.w]{13}Totals over all eight neighbors are then deduced by the %
+\PB{\|a}
 subroutine.
 
 \Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
@@ -501,7 +510,8 @@ ${}\\{newcomplit}(\|x,\39\|y,\39\T{1},\39\|j+\|k-\T{1}){}$;\C{ $\bar a_{j+k-1}$
 \4${}\}{}$\2\par
 \fi
 
-\M{14}Finally, as mentioned at the beginning, $z'$ is determined
+\M[360 sat-life.w]{14}Finally, as mentioned at the beginning, $z'$ is
+determined
 from $z$, $a_2$, $a_3$, and $a_4$.
 
 I actually generate six clauses, not five, in order to stick to
@@ -529,7 +539,7 @@ ${}\\{applit}(\|x,\39\|y,\39\T{1},\39\T{7}),\39\\{applit}(\|x,\39\|y,\39\T{1},%
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{15}Index.
+\N[380 sat-life.w]{1}{15}Index.
 \fi
 
 \inx

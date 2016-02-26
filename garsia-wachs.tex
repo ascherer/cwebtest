@@ -1,8 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Introduction. This is a quick-and-dirty implementation of the
-Garsia-Wachs
+\N[2 garsia-wachs.w]{1}{1}Introduction. This is a quick-and-dirty
+implementation of the Garsia-Wachs
 algorithm, written as I was preparing the 2nd edition of Volume~3, then
 patched after Wolfgang Panny discovered a serious bug. (The bug
 was corrected in the 17th printing of the 2nd edition, October 2004.)
@@ -35,7 +36,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Scan the command line\X${}\E{}$\6
+\M[37 garsia-wachs.w]{2}\B\X2:Scan the command line\X${}\E{}$\6
 $\|n\K\\{argc}-\T{2};{}$\6
 \&{if} ${}(\|n<\T{0}){}$\5
 ${}\{{}$\1\6
@@ -62,7 +63,7 @@ ${}\|l[\|j]\K\|r[\|j]\K{-}\T{1};{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}\B\X3:Do phase 1\X${}\E{}$\6
+\M[52 garsia-wachs.w]{3}\B\X3:Do phase 1\X${}\E{}$\6
 \\{printf}(\.{"Phase\ I:\\n"});\6
 ${}\|m\K\|n;{}$\6
 ${}\|t\K\T{1};{}$\6
@@ -84,8 +85,8 @@ ${}\\{printf}(\.{"\%d\ "},\39\|q[\|j]);{}$\2\6
 \\{combine}(\|t);\2\par
 \U1.\fi
 
-\M{4}The \PB{\\{combine}} subroutine combines weights \PB{$\|q[\|k-\T{1}]$} and
-\PB{\|q[\|k]} of the working
+\M[65 garsia-wachs.w]{4}The \PB{\\{combine}} subroutine combines weights \PB{$%
+\|q[\|k-\T{1}]$} and \PB{\|q[\|k]} of the working
 list, and continues to combine earlier weights if necessary to maintain
 the condition $q[j-1]>q[j+1]$.
 
@@ -123,12 +124,13 @@ ${}\|j\K\|t-\|d;{}$\6
 \As6\ET8.
 \U1.\fi
 
-\M{5}\B\X5:Do phase 2\X${}\E{}$\6
+\M[89 garsia-wachs.w]{5}\B\X5:Do phase 2\X${}\E{}$\6
 \\{printf}(\.{"Phase\ II:\\n"});\6
 ${}\\{mark}(\|v[\T{1}],\39\T{0}){}$;\par
 \U1.\fi
 
-\M{6}The \PB{\\{mark}} subroutine assigns level numbers to a subtree.
+\M[93 garsia-wachs.w]{6}The \PB{\\{mark}} subroutine assigns level numbers to a
+subtree.
 
 \Y\B\4\X4:Subroutines\X${}\mathrel+\E{}$\6
 $\\{mark}(\|k,\39\|p){}$\1\1\6
@@ -145,14 +147,15 @@ ${}\\{mark}(\|r[\|k],\39\|p+\T{1});{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{7}\B\X7:Do phase 3\X${}\E{}$\6
+\M[106 garsia-wachs.w]{7}\B\X7:Do phase 3\X${}\E{}$\6
 \\{printf}(\.{"Phase\ III:\\n"});\6
 ${}\|t\K\T{0};{}$\6
 ${}\|m\K\T{2}*\|n;{}$\6
 \\{build}(\T{1});\par
 \U1.\fi
 
-\M{8}The \PB{\\{build}} subroutine rebuilds a tree from the depth table,
+\M[111 garsia-wachs.w]{8}The \PB{\\{build}} subroutine rebuilds a tree from the
+depth table,
 by doing a depth-first search according a slick idea by Bob Tarjan.
 It creates a tree rooted at node~\PB{\|m} having leftmost leaf~\PB{\|t}.
 
@@ -182,7 +185,7 @@ ${}\\{printf}(\.{"\ node\ \%d\ =\ \%d\ +\ \%d\\}\)\.{n"},\39\|j,\39\|l[\|j],\39%
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{9}Index.
+\N[131 garsia-wachs.w]{1}{9}Index.
 \fi
 
 \inx

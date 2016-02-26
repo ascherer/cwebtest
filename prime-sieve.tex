@@ -1,8 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This program constructs segments of the ``sieve of
-Erasthosthenes,''
+\N[2 prime-sieve.w]{1}{1}Intro. This program constructs segments of the ``sieve
+of Erasthosthenes,''
 and outputs the largest prime gaps that it finds. More precisely, it
 works with sets of prime numbers between $s_i$ and $s_{i+1}=s_i+\delta$,
 represented as an array of bits, and it examines these arrays for
@@ -38,7 +39,7 @@ where $p\le\sqrt{\mathstrut s_{i+1}}<s_i+1\le n$.
 
 \fi
 
-\M{2}The sieve size $\delta$ is specified at compile time,
+\M[36 prime-sieve.w]{2}The sieve size $\delta$ is specified at compile time,
 but $s_0$ and $t$ are specified on the command line when this program
 is run. There also are two additional command-line parameters,
 which name the input and output files.
@@ -101,7 +102,8 @@ ${}\\{printf}(\.{"(Finished;\ the\ last}\)\.{\ segment\ took\ \%d\ sec}\)\.{.)%
 \4${}\}{}$\2\par
 \fi
 
-\M{3}\B\X3:Process the command line and input the primes\X${}\E{}$\6
+\M[93 prime-sieve.w]{3}\B\X3:Process the command line and input the primes\X${}%
+\E{}$\6
 \&{if} ${}(\\{argc}\I\T{5}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%llu"},\39{\AND}%
 \\{s0})\I\T{1}\V\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}\\{tt})\I%
 \T{1}){}$\5
@@ -148,7 +150,7 @@ ${}\\{printf}(\.{"Sieving\ between\ s[0}\)\.{]=\%llu\ and\ s[t]=\%llu}\)\.{:%
 \\n"},\39\\{s0},\39\\{st}){}$;\par
 \U2.\fi
 
-\M{4}\B\X4:Input the primes\X${}\E{}$\6
+\M[125 prime-sieve.w]{4}\B\X4:Input the primes\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{0};{}$  ; ${}\|k\PP){}$\5
 ${}\{{}$\1\6
 \&{if} ${}(\|k\G\\{kmax}){}$\5
@@ -184,8 +186,8 @@ ${}\\{printf}(\.{"\%d\ primes\ successfu}\)\.{lly\ loaded\ from\ \%s\\n}\)%
 \.{"},\39\|k,\39\\{argv}[\T{3}]){}$;\par
 \U3.\fi
 
-\N{1}{5}Sieving. Let's say that the prime $p_k$ is ``active'' if
-$p_k^2<s_{i+1}$.
+\N[148 prime-sieve.w]{1}{5}Sieving. Let's say that the prime $p_k$ is
+``active'' if $p_k^2<s_{i+1}$.
 Variable \PB{\\{kk}} is the index of the first inactive prime.
 The main task of sieving is to mark the multiples of all active
 primes in the current segment.
@@ -215,7 +217,8 @@ ${}\\{kk}\K\|k;{}$\6
 \X6:Initialize the tiny active primes\X;\par
 \U7.\fi
 
-\M{6}Primes less than 32 will appear at least twice in every octabyte of
+\M[170 prime-sieve.w]{6}Primes less than 32 will appear at least twice in every
+octabyte of
 the sieve. So we handle them in a slightly more efficient way, unless
 they're initially inactive.
 
@@ -231,13 +234,13 @@ ${}\\{sv}[\|k]\K\|x,\39\\{rem}[\|k]\K\T{64}\MOD\\{prime}[\|k];{}$\6
 ${}\|d\K\|k{}$;\C{ \PB{\|d} is the smallest nontiny prime }\par
 \U5.\fi
 
-\M{7}\B\X7:Get ready for the first segment\X${}\E{}$\6
+\M[181 prime-sieve.w]{7}\B\X7:Get ready for the first segment\X${}\E{}$\6
 \X5:Initialize the active primes\X;\6
 ${}\\{ss}\K\\{s0}{}$;\C{ base address of the next segment }\6
 ${}\\{sieve}[\T{1}+\\{del}/\T{128}]\K{-}\T{1}{}$;\C{ store a sentinel }\par
 \U2.\fi
 
-\M{8}\B\X8:Do segment \PB{\\{ii}}\X${}\E{}$\6
+\M[186 prime-sieve.w]{8}\B\X8:Do segment \PB{\\{ii}}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|s\K\\{ss},\39\\{ss}\K\|s+\\{del}{}$;\C{ $s=s_i$, $\PB{\\{ss}}=s_{i+1}$ }\6
 ${}\|j\K\\{time}(\T{0});{}$\6
@@ -252,7 +255,8 @@ ${}\\{timer}\K\|j;{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{9}\B\X9:Initialize the sieve from the tiny primes\X${}\E{}$\6
+\M[199 prime-sieve.w]{9}\B\X9:Initialize the sieve from the tiny primes\X${}%
+\E{}$\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{del}/\T{128};{}$ ${}\|j\PP){}$\5
 ${}\{{}$\1\6
 \&{for} ${}(\|z\K\T{0},\39\|k\K\T{1};{}$ ${}\|k<\|d;{}$ ${}\|k\PP){}$\5
@@ -265,7 +269,8 @@ ${}\\{sieve}[\|j]\K\|z;{}$\6
 \4${}\}{}$\2\par
 \U8.\fi
 
-\M{10}Now we want to set 1 bits for every odd multiple of \PB{\\{prime}[\|k]}
+\M[208 prime-sieve.w]{10}Now we want to set 1 bits for every odd multiple of %
+\PB{\\{prime}[\|k]}
 in the current segment, whenever \PB{\\{prime}[\|k]} is active.
 The bit for the integer $s_i+2j+1$ is
 \PB{$\T{1}\LL(\|j\AND\T{\^3f})$} in \PB{$\\{sieve}[\|j\GG\T{6}]$}, for $0\le j<%
@@ -281,7 +286,7 @@ ${}\\{start}[\|k]\K\|j-\\{del}/\T{2};{}$\6
 \4${}\}{}$\2\par
 \U8.\fi
 
-\M{11}\B\X11:Sieve in the newly active primes\X${}\E{}$\6
+\M[219 prime-sieve.w]{11}\B\X11:Sieve in the newly active primes\X${}\E{}$\6
 \&{while} (((\&{unsigned} \&{long} \&{long}) \\{prime}[\|k])${}*\\{prime}[\|k]<%
 \\{ss}){}$\5
 ${}\{{}$\1\6
@@ -295,7 +300,7 @@ ${}\|k\PP;{}$\6
 ${}\\{kk}\K\|k{}$;\par
 \U8.\fi
 
-\N{1}{12}Processing gaps.
+\N[228 prime-sieve.w]{1}{12}Processing gaps.
 If $p_{k+1}-p_k\ge256$, we're bound to find an octabyte of all 1s in the
 sieve between the 0~for~$p_k$ and the 0~for~$p_{k+1}$. In such cases,
 we check to see if this gap breaks or ties the current record.
@@ -338,7 +343,8 @@ ${}\|k\K\\{del}/\T{128}-\T{1}{}$;\5
 \4\\{donewithseg}:\par
 \U8.\fi
 
-\M{13}We don't need to figure out the exact value of the first prime
+\M[259 prime-sieve.w]{13}We don't need to figure out the exact value of the
+first prime
 greater than~\PB{\|s} unless the present segment begins with an octabyte
 of all 1s, or the previous segment ends with such an octabyte,
 or we're in the first segment.
@@ -372,8 +378,8 @@ ${}\\{fprintf}(\\{outfile},\39\.{"The\ first\ prime\ is\ }\)\.{\%llu\ =\ s[0]+%
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{14}When \PB{$\\{sieve}[\|k]\I{-}\T{1}$} and \PB{$\\{sieve}[\|j]\I{-}\T{1}$}
-and everything between them
+\M[284 prime-sieve.w]{14}When \PB{$\\{sieve}[\|k]\I{-}\T{1}$} and \PB{$%
+\\{sieve}[\|j]\I{-}\T{1}$} and everything between them
 is \PB{${-}\T{1}$} (all ones), there's a gap of size~$g$ where
 $128\vert j-k\vert-126\le g\le128\vert j-k\vert+126$.
 
@@ -390,8 +396,8 @@ the gap }\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{15}\B\X15:Set \PB{\\{lastprime}} to the largest prime in \PB{\\{sieve}[\|k]}%
-\X${}\E{}$\6
+\M[298 prime-sieve.w]{15}\B\X15:Set \PB{\\{lastprime}} to the largest prime in %
+\PB{\\{sieve}[\|k]}\X${}\E{}$\6
 \&{for} ${}(\|y\K\CM\\{sieve}[\|k],\39\|z\K\|y\AND(\|y-\T{1});{}$ \|z; ${}\|y\K%
 \|z,\39\|z\K\|y\AND(\|y-\T{1})){}$\1\5
 ;\2\6
@@ -399,7 +405,8 @@ the gap }\6
 ${}\\{lastprime}\K\|s+(\|k\LL\T{7})+\|y+\|y+\T{1}{}$;\par
 \Us12\ET14.\fi
 
-\M{16}As far as I know, the following method is the fastest way to compute
+\M[303 prime-sieve.w]{16}As far as I know, the following method is the fastest
+way to compute
 binary logarithms on an Opteron computer (which is the machine
 I'm targeting here).
 
@@ -409,7 +416,8 @@ ${}\|y\K\\{nu}[\|y\AND\T{\^ffff}]+\\{nu}[(\|y\GG\T{16})\AND\T{\^ffff}]+\\{nu}[(%
 \|y\GG\T{32})\AND\T{\^ffff}]+\\{nu}[(\|y\GG\T{48})\AND\T{\^ffff}]{}$;\par
 \Us13, 14\ETs15.\fi
 
-\M{17}With a more extensive table, I could count the 1s in an arbitrary
+\M[311 prime-sieve.w]{17}With a more extensive table, I could count the 1s in
+an arbitrary
 binary word. But seventeen table entries are sufficient for present purposes.
 
 \Y\B\4\X17:Initialize the bit-counting table\X${}\E{}$\6
@@ -417,7 +425,7 @@ binary word. But seventeen table entries are sufficient for present purposes.
 ${}\\{nu}[((\T{1}\LL\|j)-\T{1})]\K\|j{}$;\2\par
 \U2.\fi
 
-\M{18}\B\X18:Report a gap, if it's big enough\X${}\E{}$\6
+\M[317 prime-sieve.w]{18}\B\X18:Report a gap, if it's big enough\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\|x-\\{lastprime}\G\\{bestgap}){}$\5
 ${}\{{}$\1\6
@@ -429,7 +437,7 @@ length\ \%d\\}\)\.{n"},\39\\{lastprime},\39\\{bestgap});{}$\6
 \4${}\}{}$\2\par
 \Us13\ET14.\fi
 
-\M{19}\B\X19:Report the final prime\X${}\E{}$\6
+\M[327 prime-sieve.w]{19}\B\X19:Report the final prime\X${}\E{}$\6
 \&{if} (\\{lastprime})\5
 ${}\{{}$\1\6
 ${}\|k\K\\{st}-\\{lastprime};{}$\6
@@ -441,7 +449,7 @@ ${}\\{fprintf}(\\{outfile},\39\.{"No\ prime\ numbers\ ex}\)\.{ist\ between\
 s[0]\ and}\)\.{\ s[t].\\n"}){}$;\2\par
 \U2.\fi
 
-\N{1}{20}Index.
+\N[333 prime-sieve.w]{1}{20}Index.
 \fi
 
 \inx

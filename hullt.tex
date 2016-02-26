@@ -1,9 +1,11 @@
 \input cwebmac
+\srcloctrue
 % This file is part of the Stanford GraphBase (c) Stanford University 1990
 \nocon
 
 
-\N{1}{1}Introduction. This is a hastily written implementation of the treehull
+\N[4 hullt.w]{1}{1}Introduction. This is a hastily written implementation of
+the treehull
 algorithm, using simple binary search trees and hoping that they
 don't get too far out of balance.
 
@@ -35,7 +37,7 @@ ${}\\{printf}(\.{"Total\ of\ \%d\ mems\ an}\)\.{d\ \%d\ calls\ on\ ccw.\\n}\)%
 \4${}\}{}$\2\par
 \fi
 
-\M{2}I'm instrumenting this in a simple way.
+\M[32 hullt.w]{2}I'm instrumenting this in a simple way.
 
 \Y\B\4\D$\|o$ \5
 $\\{mems}\PP{}$\par
@@ -49,7 +51,7 @@ $\\{mems}\MRL{+{\K}}{}$\T{3}\par
 \A5.
 \U1.\fi
 
-\N{1}{3}Data structures.
+\N[42 hullt.w]{1}{3}Data structures.
 For now, each vertex is represented by two coordinates stored in the
 utility fields \PB{$\|x.\|i$} and \PB{$\|y.\|i$}. I'm also putting a serial
 number into
@@ -84,7 +86,7 @@ it represents the special vertex that isn't in the tree.
 ${}\}{}$ \&{node};\par
 \U1.\fi
 
-\M{4}\B\X4:Initialize the array of nodes\X${}\E{}$\6
+\M[69 hullt.w]{4}\B\X4:Initialize the array of nodes\X${}\E{}$\6
 $\\{head}\K{}$(\&{node} ${}{*}){}$ \\{gb\_alloc}${}((\|g\MG\|n)*\&{sizeof}(%
 \&{node}),\39\\{working\_storage});{}$\6
 \&{if} ${}(\\{head}\E\NULL){}$\1\5
@@ -92,7 +94,7 @@ $\\{head}\K{}$(\&{node} ${}{*}){}$ \\{gb\_alloc}${}((\|g\MG\|n)*\&{sizeof}(%
 ${}\\{next\_node}\K\\{head}{}$;\par
 \U6.\fi
 
-\M{5}\B\X2:Global variables\X${}\mathrel+\E{}$\6
+\M[74 hullt.w]{5}\B\X2:Global variables\X${}\mathrel+\E{}$\6
 \&{node} ${}{*}\\{head}{}$;\C{ beginning of the hull data structure }\6
 \&{node} ${}{*}\\{next\_node}{}$;\C{ first unused slot in that array }\6
 \&{Area} \\{working\_storage};\6
@@ -100,7 +102,8 @@ ${}\\{next\_node}\K\\{head}{}$;\par
 coordinates }\par
 \fi
 
-\M{6}We assume that the vertices have been given to us in a GraphBase-type
+\M[80 hullt.w]{6}We assume that the vertices have been given to us in a
+GraphBase-type
 graph. The algorithm begins with a trivial hull that contains
 only the first two vertices.
 
@@ -127,8 +130,8 @@ ${}\\{printf}(\.{"Beginning\ with\ (\%s;}\)\.{\ \%s)\\n"},\39\|u\MG\\{name},\39%
 \|v\MG\\{name}){}$;\2\par
 \U10.\fi
 
-\M{7}We'll probably need a bunch of local variables to do elementary operations
-on
+\M[102 hullt.w]{7}We'll probably need a bunch of local variables to do
+elementary operations on
 data structures.
 
 \Y\B\4\X7:Local variables\X${}\E{}$\6
@@ -140,7 +143,8 @@ ${}{*}\\{tt},{}$ ${}{*}{*}\\{par},{}$ ${}{*}{*}\\{ppar};{}$\6
 }\par
 \U1.\fi
 
-\M{8}Here's a routine I used when debugging (in fact I should have written
+\M[110 hullt.w]{8}Here's a routine I used when debugging (in fact I should have
+written
 it sooner than I did).
 
 \Y\B\4\X8:Verify the integrity of the data structures\X${}\E{}$\6
@@ -163,7 +167,7 @@ ${}\\{count}\K\T{1};{}$\6
 ${}\\{inorder}(\\{head}\MG\\{right}){}$;\par
 \U10.\fi
 
-\M{9}\B\X9:Procedures\X${}\E{}$\6
+\M[126 hullt.w]{9}\B\X9:Procedures\X${}\E{}$\6
 \&{int} \\{count};\7
 \\{inorder}(\|p)\1\1\6
 \&{node} ${}{*}\|p;\2\2{}$\6
@@ -183,7 +187,7 @@ ${}\\{inorder}(\|p\MG\\{right});{}$\6
 \A17.
 \U1.\fi
 
-\N{1}{10}Hull updating.
+\N[141 hullt.w]{1}{10}Hull updating.
 The main loop of the algorithm updates the data structure incrementally
 by adding one new vertex at a time. If the new vertex lies outside the
 current convex hull, we put it into the cycle and possibly delete some
@@ -207,7 +211,8 @@ ${}\|o,\39\|u\K\\{head}\MG\\{vert};{}$\6
 \X11:Print the convex hull\X;\par
 \U1.\fi
 
-\M{11}Let me do the easy part first, since it's bedtime and I can worry about
+\M[160 hullt.w]{11}Let me do the easy part first, since it's bedtime and I can
+worry about
 the rest tomorrow.
 
 \Y\B\4\X11:Print the convex hull\X${}\E{}$\6
@@ -221,7 +226,8 @@ ${}\|p\K\|p\MG\\{succ};{}$\6
 \&{while} ${}(\|p\I\\{head}){}$;\par
 \U10.\fi
 
-\M{12}In Case 1 we don't need the tree structure since we've already found
+\M[171 hullt.w]{12}In Case 1 we don't need the tree structure since we've
+already found
 that the new vertex is outside the hull at the tree root position.
 
 \Y\B\4\X12:Do Case 1\X${}\E{}$\6
@@ -261,8 +267,8 @@ ${}\\{printf}(\.{"New\ hull\ sequence\ (}\)\.{\%s;\ \%s;\ \%s)\\n"},\39\|q\MG%
 \4${}\}{}$\2\par
 \U10.\fi
 
-\M{13}At this point \PB{$\|q\E\\{head}\MG\\{pred}$} is the tree's rightmost
-node.
+\M[197 hullt.w]{13}At this point \PB{$\|q\E\\{head}\MG\\{pred}$} is the tree's
+rightmost node.
 
 \Y\B\4\X13:Insert \PB{\\{vv}} at the right of the tree\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -279,7 +285,7 @@ ${}\\{tt}\MG\\{prio}\K\\{gb\_next\_rand}(\,);{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{14}Nodes don't need to be recycled.
+\M[207 hullt.w]{14}Nodes don't need to be recycled.
 
 \Y\B\4\X14:Delete or replace \PB{\\{qqq}} from the hull\X${}\E{}$\6
 \&{if} (\\{replaced})\5
@@ -338,7 +344,7 @@ ${}\\{replaced}\K\T{1};{}$\6
 \4${}\}{}$\2\par
 \Us12\ET15.\fi
 
-\M{15}\B\X15:Do Case 2\X${}\E{}$\6
+\M[237 hullt.w]{15}\B\X15:Do Case 2\X${}\E{}$\6
 ${}\{{}$\5
 \1${}\|o,\39\\{qq}\K\\{head}\MG\\{right};{}$\6
 \&{while} (\T{1})\5
@@ -405,7 +411,8 @@ ${}\\{printf}(\.{"New\ hull\ sequence\ (}\)\.{\%s;\ \%s;\ \%s)\\n"},\39\|r\MG%
 \4${}\}{}$\2\par
 \U10.\fi
 
-\M{16}\B\X16:Insert \PB{\\{vv}} in tree, linked by \PB{\\{ppar}}\X${}\E{}$\6
+\M[281 hullt.w]{16}\B\X16:Insert \PB{\\{vv}} in tree, linked by \PB{\\{ppar}}%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{tt}\K\\{next\_node}\PP;{}$\6
 ${}\|o,\39\\{tt}\MG\\{vert}\K\\{vv};{}$\6
@@ -420,7 +427,8 @@ ${}\\{tt}\MG\\{prio}\K\\{gb\_next\_rand}(\,);{}$\6
 \4${}\}{}$\2\par
 \U15.\fi
 
-\N{1}{17}Determinants. I need code for the primitive function \PB{\\{ccw}}.
+\N[289 hullt.w]{1}{17}Determinants. I need code for the primitive function \PB{%
+\\{ccw}}.
 Floating-point arithmetic suffices for my purposes.
 
 We want to evaluate the determinant

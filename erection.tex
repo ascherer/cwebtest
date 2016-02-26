@@ -1,8 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This is a transcription of my ``random matroid'' program in %
-\#P72.
+\N[2 erection.w]{1}{1}Intro. This is a transcription of my ``random matroid''
+program in \#P72.
 
 Standard input contains a sequence of integers. The first of these is
 the universe size, $n$, which should be at most 16.
@@ -57,7 +58,8 @@ ${}\\{rank}[\T{0}]\K\T{0},\39\|r\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Set initial contents of \PB{\\{rank}} table\X${}\E{}$\6
+\M[48 erection.w]{2}\B\X2:Set initial contents of \PB{\\{rank}} table\X${}\E{}$%
+\6
 $\|k\K\T{1};{}$\6
 ${}\\{rank}[\T{0}]\K\T{100};{}$\6
 \&{while} ${}(\|k\Z\\{mask}){}$\5
@@ -68,7 +70,8 @@ ${}\|k\K\|k+\|k;{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}The published paper had a comparatively inefficient algorithm here;
+\M[55 erection.w]{3}The published paper had a comparatively inefficient
+algorithm here;
 it initialized thousands of links that usually remained unused.
 
 \Y\B\4\X3:Initialize list memory to available\X${}\E{}$\6
@@ -79,7 +82,7 @@ ${}\|h\K\T{1}{}$;\C{ list containing the empty set }\6
 ${}\\{unused}\K\T{3}{}$;\par
 \U1.\fi
 
-\M{4}\B\X4:Pass from rank $r$ to $r+1$\X${}\E{}$\6
+\M[62 erection.w]{4}\B\X4:Pass from rank $r$ to $r+1$\X${}\E{}$\6
 ${}\{{}$\1\6
 \X5:Create empty list\X;\6
 \\{generate}(\,);\6
@@ -94,7 +97,7 @@ ${}\|h\K\\{nh};{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{5}\B\X5:Create empty list\X${}\E{}$\6
+\M[74 erection.w]{5}\B\X5:Create empty list\X${}\E{}$\6
 $\\{nh}\K\\{avail};{}$\6
 \&{if} (\\{nh})\1\5
 ${}\\{avail}\K\|L[\\{nh}];{}$\2\6
@@ -103,22 +106,23 @@ ${}\\{nh}\K\\{unused}\PP;{}$\2\6
 ${}\|L[\\{nh}]\K\\{nh}{}$;\par
 \U4.\fi
 
-\M{6}\B\X6:Return list \PB{\|h} to available storage\X${}\E{}$\6
+\M[80 erection.w]{6}\B\X6:Return list \PB{\|h} to available storage\X${}\E{}$\6
 \&{for} ${}(\|j\K\|h;{}$ ${}\|L[\|j]\I\|h;{}$ ${}\|j\K\|L[\|j]){}$\1\5
 ;\2\6
 ${}\|L[\|j]\K\\{avail};{}$\6
 ${}\\{avail}\K\|h{}$;\par
 \U4.\fi
 
-\M{7}\B\X7:Assign rank to sets and print independent ones\X${}\E{}$\6
+\M[84 erection.w]{7}\B\X7:Assign rank to sets and print independent ones\X${}%
+\E{}$\6
 $\\{printf}(\.{"Independent\ sets\ fo}\)\.{r\ rank\ \%d:"},\39\|r);{}$\6
 \&{for} ${}(\|j\K\|L[\|h];{}$ ${}\|j\I\|h;{}$ ${}\|j\K\|L[\|j]){}$\1\5
 \\{mark}(\|S[\|j]);\2\6
 \\{printf}(\.{"\\n"});\par
 \U4.\fi
 
-\M{8}The \PB{\\{generate}} procedure inserts minimal closed sets for rank \PB{$%
-\|r+\T{1}$}
+\M[89 erection.w]{8}The \PB{\\{generate}} procedure inserts minimal closed sets
+for rank \PB{$\|r+\T{1}$}
 into a circular list headed by \PB{\\{nh}}. (It corresponds to ``Step 2'' in
 the published algorithm.)
 
@@ -139,14 +143,14 @@ excess elements from \PB{\|t}\X;\6
 \As11, 12, 13, 14, 15, 16, 17\ETs18.
 \U1.\fi
 
-\M{9}\B\X9:Find all sets in list \PB{\\{nh}} that already contain \PB{\|y} and
-remove excess elements from \PB{\|t}\X${}\E{}$\6
+\M[106 erection.w]{9}\B\X9:Find all sets in list \PB{\\{nh}} that already
+contain \PB{\|y} and remove excess elements from \PB{\|t}\X${}\E{}$\6
 \&{for} ${}(\|k\K\|L[\\{nh}];{}$ ${}\|k\I\\{nh};{}$ ${}\|k\K\|L[\|k]){}$\1\6
 \&{if} ${}((\|S[\|k]\AND\|y)\E\|y){}$\1\5
 ${}\|t\MRL{\AND{\K}}\CM\|S[\|k]{}$;\2\2\par
 \U8.\fi
 
-\M{10}\B\X10:Insert $y\cup a$ for each $a\in t$\X${}\E{}$\6
+\M[110 erection.w]{10}\B\X10:Insert $y\cup a$ for each $a\in t$\X${}\E{}$\6
 \&{while} (\|t)\5
 ${}\{{}$\1\6
 ${}\|x\K\|y\OR(\|t\AND{-}\|t);{}$\6
@@ -156,8 +160,8 @@ ${}\|t\MRL{\AND{\K}}\CM\|x;{}$\6
 \4${}\}{}$\2\par
 \U8.\fi
 
-\M{11}The following key procedure basically inserts the set \PB{\|x} into list %
-\PB{\\{nh}}.
+\M[117 erection.w]{11}The following key procedure basically inserts the set %
+\PB{\|x} into list \PB{\\{nh}}.
 But it augments \PB{\|x} if necessary (and deletes existing entries of the
 list)
 so that no two entries have an intersection of rank greater than~\PB{\|r}.
@@ -201,8 +205,8 @@ ${}\|S[\|j]\K\|x;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{12}The \PB{\\{enlarge}} procedure inserts sets that are read from standard
-input
+\M[145 erection.w]{12}The \PB{\\{enlarge}} procedure inserts sets that are read
+from standard input
 until encountering an empty set.
 (It corresponds to ``Step~3.'')
 
@@ -221,7 +225,8 @@ ${}\\{scanf}(\.{"\%x"},\39{\AND}\|x);{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{13}We don't output a set as a hexadecimal number according to the
+\M[159 erection.w]{13}We don't output a set as a hexadecimal number according
+to the
 convention used on standard input; instead, we print an increasing sequence
 of hexadecimal digits that name the actual set elements.
 For example, the set that was input as \.{1a} would be output as \.{134}.
@@ -238,7 +243,7 @@ ${}\\{printf}(\.{"\%x"},\39\|k);{}$\2\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{14}\B\X8:Subroutines\X${}\mathrel+\E{}$\6
+\M[171 erection.w]{14}\B\X8:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_list}(\&{int} \|h)\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{int} \|j;\7
@@ -249,8 +254,8 @@ ${}\\{printf}(\.{"Closed\ sets\ for\ ran}\)\.{k\ \%d:"},\39\|r);{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{15}The subroutine \PB{\\{mark}(\|m)} sets $\PB{\\{rank}}[m']=r$ for all
-subsets $m'\subseteq m$
+\M[179 erection.w]{15}The subroutine \PB{\\{mark}(\|m)} sets $\PB{%
+\\{rank}}[m']=r$ for all subsets $m'\subseteq m$
 whose rank is not already $\le r$, and outputs $m'$ if it is independent
 (that is, if its rank equals its cardinality).
 
@@ -272,8 +277,8 @@ ${}\\{mark}(\|m-\|t+\|v);{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{16}I've added a \PB{\\{tl}} array to the data structure, to speed up and
-shorten
+\M[196 erection.w]{16}I've added a \PB{\\{tl}} array to the data structure, to
+speed up and shorten
 this routine.
 
 \Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
@@ -301,7 +306,8 @@ ${}\|L[\\{tl}[\|i]]\K\|L[\|h],\39\|L[\|h]\K\\{hd}[\|i];{}$\2\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{17}The parameter \PB{\\{card}} is 100 plus the cardinality of \PB{\|m}
+\M[218 erection.w]{17}The parameter \PB{\\{card}} is 100 plus the cardinality
+of \PB{\|m}
 in the following subroutine.
 
 \Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
@@ -320,7 +326,7 @@ ${}\\{unmark}(\|m+\|t-\|v,\39\\{card}+\T{1});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{18}\B\X8:Subroutines\X${}\mathrel+\E{}$\6
+\M[233 erection.w]{18}\B\X8:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_circuits}(\&{void})\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{int} \|i${},{}$ \|k;\7
@@ -336,7 +342,7 @@ ${}\\{unmark}(\|k+\|i,\39\\{rank}[\|i]+\T{101});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{19}Index.
+\N[244 erection.w]{1}{19}Index.
 
 \fi
 

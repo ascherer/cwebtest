@@ -1,9 +1,11 @@
 \input cwebmac
+\srcloctrue
 \datethis
 \def\SET/{{\mc SET\null}}
 
 
-\N{1}{1}Introduction. This program finds all nonisomorphic sets of \SET/ cards
+\N[4 setset.w]{1}{1}Introduction. This program finds all nonisomorphic sets of %
+\SET/ cards
 that contain no \SET/s.
 
 In case you don't know what that means, a \SET/ card is a vector
@@ -52,7 +54,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}Our basic approach is to define a linear ordering on solutions, and to
+\M[52 setset.w]{2}Our basic approach is to define a linear ordering on
+solutions, and to
 look only for solutions that are smallest in their isomorphism class.
 In other words, we will count the sets $S$ such that $S\le\alpha S$ for
 all automorphisms~$\alpha$. We'll also count the number $t$ of cases where
@@ -86,7 +89,7 @@ canonical $(k-1)$-set.
 
 \fi
 
-\N{1}{3}Data structures.
+\N[84 setset.w]{1}{3}Data structures.
 It's convenient to represent \SET/ card vectors in a compact code,
 as an integer between 0 and 80.
 
@@ -96,7 +99,8 @@ as an integer between 0 and 80.
 \A9.
 \U1.\fi
 
-\M{4}When we output a \SET/ card, however, we prefer a hexadecimal code.
+\M[92 setset.w]{4}When we output a \SET/ card, however, we prefer a hexadecimal
+code.
 
 \Y\B\4\X4:Global variables\X${}\E{}$\6
 \&{int} \\{hexform}[\T{81}]${}\K\{\T{\^1111},\39\T{\^1112},\39\T{\^1113},\39\T{%
@@ -118,7 +122,7 @@ as an integer between 0 and 80.
 \As5, 8, 10, 12, 13, 17\ETs35.
 \U1.\fi
 
-\M{5}We will frequently need to find the third card of a \SET/,
+\M[106 setset.w]{5}We will frequently need to find the third card of a \SET/,
 given any two distinct cards $x$ and $y$, so we store the answers
 in a precomputed table.
 
@@ -129,7 +133,7 @@ in a precomputed table.
 \&{char} \\{third}[\T{81}][\T{81}];\par
 \fi
 
-\M{6}\B\D$\\{pack}(\|a,\|b,\|c,\|d)$ \5
+\M[114 setset.w]{6}\B\D$\\{pack}(\|a,\|b,\|c,\|d)$ \5
 $((((\|a)*\T{3}+(\|b))*\T{3}+(\|c))*\T{3}+(\|d){}$)\par
 \Y\B\4\X6:Initialize\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -150,8 +154,8 @@ ${}\\{third}[\\{pack}(\|a,\39\|b,\39\|c,\39\|d)][\\{pack}(\|e,\39\|f,\39\|g,\39%
 \As7, 11\ETs14.
 \U1.\fi
 
-\M{7}An even bigger table comes next: We precompute the permutation of \SET/
-cards
+\M[124 setset.w]{7}An even bigger table comes next: We precompute the
+permutation of \SET/ cards
 for each of the 31104 potential automorphisms.
 
 And, what the heck, we compute the inverse permutation too; it's only
@@ -183,7 +187,7 @@ ${}\\{trit}[\T{0}]\K\\{perm}[\|a][\|e],\39\\{trit}[\T{1}]\K\\{perm}[\|b][\|f],%
 \4${}\}{}$\2\par
 \fi
 
-\M{8}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[146 setset.w]{8}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{trit}[\T{4}];\C{ four ternary digits }\6
 \&{char} \\{perm}[\T{24}][\T{4}]${}\K\{\{\T{0},\39\T{1},\39\T{2},\39\T{3}\},\39%
 \{\T{0},\39\T{2},\39\T{1},\39\T{3}\},\39\{\T{1},\39\T{0},\39\T{2},\39\T{3}\},%
@@ -203,7 +207,8 @@ ${}\\{trit}[\T{0}]\K\\{perm}[\|a][\|e],\39\\{trit}[\T{1}]\K\\{perm}[\|b][\|f],%
 permutation tables }\par
 \fi
 
-\M{9}Cards of a set are linked together cyclically in order of their values,
+\M[155 setset.w]{9}Cards of a set are linked together cyclically in order of
+their values,
 with an ``infinite'' card at the head.
 
 We also maintain an array of 31104 elements, one for each automorphism of
@@ -250,8 +255,8 @@ ${}\}{}$ \&{element};\7
 ${}\}{}$ \&{node};\par
 \fi
 
-\M{10}The node for $s_l$ is called \PB{\\{current}[\|l]}, and \PB{\\{current}[%
-\T{0}]} contains
+\M[197 setset.w]{10}The node for $s_l$ is called \PB{\\{current}[\|l]}, and %
+\PB{\\{current}[\T{0}]} contains
 the header nodes of circular lists.
 
 \Y\B\4\D$\\{head}$ \5
@@ -262,7 +267,7 @@ $\\{current}[\|i].{}$\|v\C{ $s_i$ }\par
 \&{node} \\{current}[\T{22}];\C{ the nodes for $s_1$, $s_2$, etc. }\par
 \fi
 
-\M{11}\B\D$\\{infty}$ \5
+\M[206 setset.w]{11}\B\D$\\{infty}$ \5
 \T{81}\C{ larger than any \PB{\&{SETcard}} value }\par
 \Y\B\4\X6:Initialize\X${}\mathrel+\E{}$\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{isos};{}$ ${}\|j\PP){}$\1\5
@@ -271,7 +276,8 @@ ${}\\{head}.\\{image}[\|j].\\{val}\K\\{infty},\39\\{head}.\\{image}[\|j].%
 \\{image}[\|j].\\{fixer}\K{\AND}\\{head}.\\{image}[\|j]{}$;\2\par
 \fi
 
-\M{12}Each pair $(s_i,s_j)$ for $1\le i<j\le l$ defines a third \SET/ card $t$
+\M[213 setset.w]{12}Each pair $(s_i,s_j)$ for $1\le i<j\le l$ defines a third %
+\SET/ card $t$
 that must not be appended to the set $\{s_1,\ldots,s_l\}$. The auxiliary
 table \PB{\\{tab}[\|t]} tells how many such pairs exist for a given $t$.
 This table also counts cards that are forbidden because they would
@@ -286,7 +292,8 @@ in the current set.
 \&{char} \\{here}[\T{81}];\C{ nonzero for cards in $\{s_1,\ldots,s_l\}$ }\par
 \fi
 
-\M{13}We keep lists of all elements that need to be updated when a particular
+\M[226 setset.w]{13}We keep lists of all elements that need to be updated when
+a particular
 value~$s$ is appended to the current set. Such a list begins at
 \PB{\\{top}[\|s]}. The list beginning at \PB{\\{top}[\\{infty}]} is the one for
 unknown
@@ -307,8 +314,8 @@ from \PB{\\{top}[\\{infty}]}.
 undoing }\par
 \fi
 
-\M{14}Automorphism 0 is the identity, and we need not bother updating its
-entries.
+\M[242 setset.w]{14}Automorphism 0 is the identity, and we need not bother
+updating its entries.
 
 \Y\B\4\X6:Initialize\X${}\mathrel+\E{}$\6
 $\\{head}.\|v\K{-}\T{1};{}$\6
@@ -317,7 +324,8 @@ ${}\\{head}.\\{image}[\|k].\\{next}\K{\AND}\\{head}.\\{image}[\|k+\T{1}];{}$\2\6
 ${}\\{top}[\\{infty}]\K{\AND}\\{head}.\\{image}[\T{1}]{}$;\par
 \fi
 
-\M{15}Here's a subroutine that might facilitate debugging: It simply
+\M[250 setset.w]{15}Here's a subroutine that might facilitate debugging: It
+simply
 counts the elements of a list.
 
 \Y\B\4\X15:Subroutines\X${}\E{}$\6
@@ -331,7 +339,8 @@ ${}\|c\PP;{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{16}Backtracking. Now we're ready to construct the tree of all canonical
+\N[262 setset.w]{1}{16}Backtracking. Now we're ready to construct the tree of
+all canonical
 \SET/-free sets $\{s_1,\ldots,s_l\}$.
 
 \Y\B\4\X16:Enumerate and print all solutions\X${}\E{}$\6
@@ -368,30 +377,31 @@ ${}\|j\PP,\39\|l\MM;{}$\6
 \&{goto} \\{moveup};\2\par
 \U1.\fi
 
-\M{17}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[288 setset.w]{17}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{auts};\C{ automorphisms of the current $l$-set }\6
 \&{element} ${}{*}\\{newauts}{}$;\C{ the list of nontrivial automorphisms at
 level $l$ }\par
 \fi
 
-\M{18}\B\X18:Local variables\X${}\E{}$\6
+\M[292 setset.w]{18}\B\X18:Local variables\X${}\E{}$\6
 \&{int} \|l;\C{ the current level }\6
 \&{register} \&{int} \|j${},{}$ \|k;\C{ miscellaneous indices; usually $j=s_l$
 }\par
 \A22.
 \U1.\fi
 
-\M{19}\B\X19:Update \PB{\\{tab}}\X${}\E{}$\6
+\M[296 setset.w]{19}\B\X19:Update \PB{\\{tab}}\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|l;{}$ ${}\|j\PP){}$\1\5
 ${}\\{tab}[\\{third}[\\{curval}(\|j)][\\{curval}(\|l)]]\PP{}$;\2\par
 \U16.\fi
 
-\M{20}\B\X20:Downdate \PB{\\{tab}}\X${}\E{}$\6
+\M[299 setset.w]{20}\B\X20:Downdate \PB{\\{tab}}\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|l;{}$ ${}\|j\PP){}$\1\5
 ${}\\{tab}[\\{third}[\\{curval}(\|j)][\\{curval}(\|l)]]\MM{}$;\2\par
 \U16.\fi
 
-\M{21}Now we come to the main point of this program, the part where
+\M[302 setset.w]{21}Now we come to the main point of this program, the part
+where
 elements $\alpha s$ are incorporated into the data structures because
 their threshold value has occurred.
 
@@ -410,7 +420,7 @@ ${}\\{alf}\K\|p-{\AND}\\{current}[\\{ll}].\\{image}[\T{0}];{}$\6
 ${}\\{top}[\|j]\K\NULL,\39\\{back}[\|l]\K\\{pp}{}$;\par
 \U16.\fi
 
-\M{22}\B\X18:Local variables\X${}\mathrel+\E{}$\6
+\M[316 setset.w]{22}\B\X18:Local variables\X${}\mathrel+\E{}$\6
 \&{element} ${}{*}\|p,{}$ ${}{*}\\{pp}{}$;\C{ element of list and its
 predecessor }\6
 \&{int} \\{ll};\C{ a previous or future level number }\6
@@ -420,7 +430,8 @@ manipulations }\6
 \&{int} \\{jj};\C{ another convenient integer variable }\par
 \fi
 
-\M{23}The list of elements waiting for $j$ to occur will, I believe, consist
+\M[323 setset.w]{23}The list of elements waiting for $j$ to occur will, I
+believe, consist
 mostly of the 384 elements inserted on level~1, namely those $\alpha$ for which
 $\alpha j=0$. Once we have set $s_l=j$, the next question is almost
 always, ``What is the value of $j'$ for which $\alpha j'=1$?,'' because
@@ -453,7 +464,7 @@ ${}\\{tab}[\|k]\PP;{}$\2\6
 \4${}\}{}$\2\par
 \U21.\fi
 
-\M{24}\B\D$\\{succ}(\|p)$ \5
+\M[351 setset.w]{24}\B\D$\\{succ}(\|p)$ \5
 (\&{element} ${}{*})({}$(\&{char} ${}{*}){}$ \|p${}+\&{sizeof}(\&{node}){}$)\par
 \Y\B\4\X24:Bring \PB{$\\{current}[\|k].\\{image}[\\{alf}]$} up to date for %
 \PB{$\\{ll}<\|k\Z\|l$}\X${}\E{}$\6
@@ -472,7 +483,8 @@ ${}\|q\MG\\{val}\K\\{curval}(\|p\MG\\{tlevel}),\39\|q\MG\\{link}\K\|p\MG%
 \\{fixer}\MG\\{link},\39\|p\MG\\{fixer}\MG\\{link}\K\|q{}$;\par
 \U21.\fi
 
-\M{25}\B\X25:Compute the new threshold for $\alpha$, or backup\X${}\E{}$\6
+\M[362 setset.w]{25}\B\X25:Compute the new threshold for $\alpha$, or backup%
+\X${}\E{}$\6
 \&{for} ${}(\|r\K\|q,\39\\{ll}\K\|p\MG\\{tlevel}+\T{1};{}$ ${}\|r\MG\\{link}\MG%
 \\{val}\E\\{curval}(\\{ll});{}$ ${}\|r\K\|r\MG\\{link},\39\\{ll}\PP){}$\1\5
 ;\2\6
@@ -488,8 +500,8 @@ ${}\\{jj}\K\\{tua}[\\{alf}][\\{curval}(\\{ll})],\39\|q\MG\\{level}\K\|l,\39\|q%
 \MG\\{next}\K\\{top}[\\{jj}],\39\\{top}[\\{jj}]\K\|q{}$;\2\par
 \U21.\fi
 
-\M{26}If \PB{$\|p\MG\\{tlevel}\K\|i$}, we have already used \PB{\\{tab}} to
-forbid all $s$ values
+\M[371 setset.w]{26}If \PB{$\|p\MG\\{tlevel}\K\|i$}, we have already used \PB{%
+\\{tab}} to forbid all $s$ values
 such that $\alpha s<s_i$ and $\alpha s\notin\{s_1,\ldots,s_i\}$.
 At this point we essentially want to increase~$i$ to the new threshold
 level~\PB{\\{ll}}. If \PB{$\\{ll}>\|l$}, however, we forbid values only up to
@@ -507,7 +519,7 @@ ${}\\{tab}[\|k]\PP;{}$\2\6
 \4${}\}{}$\2\par
 \U25.\fi
 
-\M{27}Later we'll want to undo that last step.
+\M[384 setset.w]{27}Later we'll want to undo that last step.
 
 \Y\B\4\X27:Untabulate values that were considered newly forbidden\X${}\E{}$\6
 \&{for} ${}(\\{jj}\K(\\{ll}>\|l\?\|j:\\{curval}(\\{ll}))-\T{1};{}$ ${}\\{jj}>%
@@ -519,7 +531,8 @@ ${}\\{tab}[\|k]\MM;{}$\2\6
 \4${}\}{}$\2\par
 \U28.\fi
 
-\M{28}Indeed, in a backtrack program, everything we do that affects subsequent
+\M[392 setset.w]{28}Indeed, in a backtrack program, everything we do that
+affects subsequent
 decisions must eventually be undone.
 
 The main thing we must undo at this point is to remove the \PB{$\|l-\\{ll}$}
@@ -559,8 +572,8 @@ ${}\|r\K\|p\MG\\{next},\39\|p\MG\\{next}\K\\{pp},\39\\{pp}\K\|p,\39\|p\K\|r;{}$%
 \4${}\}{}$\2\par
 \U16.\fi
 
-\M{29}\B\X29:Update the data structures for all elements whose threshold is
-unknown, or backup\X${}\E{}$\6
+\M[417 setset.w]{29}\B\X29:Update the data structures for all elements whose
+threshold is unknown, or backup\X${}\E{}$\6
 \&{for} ${}(\\{pp}\K\NULL,\39\|p\K\\{top}[\\{infty}];{}$ \|p; ${}\|r\K\|p\MG%
 \\{next},\39\|p\MG\\{next}\K\\{pp},\39\\{pp}\K\|p,\39\|p\K\|r){}$\5
 ${}\{{}$\1\6
@@ -595,8 +608,8 @@ ${}\\{tab}[\|k]\PP;{}$\2\6
 ${}\\{top}[\\{infty}]\K\\{newauts},\39\\{aback}[\|l]\K\\{pp}{}$;\par
 \U16.\fi
 
-\M{30}\B\X30:Downdate the data structures for all elements whose threshold was
-unknown\X${}\E{}$\6
+\M[438 setset.w]{30}\B\X30:Downdate the data structures for all elements whose
+threshold was unknown\X${}\E{}$\6
 $\\{pp}\K\NULL,\39\|p\K\\{aback}[\|l];{}$\6
 \4\\{backup\_c}:\5
 \&{while} (\|p)\5
@@ -617,7 +630,8 @@ ${}\|r\K\|p\MG\\{next},\39\|p\MG\\{next}\K\\{pp},\39\\{pp}\K\|p,\39\|p\K\|r;{}$%
 ${}\\{top}[\\{infty}]\K\\{pp}{}$;\par
 \U16.\fi
 
-\M{31}It's slightly tricky to begin backing up when we're in the middle of
+\M[452 setset.w]{31}It's slightly tricky to begin backing up when we're in the
+middle of
 updating a data structure.
 
 \Y\B\4\X31:Begin backing up in Case C\X${}\E{}$\6
@@ -627,7 +641,7 @@ ${}\|r\K\|p,\39\|p\K\\{pp},\39\\{pp}\K\|r;{}$\6
 \4${}\}{}$\2\par
 \U29.\fi
 
-\M{32}This is one of those fairly rare occasions when it's OK to
+\M[461 setset.w]{32}This is one of those fairly rare occasions when it's OK to
 jump into the middle of a loop.
 
 \Y\B\4\X32:Begin backing up in Case B\X${}\E{}$\6
@@ -637,7 +651,7 @@ ${}\|r\K\|p\MG\\{next},\39\|p\MG\\{next}\K\\{pp},\39\\{pp}\K\|r;{}$\6
 \4${}\}{}$\2\par
 \U25.\fi
 
-\M{33}\B\X33:Begin backing up in Case A\X${}\E{}$\6
+\M[470 setset.w]{33}\B\X33:Begin backing up in Case A\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\\{jj}\MM;{}$ ${}\\{jj}>\\{curval}(\|p\MG\\{tlevel});{}$ ${}\\{jj}%
 \MM){}$\5
@@ -651,7 +665,8 @@ ${}\|r\K\|p,\39\|p\K\\{pp},\39\\{pp}\K\|r;{}$\6
 \4${}\}{}$\2\par
 \U23.\fi
 
-\N{1}{34}The totals. While we're at it, we might as well determine exactly
+\N[480 setset.w]{1}{34}The totals. While we're at it, we might as well
+determine exactly
 how many \SET/-less $k$ sets are possible. Then we'll know the
 precise odds of having no \SET/ in a random deal.
 
@@ -673,7 +688,8 @@ ${}\\{non\_iso\_count}[\|l]\PP;{}$\6
 ${}\\{total\_count}[\|l]\MRL{+{\K}}\T{31104.0}/{}$(\&{double}) \\{auts};\par
 \U16.\fi
 
-\M{35}Integers of 32 bits are insufficient to hold the numbers we're counting,
+\M[495 setset.w]{35}Integers of 32 bits are insufficient to hold the numbers
+we're counting,
 but double precision floating point turns out to be good enough
 for exact values in this problem.
 
@@ -683,13 +699,13 @@ for exact values in this problem.
 \&{int} \\{verbose}${}\K\T{0}{}$;\C{ set nonzero for debugging }\par
 \fi
 
-\M{36}\B\X36:Print the totals\X${}\E{}$\6
+\M[504 setset.w]{36}\B\X36:Print the totals\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\T{21};{}$ ${}\|j\PP){}$\1\5
 ${}\\{printf}(\.{"\%20.20g\ SETless\ \%d-}\)\.{sets\ (\%d\ cases)\\n"},\39%
 \\{total\_count}[\|j],\39\|j,\39\\{non\_iso\_count}[\|j]){}$;\2\par
 \U1.\fi
 
-\N{1}{37}Index.
+\N[509 setset.w]{1}{37}Index.
 \fi
 
 \inx

@@ -1,7 +1,8 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Introduction.
+\N[2 tcalc.w]{1}{1}Introduction.
 I'm writing this program to experiment with recursive algorithms on trees
 that I think are educational and fun. It's an interactive system that reads
 online commands in a primitive language and displays the results.
@@ -97,7 +98,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{2}Input conventions. The user types short commands in a simple postfix
+\N[101 tcalc.w]{1}{2}Input conventions. The user types short commands in a
+simple postfix
 language. For example, `\.{f2} \.{f3} \.+ \.s' means, ``fetch a copy of
 tree"2 (the output of a previous step), also fetch tree~3,
 add them, and compute the successor.''
@@ -123,7 +125,7 @@ summary of all operators.
 \As12, 24, 28, 45, 50, 53, 58\ETs63.
 \U1.\fi
 
-\M{3}\B\X3:Prompt the user for a command and execute it\X${}\E{}$\6
+\M[125 tcalc.w]{3}\B\X3:Prompt the user for a command and execute it\X${}\E{}$\6
 ${}\{{}$\1\6
 \X9:Fill \PB{\\{buf}} with the user's next sequence of commands\X;\6
 \X29:Clear the current stack\X;\6
@@ -145,7 +147,8 @@ ${}\\{printf}(\.{"Unknown\ operator\ `\%}\)\.{c'!\\n"},\39\\{op});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{4}Here's an example of how each operator is introduced; we begin with
+\M[141 tcalc.w]{4}Here's an example of how each operator is introduced; we
+begin with
 the `help' feature.
 
 \Y\B\4\X4:Define the help strings\X${}\E{}$\6
@@ -154,13 +157,13 @@ $\\{helps}[\.{'h'}]\K\.{".helpful\ summary\ of}\)\.{\ all\ known\ operators}\)%
 \As7, 31, 33, 36, 38, 48\ETs51.
 \U5.\fi
 
-\M{5}\B\X5:Initialize the data structures\X${}\E{}$\6
+\M[148 tcalc.w]{5}\B\X5:Initialize the data structures\X${}\E{}$\6
 \X4:Define the help strings\X;\par
 \A46.
 \U1.\fi
 
-\M{6}I must remember to say \PB{\&{break}} at the end of the program for each
-case.
+\M[151 tcalc.w]{6}I must remember to say \PB{\&{break}} at the end of the
+program for each case.
 
 \Y\B\4\X6:Cases for one-character operators\X${}\E{}$\6
 \4\&{case} \.{'h'}:\5
@@ -174,14 +177,15 @@ ${}\\{printf}(\.{"\ \ \%c\%s\ \%s\\n"},\39\|k,\39({*}\\{helps}[\|k]\E\.{'.'}\?%
 \As8, 32, 34, 35, 37, 39, 40, 41, 42, 43, 49\ETs52.
 \U3.\fi
 
-\M{7}Here's another easy case: The normal way to stop, instead of resorting
+\M[159 tcalc.w]{7}Here's another easy case: The normal way to stop, instead of
+resorting
 to control-C, is to give the quit command.
 
 \Y\B\4\X4:Define the help strings\X${}\mathrel+\E{}$\6
 $\\{helps}[\.{'q'}]\K\.{".quit\ the\ program"}{}$;\par
 \fi
 
-\M{8}\B\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
+\M[165 tcalc.w]{8}\B\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
 \4\&{case} \.{'q'}:\5
 \\{printf}(\.{"Type\ <return>\ to\ co}\)\.{nfirm\ quitting:"});\6
 \&{if} ${}(\\{getchar}(\,)\E\.{'\\n'}){}$\1\5
@@ -191,15 +195,15 @@ that line }\6
 \&{goto} \\{dump\_stack};\par
 \fi
 
-\M{9}\B\X9:Fill \PB{\\{buf}} with the user's next sequence of commands\X${}%
-\E{}$\6
+\M[171 tcalc.w]{9}\B\X9:Fill \PB{\\{buf}} with the user's next sequence of
+commands\X${}\E{}$\6
 \\{printf}(\.{"?\ "});\C{ this is the prompt }\6
 \&{if} ${}(\\{fgets}(\\{buf},\39\\{buf\_size},\39\\{stdin})\E\T{0}){}$\1\5
 \&{return} \T{0};\C{ we quit at end of file }\2\6
 ${}\\{loc}\K\\{buf}{}$;\C{ get ready to scan the buffer }\par
 \U3.\fi
 
-\M{10} The scanning routine is intentionally simple.
+\M[176 tcalc.w]{10} The scanning routine is intentionally simple.
 
 \Y\B\4\D$\\{large}$ \5
 \T{1000000000}\C{ parameter numbers aren't allowed to get this big }\par
@@ -231,7 +235,8 @@ ${}\\{loc}\PP;{}$\6
 \4${}\}{}$\2\par
 \U3.\fi
 
-\N{1}{11}Data structures. I'm representing trees in the obvious way: Each node
+\N[199 tcalc.w]{1}{11}Data structures. I'm representing trees in the obvious
+way: Each node
 consists of two pointers and one integer field for multipurpose use.
 
 \Y\B\4\X11:Type definitions\X${}\E{}$\6
@@ -242,7 +247,8 @@ subtree pointers }\2\6
 ${}\}{}$ \&{node};\par
 \U1.\fi
 
-\M{12}Storage allocation is dynamic. We will explicitly free nodes when they
+\M[208 tcalc.w]{12}Storage allocation is dynamic. We will explicitly free nodes
+when they
 are no longer active.
 
 \Y\B\4\X2:Global variables\X${}\mathrel+\E{}$\6
@@ -255,7 +261,7 @@ out }\6
 \&{int} \\{mems};\C{ the number of memory references to node pointers }\par
 \fi
 
-\M{13}\B\D$\\{nodes\_per\_block}$ \5
+\M[218 tcalc.w]{13}\B\D$\\{nodes\_per\_block}$ \5
 \T{1000}\par
 \Y\B\4\X13:Basic subroutines\X${}\E{}$\6
 \&{node} ${}{*}{}$\\{get\_avail}(\,)\C{ allocate a node }\6
@@ -289,7 +295,7 @@ ${}\\{used}\PP;{}$\6
 \As14, 15, 16, 17, 18, 19, 55, 60\ETs62.
 \U1.\fi
 
-\M{14}\B\X13:Basic subroutines\X${}\mathrel+\E{}$\6
+\M[242 tcalc.w]{14}\B\X13:Basic subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{free\_node}(\|p)\C{ deallocate a node }\1\1\6
 \&{node} ${}{*}\|p;\2\2{}$\6
 ${}\{{}$\1\6
@@ -300,7 +306,8 @@ ${}\\{mems}\PP;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{15}We often want to free all nodes of a tree that has served its purpose.
+\M[252 tcalc.w]{15}We often want to free all nodes of a tree that has served
+its purpose.
 
 \Y\B\4\X13:Basic subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{recycle}(\|p)\C{ deallocate an entire tree }\1\1\6
@@ -314,7 +321,8 @@ ${}\\{recycle}(\|p\MG\|r);{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{16}The algorithms for arithmetic are careful (I hope) to access node
+\M[264 tcalc.w]{16}The algorithms for arithmetic are careful (I hope) to access
+node
 pointers only via the subroutines \PB{\\{left}}, \PB{\\{right}}, and \PB{%
 \\{change}}. This
 makes the program longer and slightly less readable, but it also
@@ -348,8 +356,8 @@ ${}\\{mems}\PP;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{17}Simple tree operations. The multiplication routine needs to make
-several
+\N[295 tcalc.w]{1}{17}Simple tree operations. The multiplication routine needs
+to make several
 copies of subtrees, and the copying algorithm is one of the simplest we
 will need. So let's start with it. We can do the harder stuff once we
 get into the groove.
@@ -368,7 +376,8 @@ ${}\\{change}({\AND}\|q\MG\|r,\39\\{copy}(\\{right}(\|p)));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{18}Sometimes I want to copy tree behind the scenes; then I don't want to
+\M[312 tcalc.w]{18}Sometimes I want to copy tree behind the scenes; then I
+don't want to
 count mems.
 
 \Y\B\4\X13:Basic subroutines\X${}\mathrel+\E{}$\6
@@ -383,7 +392,7 @@ ${}\\{mems}\K\|m;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{19}Another easy case, frequently needed for arithmetic, is the
+\M[326 tcalc.w]{19}Another easy case, frequently needed for arithmetic, is the
 lexicographic comparison of binary trees. The \PB{\\{compare}} subroutine
 returns $-1$, $0$, or~$+1$ according as $p<q$, $p=q$, or $p>q$.
 
@@ -409,7 +418,8 @@ ${}\|k\K\\{compare}(\\{left}(\|p),\39\\{left}(\|q));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{20}Having laid the groundwork, we come now to the first interesting case:
+\M[346 tcalc.w]{20}Having laid the groundwork, we come now to the first
+interesting case:
 The \PB{\\{succ}} function adds one to the value represented by a binary tree.
 
 This function would have been more efficient if we had represented
@@ -460,7 +470,7 @@ ${}\\{change}({\AND}\|p\MG\|l,\39\\{get\_avail}(\,));{}$\2\6
 \As21, 25, 26, 27, 44, 47, 54\ETs57.
 \U1.\fi
 
-\N{1}{21}Addition. Arithmetic is now within our grasp. Again
+\N[386 tcalc.w]{1}{21}Addition. Arithmetic is now within our grasp. Again
 we need to think a bit about how to do it from left to right (i.e., from
 most significant bit to least significant). Here is a way that keeps the
 number of subtree comparisons to essentially the same amount as would
@@ -534,7 +544,8 @@ ${}\\{change}({\AND}\|p\MG\|r,\39\|q);{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{22}\B\X22:Swap \PB{\|p} and \PB{\|q} so that \PB{$\|p>\|q$}\X${}\E{}$\6
+\M[439 tcalc.w]{22}\B\X22:Swap \PB{\|p} and \PB{\|q} so that \PB{$\|p>\|q$}%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{pl}\K\\{ql};{}$\6
 ${}\\{ql}\K\|p;{}$\6
@@ -543,8 +554,8 @@ ${}\|q\K\\{ql};{}$\6
 \4${}\}{}$\2\par
 \U21.\fi
 
-\M{23}\B\X23:Add \PB{\\{right}(\|p)} to \PB{\\{right}(\|q)} and append this to %
-\PB{\\{succ}(\\{pl})}\X${}\E{}$\6
+\M[444 tcalc.w]{23}\B\X23:Add \PB{\\{right}(\|p)} to \PB{\\{right}(\|q)} and
+append this to \PB{\\{succ}(\\{pl})}\X${}\E{}$\6
 \\{recycle}(\\{ql});\6
 \&{if} (\\{pl})\1\5
 \\{succ}(\\{pl});\2\6
@@ -555,11 +566,12 @@ ${}\\{change}({\AND}\|p\MG\|r,\39\\{sum}(\\{right}(\|p),\39\\{right}(\|q)));{}$%
 \\{free\_node}(\|q);\par
 \U21.\fi
 
-\M{24}\B\X2:Global variables\X${}\mathrel+\E{}$\6
+\M[451 tcalc.w]{24}\B\X2:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{easy};\C{ communication parameter for the \PB{\\{sum}} routine }\par
 \fi
 
-\M{25}One nice spinoff of the addition routine is the following procedure
+\M[454 tcalc.w]{25}One nice spinoff of the addition routine is the following
+procedure
 for normalization:
 
 \Y\B\4\X20:Subroutines\X${}\mathrel+\E{}$\6
@@ -581,8 +593,8 @@ ${}\\{change}({\AND}\|p\MG\|r,\39\NULL);{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{26}Multiplication. A moment's thought reveals the somewhat surprising
-fact that
+\N[470 tcalc.w]{1}{26}Multiplication. A moment's thought reveals the somewhat
+surprising fact that
 it's easier to multiply by $2^a$ than by $a$. (Because if $b=2^{b_1}+\cdots
 +2^{b_k}$, we have $2^ab=2^{a+b_1}-\cdots+2^{a+b_k}$.)
 
@@ -610,7 +622,8 @@ ${}\\{change}({\AND}\\{qq}\MG\|l,\39\\{sum}(\\{left}(\\{qq}),\39\|p));{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{27}Full multiplication is, of course, a sum of such partial multiplications.
+\M[490 tcalc.w]{27}Full multiplication is, of course, a sum of such partial
+multiplications.
 I am not implementing it in the cleverest way, since I compute the
 final sum as $(\,\cdots((2^{a_1}b +2^{a_2}b)+2^{a_3}b)+\cdots\,)+2^{a_k}b$,
 thereby passing $k$ times over many of the nodes. It's obvious how to
@@ -646,7 +659,8 @@ ${}\\{ss}\K\\{sum}(\\{ss},\39\\{ez\_prod}(\\{left}(\\{pp}),\39\|q));{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{28}Stack discipline. Some commands put trees on the stack; others operate
+\N[517 tcalc.w]{1}{28}Stack discipline. Some commands put trees on the stack;
+others operate
 on those trees. Everything left on the stack at the end of a command line
 is displayed, and assigned an identification number for later use.
 
@@ -670,12 +684,13 @@ active? }\6
 report it }\par
 \fi
 
-\M{29}\B\X29:Clear the current stack\X${}\E{}$\6
+\M[534 tcalc.w]{29}\B\X29:Clear the current stack\X${}\E{}$\6
 $\\{stack\_ptr}\K\T{0};{}$\6
 ${}\\{mems}\K\T{0}{}$;\par
 \U3.\fi
 
-\M{30}The tree most recently in the stack is kept in \PB{\\{saved}[\T{0}]}.
+\M[538 tcalc.w]{30}The tree most recently in the stack is kept in \PB{%
+\\{saved}[\T{0}]}.
 
 \Y\B\4\D$\\{operand}(\|n)$ \5
 $\\{stack}[\\{stack\_ptr}-(\|n){}$]\par
@@ -708,7 +723,7 @@ ${}\\{printf}(\.{"(\%d\ nodes\ are\ now\ i}\)\.{n\ use)\\n"},\39\\{used}){}$;\2%
 \par
 \U3.\fi
 
-\M{31}\B\X4:Define the help strings\X${}\mathrel+\E{}$\6
+\M[561 tcalc.w]{31}\B\X4:Define the help strings\X${}\mathrel+\E{}$\6
 $\\{helps}[\.{'S'}]\K\.{":show\ tree\ sizes,\ i}\)\.{f\ <n>\ is\ nonzero"};{}$\6
 ${}\\{helps}[\.{'T'}]\K\.{":show\ computation\ t}\)\.{ime\ in\ mems,\ if\ <n>\
 }\)\.{is\ nonzero"};{}$\6
@@ -717,7 +732,7 @@ nonzero"};{}$\6
 ${}\\{helps}[\.{'k'}]\K\.{":kill\ \%<n>\ to\ conse}\)\.{rve\ memory"}{}$;\par
 \fi
 
-\M{32}\B\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
+\M[567 tcalc.w]{32}\B\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
 \4\&{case} \.{'S'}:\5
 ${}\\{showing\_size}\K\\{param}{}$;\5
 \&{break};\6
@@ -739,7 +754,8 @@ ${}\\{saved}[\\{param}]\K\NULL;{}$\6
 \&{break};\par
 \fi
 
-\M{33}One way to put a new item on the stack is to copy an old item.
+\M[578 tcalc.w]{33}One way to put a new item on the stack is to copy an old
+item.
 
 \Y\B\4\X4:Define the help strings\X${}\mathrel+\E{}$\6
 $\\{helps}[\.{'\%'}]\K\.{":recall\ a\ previousl}\)\.{y\ computed\ tree"};{}$\6
@@ -747,7 +763,7 @@ ${}\\{helps}[\.{'d'}]\K\.{":duplicate\ a\ tree\ t}\)\.{hat's\ already\ on\ the}%
 \)\.{\ stack"}{}$;\par
 \fi
 
-\M{34}\B\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
+\M[584 tcalc.w]{34}\B\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
 \4\&{case} \.{'\%'}:\6
 \&{if} ${}(\\{param}>\\{save\_ptr}){}$\5
 ${}\{{}$\1\6
@@ -767,7 +783,8 @@ ${}\\{stack\_ptr}\PP;{}$\6
 \&{goto} \\{dump\_stack};\par
 \fi
 
-\M{35}The command `\.d' duplicates the top tree on the stack. Similarly,
+\M[598 tcalc.w]{35}The command `\.d' duplicates the top tree on the stack.
+Similarly,
 `\.{d3}' duplicates the item three down from the top.
 
 \Y\B\4\D$\\{check\_stack}(\|k)$ \6
@@ -784,7 +801,8 @@ ${}\\{operand}(\T{0})\K\\{cheap\_copy}(\\{operand}(\\{param}+\T{1}));{}$\6
 \&{goto} \\{inc\_stack};\par
 \fi
 
-\M{36}Here are two trivial operations that seem pointless, because I haven't
+\M[611 tcalc.w]{36}Here are two trivial operations that seem pointless, because
+I haven't
 allowed the user to define macros. But in fact, users do have macros,
 because they can run {\sc TCALC} from an emacs shell.
 
@@ -793,8 +811,8 @@ $\\{helps}[\.{'p'}]\K\.{".pop\ the\ top\ tree\ o}\)\.{ff\ the\ stack"};{}$\6
 ${}\\{helps}[\.{'x'}]\K\.{".exchange\ the\ top\ t}\)\.{wo\ trees"}{}$;\par
 \fi
 
-\M{37}Of course I could generalize these commands so that \PB{\\{param}} is
-relevant.
+\M[619 tcalc.w]{37}Of course I could generalize these commands so that \PB{%
+\\{param}} is relevant.
 
 \Y\B\4\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
 \4\&{case} \.{'p'}:\5
@@ -810,7 +828,8 @@ ${}\\{operand}(\T{1})\K\|p;{}$\6
 \&{break};\par
 \fi
 
-\M{38}Now we implement the arithmetic operators. Later we'll define an
+\M[630 tcalc.w]{38}Now we implement the arithmetic operators. Later we'll
+define an
 operator \.t such that `\.{tj}' replaces tree $a$ by $2^a$.
 
 \Y\B\4\X4:Define the help strings\X${}\mathrel+\E{}$\6
@@ -829,7 +848,7 @@ ${}\\{helps}[\.{'j'}]\K\.{".replace\ a,b\ by\ 2\^a}\)\.{+b"}{}$;\C{ \.j is for
 ${}\\{helps}[\.{'m'}]\K\.{".replace\ a,b\ by\ 2\^a}\)\.{\ b"}{}$;\par
 \fi
 
-\M{39}Here's a typical unary operator.
+\M[644 tcalc.w]{39}Here's a typical unary operator.
 
 \Y\B\4\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
 \4\&{case} \.{'n'}:\5
@@ -838,7 +857,7 @@ ${}\\{operand}(\T{1})\K\\{normalize}(\\{operand}(\T{1}));{}$\6
 \&{break};\par
 \fi
 
-\M{40}And another, only slightly more tricky.
+\M[651 tcalc.w]{40}And another, only slightly more tricky.
 
 \Y\B\4\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
 \4\&{case} \.{'s'}:\5
@@ -850,7 +869,8 @@ ${}\\{operand}(\T{1})\K\\{get\_avail}(\,);{}$\2\6
 \&{break};\par
 \fi
 
-\M{41}The \.l and \.r operators are charged as many mems as it takes to
+\M[659 tcalc.w]{41}The \.l and \.r operators are charged as many mems as it
+takes to
 recycle the discarded nodes of the tree.
 
 \Y\B\4\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
@@ -880,7 +900,7 @@ ${}\\{operand}(\T{1})\K\\{right}(\|p);{}$\6
 \&{break};\par
 \fi
 
-\M{42}Binary operations are equally simple.
+\M[680 tcalc.w]{42}Binary operations are equally simple.
 
 \Y\B\4\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
 \4\&{case} \.{'j'}:\5
@@ -910,7 +930,8 @@ ${}\\{operand}(\T{1})\K\\{ez\_prod}(\\{operand}(\T{1}),\39\\{operand}(%
 \&{break};\par
 \fi
 
-\M{43}Here's the only one that's not quite trivial. Strictly speaking, I
+\M[703 tcalc.w]{43}Here's the only one that's not quite trivial. Strictly
+speaking, I
 should disallow $0^x$; but the implementation is so easy, I went ahead
 and did it.
 
@@ -939,8 +960,8 @@ ${}\\{change}({\AND}\|p\MG\|l,\39\\{prod}(\\{left}(\|p),\39\\{operand}(%
 \&{goto} \\{return\_p};\par
 \fi
 
-\N{1}{44}Generating binary trees. But how do the trees get built in the first
-place?
+\N[720 tcalc.w]{1}{44}Generating binary trees. But how do the trees get built
+in the first place?
 One useful way to get a fairly big tree is to ask for `\.t$n$', the tree
 that canonically represents~$n$. Then we can get bigger by multiplication
 and exponentiation, etc.
@@ -968,7 +989,8 @@ ${}\|p\MG\|r\K\\{normal\_tree}(\|n-(\T{1}\LL(\|k-\T{1})));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{45}There's also a convenient way to build random binary trees, so that
+\M[743 tcalc.w]{45}There's also a convenient way to build random binary trees,
+so that
 we can experiment with abnormal structures.
 
 For these, it's handy to have a table of the Catalan numbers, which
@@ -979,8 +1001,8 @@ enumerate the binary trees that have $n$~nodes.
 \T{19}]\K\T{1767263190}$} }\par
 \fi
 
-\M{46}We have to be careful when evaluating $\PB{\\{cat}}[n]=(4n-2)\PB{%
-\\{cat}}[n-1]/(n+1)$,
+\M[752 tcalc.w]{46}We have to be careful when evaluating $\PB{%
+\\{cat}}[n]=(4n-2)\PB{\\{cat}}[n-1]/(n+1)$,
 because the intermediate result might overflow even though the answer
 is a single-precision integer.
 
@@ -995,8 +1017,8 @@ ${}\\{cat}[\|k]\K(\T{4}*\|k-\T{2})*\\{quot}+(\&{int})(((\T{4}*\|k-\T{2})*%
 \4${}\}{}$\2\par
 \fi
 
-\M{47}The \PB{\\{btree}} subroutine is called only when $0\le m<\PB{%
-\\{cat}}[n]$.
+\M[763 tcalc.w]{47}The \PB{\\{btree}} subroutine is called only when $0\le m<%
+\PB{\\{cat}}[n]$.
 
 \Y\B\4\X20:Subroutines\X${}\mathrel+\E{}$\6
 \&{node} ${}{*}\\{btree}(\|n,\39\|m{}$)\C{ generate the \PB{\|m}th binary tree
@@ -1018,14 +1040,15 @@ ${}\|p\MG\|r\K\\{btree}(\|n-\T{1}-\|k,\39\|m\MOD\\{cat}[\|n-\T{1}-\|k]);{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{48}\B\X4:Define the help strings\X${}\mathrel+\E{}$\6
+\M[779 tcalc.w]{48}\B\X4:Define the help strings\X${}\mathrel+\E{}$\6
 $\\{helps}[\.{'t'}]\K\.{":the\ standard\ tree\ }\)\.{that\ represents\
 <n>"};{}$\6
 ${}\\{helps}[\.{'b'}]\K\.{":the\ binary\ tree\ of}\)\.{\ rank\ <n>\ in\
 lexicog}\)\.{raphic\ order"}{}$;\par
 \fi
 
-\M{49}Lexicographic order of binary trees is taken to mean that we order
+\M[783 tcalc.w]{49}Lexicographic order of binary trees is taken to mean that we
+order
 them first by number of nodes, then recursively by the order of
 the \PB{\\{compare}} function.
 
@@ -1040,8 +1063,8 @@ ${}\\{operand}(\T{0})\K\\{btree}(\|k,\39\\{param});{}$\6
 \&{goto} \\{inc\_stack};\par
 \fi
 
-\N{1}{50}Displaying the results. And finally, the grand climax---the most
-interesting
+\N[794 tcalc.w]{1}{50}Displaying the results. And finally, the grand
+climax---the most interesting
 algorithm in this whole program.
 
 A special form of display is appropriate for the binary trees we're
@@ -1101,7 +1124,7 @@ The user can suppress detailed output of any tree with
 their size is less than this }\par
 \fi
 
-\M{51}\B\X4:Define the help strings\X${}\mathrel+\E{}$\6
+\M[849 tcalc.w]{51}\B\X4:Define the help strings\X${}\mathrel+\E{}$\6
 $\\{helps}[\.{'M'}]\K\.{".use\ maximum\ possib}\)\.{le\ compression\ thres}\)%
 \.{hold\ for\ tree\ displa}\)\.{y"};{}$\6
 ${}\\{helps}[\.{'N'}]\K\.{":compress\ tree\ disp}\)\.{lays\ only\ for\ t0..t<}%
@@ -1110,7 +1133,7 @@ ${}\\{helps}[\.{'O'}]\K\.{":omit\ display\ of\ tr}\)\.{ees\ having\ <n>\ or\
 mo}\)\.{re\ nodes"}{}$;\par
 \fi
 
-\M{52}\B\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
+\M[854 tcalc.w]{52}\B\X6:Cases for one-character operators\X${}\mathrel+\E{}$\6
 \4\&{case} \.{'M'}:\5
 ${}\\{param}\K\\{large}-\T{1};{}$\6
 \4\&{case} \.{'N'}:\5
@@ -1127,7 +1150,8 @@ ${}\\{max\_display\_size}\K\\{param};{}$\6
 \&{break};\par
 \fi
 
-\M{53}The idea we'll use to display a tree is to tackle the job in two phases.
+\M[866 tcalc.w]{53}The idea we'll use to display a tree is to tackle the job in
+two phases.
 First, we compute statistics about the tree nodes, so that the root of
 the tree ``knows'' about its subtrees. Then we recursively print each
 line of the display.
@@ -1158,7 +1182,7 @@ sign }\6
 \&{int} \\{count};\C{ this will be set to the number of nodes in the tree }\par
 \fi
 
-\M{54}\B\X20:Subroutines\X${}\mathrel+\E{}$\6
+\M[892 tcalc.w]{54}\B\X20:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{get\_stats}(\|p)\C{ walk the tree and determine widths, lengths,
 etc. }\1\1\6
 \&{node} ${}{*}\|p;\2\2{}$\6
@@ -1177,7 +1201,8 @@ ${}\|p\MG\\{val}\K\|j\K\PP\\{count};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{55}We need a subroutine to compute the width of a decimal number.
+\M[906 tcalc.w]{55}We need a subroutine to compute the width of a decimal
+number.
 
 \Y\B\4\X13:Basic subroutines\X${}\mathrel+\E{}$\6
 \&{int} \\{dwidth}(\|n)\C{ how many digits do we need to print \PB{\|n}? }\1\1\6
@@ -1191,7 +1216,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{56}Here we assume that the constant called \PB{\\{large}} is 1000000000.
+\M[917 tcalc.w]{56}Here we assume that the constant called \PB{\\{large}} is
+1000000000.
 We use the facts that \PB{$\\{threshold}\Z\\{large}$} and $2^{29}<\PB{%
 \\{large}}<2^{30}$.
 Also the fact that \PB{$\\{large}+\\{large}<\\{maxint}$}.
@@ -1237,7 +1263,8 @@ ${}\\{height}[\|j]\K\\{height}[\\{jr}];{}$\2\6
 \4${}\}{}$\2\par
 \U54.\fi
 
-\M{57}The second phase is governed by another recursive procedure. This
+\M[949 tcalc.w]{57}The second phase is governed by another recursive procedure.
+This
 one, called \PB{\\{print\_rep}}, has three parameters representing a subtree
 to be displayed and its starting line and column numbers. Lines are
 numbered 0 and up from bottom to top.
@@ -1310,12 +1337,13 @@ ${}\\{print\_rep}(\|p\MG\|r,\39\|l,\39\|c+\T{1});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{58}\B\X2:Global variables\X${}\mathrel+\E{}$\6
+\M[991 tcalc.w]{58}\B\X2:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \|h;\C{ the row currently being printed }\6
 \&{int} \\{col};\C{ the col currently being printed }\par
 \fi
 
-\M{59}OK, we've built the necessary recursive mechanisms; now we just have
+\M[995 tcalc.w]{59}OK, we've built the necessary recursive mechanisms; now we
+just have
 to supply the driver program.
 
 \Y\B\4\X59:Display tree \PB{\\{saved}[\|k]}\X${}\E{}$\6
@@ -1346,7 +1374,8 @@ ${}\\{printf}(\.{"\ (\%d\ nodes)\\n"},\39\\{count});{}$\2\6
 \\{printf}(\.{"\\n"});\2\par
 \U30.\fi
 
-\N{1}{60}Debugging. Finally, here are some quick-and-dirty routines
+\N[1016 tcalc.w]{1}{60}Debugging. Finally, here are some quick-and-dirty
+routines
 that might be useful while I'm debugging.
 
 The \PB{\\{eval}} routine, which is invoked only by the debugger, computes
@@ -1370,7 +1399,8 @@ ${}\|p\MG\\{val}\K\\{large};{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{61}The next routine is used to check that I've recycled all the nodes.
+\M[1037 tcalc.w]{61}The next routine is used to check that I've recycled all
+the nodes.
 I could take it out, now that the program appears to work; but what the
 heck, this isn't a production program.
 
@@ -1385,7 +1415,7 @@ ${}\\{printf}(\.{"We\ lost\ track\ of\ \%d}\)\.{\ nodes!\\n"},\39\\{used}-%
 \\{count}){}$;\2\par
 \U3.\fi
 
-\M{62}\B\X13:Basic subroutines\X${}\mathrel+\E{}$\6
+\M[1047 tcalc.w]{62}\B\X13:Basic subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{stamp}(\|p)\C{ stamp all nodes of \PB{\|p} with \PB{\\{time%
 \_stamp}}, and count them }\1\1\6
 \&{node} ${}{*}\|p;\2\2{}$\6
@@ -1401,11 +1431,11 @@ ${}\\{count}\PP;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{63}\B\X2:Global variables\X${}\mathrel+\E{}$\6
+\M[1060 tcalc.w]{63}\B\X2:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{time\_stamp}${}\K\\{large}{}$;\C{ unique number }\par
 \fi
 
-\N{1}{64}Index.
+\N[1063 tcalc.w]{1}{64}Index.
 \fi
 
 \inx

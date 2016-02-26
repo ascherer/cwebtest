@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This program, hacked from {\mc ACHAIN4}, finds all
+\N[2 achain-all.w]{1}{1}Intro. This program, hacked from {\mc ACHAIN4}, finds
+all
 canonical addition chains of minimum length for a given integer.
 
 There are two command-line parameters. First is a file that
@@ -40,7 +42,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Process the command line\X${}\E{}$\6
+\M[36 achain-all.w]{2}\B\X2:Process the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{3}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ infile\ n\\}\)\.{n"},\39\\{argv}[%
@@ -63,7 +65,7 @@ ${}\\{exit}({-}\T{3});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}\B\X3:Input the next value, \PB{\|l[\|n]}\X${}\E{}$\6
+\M[52 achain-all.w]{3}\B\X3:Input the next value, \PB{\|l[\|n]}\X${}\E{}$\6
 $\\{lb}\K\\{fgetc}(\\{infile})-\.{'\ '}{}$;\C{ \PB{\\{fgetc}} will return a
 negative value after EOF }\6
 \&{if} ${}(\\{lb}<\T{0}\V(\|n>\T{1}\W\\{lb}>\|l[\|n-\T{1}]+\T{1})){}$\5
@@ -75,7 +77,7 @@ ${}\\{exit}({-}\T{4});{}$\6
 ${}\|l[\|n]\K\\{lb}{}$;\par
 \U1.\fi
 
-\N{1}{4}The interesting part.
+\N[60 achain-all.w]{1}{4}The interesting part.
 
 \Y\B\4\X4:Backtrack through all solutions\X${}\E{}$\6
 $\|a[\T{0}]\K\|b[\T{0}]\K\T{1},\39\|a[\T{1}]\K\|b[\T{1}]\K\T{2};{}$\6
@@ -95,7 +97,8 @@ ${}\|b[\|i]\K\|b[\|i+\T{1}]-\T{1};{}$\2\6
 \X9:Try to fix the rest of the chain, and output all the solutions\X;\par
 \U1.\fi
 
-\M{5}One of the key operations we need is to increase \PB{\|p} to the smallest
+\M[74 achain-all.w]{5}One of the key operations we need is to increase \PB{\|p}
+to the smallest
 element $p'>p$ that has $l[p']<s$, given that $l[p]<s$. Since
 $l[p+1]\le l[p]+1$, we can do this quickly by first setting $p\gets p+1$;
 then, if $l[p]=s$, we set $p\gets\PB{\\{down}}[p]$, where \PB{\\{down}[\|p]} is
@@ -123,8 +126,8 @@ ${}\|p\K(\\{down}[\|p]>\|p\?\\{down}[\|p]:\\{nmax});{}$\2\6
 \4${}\}{}$\2\par
 \U11.\fi
 
-\M{6}\B\X6:Given that \PB{$\|l[\|p]\G\|s$}, increase \PB{\|p} to the next
-element with \PB{$\|l[\|p]<\|s$}\X${}\E{}$\6
+\M[97 achain-all.w]{6}\B\X6:Given that \PB{$\|l[\|p]\G\|s$}, increase \PB{\|p}
+to the next element with \PB{$\|l[\|p]<\|s$}\X${}\E{}$\6
 \&{do}\5
 ${}\{{}$\1\6
 \&{if} ${}(\\{down}[\|p]>\|p){}$\1\5
@@ -139,12 +142,13 @@ ${}\|p\K\\{nmax}{}$;\5
 \&{while} ${}(\|l[\|p]\G\|s){}$;\par
 \Us10\ET11.\fi
 
-\M{7}\B\X7:Initialize the \PB{\\{down}} table\X${}\E{}$\6
+\M[105 achain-all.w]{7}\B\X7:Initialize the \PB{\\{down}} table\X${}\E{}$\6
 \&{for} ${}(\|n\K\T{1};{}$ ${}\|n\Z\\{nn};{}$ ${}\|n\PP){}$\1\5
 ${}\\{down}[\|n]\K\|n-\T{1}{}$;\2\par
 \U1.\fi
 
-\M{8}I can't help exclaiming that this little algorithm is quite pretty.
+\M[108 achain-all.w]{8}I can't help exclaiming that this little algorithm is
+quite pretty.
 
 \Y\B\4\X8:Update the \PB{\\{down}} links\X${}\E{}$\6
 \&{if} ${}(\|l[\|n]<\|l[\|n-\T{1}]){}$\5
@@ -155,8 +159,8 @@ ${}\\{down}[\|n]\K\|p;{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{9}\B\X9:Try to fix the rest of the chain, and output all the solutions\X${}%
-\E{}$\6
+\M[117 achain-all.w]{9}\B\X9:Try to fix the rest of the chain, and output all
+the solutions\X${}\E{}$\6
 $\\{ptr}\K\T{0}{}$;\C{ clear the \PB{\\{undo}} stack }\6
 \&{for} ${}(\|r\K\|s\K\\{lb};{}$ ${}\|s>\T{2};{}$ ${}\|s\MM){}$\5
 ${}\{{}$\1\6
@@ -219,8 +223,8 @@ ${}\|s\PP;{}$\6
 \4\\{impossible}:\par
 \U4.\fi
 
-\M{10}At this point we have \PB{$\|a[\|k]\K\|b[\|k]$} for all $r\le k\le\PB{%
-\\{lb}}$.
+\M[159 achain-all.w]{10}At this point we have \PB{$\|a[\|k]\K\|b[\|k]$} for all
+$r\le k\le\PB{\\{lb}}$.
 
 \Y\B\4\X10:Set \PB{\|p} to its smallest feasible value, and \PB{$\|q\K\|a[\|s]-%
 \|p$}\X${}\E{}$\6
@@ -268,8 +272,8 @@ ${}\|q\K\|b[\|r-\T{2}],\39\|p\K\|a[\|s]-\|q;{}$\2\6
 \4${}\}{}$\2\par
 \U9.\fi
 
-\M{11}\B\X11:Advance \PB{\|p} to the next smallest feasible value, and set %
-\PB{$\|q\K\|a[\|s]-\|p$}\X${}\E{}$\6
+\M[184 achain-all.w]{11}\B\X11:Advance \PB{\|p} to the next smallest feasible
+value, and set \PB{$\|q\K\|a[\|s]-\|p$}\X${}\E{}$\6
 \&{if} ${}(\|p\E\|q){}$\5
 ${}\{{}$\1\6
 \&{if} ${}(\\{outdeg}[\|s-\T{1}]\E\T{0}){}$\1\5
@@ -328,7 +332,8 @@ ${}\|q\K\|b[\\{ubq}],\39\|p\K\|a[\|s]-\|q;{}$\6
 \4${}\}{}$\2\par
 \U9.\fi
 
-\M{12}\B\X12:Put local variables on the stack and update outdegrees\X${}\E{}$\6
+\M[217 achain-all.w]{12}\B\X12:Put local variables on the stack and update
+outdegrees\X${}\E{}$\6
 $\\{tail}[\|s]\K\|q,\39\\{stack}[\|s].\|r\K\|r;{}$\6
 ${}\\{outdeg}[\\{ubp}]\PP,\39\\{outsum}[\\{ubp}]\MRL{+{\K}}\|s;{}$\6
 ${}\\{outdeg}[\\{ubq}]\PP,\39\\{outsum}[\\{ubq}]\MRL{+{\K}}\|s;{}$\6
@@ -338,8 +343,8 @@ ${}\\{stack}[\|s].\\{ptrp}\K\\{ptrp},\39\\{stack}[\|s].\\{ptrq}\K\\{ptrq}{}$;%
 \par
 \U9.\fi
 
-\M{13}\B\X13:Restore local variables from the stack and downdate outdegrees%
-\X${}\E{}$\6
+\M[225 achain-all.w]{13}\B\X13:Restore local variables from the stack and
+downdate outdegrees\X${}\E{}$\6
 $\\{ptrq}\K\\{stack}[\|s].\\{ptrq},\39\\{ptrp}\K\\{stack}[\|s].\\{ptrp};{}$\6
 ${}\\{lbq}\K\\{stack}[\|s].\\{lbq},\39\\{ubq}\K\\{stack}[\|s].\\{ubq};{}$\6
 ${}\\{lbp}\K\\{stack}[\|s].\\{lbp},\39\\{ubp}\K\\{stack}[\|s].\\{ubp};{}$\6
@@ -348,8 +353,8 @@ ${}\\{outdeg}[\\{ubp}]\MM,\39\\{outsum}[\\{ubp}]\MRL{-{\K}}\|s;{}$\6
 ${}\|q\K\\{tail}[\|s],\39\|p\K\|a[\|s]-\|q,\39\|r\K\\{stack}[\|s].\|r{}$;\par
 \U9.\fi
 
-\M{14}After the test in this step is passed, we'll have \PB{$\\{ubp}>\\{ubq}$}
-and \PB{$\\{lbp}>\\{lbq}$}.
+\M[233 achain-all.w]{14}After the test in this step is passed, we'll have \PB{$%
+\\{ubp}>\\{ubq}$} and \PB{$\\{lbp}>\\{lbq}$}.
 
 \Y\B\4\X14:Find bounds $(\PB{\\{lbp}},\PB{\\{ubp}})$ and $(\PB{\\{lbq}},\PB{%
 \\{ubq}})$ on where \PB{\|p} and \PB{\|q} can be inserted; but go to \PB{%
@@ -400,7 +405,8 @@ ${}\\{lbp}\K\\{lbq}+\T{1};{}$\2\6
 \4${}\}{}$\2\par
 \U9.\fi
 
-\M{15}The undoing mechanism is very simple: When changing \PB{\|a[\|j]}, we
+\M[261 achain-all.w]{15}The undoing mechanism is very simple: When changing %
+\PB{\|a[\|j]}, we
 put \PB{$(\|j\LL\T{24})+\|x$} on the \PB{\\{undo}} stack, where \PB{\|x} was
 the former value.
 Similarly, when changing \PB{\|b[\|j]}, we stack the value \PB{$(\T{1}\LL%
@@ -421,7 +427,7 @@ ${}\|b[(\|i\AND\T{\^3fffffff})\GG\T{24}]\K\|i\AND\T{\^ffffff};{}$\2\6
 \4${}\}{}$\2\par
 \U9.\fi
 
-\M{16}At this point we know that $a[ubp]\le p\le b[ubp]$.
+\M[275 achain-all.w]{16}At this point we know that $a[ubp]\le p\le b[ubp]$.
 
 \Y\B\4\X16:Put \PB{\|p} into the chain at location \PB{\\{ubp}}; \PB{\&{goto} %
 \\{failp}} if there's a problem\X${}\E{}$\6
@@ -468,8 +474,8 @@ ${}\\{newb}(\|j,\39\|i);{}$\6
 \X17:Make forced moves if \PB{\|p} has a special form\X;\par
 \U9.\fi
 
-\M{17}If, say, we've just set \PB{$\|a[\T{8}]\K\|b[\T{8}]\K\T{132}$}, special
-considerations apply,
+\M[306 achain-all.w]{17}If, say, we've just set \PB{$\|a[\T{8}]\K\|b[\T{8}]\K%
+\T{132}$}, special considerations apply,
 because the only addition chains of length~8 for 132 are
 $$\eqalign{
 &1,2,4,8,16,32,64,128,132;\cr
@@ -504,7 +510,8 @@ ${}\\{newa}(\|j,\39\T{1}\LL\|j);{}$\2\6
 \4${}\}{}$\2\par
 \U16.\fi
 
-\M{18}At this point we had better not assume that $a[ubq]\le q\le b[ubq]$,
+\M[333 achain-all.w]{18}At this point we had better not assume that $a[ubq]\le
+q\le b[ubq]$,
 because \PB{\|p} has just been inserted. That insertion can mess up the
 bounds that we looked at when \PB{\\{lbq}} and \PB{\\{ubq}} were computed.
 
@@ -557,7 +564,8 @@ ${}\\{newb}(\|j,\39\|i);{}$\6
 \X19:Make forced moves if \PB{\|q} has a special form\X;\par
 \U9.\fi
 
-\M{19}\B\X19:Make forced moves if \PB{\|q} has a special form\X${}\E{}$\6
+\M[368 achain-all.w]{19}\B\X19:Make forced moves if \PB{\|q} has a special form%
+\X${}\E{}$\6
 $\|i\K\|q-(\T{1}\LL(\\{ubq}-\T{1}));{}$\6
 \&{if} ${}(\|i\W((\|i\AND(\|i-\T{1}))\E\T{0})\W(\|i\LL\T{4})<\|q){}$\5
 ${}\{{}$\1\6
@@ -571,13 +579,13 @@ ${}\\{newa}(\|j,\39\T{1}\LL\|j);{}$\2\6
 \4${}\}{}$\2\par
 \U18.\fi
 
-\M{20}\B\X20:Print a solution\X${}\E{}$\6
+\M[376 achain-all.w]{20}\B\X20:Print a solution\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j\Z\\{lb};{}$ ${}\|j\PP){}$\1\5
 ${}\\{printf}(\.{"\ \%d"},\39\|a[\|j]);{}$\2\6
 \\{printf}(\.{"\\n"});\par
 \U9.\fi
 
-\N{1}{21}Index.
+\N[380 achain-all.w]{1}{21}Index.
 
 
 \fi

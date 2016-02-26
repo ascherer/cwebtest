@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This program is a revision of {\mc ACHAIN1}, which you should
+\N[2 achain2.w]{1}{1}Intro. This program is a revision of {\mc ACHAIN1}, which
+you should
 read first. I'm thinking that a few changes will speed that program up,
 but as usual the proof of the pudding is in the eating.
 
@@ -70,7 +72,7 @@ ${}\\{timer}\K\|j;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Process the command line\X${}\E{}$\6
+\M[61 achain2.w]{2}\B\X2:Process the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{3}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ infile\ ou}\)\.{tfile\\n"},\39%
@@ -93,12 +95,13 @@ ${}\\{exit}({-}\T{3});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}\B\X3:Output the value of $l(n)$\X${}\E{}$\6
+\M[77 achain2.w]{3}\B\X3:Output the value of $l(n)$\X${}\E{}$\6
 $\\{fprintf}(\\{outfile},\39\.{"\%c"},\39\|l[\|n]+\.{'\ '});{}$\6
 \\{fflush}(\\{outfile});\C{ make sure the result is viewable immediately }\par
 \U1.\fi
 
-\M{4}At this point I compute the ``lower bound'' $\lfloor\lg n\rfloor+3$,
+\M[81 achain2.w]{4}At this point I compute the ``lower bound'' $\lfloor\lg n%
+\rfloor+3$,
 which is valid if $\nu n>4$. Simple cases where $\nu n\le 4$ will be
 handled separately below.
 
@@ -113,7 +116,7 @@ negative value after EOF }\6
 ${}\\{lb}\K\|i+\T{3}{}$;\2\par
 \U1.\fi
 
-\M{5}Three elementary and well-known upper bounds are considered:
+\M[92 achain2.w]{5}Three elementary and well-known upper bounds are considered:
 (i)~$l(n)\le\lfloor\lg n\rfloor+\nu n-1$;
 (ii)~$l(n)\le l(n-1)+1$;
 (iii)~$l(n)\le l(p)+l(q)$ if $n=pq$.
@@ -147,8 +150,8 @@ ${}\|l[\|n]\K\|i+\T{2};{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{6}It's important to try the factor method even when \PB{$\|j\Z\T{4}$},
-because
+\M[119 achain2.w]{6}It's important to try the factor method even when \PB{$\|j%
+\Z\T{4}$}, because
 of the way prime numbers are recognized here: We would miss the
 prime~3, for example.
 
@@ -176,7 +179,7 @@ ${}\\{prime}[\\{pr}\PP]\K\|n;{}$\2\6
 \4${}\}{}$\2\2\par
 \U5.\fi
 
-\N{1}{7}The interesting part.
+\N[140 achain2.w]{1}{7}The interesting part.
 Nontrivial changes begin to occur when we get into the guts of
 the backtracking structure carried over from the previous versions of this
 program, but the controlling loop at the outer level remains intact.
@@ -203,7 +206,8 @@ ${}\|l[\|n]\K\PP\\{lb};{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{8}The main new idea implemented below is related to the reduced digraph
+\M[159 achain2.w]{8}The main new idea implemented below is related to the
+reduced digraph
 representation of an addition chain, in which each element $a_s$
 of the chain is effectively expressed as a sum of two or
 more previous elements. For example, we might have $a_s=a_i+a_j+a_k+a_l$
@@ -238,7 +242,8 @@ ${1\over2}a[s-1]\ge\PB{\\{tail}}[s-1]\ge\PB{\\{tail}}[s]=a[s]-a[s-1]$.
 
 \fi
 
-\M{9}We maintain a stack of subproblems, as usual when backtracking.
+\M[192 achain2.w]{9}We maintain a stack of subproblems, as usual when
+backtracking.
 Suppose \PB{\|a[\|t]} is the sum of two items already present, for all
 $t>s$; we want to make sure that \PB{\|a[\|s]} is legitimate too.
 For this purpose we try all combinations \PB{$\|a[\|s]\K\|p+\|q$} where
@@ -336,7 +341,8 @@ ${}\|p\PP,\39\|q\MM;{}$\2\6
 \4\\{impossible}:\par
 \U7.\fi
 
-\M{10}\B\X10:Put local variables on the stack and update outdegrees\X${}\E{}$\6
+\M[254 achain2.w]{10}\B\X10:Put local variables on the stack and update
+outdegrees\X${}\E{}$\6
 $\\{tail}[\|s]\K\|q,\39\\{stack}[\|s].\|r\K\|r;{}$\6
 ${}\\{outdeg}[\\{ubp}]\PP,\39\\{outsum}[\\{ubp}]\MRL{+{\K}}\|s;{}$\6
 ${}\\{outdeg}[\\{ubq}]\PP,\39\\{outsum}[\\{ubq}]\MRL{+{\K}}\|s;{}$\6
@@ -346,8 +352,8 @@ ${}\\{stack}[\|s].\\{ptrp}\K\\{ptrp},\39\\{stack}[\|s].\\{ptrq}\K\\{ptrq}{}$;%
 \par
 \U9.\fi
 
-\M{11}\B\X11:Restore local variables from the stack and downdate outdegrees%
-\X${}\E{}$\6
+\M[262 achain2.w]{11}\B\X11:Restore local variables from the stack and downdate
+outdegrees\X${}\E{}$\6
 $\\{ptrq}\K\\{stack}[\|s].\\{ptrq},\39\\{ptrp}\K\\{stack}[\|s].\\{ptrp};{}$\6
 ${}\\{lbq}\K\\{stack}[\|s].\\{lbq},\39\\{ubq}\K\\{stack}[\|s].\\{ubq};{}$\6
 ${}\\{lbp}\K\\{stack}[\|s].\\{lbp},\39\\{ubp}\K\\{stack}[\|s].\\{ubp};{}$\6
@@ -356,8 +362,8 @@ ${}\\{outdeg}[\\{ubp}]\MM,\39\\{outsum}[\\{ubp}]\MRL{-{\K}}\|s;{}$\6
 ${}\|q\K\\{tail}[\|s],\39\|p\K\|a[\|s]-\|q,\39\|r\K\\{stack}[\|s].\|r{}$;\par
 \U9.\fi
 
-\M{12}After the test in this step is passed, we'll have \PB{$\\{ubp}>\\{ubq}$}
-and \PB{$\\{lbp}>\\{lbq}$}.
+\M[270 achain2.w]{12}After the test in this step is passed, we'll have \PB{$%
+\\{ubp}>\\{ubq}$} and \PB{$\\{lbp}>\\{lbq}$}.
 
 \Y\B\4\X12:Find bounds $(\PB{\\{lbp}},\PB{\\{ubp}})$ and $(\PB{\\{lbq}},\PB{%
 \\{ubq}})$ on where \PB{\|p} and \PB{\|q} can be inserted; but go to \PB{%
@@ -395,7 +401,8 @@ ${}\\{lbp}\PP;{}$\2\6
 \4${}\}{}$\2\par
 \U9.\fi
 
-\M{13}The undoing mechanism is very simple: When changing \PB{\|a[\|j]}, we
+\M[290 achain2.w]{13}The undoing mechanism is very simple: When changing \PB{%
+\|a[\|j]}, we
 put \PB{$(\|j\LL\T{24})+\|x$} on the \PB{\\{undo}} stack, where \PB{\|x} was
 the former value.
 Similarly, when changing \PB{\|b[\|j]}, we stack the value \PB{$(\T{1}\LL%
@@ -416,7 +423,7 @@ ${}\|b[(\|i\AND\T{\^3fffffff})\GG\T{24}]\K\|i\AND\T{\^ffffff};{}$\2\6
 \4${}\}{}$\2\par
 \U9.\fi
 
-\M{14}At this point we know that $a[ubp]\le p\le b[ubp]$.
+\M[304 achain2.w]{14}At this point we know that $a[ubp]\le p\le b[ubp]$.
 
 \Y\B\4\X14:Put \PB{\|p} into the chain at location \PB{\\{ubp}}; \PB{\&{goto} %
 \\{failp}} if there's a problem\X${}\E{}$\6
@@ -463,8 +470,8 @@ ${}\\{newb}(\|j,\39\|i);{}$\6
 \X15:Make forced moves if \PB{\|p} has a special form\X;\par
 \U9.\fi
 
-\M{15}If, say, we've just set \PB{$\|a[\T{8}]\K\|b[\T{8}]\K\T{132}$}, special
-considerations apply,
+\M[335 achain2.w]{15}If, say, we've just set \PB{$\|a[\T{8}]\K\|b[\T{8}]\K%
+\T{132}$}, special considerations apply,
 because the only addition chains of length~8 for 132 are
 $$\eqalign{
 &1,2,4,8,16,32,64,128,132;\cr
@@ -499,7 +506,8 @@ ${}\\{newa}(\|j,\39\T{1}\LL\|j);{}$\2\6
 \4${}\}{}$\2\par
 \U14.\fi
 
-\M{16}At this point we had better not assume that $a[ubq]\le q\le b[ubq]$,
+\M[362 achain2.w]{16}At this point we had better not assume that $a[ubq]\le q%
+\le b[ubq]$,
 because \PB{\|p} has just been inserted. That insertion can mess up the
 bounds that we looked at when \PB{\\{lbq}} and \PB{\\{ubq}} were computed.
 
@@ -552,7 +560,8 @@ ${}\\{newb}(\|j,\39\|i);{}$\6
 \X17:Make forced moves if \PB{\|q} has a special form\X;\par
 \U9.\fi
 
-\M{17}\B\X17:Make forced moves if \PB{\|q} has a special form\X${}\E{}$\6
+\M[397 achain2.w]{17}\B\X17:Make forced moves if \PB{\|q} has a special form%
+\X${}\E{}$\6
 $\|i\K\|q-(\T{1}\LL(\\{ubq}-\T{1}));{}$\6
 \&{if} ${}(\|i\W((\|i\AND(\|i-\T{1}))\E\T{0})\W(\|i\LL\T{4})<\|q){}$\5
 ${}\{{}$\1\6
@@ -566,7 +575,7 @@ ${}\\{newa}(\|j,\39\T{1}\LL\|j);{}$\2\6
 \4${}\}{}$\2\par
 \U16.\fi
 
-\N{1}{18}Index.
+\N[406 achain2.w]{1}{18}Index.
 
 
 \fi

@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. A quick program to output the ``domination'' or ``majorization''
+\N[2 domination.w]{1}{1}Intro. A quick program to output the ``domination'' or
+``majorization''
 relation when it is defined on permutations of multisets instead of
 on partitions.
 
@@ -56,8 +58,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Set \PB{\\{work}} to the string that is to be permuted, and check it%
-\X${}\E{}$\6
+\M[56 domination.w]{2}\B\X2:Set \PB{\\{work}} to the string that is to be
+permuted, and check it\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{2}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ digits\_to}\)\.{\_permute\\n"},%
@@ -89,7 +91,7 @@ ${}\\{work}[\|j+\T{1}]\K\\{argv}[\T{1}][\|j];{}$\6
 ${}\|n\K\|j{}$;\par
 \U1.\fi
 
-\M{3}Here I use ye olde Algorithm 7.2.1.2L.
+\M[78 domination.w]{3}Here I use ye olde Algorithm 7.2.1.2L.
 
 \Y\B\4\X3:Generate the rest of the permutations\X${}\E{}$\6
 $\|m\K\T{0};{}$\6
@@ -123,8 +125,8 @@ ${}\|s\K\\{work}[\|k],\39\\{work}[\|k]\K\\{work}[\|l],\39\\{work}[\|l]\K\|s;{}$%
 \4\\{done}:\par
 \U1.\fi
 
-\M{4}We use the fact that dominance is a subset of (reverse) lexicographic
-order.
+\M[96 domination.w]{4}We use the fact that dominance is a subset of (reverse)
+lexicographic order.
 In other words, if $x_1\ldots x_n$ is lexicographically less than
 $y_1\ldots y_n$ we cannot have $x_1\ldots x_n\succeq y_1\ldots y_n$.
 
@@ -151,7 +153,7 @@ ${}\\{rel}[\|l][\\{ll}]\K\T{1};{}$\2\6
 \4${}\}{}$\2\2\par
 \U1.\fi
 
-\M{5}Hey, I'm just using brute force today.
+\M[113 domination.w]{5}Hey, I'm just using brute force today.
 
 \Y\B\4\X5:Do transitive reduction\X${}\E{}$\6
 \&{for} ${}(\|l\K\T{0};{}$ ${}\|l<\|m;{}$ ${}\|l\PP){}$\1\6
@@ -168,7 +170,7 @@ ${}\\{red}[\|l][\\{ll}]\K\T{1};{}$\6
 \4${}\}{}$\2\2\par
 \U1.\fi
 
-\M{6}\B\X6:Print the results\X${}\E{}$\6
+\M[124 domination.w]{6}\B\X6:Print the results\X${}\E{}$\6
 \&{for} ${}(\|l\K\T{0};{}$ ${}\|l<\|m;{}$ ${}\|l\PP){}$\5
 ${}\{{}$\1\6
 ${}\\{printf}(\.{"\%s\ <"},\39\\{perm}[\|l]);{}$\6
@@ -179,7 +181,7 @@ ${}\\{printf}(\.{"\ \%s"},\39\\{perm}[\\{ll}]);{}$\2\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{7}Index.
+\N[131 domination.w]{1}{7}Index.
 
 \fi
 

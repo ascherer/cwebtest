@@ -1,10 +1,12 @@
 \input cwebmac
+\srcloctrue
 
 
 \datethis
 
 
-\N{1}{1}Introduction. This program counts the number of knight's tours of an
+\N[4 obdd.w]{1}{1}Introduction. This program counts the number of knight's
+tours of an
 $m\times n$ board that are symmetric under $180^\circ$ rotation, assuming that
 $m$ and $n$ are even. I wrote it partly to verify the results of another
 program, using an independent method; but mostly, I wrote it to get experience
@@ -40,7 +42,8 @@ ${}\\{printf}(\.{"Total\ \%d\ solutions\ }\)\.{and\ \%d\ pseudo-soluti}\)%
 \4${}\}{}$\2\par
 \fi
 
-\M{2}To account for $180^\circ$ symmetry, we identify each vertex with its
+\M[38 obdd.w]{2}To account for $180^\circ$ symmetry, we identify each vertex
+with its
 ``mate'' under rotation. Each edge \PB{\|k} is represented by three quantities:
 \PB{\\{black}[\|k]} and \PB{\\{red}[\|k]} are the endpoints (which are vertices
 of different
@@ -85,7 +88,7 @@ ${}\\{edges}\K\|k;{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}\B\X3:Global variables\X${}\E{}$\6
+\M[69 obdd.w]{3}\B\X3:Global variables\X${}\E{}$\6
 \&{Vertex} ${}{*}\\{black}[\\{mm}*\\{nn}*\T{2}],{}$ ${}{*}\\{red}[\\{mm}*%
 \\{nn}*\T{2}];{}$\6
 \&{int} ${}\\{parity}[\\{mm}*\\{nn}*\T{2}];{}$\6
@@ -96,14 +99,14 @@ two half-cycles }\par
 \As5, 12, 14, 20\ETs26.
 \U1.\fi
 
-\M{4}\B\X4:Local variables\X${}\E{}$\6
+\M[76 obdd.w]{4}\B\X4:Local variables\X${}\E{}$\6
 \&{register} \&{int} \|j${},{}$ \|k${},{}$ \|t;\6
 \&{register} \&{Vertex} ${}{*}\|u,{}$ ${}{*}\|v;{}$\6
 \&{Graph} ${}{*}\\{gg}{}$;\par
 \As10\ET25.
 \U1.\fi
 
-\N{1}{5}OBDDs. An OBDD canonically represents a boolean function
+\N[81 obdd.w]{1}{5}OBDDs. An OBDD canonically represents a boolean function
 $f(x_1,x_2,\ldots,x_n)$ as a binary tree with shared subtrees (a special kind
 of~dag). If $n=0$, the representation is the node `0' or `1'. If $n>0$ and the
 function doesn't depend on $x_1$,
@@ -137,7 +140,8 @@ my hash function below }\par
 \&{int} \\{curnode};\C{ size of the current OBDD }\par
 \fi
 
-\M{6}To get started, I set up a simple OBDD for the function $f$ that says
+\M[110 obdd.w]{6}To get started, I set up a simple OBDD for the function $f$
+that says
 every black vertex is matched exactly once.
 
 If $e_1$, \dots, $e_n$ are the edges that touch some vertex, we want exactly
@@ -185,7 +189,8 @@ ${}\\{left}[\\{curnode}-\T{2}]\K\\{right}[\\{curnode}-\T{1}]\K\T{1}{}$;\C{ $%
 \beta_{n+1}=1$, the last time }\par
 \U8.\fi
 
-\M{7}Here's a subroutine for use when debugging: It prints the current OBDD.
+\M[143 obdd.w]{7}Here's a subroutine for use when debugging: It prints the
+current OBDD.
 
 \Y\B\4\X7:Subroutines\X${}\E{}$\6
 \&{void} \\{print\_obdd}(\,)\1\1\2\2\6
@@ -200,7 +205,8 @@ ${}\\{printf}(\.{"\%d:\ if\ \%s-\%s\%s\ then}\)\.{\ \%d\ else\ \%d\\n"},\39\|k,%
 \A11.
 \U1.\fi
 
-\M{8}To complete the construction of the OBDD for matching, we need to specify
+\M[155 obdd.w]{8}To complete the construction of the OBDD for matching, we need
+to specify
 the fact that every red vertex is matched exactly once. This is done by
 repeatedly ANDing an appropriate boolean function to the current OBDD,
 once for each red vertex.
@@ -215,8 +221,8 @@ ${}\|f\K\T{2}{}$;\C{ root of the current OBDD }\6
 \par
 \U1.\fi
 
-\M{9}The reader may have noticed that I forgot to test whether \PB{\\{curnode}}
-has
+\M[166 obdd.w]{9}The reader may have noticed that I forgot to test whether \PB{%
+\\{curnode}} has
 exceeded \PB{\\{max\_nodes}}. Peccavi; I am silently assuming that \PB{\\{max%
 \_nodes}} isn't
 way too low. In the \PB{\\{intersect}} routine below this condition is
@@ -250,12 +256,12 @@ ${}\|f\K\\{intersect}(\|f,\39\|g);{}$\6
 \4${}\}{}$\2\par
 \U8.\fi
 
-\M{10}\B\X4:Local variables\X${}\mathrel+\E{}$\6
+\M[187 obdd.w]{10}\B\X4:Local variables\X${}\mathrel+\E{}$\6
 \&{int} \|f${},{}$ \|g;\C{ roots of OBDDs }\par
 \fi
 
-\N{1}{11}Intersection of OBDDs. Now comes the funnest part. Given the roots
-$f,g$ of
+\N[190 obdd.w]{1}{11}Intersection of OBDDs. Now comes the funnest part. Given
+the roots $f,g$ of
 two OBDDs, the following subroutine computes the OBDD for $f\land g$.
 
 We assume that $f$ and $g$ occupy the low end of memory, up to but not
@@ -291,11 +297,12 @@ ${}\\{printf}(\.{"\ ...\ unreduced\ size}\)\.{\ \%d,\ reduced\ \%d\\n"},\39%
 \4${}\}{}$\2\par
 \fi
 
-\M{12}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\M[220 obdd.w]{12}\B\X3:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{hinode};\C{ the first free node in upper memory }\par
 \fi
 
-\M{13}What's a template? Well, it's sort of like an OBDD except that it hasn't
+\M[223 obdd.w]{13}What's a template? Well, it's sort of like an OBDD except
+that it hasn't
 been reduced to canonical form. Also, it represents the variables in a
 different way. The \PB{\\{var}} field of a node contains a pointer to the
 previous
@@ -343,8 +350,8 @@ ${}\\{source}\MM;{}$\6
 \4${}\}{}$\2\par
 \U11.\fi
 
-\M{14}The \PB{\\{new\_template}} routine recognizes previous entries by
-maintaining
+\M[257 obdd.w]{14}The \PB{\\{new\_template}} routine recognizes previous
+entries by maintaining
 a hash table of all node pairs it has seen. The hash table consists of
 two arrays, \PB{\\{hash\_f}} and \PB{\\{hash\_g}}, for the two function nodes;
 these point
@@ -364,13 +371,14 @@ table rarely if ever gets more than half full.
 variables }\par
 \fi
 
-\M{15}\B\X15:Initialize the tables for template construction\X${}\E{}$\6
+\M[273 obdd.w]{15}\B\X15:Initialize the tables for template construction\X${}%
+\E{}$\6
 $\\{time}\PP{}$;\C{ clear the memory of the \PB{\\{new\_template}} routine }\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\\{edges};{}$ ${}\|k\PP){}$\1\5
 ${}\\{head}[\|k]\K\T{0}{}$;\2\par
 \U13.\fi
 
-\M{16}I forgot to mention that
+\M[277 obdd.w]{16}I forgot to mention that
 the \PB{\\{new\_template}} routine returns 0 if either input function is the
 constant~0. This feature, in fact, is what makes the \PB{\\{intersect}} routine
 compute intersections(!).
@@ -411,8 +419,8 @@ ${}\\{exit}({-}\T{1});{}$\6
 \A17.
 \U11.\fi
 
-\M{17}The second phase of \PB{\\{intersect}} uses a routine \PB{\\{new\_node}}
-that is
+\M[305 obdd.w]{17}The second phase of \PB{\\{intersect}} uses a routine \PB{%
+\\{new\_node}} that is
 very much like \PB{\\{new\_template}}.
 The main difference is that \PB{\\{new\_node}} creates (or finds existing
 copies)
@@ -448,7 +456,8 @@ ${}\\{exit}({-}\T{2});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{18}OK, we're ready to finish off the intersection process. The idea is to go
+\M[329 obdd.w]{18}OK, we're ready to finish off the intersection process. The
+idea is to go
 through the template from the bottom up, collapsing identical nodes when they
 don't belong in an OBDD.
 
@@ -488,8 +497,8 @@ ${}\\{var}[\\{clone}[\|j]]\K\|k;{}$\6
 \4${}\}{}$\2\par
 \U11.\fi
 
-\M{19}The \PB{\\{intersect}} routine is now complete. I just want to point out
-here that
+\M[360 obdd.w]{19}The \PB{\\{intersect}} routine is now complete. I just want
+to point out here that
 \PB{$\\{intersect}(\|f,\|g)$} is called in this program only when \PB{\|g} is
 an OBDD of
 width~2; therefore the template (and the resulting OBDD)
@@ -501,8 +510,8 @@ the size of the OBDDs generated.
 
 \fi
 
-\N{1}{20}Counting the matchings. One of the neatest properties of the OBDD is
-that
+\N[368 obdd.w]{1}{20}Counting the matchings. One of the neatest properties of
+the OBDD is that
 it's easy to count exactly how many combinations $(x_1,x_2,\ldots,x_n)$ will
 make $f(x_1,x_2,\ldots,x_n)=1$. This is just the number of paths to node~1 in
 the dag.
@@ -517,7 +526,8 @@ $(\\{max\_nodes}/\T{2}{}$)\par
 \&{int} \\{count}[\\{max\_final\_nodes}];\par
 \fi
 
-\M{21}\B\X21:Count and report the number of such matchings\X${}\E{}$\6
+\M[382 obdd.w]{21}\B\X21:Count and report the number of such matchings\X${}%
+\E{}$\6
 \&{if} ${}(\|f\G\\{max\_final\_nodes}){}$\5
 ${}\{{}$\1\6
 ${}\\{printf}(\\{stderr},\39\.{"Oops,\ out\ of\ memory}\)\.{\ for\ counting!%
@@ -532,8 +542,8 @@ ${}\\{printf}(\.{"Total\ solutions\ \%d\ }\)\.{in\ OBDD\ of\ size\ \%d.\\}\)%
 \.{n"},\39\\{count}[\|f],\39\|f+\T{1}){}$;\par
 \U1.\fi
 
-\N{1}{22}Hamiltonicity. The first two edges in our list are the two knight
-moves
+\N[390 obdd.w]{1}{22}Hamiltonicity. The first two edges in our list are the two
+knight moves
 from the upper left corner of the board. Some of the matchings use the first
 edge, some use the second. We want to look at all pairs of matchings
 $(\mu,\mu')$ where $\mu$ uses the first edge and $\mu'$ uses the second,
@@ -566,8 +576,8 @@ uniform distribution.
 
 \fi
 
-\M{23}When I got to the point of writing this part of the program, it became
-clear
+\M[421 obdd.w]{23}When I got to the point of writing this part of the program,
+it became clear
 why Minato invented a variant of OBDDs called ZBDDs [{\sl ACM/IEEE Design
 Automation Conf.\ \bf30} (1993), 272--277]. In this variant, we have
 $\rep f(x_1,x_2,\ldots,x_n)=\rep f(x_2,\ldots,x_n)$ if $f(1,x_2,\ldots,x_n)$
@@ -629,8 +639,8 @@ ${}\\{printf}(\.{"(I\ removed\ \%d\ null\ }\)\.{right\ branches.)\\n"},\39%
 \|j){}$;\par
 \U24.\fi
 
-\M{24}In this part of the program I'm implementing recursive traversal with my
-own
+\M[471 obdd.w]{24}In this part of the program I'm implementing recursive
+traversal with my own
 stack instead of using \CEE/'s built-in recursion. The main reason is that we
 save overhead because of tail recursion. Of course, that may not be a big
 deal, but in a program like this I feel more confident about its speed if I
@@ -677,11 +687,11 @@ ${}\\{tt}\K\\{outerstack}[\MM\\{outerptr}];{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{25}\B\X4:Local variables\X${}\mathrel+\E{}$\6
+\M[499 obdd.w]{25}\B\X4:Local variables\X${}\mathrel+\E{}$\6
 \&{int} \\{tt};\C{ node being traversed in the outer loop }\par
 \fi
 
-\M{26}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\M[502 obdd.w]{26}\B\X3:Global variables\X${}\mathrel+\E{}$\6
 \&{int} ${}\\{outerstack}[\\{mm}*\\{nn}*\T{2}],{}$ ${}\\{innerstack}[\\{mm}*%
 \\{nn}*\T{2}]{}$;\C{ stacks for traversal }\6
 \&{int} \\{outerptr}${},{}$ \\{innerptr};\C{ stack pointers }\6
@@ -689,8 +699,8 @@ ${}\\{tt}\K\\{outerstack}[\MM\\{outerptr}];{}$\6
 \par
 \fi
 
-\M{27}The inner traversal is very similar, except that we generalize the
-meaning
+\M[507 obdd.w]{27}The inner traversal is very similar, except that we
+generalize the meaning
 of \PB{\\{opp}}. Now, if there's a chain of links with $u$ at one end and $v$
 at the
 other, \PB{\|u} and~\PB{\|v} are considered ``opposites.'' Inside the chain,
@@ -742,7 +752,7 @@ ${}\|t\K\\{innerstack}[\MM\\{innerptr}];{}$\6
 \4${}\}{}$\2\par
 \U24.\fi
 
-\M{28}\B\X28:Record a solution\X${}\E{}$\6
+\M[531 obdd.w]{28}\B\X28:Record a solution\X${}\E{}$\6
 \&{if} ${}((\\{total\_parity}\AND\T{1})\E\T{0}){}$\1\5
 ${}\\{pseudo\_sols}\PP;{}$\2\6
 \&{else}\5
@@ -764,7 +774,8 @@ ${}\\{printf}(\.{"\ \%s-\%s\%s"},\39\\{black}[\\{var}[\\{innerstack}[\|k]]]\MG%
 \4${}\}{}$\2\par
 \U27.\fi
 
-\N{1}{29}Experiences. When I ran this program in May, 1996, I was able to
+\N[550 obdd.w]{1}{29}Experiences. When I ran this program in May, 1996, I was
+able to
 confirm the results I had obtained previously with my backtrack code for
 Hamiltonian paths. The running time for the $8\times8$ case (on my "old"
 SPARC2) was 1310 seconds. For $6\times8$ the OBDD had 6708 nodes, of which
@@ -776,7 +787,7 @@ matchings and 112740 nodes in the OBDD, of which 80572 were removed.
 
 \fi
 
-\N{1}{30}Index.
+\N[560 obdd.w]{1}{30}Index.
 \fi
 
 \inx

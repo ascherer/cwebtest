@@ -1,4 +1,5 @@
 \input cwebmac
+\srcloctrue
 \datethis
 \ifpdftex \input supp-pdf \else \input epsf \fi
 
@@ -6,8 +7,8 @@
 \def\qcaret/{`\thinspace\caret/\thinspace'} % quoted caret
 
 
-\N{1}{1}Introduction. The purpose of this program is to enumerate fixed
-polyominoes
+\N[8 polynum.w]{1}{1}Introduction. The purpose of this program is to enumerate
+fixed polyominoes
 of up to 55 cells (although I won't really be able to get that far until
 Moore's law carries on for a few more years). The method is essentially
 that of Iwan Jensen [{\tt arXiv:cond-mat/0007239}, to appear in {\sl Journal of
@@ -78,7 +79,8 @@ that have different numbers of rows above the current partial row.
 
 \fi
 
-\M{2}A bit of theory may help the reader internalize these rules: It turns out
+\M[79 polynum.w]{2}A bit of theory may help the reader internalize these rules:
+It turns out
 that the set of all connectivity/occupancy configuration codes at the end of a
 row has the interesting unambiguous context-free grammar
 $$\eqalign{
@@ -102,8 +104,8 @@ hence $s_n$ is asymptotically proportional to $3^n\!/n^{3/2}$.
 
 \fi
 
-\M{3}Any polyomino with the configuration $(*)$ in the midst of row 10 must
-have
+\M[101 polynum.w]{3}Any polyomino with the configuration $(*)$ in the midst of
+row 10 must have
 occupied at least $28+18+1+1+2+4=54$ cells so far, and 16 more will be
 needed to connect it up and make it touch the left edge of the array.
 Moreover, the array has only 10 rows so far, but it has 26 columns, and we
@@ -123,7 +125,8 @@ which turns out to be approximately $4.06^n$ times $0.3/n$.
 
 \fi
 
-\M{4}This program doesn't actually do the whole job of enumeration;
+\M[119 polynum.w]{4}This program doesn't actually do the whole job of
+enumeration;
 it only outputs a set of instructions that tell how to do it.
 Another program reads those instructions and completes the computation.
 
@@ -143,7 +146,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{5}\B\X5:Subroutines\X${}\E{}$\6
+\M[140 polynum.w]{5}\B\X5:Subroutines\X${}\E{}$\6
 \&{void} \\{panic}(\&{char} ${}{*}\\{mess}){}$\1\1\2\2\6
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"\%s!\\n"},\39\\{mess});{}$\6
@@ -152,7 +155,8 @@ ${}\\{exit}({-}\T{1});{}$\6
 \As9, 10, 11, 13, 14, 17, 30, 31, 32, 35, 55, 56, 59, 63, 64, 69, 73, 75\ETs76.
 \U4.\fi
 
-\M{6}The user specifies the maximum size of polyominoes to be counted, $n$,
+\M[147 polynum.w]{6}The user specifies the maximum size of polyominoes to be
+counted, $n$,
 and the desired width, $w$, on the command line. All $h\times w$ rectangles
 spanned by polyominoes of $n$ cells or less will be counted, for
 $w\le h\le n+1-w$. (No solutions are possible for $h>n+1-w$.)
@@ -197,7 +201,7 @@ ${}\\{exit}({-}\T{2});{}$\6
 ${}\\{base\_name}\K\\{argv}[\T{5}]{}$;\par
 \U4.\fi
 
-\M{7}\B\X7:Global variables\X${}\E{}$\6
+\M[180 polynum.w]{7}\B\X7:Global variables\X${}\E{}$\6
 \&{int} \|n;\C{ we will count polyominoes of $n$ or fewer cells }\6
 \&{int} \|w;\C{ provided that they span a rectangle of width $w$          and
 height $\ge w$ }\6
@@ -207,7 +211,8 @@ slave program memory }\par
 \As8, 18, 27, 34, 39, 57, 65, 68, 71, 85, 98, 108\ETs110.
 \U4.\fi
 
-\N{1}{8}Output. Let's get the basics of output out of the way first, so that
+\N[188 polynum.w]{1}{8}Output. Let's get the basics of output out of the way
+first, so that
 we know where we're heading. The postprocessing program {\mc POLYSLAVE}
 will interpret instructions according to a compact binary format,
 with either one or four bytes per instruction.
@@ -243,7 +248,7 @@ file }\6
 \&{char} ${}{*}\\{base\_name},{}$ \\{filename}[\T{100}];\par
 \fi
 
-\M{9}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\M[218 polynum.w]{9}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{open\_it}(\,)\1\1\2\2\6
 ${}\{{}$\1\6
 ${}\\{sprintf}(\\{filename},\39\.{"\%.90s.\%d"},\39\\{base\_name},\39\\{file%
@@ -259,7 +264,7 @@ ${}\\{bytes\_out}\K\\{checksum}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{10}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\M[230 polynum.w]{10}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{close\_it}(\,)\1\1\2\2\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{fwrite}({\AND}\\{checksum},\39{}$\&{sizeof}(\&{unsigned} %
@@ -272,7 +277,7 @@ ${}\\{printf}(\.{"[\%d\ bytes\ written\ o}\)\.{n\ file\ \%s,\ checksum\ }\)\.{%
 \4${}\}{}$\2\par
 \fi
 
-\M{11}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\M[240 polynum.w]{11}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{write\_it}(\&{int} \\{bytes})\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{int} \|k;\6
@@ -295,8 +300,8 @@ ${}\\{checksum}\MRL{+{\K}}\|s;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{12}A four-byte instruction has the binary form $(0xaaaaaa)_2$,
-$(bbbbbbbb)_2$,
+\M[257 polynum.w]{12}A four-byte instruction has the binary form
+$(0xaaaaaa)_2$, $(bbbbbbbb)_2$,
 $(cccccccc)_2$, $(dddddddd)_2$, where
 $(aaaaaabbbbbbbbccccccccdddddddd)_2$ is a 30-bit address specified
 in big-endian fashion.
@@ -345,7 +350,7 @@ ${}\}{}$ \&{opcode};\par
 \As26, 28, 29, 33, 54, 60\ETs61.
 \U4.\fi
 
-\M{13}\B\D$\\{end\_of\_buffer}$ \5
+\M[298 polynum.w]{13}\B\D$\\{end\_of\_buffer}$ \5
 ${\AND}\\{out}.\\{buf}{}$[\\{buf\_size}]\par
 \Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{put\_inst}(\&{unsigned} \&{char} \|o${},\39{}$\&{unsigned} \&{char}
@@ -365,7 +370,7 @@ ${}\\{buf\_ptr}\K\|b;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{14}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\M[314 polynum.w]{14}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{put\_four}(\&{register} \&{unsigned} \&{int} \|x)\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{unsigned} \&{char} ${}{*}\|b\K\\{buf\_ptr};{}$\7
@@ -386,7 +391,8 @@ ${}\\{buf\_ptr}\K\|b;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{15}The first six bytes of the instruction file are, however, special.
+\M[333 polynum.w]{15}The first six bytes of the instruction file are, however,
+special.
 Byte~0 is the number $n$ of cells in the largest polyominoes being
 enumerated. When a \PB{\\{sync}} is interpreted, {\mc POLYSLAVE}
 outputs the current values of \PB{\\{count}[\|j]} for $1\le j\le n$.
@@ -414,7 +420,7 @@ ${}\\{buf\_ptr}\K{\AND}\\{out}.\\{buf}[\T{2}];{}$\6
 \As58, 62, 66\ETs77.
 \U4.\fi
 
-\M{16}Here's what we'll do when it's all over.
+\M[356 polynum.w]{16}Here's what we'll do when it's all over.
 
 \Y\B\4\X16:Empty the buffer and close the output file\X${}\E{}$\6
 \&{if} ${}(\\{buf\_ptr}\I{\AND}\\{out}.\\{buf}[\T{0}]){}$\1\5
@@ -422,7 +428,8 @@ ${}\\{write\_it}(\\{buf\_ptr}-{\AND}\\{out}.\\{buf}[\T{0}]);{}$\2\6
 \\{close\_it}(\,);\par
 \Us4\ET106.\fi
 
-\M{17}Most of the output is generated by the \PB{\\{basic\_inst}} routine.
+\M[362 polynum.w]{17}Most of the output is generated by the \PB{\\{basic%
+\_inst}} routine.
 
 \Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{basic\_inst}(\&{int} \\{op}${},\39{}$\&{int} \\{src\_addr}${},%
@@ -458,7 +465,7 @@ ${}\\{put\_inst}(\\{op},\39\\{count});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{18}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[385 polynum.w]{18}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{char} ${}{*}\\{sym}[\T{4}]\K\{\.{"sync"},\39\.{"clear"},\39\.{"copy"},\39%
 \.{"add"}\};{}$\6
 \&{int} \\{cur\_src}${},{}$ \\{cur\_trg};\C{ current source and target
@@ -466,7 +473,8 @@ addresses in the slave }\6
 \&{int} \\{verbose}${}\K\T{0}{}$;\C{ set nonzero when debugging }\par
 \fi
 
-\N{1}{19}Connectivity. The hardest task that confronts us is to figure out
+\N[390 polynum.w]{1}{19}Connectivity. The hardest task that confronts us is to
+figure out
 how to determine the cutoff threshold:
 Given a configuration like \.{0(00(00100-010-\caret/)00()0)0(-0},
 what is the minimum number of additional cells that are needed to connect
@@ -505,8 +513,8 @@ applies at the right.
 
 \fi
 
-\M{20}The situation gets more interesting when components are nested. Suppose,
-for
+\M[427 polynum.w]{20}The situation gets more interesting when components are
+nested. Suppose, for
 example, that $\alpha_1$, $\alpha_2$, \dots, $\alpha_{k-1}$ are distinct,
 but $\alpha_k$ is part of the same component as $\alpha_1$. Then we still
 must pay $g_0+1$ to connect $\alpha_1$ at the left and $g_k+1$ to
@@ -526,7 +534,8 @@ disconnect the largest gap~$\.0^3$, because it retains the 2 bonus points.
 
 \fi
 
-\M{21}Now look at the configuration \.{-00(010-010)00()00()00-}, which is
+\M[445 polynum.w]{21}Now look at the configuration \.{-00(010-010)00()00()00-},
+which is
 connected to left and right edges and which also contains the subcomponent
 \.{(010-010)}. The best way to handle the subcomponent is to occupy 5 cells
 below it, spanning the middle region \.{10-01}. But then we need
@@ -555,8 +564,8 @@ $\alpha_j$ is a single character, either \.1 or \.( or \.) or \.-.)
 
 \fi
 
-\M{22}A recursive strategy can be used to solve the minimum connectivity
-problem
+\M[471 polynum.w]{22}A recursive strategy can be used to solve the minimum
+connectivity problem
 in linear time, but we must design it carefully because of the examples
 considered earlier. The key idea will be to associate four costs $c_{ij}$ with
 each subcomponent, where $0\le i,j\le1$. Cost $c_{ij}$ is the minimum number
@@ -607,8 +616,8 @@ the configuration as a multiplication by~$X_1$.
 
 \fi
 
-\M{23}If $\alpha$ and $\beta$ are subcomponents that are already connected to
-each
+\M[520 polynum.w]{23}If $\alpha$ and $\beta$ are subcomponents that are already
+connected to each
 other, having cost matrices $A$ and~$B$ respectively, the cost matrix for
 $\alpha\,\.0^g\beta$ as a single component is $ANB$, where
 $N=\mtx0\infty\infty\infty$ is the matrix meaning ``don't occupy anything
@@ -631,7 +640,8 @@ recursive algorithm work.
 
 \fi
 
-\M{24}Our discussion so far has assumed for simplicity that we're at the end
+\M[541 polynum.w]{24}Our discussion so far has assumed for simplicity that
+we're at the end
 of a row. But we also need to consider the case that a gap $\.0^g$ might be
 $\.0^a\caret/\.0^b$ in the vicinity of the place where a partial row is being
 filled. Fortunately the same theory applies with only a slight variation:
@@ -645,7 +655,8 @@ row~$r$ in order to reach row~$r+1$.
 
 \fi
 
-\M{25}After calculating the minimum cost of connection, we might also need to
+\M[553 polynum.w]{25}After calculating the minimum cost of connection, we might
+also need to
 add the cost of extension to span a $w\times w$ square. Thus, if row~$r$
 is partially filled and row $r-1$ is completely filled, and if $r<w$,
 we must add $w-r-1$ cells if the minimum connection can be achieved with at
@@ -670,7 +681,8 @@ latter cells more attractive, in cases when they need to~be.
 
 \fi
 
-\M{26}OK, we've got a reasonably clean theory; now it's time to put it into
+\M[576 polynum.w]{26}OK, we've got a reasonably clean theory; now it's time to
+put it into
 practice. The first step is to define the encoding of our alphabet
 \.0, \.1, \.(, \.), and \.-, to which we'll add an ``edge of line''
 character. The following encoding is designed to make it easy to test
@@ -685,14 +697,15 @@ ${}\}{}$ \&{code};\C{ \.0, \.1, \.), \.-, \.(, or edge delimiter in a
 configuration string }\par
 \fi
 
-\M{27}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[588 polynum.w]{27}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{decode}[\T{5}]${}\K\{\.{'0'},\39\.{'1'},\39\.{')'},\39\.{'-'},\39%
 \.{'('}\};{}$\6
 \&{code} \\{reflect}[\T{5}]${}\K\{\\{zero},\39\\{one},\39\\{lft},\39\\{mid},\39%
 \\{rt}\}{}$;\par
 \fi
 
-\M{28}Then in the cost matrices and in our answer describing the minimum
+\M[592 polynum.w]{28}Then in the cost matrices and in our answer describing the
+minimum
 connection cost of a given configuration, we will represent numbers
 $a+b\epsilon$ as short integers, knowing that $a$ and $b$ will never exceed 27.
 
@@ -714,7 +727,7 @@ $((\|x)\AND\T{\^ff}{}$)\par
 ${}\}{}$ \&{cost\_matrix};\par
 \fi
 
-\M{29}We will need to distinguish between the cost matrices
+\M[609 polynum.w]{29}We will need to distinguish between the cost matrices
 $X_g=\mtx\infty\infty\infty {g_{\mathstrut}}$
 and $Y_g=\mtx\infty\infty g\infty$,
 as well as a third case that arises when a configuration is already
@@ -726,8 +739,8 @@ ${}\\{ytyp},\39\\{xtyp},\39\\{otyp}{}$\2\6
 ${}\}{}$ \&{gap\_type};\par
 \fi
 
-\M{30}A few easy subroutines do the basic operations on cost matrices that we
-will
+\M[618 polynum.w]{30}A few easy subroutines do the basic operations on cost
+matrices that we will
 need.
 
 \Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
@@ -743,7 +756,7 @@ ${}\|c.\|c[\T{1}][\T{1}]\K\|a.\|c[\T{1}][\T{0}]+\|b.\|c[\T{0}][\T{1}];{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{31}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\M[632 polynum.w]{31}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
 \&{cost\_matrix} \\{a\_x\_b}(\&{cost\_matrix} \|a${},\39{}$\&{cost\_matrix} %
 \|b${},\39{}$\&{gap\_type} \\{typ}${},\39{}$\&{cost} \|g)\C{ computes $A X_{g%
 \,}B$, $A Y_{g\,} B$,  or $B$, depending on \PB{\\{typ}} }\6
@@ -763,7 +776,7 @@ ${}\|c.\|c[\T{1}][\T{1}]\K\|a.\|c[\T{1}][\\{typ}]+\|g+\|b.\|c[\T{1}][\T{1}];{}$%
 \4${}\}{}$\2\par
 \fi
 
-\M{32}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\M[645 polynum.w]{32}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{min\_mat}(\&{cost\_matrix} ${}{*}\|a,\39{}$\&{cost\_matrix} \|b)\C{
 sets $A=\min(A,B)$ }\6
 ${}\{{}$\1\6
@@ -778,7 +791,8 @@ ${}({*}\|a).\|c[\T{1}][\T{1}]\K\|b.\|c[\T{1}][\T{1}];{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{33}The algorithm we use is inherently recursive, but we implement it
+\M[654 polynum.w]{33}The algorithm we use is inherently recursive, but we
+implement it
 iteratively using a stack because it involves only simple algebraic
 operations. Each stack entry typically represents a string of \.0's
 and a subcomponent that has not been completely scanned as yet;
@@ -800,8 +814,8 @@ the cost matrix of all components scanned so far.
 ${}\}{}$ \&{stack\_entry};\par
 \fi
 
-\M{34}The given configuration string will appear in \PB{\|c[\T{1}]} through %
-\PB{\|c[\|w]};
+\M[674 polynum.w]{34}The given configuration string will appear in \PB{\|c[%
+\T{1}]} through \PB{\|c[\|w]};
 also \PB{\|c[\T{0}]} and \PB{$\|c[\|w+\T{1}]$} will be set to \PB{\\{eol}}.
 
 \Y\B\4\X7:Global variables\X${}\mathrel+\E{}$\6
@@ -809,7 +823,8 @@ also \PB{\|c[\T{0}]} and \PB{$\|c[\|w+\T{1}]$} will be set to \PB{\\{eol}}.
 \&{stack\_entry} \\{stk}[\T{64}];\C{ partially evaluated costs }\par
 \fi
 
-\M{35}This program operates in two phases that are almost identical:
+\M[681 polynum.w]{35}This program operates in two phases that are almost
+identical:
 Before \PB{\\{row\_end}} has been sensed, the cost of a connection cell is
 \PB{\\{unity}}, but afterwards it is \PB{$\\{unity}+\\{epsilon}$}. In order to
 streamline
@@ -860,8 +875,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{36}In practice \PB{\\{row\_end}} will not be zero. But I decided to make the
-algorithm
+\M[724 polynum.w]{36}In practice \PB{\\{row\_end}} will not be zero. But I
+decided to make the algorithm
 general enough to work correctly also in that case, because only one more
 line of code was needed.
 
@@ -880,7 +895,7 @@ equivalent at the left edge }\6
 \4${}\}{}$\2\par
 \U35.\fi
 
-\M{37}\B\X37:Scan for zeros in Phase 0\X${}\E{}$\6
+\M[738 polynum.w]{37}\B\X37:Scan for zeros in Phase 0\X${}\E{}$\6
 \&{if} ${}(\|k\E\\{row\_end}){}$\5
 ${}\{{}$\1\6
 ${}\|g\K\T{0},\39\\{typ}\K\\{ytyp};{}$\6
@@ -906,7 +921,7 @@ ${}\|g\MRL{+{\K}}\\{unity};{}$\6
 \4${}\}{}$\2\par
 \U35.\fi
 
-\M{38}\B\X38:Scan a nonzero token cluster in Phase 0\X${}\E{}$\6
+\M[755 polynum.w]{38}\B\X38:Scan a nonzero token cluster in Phase 0\X${}\E{}$\6
 $\\{cm}\K\\{base\_cost0};{}$\6
 ${}\|k\PP;$ \&{switch} ${}(\|c[\|k-\T{1}])$ $\{$ \6
 \4\&{case} \\{lft}:\5
@@ -959,7 +974,7 @@ ${}\\{open}\K\T{1};{}$\6
 \\{panic}(\.{"Row\ end\ missed"});\par
 \U35.\fi
 
-\M{39}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[785 polynum.w]{39}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{gap\_type} \\{typ};\C{ the current type of gap \PB{\|g} }\6
 \&{cost\_matrix} \\{cm};\C{ the current cost matrix }\6
 \&{cost\_matrix} \\{acm};\C{ another cost matrix }\7
@@ -972,8 +987,8 @@ ${}\\{open}\K\T{1};{}$\6
 \epsilon}\bigr)$ }\par
 \fi
 
-\M{40}\B\X40:Compress $\.-^*\.)$ following \.( into a single token in Phase 0%
-\X${}\E{}$\6
+\M[795 polynum.w]{40}\B\X40:Compress $\.-^*\.)$ following \.( into a single
+token in Phase 0\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{do}\5
 ${}\{{}$\1\6
@@ -990,8 +1005,8 @@ ${}\\{cm}.\|c[\T{1}][\T{1}]\K\\{unity}+\\{unity}{}$;\C{ now \PB{\\{cm}} is $0%
 \4${}\}{}$\2\par
 \U38.\fi
 
-\M{41}\B\X41:Compress $\.-^*\.)$ following \.- into a single token in Phase 0%
-\X${}\E{}$\6
+\M[805 polynum.w]{41}\B\X41:Compress $\.-^*\.)$ following \.- into a single
+token in Phase 0\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{do}\5
 ${}\{{}$\1\6
@@ -1008,15 +1023,16 @@ ${}\\{cm}.\|c[\T{1}][\T{1}]\K\\{unity}+\\{unity}{}$;\C{ now \PB{\\{cm}} is $0%
 \4${}\}{}$\2\par
 \U38.\fi
 
-\M{42}\B\X42:Append \PB{\\{cm}} to the current partial component\X${}\E{}$\6
+\M[815 polynum.w]{42}\B\X42:Append \PB{\\{cm}} to the current partial component%
+\X${}\E{}$\6
 \&{if} (\|s)\1\5
 \X43:Append \PB{\\{cm}} to \PB{$\\{stk}[\|s].\\{open\_cost}$}\X;\2\6
 ${}\\{stk}[\|s].\\{closed\_cost}\K\\{a\_x\_b}(\\{stk}[\|s].\\{closed\_cost},\39%
 \\{cm},\39\\{typ},\39\|g){}$;\par
 \Us38\ET49.\fi
 
-\M{43}\B\X43:Append \PB{\\{cm}} to \PB{$\\{stk}[\|s].\\{open\_cost}$}\X${}\E{}$%
-\6
+\M[819 polynum.w]{43}\B\X43:Append \PB{\\{cm}} to \PB{$\\{stk}[\|s].\\{open%
+\_cost}$}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{acm}\K\\{a\_n\_b}(\\{stk}[\|s].\\{closed\_cost},\39\\{cm});{}$\6
 ${}\\{stk}[\|s].\\{open\_cost}\K\\{a\_x\_b}(\\{stk}[\|s].\\{open\_cost},\39%
@@ -1025,7 +1041,7 @@ ${}\\{min\_mat}({\AND}\\{stk}[\|s].\\{open\_cost},\39\\{acm});{}$\6
 \4${}\}{}$\2\par
 \Us38, 42, 47\ETs49.\fi
 
-\M{44}\B\X44:Combine the top two items on the stack\X${}\E{}$\6
+\M[826 polynum.w]{44}\B\X44:Combine the top two items on the stack\X${}\E{}$\6
 $\|s\MM;{}$\6
 \&{if} (\|s)\1\5
 \X45:Append \PB{$\\{stk}[\|s+\T{1}].\\{open\_cost}$} to \PB{$\\{stk}[\|s].%
@@ -1035,8 +1051,8 @@ ${}\\{stk}[\|s].\\{closed\_cost}\K\\{a\_x\_b}(\\{stk}[\|s].\\{closed\_cost},\39%
 \\{stk}[\|s+\T{1}].\\{gap}){}$;\par
 \Us38, 49\ETs52.\fi
 
-\M{45}\B\X45:Append \PB{$\\{stk}[\|s+\T{1}].\\{open\_cost}$} to \PB{$\\{stk}[%
-\|s].\\{open\_cost}$}\X${}\E{}$\6
+\M[832 polynum.w]{45}\B\X45:Append \PB{$\\{stk}[\|s+\T{1}].\\{open\_cost}$} to %
+\PB{$\\{stk}[\|s].\\{open\_cost}$}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{acm}\K\\{a\_n\_b}(\\{stk}[\|s].\\{closed\_cost},\39\\{stk}[\|s+\T{1}].%
 \\{open\_cost});{}$\6
@@ -1047,13 +1063,13 @@ ${}\\{min\_mat}({\AND}\\{stk}[\|s].\\{open\_cost},\39\\{acm});{}$\6
 \4${}\}{}$\2\par
 \U44.\fi
 
-\M{46}\B\X46:Finish processing \PB{\\{lft}}\X${}\E{}$\6
+\M[840 polynum.w]{46}\B\X46:Finish processing \PB{\\{lft}}\X${}\E{}$\6
 $\\{stk}[\PP\|s].\\{gap\_typ}\K\\{typ};{}$\6
 ${}\\{stk}[\|s].\\{gap}\K\|g;{}$\6
 ${}\\{stk}[\|s].\\{closed\_cost}\K\\{stk}[\|s].\\{open\_cost}\K\\{cm}{}$;\par
 \Us38\ET49.\fi
 
-\M{47}\B\X47:Finish processing \PB{\\{mid}}\X${}\E{}$\6
+\M[845 polynum.w]{47}\B\X47:Finish processing \PB{\\{mid}}\X${}\E{}$\6
 \&{if} ${}(\R\|s){}$\5
 ${}\{{}$\1\6
 \&{if} ${}(\\{stk}[\T{0}].\\{closed\_cost}.\|c[\T{1}][\T{1}]){}$\1\5
@@ -1068,7 +1084,7 @@ ${}\\{stk}[\|s].\\{closed\_cost}\K\\{stk}[\|s].\\{open\_cost};{}$\6
 \4${}\}{}$\2\par
 \Us38\ET49.\fi
 
-\M{48}\B\X48:Scan for zeros in Phase 1\X${}\E{}$\6
+\M[854 polynum.w]{48}\B\X48:Scan for zeros in Phase 1\X${}\E{}$\6
 \&{if} (\|c[\|k])\1\5
 \\{panic}(\.{"Syntax\ error,\ 0\ exp}\)\.{ected"});\2\6
 ${}\\{typ}\K\\{xtyp},\39\|g\K\\{uunity},\39\|k\PP;{}$\6
@@ -1079,7 +1095,7 @@ ${}\|g\MRL{+{\K}}\\{uunity},\39\|k\PP;{}$\6
 \4${}\}{}$\2\par
 \U35.\fi
 
-\M{49}\B\X49:Scan a nonzero token cluster in Phase 1\X${}\E{}$\6
+\M[861 polynum.w]{49}\B\X49:Scan a nonzero token cluster in Phase 1\X${}\E{}$\6
 $\\{cm}\K\\{base\_cost1};{}$\6
 ${}\|k\PP;$ \&{switch} ${}(\|c[\|k-\T{1}])$ $\{$ \6
 \4\&{case} \\{lft}:\5
@@ -1129,8 +1145,8 @@ ${}\\{open}\K\T{1};{}$\6
 \4\\{scan\_eol1}:\C{ fall through to return the answer }\par
 \U35.\fi
 
-\M{50}\B\X50:Compress $\.-^*\.)$ following \.( into a single token in Phase 1%
-\X${}\E{}$\6
+\M[890 polynum.w]{50}\B\X50:Compress $\.-^*\.)$ following \.( into a single
+token in Phase 1\X${}\E{}$\6
 ${}\{{}$\1\6
 \4\\{scan\_tokens1a}:\5
 \&{do}\5
@@ -1148,8 +1164,8 @@ ${}\\{cm}.\|c[\T{1}][\T{1}]\MRL{+{\K}}\\{uunity}{}$;\C{ now \PB{\\{cm}} is
 \4${}\}{}$\2\par
 \U49.\fi
 
-\M{51}\B\X51:Compress $\.-^*\.)$ following \.- into a single token in Phase 1%
-\X${}\E{}$\6
+\M[902 polynum.w]{51}\B\X51:Compress $\.-^*\.)$ following \.- into a single
+token in Phase 1\X${}\E{}$\6
 ${}\{{}$\1\6
 \4\\{scan\_tokens1b}:\5
 \&{do}\5
@@ -1167,7 +1183,8 @@ ${}\\{cm}.\|c[\T{1}][\T{1}]\MRL{+{\K}}\\{uunity}{}$;\C{ now \PB{\\{cm}} is
 \4${}\}{}$\2\par
 \U49.\fi
 
-\M{52}The cost of reaching the right edge is \PB{\|g} if \PB{\|g} has the form
+\M[914 polynum.w]{52}The cost of reaching the right edge is \PB{\|g} if \PB{%
+\|g} has the form
 $b+b\epsilon$, but it is $a+b$ if \PB{\|g} has the exceptional form
 $a+1+b+b\epsilon$ that arises when filling an unfilled row.
 
@@ -1191,8 +1208,8 @@ ${}\{{}$\C{ we need to reach the right edge }\1\6
 \4${}\}{}$\2\par
 \U35.\fi
 
-\N{1}{53}Data structures. If we want to count $n$-ominoes efficiently for
-large~$n$,
+\N[929 polynum.w]{1}{53}Data structures. If we want to count $n$-ominoes
+efficiently for large~$n$,
 our most precious resource turns out to be the random-access memory that
 is available. I think at least 20 bytes of memory are needed per active
 configuration, and that limits us to about 50 million active configurations per
@@ -1251,7 +1268,8 @@ would. But the behavior in general is quite satisfactory.)
 
 \fi
 
-\M{54}Eight bytes suffice to encode any configuration $c_0\ldots c_{w-1}$ in a
+\M[985 polynum.w]{54}Eight bytes suffice to encode any configuration $c_0\ldots
+c_{w-1}$ in a
 5-letter alphabet, since $5^{27}<2^{64}<5^{28}$ and we are assuming that $w$ is
 at most~27. We define \&{cstring} to a union type, so that the hash function
 can readily access its individual bytes, yet packing and unpacking can be done
@@ -1268,8 +1286,8 @@ ${}\}{}$ \&{octa};\C{ two tetrabytes make one octabyte }\6
 ${}\}{}$ \&{cstring};\C{ packed version of a configuration string }\par
 \fi
 
-\M{55}The \PB{\\{pack}} subroutine produces a \PB{\&{cstring}} from the codes
-in array \PB{\|c}.
+\M[1001 polynum.w]{55}The \PB{\\{pack}} subroutine produces a \PB{\&{cstring}}
+from the codes in array \PB{\|c}.
 Since we are assuming provisionally that \PB{\|w} is at most 23, we can use
 octal notation to put 10 codes in one tetrabyte and quinary notation
 to put 13 in the other.
@@ -1299,7 +1317,8 @@ ${}\\{packed}.\|o.\|l\K\|j;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{56}That which can be packed can be unpacked. This routine puts the
+\M[1026 polynum.w]{56}That which can be packed can be unpacked. This routine
+puts the
 results into two arrays, \PB{\\{sc}} and \PB{\|c}, because it is used only when
 unpacking a new source configuration $\alpha$.
 
@@ -1344,15 +1363,15 @@ ${}\\{sc}[\|k]\K\|c[\|k]\K\|j;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{57}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[1062 polynum.w]{57}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{code} \\{sc}[\T{64}];\C{ codes of the current source configuration }\par
 \fi
 
-\M{58}\B\X15:Initialize\X${}\mathrel+\E{}$\6
+\M[1065 polynum.w]{58}\B\X15:Initialize\X${}\mathrel+\E{}$\6
 $\|c[\T{0}]\K\\{sc}[\T{0}]\K\|c[\|w+\T{1}]\K\\{sc}[\|w+\T{1}]\K\\{eol}{}$;\par
 \fi
 
-\M{59}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\M[1068 polynum.w]{59}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_config}(\&{int} \\{row\_end})\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{int} \|k;\7
@@ -1368,7 +1387,8 @@ ${}\\{printf}(\.{"\%c"},\39\\{decode}[\|c[\|k]]);{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{60}A configuration can be in three states: Normally it is \PB{\\{active}},
+\M[1079 polynum.w]{60}A configuration can be in three states: Normally it is %
+\PB{\\{active}},
 with a generating function represented as a sequence of counters;
 first, however, it is \PB{\\{raw}}, meaning that the space for counters has
 been
@@ -1382,7 +1402,8 @@ ${}\\{active},\39\\{raw},\39\\{deleted}{}$\2\6
 ${}\}{}$ \&{status};\par
 \fi
 
-\M{61}Here then are the 20 precious bytes that represent a configuration.
+\M[1089 polynum.w]{61}Here then are the 20 precious bytes that represent a
+configuration.
 The rolling strategy allows us to get by with only one link field.
 
 \Y\B\4\X12:Type definitions\X${}\mathrel+\E{}$\6
@@ -1402,7 +1423,7 @@ or hole list }\6
 ${}\}{}$ \&{config};\par
 \fi
 
-\M{62}\B\X15:Initialize\X${}\mathrel+\E{}$\6
+\M[1103 polynum.w]{62}\B\X15:Initialize\X${}\mathrel+\E{}$\6
 $\\{conf}\K{}$(\&{config} ${}{*}){}$ \\{calloc}${}(\\{conf\_size},\39%
 \&{sizeof}(\&{config}));{}$\6
 \&{if} ${}(\R\\{conf}){}$\1\5
@@ -1410,7 +1431,8 @@ $\\{conf}\K{}$(\&{config} ${}{*}){}$ \\{calloc}${}(\\{conf\_size},\39%
 ${}\\{conf\_end}\K\\{conf}+\\{conf\_size}{}$;\par
 \fi
 
-\M{63}The main high-level routine, called \PB{\\{update}}, is used to add terms
+\M[1108 polynum.w]{63}The main high-level routine, called \PB{\\{update}}, is
+used to add terms
 \PB{$\|p\MG\\{lo}$} through \PB{\\{hi}} of the generating function for
 configuration~\PB{\|p}
 to the generating function for configuration~\PB{\|q}. The special case
@@ -1439,7 +1461,8 @@ ${}\\{basic\_inst}(\\{add},\39\|p\MG\\{addr},\39\|q\MG\\{addr}+\|p\MG\\{lo}-\|q%
 \4${}\}{}$\2\par
 \fi
 
-\M{64}``Universal hashing'' ({\sl TAOCP\/} exercise 6.4--72) is used to get a
+\M[1126 polynum.w]{64}``Universal hashing'' ({\sl TAOCP\/} exercise 6.4--72) is
+used to get a
 good hash function, because most of the key bits tend to be zero.
 
 \Y\B\4\D$\\{hash\_width}$ \5
@@ -1457,14 +1480,15 @@ ${}\|h\MRL{+{\K}}\\{hash\_bits}[\|l][\|s.\\{byte}[\|l]];{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{65}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[1141 polynum.w]{65}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{unsigned} \&{int} \\{hash\_bits}[\T{8}][\T{256}];\C{ random bits for
 universal hashing }\6
 \&{config} ${}{*}\\{hash\_table}[\\{hash\_mask}+\T{1}]{}$;\C{ heads of the hash
 chains }\par
 \fi
 
-\M{66}The random number generator used here doesn't have to be of sensational
+\M[1145 polynum.w]{66}The random number generator used here doesn't have to be
+of sensational
 quality. We can keep \PB{$\\{hash\_bits}[\|j][\T{0}]\K\T{0}$} without loss of
 universality.
 
@@ -1479,15 +1503,15 @@ ${}\\{hash\_bits}[\|j][\|k]\K\\{row\_end}\GG(\T{32}-\\{hash\_width});{}$\6
 \4${}\}{}$\2\2\par
 \fi
 
-\M{67}\B\X67:Local variables\X${}\E{}$\6
+\M[1155 polynum.w]{67}\B\X67:Local variables\X${}\E{}$\6
 \&{register} \&{int} \|j${},{}$ \|k;\C{ all-purpose indices }\6
 \&{register} \&{int} \\{row\_end};\C{ size of the current partial row \PB{\|r}
 }\par
 \A99.
 \U4.\fi
 
-\M{68}On odd-numbered passes, \PB{\\{src}} runs down towards \PB{\\{conf}},
-while \PB{\\{trg}}
+\M[1159 polynum.w]{68}On odd-numbered passes, \PB{\\{src}} runs down towards %
+\PB{\\{conf}}, while \PB{\\{trg}}
 starts at \PB{$\\{conf\_end}-\T{1}$} and proceeds downward. On even-numbered
 passes,
 \PB{\\{src}} runs up towards \PB{$\\{conf\_end}-\T{1}$} and \PB{\\{trg}} starts
@@ -1506,7 +1530,8 @@ recycled }\6
 \&{int} \\{ssrc}${},{}$ \\{strg};\C{ allocation pointers for slave counts }\par
 \fi
 
-\M{69}When a new configuration is created, we allocate space for its
+\M[1172 polynum.w]{69}When a new configuration is created, we allocate space
+for its
 generating function in the slave module. Later on, we might discover
 that more space is needed because another generating function (with
 more terms) must be combined with it. At such times, we copy the data to
@@ -1542,8 +1567,8 @@ ${}\|p\MG\\{state}\K\\{raw};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{70}\B\X70:Allocate \PB{$\|p\MG\\{addr}$} (upward) and check that memory
-hasn't overflowed\X${}\E{}$\6
+\M[1202 polynum.w]{70}\B\X70:Allocate \PB{$\|p\MG\\{addr}$} (upward) and check
+that memory hasn't overflowed\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{src}-\\{trg}<\\{min\_space}){}$\5
 ${}\{{}$\1\6
@@ -1566,7 +1591,7 @@ ${}\\{min\_sholes}\K\\{sholes},\39\\{slave\_row}\K\|r,\39\\{slave\_col}\K%
 \4${}\}{}$\2\par
 \U69.\fi
 
-\M{71}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[1218 polynum.w]{71}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{holes};\C{ current number of holes in the target area }\6
 \&{int} \\{sholes};\C{ current number of vacated counters in slave target area
 }\6
@@ -1587,7 +1612,7 @@ and \PB{\\{strg}} get? }\6
 chains }\par
 \fi
 
-\M{72}\B\X72:Print statistics about this run\X${}\E{}$\6
+\M[1234 polynum.w]{72}\B\X72:Print statistics about this run\X${}\E{}$\6
 \\{printf}(\.{"Altogether\ "});\6
 \&{if} (\\{hconfigs})\1\5
 ${}\\{printf}(\.{"\%d\%09d"},\39\\{hconfigs},\39\\{configs});{}$\2\6
@@ -1603,7 +1628,7 @@ position\ (\%d,\%d);\\n}\)\.{"},\39\\{slave\_size}-\\{min\_sspace},\39\\{min%
 ${}\\{printf}(\.{"\ \%d\ moves.\\n"},\39\\{moves}){}$;\par
 \Us4\ET105.\fi
 
-\M{73}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\M[1245 polynum.w]{73}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
 \&{config} ${}{*}{}$\\{get\_slot\_down}(\&{register} \&{int} \|s)\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{config} ${}{*}\|p\K\\{slot}[\|s];{}$\7
@@ -1623,8 +1648,8 @@ ${}\|p\MG\\{state}\K\\{raw};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{74}\B\X74:Allocate \PB{$\|p\MG\\{addr}$} (downward) and check that memory
-hasn't overflowed\X${}\E{}$\6
+\M[1260 polynum.w]{74}\B\X74:Allocate \PB{$\|p\MG\\{addr}$} (downward) and
+check that memory hasn't overflowed\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{trg}-\\{src}<\\{min\_space}){}$\5
 ${}\{{}$\1\6
@@ -1647,8 +1672,8 @@ ${}\|p\MG\\{addr}\K\\{strg}+\T{1};{}$\6
 \4${}\}{}$\2\par
 \U73.\fi
 
-\M{75}The \PB{\\{move\_down}} and \PB{\\{move\_up}} subroutines are invoked
-when an
+\M[1276 polynum.w]{75}The \PB{\\{move\_down}} and \PB{\\{move\_up}} subroutines
+are invoked when an
 active target configuration \PB{\|p} needs more space for its generating
 function. The global variable \PB{\\{hash}} will have been set so that
 \PB{$\\{hash\_table}[\\{hash}]\K\|p$}; we effectively move that configuration
@@ -1682,7 +1707,7 @@ ${}\\{moves}\PP;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{76}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\M[1305 polynum.w]{76}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
 \&{config} ${}{*}{}$\\{move\_up}(\&{config} ${}{*}\|p,\39{}$\&{int} \\{lo}${},%
 \39{}$\&{int} \\{hi})\1\1\2\2\6
 ${}\{{}$\1\6
@@ -1706,7 +1731,8 @@ ${}\\{moves}\PP;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{77}The main loop. Now that we have some infrastructure in place,
+\N[1325 polynum.w]{1}{77}The main loop. Now that we have some infrastructure in
+place,
 we can map out the top levels of this program's main processing cycle.
 
 We start with an all-\PB{\\{zero}} configuration, at the very top of the
@@ -1733,7 +1759,8 @@ single result }\6
 ${}\\{strg}\K\T{1}{}$;\par
 \fi
 
-\M{78}Once again it seems best to write two nearly identical pieces of
+\M[1347 polynum.w]{78}Once again it seems best to write two nearly identical
+pieces of
 code, depending on whether the allocation is actually moving upward or
 downward. (We're supposed to be hoarding memory, but the space required
 for this program is small potatoes.)
@@ -1748,8 +1775,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U4.\fi
 
-\M{79}\B\X79:Get ready for a downward pass, or \PB{\&{break}} when done\X${}%
-\E{}$\6
+\M[1360 polynum.w]{79}\B\X79:Get ready for a downward pass, or \PB{\&{break}}
+when done\X${}\E{}$\6
 \&{if} ${}(\\{row\_end}<\|w){}$\5
 ${}\{{}$\1\6
 ${}\\{row\_end}\PP;{}$\6
@@ -1780,8 +1807,8 @@ position }\6
 ${}\\{re}\K\\{row\_end}{}$;\par
 \U78.\fi
 
-\M{80}\B\X80:Pass downward over all configurations created on the previous pass%
-\X${}\E{}$\6
+\M[1381 polynum.w]{80}\B\X80:Pass downward over all configurations created on
+the previous pass\X${}\E{}$\6
 \&{while} ${}(\\{src}\G\\{conf}){}$\5
 ${}\{{}$\1\6
 \&{if} ${}(\\{src}\MG\\{state}\E\\{active}){}$\5
@@ -1807,8 +1834,8 @@ ${}\\{src}\MM{}$;\C{ the old \PB{\\{src}} node is now outta here }\6
 \4${}\}{}$\2\par
 \U78.\fi
 
-\M{81}Timely progress reports let the user know that we are still chugging
-along.
+\M[1399 polynum.w]{81}Timely progress reports let the user know that we are
+still chugging along.
 We are about to start an upward pass if and only if \PB{$\\{src}\E\\{conf}-%
 \T{1}$}.
 
@@ -1826,7 +1853,8 @@ ${}\\{printf}(\.{"\%d,\%d,\%d,\%d,\%d)\\n"},\39\\{conf\_size}-\\{min\_space},%
 \\{fflush}(\\{stdout});\par
 \Us79\ET82.\fi
 
-\M{82}Counter positions 1 through $n$ in the slave memory are reserved for
+\M[1411 polynum.w]{82}Counter positions 1 through $n$ in the slave memory are
+reserved for
 the final polyomino counts.
 
 \Y\B\4\X82:Get ready for an upward pass, or \PB{\&{break}} when done\X${}\E{}$\6
@@ -1859,8 +1887,8 @@ ${}\\{strg}\K\|n+\T{1}{}$;\C{ and the lowest unoccupied counter position }\6
 ${}\\{re}\K\\{row\_end}{}$;\par
 \U78.\fi
 
-\M{83}\B\X83:Pass upward over all configurations created on the previous pass%
-\X${}\E{}$\6
+\M[1435 polynum.w]{83}\B\X83:Pass upward over all configurations created on the
+previous pass\X${}\E{}$\6
 \&{while} ${}(\\{src}<\\{conf\_end}){}$\5
 ${}\{{}$\1\6
 \&{if} ${}(\\{src}\MG\\{state}\E\\{active}){}$\5
@@ -1886,8 +1914,8 @@ ${}\\{src}\PP{}$;\C{ the old \PB{\\{src}} node is now outta here }\6
 \4${}\}{}$\2\par
 \U78.\fi
 
-\N{1}{84}Nitty-gritty. The basic logic of a so-called ``transfer-matrix''
-approach
+\N[1453 polynum.w]{1}{84}Nitty-gritty. The basic logic of a so-called
+``transfer-matrix'' approach
 is embedded in the following program steps, which change a configuration string
 when a new cell in row~$r$ is or is not to be occupied. Here, for example,
 we observe that when the previous configuration has `\.{1\caret/(}' at
@@ -1988,13 +2016,13 @@ ${}\\{viable}\K\T{0}{}$;\C{ component would be isolated }\6
 \4${}\}{}$\2\par
 \Us80\ET83.\fi
 
-\M{85}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[1555 polynum.w]{85}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{pair};\C{ the two codes surrounding the \qcaret/ in \PB{\\{sc}} }\6
 \&{int} \\{viable};\C{ might the target configuration lead to a relevant
 polyomino? }\par
 \fi
 
-\M{86}In this step, we have just zeroed out a left parenthesis.
+\M[1559 polynum.w]{86}In this step, we have just zeroed out a left parenthesis.
 If that \.( is followed by a \.-, we change the \.- to \.(;
 if it is followed by a \.), we change the \.) to \.1.
 
@@ -2039,7 +2067,8 @@ ${}\\{viable}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U84.\fi
 
-\M{87}Contrariwise, an erased \.) is like an erased \.( but vice versa.
+\M[1586 polynum.w]{87}Contrariwise, an erased \.) is like an erased \.( but
+vice versa.
 
 \Y\B\4\X87:Downgrade the predecessor of the \PB{\\{rt}}\X${}\E{}$\6
 \&{for} ${}(\|k\K\\{row\_end}-\T{1},\39\|j\K\T{0};{}$  ; ${}\|k\MM){}$\5
@@ -2073,7 +2102,8 @@ ${}\\{viable}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U84.\fi
 
-\M{88}\B\X88:Cautiously delete a \PB{\\{mid}} that may be leftmost\X${}\E{}$\6
+\M[1603 polynum.w]{88}\B\X88:Cautiously delete a \PB{\\{mid}} that may be
+leftmost\X${}\E{}$\6
 \&{for} ${}(\|k\K\\{row\_end}-\T{1};{}$ ${}\|c[\|k]\E\\{zero};{}$ ${}\|k\MM){}$%
 \1\5
 ;\2\6
@@ -2124,7 +2154,8 @@ ${}\|c[\|k]\K\\{one}{}$;\5
 \4${}\}{}$\2\par
 \U84.\fi
 
-\M{89}\B\X89:Cautiously delete a \PB{\\{mid}} that may be rightmost\X${}\E{}$\6
+\M[1626 polynum.w]{89}\B\X89:Cautiously delete a \PB{\\{mid}} that may be
+rightmost\X${}\E{}$\6
 \&{for} ${}(\|k\K\\{row\_end}+\T{1};{}$ ${}\|c[\|k]\E\\{zero};{}$ ${}\|k\PP){}$%
 \1\5
 ;\2\6
@@ -2175,7 +2206,7 @@ ${}\|c[\|k]\K\\{one}{}$;\5
 \4${}\}{}$\2\par
 \U84.\fi
 
-\M{90}A different kind of excitement awaits us when we consider
+\M[1649 polynum.w]{90}A different kind of excitement awaits us when we consider
 occupying the new cell.
 
 If the cases \PB{$\|f(\\{lft},\\{mid})$}, \PB{$\|f(\\{lft},\\{rt})$}, \PB{$\|f(%
@@ -2287,7 +2318,8 @@ ${}\|c[\\{row\_end}]\K\\{rt};{}$\6
 \X95:Make special corrections at the right edge\X;\2\par
 \Us80\ET83.\fi
 
-\M{91}\B\X91:Merge with the mate of the former \PB{\\{lft}}\X${}\E{}$\6
+\M[1759 polynum.w]{91}\B\X91:Merge with the mate of the former \PB{\\{lft}}%
+\X${}\E{}$\6
 \&{for} ${}(\|k\K\\{row\_end}+\T{1},\39\|j\K\T{0};{}$  ; ${}\|k\PP){}$\5
 ${}\{{}$\1\6
 \&{switch} (\|c[\|k])\5
@@ -2311,7 +2343,8 @@ ${}\|c[\|k]\K\\{mid}{}$;\5
 \4${}\}{}$\2\par
 \U90.\fi
 
-\M{92}\B\X92:Merge with the mate of the former \PB{\\{rt}}\X${}\E{}$\6
+\M[1771 polynum.w]{92}\B\X92:Merge with the mate of the former \PB{\\{rt}}\X${}%
+\E{}$\6
 \&{for} ${}(\|k\K\\{row\_end}-\T{2},\39\|j\K\T{0};{}$  ; ${}\|k\MM){}$\5
 ${}\{{}$\1\6
 \&{switch} (\|c[\|k])\5
@@ -2335,7 +2368,8 @@ ${}\|c[\|k]\K\\{mid}{}$;\5
 \4${}\}{}$\2\par
 \U90.\fi
 
-\M{93}\B\X93:Downgrade the next component if it is open\X${}\E{}$\6
+\M[1783 polynum.w]{93}\B\X93:Downgrade the next component if it is open\X${}%
+\E{}$\6
 \&{for} ${}(\|k\K\T{2};{}$  ; ${}\|k\PP){}$\5
 ${}\{{}$\1\6
 \&{switch} (\|c[\|k])\5
@@ -2355,7 +2389,7 @@ ${}\|c[\|k]\K\\{one};{}$\6
 \4${}\}{}$\2\par
 \U90.\fi
 
-\M{94}\B\X94:Cautiously introduce a new \PB{\\{one}}\X${}\E{}$\6
+\M[1794 polynum.w]{94}\B\X94:Cautiously introduce a new \PB{\\{one}}\X${}\E{}$\6
 $\|c[\\{row\_end}]\K\\{one};{}$\6
 \&{for} ${}(\|k\K\\{row\_end}-\T{2};{}$ ${}\|c[\|k]\E\\{zero};{}$ ${}\|k\MM){}$%
 \1\5
@@ -2395,7 +2429,8 @@ ${}\|c[\|k]\K\\{one},\39\|c[\\{row\_end}]\K\\{lft};{}$\2\6
 \4${}\}{}$\2\par
 \U90.\fi
 
-\M{95}\B\X95:Make special corrections at the right edge\X${}\E{}$\6
+\M[1815 polynum.w]{95}\B\X95:Make special corrections at the right edge\X${}%
+\E{}$\6
 \&{switch} (\|c[\\{row\_end}])\5
 ${}\{{}$\1\6
 \4\&{case} \\{rt}:\5
@@ -2410,7 +2445,8 @@ ${}\|c[\\{row\_end}]\K\\{lft};{}$\6
 \4${}\}{}$\2\par
 \U90.\fi
 
-\M{96}\B\X96:Downgrade the previous component if it is open\X${}\E{}$\6
+\M[1823 polynum.w]{96}\B\X96:Downgrade the previous component if it is open%
+\X${}\E{}$\6
 \&{for} ${}(\|k\K\\{row\_end}-\T{1};{}$  ; ${}\|k\MM){}$\5
 ${}\{{}$\1\6
 \&{switch} (\|c[\|k])\5
@@ -2430,7 +2466,8 @@ ${}\|c[\|k]\K\\{one};{}$\6
 \4${}\}{}$\2\par
 \U95.\fi
 
-\N{1}{97}Nittier-and-grittier. The last nontrivial hurdle facing us
+\N[1834 polynum.w]{1}{97}Nittier-and-grittier. The last nontrivial hurdle
+facing us
 is the problem of what to do after a target configuration has
 been constructed in \PB{\|c[\T{1}]} through \PB{\|c[\|w]}. It's not a Big
 Problem,
@@ -2476,17 +2513,18 @@ completed }\6
 \4${}\}{}$\2\par
 \U80.\fi
 
-\M{98}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[1864 polynum.w]{98}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{cstring} \\{target};\C{ the packed name of the current target configuration
 }\6
 \&{int} \\{hash};\C{ its hash address }\par
 \fi
 
-\M{99}\B\X67:Local variables\X${}\mathrel+\E{}$\6
+\M[1868 polynum.w]{99}\B\X67:Local variables\X${}\mathrel+\E{}$\6
 \&{register} \&{config} ${}{*}\|p{}$;\C{ current target of interest }\par
 \fi
 
-\M{100}At the end of a row we change the configuration to its left-right
+\M[1871 polynum.w]{100}At the end of a row we change the configuration to its
+left-right
 reflection, if the reflection is lexicographically smaller. This reduction to
 a canonical form reduces the number of active configurations by a factor of
 nearly~2, at least for the next few passes. (The reduction can be justified
@@ -2511,7 +2549,8 @@ ${}\|c[\|j]\K\\{reflect}[\|i];{}$\6
 \4${}\}{}$\2\par
 \Us97\ET103.\fi
 
-\M{101}We take care to move \PB{\|p} to the top of its hash list, when present,
+\M[1891 polynum.w]{101}We take care to move \PB{\|p} to the top of its hash
+list, when present,
 and to set the global variable \PB{\\{hash}} as required by \PB{\\{move\_down}}
 and \PB{\\{move\_up}}.
 
@@ -2539,7 +2578,8 @@ ${}\\{hash\_table}[\\{hash}]\K\|p;{}$\6
 \4${}\}{}$\2\par
 \Us97\ET103.\fi
 
-\M{102}If the target is viable, \PB{\|p} will be set to a fresh node with
+\M[1908 polynum.w]{102}If the target is viable, \PB{\|p} will be set to a fresh
+node with
 \PB{$\|p\MG\\{state}\K\\{raw}$}. The reader can verify that \PB{\\{move\_down}}
 will not
 then be necessary.
@@ -2572,7 +2612,8 @@ ${}\|p\MG\\{hi}\K\|p\MG\\{lim};{}$\2\6
 \4${}\}{}$\2\par
 \U97.\fi
 
-\M{103}\B\X103:Process target configuration \PB{\|c} (upward)\X${}\E{}$\6
+\M[1929 polynum.w]{103}\B\X103:Process target configuration \PB{\|c} (upward)%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{row\_end}\E\|w){}$\1\5
 \X100:Canonize the configuration\X;\2\6
@@ -2608,8 +2649,8 @@ completed }\6
 \4${}\}{}$\2\par
 \U83.\fi
 
-\M{104}\B\X104:Get an upward slot for \PB{\\{target}} if it is really viable%
-\X${}\E{}$\6
+\M[1950 polynum.w]{104}\B\X104:Get an upward slot for \PB{\\{target}} if it is
+really viable\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|j\K\\{connectivity}(\\{row\_end}+\T{1});{}$\6
 \&{if} ${}(\|r\G\|w){}$\1\5
@@ -2636,7 +2677,8 @@ ${}\|p\MG\\{hi}\K\|p\MG\\{lim};{}$\2\6
 \4${}\}{}$\2\par
 \U103.\fi
 
-\N{1}{105}Checkpointing. One of the goals of this program is to establish
+\N[1967 polynum.w]{1}{105}Checkpointing. One of the goals of this program is to
+establish
 new world records. Thus, local resources
 are probably being stretched to their current limits, and several days
 of running time might well be involved.
@@ -2674,8 +2716,8 @@ ${}\\{printf}(\.{"[\%d\ bytes\ written\ o}\)\.{n\ file\ \%s.]\\n"},\39%
 \4${}\}{}$\2\par
 \U79.\fi
 
-\M{106}A special \PB{\\{sync}} instruction with parameter 255 tells {\mc
-POLYSLAVE}
+\M[2001 polynum.w]{106}A special \PB{\\{sync}} instruction with parameter 255
+tells {\mc POLYSLAVE}
 that it should invoke its own checkpointing activity.
 
 \Y\B\4\X106:Shut down the {\mc POLYSLAVE} process\X${}\E{}$\6
@@ -2687,7 +2729,8 @@ $\\{put\_inst}(\\{sync},\39\T{255});{}$\6
 \.{m-restart.\\n"});\par
 \U105.\fi
 
-\M{107}Since we're at the beginning of a downward pass, the user will be
+\M[2010 polynum.w]{107}Since we're at the beginning of a downward pass, the
+user will be
 able to restart this program with different values of \PB{\\{conf\_size}} and
 \PB{\\{slave\_size}} if desired.
 
@@ -2705,11 +2748,11 @@ ${}\\{dump\_data}[\T{4}]\K\\{strg};{}$\6
 \\{panic}(\.{"Couldn't\ dump\ the\ c}\)\.{onfiguration\ table"});\2\par
 \U105.\fi
 
-\M{108}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[2025 polynum.w]{108}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{dump\_data}[\T{5}];\C{ parameters needed to restart }\par
 \fi
 
-\N{1}{109}Computational experience. With a suitable change file
+\N[2028 polynum.w]{1}{109}Computational experience. With a suitable change file
 it is not difficult to convert this program to a one-pass routine
 that does the evaluation directly, provided that $n$ and $w$ are
 reasonably small. For example, when $n=30$ and $2\le w\le15$,
@@ -2782,14 +2825,15 @@ ${}\\{slot}[\|j]\K\NULL;{}$\6
 ${}\\{holes}\K\\{sholes}\K\T{0}{}$;\par
 \U81.\fi
 
-\M{110}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[2084 polynum.w]{110}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{hhist}[\\{hist\_size}];\C{ histogram of hash chain lengths }\6
 \&{int} ${}\\{chist}[\\{nmax}+\T{1}]{}$;\C{ histogram of counter table lengths
 }\6
 \&{int} \\{jj};\C{ auxiliary variable for statistics calculations }\par
 \fi
 
-\M{111}The greatest difficulty for $n=47$ occurred when $w=20$; indeed,
+\M[2089 polynum.w]{111}The greatest difficulty for $n=47$ occurred when $w=20$;
+indeed,
 more than 100 gigabytes of data were passed to {\mc POLYSLAVE} in
 that case, and the computation lasted several days,
 so the checkpointing algorithm proved to be particularly helpful.
@@ -2837,8 +2881,8 @@ rectangle when $n=h+w-1$ and $h>1$ and $w>1$.)
 
 \fi
 
-\M{112}I was glad to see that the allocation system used here for
-variable-length
+\M[2135 polynum.w]{112}I was glad to see that the allocation system used here
+for variable-length
 nodes, allowing ``holes,'' worked quite well: More than 98 percent of
 the memory space was typically being put to good use when it was needed.
 In fact, only 8 holes were present when the maximum demand of 40,219,325
@@ -2848,11 +2892,12 @@ when $w=20$); only 105 counters were wasted when the maximum demand of
 
 \fi
 
-\M{113}Joke: George P\'olya was a polymath who worked on polyominoes.
+\M[2143 polynum.w]{113}Joke: George P\'olya was a polymath who worked on
+polyominoes.
 
 \fi
 
-\N{1}{114}Index.
+\N[2146 polynum.w]{1}{114}Index.
 \fi
 
 \inx

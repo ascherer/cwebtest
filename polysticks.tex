@@ -1,8 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Data for dancing. This program creates data suitable for the {\mc
-DANCE}
+\N[2 polysticks.w]{1}{1}Data for dancing. This program creates data suitable
+for the {\mc DANCE}
 routine, given the description of edges and junctions to be covered and
 a set of polystick shapes.
 
@@ -50,7 +51,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\D$\\{panic}(\|m)$ \6
+\M[49 polysticks.w]{2}\B\D$\\{panic}(\|m)$ \6
 ${}\{{}$\5
 \1${}\\{fprintf}(\\{stderr},\39\.{"\%s!\\n\%s"},\39\|m,\39\\{buf}){}$;\5
 ${}\\{exit}({-}\T{1}){}$;\5
@@ -64,7 +65,7 @@ ${}\\{fwrite}(\\{buf},\39\T{1},\39\\{strlen}(\\{buf})-\T{1},\39\\{stdout}){}$;%
 \C{ output all but the newline }\par
 \U1.\fi
 
-\M{3}\B\X3:Read and output the board\X${}\E{}$\6
+\M[56 polysticks.w]{3}\B\X3:Read and output the board\X${}\E{}$\6
 \&{if} ${}(\R\\{fgets}(\\{buf},\39\\{buf\_size},\39\\{stdin})){}$\1\5
 \\{panic}(\.{"No\ board"});\2\6
 \&{if} ${}(\\{buf}[\\{strlen}(\\{buf})-\T{1}]\I\.{'\\n'}){}$\1\5
@@ -118,7 +119,7 @@ ${}\\{printf}(\.{"\ \%s"},\39\\{buf}){}$;\C{ just pass the board names through
 }\par
 \U1.\fi
 
-\M{4}\B\X4:Subroutines\X${}\E{}$\6
+\M[85 polysticks.w]{4}\B\X4:Subroutines\X${}\E{}$\6
 \&{int} \\{decode}(\|c)\1\1\6
 \&{char} \|c;\2\2\6
 ${}\{{}$\1\6
@@ -137,7 +138,7 @@ ${}\{{}$\1\6
 \A12.
 \U1.\fi
 
-\M{5}\B\X5:Global variables\X${}\E{}$\6
+\M[97 polysticks.w]{5}\B\X5:Global variables\X${}\E{}$\6
 \&{char} \\{buf}[\\{buf\_size}];\6
 \&{int} \\{board}[\T{36}][\T{36}][\T{3}];\C{ positions present }\6
 \&{int} \\{bxmin}${},{}$ \\{bxmax}${},{}$ \\{bymin}${},{}$ \\{bymax};\C{ used
@@ -145,7 +146,7 @@ portion of the board }\par
 \A7.
 \U1.\fi
 
-\M{6}\B\X6:Read and output the pieces\X${}\E{}$\6
+\M[102 polysticks.w]{6}\B\X6:Read and output the pieces\X${}\E{}$\6
 \&{while} ${}(\\{fgets}(\\{buf},\39\\{buf\_size},\39\\{stdin})){}$\5
 ${}\{{}$\1\6
 \&{if} ${}(\\{buf}[\\{strlen}(\\{buf})-\T{1}]\I\.{'\\n'}){}$\1\5
@@ -218,7 +219,7 @@ ${}\\{ymax}\K\|y;{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{7}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\M[142 polysticks.w]{7}\B\X5:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{name}[\T{4}];\C{ name of current piece }\6
 \&{int} \|s${},{}$ \|t;\C{ symmetry type of current piece }\6
 \&{int} ${}\\{xx}[\T{36}*\T{36}*\T{3}],{}$ ${}\\{yy}[\T{36}*\T{36}*\T{3}],{}$
@@ -227,7 +228,7 @@ ${}\\{zz}[\T{36}*\T{36}*\T{3}]{}$;\C{ coordinates of current piece }\6
 coordinates }\par
 \fi
 
-\M{8}\B\X8:Generate the possible piece placements\X${}\E{}$\6
+\M[148 polysticks.w]{8}\B\X8:Generate the possible piece placements\X${}\E{}$\6
 \&{while} (\|t)\5
 ${}\{{}$\1\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\T{4};{}$ ${}\|k\PP){}$\5
@@ -241,7 +242,7 @@ ${}\|t\MM;{}$\6
 \4${}\}{}$\2\par
 \U6.\fi
 
-\M{9}\B\X9:Transpose the current piece\X${}\E{}$\6
+\M[158 polysticks.w]{9}\B\X9:Transpose the current piece\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
 ${}\{{}$\1\6
 ${}\|z\K\\{xx}[\|j];{}$\6
@@ -257,7 +258,7 @@ ${}\\{xmax}\K\\{ymax}{}$;\5
 ${}\\{ymax}\K\|z{}$;\par
 \U8.\fi
 
-\M{10}\B\X10:Rotate the current piece\X${}\E{}$\6
+\M[168 polysticks.w]{10}\B\X10:Rotate the current piece\X${}\E{}$\6
 $\\{xmin}\K\\{ymin}\K\T{1000}{}$;\5
 ${}\\{xmax}\K\\{ymax}\K{-}\T{1000};{}$\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
@@ -279,7 +280,8 @@ ${}\\{ymax}\K\\{yy}[\|j];{}$\2\6
 \4${}\}{}$\2\par
 \U8.\fi
 
-\M{11}Interior points don't have to be on the board; they might, for example,
+\M[182 polysticks.w]{11}Interior points don't have to be on the board; they
+might, for example,
 lie on the boundary after translation.
 
 \Y\B\4\X11:Output translates of the current piece\X${}\E{}$\6
@@ -305,7 +307,7 @@ ${}\\{printf}(\.{"\ \%c\%c\%c"},\39\\{codeletter}[\\{zz}[\|j]],\39\\{encode}(%
 \4${}\}{}$\2\2\par
 \U8.\fi
 
-\M{12}\B\X4:Subroutines\X${}\mathrel+\E{}$\6
+\M[198 polysticks.w]{12}\B\X4:Subroutines\X${}\mathrel+\E{}$\6
 \&{char} \\{codeletter}[\T{3}]${}\K\{\.{'H'},\39\.{'I'},\39\.{'V'}\};{}$\7
 \&{char} \\{encode}(\|x)\1\1\6
 \&{int} \|x;\2\2\6
@@ -316,7 +318,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{13}Index.
+\N[207 polysticks.w]{1}{13}Index.
 \fi
 
 \inx

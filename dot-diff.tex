@@ -1,11 +1,12 @@
 \input cwebmac
+\srcloctrue
 \datethis
 \font\logo=logo10
 \def\MF{{\logo META}\-{\logo FONT}}
 
 
-\N{1}{1}Introduction. This program prepares a \MF\ file for a special-purpose
-font
+\N[5 dot-diff.w]{1}{1}Introduction. This program prepares a \MF\ file for a
+special-purpose font
 that will approximate a given picture. The input file (\PB{\\{stdin}}) is
 assumed to be an EPS file output by Adobe Photoshop$^{\rm TM}$
 on a Macintosh with the binary EPS option, containing $m$~rows of
@@ -44,7 +45,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}Optional command-line arguments allow the user to change the
+\M[42 dot-diff.w]{2}Optional command-line arguments allow the user to change
+the
 \PB{\\{zeta}} and/or \PB{\\{sharpening}} parameters discussed below.
 
 \Y\B\4\X2:Check for nonstandard \PB{\\{zeta}} and \PB{\\{sharpening}} factors%
@@ -60,7 +62,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\ \ and\ sharpening\ fa}\)\.{ctor\ \%g\\n"},%
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}Macintosh conventions indicate the end of a line by the
+\M[52 dot-diff.w]{3}Macintosh conventions indicate the end of a line by the
 ASCII $\langle\,$carriage return$\,\rangle$ character
 (i.e., control-M, aka \.{\char`\\r}), but the \CEE/ library is
 set up to work best with newlines (i.e., control-J, aka \.{\char`\\n}).
@@ -97,13 +99,14 @@ $\|k\K\T{0};{}$\6
 height!\\n"});\2\par
 \U1.\fi
 
-\M{4}\B\X4:Global variables\X${}\E{}$\6
+\M[76 dot-diff.w]{4}\B\X4:Global variables\X${}\E{}$\6
 \&{int} \\{llx}${},{}$ \\{lly}${},{}$ \\{urx}${},{}$ \\{ury};\C{ bounding box
 parameters }\par
 \As8\ET11.
 \U1.\fi
 
-\M{5}After we've seen the bounding box, we look for \.{beginimage\char`\\r};
+\M[79 dot-diff.w]{5}After we've seen the bounding box, we look for %
+\.{beginimage\char`\\r};
 this will be followed by the pixel data, one character per byte.
 
 \Y\B\4\X5:Input the graphic data\X${}\E{}$\6
@@ -138,7 +141,8 @@ $\|k\K\T{0};{}$\6
 \\{panic}(\.{"Wrong\ amount\ of\ pix}\)\.{el\ data!\\n"});\2\par
 \U1.\fi
 
-\M{6}Photoshop follows the conventions of photographers who consider
+\M[99 dot-diff.w]{6}Photoshop follows the conventions of photographers who
+consider
 0~to be black and 1~to be white; but we follow the conventions of
 computer scientists who tend to regard 0~as devoid of ink (white)
 and 1~as full of ink (black).
@@ -153,8 +157,8 @@ of the input data.
 ${}\|a[\|i][\|j]\K\T{1.0}-\\{getchar}(\,)/\T{255.0}{}$;\2\2\par
 \U5.\fi
 
-\N{1}{7}Dot diffusion. Our job is to go from eight-bit pixels to one-bit
-pixels;
+\N[111 dot-diff.w]{1}{7}Dot diffusion. Our job is to go from eight-bit pixels
+to one-bit pixels;
 that is, from 256 shades of gray to an approximation that uses only
 black and white. The method used here is called {\it dot diffusion\/}
 (see [D.~E. Knuth, ``Digital halftones by dot diffusion,'' {\sl ACM
@@ -185,7 +189,8 @@ ${}\|a[\|i+\\{del\_i}[\|l]][\|j+\\{del\_j}[\|l]]\MRL{+{\K}}\\{err}*\\{alpha}[%
 \4${}\}{}$\2\2\2\par
 \U15.\fi
 
-\M{8}We will use the following model for estimating the effect of a given
+\M[133 dot-diff.w]{8}We will use the following model for estimating the effect
+of a given
 bit pattern in the output: If a pixel is black, its darkness is~1.0;
 if it is white but at least one of its four neighbors is black, its
 darkness is~\PB{\\{zeta}}; if it is white and has four white neighbors, its
@@ -212,7 +217,8 @@ All cells are initially \PB{\\{white}}; but when we decide to make a pixel
 or \PB{\\{black}} status of final pixels }\par
 \fi
 
-\M{9}In this step the current pixel's final one-bit value is determined.
+\M[153 dot-diff.w]{9}In this step the current pixel's final one-bit value is
+determined.
 It presently is either \PB{\\{white}} or \PB{\\{gray}}; we either leave it as
 is,
 or we blacken it and gray its white neighbors, whichever minimizes the
@@ -263,7 +269,8 @@ ${}\\{aa}[\|i][\|j+\T{1}]\K\\{gray};{}$\2\6
 ${}\\{err}\K\|a[\|i][\|j]{}$;\C{ keep it white or gray }\2\par
 \U7.\fi
 
-\N{1}{10}Computing the diffusion tables. The tables for dot diffusion could be
+\N[185 dot-diff.w]{1}{10}Computing the diffusion tables. The tables for dot
+diffusion could be
 specified by a large number of boring assignment statements, but it is more
 fun to compute them by a method that reveals some of the mysterious underlying
 structure.
@@ -273,7 +280,7 @@ structure.
 \X14:Compile ``instructions'' for the diffusion operations\X;\par
 \U15.\fi
 
-\M{11}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[194 dot-diff.w]{11}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{class\_row}[\T{64}]${},{}$ \\{class\_col}[\T{64}];\C{ first row and
 column for a given class }\6
 \&{char} \\{class\_number}[\T{10}][\T{10}];\C{ the number of a given position }%
@@ -285,7 +292,8 @@ a neighbor }\6
 \&{float} \\{alpha}[\T{256}];\C{ diffusion coefficient for a neighbor }\par
 \fi
 
-\M{12}The order of classes used here is the order in which pixels might be
+\M[202 dot-diff.w]{12}The order of classes used here is the order in which
+pixels might be
 blackened in a font for halftones based on dots in a $45^\circ$ grid.
 In fact, it is precisely the pattern used in the font \.{ddith300},
 discussed in the author's paper ``Fonts for Digital Halftones''
@@ -322,7 +330,7 @@ ${}\\{store}(\T{1}-\|i,\39\T{1}-\|j);{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{13}\B\X13:Initialize the class number matrix\X${}\E{}$\6
+\M[226 dot-diff.w]{13}\B\X13:Initialize the class number matrix\X${}\E{}$\6
 $\\{store\_eight}(\T{7},\39\T{2}){}$;\5
 ${}\\{store\_eight}(\T{8},\39\T{3}){}$;\5
 ${}\\{store\_eight}(\T{8},\39\T{2}){}$;\5
@@ -339,7 +347,8 @@ ${}\\{class\_number}[\T{0}][\|j]\K\\{class\_number}[\T{8}][\|j],\39\\{class%
 \_number}[\T{9}][\|j]\K\\{class\_number}[\T{1}][\|j]{}$;\2\par
 \U10.\fi
 
-\M{14}The ``compilation'' in this step simulates going through the diffusion
+\M[234 dot-diff.w]{14}The ``compilation'' in this step simulates going through
+the diffusion
 process the slow way, recording the actions it performs. Then those actions
 can all be done at high speed later.
 
@@ -372,7 +381,7 @@ ${}\\{alpha}[\\{jj}]\K\T{2.0}/\|w;{}$\2\2\6
 ${}\\{start}[\T{64}]\K\|l{}$;\C{ at this point \PB{\|l} will be 256 }\par
 \U10.\fi
 
-\N{1}{15}Synthesis. Now we're ready to put the pieces together.
+\N[254 dot-diff.w]{1}{15}Synthesis. Now we're ready to put the pieces together.
 
 \Y\B\4\X15:Translate input to output\X${}\E{}$\6
 \X10:Initialize the diffusion tables\X;\6
@@ -381,7 +390,8 @@ ${}\\{start}[\T{64}]\K\|l{}$;\C{ at this point \PB{\|l} will be 256 }\par
 \X7:Choose pixel values and diffuse the errors in the buffer\X;\par
 \U1.\fi
 
-\M{16}Experience shows that dot diffusion often does a better job if
+\M[261 dot-diff.w]{16}Experience shows that dot diffusion often does a better
+job if
 we apply a filtering operation that exaggerates the differences between
 the intensities of a pixel and its neighbors:
 $$a_{ij}\gets {a_{ij}-\alpha {\bar a}_{ij}\over 1-\alpha},$$
@@ -417,7 +427,7 @@ ${}\|a[\|i][\|j]\K(\|a[\|i-\T{1}][\|j-\T{1}]\Z\T{0.0}\?\T{0.0}:\|a[\|i-\T{1}][%
 \4${}\}{}$\2\par
 \U15.\fi
 
-\M{17}Here I'm assuming that \PB{\|n} is a multiple of 4.
+\M[289 dot-diff.w]{17}Here I'm assuming that \PB{\|n} is a multiple of 4.
 
 \Y\B\4\X17:Spew out the answers\X${}\E{}$\6
 \&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\|m;{}$ ${}\|i\PP){}$\5
@@ -433,7 +443,7 @@ ${}\\{printf}(\.{"\%x"},\39\|w);{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{18}Index.
+\N[301 dot-diff.w]{1}{18}Index.
 \fi
 
 \inx

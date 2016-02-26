@@ -1,8 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This program was written (somewhat hastily) in order to
-experiment
+\N[2 sand.w]{1}{1}Intro. This program was written (somewhat hastily) in order
+to experiment
 with sandpiles.
 
 The first command line argument is the name of a file that specifies
@@ -33,7 +34,7 @@ ${}\\{Graph}*\|g;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Input the graph\X${}\E{}$\6
+\M[33 sand.w]{2}\B\X2:Input the graph\X${}\E{}$\6
 \&{if} ${}(\\{argc}<\T{2}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ foo.gb\ [r}\)\.{]\\n"},\39%
@@ -53,7 +54,7 @@ ${}\|n\K\|g\MG\|n;{}$\6
 ${}\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}\|r){}$;\2\par
 \U1.\fi
 
-\M{3}\B\X3:Prepare the \PB{\\{vec}} table\X${}\E{}$\6
+\M[48 sand.w]{3}\B\X3:Prepare the \PB{\\{vec}} table\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
 ${}\{{}$\1\6
 ${}\|v\K\|g\MG\\{vertices}+\|j;{}$\6
@@ -77,8 +78,8 @@ ${}\|k\K\|d[\T{0}],\39\|d[\T{0}]\K\|d[\|r],\39\|d[\|r]\K\|k;{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{4}The \PB{\\{reduce}} subroutine topples a given vector \PB{\|x} until it is
-stable.
+\M[64 sand.w]{4}The \PB{\\{reduce}} subroutine topples a given vector \PB{\|x}
+until it is stable.
 
 \Y\B\4\X4:Subroutines\X${}\E{}$\6
 \&{void} \\{reduce}(\,)\1\1\2\2\6
@@ -100,7 +101,7 @@ ${}\|x[\|k]\MRL{-{\K}}\\{vec}[\|j][\|k];{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{5}\B\X5:Reduce the vector \PB{\|d}\X${}\E{}$\6
+\M[80 sand.w]{5}\B\X5:Reduce the vector \PB{\|d}\X${}\E{}$\6
 \\{printf}(\.{"The\ d\ vector\ is"});\6
 \&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
 ${}\{{}$\1\6
@@ -137,7 +138,7 @@ ${}\\{printf}(\.{"\ \%d"},\39\|x[\|j]);{}$\6
 \\{printf}(\.{"\\n"});\par
 \U1.\fi
 
-\N{1}{6}Index.
+\N[111 sand.w]{1}{6}Index.
 \fi
 
 \inx

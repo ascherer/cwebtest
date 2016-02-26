@@ -1,10 +1,12 @@
 \input cwebmac
+\srcloctrue
 \def\adj{\mathrel{\!\mathrel-\mkern-8mu\mathrel-\mkern-8mu\mathrel-\!}}
 
 
 
 
-\N{1}{1}Intro. OK, you've heard about {\mc SIGGRAPH}; what's this?
+\N[4 graph-sig-v0.w]{1}{1}Intro. OK, you've heard about {\mc SIGGRAPH}; what's
+this?
 
 {\mc GRAPH-SIG} is an experimental program to find potential equivalence
 classes in automorphism testing. Given a graph $G$ and a vertex $v_0$,
@@ -58,7 +60,7 @@ ${}\\{change}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Process the command line\X${}\E{}$\6
+\M[55 graph-sig-v0.w]{2}\B\X2:Process the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{3}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ foo.gb\ v0}\)\.{\\n"},\39%
@@ -92,7 +94,7 @@ ${}\\{exit}({-}\T{9});{}$\6
 ${}\\{v0}\K\|v{}$;\par
 \U1.\fi
 
-\M{3}Vertices with the same signature are linked cyclically.
+\M[82 graph-sig-v0.w]{3}Vertices with the same signature are linked cyclically.
 As mentioned above, we start by simply computing distances from~$v_0$.
 
 \Y\B\4\D$\\{sig}$ \5
@@ -128,8 +130,8 @@ ${}\|v\K\\{prev},\39\|k\PP;{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{4}\B\X4:Set signature of all \PB{\|v}'s unseen neighbors to \PB{\|k}\X${}%
-\E{}$\6
+\M[108 graph-sig-v0.w]{4}\B\X4:Set signature of all \PB{\|v}'s unseen neighbors
+to \PB{\|k}\X${}\E{}$\6
 \&{for} ${}(\|a\K\|v\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
 ${}\{{}$\1\6
 ${}\|u\K\|a\MG\\{tip};{}$\6
@@ -145,7 +147,8 @@ ${}\\{prev}\K\|u;{}$\6
 \4${}\}{}$\2\par
 \U3.\fi
 
-\M{5}Now comes the fun part. As we pass from $\sigma_{r-1}$ to $\sigma_r$,
+\M[119 graph-sig-v0.w]{5}Now comes the fun part. As we pass from $\sigma_{r-1}$
+to $\sigma_r$,
 each equivalence class becomes one or more classes.
 
 \Y\B\4\D$\\{oldsig}$ \5
@@ -194,13 +197,13 @@ ${}\\{change}\K\T{1};{}$\2\6
 \4${}\}{}$\2\2\par
 \U1.\fi
 
-\M{6}\B\X6:Compute $s=\sigma_r(v)$\X${}\E{}$\6
+\M[153 graph-sig-v0.w]{6}\B\X6:Compute $s=\sigma_r(v)$\X${}\E{}$\6
 \&{for} ${}(\|s\K\T{1},\39\|a\K\|v\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG%
 \\{next}){}$\1\5
 ${}\|s\MRL{*{\K}}\|x-\|a\MG\\{tip}\MG\\{oldsig}{}$;\2\par
 \U5.\fi
 
-\N{1}{7}Index.
+\N[157 graph-sig-v0.w]{1}{7}Index.
 \fi
 
 \inx

@@ -1,7 +1,8 @@
 \input cwebmac
+\srcloctrue
 
-\N{1}{1}An example of backtracking. Given a list of $m$-letter words and
-another
+\N[1 back-mxn-words-new.w]{1}{1}An example of backtracking. Given a list of
+$m$-letter words and another
 list of $n$-letter words, we find all $m\times n$ matrices whose rows and
 columns are all listed. This program improves on {\mc BACK-MXN-WORDS}
 by using a more sophisticated data structure for the $m$-letter words,
@@ -68,7 +69,7 @@ mems).\\n"},\39\\{count},\39\\{mems});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Print the profile\X${}\E{}$\6
+\M[53 back-mxn-words-new.w]{2}\B\X2:Print the profile\X${}\E{}$\6
 $\\{fprintf}(\\{stderr},\39\.{"Profile:\ \ \ \ \ \ \ \ \ \ 1}\)\.{\%9.1f\\n"},%
 \39{}$(\&{double}) \\{weight}[\T{1}]);\6
 \&{for} ${}(\|k\K\T{2};{}$ ${}\|k\Z\|n+\T{1};{}$ ${}\|k\PP){}$\1\5
@@ -77,7 +78,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\%19lld\%9.1f\\n"},\39\\{profile}[\|k],\39%
 \T{0.0}){}$;\2\par
 \U1.\fi
 
-\M{3}\B\X3:Process the command line\X${}\E{}$\6
+\M[58 back-mxn-words-new.w]{3}\B\X3:Process the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{3}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ mwords[:m}\)\.{m]\ nwords[:nn]%
@@ -120,7 +121,7 @@ ${}\\{exit}({-}\T{3});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{4}\B\X4:Input the $m$-words\X${}\E{}$\6
+\M[88 back-mxn-words-new.w]{4}\B\X4:Input the $m$-words\X${}\E{}$\6
 $\|m\K\\{mm}\K\T{0};{}$\6
 \&{while} (\T{1})\5
 ${}\{{}$\1\6
@@ -159,7 +160,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"OK,\ I've\ successful}\)\.{ly\ read\ \%d\
 words\ of\ }\)\.{length\ m=\%d.\\n"},\39\\{mm},\39\|m){}$;\par
 \U1.\fi
 
-\M{5}For $0\le k<m$ we make 26 lists, one for each word that has a given
+\M[113 back-mxn-words-new.w]{5}For $0\le k<m$ we make 26 lists, one for each
+word that has a given
 letter~\PB{$\|j+\.{'a'}$}
 in the $(k+1)$st position. The first such word is \PB{\\{mword}} number
 \PB{\\{head}[\|k][\|j]}; the next such word following word~\PB{\|x} is number
@@ -182,7 +184,8 @@ ${}\\{oo},\39\\{size}[\|k][\|j]\PP{}$;\C{ and remember the current list length
 \4${}\}{}$\2\par
 \U4.\fi
 
-\M{6}For simplicity, I make a sparse trie with 27 branches at every node.
+\M[131 back-mxn-words-new.w]{6}For simplicity, I make a sparse trie with 27
+branches at every node.
 An $n$-letter word $w_1\ldots w_n$ leads to entries
 \PB{\\{trie}}$[p_{k-1}][[w_k]=p_k$ for $1\le k\le n$, where $p_0=0$ and
 $p_k>0$.
@@ -252,7 +255,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"(The\ trie\ has\ \%d\ no}\)\.{des.)\\n"},\39%
 \\{trieptr}){}$;\par
 \U1.\fi
 
-\M{7}\B\X7:Check the length of the new line\X${}\E{}$\6
+\M[181 back-mxn-words-new.w]{7}\B\X7:Check the length of the new line\X${}\E{}$%
+\6
 \&{if} ${}(\|n\E\T{0}){}$\5
 ${}\{{}$\1\6
 ${}\|n\K\|j;{}$\6
@@ -283,7 +287,7 @@ ${}\\{exit}({-}\T{6});{}$\6
 \4${}\}{}$\2\par
 \U6.\fi
 
-\M{8}Here I follow Algorithm 7.2.2B.
+\M[201 back-mxn-words-new.w]{8}Here I follow Algorithm 7.2.2B.
 
 \Y\B\4\X8:Backtrack thru all solutions\X${}\E{}$\6
 \4\\{b1}:\5
@@ -336,7 +340,8 @@ part }\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{9}The $k$th letter of the next $m$-word must belong to the subset~$s_k$ that
+\M[231 back-mxn-words-new.w]{9}The $k$th letter of the next $m$-word must
+belong to the subset~$s_k$ that
 is specified in slot~0 of \PB{$\\{trie}[\|a[\|l-\T{1}][\|k]]$}.
 We set \PB{\\{zl}} to a \PB{$\|k-\T{1}$} that minimizes the corresponding sum
 of sublist sizes,
@@ -358,7 +363,8 @@ ${}\\{weight}[\|l]\MRL{+{\K}}\|p{}$;\C{ record the size of subdomain (for
 statistics only) }\par
 \U8.\fi
 
-\M{10}\B\X10:Print a solution and \PB{\&{goto} \\{b5}}\X${}\E{}$\6
+\M[244 back-mxn-words-new.w]{10}\B\X10:Print a solution and \PB{\&{goto} %
+\\{b5}}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{count}\PP{}$;\5
 ${}\\{printf}(\.{"\%d:"},\39\\{count});{}$\6
@@ -376,8 +382,8 @@ ${}\\{printf}(\.{"\ (\%06d,\%06d;\ sum\ \%0}\)\.{7d,\ prod\ \%012d)\\n"},\39%
 \4${}\}{}$\2\par
 \U8.\fi
 
-\M{11}\B\X11:Report the current state, if \PB{$\\{mems}\G\\{thresh}$}\X${}\E{}$%
-\6
+\M[254 back-mxn-words-new.w]{11}\B\X11:Report the current state, if \PB{$%
+\\{mems}\G\\{thresh}$}\X${}\E{}$\6
 \&{if} ${}(\\{mems}\G\\{thresh}){}$\5
 ${}\{{}$\1\6
 ${}\\{thresh}\MRL{+{\K}}\T{10000000000};{}$\6
@@ -388,7 +394,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
 \4${}\}{}$\2\par
 \U8.\fi
 
-\N{1}{12}Index.
+\N[262 back-mxn-words-new.w]{1}{12}Index.
 \fi
 
 \inx

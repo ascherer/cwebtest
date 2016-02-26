@@ -1,11 +1,12 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
 
 \def\adj{\mathrel{\!\mathrel-\mkern-8mu\mathrel-\mkern-8mu\mathrel-\!}}
 
 
-\N{1}{1}Intro. I'm implementing a pretty algorithm due to
+\N[5 embed.w]{1}{1}Intro. I'm implementing a pretty algorithm due to
 Hagauer, Imrich, and Klav\v{z}ar
 [{\sl Theoretical Computer Science\/ \bf215} (1999), 123--136], which
 embeds a median graph in a hypercube.
@@ -79,7 +80,7 @@ ${}\\{exit}({-}\T{3});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{2}Data structures. One part of the algorithm will behoove us
+\N[72 embed.w]{1}{2}Data structures. One part of the algorithm will behoove us
 to find the arc from
 vertex~$u$ to vertex~$v$, given $u$ and $v$. For this random-access
 task, it's easiest
@@ -93,7 +94,7 @@ $\\{adjmat}[\|u-\|g\MG\\{vertices}][\|v-\|g\MG\\{vertices}{}$]\par
 \As5\ET12.
 \U1.\fi
 
-\M{3}We want the adjacency lists to be doubly linked, so that
+\M[84 embed.w]{3}We want the adjacency lists to be doubly linked, so that
 it will be easy to remove an arbitrary edge. The doubly linked adjacency
 lists in this program have a header node \PB{$\|b\K\|v\MG\\{arcs}$} for every
 vertex,
@@ -119,8 +120,8 @@ complete the cycle }\6
 \4${}\}{}$\2\par
 \U10.\fi
 
-\M{4}We also want to compute the distances $d(v)$ from \PB{\\{start\_vertex}}
-to
+\M[100 embed.w]{4}We also want to compute the distances $d(v)$ from \PB{%
+\\{start\_vertex}} to
 each vertex~$v$, representing $d(v)$ in memory as \PB{$\|v\MG\\{dist}$}.
 
 The graph is bipartite, so we know that $d(u)-d(v)=\pm1$ whenever $u\adj v$.
@@ -166,7 +167,8 @@ ${}\|a\K\|c;{}$\6
 \4${}\}{}$\2\par
 \U10.\fi
 
-\M{5}We use a typical union-find algorithm to handle the equivalence
+\M[137 embed.w]{5}We use a typical union-find algorithm to handle the
+equivalence
 classes: Each edge is part of a circular list containing all edges
 that are currently in its class. Each edge also points to the
 ``leader'' of the class, and the leader knows the class size.
@@ -211,7 +213,7 @@ $\\{upper}(\|a)\MG{}$\\{len}\C{ serial number of this equivalence class }\par
 }\par
 \fi
 
-\M{6}Here's a routine that might help when debugging.
+\M[168 embed.w]{6}Here's a routine that might help when debugging.
 
 \Y\B\4\X6:Subroutines\X${}\E{}$\6
 \&{void} \\{print\_edge}(\&{Arc} ${}{*}\|e){}$\1\1\2\2\6
@@ -234,7 +236,7 @@ ${}\\{printf}(\.{",\ size\ \%d\\n"},\39\\{size}(\|f));{}$\6
 \As7, 8\ETs11.
 \U1.\fi
 
-\M{7}The serial number is stored only with the leader.
+\M[184 embed.w]{7}The serial number is stored only with the leader.
 
 \Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{serialize}(\&{Arc} ${}{*}\|e{}$)\C{ assign a serial number }\6
@@ -253,7 +255,7 @@ ${}\\{exit}({-}\T{5});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{8}\B\X6:Subroutines\X${}\mathrel+\E{}$\6
+\M[199 embed.w]{8}\B\X6:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{unionize}(\&{Arc} ${}{*}\|e,\39{}$\&{Arc} ${}{*}\|f{}$)\C{ merge
 two classes }\6
 ${}\{{}$\1\6
@@ -282,7 +284,8 @@ ${}\|g\K\\{elink}(\|e),\39\\{elink}(\|e)\K\\{elink}(\|f),\39\\{elink}(\|f)\K%
 \4${}\}{}$\2\par
 \fi
 
-\M{9}\B\X9:Make each edge its own anonymous equivalence class\X${}\E{}$\6
+\M[217 embed.w]{9}\B\X9:Make each edge its own anonymous equivalence class\X${}%
+\E{}$\6
 \&{for} ${}(\|u\K\|g\MG\\{vertices};{}$ ${}\|u<\|g\MG\\{vertices}+\|g\MG\|n;{}$
 ${}\|u\PP){}$\1\6
 \&{for} ${}(\|a\K\|u\MG\\{arcs}\MG\\{next};{}$ ${}\|a\MG\\{tip};{}$ ${}\|a\K\|a%
@@ -292,7 +295,7 @@ ${}\\{elink}(\|a)\K\\{leader}(\|a)\K\|a,\39\\{size}(\|a)\K\T{1},\39\\{serial}(%
 \|a)\K\T{0}{}$;\2\2\2\par
 \U10.\fi
 
-\M{10}A few more data structures will be introduced after we get
+\M[222 embed.w]{10}A few more data structures will be introduced after we get
 inside the main algorithm itself, but we have now discussed all
 of the necessary preprocessing.
 
@@ -302,7 +305,8 @@ of the necessary preprocessing.
 \X9:Make each edge its own anonymous equivalence class\X;\par
 \U1.\fi
 
-\N{1}{11}The main algorithm. The heart of this program is a recursive procedure
+\N[231 embed.w]{1}{11}The main algorithm. The heart of this program is a
+recursive procedure
 called \PB{\\{embed}(\|r)}. Vertex~\PB{\|r} is the ``root'' of all
 vertices currently reachable from~it; in fact,
 \PB{\|r}~lies on a shortest path from every such vertex
@@ -340,7 +344,8 @@ ${}\\{printf}(\.{"Done\ with\ \%s.\\n"},\39\|r\MG\\{name});{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{12}The edges $r\adj s$ reflected in successive calls of \PB{\\{embed}}
+\M[260 embed.w]{12}The edges $r\adj s$ reflected in successive calls of \PB{%
+\\{embed}}
 form a spanning tree of the original graph. In other words, every
 vertex \PB{\|s} (except for \PB{\\{start\_vertex}}) is chosen exactly once,
 by its unique parent~\PB{\|r}.
@@ -363,11 +368,12 @@ of the spanning tree }\6
 \&{int} \\{tabptr};\C{ number of spanning edges recorded so far }\par
 \fi
 
-\M{13}\B\X13:Record \PB{\|r} and \PB{\|s} for postprocessing\X${}\E{}$\6
+\M[278 embed.w]{13}\B\X13:Record \PB{\|r} and \PB{\|s} for postprocessing\X${}%
+\E{}$\6
 $\\{rtab}[\\{tabptr}]\K\|r,\39\\{stab}[\\{tabptr}]\K\|s,\39\\{tabptr}\PP{}$;\par
 \U11.\fi
 
-\M{14}\B\X14:Print out the embedding codes\X${}\E{}$\6
+\M[281 embed.w]{14}\B\X14:Print out the embedding codes\X${}\E{}$\6
 $\\{printf}(\.{"The\ codewords\ are:\\}\)\.{n\ \%s\ =\ 00000000\\n"},\39%
 \\{start\_vertex}\MG\\{name});{}$\6
 ${}\\{start\_vertex}\MG\\{code}\K\T{\^0};{}$\6
@@ -388,7 +394,8 @@ ${}\\{printf}(\.{"\ \%s\ =\ \%08x\\n"},\39\|v\MG\\{name},\39\|v\MG\\{code});{}$%
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{15}Now we get to real meat. Vertices of the current graph can be partitioned
+\M[295 embed.w]{15}Now we get to real meat. Vertices of the current graph can
+be partitioned
 into {\it left vertices}, which are closer to $r$ than to~$s$, and
 {\it right vertices}, which are closer to~$s$ than to~$r$. Each right
 vertex~$v$ has a {\it rank}, which is the shortest distance from~$v$ to
@@ -458,7 +465,7 @@ ${}\|u\K\|a\MG\\{tip};{}$\6
 \4${}\}{}$\2\par
 \U11.\fi
 
-\M{16}In this step, vertex \PB{\|v} has rank 1, so it
+\M[356 embed.w]{16}In this step, vertex \PB{\|v} has rank 1, so it
 should have exactly one early neighbor~\PB{\|u} that does not
 have rank~1; this vertex will be \PB{$\|v\MG\\{mate}$}.
 
@@ -484,7 +491,8 @@ ${}\|b\MG\\{next}\MG\\{prev}\K\|b\MG\\{prev},\39\|b\MG\\{prev}\MG\\{next}\K\|b%
 ${}\\{unionize}(\|a,\39\\{aa}){}$;\par
 \U15.\fi
 
-\M{17}In this step, \PB{\|u} is a late neighbor of~\PB{\|v}, and \PB{\|v} has
+\M[376 embed.w]{17}In this step, \PB{\|u} is a late neighbor of~\PB{\|v}, and %
+\PB{\|v} has
 rank~1. Vertex~\PB{\|u} itself has at least one early neighbor,
 namely~\PB{\|v}. If \PB{\|u} has rank~1, we know that it will also have a
 (unique)
@@ -518,7 +526,8 @@ ${}\|u\MG\\{rank}\K\T{1},\39\|u\MG\\{link}\K\T{0},\39\\{vv}\MG\\{link}\K\|u,\39%
 \4${}\}{}$\2\par
 \U15.\fi
 
-\M{18}In this step, \PB{\|u} is an early neighbor of~\PB{\|v}, and \PB{\|v} has
+\M[401 embed.w]{18}In this step, \PB{\|u} is an early neighbor of~\PB{\|v}, and
+\PB{\|v} has
 rank~1. If \PB{\|u}~also has rank~1, the edge $v\adj u$ is equivalent
 to the edge from \PB{$\|v\MG\\{mate}$} to \PB{$\|u\MG\\{mate}$}, so we need to
 record
@@ -529,7 +538,7 @@ that fact.
 ${}\\{unionize}(\|a,\39\\{the\_arc}(\|v\MG\\{mate},\39\|u\MG\\{mate})){}$;\2\par
 \U15.\fi
 
-\N{1}{19}Index.
+\N[410 embed.w]{1}{19}Index.
 \fi
 
 \inx

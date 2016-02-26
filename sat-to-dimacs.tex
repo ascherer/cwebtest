@@ -1,6 +1,8 @@
 \input cwebmac
+\srcloctrue
 
-\N{1}{1}Intro. This is a filter that inputs the format used by {\mc SAT0},
+\N[1 sat-to-dimacs.w]{1}{1}Intro. This is a filter that inputs the format used
+by {\mc SAT0},
 {\mc SAT1}, etc., and outputs the well-known DIMACS format for
 satisfiability problems.
 
@@ -42,7 +44,7 @@ ${}\\{printf}(\.{"c\ file\ created\ by\ S}\)\.{AT-TO-DIMACS\ \%s"},\39%
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Global variables\X${}\E{}$\6
+\M[39 sat-to-dimacs.w]{2}\B\X2:Global variables\X${}\E{}$\6
 \&{int} \\{random\_seed}${}\K\T{0}{}$;\C{ seed for the random words of \PB{%
 \\{gb\_rand}} }\6
 \&{int} \\{verbose}${}\K\T{1}{}$;\C{ level of verbosity }\6
@@ -52,7 +54,7 @@ input line }\par
 \A6.
 \U1.\fi
 
-\M{3}On the command line one can say
+\M[45 sat-to-dimacs.w]{3}On the command line one can say
 \smallskip
 \item{$\bullet$}
 `\.v$\langle\,$integer$\,\rangle$' to enable various levels of verbose
@@ -97,8 +99,8 @@ ${}\\{exit}({-}\T{1});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{4}The I/O wrapper. The following routines read the input and absorb it
-into
+\N[72 sat-to-dimacs.w]{1}{4}The I/O wrapper. The following routines read the
+input and absorb it into
 temporary data areas from which all of the ``real'' data structures
 can readily be initialized. My intent is to incorporate these routines in all
 of the SAT-solvers in this series. Therefore I've tried to make the code
@@ -139,7 +141,8 @@ ${}\}{}$ \&{vchunk};\par
 \A5.
 \U1.\fi
 
-\M{5}Each clause in the temporary tables is represented by a sequence of
+\M[109 sat-to-dimacs.w]{5}Each clause in the temporary tables is represented by
+a sequence of
 one or more pointers to the \PB{\&{tmp\_var}} nodes of the literals involved.
 A negated literal is indicated by adding~1 to such a pointer.
 The first literal of a clause is indicated by adding~2.
@@ -156,7 +159,7 @@ any) }\6
 ${}\}{}$ \&{chunk};\par
 \fi
 
-\M{6}\B\X2:Global variables\X${}\mathrel+\E{}$\6
+\M[124 sat-to-dimacs.w]{6}\B\X2:Global variables\X${}\mathrel+\E{}$\6
 \&{char} ${}{*}\\{buf}{}$;\C{ buffer for reading the lines (clauses) of \PB{%
 \\{stdin}} }\6
 \&{tmp\_var} ${}{*}{*}\\{hash}{}$;\C{ heads of the hash lists }\6
@@ -178,7 +181,7 @@ a new \PB{\&{chunk}} }\6
 \&{ullng} \\{cells};\C{ how many occurrences of literals in clauses? }\par
 \fi
 
-\M{7}\B\X7:Initialize everything\X${}\E{}$\6
+\M[139 sat-to-dimacs.w]{7}\B\X7:Initialize everything\X${}\E{}$\6
 \\{gb\_init\_rand}(\\{random\_seed});\6
 ${}\\{buf}\K{}$(\&{char} ${}{*}){}$ \\{malloc}${}(\\{buf\_size}*\&{sizeof}(%
 \&{char}));{}$\6
@@ -201,7 +204,8 @@ ${}\\{hash}[\|h]\K\NULL{}$;\2\par
 \A13.
 \U1.\fi
 
-\M{8}The hash address of each variable name has $h$ bits, where $h$ is the
+\M[155 sat-to-dimacs.w]{8}The hash address of each variable name has $h$ bits,
+where $h$ is the
 value of the adjustable parameter \PB{\\{hbits}}.
 Thus the average number of variables per hash list is $n/2^h$ when there
 are $n$ different variables. A warning is printed if this average number
@@ -267,7 +271,7 @@ ${}\\{exit}({-}\T{666});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{9}\B\X9:Input the clause in \PB{\\{buf}}\X${}\E{}$\6
+\M[205 sat-to-dimacs.w]{9}\B\X9:Input the clause in \PB{\\{buf}}\X${}\E{}$\6
 \&{for} ${}(\|j\K\|k\K\T{0};{}$  ; \,)\5
 ${}\{{}$\1\6
 \&{while} ${}(\\{buf}[\|j]\E\.{'\ '}){}$\1\5
@@ -299,7 +303,8 @@ ${}\\{nullclauses}\PP{}$;\C{ strictly speaking it would be unsatisfiable }\6
 ${}\\{cells}\MRL{+{\K}}\|k{}$;\par
 \U8.\fi
 
-\M{10}We need a hack to insert the bit codes 1 and/or 2 into a pointer value.
+\M[226 sat-to-dimacs.w]{10}We need a hack to insert the bit codes 1 and/or 2
+into a pointer value.
 
 \Y\B\4\D$\\{hack\_in}(\|q,\|t)$ \5
 (\&{tmp\_var} ${}{*})(\|t\OR{}$(\&{ullng}) \|q)\par
@@ -329,7 +334,7 @@ ${}\\{cur\_cell}\PP,\39\|k\PP;{}$\6
 \4${}\}{}$\2\par
 \U9.\fi
 
-\M{11}\B\X11:Install a new \PB{\&{vchunk}}\X${}\E{}$\6
+\M[248 sat-to-dimacs.w]{11}\B\X11:Install a new \PB{\&{vchunk}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{vchunk} ${}{*}\\{new\_vchunk};{}$\7
 ${}\\{new\_vchunk}\K{}$(\&{vchunk} ${}{*}){}$ \\{malloc}(\&{sizeof}(%
@@ -348,7 +353,7 @@ ${}\\{bad\_tmp\_var}\K{\AND}\\{new\_vchunk}\MG\\{var}[\\{vars\_per%
 \4${}\}{}$\2\par
 \U10.\fi
 
-\M{12}\B\X12:Install a new \PB{\&{chunk}}\X${}\E{}$\6
+\M[261 sat-to-dimacs.w]{12}\B\X12:Install a new \PB{\&{chunk}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{chunk} ${}{*}\\{new\_chunk};{}$\7
 ${}\\{new\_chunk}\K{}$(\&{chunk} ${}{*}){}$ \\{malloc}(\&{sizeof}(\&{chunk}));\6
@@ -365,7 +370,8 @@ ${}\\{bad\_cell}\K{\AND}\\{new\_chunk}\MG\\{cell}[\\{cells\_per\_chunk}];{}$\6
 \4${}\}{}$\2\par
 \U10.\fi
 
-\M{13}The hash code is computed via ``universal hashing,'' using the following
+\M[274 sat-to-dimacs.w]{13}The hash code is computed via ``universal hashing,''
+using the following
 precomputed tables of random bits.
 
 \Y\B\4\X7:Initialize everything\X${}\mathrel+\E{}$\6
@@ -374,8 +380,9 @@ precomputed tables of random bits.
 ${}\\{hash\_bits}[\|j][\|k]\K\\{gb\_next\_rand}(\,){}$;\2\2\par
 \fi
 
-\M{14}\B\X14:Put the variable name beginning at \PB{\\{buf}[\|j]} in \PB{$%
-\\{cur\_tmp\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X${}\E{}$\6
+\M[281 sat-to-dimacs.w]{14}\B\X14:Put the variable name beginning at \PB{%
+\\{buf}[\|j]} in \PB{$\\{cur\_tmp\_var}\MG\\{name}$} and compute its hash code %
+\PB{\|h}\X${}\E{}$\6
 $\\{cur\_tmp\_var}\MG\\{name}.\\{lng}\K\T{0};{}$\6
 \&{for} ${}(\|h\K\|l\K\T{0};{}$ ${}\\{buf}[\|j+\|l]>\.{'\ '}\W\\{buf}[\|j+\|l]%
 \Z\.{'\~'};{}$ ${}\|l\PP){}$\5
@@ -396,8 +403,8 @@ ${}\|j\MRL{+{\K}}\|l;{}$\6
 ${}\|h\MRL{\AND{\K}}(\T{1}\LL\\{hbits})-\T{1}{}$;\par
 \U10.\fi
 
-\M{15}\B\X15:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash table at \PB{%
-\|p}\X${}\E{}$\6
+\M[297 sat-to-dimacs.w]{15}\B\X15:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in
+the hash table at \PB{\|p}\X${}\E{}$\6
 \&{for} ${}(\|p\K\\{hash}[\|h];{}$ \|p; ${}\|p\K\|p\MG\\{next}){}$\1\6
 \&{if} ${}(\|p\MG\\{name}.\\{lng}\E\\{cur\_tmp\_var}\MG\\{name}.\\{lng}){}$\1\5
 \&{break};\2\2\6
@@ -410,8 +417,8 @@ ${}\|p\MG\\{stamp}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U10.\fi
 
-\M{16}The most interesting aspect of the input phase is probably the
-``unwinding''
+\M[307 sat-to-dimacs.w]{16}The most interesting aspect of the input phase is
+probably the ``unwinding''
 that we might need to do when encountering a literal more than once
 in the same clause.
 
@@ -422,8 +429,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U10.\fi
 
-\M{17}An input line that begins with `\.{\~\ }' is silently treated as a
-comment.
+\M[316 sat-to-dimacs.w]{17}An input line that begins with `\.{\~\ }' is
+silently treated as a comment.
 Otherwise redundant clauses are logged, in case they were unintentional.
 (One can, however, intentionally
 use redundant clauses to force the order of the variables.)
@@ -443,7 +450,8 @@ ${}\\{printf}(\.{"c\ \%s"},\39\\{buf}+\T{2}){}$;\C{ retain opening comments }\2%
 ${}\\{nullclauses}\PP{}$;\par
 \U9.\fi
 
-\M{18}\B\X18:Move \PB{\\{cur\_cell}} backward to the previous cell\X${}\E{}$\6
+\M[331 sat-to-dimacs.w]{18}\B\X18:Move \PB{\\{cur\_cell}} backward to the
+previous cell\X${}\E{}$\6
 \&{if} ${}(\\{cur\_cell}>{\AND}\\{cur\_chunk}\MG\\{cell}[\T{0}]){}$\1\5
 ${}\\{cur\_cell}\MM;{}$\2\6
 \&{else}\5
@@ -456,8 +464,8 @@ ${}\\{cur\_cell}\K\\{bad\_cell}-\T{1};{}$\6
 \4${}\}{}$\2\par
 \Us17\ET24.\fi
 
-\M{19}Here I must omit `\PB{\\{free}(\\{old\_vchunk})}' from the code that's
-usually
+\M[340 sat-to-dimacs.w]{19}Here I must omit `\PB{\\{free}(\\{old\_vchunk})}'
+from the code that's usually
 in this section, because the variable data will be used later.
 
 \Y\B\4\X19:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary
@@ -475,14 +483,15 @@ ${}\\{cur\_tmp\_var}\K\\{bad\_tmp\_var}-\T{1};{}$\6
 \4${}\}{}$\2\par
 \U22.\fi
 
-\M{20}\B\X20:Report the successful completion of the input phase\X${}\E{}$\6
+\M[352 sat-to-dimacs.w]{20}\B\X20:Report the successful completion of the input
+phase\X${}\E{}$\6
 $\\{fprintf}(\\{stderr},\39\.{"(\%lld\ variables,\ \%l}\)\.{ld\ clauses,\ \%llu%
 \ lit}\)\.{erals\ successfully\ r}\)\.{ead)\\n"},\39\\{vars},\39\\{clauses},\39%
 \\{cells}){}$;\par
 \U1.\fi
 
-\N{1}{21}The output phase. I had to input everything first because DIMACS
-format
+\N[356 sat-to-dimacs.w]{1}{21}The output phase. I had to input everything first
+because DIMACS format
 specifies the number of variables and clauses right at the beginning.
 
 \Y\B\4\X21:Output the clauses\X${}\E{}$\6
@@ -492,7 +501,8 @@ ${}\\{printf}(\.{"p\ cnf\ \%lld\ \%lld\\n"},\39\\{vars},\39\\{clauses});{}$\6
 \X25:Check consistency\X;\par
 \U1.\fi
 
-\M{22}This section is optional, but I'm including it today while I remember
+\M[365 sat-to-dimacs.w]{22}This section is optional, but I'm including it today
+while I remember
 how to provide it.
 
 \Y\B\4\X22:Show the variable names as comments\X${}\E{}$\6
@@ -505,8 +515,8 @@ ${}\\{printf}(\.{"c\ \%.8s\ ->\ \%d\\n"},\39\\{cur\_tmp\_var}\MG\\{name}.%
 \4${}\}{}$\2\par
 \U21.\fi
 
-\M{23}\B\X23:Translate all the temporary cells into the simple DIMACS form\X${}%
-\E{}$\6
+\M[374 sat-to-dimacs.w]{23}\B\X23:Translate all the temporary cells into the
+simple DIMACS form\X${}\E{}$\6
 \&{for} ${}(\|c\K\\{clauses};{}$ \|c; ${}\|c\MM){}$\5
 ${}\{{}$\1\6
 \X24:Translate the cells for the literals of clause \PB{\|c}\X;\6
@@ -514,7 +524,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U21.\fi
 
-\M{24}\B\D$\\{hack\_out}(\|q)$ \5
+\M[380 sat-to-dimacs.w]{24}\B\D$\\{hack\_out}(\|q)$ \5
 (((\&{ullng}) \|q)${}\AND\T{\^3}{}$)\par
 \B\4\D$\\{hack\_clean}(\|q)$ \5
 ((\&{tmp\_var} ${}{*})({}$(\&{ullng}) \|q${}\AND{-}\T{4}){}$)\par
@@ -528,7 +538,7 @@ ${}\\{printf}(\.{"\ \%s\%d"},\39\|i\AND\T{1}\?\.{"-"}:\.{""},\39\|p+\T{1});{}$\6
 \4${}\}{}$\2\par
 \U23.\fi
 
-\M{25}\B\X25:Check consistency\X${}\E{}$\6
+\M[391 sat-to-dimacs.w]{25}\B\X25:Check consistency\X${}\E{}$\6
 \&{if} ${}(\\{cur\_cell}\I{\AND}\\{cur\_chunk}\MG\\{cell}[\T{0}]\V\\{cur%
 \_chunk}\MG\\{prev}\I\NULL\V\\{cur\_tmp\_var}\I{\AND}\\{cur\_vchunk}\MG\\{var}[%
 \T{0}]\V\\{cur\_vchunk}\MG\\{prev}\I\NULL){}$\5
@@ -539,7 +549,7 @@ ${}\\{exit}({-}\T{14});{}$\6
 \4${}\}{}$\2\par
 \U21.\fi
 
-\N{1}{26}Index.
+\N[400 sat-to-dimacs.w]{1}{26}Index.
 
 
 \fi

@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This program is a transcription of the code that I wrote in
+\N[2 achain0.w]{1}{1}Intro. This program is a transcription of the code that I
+wrote in
 1969 to determine the length $l(n)$ of a shortest addition chain for~$n$.
 My original program was written in {\mc IMP}, an idiosyncratic language
 that was basically an assembly program for the Control Data 6600.
@@ -73,7 +75,7 @@ ${}\\{timer}\K\|j;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Process the command line\X${}\E{}$\6
+\M[66 achain0.w]{2}\B\X2:Process the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{3}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ infile\ ou}\)\.{tfile\\n"},\39%
@@ -96,12 +98,13 @@ ${}\\{exit}({-}\T{3});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}\B\X3:Output the value of $l(n)$\X${}\E{}$\6
+\M[82 achain0.w]{3}\B\X3:Output the value of $l(n)$\X${}\E{}$\6
 $\\{fprintf}(\\{outfile},\39\.{"\%c"},\39\|l[\|n]+\.{'\ '});{}$\6
 \\{fflush}(\\{outfile});\C{ make sure the result is viewable immediately }\par
 \U1.\fi
 
-\M{4}At this point I compute the ``lower bound'' $\lfloor\lg n\rfloor+3$,
+\M[86 achain0.w]{4}At this point I compute the ``lower bound'' $\lfloor\lg n%
+\rfloor+3$,
 which is valid if $\nu n>4$. Simple cases where $\nu n\le 4$ will be
 handled separately below.
 
@@ -116,7 +119,7 @@ negative value after EOF }\6
 ${}\\{lb}\K\|i+\T{3}{}$;\2\par
 \U1.\fi
 
-\M{5}Three elementary and well-known upper bounds are considered:
+\M[97 achain0.w]{5}Three elementary and well-known upper bounds are considered:
 (i)~$l(n)\le\lfloor\lg n\rfloor+\nu n-1$;
 (ii)~$l(n)\le l(n-1)+1$;
 (iii)~$l(n)\le l(p)+l(q)$ if $n=pq$.
@@ -150,8 +153,8 @@ ${}\|l[\|n]\K\|i+\T{2};{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{6}It's important to try the factor method even when \PB{$\|j\Z\T{4}$},
-because
+\M[124 achain0.w]{6}It's important to try the factor method even when \PB{$\|j%
+\Z\T{4}$}, because
 of the way prime numbers are recognized here: We would miss the
 prime~3, for example.
 
@@ -179,7 +182,8 @@ ${}\\{prime}[\\{pr}\PP]\K\|n;{}$\2\6
 \4${}\}{}$\2\2\par
 \U5.\fi
 
-\N{1}{7}The interesting part. All the above was necessary just to get
+\N[145 achain0.w]{1}{7}The interesting part. All the above was necessary just
+to get
 warmed up and to set the groundwork for nontrivial cases.
 The method adopted is simple, but it has some subtleties that
 I discovered one by one in the 60s.
@@ -201,7 +205,8 @@ ${}\|l[\|n]\K\MM\\{ub};{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{8}We maintain a stack of subproblems, as usual when backtracking.
+\M[162 achain0.w]{8}We maintain a stack of subproblems, as usual when
+backtracking.
 Suppose \PB{\|a[\|t]} is the sum of two items already present, for all
 $t>s$; we want to make sure that \PB{\|a[\|s]} is legitimate too.
 For this purpose we try all combinations \PB{$\|a[\|s]\K\|p+\|q$} where
@@ -292,7 +297,8 @@ ${}\|a[\\{ubp}]\K\T{0};{}$\6
 \4${}\}{}$\2\2\par
 \U7.\fi
 
-\M{9}The heart of the computation is the following routine, which decides
+\M[235 achain0.w]{9}The heart of the computation is the following routine,
+which decides
 where insertion is possible. A tedious case analysis seems necessary.
 We set \PB{\\{ubp}} to a harmless value so that the subsequent statement
 \PB{$\|a[\\{ubp}]\K\T{0}$} doesn't remove \PB{\|p} if \PB{\|p} was already
@@ -354,7 +360,8 @@ ${}\|i\K(\|i+\T{1})\GG\T{1};{}$\2\6
 \4\\{p\_done}:\par
 \U8.\fi
 
-\M{10}The other case is essentially the same. So if I have a bug in
+\M[273 achain0.w]{10}The other case is essentially the same. So if I have a bug
+in
 one routine, it probably is present in the other one too.
 
 \Y\B\4\X10:Find bounds \PB{\\{lbq}} and \PB{\\{ubq}} on where \PB{\|q} can be
@@ -411,7 +418,7 @@ ${}\|i\K(\|i+\T{1})\GG\T{1};{}$\2\6
 \4\\{q\_done}:\par
 \U8.\fi
 
-\N{1}{11}Index.
+\N[308 achain0.w]{1}{11}Index.
 
 
 \fi

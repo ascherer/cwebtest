@@ -1,10 +1,11 @@
 \input cwebmac
+\srcloctrue
 \datethis
 \let\Xmod=\bmod % this is CWEB magic for using "mod" instead of "%"
 
 
-\N{1}{1}Intro. This program is part of a family of ``SAT-solvers'' that I'm
-putting
+\N[8 sat13.w]{1}{1}Intro. This program is part of a family of ``SAT-solvers''
+that I'm putting
 together for my own education as I prepare to write Section 7.2.2.2 of
 {\sl The Art of Computer Programming}. My intent is to have a variety of
 compatible programs on which I can run experiments to learn how different
@@ -68,7 +69,7 @@ input or to format the output.)
 
 \fi
 
-\M{2}So here's the structure of the program. (Skip ahead if you are
+\M[69 sat13.w]{2}So here's the structure of the program. (Skip ahead if you are
 impatient to see the interesting stuff.)
 
 \Y\B\4\D$\|o$ \5
@@ -136,7 +137,8 @@ ${}\\{imems}\K\\{mems},\39\\{mems}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{3}On the command line one can specify any or all of the following options:
+\M[120 sat13.w]{3}On the command line one can specify any or all of the
+following options:
 \smallskip
 \item{$\bullet$}
 `\.v$\langle\,$integer$\,\rangle$' to enable various levels of verbose
@@ -245,7 +247,7 @@ ${}\|k\K\T{1}{}$;\C{ unrecognized command-line option }\6
 \par
 \U2.\fi
 
-\M{4}\B\X4:Global variables\X${}\E{}$\6
+\M[218 sat13.w]{4}\B\X4:Global variables\X${}\E{}$\6
 \&{int} \\{random\_seed}${}\K\T{0}{}$;\C{ seed for the random words of \PB{%
 \\{gb\_rand}} }\6
 \&{int} \\{verbose}${}\K\\{show\_basics}{}$;\C{ level of verbosity }\6
@@ -326,8 +328,8 @@ of \PB{\\{restart\_psi}} }\6
 \As11, 27, 41, 59, 80, 90, 97, 111\ETs140.
 \U2.\fi
 
-\M{5}\B\X5:Respond to a command-line option, setting \PB{\|k} nonzero on error%
-\X${}\E{}$\6
+\M[270 sat13.w]{5}\B\X5:Respond to a command-line option, setting \PB{\|k}
+nonzero on error\X${}\E{}$\6
 \4\&{case} \.{'v'}:\5
 ${}\|k\MRL{{\OR}{\K}}(\\{sscanf}(\\{argv}[\|j]+\T{1},\39\.{""}\|O\.{"d"},\39{%
 \AND}\\{verbose})-\T{1}){}$;\5
@@ -450,8 +452,8 @@ ${}\|k\MRL{{\OR}{\K}}(\\{sscanf}(\\{argv}[\|j]+\T{1},\39\.{""}\|O\.{"lld"},\39{%
 \&{break};\par
 \U3.\fi
 
-\M{6}\B\X6:If there's a problem, print a message about \.{Usage:} and \PB{%
-\\{exit}}\X${}\E{}$\6
+\M[319 sat13.w]{6}\B\X6:If there's a problem, print a message about \.{Usage:}
+and \PB{\\{exit}}\X${}\E{}$\6
 \&{if} ${}(\|k\V\\{hbits}<\T{0}\V\\{hbits}>\T{30}\V\\{buf\_size}\Z\T{0}\V%
 \\{memk\_max}<\T{2}\V\\{memk\_max}>\T{31}\V\\{trivial\_limit}\Z\T{0}\V{}$(%
 \&{int}) \\{recycle\_inc}${}<\T{0}\V\\{alpha}<\T{0.0}\V\\{alpha}>\T{1.0}\V%
@@ -470,7 +472,7 @@ ${}\\{exit}({-}\T{1});{}$\6
 \4${}\}{}$\2\par
 \U3.\fi
 
-\M{7}\B\X7:Print farewell messages\X${}\E{}$\6
+\M[331 sat13.w]{7}\B\X7:Print farewell messages\X${}\E{}$\6
 \&{if} ${}(\\{verbose}\AND\\{show\_basics}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Altogether\ "}\|O\.{"llu+"}\|O\.{"llu\ mems,\
@@ -504,7 +506,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"("}\|O\.{"lld\ restart"}\|O\.{"s.)\\n"},\39%
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{8}\B\X8:Close the files\X${}\E{}$\6
+\M[358 sat13.w]{8}\B\X8:Close the files\X${}\E{}$\6
 \&{if} (\\{out\_file})\1\5
 \\{fclose}(\\{out\_file});\2\6
 \&{if} (\\{learned\_file})\1\5
@@ -517,8 +519,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"("}\|O\.{"lld\ restart"}\|O\.{"s.)\\n"},\39%
 \\{fclose}(\\{polarity\_outfile});\2\par
 \U2.\fi
 
-\N{1}{9}The I/O wrapper. The following routines read the input and absorb it
-into
+\N[365 sat13.w]{1}{9}The I/O wrapper. The following routines read the input and
+absorb it into
 temporary data areas from which all of the ``real'' data structures
 can readily be initialized. My intent is to incorporate these routines into all
 of the SAT-solvers in this series. Therefore I've tried to make the code
@@ -559,7 +561,8 @@ ${}\}{}$ \&{vchunk};\par
 \As10, 28, 29\ETs30.
 \U2.\fi
 
-\M{10}Each clause in the temporary tables is represented by a sequence of
+\M[402 sat13.w]{10}Each clause in the temporary tables is represented by a
+sequence of
 one or more pointers to the \PB{\&{tmp\_var}} nodes of the literals involved.
 A negated literal is indicated by adding~1 to such a pointer.
 The first literal of a clause is indicated by adding~2.
@@ -576,7 +579,7 @@ any) }\6
 ${}\}{}$ \&{chunk};\par
 \fi
 
-\M{11}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[417 sat13.w]{11}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{char} ${}{*}\\{buf}{}$;\C{ buffer for reading the lines (clauses) of \PB{%
 \\{stdin}} }\6
 \&{tmp\_var} ${}{*}{*}\\{hash}{}$;\C{ heads of the hash lists }\6
@@ -600,7 +603,7 @@ a new \PB{\&{chunk}} }\6
 \&{ullng} \\{cells};\C{ how many occurrences of literals in clauses? }\par
 \fi
 
-\M{12}\B\X12:Initialize everything\X${}\E{}$\6
+\M[434 sat13.w]{12}\B\X12:Initialize everything\X${}\E{}$\6
 \\{gb\_init\_rand}(\\{random\_seed});\6
 ${}\\{buf}\K{}$(\&{char} ${}{*}){}$ \\{malloc}${}(\\{buf\_size}*\&{sizeof}(%
 \&{char}));{}$\6
@@ -623,7 +626,8 @@ ${}\\{hash}[\|h]\K\NULL{}$;\2\par
 \A18.
 \U2.\fi
 
-\M{13}The hash address of each variable name has $h$ bits, where $h$ is the
+\M[450 sat13.w]{13}The hash address of each variable name has $h$ bits, where
+$h$ is the
 value of the adjustable parameter \PB{\\{hbits}}.
 Thus the average number of variables per hash list is $n/2^h$ when there
 are $n$ different variables. A warning is printed if this average number
@@ -691,7 +695,7 @@ ${}\\{exit}({-}\T{666});{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{14}\B\X14:Input the clause in \PB{\\{buf}}\X${}\E{}$\6
+\M[500 sat13.w]{14}\B\X14:Input the clause in \PB{\\{buf}}\X${}\E{}$\6
 \&{for} ${}(\|j\K\|k\K\T{0};{}$  ; \,)\5
 ${}\{{}$\1\6
 \&{while} ${}(\\{buf}[\|j]\E\.{'\ '}){}$\1\5
@@ -728,7 +732,8 @@ ${}\\{unaries}\PP;{}$\2\6
 ${}\\{binaries}\PP{}$;\2\par
 \U13.\fi
 
-\M{15}We need a hack to insert the bit codes 1 and/or 2 into a pointer value.
+\M[523 sat13.w]{15}We need a hack to insert the bit codes 1 and/or 2 into a
+pointer value.
 
 \Y\B\4\D$\\{hack\_in}(\|q,\|t)$ \5
 (\&{tmp\_var} ${}{*})(\|t\OR{}$(\&{ullng}) \|q)\par
@@ -758,7 +763,7 @@ ${}\\{cur\_cell}\PP,\39\|k\PP;{}$\6
 \4${}\}{}$\2\par
 \U14.\fi
 
-\M{16}\B\X16:Install a new \PB{\&{vchunk}}\X${}\E{}$\6
+\M[545 sat13.w]{16}\B\X16:Install a new \PB{\&{vchunk}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{vchunk} ${}{*}\\{new\_vchunk};{}$\7
 ${}\\{new\_vchunk}\K{}$(\&{vchunk} ${}{*}){}$ \\{malloc}(\&{sizeof}(%
@@ -777,7 +782,7 @@ ${}\\{bad\_tmp\_var}\K{\AND}\\{new\_vchunk}\MG\\{var}[\\{vars\_per%
 \4${}\}{}$\2\par
 \U15.\fi
 
-\M{17}\B\X17:Install a new \PB{\&{chunk}}\X${}\E{}$\6
+\M[558 sat13.w]{17}\B\X17:Install a new \PB{\&{chunk}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{chunk} ${}{*}\\{new\_chunk};{}$\7
 ${}\\{new\_chunk}\K{}$(\&{chunk} ${}{*}){}$ \\{malloc}(\&{sizeof}(\&{chunk}));\6
@@ -794,7 +799,8 @@ ${}\\{bad\_cell}\K{\AND}\\{new\_chunk}\MG\\{cell}[\\{cells\_per\_chunk}];{}$\6
 \4${}\}{}$\2\par
 \U15.\fi
 
-\M{18}The hash code is computed via ``universal hashing,'' using the following
+\M[571 sat13.w]{18}The hash code is computed via ``universal hashing,'' using
+the following
 precomputed tables of random bits.
 
 \Y\B\4\X12:Initialize everything\X${}\mathrel+\E{}$\6
@@ -803,8 +809,9 @@ precomputed tables of random bits.
 ${}\\{hash\_bits}[\|j][\|k]\K\\{gb\_next\_rand}(\,){}$;\2\2\par
 \fi
 
-\M{19}\B\X19:Put the variable name beginning at \PB{\\{buf}[\|j]} in \PB{$%
-\\{cur\_tmp\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X${}\E{}$\6
+\M[578 sat13.w]{19}\B\X19:Put the variable name beginning at \PB{\\{buf}[\|j]}
+in \PB{$\\{cur\_tmp\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X${}%
+\E{}$\6
 $\\{cur\_tmp\_var}\MG\\{name}.\\{lng}\K\T{0};{}$\6
 \&{for} ${}(\|h\K\|l\K\T{0};{}$ ${}\\{buf}[\|j+\|l]>\.{'\ '}\W\\{buf}[\|j+\|l]%
 \Z\.{'\~'};{}$ ${}\|l\PP){}$\5
@@ -825,8 +832,8 @@ ${}\|j\MRL{+{\K}}\|l;{}$\6
 ${}\|h\MRL{\AND{\K}}(\T{1}\LL\\{hbits})-\T{1}{}$;\par
 \Us15\ET79.\fi
 
-\M{20}\B\X20:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash table at \PB{%
-\|p}\X${}\E{}$\6
+\M[594 sat13.w]{20}\B\X20:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash
+table at \PB{\|p}\X${}\E{}$\6
 \&{for} ${}(\|p\K\\{hash}[\|h];{}$ \|p; ${}\|p\K\|p\MG\\{next}){}$\1\6
 \&{if} ${}(\|p\MG\\{name}.\\{lng}\E\\{cur\_tmp\_var}\MG\\{name}.\\{lng}){}$\1\5
 \&{break};\2\2\6
@@ -839,8 +846,8 @@ ${}\|p\MG\\{stamp}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U15.\fi
 
-\M{21}The most interesting aspect of the input phase is probably the
-``unwinding''
+\M[604 sat13.w]{21}The most interesting aspect of the input phase is probably
+the ``unwinding''
 that we might need to do when encountering a literal more than once
 in the same clause.
 
@@ -851,8 +858,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U15.\fi
 
-\M{22}An input line that begins with `\.{\~\ }' is silently treated as a
-comment.
+\M[613 sat13.w]{22}An input line that begins with `\.{\~\ }' is silently
+treated as a comment.
 Otherwise redundant clauses are logged, in case they were unintentional.
 (One can, however, intentionally
 use redundant clauses to force the order of the variables.)
@@ -869,7 +876,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"(The\ clause\ on\ line}\)\.{\ "}\|O\.{"lld\ is%
 ${}\\{nullclauses}\PP{}$;\par
 \U14.\fi
 
-\M{23}\B\X23:Move \PB{\\{cur\_cell}} backward to the previous cell\X${}\E{}$\6
+\M[627 sat13.w]{23}\B\X23:Move \PB{\\{cur\_cell}} backward to the previous cell%
+\X${}\E{}$\6
 \&{if} ${}(\\{cur\_cell}>{\AND}\\{cur\_chunk}\MG\\{cell}[\T{0}]){}$\1\5
 ${}\\{cur\_cell}\MM;{}$\2\6
 \&{else}\5
@@ -882,8 +890,8 @@ ${}\\{cur\_cell}\K\\{bad\_cell}-\T{1};{}$\6
 \4${}\}{}$\2\par
 \Us22\ET50.\fi
 
-\M{24}\B\X24:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary
-variable\X${}\E{}$\6
+\M[636 sat13.w]{24}\B\X24:Move \PB{\\{cur\_tmp\_var}} backward to the previous
+temporary variable\X${}\E{}$\6
 \&{if} ${}(\\{cur\_tmp\_var}>{\AND}\\{cur\_vchunk}\MG\\{var}[\T{0}]){}$\1\5
 ${}\\{cur\_tmp\_var}\MM;{}$\2\6
 \&{else}\5
@@ -897,13 +905,14 @@ ${}\\{cur\_tmp\_var}\K\\{bad\_tmp\_var}-\T{1};{}$\6
 \4${}\}{}$\2\par
 \U54.\fi
 
-\M{25}\B\X25:Report the successful completion of the input phase\X${}\E{}$\6
+\M[645 sat13.w]{25}\B\X25:Report the successful completion of the input phase%
+\X${}\E{}$\6
 $\\{fprintf}(\\{stderr},\39\.{"("}\|O\.{"lld\ variables,\ "}\|O\.{"lld\
 clauses,\ "}\|O\.{"llu\ literals\ succes}\)\.{sfully\ read)\\n"},\39\\{vars},%
 \39\\{clauses},\39\\{cells}){}$;\par
 \U2.\fi
 
-\N{1}{26}SAT solving, version 13.
+\N[650 sat13.w]{1}{26}SAT solving, version 13.
 The methods used in this program have much in common with what we've
 seen before in {\mc SAT0}, {\mc SAT1}, etc.; yet conflict-driven
 clause learning is also rather different. So we might as well derive everything
@@ -997,7 +1006,8 @@ that outlive their usefulness.
 
 \fi
 
-\M{27}What data structures support this procedure? We obviously need to
+\M[741 sat13.w]{27}What data structures support this procedure? We obviously
+need to
 represent the trail, as well as the levels, the values, and the reasons for
 each of its literals.
 
@@ -1054,7 +1064,8 @@ assumptions }\6
 full runs }\par
 \fi
 
-\M{28}Binary clauses $u\lor v$ are represented by putting $v$ into a list
+\M[791 sat13.w]{28}Binary clauses $u\lor v$ are represented by putting $v$ into
+a list
 associated with $\bar u$ and $u$ into a list associated with $\bar v$.
 These ``binary implication'' lists are created once and for all at the
 beginning of the run, as explained below.
@@ -1134,7 +1145,8 @@ $(\\{clause\_extra}+\\{learned\_supplement}{}$)\C{ preamble length }\par
 ${}\}{}$ \&{cel};\par
 \fi
 
-\M{29}The variables are numbered from 1 to \PB{\|n}. The literals corresponding
+\M[854 sat13.w]{29}The variables are numbered from 1 to \PB{\|n}. The literals
+corresponding
 to variable~\PB{\|k} are \PB{$\|k+\|k$} and \PB{$\|k+\|k+\T{1}$}, standing
 respectively for $v$
 and $\bar v$ if the $k$th variable is~$v$.
@@ -1179,8 +1191,8 @@ $((\\{vmem}[\\{thevar}(\|l)].\\{value}\XOR(\|l))\AND\T{1}{}$)\par
 ${}\}{}$ \&{variable};\par
 \fi
 
-\M{30}Special data for each literal goes into \PB{\\{lmem}}, containing the
-literal's
+\M[888 sat13.w]{30}Special data for each literal goes into \PB{\\{lmem}},
+containing the literal's
 \PB{\\{reason}} for being true, the first clause (if any) that it watches,
 and the boundaries of its binary implications in \PB{\\{bmem}}.
 
@@ -1196,7 +1208,8 @@ any) }\2\6
 ${}\}{}$ \&{literal};\par
 \fi
 
-\M{31}Here is a subroutine that prints the binary implicant data for
+\M[900 sat13.w]{31}Here is a subroutine that prints the binary implicant data
+for
 a given literal. (Used only when debugging.)
 
 \Y\B\4\X31:Subroutines\X${}\E{}$\6
@@ -1217,8 +1230,8 @@ ${}\\{printf}(\.{"\ "}\|O\.{"s"}\|O\.{".8s("}\|O\.{"d)"},\39\\{litname}(%
 \As32, 33, 34, 39, 42, 43, 44\ETs71.
 \U2.\fi
 
-\M{32}Similarly, we can print the numbers of all clauses that \PB{\|l} is
-currently
+\M[914 sat13.w]{32}Similarly, we can print the numbers of all clauses that \PB{%
+\|l} is currently
 watching.
 
 \Y\B\4\X31:Subroutines\X${}\mathrel+\E{}$\6
@@ -1239,7 +1252,8 @@ ${}\|c\K\\{link1}(\|c);{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{33}And we also sometimes need to see the literals of a given clause.
+\M[929 sat13.w]{33}And we also sometimes need to see the literals of a given
+clause.
 
 \Y\B\4\X31:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_clause}(\&{uint} \|c)\1\1\2\2\6
@@ -1278,7 +1292,8 @@ ${}\|k\PP;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{34}Speaking of debugging, here's a routine to check if the redundant
+\M[959 sat13.w]{34}Speaking of debugging, here's a routine to check if the
+redundant
 parts of our data structure have gone awry.
 
 \Y\B\4\D$\\{sanity\_checking}$ \5
@@ -1297,7 +1312,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{35}\B\X35:Check all clauses for spurious data\X${}\E{}$\6
+\M[974 sat13.w]{35}\B\X35:Check all clauses for spurious data\X${}\E{}$\6
 \&{for} ${}(\\{clauses}\K\|k\K\T{0},\39\|c\K\\{clause\_extra};{}$ ${}\|c<\\{min%
 \_learned};{}$ ${}\|k\K\|c,\39\|c\K\\{endc}+\\{clause\_extra}){}$\5
 ${}\{{}$\1\6
@@ -1376,7 +1391,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"missing\ zero\ at\ end}\)\.{\ of\ mem!%
 \4${}\}{}$\2\par
 \U34.\fi
 
-\M{36}In really bad cases this routine will get into a loop. I try to avoid
+\M[1028 sat13.w]{36}In really bad cases this routine will get into a loop. I
+try to avoid
 segmentation faults, but not loops.
 
 \Y\B\4\X36:Check the watch lists\X${}\E{}$\6
@@ -1409,7 +1425,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{""}\|O\.{"u\ clauses\ but\ "}\|O\.{"u\ watches!%
 \\n"},\39\\{clauses},\39\\{watches}){}$;\2\par
 \U34.\fi
 
-\M{37}\B\X37:Check the trail\X${}\E{}$\6
+\M[1050 sat13.w]{37}\B\X37:Check the trail\X${}\E{}$\6
 \&{for} ${}(\|k\K\\{llevel}\K\T{0};{}$ ${}\|k<\\{eptr};{}$ ${}\|k\PP){}$\5
 ${}\{{}$\1\6
 ${}\|l\K\\{trail}[\|k];{}$\6
@@ -1475,7 +1491,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{""}\|O\.{"s"}\|O\.{".8s("}\|O\.{"u),\ level\ "}%
 \4${}\}{}$\2\par
 \U34.\fi
 
-\M{38}\B\X38:Check the variables\X${}\E{}$\6
+\M[1095 sat13.w]{38}\B\X38:Check the variables\X${}\E{}$\6
 \&{for} ${}(\\{vals}\K\T{0},\39\|v\K\T{1};{}$ ${}\|v\Z\\{vars};{}$ ${}\|v%
 \PP){}$\5
 ${}\{{}$\1\6
@@ -1497,8 +1513,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"I\ found\ "}\|O\.{"u\ values,\ but\ eptr=}\)%
 \.{"}\|O\.{"u!\\n"},\39\\{vals},\39\\{eptr}){}$;\2\par
 \U34.\fi
 
-\M{39}The \PB{\\{print\_stats}} subroutine presents a digest of the current
-goings-on.
+\M[1108 sat13.w]{39}The \PB{\\{print\_stats}} subroutine presents a digest of
+the current goings-on.
 First it shows the number of literals learned at level~zero~(\.z).
 Then it shows recent smoothed-average values of decision depth~(\.d),
 mems per conflict~(\.m),
@@ -1533,7 +1549,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\ r="}\|O\.{".1f\ L="}\|O\.{".1f\ l="}\|O%
 \4${}\}{}$\2\par
 \fi
 
-\M{40}We represent the statistics $\sigma=(x_0+x_1\zeta+x_2\zeta^2+\cdots{})/
+\M[1140 sat13.w]{40}We represent the statistics $\sigma=(x_0+x_1\zeta+x_2%
+\zeta^2+\cdots{})/
 (1+\zeta+\zeta^2+\cdots{})$, for various integer quantities~$x$, as
 64-bit unsigned integers with 32 bits of fraction. Here $x_k$ denotes
 the value of~$x$ at the $k$-from-last conflict, and $\zeta$ is the
@@ -1564,7 +1581,7 @@ ${}\\{glucose\_per\_confl}\MRL{+{\K}}{-}(\\{glucose\_per\_confl}\GG\T{7})+{}$((%
 \&{ullng}) \\{clevels}${}\LL\T{25}){}$;\par
 \U102.\fi
 
-\M{41}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[1162 sat13.w]{41}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{ullng} \\{depth\_per\_decision};\C{ smoothed average of \PB{$\\{llevel}\GG%
 \T{1}$} at decision time }\6
 \&{ullng} \\{trail\_per\_decision};\C{ smoothed average of \PB{\\{eptr}} at
@@ -1582,7 +1599,8 @@ short }\6
 \&{uint} \\{props};\C{ propagations since the previous update }\par
 \fi
 
-\M{42}In long runs it's helpful to know how far we've gotten. A numeric code
+\M[1173 sat13.w]{42}In long runs it's helpful to know how far we've gotten. A
+numeric code
 summarizes the histories of literals that appear in the current trail:
 0 or 1 means that we're trying to set a variable
 true or false, as a decision at the beginning of a level;
@@ -1640,8 +1658,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\ "});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{43}We might also like to see the complete trail, including names and
-reasons.
+\M[1221 sat13.w]{43}We might also like to see the complete trail, including
+names and reasons.
 
 \Y\B\4\X31:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_trail}(\&{int} \\{eptr})\1\1\2\2\6
@@ -1674,7 +1692,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{44}Here's a diagnostic routine that runs through all the nonbinary,
+\M[1241 sat13.w]{44}Here's a diagnostic routine that runs through all the
+nonbinary,
 nonlearned clauses, printing any that are unsatisfied with respect to the
 current partial assignment of values to variables.
 
@@ -1719,7 +1738,7 @@ ${}\\{endc}\PP;{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{45}Initializing the real data structures.
+\N[1271 sat13.w]{1}{45}Initializing the real data structures.
 We're ready now to convert the temporary chunks of data into the
 form we want, and to recycle those chunks. The code below is, of course,
 similar to what has worked in previous programs of this series.
@@ -1739,7 +1758,7 @@ format\X;\6
 \X57:Allocate the auxiliary arrays\X;\par
 \U2.\fi
 
-\M{46}\B\X46:Allocate \PB{\\{vmem}} and \PB{\\{heap}}\X${}\E{}$\6
+\M[1287 sat13.w]{46}\B\X46:Allocate \PB{\\{vmem}} and \PB{\\{heap}}\X${}\E{}$\6
 $\\{vmem}\K{}$(\&{variable} ${}{*}){}$ \\{malloc}${}((\\{vars}+\T{1})*%
 \&{sizeof}(\&{variable}));{}$\6
 \&{if} ${}(\R\\{vmem}){}$\5
@@ -1763,7 +1782,7 @@ ${}\\{exit}({-}\T{11});{}$\6
 ${}\\{bytes}\MRL{+{\K}}\\{vars}*\&{sizeof}(\&{uint}){}$;\par
 \U45.\fi
 
-\M{47}\B\X47:Allocate the other main arrays\X${}\E{}$\6
+\M[1302 sat13.w]{47}\B\X47:Allocate the other main arrays\X${}\E{}$\6
 \\{free}(\\{buf});\5
 \\{free}(\\{hash});\C{ a tiny gesture to make a little room }\6
 \X48:Figure out how big \PB{\\{mem}} ought to be\X;\6
@@ -1798,8 +1817,8 @@ ${}\\{bytes}\MRL{+{\K}}\\{vars}*\&{sizeof}(\&{uint}){}$;\par
 \A56.
 \U45.\fi
 
-\M{48}The \PB{\\{mem}} array will contain $2^k-1<2^{31}$ cells of four bytes
-each,
+\M[1325 sat13.w]{48}The \PB{\\{mem}} array will contain $2^k-1<2^{31}$ cells of
+four bytes each,
 where $k$ is the parameter \PB{\\{memk\_max}}; this parameter is
 \PB{\\{memk\_max\_default}} (currently~26) by default, and changeable by the
 user
@@ -1847,8 +1866,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"(learned\ clauses\ be}\)\.{gin\ at\ "}\|O%
 \4${}\}{}$\2\par
 \U47.\fi
 
-\M{49}Binary data is copied temporarily into cells starting at \PB{$\\{min%
-\_learned}+\T{2}$}.
+\M[1365 sat13.w]{49}Binary data is copied temporarily into cells starting at %
+\PB{$\\{min\_learned}+\T{2}$}.
 (The `${}+2$' is needed because the final clause processed is input
 with \PB{$\|c\K\\{min\_learned}$}.)
 
@@ -1895,7 +1914,8 @@ ${}\\{exit}({-}\T{18});{}$\6
 \X53:Reformat the binary implications\X;\par
 \U45.\fi
 
-\M{50}The basic idea is to ``unwind'' the steps that we went through while
+\M[1400 sat13.w]{50}The basic idea is to ``unwind'' the steps that we went
+through while
 building up the chunks.
 
 \Y\B\4\D$\\{hack\_out}(\|q)$ \5
@@ -1913,7 +1933,8 @@ ${}\|o,\39\\{mem}[\|c+\|k\PP].\\{lit}\K\|p;{}$\6
 \4${}\}{}$\2\par
 \U49.\fi
 
-\M{51}\B\X51:Do special things for unary and binary clauses\X${}\E{}$\6
+\M[1415 sat13.w]{51}\B\X51:Do special things for unary and binary clauses\X${}%
+\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\|k<\T{2}){}$\1\5
 \X52:Define \PB{$\\{mem}[\|c].\\{lit}$} at level 0\X\2\6
@@ -1929,7 +1950,8 @@ ${}\|o,\39\\{mem}[\\{jj}].\\{lit}\K\|l,\39\\{mem}[\\{jj}+\T{1}].\\{lit}\K%
 \4${}\}{}$\2\par
 \U49.\fi
 
-\M{52}We have to watch for degenerate cases: Unit clauses in the input
+\M[1426 sat13.w]{52}We have to watch for degenerate cases: Unit clauses in the
+input
 might be duplicated or contradictory.
 
 \Y\B\4\X52:Define \PB{$\\{mem}[\|c].\\{lit}$} at level 0\X${}\E{}$\6
@@ -1946,7 +1968,7 @@ ${}\|o,\39\\{history}[\\{eptr}]\K\T{6},\39\\{trail}[\\{eptr}\PP]\K\|l;{}$\6
 \4${}\}{}$\2\par
 \U51.\fi
 
-\M{53}\B\X53:Reformat the binary implications\X${}\E{}$\6
+\M[1438 sat13.w]{53}\B\X53:Reformat the binary implications\X${}\E{}$\6
 \&{for} ${}(\|l\K\T{2},\39\\{jj}\K\T{0};{}$ ${}\|l\Z\\{max\_lit};{}$ ${}\|l%
 \PP){}$\5
 ${}\{{}$\1\6
@@ -1967,8 +1989,8 @@ ${}\\{ooo},\39\|k\K\\{lmem}[\\{bar}(\\{ll})].\\{bimp\_end},\39\\{bmem}[\|k]\K%
 \4${}\}{}$\2\par
 \U49.\fi
 
-\M{54}\B\X54:Copy all the temporary variable nodes to the \PB{\\{vmem}} array
-in proper format\X${}\E{}$\6
+\M[1450 sat13.w]{54}\B\X54:Copy all the temporary variable nodes to the \PB{%
+\\{vmem}} array in proper format\X${}\E{}$\6
 \&{for} ${}(\|c\K\\{vars};{}$ \|c; ${}\|c\MM){}$\5
 ${}\{{}$\1\6
 \X24:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary variable\X;%
@@ -1979,7 +2001,8 @@ ${}\|o,\39\\{vmem}[\|c].\\{stamp}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U45.\fi
 
-\M{55}We should now have unwound all the temporary data chunks back to their
+\M[1457 sat13.w]{55}We should now have unwound all the temporary data chunks
+back to their
 beginnings.
 
 \Y\B\4\X55:Check consistency\X${}\E{}$\6
@@ -1995,8 +2018,8 @@ ${}\\{exit}({-}\T{14});{}$\6
 \\{free}(\\{cur\_vchunk});\par
 \U45.\fi
 
-\M{56}A few arrays aren't really of ``main'' importance, but we need to
-allocate
+\M[1470 sat13.w]{56}A few arrays aren't really of ``main'' importance, but we
+need to allocate
 them before incorporating the clause information into \PB{\\{mem}}.
 
 \Y\B\4\X47:Allocate the other main arrays\X${}\mathrel+\E{}$\6
@@ -2020,7 +2043,8 @@ ${}\\{exit}({-}\T{15});{}$\6
 ${}\\{bytes}\MRL{+{\K}}\\{vars}*\&{sizeof}(\&{char}){}$;\par
 \fi
 
-\M{57}The other arrays can perhaps make use of the memory chunks that are
+\M[1487 sat13.w]{57}The other arrays can perhaps make use of the memory chunks
+that are
 freed while we're reformatting the clause and variable data.
 
 \Y\B\4\X57:Allocate the auxiliary arrays\X${}\E{}$\6
@@ -2036,7 +2060,8 @@ ${}\\{bytes}\MRL{+{\K}}\\{vars}*\T{2}*\&{sizeof}(\&{int}){}$;\par
 \As89, 96, 109\ETs116.
 \U45.\fi
 
-\N{1}{58}Forcing. This program spends most of its time adding literals
+\N[1498 sat13.w]{1}{58}Forcing. This program spends most of its time adding
+literals
 to the current trail when they are forced to be true because of
 earlier items on the trail.
 
@@ -2100,13 +2125,13 @@ ${}\|o,\39\\{lat}\K\\{lmem}[\|l].\\{bimp\_end};{}$\6
 \4${}\}{}$\2\par
 \Us65\ET127.\fi
 
-\M{59}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[1544 sat13.w]{59}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{uint} \\{lt};\C{ literal on the trail }\6
 \&{uint} \\{lat};\C{ its \PB{\\{bimp\_end}} }\6
 \&{uint} \\{wa}${},{}$ \\{next\_wa};\C{ a clause in its watch list }\par
 \fi
 
-\M{60}The ``next to inner loop'' of forcing looks for nonbinary
+\M[1549 sat13.w]{60}The ``next to inner loop'' of forcing looks for nonbinary
 clauses that have at most one literal that isn't false.
 
 At this point we're looking at a literal \PB{\\{lt}} that was placed on the
@@ -2165,7 +2190,8 @@ with 0 }\6
 \4${}\}{}$\2\par
 \U127.\fi
 
-\M{61}The literal \PB{\|l} is known to be permanently false, so we seize this
+\M[1592 sat13.w]{61}The literal \PB{\|l} is known to be permanently false, so
+we seize this
 opportunity to remove it from the active memory. (Such deletions will
 be important later, when we attempt to do ``on-the-fly subsumption.'')
 
@@ -2181,8 +2207,8 @@ ${}\|o,\39\\{mem}[\\{wa}+\|s].\\{lit}\K\|l+\\{sign\_bit};{}$\6
 \4${}\}{}$\2\par
 \U60.\fi
 
-\M{62}\B\X62:Swap \PB{\\{wa}} to the watch list of \PB{\|l} and \PB{%
-\&{continue}}\X${}\E{}$\6
+\M[1605 sat13.w]{62}\B\X62:Swap \PB{\\{wa}} to the watch list of \PB{\|l} and %
+\PB{\&{continue}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{verbose}\AND\\{show\_watches}){}$\1\5
 ${}\\{fprintf}(\\{stderr},\39\.{"\ "}\|O\.{"s"}\|O\.{".8s\ watched\ in\ "}\|O%
@@ -2195,8 +2221,8 @@ ${}\|o,\39\\{lmem}[\|l].\\{watch}\K\\{wa};{}$\6
 \4${}\}{}$\2\par
 \U60.\fi
 
-\M{63}We're looking at clause \PB{\\{wa}}, which is watched by \PB{\\{bar}(%
-\\{lt})} and \PB{\\{ll}},
+\M[1615 sat13.w]{63}We're looking at clause \PB{\\{wa}}, which is watched by %
+\PB{\\{bar}(\\{lt})} and \PB{\\{ll}},
 where \PB{\\{lt}} is known to be true (at least with respect to the
 decisions currently in force).
 
@@ -2215,8 +2241,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U60.\fi
 
-\M{64}A satisfied clause \PB{\\{wa}} can be watched by a false literal, as
-noted above.
+\M[1630 sat13.w]{64}A satisfied clause \PB{\\{wa}} can be watched by a false
+literal, as noted above.
 Furthermore, during full runs we allow clauses to become entirely false;
 in such cases both watchers must have become false
 on the maximum level of all literals in~\PB{\\{wa}}.
@@ -2229,7 +2255,8 @@ ${}\|o,\39\\{link1}(\|q)\K\\{wa};{}$\2\6
 ${}\|q\K\\{wa}{}$;\par
 \Us60\ET63.\fi
 
-\M{65}Well, all literals of clause \PB{\\{wa}}, except possibly the first one,
+\M[1640 sat13.w]{65}Well, all literals of clause \PB{\\{wa}}, except possibly
+the first one,
 did in fact turn out to be false. That first literal is what the
 program calls~\PB{\\{ll}}, and we've already verified that \PB{\\{ll}} isn't
 true.
@@ -2266,7 +2293,8 @@ conflict arises\X;\6
 \4${}\}{}$\2\par
 \U60.\fi
 
-\M{66}In the case considered here, a conflict has arisen from the binary clause
+\M[1666 sat13.w]{66}In the case considered here, a conflict has arisen from the
+binary clause
 $\bar u\lor\bar v$, where $u=l$ and $\bar v=\hbox{\PB{\\{ll}}}$.
 This clause is represented
 only implicitly in the \PB{\\{bmem}} array, not explicitly in~\PB{\\{mem}}.
@@ -2286,7 +2314,7 @@ ${}\|c\K{-}\|l;{}$\6
 \4${}\}{}$\2\par
 \U58.\fi
 
-\M{67}\B\X67:Deal with a nonbinary conflict\X${}\E{}$\6
+\M[1683 sat13.w]{67}\B\X67:Deal with a nonbinary conflict\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{verbose}\AND\\{show\_details}){}$\1\5
 ${}\\{fprintf}(\\{stderr},\39\.{"\ "}\|O\.{"s"}\|O\.{".8s\ from\ "}\|O\.{"d\ \#%
@@ -2301,7 +2329,8 @@ ${}\|c\K\\{wa};{}$\6
 \4${}\}{}$\2\par
 \U65.\fi
 
-\M{68}During a ``full run,'' we continue to propagate after finding a conflict.
+\M[1695 sat13.w]{68}During a ``full run,'' we continue to propagate after
+finding a conflict.
 We remember only the first one, at any given level,
 putting its clause number into \PB{$\\{leveldat}[\\{llevel}+\T{1}]$}.
 
@@ -2326,7 +2355,7 @@ ${}\\{conflictdat}[\\{llevel}]\K\\{conflict\_level},\39\\{conflict\_level}\K%
 \4${}\}{}$\2\par
 \U66.\fi
 
-\M{69}\B\X69:Record a nonbinary conflict\X${}\E{}$\6
+\M[1717 sat13.w]{69}\B\X69:Record a nonbinary conflict\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\R\\{conflict\_seen}){}$\5
 ${}\{{}$\1\6
@@ -2338,7 +2367,7 @@ ${}\|o,\39\\{conflictdat}[\\{llevel}]\K\\{conflict\_level},\39\\{conflict%
 \4${}\}{}$\2\par
 \U67.\fi
 
-\N{1}{70}Activity scores.
+\N[1726 sat13.w]{1}{70}Activity scores.
 Experience shows that it's usually a good idea to branch on a variable that
 has participated recently in the construction of conflict clauses. More
 precisely, we try to maximize ``activity,'' where the activity of variable~$v$
@@ -2376,7 +2405,8 @@ ${}\|o,\39\|h\K\\{vmem}[\|v].\\{hloc};{}$\6
 \X73:Sift \PB{\|v} up in the heap\X;\2\par
 \Us87, 88\ETs95.\fi
 
-\M{71}The heap contains \PB{\\{hn}} variables, ordered in such a way that
+\M[1761 sat13.w]{71}The heap contains \PB{\\{hn}} variables, ordered in such a
+way that
 \PB{$\\{vmem}[\|x].\\{activity}\G\\{vmem}[\|y].\\{activity}$} whenever \PB{$\|x%
 \K\\{heap}[\|h]$} and
 \PB{$\|y\K\\{heap}[\T{2}*\|h+\T{1}]$} or \PB{$\|y\K\\{heap}[\T{2}*\|h+\T{2}]$}.
@@ -2396,7 +2426,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{""}\|O\.{"d:\ "}\|O\.{".8s\ "}\|O\.{"e\\n"},\39%
 \4${}\}{}$\2\par
 \fi
 
-\M{72}\B\X72:Check the sanity of the heap\X${}\E{}$\6
+\M[1775 sat13.w]{72}\B\X72:Check the sanity of the heap\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\\{vars};{}$ ${}\|k\PP){}$\5
 ${}\{{}$\1\6
 \&{if} ${}(\\{vmem}[\|k].\\{hloc}\G\\{hn}){}$\1\5
@@ -2424,7 +2454,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"heap["}\|O\.{"d]act<heap["}\|O\.{"d]act!\\n"},%
 \4${}\}{}$\2\par
 \U34.\fi
 
-\M{73}At this point we assume that \PB{$\\{av}\K\\{vmem}[\|v].\\{activity}$}.
+\M[1793 sat13.w]{73}At this point we assume that \PB{$\\{av}\K\\{vmem}[\|v].%
+\\{activity}$}.
 
 \Y\B\4\X73:Sift \PB{\|v} up in the heap\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -2451,7 +2482,7 @@ ${}\|j\K\T{1};{}$\6
 \4${}\}{}$\2\par
 \Us70\ET74.\fi
 
-\M{74}\B\X74:Put \PB{\|v} into the heap\X${}\E{}$\6
+\M[1815 sat13.w]{74}\B\X74:Put \PB{\|v} into the heap\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|o,\39\\{av}\K\\{vmem}[\|v].\\{activity};{}$\6
 ${}\|h\K\\{hn}\PP,\39\|j\K\T{0};{}$\6
@@ -2462,8 +2493,8 @@ ${}\\{oo},\39\\{heap}[\|h]\K\|v,\39\\{vmem}[\|v].\\{hloc}\K\|h;{}$\2\6
 \4${}\}{}$\2\par
 \U128.\fi
 
-\M{75}With probability \PB{\\{rand\_prob}}, we select a variable from the heap
-at random;
+\M[1823 sat13.w]{75}With probability \PB{\\{rand\_prob}}, we select a variable
+from the heap at random;
 this policy is a heuristic designed to avoid getting into a rut.
 Otherwise we take the variable at the top, because that variable has
 maximum activity.
@@ -2509,7 +2540,8 @@ ${}\|o,\39\|v\K\\{heap}[\T{0}];{}$\6
 ${}\|o,\39\|l\K\\{poslit}(\|v)+(\\{vmem}[\|v].\\{oldval}\AND\T{1}){}$;\par
 \U124.\fi
 
-\M{76}\B\X76:Set \PB{\|h} to a random integer less than \PB{\\{hn}}\X${}\E{}$\6
+\M[1858 sat13.w]{76}\B\X76:Set \PB{\|h} to a random integer less than \PB{%
+\\{hn}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{unsigned} \&{long} \|t${}\K\\{two\_to\_the\_31}-(\\{two\_to%
 \_the\_31}\Xmod\\{hn});{}$\6
@@ -2524,7 +2556,7 @@ ${}\|h\K\|r\Xmod\\{hn};{}$\6
 \4${}\}{}$\2\par
 \Us75\ET78.\fi
 
-\M{77}Here we assume that \PB{$\|v\K\\{heap}[\T{0}]$}.
+\M[1868 sat13.w]{77}Here we assume that \PB{$\|v\K\\{heap}[\T{0}]$}.
 
 \Y\B\4\X77:Delete \PB{\|v} from the heap\X${}\E{}$\6
 $\|o,\39\\{vmem}[\|v].\\{hloc}\K{-}\T{1};{}$\6
@@ -2550,7 +2582,7 @@ ${}\|o,\39\\{vmem}[\|u].\\{hloc}\K\|h;{}$\6
 \4${}\}{}$\2\par
 \Us75\ET137.\fi
 
-\M{78}At the very beginning, all activity scores are zero.
+\M[1887 sat13.w]{78}At the very beginning, all activity scores are zero.
 We'll permute the variables randomly in \PB{\\{heap}}, for the sake of variety.
 
 \Y\B\4\X78:Initialize the heap randomly\X${}\E{}$\6
@@ -2586,8 +2618,8 @@ ${}\\{hn}\K\\{vars};{}$\6
 \4${}\}{}$\2\par
 \U45.\fi
 
-\M{79}Literals that occur in \PB{\\{polarity\_infile}} must be separated by
-whitespace,
+\M[1914 sat13.w]{79}Literals that occur in \PB{\\{polarity\_infile}} must be
+separated by whitespace,
 but they can appear on any number of lines. If the literal isn't in the
 hash table, we ignore it. (Perhaps a preprocessor has made this literal
 obsolete.)
@@ -2639,14 +2671,15 @@ ${}\\{hn}\K\\{vars};{}$\6
 \4${}\}{}$\2\par
 \U45.\fi
 
-\M{80}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[1951 sat13.w]{80}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{double} \\{var\_bump}${}\K\T{1.0};{}$\6
 \&{float} \\{clause\_bump}${}\K\T{1.0};{}$\6
 \&{double} \\{var\_bump\_factor};\C{ reciprocal of \PB{\\{var\_rho}} }\6
 \&{float} \\{clause\_bump\_factor};\C{ reciprocal of \PB{\\{clause\_rho}} }\par
 \fi
 
-\M{81}Learned clauses also have activity scores. They aren't used as
+\M[1957 sat13.w]{81}Learned clauses also have activity scores. They aren't used
+as
 heavily as the scores for variables; we look at them only when
 deciding what clauses to keep after too many learned clauses
 have accumulated.
@@ -2661,12 +2694,13 @@ ${}\|o,\39\\{activ}(\|c)\K\\{ac};{}$\6
 \4${}\}{}$\2\par
 \Us87\ET93.\fi
 
-\M{82}\B\X82:Bump the bumps\X${}\E{}$\6
+\M[1970 sat13.w]{82}\B\X82:Bump the bumps\X${}\E{}$\6
 $\\{var\_bump}\MRL{*{\K}}\\{var\_bump\_factor};{}$\6
 ${}\\{clause\_bump}\MRL{*{\K}}\\{clause\_bump\_factor}{}$;\par
 \Us125\ET133.\fi
 
-\M{83}When a nonzero activity is rescaled, we are careful to keep it nonzero
+\M[1974 sat13.w]{83}When a nonzero activity is rescaled, we are careful to keep
+it nonzero
 so that a variable once active will not take second place to a totally
 inactive variable. (I doubt if this is terrifically important, but
 Niklas E\'en told me that he recommends it.)
@@ -2689,7 +2723,7 @@ ${}\\{var\_bump}\MRL{*{\K}}\T{1\_-100};{}$\6
 \4${}\}{}$\2\par
 \U70.\fi
 
-\M{84}\B\D$\\{single\_tiny}$ \5
+\M[1994 sat13.w]{84}\B\D$\\{single\_tiny}$ \5
 \T{1.1754943508222875080\_-38}\C{ $2^{-126}$, the smallest positive nondenormal
 \PB{\&{float}} }\par
 \Y\B\4\X84:Rescale all clause activities\X${}\E{}$\6
@@ -2710,7 +2744,7 @@ ${}\\{clause\_bump}\MRL{*{\K}}\T{1\_-20};{}$\6
 \4${}\}{}$\2\par
 \U81.\fi
 
-\N{1}{85}Learning from a conflict.
+\N[2010 sat13.w]{1}{85}Learning from a conflict.
 A conflict arises when some clause is found to have no true literals
 at the current level. This program relies on a technique for avoiding
 such a conflict in the future,
@@ -2758,8 +2792,8 @@ Then we can resume at a previous level.
 
 \fi
 
-\M{86}So much for theory; let's proceed to practice. We can use the \PB{%
-\\{stamp}}
+\M[2056 sat13.w]{86}So much for theory; let's proceed to practice. We can use
+the \PB{\\{stamp}}
 field to identify literals that appear in the conflict clause~$c$, or in the
 clauses derived from~$c$ as we compute~$c_0$: A variable's \PB{\\{stamp}} will
 equal \PB{\\{curstamp}} if and only if we have just marked it.
@@ -2788,7 +2822,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\ "}\|O\.{"s"}\|O\.{".8s\\n"},\39\\{litname}(%
 \\{lll})){}$;\2\par
 \U125.\fi
 
-\M{87}\B\X87:Initialize a nonbinary conflict\X${}\E{}$\6
+\M[2078 sat13.w]{87}\B\X87:Initialize a nonbinary conflict\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|o,\39\|l\K\\{bar}(\\{mem}[\|c].\\{lit});{}$\6
 ${}\|o,\39\\{tl}\K\\{vmem}[\\{thevar}(\|l)].\\{tloc};{}$\6
@@ -2809,8 +2843,8 @@ ${}\\{tl}\K\|j;{}$\2\6
 \4${}\}{}$\2\par
 \U86.\fi
 
-\M{88}Here the conflict is that \PB{\|l} implies \PB{\\{ll}}, where literal %
-\PB{$\|l\K{-}\|c$} is
+\M[2093 sat13.w]{88}Here the conflict is that \PB{\|l} implies \PB{\\{ll}},
+where literal \PB{$\|l\K{-}\|c$} is
 true but literal \PB{\\{ll}} is false.
 
 \Y\B\4\X88:Initialize a binary conflict\X${}\E{}$\6
@@ -2828,7 +2862,7 @@ ${}\\{xnew}\K\T{1};{}$\6
 \4${}\}{}$\2\par
 \U86.\fi
 
-\M{89}\B\X57:Allocate the auxiliary arrays\X${}\mathrel+\E{}$\6
+\M[2109 sat13.w]{89}\B\X57:Allocate the auxiliary arrays\X${}\mathrel+\E{}$\6
 $\\{learn}\K{}$(\&{uint} ${}{*}){}$ \\{malloc}${}(\\{vars}*\&{sizeof}(%
 \&{uint}));{}$\6
 \&{if} ${}(\R\\{learn}){}$\5
@@ -2840,7 +2874,7 @@ ${}\\{exit}({-}\T{16});{}$\6
 ${}\\{bytes}\MRL{+{\K}}\\{vars}*\&{sizeof}(\&{uint}){}$;\par
 \fi
 
-\M{90}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[2117 sat13.w]{90}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{uint} \\{curstamp};\C{ a unique value for marking literals and levels of
 interest }\6
 \&{uint} ${}{*}\\{learn}{}$;\C{ literals in a clause being learned }\6
@@ -2859,8 +2893,8 @@ clause }\6
 decision? }\par
 \fi
 
-\M{91}The algorithm that follows will use \PB{\\{curstamp}}, \PB{$\\{curstamp}+%
-\T{1}$}, and
+\M[2130 sat13.w]{91}The algorithm that follows will use \PB{\\{curstamp}}, %
+\PB{$\\{curstamp}+\T{1}$}, and
 \PB{$\\{curstamp}+\T{2}$}.
 
 \Y\B\4\X91:Bump \PB{\\{curstamp}} to a new value\X${}\E{}$\6
@@ -2874,7 +2908,7 @@ ${}\\{curstamp}\K\T{1};{}$\6
 ${}\\{curstamp}\MRL{+{\K}}\T{3}{}$;\2\par
 \U86.\fi
 
-\M{92}\B\X92:Reduce \PB{\\{xnew}} to zero\X${}\E{}$\6
+\M[2139 sat13.w]{92}\B\X92:Reduce \PB{\\{xnew}} to zero\X${}\E{}$\6
 \&{while} (\\{xnew})\5
 ${}\{{}$\1\6
 \&{while} (\T{1})\5
@@ -2888,7 +2922,8 @@ ${}\\{xnew}\MM;{}$\6
 \4${}\}{}$\2\par
 \U86.\fi
 
-\M{93}At this point the current conflict clause is represented implicitly
+\M[2149 sat13.w]{93}At this point the current conflict clause is represented
+implicitly
 as the set of negatives of the literals \PB{\\{trail}[\|j]} for \PB{$\|j\Z%
 \\{tl}$} that
 have \PB{$\\{stamp}\K\\{curstamp}$},
@@ -2923,7 +2958,7 @@ ${}\|o,\39\|l\K\\{bar}(\\{mem}[\|k].\\{lit});{}$\6
 \4${}\}{}$\2\par
 \U92.\fi
 
-\M{94}\B\X94:Resolve with binary reason\X${}\E{}$\6
+\M[2174 sat13.w]{94}\B\X94:Resolve with binary reason\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|l\K{-}\|c;{}$\6
 \&{if} ${}(\|o,\39\\{vmem}[\\{thevar}(\|l)].\\{stamp}\I\\{curstamp}){}$\1\5
@@ -2931,7 +2966,8 @@ ${}\|l\K{-}\|c;{}$\6
 \4${}\}{}$\2\par
 \U93.\fi
 
-\M{95}\B\X95:Stamp \PB{\|l} as part of the conflict clause milieu\X${}\E{}$\6
+\M[2181 sat13.w]{95}\B\X95:Stamp \PB{\|l} as part of the conflict clause milieu%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|o,\39\\{jj}\K\\{vmem}[\\{thevar}(\|l)].\\{value}\AND{-}\T{2};{}$\6
 \&{if} ${}(\R\\{jj}){}$\1\5
@@ -2960,7 +2996,7 @@ ${}\|o,\39\\{levstamp}[\\{jj}]\K\\{curstamp}+\T{1};{}$\2\6
 \4${}\}{}$\2\par
 \Us87, 93\ETs94.\fi
 
-\M{96}The \PB{\\{stack}} and \PB{\\{conflictdat}} arrays have
+\M[2201 sat13.w]{96}The \PB{\\{stack}} and \PB{\\{conflictdat}} arrays have
 enough room for twice the number of variables in the worst case.
 
 The \PB{\\{levstamp}} array also has that same size. We use its even-numbered
@@ -2999,7 +3035,7 @@ ${}\\{bytes}\MRL{+{\K}}\T{2}*\\{vars}*\&{sizeof}(\&{uint});{}$\6
 ${}\|o,\39\\{levstamp}[\|k+\|k]\K\T{0}{}$;\2\par
 \fi
 
-\M{97}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[2228 sat13.w]{97}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{int} ${}{*}\\{stack}{}$;\C{ place for homemade recursion control }\6
 \&{int} \\{stackptr};\C{ number of elements in the stack }\6
 \&{int} ${}{*}\\{conflictdat}{}$;\C{ recorded data about conflicts in full runs
@@ -3010,7 +3046,8 @@ ${}\|o,\39\\{levstamp}[\|k+\|k]\K\T{0}{}$;\2\par
 conflict info }\par
 \fi
 
-\M{98}Here now is the technique of ``on-the-fly subsumption,'' which allows us
+\M[2235 sat13.w]{98}Here now is the technique of ``on-the-fly subsumption,''
+which allows us
 to strengthen the clause \PB{\|c} because it happens to contain the current
 conflict clause.
 [This technique was discovered by Han and Somenzi in America, and
@@ -3074,7 +3111,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\ ["}\|O\.{"s"}\|O\.{".8s\ watches\ "}\|O%
 \4${}\}{}$\2\par
 \U93.\fi
 
-\N{1}{99}Simplifying the learned clause.
+\N[2285 sat13.w]{1}{99}Simplifying the learned clause.
 Suppose the clause to be learned is $\bar l\lor\bar a_1\lor\cdots\lor\bar a_k$.
 Many of the literals $\bar a_j$ often turn out to be redundant, in the sense
 that a few well-chosen resolutions will remove them.
@@ -3121,7 +3158,8 @@ without pursuing the whole recursion into impossible levels.
 
 \fi
 
-\M{100}Instead of doing this computation with a recursive procedure, I want
+\M[2326 sat13.w]{100}Instead of doing this computation with a recursive
+procedure, I want
 to control the counting of memory accesses, and to take advantage of
 the special logical structure that's present. So the program here uses an
 explicit stack to hold the parameters of unfinished queries.
@@ -3204,7 +3242,8 @@ ${}\|o,\39\|k\K\\{stack}[\MM\\{stackptr}];{}$\6
 \X101:Clear the stack\X;\par
 \U102.\fi
 
-\M{101}If any of the literals we encounter during that recursive exploration
+\M[2384 sat13.w]{101}If any of the literals we encounter during that recursive
+exploration
 are non-redundant, the literal \PB{\\{ll}} we're currently working on is
 non-redundant, and so are all of the literals on the stack.
 
@@ -3226,7 +3265,8 @@ ${}\\{stackptr}\MM;{}$\2\6
 \4${}\}{}$\2\par
 \U100.\fi
 
-\M{102}Sometimes the learned clause turns out to be unnecessarily long even
+\M[2401 sat13.w]{102}Sometimes the learned clause turns out to be unnecessarily
+long even
 after we simplify it. This can happen, for example, if the decision
 literal~\PB{\|l} on level~1 is not part of the clause, but all the other
 literals
@@ -3268,8 +3308,8 @@ ${}\\{cells\_learned}\MRL{+{\K}}\\{learned\_size},\39\\{total\_learned}\PP;{}$\6
 \X40:Update the smoothed-average stats after a clause has been learned\X;\par
 \U125.\fi
 
-\M{103}The following code is used only when \PB{$\\{learned\_size}>\T{1}$}.
-(Learned
+\M[2430 sat13.w]{103}The following code is used only when \PB{$\\{learned%
+\_size}>\T{1}$}. (Learned
 unit clauses are, of course, happy events; but we deal with them separately.)
 
 The new clause must be watched by two literals. One literal in this
@@ -3297,8 +3337,8 @@ ${}\\{prev\_learned}\K\|c;{}$\6
 \4${}\}{}$\2\par
 \Us125\ET134.\fi
 
-\M{104}In early runs of this program, I noticed several times when the
-previously
+\M[2457 sat13.w]{104}In early runs of this program, I noticed several times
+when the previously
 learned clause is immediately subsumed by the next clause to be learned.
 On further inspection, it turned out that this happened when the
 previously learned clause was the reason for a literal on a level that
@@ -3335,8 +3375,8 @@ ${}\\{max\_cells\_used}\K\\{max\_learned};{}$\6
 \4${}\}{}$\2\par
 \U103.\fi
 
-\M{105}The first literal of \PB{\\{prev\_learned}} has no set value, so it
-isn't
+\M[2488 sat13.w]{105}The first literal of \PB{\\{prev\_learned}} has no set
+value, so it isn't
 part of the conflict clause. We will discard \PB{\\{prev\_learned}} if all
 literals of the learned clause appear among the {\it other\/} literals of
 \PB{\\{prev\_learned}}.
@@ -3370,7 +3410,8 @@ ${}\\{oo},\39\|l\K\\{mem}[\|c+\T{1}].\\{lit},\39\|r\K\\{link1}(\|c);{}$\6
 \4${}\}{}$\2\par
 \U104.\fi
 
-\M{106}At this point \PB{\|r} is the successor of \PB{\|c} in the watch list.
+\M[2514 sat13.w]{106}At this point \PB{\|r} is the successor of \PB{\|c} in the
+watch list.
 
 \Y\B\4\X106:Remove \PB{\|c} from \PB{\|l}'s watch list\X${}\E{}$\6
 \&{for} ${}(\|o,\39\\{wa}\K\\{lmem}[\|l].\\{watch},\39\|q\K\T{0};{}$ ${}\\{wa}%
@@ -3387,7 +3428,7 @@ ${}\|o,\39\\{link0}(\|q)\K\|r;{}$\2\6
 ${}\|o,\39\\{link1}(\|q)\K\|r{}$;\2\par
 \Us98\ET105.\fi
 
-\M{107}\B\X107:Store the learned clause \PB{\|c}\X${}\E{}$\6
+\M[2525 sat13.w]{107}\B\X107:Store the learned clause \PB{\|c}\X${}\E{}$\6
 \&{if} (\\{activ}(\|c))\1\5
 \\{confusion}(\.{"bumps"});\2\6
 ${}\\{size}(\|c)\K\\{learned\_size}{}$;\C{ no mem need be charged here, since
@@ -3432,7 +3473,8 @@ ${}\|k\PP;{}$\6
 \4${}\}{}$\2\2\par
 \U103.\fi
 
-\M{108}\B\X108:Output \PB{\|c} to the file of learned clauses\X${}\E{}$\6
+\M[2554 sat13.w]{108}\B\X108:Output \PB{\|c} to the file of learned clauses%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|k\K\|c;{}$ ${}\|k<\|c+\\{learned\_size};{}$ ${}\|k\PP){}$\1\5
 ${}\\{fprintf}(\\{learned\_file},\39\.{"\ "}\|O\.{"s"}\|O\.{".8s"},\39%
@@ -3443,7 +3485,7 @@ ${}\\{learned\_out}\PP;{}$\6
 \4${}\}{}$\2\par
 \U103.\fi
 
-\N{1}{109}Recycling unhelpful clauses.
+\N[2563 sat13.w]{1}{109}Recycling unhelpful clauses.
 After thousands of conflicts have occurred, we have learned thousands of new
 clauses. New clauses guide the search by steering us away from unproductive
 paths; but they also slow down the propagation process because we have to
@@ -3514,7 +3556,7 @@ ${}\\{bytes}\MRL{+{\K}}\\{buckets}*\&{sizeof}(\&{int});{}$\6
 ${}\|o,\39\\{rangedist}[\|k+\|k]\K\\{rangedist}[\|k+\|k+\T{1}]\K\T{0}{}$;\2\par
 \fi
 
-\M{110}The following program computes the scaled range by using
+\M[2627 sat13.w]{110}The following program computes the scaled range by using
 the auxiliary array \PB{\\{levstamp}} to identify levels that have been seen
 before. All odd-numbered entries of \PB{\\{levstamp}} should be less than~\PB{%
 \|c} when
@@ -3572,7 +3614,7 @@ ${}\\{oo},\39\\{rangedist}[\|v]\PP;{}$\6
 \4${}\}{}$\2\par
 \U112.\fi
 
-\M{111}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[2662 sat13.w]{111}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{int} ${}{*}\\{rangedist}{}$;\C{ how many clauses have a particular scaled
 range? }\6
 \&{int} \\{asserts};\C{ how many learned clauses are assertions that must
@@ -3587,7 +3629,8 @@ clause activity }\6
 \&{int} \\{clause\_heap\_size};\C{ its maximum size }\par
 \fi
 
-\M{112}Each clause recycling pass is a major event, something like spring
+\M[2672 sat13.w]{112}Each clause recycling pass is a major event, something
+like spring
 cleaning. First we prepare to compute the ranges by doing a full run,
 so that every variable has been assigned to a level and a tentative
 Boolean value. Then we backtrack to level zero, possibly learning
@@ -3632,13 +3675,13 @@ ${}\\{budget}\K\|h/\T{2};{}$\6
 ${}\\{prev\_learned}\K\T{0}{}$;\par
 \U133.\fi
 
-\M{113}\B\X113:Recycle half of the learned clauses\X${}\E{}$\6
+\M[2709 sat13.w]{113}\B\X113:Recycle half of the learned clauses\X${}\E{}$\6
 \X114:Compress the database\X;\6
 \X122:Recompute all the watch lists\X;\6
 ${}\\{recycle\_point}\K\T{0}{}$;\par
 \U133.\fi
 
-\M{114}\B\X114:Compress the database\X${}\E{}$\6
+\M[2714 sat13.w]{114}\B\X114:Compress the database\X${}\E{}$\6
 \&{for} ${}(\|o,\39\|j\K\\{minrange},\39\|s\K\\{asserts}+\\{rangedist}[\|j];{}$
 ${}\|s<\\{budget}\W\|j<\\{maxrange};{}$ \,)\1\5
 ${}\|o,\39\|s\MRL{+{\K}}\\{rangedist}[\PP\|j];{}$\2\6
@@ -3683,7 +3726,8 @@ learned\ clauses\ t}\)\.{o\ "}\|O\.{"d)\\n"},\39\\{budget}*\T{2}+\T{1},\39%
 \|h){}$;\C{ a little white lie sometimes }\2\par
 \U113.\fi
 
-\M{115}Clause activity scores are used only to break ties. So it's natural to
+\M[2741 sat13.w]{115}Clause activity scores are used only to break ties. So
+it's natural to
 ask whether the effort of computing them and sorting through them is
 actually worthwhile. Armin Biere has told me that a small but significant
 number of problems do have a fairly large number of clauses at
@@ -3704,7 +3748,7 @@ ${}\\{jj}\K\\{clause\_heap\_size};{}$\2\6
 \4${}\}{}$\2\par
 \U114.\fi
 
-\M{116}\B\X57:Allocate the auxiliary arrays\X${}\mathrel+\E{}$\6
+\M[2758 sat13.w]{116}\B\X57:Allocate the auxiliary arrays\X${}\mathrel+\E{}$\6
 $\\{clause\_heap\_size}\K\\{recycle\_bump}\GG\T{1};{}$\6
 ${}\\{clause\_heap}\K{}$(\&{ullng} ${}{*}){}$ \\{malloc}${}(\\{clause\_heap%
 \_size}*\&{sizeof}(\&{ullng}));{}$\6
@@ -3717,7 +3761,8 @@ ${}\\{exit}({-}\T{16});{}$\6
 ${}\\{bytes}\MRL{+{\K}}\\{clause\_heap\_size}*\&{sizeof}(\&{ullng}){}$;\par
 \fi
 
-\M{117}Entries of \PB{\\{clause\_heap}} are packed so that they sort on
+\M[2767 sat13.w]{117}Entries of \PB{\\{clause\_heap}} are packed so that they
+sort on
 activity first, location second. (If two clauses have equally
 low activity, we prefer to forget the one that has had more
 time to become active.)
@@ -3741,7 +3786,7 @@ ${}\\{clause\_heap}[\|h\PP]\K\\{activ\_as\_lit}(\|c)+\|c;{}$\2\6
 \4${}\}{}$\2\par
 \U115.\fi
 
-\M{118}\B\X118:Establish heap order in the clause heap\X${}\E{}$\6
+\M[2784 sat13.w]{118}\B\X118:Establish heap order in the clause heap\X${}\E{}$\6
 \&{for} ${}(\|h\K\\{jj}\GG\T{1};{}$ \|h; \,)\5
 ${}\{{}$\1\6
 ${}\|q\K\|h+\|h,\39\|p\K\MM\|h,\39\|o,\39\\{accum}\K\\{clause\_heap}[\|p];{}$\6
@@ -3749,7 +3794,7 @@ ${}\|q\K\|h+\|h,\39\|p\K\MM\|h,\39\|o,\39\\{accum}\K\\{clause\_heap}[\|p];{}$\6
 \4${}\}{}$\2\par
 \U115.\fi
 
-\M{119}At this point \PB{$\|q\K\|p+\|p+\T{2}$}.
+\M[2790 sat13.w]{119}At this point \PB{$\|q\K\|p+\|p+\T{2}$}.
 
 \Y\B\4\X119:Sift \PB{\\{accum}} into the clause heap at \PB{\|p}\X${}\E{}$\6
 \&{while} ${}(\|q\Z\\{jj}){}$\5
@@ -3765,7 +3810,8 @@ ${}\|p\K\|q,\39\|q\K\|p+\|p+\T{2};{}$\6
 ${}\|o,\39\\{clause\_heap}[\|p]\K\\{accum}{}$;\par
 \Us118\ET120.\fi
 
-\M{120}We continue to pass over all learned clauses, looking for those
+\M[2801 sat13.w]{120}We continue to pass over all learned clauses, looking for
+those
 whose range is~\PB{\|j}, until \PB{\|t} more are found.
 
 \Y\B\4\X120:Increase the range of \PB{\|t} clauses from \PB{\|j} to \PB{$\|j+%
@@ -3799,8 +3845,8 @@ ${}\\{endc}\PP;{}$\2\6
 \4${}\}{}$\2\par
 \U115.\fi
 
-\M{121}At this point we're operating at root level; that is, \PB{$\\{llevel}\K%
-\T{0}$}.
+\M[2823 sat13.w]{121}At this point we're operating at root level; that is, %
+\PB{$\\{llevel}\K\T{0}$}.
 And we've just copied the literals of a learned-clause-to-remember
 into positions \PB{$\\{mem}[\\{cc}].\\{lit}$}, \PB{$\\{mem}[\\{cc}+\T{1}].%
 \\{lit}$}, \dots,~\PB{$\\{mem}[\\{kk}-\T{1}].\\{lit}$}.
@@ -3832,7 +3878,7 @@ recycled\ "}\|O\.{"d\\n"},\39\\{litname}(\|l),\39\|c);{}$\2\6
 \4${}\}{}$\2\par
 \U114.\fi
 
-\M{122}\B\X122:Recompute all the watch lists\X${}\E{}$\6
+\M[2846 sat13.w]{122}\B\X122:Recompute all the watch lists\X${}\E{}$\6
 \&{for} ${}(\|l\K\T{2};{}$ ${}\|l\Z\\{max\_lit};{}$ ${}\|l\PP){}$\1\5
 ${}\|o,\39\\{lmem}[\|l].\\{watch}\K\T{0};{}$\2\6
 \&{for} ${}(\|c\K\\{clause\_extra};{}$ ${}\|c<\\{min\_learned};{}$ ${}\|c\K%
@@ -3851,7 +3897,8 @@ ${}\|o,\39\\{endc}\K\|c+\\{size}(\|c);{}$\6
 \4${}\}{}$\2\par
 \U113.\fi
 
-\M{123}A technicality for mem counting: We save one memory access either when
+\M[2858 sat13.w]{123}A technicality for mem counting: We save one memory access
+either when
 fetching \PB{$\\{mem}[\|c+\T{1}].\\{lit}$} or when storing into \PB{\\{link1}(%
 \|c)}.
 
@@ -3866,7 +3913,7 @@ ${}\\{ooo},\39\\{link1}(\|c)\K\\{lmem}[\|l].\\{watch},\39\\{lmem}[\|l].%
 \4${}\}{}$\2\par
 \U122.\fi
 
-\N{1}{124}Putting it all together.
+\N[2869 sat13.w]{1}{124}Putting it all together.
 Most of the mechanisms that we need to solve a satisfiability problem
 are now in place. We just need to set them in motion at the proper times.
 
@@ -3937,7 +3984,8 @@ $1-2^{-13}$ }\6
 \X125:Resolve the current conflict\X;\par
 \U2.\fi
 
-\M{125}(I should mention somewhere that the updating of \PB{\\{agility}} here,
+\M[2916 sat13.w]{125}(I should mention somewhere that the updating of \PB{%
+\\{agility}} here,
 and elsewhere, has a known bug: Overflow from $2^{32}-1$ to $2^{32}$
 is theoretically possible! However, this will certainly never occur
 in practice; and even if it does, it will cause no great harm.)
@@ -3998,7 +4046,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"!SAT!\\n"});{}$\2\6
 \4${}\}{}$\2\par
 \U124.\fi
 
-\M{126}\B\X126:Learn a clause of size 1\X${}\E{}$\6
+\M[2955 sat13.w]{126}\B\X126:Learn a clause of size 1\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{verbose}\AND(\\{show\_details}+\\{show\_choices})){}$\1\5
 ${}\\{fprintf}(\\{stderr},\39\.{"level\ 0,\ learned\ "}\|O\.{"s"}\|O\.{".8s%
@@ -4013,8 +4061,8 @@ ${}\\{learned\_out}\PP;{}$\6
 \4${}\}{}$\2\par
 \U125.\fi
 
-\M{127}\B\X127:Complete the current level, or \PB{\&{goto} \\{confl}}\X${}\E{}$%
-\6
+\M[2966 sat13.w]{127}\B\X127:Complete the current level, or \PB{\&{goto} %
+\\{confl}}\X${}\E{}$\6
 $\\{ebptr}\K\\{eptr}{}$;\C{ binary implications needn't be checked after this
 point }\6
 \&{while} ${}(\\{lptr}<\\{eptr}){}$\5
@@ -4035,7 +4083,7 @@ if there's a conflict\X;\6
 \4${}\}{}$\2\par
 \U124.\fi
 
-\M{128}\B\X128:Backtrack to \PB{\\{jumplev}}\X${}\E{}$\6
+\M[2980 sat13.w]{128}\B\X128:Backtrack to \PB{\\{jumplev}}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|o,\39\|k\K\\{leveldat}[\\{jumplev}+\T{2}];{}$\6
 \&{while} ${}(\\{eptr}>\|k){}$\5
@@ -4058,7 +4106,7 @@ ${}\\{llevel}\K\\{jumplev};{}$\2\6
 \4${}\}{}$\2\par
 \Us125, 133, 134\ETs137.\fi
 
-\M{129}\B\X129:Print the solution found\X${}\E{}$\6
+\M[2996 sat13.w]{129}\B\X129:Print the solution found\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{vars};{}$ ${}\|k\PP){}$\5
 ${}\{{}$\1\6
 ${}\|o,\39\\{printf}(\.{"\ "}\|O\.{"s"}\|O\.{".8s"},\39\\{litname}(\\{trail}[%
@@ -4078,7 +4126,7 @@ fil}\)\.{e\ `"}\|O\.{"s'.\\n"},\39\\{out\_name});{}$\6
 \4${}\}{}$\2\par
 \U125.\fi
 
-\M{130}\B\X130:Finish the initialization\X${}\E{}$\6
+\M[3009 sat13.w]{130}\B\X130:Finish the initialization\X${}\E{}$\6
 \&{if} ${}(\\{rand\_prob}\G\T{1.0}){}$\1\5
 ${}\\{rand\_prob\_thresh}\K\T{\^80000000};{}$\2\6
 \&{else}\1\5
@@ -4104,7 +4152,7 @@ ${}\|o,\39\\{leveldat}[\|k+\|k]\K{-}\T{1},\39\\{leveldat}[\|k+\|k+\T{1}]\K%
 \T{0}{}$;\2\par
 \U124.\fi
 
-\M{131}\B\X131:Schedule the next restart\X${}\E{}$\6
+\M[3025 sat13.w]{131}\B\X131:Schedule the next restart\X${}\E{}$\6
 \&{if} ${}((\\{restart\_u}\AND{-}\\{restart\_u})\E\\{restart\_v}){}$\1\5
 ${}\\{restart\_u}\PP,\39\\{restart\_v}\K\T{1},\39\\{restart\_thresh}\K%
 \\{restart\_psi};{}$\2\6
@@ -4116,14 +4164,15 @@ ${}\\{next\_restart}\K\\{total\_learned}+\\{restart\_v};{}$\6
 ${}\\{next\_restart}\K\\{doomsday}{}$;\2\par
 \U136.\fi
 
-\M{132}\B\X132:Schedule the next recycling pass\X${}\E{}$\6
+\M[3032 sat13.w]{132}\B\X132:Schedule the next recycling pass\X${}\E{}$\6
 $\\{recycle\_bump}\MRL{+{\K}}\\{recycle\_inc};{}$\6
 ${}\\{next\_recycle}\K\\{total\_learned}+\\{recycle\_bump};{}$\6
 \&{if} ${}(\\{next\_recycle}>\\{doomsday}){}$\1\5
 ${}\\{next\_recycle}\K\\{doomsday}{}$;\2\par
 \U133.\fi
 
-\M{133}After a full cycle has assigned values to all the variables,
+\M[3037 sat13.w]{133}After a full cycle has assigned values to all the
+variables,
 we go back and learn clauses from each of the recorded conflicts.
 
 If clause $c_i$ is learned at level $l_i$, it tells us that some literal~$u_i$
@@ -4171,8 +4220,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U124.\fi
 
-\M{134}Trivial clauses that arise during a full run are ignored, unless they
-are
+\M[3073 sat13.w]{134}Trivial clauses that arise during a full run are ignored,
+unless they are
 on the first conflict level, because they are never applicable
 at higher levels.
 
@@ -4236,8 +4285,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"(learned\ clause\ "}\|O\.{"d\ of\ size\ "}\|O%
 \4${}\}{}$\2\par
 \U133.\fi
 
-\M{135}\B\X135:Place the literals learned at \PB{\\{minjumplev}} at the end of
-the trail\X${}\E{}$\6
+\M[3118 sat13.w]{135}\B\X135:Place the literals learned at \PB{\\{minjumplev}}
+at the end of the trail\X${}\E{}$\6
 \&{while} (\\{next\_learned})\5
 ${}\{{}$\1\6
 ${}\|o,\39\\{lll}\K\\{conflictdat}[\\{next\_learned}+\T{1}];{}$\6
@@ -4264,7 +4313,8 @@ ${}\|o,\39\\{history}[\\{eptr}]\K\T{4},\39\\{trail}[\\{eptr}\PP]\K\\{lll};{}$\6
 \4${}\}{}$\2\par
 \U133.\fi
 
-\M{136}Following the advice of Armin Biere [{\sl Lecture Notes in Computer
+\M[3135 sat13.w]{136}Following the advice of Armin Biere [{\sl Lecture Notes in
+Computer
 Science\/ \bf4996} (2008), 28--33], I disable restarts when there's lots
 of agility (recent flips of variables). The threshold is higher when
 the time to next restart is longer.
@@ -4281,7 +4331,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"No\ restart\ ("}\|O\.{"llu\ conflicts,\ "}\|O%
 \4${}\}{}$\2\par
 \U124.\fi
 
-\M{137}Instead of restarting completely, by backing up all the way to level~0,
+\M[3150 sat13.w]{137}Instead of restarting completely, by backing up all the
+way to level~0,
 we follow the advice of van~der~Tak, Ramos, and Heule [{\sl Journal
 on Satisfiability, Boolean Modeling and Computation\/ \bf7} (2011), 133--138]:
 We return to the first level for which a new variable will be injected into
@@ -4326,7 +4377,8 @@ ${}\\{warmup\_cycles}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U136.\fi
 
-\M{138}Well, we didn't solve the problem. Too bad. At least we can report
+\M[3184 sat13.w]{138}Well, we didn't solve the problem. Too bad. At least we
+can report
 what progress was made.
 
 \Y\B\4\X138:Call it quits\X${}\E{}$\6
@@ -4375,7 +4427,7 @@ file}\)\.{\ `"}\|O\.{"s'.\\n"},\39\\{restart\_name});{}$\6
 \4${}\}{}$\2\par
 \U124.\fi
 
-\M{139}\B\X139:Debugging fallbacks\X${}\E{}$\6
+\M[3219 sat13.w]{139}\B\X139:Debugging fallbacks\X${}\E{}$\6
 \&{void} \\{confusion}(\&{char} ${}{*}\\{id}){}$\1\1\2\2\6
 ${}\{{}$\C{ an assertion has failed }\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"This\ can't\ happen\ (}\)\.{"}\|O\.{"s)!\\n"},%
@@ -4388,7 +4440,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"You\ rang("}\|O\.{"d)?\\n"},\39\\{foo});{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{140}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[3229 sat13.w]{140}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{full\_run};\C{ are we making a pass to gather data on all variables?
 }\6
 \&{int} \\{conflict\_seen};\C{ have we seen a conflict at the current level? }\6
@@ -4407,7 +4459,7 @@ doubling sequence }\6
 \&{int} \\{minjumplev};\C{ level to which we'll return after a full run }\par
 \fi
 
-\N{1}{141}Index.
+\N[3241 sat13.w]{1}{141}Index.
 \fi
 
 \inx

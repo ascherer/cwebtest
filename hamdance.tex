@@ -1,9 +1,11 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
 
 
-\N{1}{1}Introduction. This little program finds all the Hamiltonian circuits
+\N[3 hamdance.w]{1}{1}Introduction. This little program finds all the
+Hamiltonian circuits
 of a given graph, using an interesting algorithm that illustrates
 the technique of ``dancing links'' [see my paper in {\sl Millennial
 Perspectives in Computer Science}, edited by Jim Davies, Bill Roscoe,
@@ -36,7 +38,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}The given graph should be in Stanford GraphBase format, in a file
+\M[34 hamdance.w]{2}The given graph should be in Stanford GraphBase format, in
+a file
 like \PB{\.{"foo.gb"}} named on the command line. This file name can optionally
 be followed by a modulus \PB{\|m}, which causes every $\vert m\vert$th solution
 to be printed.
@@ -74,15 +77,16 @@ ${}\\{exit}({-}\T{2});{}$\6
 ${}\\{verbose}\K\T{1}{}$;\2\par
 \U1.\fi
 
-\M{3}The \PB{\\{verbose}} variable is declared in \.{gb\_graph.h}.
+\M[60 hamdance.w]{3}The \PB{\\{verbose}} variable is declared in \.{gb%
+\_graph.h}.
 
 \Y\B\4\X3:Global variables\X${}\E{}$\6
 \&{int} \\{modulus};\C{ how often we should show solutions }\par
 \As4, 8, 10, 11\ETs35.
 \U1.\fi
 
-\N{1}{4}Data structures. Each vertex is either \PB{\\{bare}} (touching none of
-the chosen
+\N[65 hamdance.w]{1}{4}Data structures. Each vertex is either \PB{\\{bare}}
+(touching none of the chosen
 edges) or \PB{\\{outer}} (touching just one) or \PB{\\{inner}} (touching two).
 An \PB{\\{outer}}
 vertex has a \PB{\\{mate}}, which is the vertex at the other end of the path of
@@ -148,7 +152,8 @@ $({\AND}\\{list\_head}{}$)\par
 \}{}$;\par
 \fi
 
-\M{5}Here's a routine that should be useful for debugging: It displays
+\M[110 hamdance.w]{5}Here's a routine that should be useful for debugging: It
+displays
 the fields of a given vertex symbolically.
 
 \Y\B\4\X5:Subroutines\X${}\E{}$\6
@@ -169,7 +174,7 @@ ${}\\{printf}(\.{",\ comate=\%s"},\39\|v\MG\\{comate}\MG\\{name});{}$\2\6
 \As6, 7\ETs12.
 \U1.\fi
 
-\M{6}And if we want to see them all:
+\M[124 hamdance.w]{6}And if we want to see them all:
 
 \Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_verts}(\,)\1\1\2\2\6
@@ -181,7 +186,8 @@ ${}\|v\PP){}$\1\5
 \4${}\}{}$\2\par
 \fi
 
-\M{7}Even more important for debugging is the \PB{\\{sanity\_check}} routine,
+\M[133 hamdance.w]{7}Even more important for debugging is the \PB{\\{sanity%
+\_check}} routine,
 which painstakingly makes sure that I haven't let the data structure get
 out of sync with itself. (Vertex \PB{\\{vv}} is either \PB{$\NULL$} or an \PB{%
 \\{inner}}
@@ -240,7 +246,8 @@ ${}\\{printf}(\.{"Double-link\ failure}\)\.{\ at\ vertex\ \%s!\\n"},\39\|v\MG%
 \4${}\}{}$\2\par
 \fi
 
-\M{8}The next most interesting data structure is the \PB{\\{barelist}},
+\M[175 hamdance.w]{8}The next most interesting data structure is the \PB{%
+\\{barelist}},
 which receives the names of \PB{\\{bare}} vertices at the moment their
 degree drops to~2. Such vertices must be clothed before we advance
 to a new level of backtracking.
@@ -255,7 +262,7 @@ each level }\6
 \\{barelist}} manipulations }\par
 \fi
 
-\M{9}\B\X9:Prepare the graph for backtracking\X${}\E{}$\6
+\M[187 hamdance.w]{9}\B\X9:Prepare the graph for backtracking\X${}\E{}$\6
 $\|d\K\\{infty};{}$\6
 ${}\\{bcount}\K\\{ocount}\K\T{0};{}$\6
 \&{for} ${}(\|v\K\|g\MG\\{vertices};{}$ ${}\|v<\|g\MG\\{vertices}+\|g\MG\|n;{}$
@@ -283,8 +290,8 @@ ${}\\{printf}(\.{"There\ are\ no\ Hamilt}\)\.{onian\ circuits,\ beca}\)\.{use\ %
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{10}The arcs currently chosen appear in lists called \PB{\\{source}} and \PB{%
-\\{dest}}.
+\M[205 hamdance.w]{10}The arcs currently chosen appear in lists called \PB{%
+\\{source}} and \PB{\\{dest}}.
 Some arcs are chosen when a bare vertex is being clothed; others are
 chosen at a level of backtracking when an outer vertex becomes inner.
 
@@ -297,7 +304,8 @@ the answers }\6
 each level }\par
 \fi
 
-\M{11}Finally, a few other minor structures help us with backtracking or
+\M[214 hamdance.w]{11}Finally, a few other minor structures help us with
+backtracking or
 when we want to assess the progress of a potentially long calculation.
 
 \Y\B\4\X3:Global variables\X${}\mathrel+\E{}$\6
@@ -312,7 +320,8 @@ when we want to assess the progress of a potentially long calculation.
 \&{unsigned} \&{int} \\{total};\C{ this many solutions so far }\par
 \fi
 
-\M{12}Hamiltonian path problems often take a long time. The following
+\M[227 hamdance.w]{12}Hamiltonian path problems often take a long time. The
+following
 subroutine can be called with an online debugger, to assess how
 far the work has progressed.
 
@@ -341,7 +350,7 @@ ${}\\{printf}(\.{"\ \%3d:\ \%s--\%s\ (\%d\ of}\)\.{\ \%d)\\n"},\39\|k,\39%
 \4${}\}{}$\2\par
 \fi
 
-\M{13}\B\X13:Print the results\X${}\E{}$\6
+\M[247 hamdance.w]{13}\B\X13:Print the results\X${}\E{}$\6
 $\\{printf}(\.{"Altogether\ \%u\ solut}\)\.{ions.\\n"},\39\\{total});{}$\6
 \&{if} (\\{verbose})\5
 ${}\{{}$\1\6
@@ -350,8 +359,8 @@ ${}\\{printf}(\.{"\%3d:\ \%d\\n"},\39\|k,\39\\{profile}[\|k]);{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{14}Marching forward. Here we follow the usual pattern of a backtrack
-process
+\N[254 hamdance.w]{1}{14}Marching forward. Here we follow the usual pattern of
+a backtrack process
 (and I follow my usual practice of \PB{\&{goto}}-ing). In this particular case
 it's a bit tricky to get the whole process started, so I'm deferring
 that bootstrap calculation until the program for levels \PB{$\|l\G\T{1}$} is in
@@ -417,7 +426,8 @@ ${}\|a\K\\{cura}[\|l]\MG\\{next};{}$\6
 \X38:Advance at bottom level\X;\par
 \U1.\fi
 
-\M{15}All the outer vertices are in the doubly linked list, and it
+\M[302 hamdance.w]{15}All the outer vertices are in the doubly linked list, and
+it
 is not empty.
 
 \Y\B\4\X15:Choose an outer vertex \PB{\|v} of minimum degree \PB{\|d}\X${}\E{}$%
@@ -432,7 +442,7 @@ ${}\|d\K\|u\MG\\{deg},\39\|v\K\|u;{}$\2\6
 \4${}\}{}$\2\par
 \U14.\fi
 
-\M{16}At the beginning of a level, when we're about to choose a
+\M[311 hamdance.w]{16}At the beginning of a level, when we're about to choose a
 neighbor for the outer vertex \PB{\|v}, we convert \PB{\|v} to \PB{\\{inner}}
 type
 because this conversion will be valid regardless of which edge we choose.
@@ -461,7 +471,8 @@ ${}\|v\MG\\{type}\K\\{inner};{}$\6
 ${}\\{curbb}[\|l]\K\\{bcount}{}$;\par
 \U14.\fi
 
-\M{17}At this point, \PB{\|v} is a formerly outer vertex that we're joining to
+\M[332 hamdance.w]{17}At this point, \PB{\|v} is a formerly outer vertex that
+we're joining to
 vertex~\PB{\|u}. Also, \PB{$\|w\K\|v\MG\\{mate}$}.
 
 If \PB{\|u} is type \PB{\\{outer}}, we're joining two segments into one, making
@@ -514,7 +525,8 @@ ${}\|w\MG\\{mate}\K\|u,\39\|u\MG\\{mate}\K\|w;{}$\6
 \4${}\}{}$\2\par
 \U14.\fi
 
-\M{18}The situation might have changed since a vertex entered the bare list,
+\M[373 hamdance.w]{18}The situation might have changed since a vertex entered
+the bare list,
 because its type and/or degree may have been altered.
 
 Also, giving clothes to one bare vertex might have a ripple effect, causing
@@ -566,8 +578,8 @@ ${}\\{source}[\\{ocount}]\K\|v,\39\\{dest}[\\{ocount}\PP]\K\|w{}$;\5
 \4${}\}{}$\2\par
 \U14.\fi
 
-\M{19}\B\X19:Find the two neighbors, \PB{\|u} and \PB{\|w}, of vertex \PB{\|v}%
-\X${}\E{}$\6
+\M[410 hamdance.w]{19}\B\X19:Find the two neighbors, \PB{\|u} and \PB{\|w}, of
+vertex \PB{\|v}\X${}\E{}$\6
 \&{for} ${}(\|a\K\|v\MG\\{arcs};{}$  ; ${}\|a\K\|a\MG\\{next}){}$\5
 ${}\{{}$\1\6
 ${}\|u\K\|a\MG\\{tip};{}$\6
@@ -582,7 +594,8 @@ ${}\|w\K\|a\MG\\{tip};{}$\6
 \4${}\}{}$\2\par
 \U18.\fi
 
-\M{20}The clothing process involves four similar subcases (which, I admit,
+\M[420 hamdance.w]{20}The clothing process involves four similar subcases
+(which, I admit,
 are slightly boring). We will see, however, that all of these manipulations
 are easily undone; and that fact, to me, is interesting indeed, almost
 climactic.
@@ -602,7 +615,7 @@ ${}\|u\MG\\{deg}\MM,\39\|w\MG\\{deg}\MM;{}$\6
 \4${}\}{}$\2\par
 \U18.\fi
 
-\M{21}\B\X21:Promote BBO to OII\X${}\E{}$\6
+\M[437 hamdance.w]{21}\B\X21:Promote BBO to OII\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|u\MG\\{deg}\MM;{}$\6
 \\{make\_outer}(\|u);\6
@@ -624,7 +637,7 @@ ${}\|w\MG\\{type}\K\\{inner};{}$\6
 \4${}\}{}$\2\par
 \U18.\fi
 
-\M{22}\B\X22:Promote OBB to IIO\X${}\E{}$\6
+\M[454 hamdance.w]{22}\B\X22:Promote OBB to IIO\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|w\MG\\{deg}\MM;{}$\6
 \\{make\_outer}(\|w);\6
@@ -646,7 +659,7 @@ ${}\|u\MG\\{type}\K\\{inner};{}$\6
 \4${}\}{}$\2\par
 \U18.\fi
 
-\M{23}\B\X23:Promote OBO to III\X${}\E{}$\6
+\M[471 hamdance.w]{23}\B\X23:Promote OBO to III\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|a\K\|u\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
 ${}\{{}$\1\6
@@ -679,7 +692,7 @@ ${}\|u\MG\\{mate}\MG\\{deg}\MM,\39\|w\MG\\{mate}\MG\\{deg}\MM;{}$\6
 \4${}\}{}$\2\par
 \U18.\fi
 
-\N{1}{24}Backtracking.
+\N[494 hamdance.w]{1}{24}Backtracking.
 The fascinating thing about dancing links is the almost magical way in which
 the linked data structures snap back into place when we
 run the updating algorithm backwards. We do need constant vigilance,
@@ -692,7 +705,8 @@ $\\{dancing\_delete}(\|v),\39\|v\MG\\{type}\K\\{bare},\39\|v\MG\\{mate}\K%
 \NULL{}$\par
 \fi
 
-\M{25}The \PB{\\{emergency\_backup}} label in this section provides
+\M[503 hamdance.w]{25}The \PB{\\{emergency\_backup}} label in this section
+provides
 an interesting example of a case where it is right and proper to
 \PB{\&{goto}} a statement in the middle of one loop from the middle of another.
 [See the discussion in Examples 6c and 7a of my paper ``Structured programming
@@ -730,7 +744,7 @@ today }\6
 \4${}\}{}$\2\par
 \U14.\fi
 
-\M{26}\B\X26:Demote OIO to BBB\X${}\E{}$\6
+\M[531 hamdance.w]{26}\B\X26:Demote OIO to BBB\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|u\MG\\{deg}\PP,\39\|w\MG\\{deg}\PP;{}$\6
 \\{make\_bare}(\|u);\6
@@ -744,8 +758,8 @@ ${}\|u\MG\\{deg}\PP,\39\|w\MG\\{deg}\PP;{}$\6
 \4${}\}{}$\2\par
 \U25.\fi
 
-\M{27}The first statement here, `\PB{$\|v\MG\\{deg}\MM$}', compensates for the
-spurious
+\M[542 hamdance.w]{27}The first statement here, `\PB{$\|v\MG\\{deg}\MM$}',
+compensates for the spurious
 increases that will occur because \PB{\|v} is a neighbor of \PB{\|w} and \PB{$%
 \|v\MG\\{type}$}
 is no longer \PB{\\{inner}}.
@@ -773,7 +787,7 @@ ${}\|u\MG\\{deg}\PP;{}$\6
 \4${}\}{}$\2\par
 \U25.\fi
 
-\M{28}\B\X28:Demote IIO to OBB\X${}\E{}$\6
+\M[564 hamdance.w]{28}\B\X28:Demote IIO to OBB\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|v\MG\\{deg}\MM;{}$\6
 ${}\|u\MG\\{mate}\MG\\{mate}\K\|u;{}$\6
@@ -796,7 +810,7 @@ ${}\|w\MG\\{deg}\PP;{}$\6
 \4${}\}{}$\2\par
 \U25.\fi
 
-\M{29}\B\X29:Demote III to OBO\X${}\E{}$\6
+\M[582 hamdance.w]{29}\B\X29:Demote III to OBO\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|v\MG\\{deg}\MRL{-{\K}}\T{2}{}$;\C{ compensate for two spurious increases
 below }\6
@@ -830,7 +844,7 @@ ${}\|v\MG\\{deg}\PP;{}$\2\6
 \4${}\}{}$\2\par
 \U25.\fi
 
-\M{30}A somewhat subtle point deserve special mention here:
+\M[606 hamdance.w]{30}A somewhat subtle point deserve special mention here:
 We want to reset \PB{\\{bcount}} to \PB{\\{curbb}[\|l]}, not to \PB{\\{curb}[%
 \|l]},
 because entries that were put onto the \PB{\\{barelist}} while \PB{\|v} was
@@ -875,7 +889,8 @@ ${}\|u\MG\\{deg}\PP,\39\|w\MG\\{deg}\PP;{}$\6
 ${}\\{bcount}\K\\{curbb}[\|l]{}$;\par
 \U14.\fi
 
-\M{31}\B\X31:Demote \PB{\|v} from \PB{\\{inner}} to \PB{\\{outer}}\X${}\E{}$\6
+\M[641 hamdance.w]{31}\B\X31:Demote \PB{\|v} from \PB{\\{inner}} to \PB{%
+\\{outer}}\X${}\E{}$\6
 $\\{bcount}\K\\{curb}[\|l];{}$\6
 \\{dancing\_undelete}(\|v);\6
 ${}\|v\MG\\{type}\K\\{outer};{}$\6
@@ -887,7 +902,8 @@ ${}\|u\MG\\{deg}\PP;{}$\2\6
 \4${}\}{}$\2\par
 \U14.\fi
 
-\N{1}{32}Reaping the rewards. Once all vertices have been connected up,
+\N[650 hamdance.w]{1}{32}Reaping the rewards. Once all vertices have been
+connected up,
 no more decisions need to be made. In most such cases, we'll have found a
 valid Hamiltonian circuit, although its last link usually still needs
 to be filled in.
@@ -916,7 +932,8 @@ ${}\\{printf}(\.{"\\n\%d:\\n"},\39\\{total}){}$;\5
 \4${}\}{}$\2\par
 \U14.\fi
 
-\M{33}At this point we've formed a Hamiltonian path, which will be a
+\M[671 hamdance.w]{33}At this point we've formed a Hamiltonian path, which will
+be a
 Hamiltonian circuit if and only if its two \PB{\\{outer}} vertices are
 neighbors.
 
@@ -933,7 +950,7 @@ ${}\|u\K\\{head}\MG\\{llink},\39\|v\K\\{head}\MG\\{rlink};{}$\6
 \4${}\}{}$\2\par
 \U32.\fi
 
-\M{34}\B\D$\\{index}(\|v)$ \5
+\M[683 hamdance.w]{34}\B\D$\\{index}(\|v)$ \5
 $((\|v)-\|g\MG\\{vertices}{}$)\par
 \Y\B\4\X34:Unscramble and print the current solution\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -973,14 +990,15 @@ ${}\\{printf}(\.{"\ \%s"},\39(\|g\MG\\{vertices}+\\{path}[\|k])\MG\\{name});{}$%
 \4${}\}{}$\2\par
 \U32.\fi
 
-\M{35}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\M[709 hamdance.w]{35}\B\X3:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{v1}[\\{max\_n}]${},{}$ \\{v2}[\\{max\_n}];\C{ the neighbors of a
 given vertex }\6
 \&{int} ${}\\{path}[\\{max\_n}+\T{1}]{}$;\C{ the Hamiltonian circuit, in order
 }\par
 \fi
 
-\N{1}{36}Getting started. Our program is almost complete, but we still need to
+\N[713 hamdance.w]{1}{36}Getting started. Our program is almost complete, but
+we still need to
 figure out how to get the ball rolling by setting things up properly
 at backtrack level~0.
 
@@ -1021,7 +1039,8 @@ ${}\|v\MG\\{mate}\K\|u,\39\|u\MG\\{mate}\K\|v;{}$\6
 \4${}\}{}$\2\par
 \U14.\fi
 
-\M{37}\B\X37:Remove the arc from \PB{\|u} to \PB{\|v}\X${}\E{}$\6
+\M[747 hamdance.w]{37}\B\X37:Remove the arc from \PB{\|u} to \PB{\|v}\X${}\E{}$%
+\6
 \&{if} ${}(\|u\MG\\{arcs}\MG\\{tip}\E\|v){}$\1\5
 ${}\|u\MG\\{arcs}\K\|u\MG\\{arcs}\MG\\{next};{}$\2\6
 \&{else}\5
@@ -1033,8 +1052,8 @@ ${}\|a\MG\\{next}\K\|a\MG\\{next}\MG\\{next};{}$\6
 \4${}\}{}$\2\par
 \U36.\fi
 
-\M{38}When the edge between \PB{\|u} and \PB{\|v} is removed, and \PB{\|u}
-reverts to a
+\M[754 hamdance.w]{38}When the edge between \PB{\|u} and \PB{\|v} is removed,
+and \PB{\|u} reverts to a
 \PB{\\{bare}} vertex, it might now have degree~2. In such cases we don't
 need \PB{\|v} as a seed vertex, so we revert to the simpler algorithm.
 
@@ -1069,7 +1088,8 @@ ${}\\{cura}[\T{0}]\K\NULL;{}$\6
 \4${}\}{}$\2\par
 \U14.\fi
 
-\M{39}\B\X39:Print the state line for the bottom level\X${}\E{}$\6
+\M[780 hamdance.w]{39}\B\X39:Print the state line for the bottom level\X${}%
+\E{}$\6
 \&{if} (\\{cura}[\T{0}])\1\5
 ${}\\{printf}(\.{"\ \%3d:\ \%s--\%s\ (\%d\ of}\)\.{\ \%d)\\n"},\39\T{0},\39%
 \\{source}[\T{0}]\MG\\{name},\39\\{dest}[\T{0}]\MG\\{name},\39\\{curi}[\T{0}],%
@@ -1084,7 +1104,7 @@ ${}\\{printf}(\.{"\ \%3d:\ (\%d\ of\ \%d)\\n"},\39\T{0},\39\\{curi}[\T{0}],\39%
 \4${}\}{}$\2\par
 \U12.\fi
 
-\N{1}{40}Index.
+\N[790 hamdance.w]{1}{40}Index.
 \fi
 
 \inx

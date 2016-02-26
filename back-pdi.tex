@@ -1,7 +1,8 @@
 \input cwebmac
+\srcloctrue
 
-\N{1}{1}Intro. This program finds all ``perfect digital invariants'' of
-order~$m$
+\N[1 back-pdi.w]{1}{1}Intro. This program finds all ``perfect digital
+invariants'' of order~$m$
 in the decimal system, namely all integers that satisfy $\pi_m x=x$,
 where $\pi_m$ takes an integer into the sum of the $m$th powers of its digits.
 
@@ -63,7 +64,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"Altogether\ \%d\ solut}\)\.{ions\ for\ m=\%d\
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Print the profile\X${}\E{}$\6
+\M[54 back-pdi.w]{2}\B\X2:Print the profile\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Profile:\ \ \ \ \ \ \ \ \ \ 1}\)\.{\\n"});{}$\6
 \&{for} ${}(\|k\K\T{2};{}$ ${}\|k\Z\|m+\T{2};{}$ ${}\|k\PP){}$\1\5
@@ -71,7 +72,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\%19lld\\n"},\39\\{profile}[\|k]);{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}\B\X3:Process the command line\X${}\E{}$\6
+\M[60 back-pdi.w]{3}\B\X3:Process the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}<\T{2}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
 \|m)\I\T{1}){}$\5
 ${}\{{}$\1\6
@@ -89,8 +90,8 @@ ${}\\{exit}({-}\T{2});{}$\6
 ${}\\{mdigs}\K\T{1}+(\|m/\T{15}){}$;\par
 \U1.\fi
 
-\N{1}{4}Tricky arithmetic. I've got to deal with biggish numbers and inspect
-their
+\N[72 back-pdi.w]{1}{4}Tricky arithmetic. I've got to deal with biggish numbers
+and inspect their
 decimal digits. But I'm using a binary computer and I don't want to
 be repeatedly dividing by powers of~10. So I have an addition routine
 that computes (say) the sum of hexadecimal-coded numbers
@@ -116,8 +117,8 @@ ${}\\{exit}({-}\T{999});{}$\6
 \As6\ET10.
 \U1.\fi
 
-\M{5}It's interesting that I must add \PB{\|c} to \PB{\|x} here, {\it not\/}
-to~\PB{\|y}.
+\M[91 back-pdi.w]{5}It's interesting that I must add \PB{\|c} to \PB{\|x} here,
+{\it not\/} to~\PB{\|y}.
 Otherwise the nondecimal digit \.{a} might appear in the result.
 
 \Y\B\4\X5:Add \PB{$\|c+{*}(\|p+\|k)$} to \PB{${*}(\|q+\|k)$}, giving \PB{${*}(%
@@ -138,7 +139,8 @@ ${}\|c\K\|t\GG\T{60};{}$\6
 \4${}\}{}$\2\par
 \U4.\fi
 
-\M{6}At the beginning of this program, I need a table of $0^m$, $1^m$, $2^m$,
+\M[106 back-pdi.w]{6}At the beginning of this program, I need a table of $0^m$,
+$1^m$, $2^m$,
 \dots,~$9^m$. So why not compute it via addition?
 
 \Y\B\4\X4:Subroutines\X${}\mathrel+\E{}$\6
@@ -183,7 +185,7 @@ ${}\\{add}(\|a,\39\|z,\39\|a){}$;\5
 \4${}\}{}$\2\par
 \fi
 
-\M{7}\B\X7:Precompute the power tables\X${}\E{}$\6
+\M[124 back-pdi.w]{7}\B\X7:Precompute the power tables\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\T{10};{}$ ${}\|k\PP){}$\5
 ${}\{{}$\1\6
 ${}\\{table}[\T{1}][\|k][\T{0}]\K\|k;{}$\6
@@ -195,7 +197,7 @@ ${}\\{add}(\\{table}[\T{1}][\|k],\39\\{table}[\|j-\T{1}][\|k],\39\\{table}[%
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{8}\B\X8:Global variables\X${}\E{}$\6
+\M[132 back-pdi.w]{8}\B\X8:Global variables\X${}\E{}$\6
 \&{int} \\{mdigs};\C{ our multiprecision arithmetic routine uses this many
 octabytes }\6
 \&{ull} ${}\\{table}[\\{maxm}+\T{2}][\T{10}][\\{maxdigs}]{}$;\C{ precomputed
@@ -204,13 +206,15 @@ tables of $j\cdot k^m$ }\6
 \A14.
 \U1.\fi
 
-\M{9}Here's a macro that delivers a given digit (nybble) of a mutlibyte number.
+\M[137 back-pdi.w]{9}Here's a macro that delivers a given digit (nybble) of a
+mutlibyte number.
 
 \Y\B\4\D$\\{nybb}(\|a,\|p)$ \5
 $(\&{int})((\|a[\|p/\T{15}]\GG(\T{4}*(\|p\MOD\T{15})))\AND\T{\^f}{}$)\par
 \fi
 
-\M{10}When debugging, or operating verbosely, I want to see all digits of a
+\M[141 back-pdi.w]{10}When debugging, or operating verbosely, I want to see all
+digits of a
 multiprecise number, with a vertical bar just before digit number~\PB{\|t}.
 
 \Y\B\4\X4:Subroutines\X${}\mathrel+\E{}$\6
@@ -226,7 +230,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\%d"},\39\\{nybb}(\|a,\39\|k));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{11}The algorithm. This program has the overall structure of a typical
+\N[153 back-pdi.w]{1}{11}The algorithm. This program has the overall structure
+of a typical
 backtrack program, with a few twists. One of those twists is the
 state parameter~\PB{\\{pd}}, which is nonzero when the move at level~\PB{$\|l-%
 \T{1}$} was forced.
@@ -284,8 +289,8 @@ ${}\|o,\39\\{pd}\K\\{pdsave}[\|l];{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{12}\B\X12:Report the current state, if \PB{$\\{mems}\G\\{thresh}$}\X${}\E{}$%
-\6
+\M[189 back-pdi.w]{12}\B\X12:Report the current state, if \PB{$\\{mems}\G%
+\\{thresh}$}\X${}\E{}$\6
 \&{if} ${}(\\{mems}\G\\{thresh}){}$\5
 ${}\{{}$\1\6
 ${}\\{thresh}\MRL{+{\K}}\T{10000000000};{}$\6
@@ -296,8 +301,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
 \4${}\}{}$\2\par
 \U11.\fi
 
-\M{13}The purpose of backtrack level \PB{\|l} is to compute the $l$th largest
-digit,
+\M[197 back-pdi.w]{13}The purpose of backtrack level \PB{\|l} is to compute the
+$l$th largest digit,
 $x_l$, of a solution~$x$, assuming that $x_1$, \dots,~$x_{l-1}$ have already
 been specified.
 
@@ -346,7 +351,7 @@ $\PB{\\{sig}}[l]=\sum_{k=0}^{xl-1}\PB{\\{pdist}}[l][k]\cdot k^m+
 
 \fi
 
-\M{14}\B\X8:Global variables\X${}\mathrel+\E{}$\6
+\M[238 back-pdi.w]{14}\B\X8:Global variables\X${}\mathrel+\E{}$\6
 \&{int} ${}\\{dist}[\\{maxm}+\T{1}][\T{16}],{}$ ${}\\{pdist}[\\{maxm}+\T{1}][%
 \T{16}];{}$\6
 \&{ull} ${}\|a[\\{maxm}+\T{1}][\\{maxdigs}],{}$ ${}\|b[\\{maxm}+\T{1}][%
@@ -355,7 +360,7 @@ $\PB{\\{sig}}[l]=\sum_{k=0}^{xl-1}\PB{\\{pdist}}[l][k]\cdot k^m+
 \\{tsave}[\\{maxm}+\T{1}],{}$ ${}\\{pdsave}[\\{maxm}+\T{1}]{}$;\par
 \fi
 
-\M{15}\B\X15:Initialize the data structures\X${}\E{}$\6
+\M[243 back-pdi.w]{15}\B\X15:Initialize the data structures\X${}\E{}$\6
 $\|l\K\T{1};{}$\6
 ${}\\{pd}\K\\{pdsave}[\T{1}]\K\T{0};{}$\6
 ${}\\{alt}\K\T{0},\39\\{blt}\K\T{9};{}$\6
@@ -366,15 +371,16 @@ ${}\\{profile}[\T{1}]\K\T{1};{}$\6
 \par
 \U11.\fi
 
-\M{16}\B\X16:Advance to the next level with $x_l=\PB{\\{xl}}$ and \PB{\&{goto} %
-\\{b2}}\X${}\E{}$\6
+\M[252 back-pdi.w]{16}\B\X16:Advance to the next level with $x_l=\PB{\\{xl}}$
+and \PB{\&{goto} \\{b2}}\X${}\E{}$\6
 $\\{oo},\39\\{tsave}[\|l]\K\|t,\39\\{rsave}[\|l]\K\|r;{}$\6
 ${}\|o,\39\\{pdsave}[\|l]\K\\{pd};{}$\6
 ${}\|o,\39\|x[\|l\PP]\K\\{xl};{}$\6
 \&{goto} \\{b2};\par
 \U11.\fi
 
-\M{17}\B\X17:Print a solution and \PB{\&{goto} \\{b5}}\X${}\E{}$\6
+\M[258 back-pdi.w]{17}\B\X17:Print a solution and \PB{\&{goto} \\{b5}}\X${}%
+\E{}$\6
 ${}\{{}$\1\6
 ${}\\{count}\PP;{}$\6
 ${}\\{printf}(\.{"\%d:\ "},\39\\{count});{}$\6
@@ -388,8 +394,8 @@ ${}\\{printf}(\.{"\%d"},\39\\{nybb}(\\{sig}[\|l],\39\|k));{}$\2\6
 \4${}\}{}$\2\par
 \U11.\fi
 
-\M{18}When this code is performed, \PB{\\{sig}[\|l]} and \PB{\\{dist}[\|l]} and
-\PB{\\{pdist}[\|l]}
+\M[269 back-pdi.w]{18}When this code is performed, \PB{\\{sig}[\|l]} and \PB{%
+\\{dist}[\|l]} and \PB{\\{pdist}[\|l]}
 are supposed to be up to date, as well as \PB{\\{xl}}, \PB{\|t}, \PB{\|r}, \PB{%
 \\{alt}}, and \PB{\\{blt}}.
 
@@ -417,8 +423,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
 \4${}\}{}$\2\par
 \U11.\fi
 
-\M{19}The numbers \PB{\\{alt}} and \PB{\\{blt}} just past the prefix give
-important constraints
+\M[288 back-pdi.w]{19}The numbers \PB{\\{alt}} and \PB{\\{blt}} just past the
+prefix give important constraints
 on what the future can bring. If we can improve them, we can often
 improve them further yet, and possibly even extend the prefix.
 
@@ -465,7 +471,8 @@ ${}\\{change}\K\T{1};{}$\2\6
 \4${}\}{}$\2\par
 \U18.\fi
 
-\M{20}Here's the most delicate (and most important) part, as we've learned
+\M[319 back-pdi.w]{20}Here's the most delicate (and most important) part, as
+we've learned
 another digit of~\PB{\|x}.
 
 Incidentally, here's an interesting example of a ``flowchart'' where
@@ -505,7 +512,8 @@ ${}\\{oo},\39\\{alt}\K\\{nybb}(\|a[\|l],\39\|t),\39\\{blt}\K\\{nybb}(\|b[\|l],%
 \4${}\}{}$\2\par
 \U18.\fi
 
-\M{21}\B\X21:Restore the previous state at level \PB{\|l}\X${}\E{}$\6
+\M[349 back-pdi.w]{21}\B\X21:Restore the previous state at level \PB{\|l}\X${}%
+\E{}$\6
 $\\{oo},\39\|t\K\\{tsave}[\|l],\39\|r\K\\{rsave}[\|l];{}$\6
 \&{if} ${}(\|t\G\T{0}){}$\1\5
 ${}\\{oo},\39\\{alt}\K\\{nybb}(\|a[\|l],\39\|t),\39\\{blt}\K\\{nybb}(\|b[\|l],%
@@ -515,8 +523,8 @@ ${}\\{alt}\K\\{blt}\K\T{9};{}$\2\6
 ${}\|o,\39\\{xl}\K\|x[\|l]{}$;\par
 \U11.\fi
 
-\M{22}When \PB{\\{dist}} is ``catching up'' with \PB{\\{pdist}}, we don't
-change \PB{\\{sig}},
+\M[355 back-pdi.w]{22}When \PB{\\{dist}} is ``catching up'' with \PB{%
+\\{pdist}}, we don't change \PB{\\{sig}},
 because a digit that occurred in the prefix was already accounted for;
 we knew that an \PB{\\{xl}} would be coming, and it has finally arrived.
 (Also \PB{\|t} and \PB{\|r} remain unchanged.)
@@ -533,7 +541,7 @@ ${}\\{oo},\39\\{sig}[\|l][\|k]\K\\{sig}[\|l-\T{1}][\|k];{}$\2\6
 \4${}\}{}$\2\par
 \U11.\fi
 
-\N{1}{23}Index.
+\N[367 back-pdi.w]{1}{23}Index.
 \fi
 
 \inx

@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Introduction. This program finds a minimum-move solution to the famous
+\N[2 15puzzle-korf1.w]{1}{1}Introduction. This program finds a minimum-move
+solution to the famous
 ``15 puzzle,'' using a method introduced by Richard E. Korf
 [{\sl Artificial Intelligence\/ \bf27} (1985), 97--109]. It's the
 first of a series of ever-more-efficient ways to do the job.
@@ -56,7 +58,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}Let's regard the 16 cell positions as two-digit numbers in quaternary
+\M[57 15puzzle-korf1.w]{2}Let's regard the 16 cell positions as two-digit
+numbers in quaternary
 (radix-4) notation:
 $$\vcenter{\halign{&\enspace#\cr
 00&01&02&03\cr
@@ -143,7 +146,7 @@ start\ position!}\)\.{\\n"});\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{3}Korf's method.
+\N[121 15puzzle-korf1.w]{1}{3}Korf's method.
 If piece $(r,c)$ is currently in board position $(r',c')$, it must make
 at least $\vert r-r'\vert+\vert c-c'\vert$ moves before it reaches home.
 The sum of these numbers, over all fifteen pieces, is called~$h$;
@@ -209,7 +212,8 @@ instead? Readers comments are invited.
 
 \fi
 
-\M{4}Saving memory means that the computation lives entirely within the
+\M[185 15puzzle-korf1.w]{4}Saving memory means that the computation lives
+entirely within the
 computer's high-speed cache. Of course we do need to examine billions
 of positions, in tough cases; so we want the inner loop of depth-first
 search to be short.
@@ -289,7 +293,8 @@ technique adopted here.
 
 \fi
 
-\M{5}Enough of this introduction. Let's get on with the program.
+\M[263 15puzzle-korf1.w]{5}Enough of this introduction. Let's get on with the
+program.
 
 \Y\B\4\X5:Apply Korf's procedure\X${}\E{}$\6
 \X6:Set \PB{\\{moves}} to the minimum number of happy moves\X;\6
@@ -310,7 +315,8 @@ current quota }\6
 \4\\{win}:\par
 \U1.\fi
 
-\M{6}\B\X6:Set \PB{\\{moves}} to the minimum number of happy moves\X${}\E{}$\6
+\M[279 15puzzle-korf1.w]{6}\B\X6:Set \PB{\\{moves}} to the minimum number of
+happy moves\X${}\E{}$\6
 \&{for} ${}(\|j\K\\{moves}\K\T{0};{}$ ${}\|j<\T{16};{}$ ${}\|j\PP){}$\1\6
 \&{if} ${}(\\{start}[\|j]\G\T{0}){}$\5
 ${}\{{}$\1\6
@@ -321,7 +327,8 @@ ${}\\{moves}\MRL{+{\K}}(\\{del}<\T{0}\?{-}\\{del}:\\{del});{}$\6
 \4${}\}{}$\2\2\par
 \U5.\fi
 
-\M{7}The main control routine is a stack, which records two things:
+\M[287 15puzzle-korf1.w]{7}The main control routine is a stack, which records
+two things:
 In the left 16 bits is the number of $\rm(sad,happy)$ moves remaining,
 called~$t$; this number will be restored when backtracking.
 And in the right 16 bits is a code number of the routine to
@@ -329,7 +336,7 @@ execute next, after finishing every task that's higher on the stack.
 
 \fi
 
-\M{8}\B\X8:Switch into action\X${}\E{}$\6
+\M[293 15puzzle-korf1.w]{8}\B\X8:Switch into action\X${}\E{}$\6
 \4\\{switcher}:\5
 ${}\|t\K\\{stack}[\MM\|s]\GG\T{16};{}$\6
 \&{switch} ${}(\\{stack}[\|s]\AND\T{\^ffff}){}$\5
@@ -355,7 +362,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"Oops,\ I'm\ confused\ }\)\.{about\ case\ \%x!%
 \4${}\}{}$\2\par
 \U23.\fi
 
-\M{9}Directions are encoded as follows: $\rm east=0$, $\rm north=1$,
+\M[313 15puzzle-korf1.w]{9}Directions are encoded as follows: $\rm east=0$, $%
+\rm north=1$,
 $\rm west=2$, $\rm south=3$. (Think of powers of~$i$ in the complex
 plane.)
 
@@ -392,7 +400,8 @@ $\\{piece}\K\\{bord}(\|r+\T{1},\39\|c);$ $\\{del}\K(((\|r-\\{row}(\\{piece}))%
 \GG\T{2})\AND\T{\^ff})+{}$\T{1}\par
 \fi
 
-\M{10}\B\X10:Cases that move east from column 0\X${}\E{}$\6
+\M[335 15puzzle-korf1.w]{10}\B\X10:Cases that move east from column 0\X${}\E{}$%
+\6
 \4\&{case} \\{tailcode}${}(\T{0},\39\T{0},\39\T{0}){}$:\5
 \&{case} \\{code}${}(\T{0},\39\T{0},\39\T{0},\39\T{3}){}$:\5
 \\{r0c0d0p3}:\5
@@ -477,7 +486,8 @@ ${}\\{bord}(\T{3},\39\T{0})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
 \&{goto} \\{r3c1d1p2};\par
 \U8.\fi
 
-\M{11}\B\X11:Cases that move east from column 1\X${}\E{}$\6
+\M[376 15puzzle-korf1.w]{11}\B\X11:Cases that move east from column 1\X${}\E{}$%
+\6
 \4\&{case} \\{code}${}(\T{0},\39\T{1},\39\T{0},\39\T{2}){}$:\5
 \\{r0c1d0p2}:\5
 ${}\\{east}(\T{0},\39\T{1});{}$\6
@@ -614,7 +624,8 @@ ${}\\{bord}(\T{3},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
 \&{goto} \\{r3c2d1p2};\par
 \U8.\fi
 
-\M{12}\B\X12:Cases that move east from column 2\X${}\E{}$\6
+\M[441 15puzzle-korf1.w]{12}\B\X12:Cases that move east from column 2\X${}\E{}$%
+\6
 \4\&{case} \\{code}${}(\T{0},\39\T{2},\39\T{0},\39\T{2}){}$:\5
 \\{r0c2d0p2}:\5
 ${}\\{east}(\T{0},\39\T{2});{}$\6
@@ -751,7 +762,8 @@ ${}\\{bord}(\T{3},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
 \&{goto} \\{r3c3d1p2};\par
 \U8.\fi
 
-\M{13}\B\X13:Cases that move west from column 1\X${}\E{}$\6
+\M[506 15puzzle-korf1.w]{13}\B\X13:Cases that move west from column 1\X${}\E{}$%
+\6
 \4\&{case} \\{tailcode}${}(\T{0},\39\T{1},\39\T{2}){}$:\5
 \&{case} \\{code}${}(\T{0},\39\T{1},\39\T{2},\39\T{0}){}$:\5
 \\{r0c1d2p0}:\5
@@ -888,7 +900,8 @@ ${}\\{bord}(\T{3},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
 \&{goto} \\{r3c0d1p0};\par
 \U8.\fi
 
-\M{14}\B\X14:Cases that move west from column 2\X${}\E{}$\6
+\M[572 15puzzle-korf1.w]{14}\B\X14:Cases that move west from column 2\X${}\E{}$%
+\6
 \4\&{case} \\{tailcode}${}(\T{0},\39\T{2},\39\T{2}){}$:\5
 \&{case} \\{code}${}(\T{0},\39\T{2},\39\T{2},\39\T{0}){}$:\5
 \\{r0c2d2p0}:\5
@@ -1025,7 +1038,8 @@ ${}\\{bord}(\T{3},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
 \&{goto} \\{r3c1d2p0};\par
 \U8.\fi
 
-\M{15}\B\X15:Cases that move west from column 3\X${}\E{}$\6
+\M[638 15puzzle-korf1.w]{15}\B\X15:Cases that move west from column 3\X${}\E{}$%
+\6
 \4\&{case} \\{tailcode}${}(\T{0},\39\T{3},\39\T{2}){}$:\5
 \&{case} \\{code}${}(\T{0},\39\T{3},\39\T{2},\39\T{3}){}$:\5
 \\{r0c3d2p3}:\5
@@ -1110,7 +1124,7 @@ ${}\\{bord}(\T{3},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
 \&{goto} \\{r3c2d2p0};\par
 \U8.\fi
 
-\M{16}\B\X16:Cases that move north from row 1\X${}\E{}$\6
+\M[679 15puzzle-korf1.w]{16}\B\X16:Cases that move north from row 1\X${}\E{}$\6
 \4\&{case} \\{tailcode}${}(\T{1},\39\T{0},\39\T{1}){}$:\5
 \&{case} \\{code}${}(\T{1},\39\T{0},\39\T{1},\39\T{0}){}$:\5
 \\{r1c0d1p0}:\5
@@ -1247,7 +1261,7 @@ ${}\\{bord}(\T{1},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
 \&{goto} \\{r0c3d2p3};\par
 \U8.\fi
 
-\M{17}\B\X17:Cases that move north from row 2\X${}\E{}$\6
+\M[745 15puzzle-korf1.w]{17}\B\X17:Cases that move north from row 2\X${}\E{}$\6
 \4\&{case} \\{tailcode}${}(\T{2},\39\T{0},\39\T{1}){}$:\5
 \&{case} \\{code}${}(\T{2},\39\T{0},\39\T{1},\39\T{0}){}$:\5
 \\{r2c0d1p0}:\5
@@ -1384,7 +1398,7 @@ ${}\\{bord}(\T{2},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
 \&{goto} \\{r1c3d2p3};\par
 \U8.\fi
 
-\M{18}\B\X18:Cases that move north from row 3\X${}\E{}$\6
+\M[811 15puzzle-korf1.w]{18}\B\X18:Cases that move north from row 3\X${}\E{}$\6
 \4\&{case} \\{tailcode}${}(\T{3},\39\T{0},\39\T{1}){}$:\5
 \&{case} \\{code}${}(\T{3},\39\T{0},\39\T{1},\39\T{0}){}$:\5
 \\{r3c0d1p0}:\5
@@ -1469,7 +1483,7 @@ ${}\\{bord}(\T{3},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
 \&{goto} \\{r2c3d2p3};\par
 \U8.\fi
 
-\M{19}\B\X19:Cases that move south from row 0\X${}\E{}$\6
+\M[852 15puzzle-korf1.w]{19}\B\X19:Cases that move south from row 0\X${}\E{}$\6
 \4\&{case} \\{tailcode}${}(\T{0},\39\T{0},\39\T{3}){}$:\5
 \&{case} \\{code}${}(\T{0},\39\T{0},\39\T{3},\39\T{0}){}$:\5
 \\{r0c0d3p0}:\5
@@ -1554,7 +1568,7 @@ ${}\\{bord}(\T{0},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
 \&{goto} \\{r1c3d3p1};\par
 \U8.\fi
 
-\M{20}\B\X20:Cases that move south from row 1\X${}\E{}$\6
+\M[893 15puzzle-korf1.w]{20}\B\X20:Cases that move south from row 1\X${}\E{}$\6
 \4\&{case} \\{code}${}(\T{1},\39\T{0},\39\T{3},\39\T{0}){}$:\5
 \\{r1c0d3p0}:\5
 ${}\\{south}(\T{1},\39\T{0});{}$\6
@@ -1691,7 +1705,8 @@ ${}\\{bord}(\T{1},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
 \&{goto} \\{r2c3d3p1};\par
 \U8.\fi
 
-\M{21}Yes, this has been boring. But now we're in the last such section.
+\M[959 15puzzle-korf1.w]{21}Yes, this has been boring. But now we're in the
+last such section.
 
 \Y\B\4\X21:Cases that move south from row 2\X${}\E{}$\6
 \4\&{case} \\{code}${}(\T{2},\39\T{0},\39\T{3},\39\T{0}){}$:\5
@@ -1830,7 +1845,8 @@ ${}\\{bord}(\T{2},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
 \&{goto} \\{r3c3d2p1};\par
 \U8.\fi
 
-\M{22}The cases $(r,c,d,p)$ with $d=p$ represent the times when we
+\M[1026 15puzzle-korf1.w]{22}The cases $(r,c,d,p)$ with $d=p$ represent the
+times when we
 are backtracking and must restore the previous board position.
 
 \Y\B\4\X22:Cases that move back\X${}\E{}$\6
@@ -2028,7 +2044,8 @@ ${}\\{bord}(\T{3},\39\T{3})\K\\{bord}(\T{3},\39\T{2}){}$;\5
 \&{goto} \\{switcher};\par
 \U8.\fi
 
-\M{23}Great --- all the code has now been written for the inner loop.
+\M[1175 15puzzle-korf1.w]{23}Great --- all the code has now been written for
+the inner loop.
 Only two things remain: (1)~Getting the whole process rolling, and
 (2)~eventually stopping the darn thing.
 
@@ -2067,7 +2084,8 @@ ${}\\{stack}[\|s\PP]\K(\|t\LL\T{16})+\\{tailcode}(\\{row}(\|k),\39\\{col}(\|k),%
 \X8:Switch into action\X;\par
 \U5.\fi
 
-\M{24}Hey, we have a winner! The stack entries tell us how we got here,
+\M[1206 15puzzle-korf1.w]{24}Hey, we have a winner! The stack entries tell us
+how we got here,
 so that we can easily give the user instructions about which piece
 should be pushed at each step --- except that the last two steps haven't
 been placed on the stack, because of my tricky optimizations.
@@ -2109,7 +2127,7 @@ ${}\\{printf}(\.{"\ (\%d\ sec)\\n"},\39\\{time}(\T{0})-\\{timer});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{25}Index.
+\N[1235 15puzzle-korf1.w]{1}{25}Index.
 \fi
 
 \inx

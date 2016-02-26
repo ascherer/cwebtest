@@ -1,8 +1,10 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
 
-\N{1}{1}Primitive sorting networks at random. This program is a quick-and-dirty
+\N[3 ran-prim.w]{1}{1}Primitive sorting networks at random. This program is a
+quick-and-dirty
 implementation of the random process studied in exercise 5.3.4--40:
 Start with the permutation $n\,\ldots\,2\,1$ and
 randomly interchange adjacent elements that are out of order,
@@ -40,7 +42,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Scan the command line\X${}\E{}$\6
+\M[40 ran-prim.w]{2}\B\X2:Scan the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{3}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
 \|n)\I\T{1}\V\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}\\{seed})\I%
 \T{1}){}$\5
@@ -51,7 +53,8 @@ ${}\\{exit}({-}\T{1});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}We maintain the following invariants: the indices \PB{\|i} where
+\M[46 ran-prim.w]{3}We maintain the following invariants: the indices \PB{\|i}
+where
 \PB{$\\{perm}[\|i]>\\{perm}[\|i+\T{1}]$} are \PB{\\{list}[\|j]} for $0\le j<t$.
 
 \Y\B\4\X3:Initialize everything\X${}\E{}$\6
@@ -68,7 +71,7 @@ ${}\|t\K\|n-\T{1};{}$\6
 ${}\|s\K\T{0.0}{}$;\par
 \U1.\fi
 
-\M{4}\B\X4:Move\X${}\E{}$\6
+\M[59 ran-prim.w]{4}\B\X4:Move\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|s\MRL{+{\K}}\T{1.0}/{}$(\&{double}) \|t;\6
 ${}\|j\K\\{gb\_unif\_rand}(\|t);{}$\6
@@ -86,13 +89,13 @@ ${}\\{list}[\|t\PP]\K\|i+\T{1};{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{5}Is this program simple, or what?
+\M[72 ran-prim.w]{5}Is this program simple, or what?
 
 \Y\B\4\X5:Print the results\X${}\E{}$\6
 $\\{printf}(\.{"\%g\ =\ \%gn\\n"},\39\|s,\39\|s/{}$(\&{double}) \|n);\par
 \U1.\fi
 
-\N{1}{6}Index.
+\N[77 ran-prim.w]{1}{6}Index.
 
 
 

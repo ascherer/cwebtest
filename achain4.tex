@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This program is a revision of {\mc ACHAIN2} ({\it not\/} {\mc
+\N[2 achain4.w]{1}{1}Intro. This program is a revision of {\mc ACHAIN2} ({\it
+not\/} {\mc
 ACHAIN3}), which you should read first. After I found an unpublished preprint
 by D. Bleichenbacher and A.~Flammenkamp (1997) on the web, I realized that
 several changes would speed that program up significantly.
@@ -76,7 +78,7 @@ ${}\\{timer}\K\|j;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Process the command line\X${}\E{}$\6
+\M[68 achain4.w]{2}\B\X2:Process the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{3}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ infile\ ou}\)\.{tfile\\n"},\39%
@@ -99,12 +101,12 @@ ${}\\{exit}({-}\T{3});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}\B\X3:Output the value of $l(n)$\X${}\E{}$\6
+\M[84 achain4.w]{3}\B\X3:Output the value of $l(n)$\X${}\E{}$\6
 $\\{fprintf}(\\{outfile},\39\.{"\%c"},\39\|l[\|n]+\.{'\ '});{}$\6
 \\{fflush}(\\{outfile});\C{ make sure the result is viewable immediately }\par
 \U1.\fi
 
-\M{4}At this point I compute the known lower bound
+\M[88 achain4.w]{4}At this point I compute the known lower bound
 $\lfloor\lg n\rfloor+\lceil\lg\min(\nu n,16)\rceil$.
 
 (With a change file, I could make the program set \PB{$\|l[\|n]\K\\{lb}$} and %
@@ -131,7 +133,8 @@ negative value after EOF }\6
 ${}\\{lb}\K\|i{}$;\2\par
 \U1.\fi
 
-\M{5}Initially we want to fill the \PB{\|l} table with fairly decent upper
+\M[106 achain4.w]{5}Initially we want to fill the \PB{\|l} table with fairly
+decent upper
 bounds. Here I use Theorem 4.6.3F, which includes the binary method
 as a special case; namely, $l(2^A+xy)\le A+\nu x+\nu y-1$,
 when $A\ge\lfloor\lg x\rfloor+\lfloor\lg y\rfloor$.
@@ -163,7 +166,8 @@ ${}\\{down}[\|n]\K\|n-\T{1};{}$\2\6
 \X6:Apply the factor method\X;\par
 \U1.\fi
 
-\M{6}Whenever we learn a better upper bound, we might as well broadcast all
+\M[128 achain4.w]{6}Whenever we learn a better upper bound, we might as well
+broadcast all
 of its consequences, using the factor method. (The total number of
 times this happens for a particular number \PB{\|n} is at most $\lg n$,
 and the time to propagate is proportional to \PB{$\\{nmax}/\|n$}, so the
@@ -201,7 +205,7 @@ ${}\\{upbound}(\|i*\|p,\39\|l[\|i]+\|l[\|p]);{}$\2\6
 \4${}\}{}$\2\par
 \U5.\fi
 
-\M{7}Later, whenever we've come up with an addition chain
+\M[157 achain4.w]{7}Later, whenever we've come up with an addition chain
 $a[0]$, \dots, $a[\PB{\\{lb}}]$ that beats the known upper bound,
 we use the factor method again to send out the good news. And we also
 might as well use an extension of the factor method found in
@@ -228,7 +232,7 @@ ${}\\{upbound}(\|i*\|p,\39\|l[\|i]+\|l[\|p]);{}$\2\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\N{1}{8}The interesting part.
+\N[178 achain4.w]{1}{8}The interesting part.
 Nontrivial changes begin to occur when we get into the guts of
 the backtracking structure carried over from the previous versions of this
 program, but the controlling loop at the outer level remains intact.
@@ -256,7 +260,8 @@ ${}\|l[\|n]\K\PP\\{lb};{}$\6
 \\{backtrackdone}:\par
 \U1.\fi
 
-\M{9}One of the key operations we need is to increase \PB{\|p} to the smallest
+\M[198 achain4.w]{9}One of the key operations we need is to increase \PB{\|p}
+to the smallest
 element $p'>p$ that has $l[p']<s$, given that $l[p]<s$. Since
 $l[p+1]\le l[p]+1$, we can do this quickly by first setting $p\gets p+1$;
 then, if $l[p]=s$, we set $p\gets\PB{\\{down}}[p]$, where \PB{\\{down}[\|p]} is
@@ -284,8 +289,8 @@ ${}\|p\K(\\{down}[\|p]>\|p\?\\{down}[\|p]:\\{nmax});{}$\2\6
 \4${}\}{}$\2\par
 \U14.\fi
 
-\M{10}\B\X10:Given that \PB{$\|l[\|p]\G\|s$}, increase \PB{\|p} to the next
-element with \PB{$\|l[\|p]<\|s$}\X${}\E{}$\6
+\M[221 achain4.w]{10}\B\X10:Given that \PB{$\|l[\|p]\G\|s$}, increase \PB{\|p}
+to the next element with \PB{$\|l[\|p]<\|s$}\X${}\E{}$\6
 \&{do}\5
 ${}\{{}$\1\6
 \&{if} ${}(\\{down}[\|p]>\|p){}$\1\5
@@ -300,7 +305,8 @@ ${}\|p\K\\{nmax}{}$;\5
 \&{while} ${}(\|l[\|p]\G\|s){}$;\par
 \Us13\ET14.\fi
 
-\M{11}I can't help exclaiming that this little algorithm is quite pretty.
+\M[229 achain4.w]{11}I can't help exclaiming that this little algorithm is
+quite pretty.
 
 \Y\B\4\X11:Update the \PB{\\{down}} links\X${}\E{}$\6
 \&{if} ${}(\|l[\|n]<\|l[\|n-\T{1}]){}$\5
@@ -311,7 +317,8 @@ ${}\\{down}[\|n]\K\|p;{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{12}We maintain a stack of subproblems, and a stack for undoing,
+\M[238 achain4.w]{12}We maintain a stack of subproblems, and a stack for
+undoing,
 as in {\mc ACHAIN2} and its predecessors.
 
 \Y\B\4\X12:Try to fix the rest of the chain; \PB{\&{goto} \\{backtrackdone}} if
@@ -378,8 +385,8 @@ ${}\|s\PP;{}$\6
 \4\\{impossible}:\par
 \U8.\fi
 
-\M{13}At this point we have \PB{$\|a[\|k]\K\|b[\|k]$} for all $r\le k\le\PB{%
-\\{lb}}$.
+\M[283 achain4.w]{13}At this point we have \PB{$\|a[\|k]\K\|b[\|k]$} for all $r%
+\le k\le\PB{\\{lb}}$.
 
 \Y\B\4\X13:Set \PB{\|p} to its smallest feasible value, and \PB{$\|q\K\|a[\|s]-%
 \|p$}\X${}\E{}$\6
@@ -427,8 +434,8 @@ ${}\|q\K\|b[\|r-\T{2}],\39\|p\K\|a[\|s]-\|q;{}$\2\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{14}\B\X14:Advance \PB{\|p} to the next smallest feasible value, and set %
-\PB{$\|q\K\|a[\|s]-\|p$}\X${}\E{}$\6
+\M[308 achain4.w]{14}\B\X14:Advance \PB{\|p} to the next smallest feasible
+value, and set \PB{$\|q\K\|a[\|s]-\|p$}\X${}\E{}$\6
 \&{if} ${}(\|p\E\|q){}$\5
 ${}\{{}$\1\6
 \&{if} ${}(\\{outdeg}[\|s-\T{1}]\E\T{0}){}$\1\5
@@ -487,7 +494,8 @@ ${}\|q\K\|b[\\{ubq}],\39\|p\K\|a[\|s]-\|q;{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{15}\B\X15:Put local variables on the stack and update outdegrees\X${}\E{}$\6
+\M[341 achain4.w]{15}\B\X15:Put local variables on the stack and update
+outdegrees\X${}\E{}$\6
 $\\{tail}[\|s]\K\|q,\39\\{stack}[\|s].\|r\K\|r;{}$\6
 ${}\\{outdeg}[\\{ubp}]\PP,\39\\{outsum}[\\{ubp}]\MRL{+{\K}}\|s;{}$\6
 ${}\\{outdeg}[\\{ubq}]\PP,\39\\{outsum}[\\{ubq}]\MRL{+{\K}}\|s;{}$\6
@@ -497,8 +505,8 @@ ${}\\{stack}[\|s].\\{ptrp}\K\\{ptrp},\39\\{stack}[\|s].\\{ptrq}\K\\{ptrq}{}$;%
 \par
 \U12.\fi
 
-\M{16}\B\X16:Restore local variables from the stack and downdate outdegrees%
-\X${}\E{}$\6
+\M[349 achain4.w]{16}\B\X16:Restore local variables from the stack and downdate
+outdegrees\X${}\E{}$\6
 $\\{ptrq}\K\\{stack}[\|s].\\{ptrq},\39\\{ptrp}\K\\{stack}[\|s].\\{ptrp};{}$\6
 ${}\\{lbq}\K\\{stack}[\|s].\\{lbq},\39\\{ubq}\K\\{stack}[\|s].\\{ubq};{}$\6
 ${}\\{lbp}\K\\{stack}[\|s].\\{lbp},\39\\{ubp}\K\\{stack}[\|s].\\{ubp};{}$\6
@@ -507,8 +515,8 @@ ${}\\{outdeg}[\\{ubp}]\MM,\39\\{outsum}[\\{ubp}]\MRL{-{\K}}\|s;{}$\6
 ${}\|q\K\\{tail}[\|s],\39\|p\K\|a[\|s]-\|q,\39\|r\K\\{stack}[\|s].\|r{}$;\par
 \U12.\fi
 
-\M{17}After the test in this step is passed, we'll have \PB{$\\{ubp}>\\{ubq}$}
-and \PB{$\\{lbp}>\\{lbq}$}.
+\M[357 achain4.w]{17}After the test in this step is passed, we'll have \PB{$%
+\\{ubp}>\\{ubq}$} and \PB{$\\{lbp}>\\{lbq}$}.
 
 \Y\B\4\X17:Find bounds $(\PB{\\{lbp}},\PB{\\{ubp}})$ and $(\PB{\\{lbq}},\PB{%
 \\{ubq}})$ on where \PB{\|p} and \PB{\|q} can be inserted; but go to \PB{%
@@ -559,7 +567,8 @@ ${}\\{lbp}\K\\{lbq}+\T{1};{}$\2\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{18}The undoing mechanism is very simple: When changing \PB{\|a[\|j]}, we
+\M[385 achain4.w]{18}The undoing mechanism is very simple: When changing \PB{%
+\|a[\|j]}, we
 put \PB{$(\|j\LL\T{24})+\|x$} on the \PB{\\{undo}} stack, where \PB{\|x} was
 the former value.
 Similarly, when changing \PB{\|b[\|j]}, we stack the value \PB{$(\T{1}\LL%
@@ -580,7 +589,7 @@ ${}\|b[(\|i\AND\T{\^3fffffff})\GG\T{24}]\K\|i\AND\T{\^ffffff};{}$\2\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{19}At this point we know that $a[ubp]\le p\le b[ubp]$.
+\M[399 achain4.w]{19}At this point we know that $a[ubp]\le p\le b[ubp]$.
 
 \Y\B\4\X19:Put \PB{\|p} into the chain at location \PB{\\{ubp}}; \PB{\&{goto} %
 \\{failp}} if there's a problem\X${}\E{}$\6
@@ -627,8 +636,8 @@ ${}\\{newb}(\|j,\39\|i);{}$\6
 \X20:Make forced moves if \PB{\|p} has a special form\X;\par
 \U12.\fi
 
-\M{20}If, say, we've just set \PB{$\|a[\T{8}]\K\|b[\T{8}]\K\T{132}$}, special
-considerations apply,
+\M[430 achain4.w]{20}If, say, we've just set \PB{$\|a[\T{8}]\K\|b[\T{8}]\K%
+\T{132}$}, special considerations apply,
 because the only addition chains of length~8 for 132 are
 $$\eqalign{
 &1,2,4,8,16,32,64,128,132;\cr
@@ -663,7 +672,8 @@ ${}\\{newa}(\|j,\39\T{1}\LL\|j);{}$\2\6
 \4${}\}{}$\2\par
 \U19.\fi
 
-\M{21}At this point we had better not assume that $a[ubq]\le q\le b[ubq]$,
+\M[457 achain4.w]{21}At this point we had better not assume that $a[ubq]\le q%
+\le b[ubq]$,
 because \PB{\|p} has just been inserted. That insertion can mess up the
 bounds that we looked at when \PB{\\{lbq}} and \PB{\\{ubq}} were computed.
 
@@ -716,7 +726,8 @@ ${}\\{newb}(\|j,\39\|i);{}$\6
 \X22:Make forced moves if \PB{\|q} has a special form\X;\par
 \U12.\fi
 
-\M{22}\B\X22:Make forced moves if \PB{\|q} has a special form\X${}\E{}$\6
+\M[492 achain4.w]{22}\B\X22:Make forced moves if \PB{\|q} has a special form%
+\X${}\E{}$\6
 $\|i\K\|q-(\T{1}\LL(\\{ubq}-\T{1}));{}$\6
 \&{if} ${}(\|i\W((\|i\AND(\|i-\T{1}))\E\T{0})\W(\|i\LL\T{4})<\|q){}$\5
 ${}\{{}$\1\6
@@ -730,7 +741,7 @@ ${}\\{newa}(\|j,\39\T{1}\LL\|j);{}$\2\6
 \4${}\}{}$\2\par
 \U21.\fi
 
-\N{1}{23}Index.
+\N[501 achain4.w]{1}{23}Index.
 \fi
 
 \inx

@@ -1,7 +1,8 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Generalized exact cover.
+\N[2 dance.w]{1}{1}Generalized exact cover.
 This program implements the algorithm discussed in my paper about ``dancing
 links.'' I hacked it together from the {\mc XCOVER} program that I wrote in
 1994; I apologize for not having time to apply spit and polish.
@@ -54,7 +55,7 @@ ${}\\{printf}(\.{"Altogether\ \%d\ solut}\)\.{ions,\ after\ \%.15g\ up}\)%
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Global variables\X${}\E{}$\6
+\M[50 dance.w]{2}\B\X2:Global variables\X${}\E{}$\6
 \&{int} \\{verbose};\C{ $>0$ to show solutions, $>1$ to show partial ones too }%
 \6
 \&{int} \\{count}${}\K\T{0}{}$;\C{ number of solutions found so far }\6
@@ -69,7 +70,7 @@ level and degree }\6
 \As8\ET14.
 \U1.\fi
 
-\N{1}{3}Data structures.
+\N[60 dance.w]{1}{3}Data structures.
 Each column of the input matrix is represented by a \&{column} struct,
 and each row is represented as a linked list of \&{node} structs. There's one
 node for each nonzero entry in the matrix.
@@ -95,7 +96,7 @@ ${}\}{}$ \&{node};\par
 \A4.
 \U1.\fi
 
-\M{4}Each \&{column} struct contains five fields:
+\M[83 dance.w]{4}Each \&{column} struct contains five fields:
 The \PB{\\{head}} is a node that stands at the head of its list of nodes;
 the \PB{\\{len}} tells the length of that list of nodes, not counting the
 header;
@@ -121,8 +122,8 @@ of this column }\2\6
 ${}\}{}$ \&{column};\par
 \fi
 
-\M{5}One \PB{\&{column}} struct is called the root. It serves as the head of
-the
+\M[104 dance.w]{5}One \PB{\&{column}} struct is called the root. It serves as
+the head of the
 list of columns that need to be covered, and is identifiable by the fact
 that its \PB{\\{name}} is empty.
 
@@ -130,8 +131,8 @@ that its \PB{\\{name}} is empty.
 \\{col\_array}[\T{0}]\C{ gateway to the unsettled columns }\par
 \fi
 
-\M{6}A row is identified not by name but by the names of the columns it
-contains.
+\M[110 dance.w]{6}A row is identified not by name but by the names of the
+columns it contains.
 Here is a routine that prints a row, given a pointer to any of its
 columns. It also prints the position of the row in its column.
 
@@ -167,7 +168,7 @@ ${}\{{}$\1\6
 \As15\ET16.
 \U1.\fi
 
-\N{1}{7}Inputting the matrix.
+\N[136 dance.w]{1}{7}Inputting the matrix.
 Brute force is the rule in this part of the program.
 
 \Y\B\4\X7:Initialize the data structures\X${}\E{}$\6
@@ -175,7 +176,7 @@ Brute force is the rule in this part of the program.
 \X11:Read the rows\X;\par
 \U1.\fi
 
-\M{8}\B\D$\\{buf\_size}$ \5
+\M[143 dance.w]{8}\B\D$\\{buf\_size}$ \5
 $\T{4}*\\{max\_cols}+{}$\T{3}\C{ upper bound on input line length }\par
 \Y\B\4\X2:Global variables\X${}\mathrel+\E{}$\6
 \&{column} ${}\\{col\_array}[\\{max\_cols}+\T{2}]{}$;\C{ place for column
@@ -184,7 +185,7 @@ records }\6
 \&{char} \\{buf}[\\{buf\_size}];\par
 \fi
 
-\M{9}\B\D$\\{panic}(\|m)$ \6
+\M[150 dance.w]{9}\B\D$\\{panic}(\|m)$ \6
 ${}\{{}$\5
 \1${}\\{fprintf}(\\{stderr},\39\.{"\%s!\\n\%s"},\39\|m,\39\\{buf}){}$;\5
 ${}\\{exit}({-}\T{1}){}$;\5
@@ -237,7 +238,7 @@ ${}(\\{cur\_col}-\T{1})\MG\\{next}\K{\AND}\\{root},\39\\{root}.\\{prev}\K\\{cur%
 \4${}\}{}$\2\par
 \U7.\fi
 
-\M{10}\B\X10:Local variables\X${}\E{}$\6
+\M[180 dance.w]{10}\B\X10:Local variables\X${}\E{}$\6
 \&{register} \&{column} ${}{*}\\{cur\_col};{}$\6
 \&{register} \&{char} ${}{*}\|p,{}$ ${}{*}\|q;{}$\6
 \&{register} \&{node} ${}{*}\\{cur\_node};{}$\6
@@ -245,7 +246,7 @@ ${}(\\{cur\_col}-\T{1})\MG\\{next}\K{\AND}\\{root},\39\\{root}.\\{prev}\K\\{cur%
 \As13\ET20.
 \U1.\fi
 
-\M{11}\B\X11:Read the rows\X${}\E{}$\6
+\M[186 dance.w]{11}\B\X11:Read the rows\X${}\E{}$\6
 $\\{cur\_node}\K\\{node\_array};{}$\6
 \&{while} ${}(\\{fgets}(\\{buf},\39\\{buf\_size},\39\\{stdin})){}$\5
 ${}\{{}$\1\6
@@ -295,7 +296,7 @@ ${}\\{row\_start}\MG\\{left}\K\\{cur\_node}-\T{1},\39(\\{cur\_node}-\T{1})\MG%
 \4${}\}{}$\2\par
 \U7.\fi
 
-\N{1}{12}Backtracking.
+\N[215 dance.w]{1}{12}Backtracking.
 Our strategy for generating all exact covers will be to repeatedly
 choose always the column that appears to be hardest to cover, namely the
 column with shortest list, from all columns that still need to be covered.
@@ -347,19 +348,20 @@ ${}\\{cur\_node}\K\\{choice}[\\{level}]\K\\{cur\_node}\MG\\{down}{}$;\5
 \X22:Print column lengths, to make sure everything has been restored\X;\2\par
 \U1.\fi
 
-\M{13}\B\X10:Local variables\X${}\mathrel+\E{}$\6
+\M[255 dance.w]{13}\B\X10:Local variables\X${}\mathrel+\E{}$\6
 \&{register} \&{column} ${}{*}\\{best\_col}{}$;\C{ column chosen for branching
 }\6
 \&{register} \&{node} ${}{*}\\{pp}{}$;\C{ traverses a row }\par
 \fi
 
-\M{14}\B\X2:Global variables\X${}\mathrel+\E{}$\6
+\M[259 dance.w]{14}\B\X2:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{level};\C{ number of choices in current partial solution }\6
 \&{node} ${}{*}\\{choice}[\\{max\_level}]{}$;\C{ the row and column chosen on
 each level }\par
 \fi
 
-\M{15}When a row is blocked, it leaves all lists except the list of the
+\M[263 dance.w]{15}When a row is blocked, it leaves all lists except the list
+of the
 column that is being covered. Thus a node is never removed from a list
 twice.
 
@@ -392,7 +394,8 @@ ${}\\{upd\_prof}[\\{level}]\MRL{+{\K}}\|k;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{16}Uncovering is done in precisely the reverse order. The pointers thereby
+\M[286 dance.w]{16}Uncovering is done in precisely the reverse order. The
+pointers thereby
 execute an exquisitely choreo\-graphed dance which returns them almost
 magically to their former state.
 
@@ -419,14 +422,15 @@ ${}\|l\MG\\{next}\K\|r\MG\\{prev}\K\|c;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{17}\B\X17:Cover all other columns of \PB{\\{cur\_node}}\X${}\E{}$\6
+\M[305 dance.w]{17}\B\X17:Cover all other columns of \PB{\\{cur\_node}}\X${}%
+\E{}$\6
 \&{for} ${}(\\{pp}\K\\{cur\_node}\MG\\{right};{}$ ${}\\{pp}\I\\{cur\_node};{}$
 ${}\\{pp}\K\\{pp}\MG\\{right}){}$\1\5
 ${}\\{cover}(\\{pp}\MG\\{col}){}$;\2\par
 \U12.\fi
 
-\M{18}We included \PB{\\{left}} links, thereby making the rows doubly linked,
-so
+\M[308 dance.w]{18}We included \PB{\\{left}} links, thereby making the rows
+doubly linked, so
 that columns would be uncovered in the correct LIFO order in this
 part of the program. (The \PB{\\{uncover}} routine itself could have done its
 job with \PB{\\{right}} links only.) (Think about it.)
@@ -437,7 +441,8 @@ ${}\\{pp}\K\\{pp}\MG\\{left}){}$\1\5
 ${}\\{uncover}(\\{pp}\MG\\{col}){}$;\2\par
 \U12.\fi
 
-\M{19}\B\X19:Set \PB{\\{best\_col}} to the best column for branching\X${}\E{}$\6
+\M[316 dance.w]{19}\B\X19:Set \PB{\\{best\_col}} to the best column for
+branching\X${}\E{}$\6
 $\\{minlen}\K\\{max\_nodes};{}$\6
 \&{if} ${}(\\{verbose}>\T{2}){}$\1\5
 ${}\\{printf}(\.{"Level\ \%d:"},\39\\{level});{}$\2\6
@@ -471,12 +476,13 @@ ${}\\{printf}(\.{"\ branching\ on\ \%s(\%d}\)\.{)\\n"},\39\\{best\_col}\MG%
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{20}\B\X10:Local variables\X${}\mathrel+\E{}$\6
+\M[336 dance.w]{20}\B\X10:Local variables\X${}\mathrel+\E{}$\6
 \&{register} \&{int} \\{minlen};\6
 \&{register} \&{int} \|j${},{}$ \|k${},{}$ \|x;\par
 \fi
 
-\M{21}\B\X21:Record solution and \PB{\&{goto} \\{recover}}\X${}\E{}$\6
+\M[340 dance.w]{21}\B\X21:Record solution and \PB{\&{goto} \\{recover}}\X${}%
+\E{}$\6
 ${}\{{}$\1\6
 ${}\\{count}\PP;{}$\6
 \&{if} (\\{verbose})\5
@@ -493,8 +499,8 @@ ${}\\{printf}(\.{"\%d:\\n"},\39\\{count});{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{22}\B\X22:Print column lengths, to make sure everything has been restored%
-\X${}\E{}$\6
+\M[353 dance.w]{22}\B\X22:Print column lengths, to make sure everything has
+been restored\X${}\E{}$\6
 ${}\{{}$\1\6
 \\{printf}(\.{"Final\ column\ length}\)\.{s"});\6
 \&{for} ${}(\\{cur\_col}\K\\{root}.\\{next};{}$ ${}\\{cur\_col}\I{\AND}%
@@ -505,7 +511,7 @@ ${}\\{printf}(\.{"\ \%s(\%d)"},\39\\{cur\_col}\MG\\{name},\39\\{cur\_col}\MG%
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{23}\B\X23:Print a profile of the search tree\X${}\E{}$\6
+\M[361 dance.w]{23}\B\X23:Print a profile of the search tree\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{double} \\{tot}${},{}$ \\{subtot};\7
 ${}\\{tot}\K\T{1}{}$;\C{ the root node doesn't show up in the profile }\6
@@ -526,7 +532,7 @@ ${}\\{printf}(\.{"Total\ \%.15g\ nodes.\\}\)\.{n"},\39\\{tot});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{24}Index.
+\N[377 dance.w]{1}{24}Index.
 \fi
 
 \inx

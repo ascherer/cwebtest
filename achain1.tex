@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This program is a revision of {\mc ACHAIN0}, which you should
+\N[2 achain1.w]{1}{1}Intro. This program is a revision of {\mc ACHAIN0}, which
+you should
 read first. I'm thinking that a few changes will speed that program up,
 but as usual the proof of the pudding is in the eating.
 
@@ -74,7 +76,7 @@ ${}\\{timer}\K\|j;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Process the command line\X${}\E{}$\6
+\M[64 achain1.w]{2}\B\X2:Process the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{3}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ infile\ ou}\)\.{tfile\\n"},\39%
@@ -97,12 +99,13 @@ ${}\\{exit}({-}\T{3});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}\B\X3:Output the value of $l(n)$\X${}\E{}$\6
+\M[80 achain1.w]{3}\B\X3:Output the value of $l(n)$\X${}\E{}$\6
 $\\{fprintf}(\\{outfile},\39\.{"\%c"},\39\|l[\|n]+\.{'\ '});{}$\6
 \\{fflush}(\\{outfile});\C{ make sure the result is viewable immediately }\par
 \U1.\fi
 
-\M{4}At this point I compute the ``lower bound'' $\lfloor\lg n\rfloor+3$,
+\M[84 achain1.w]{4}At this point I compute the ``lower bound'' $\lfloor\lg n%
+\rfloor+3$,
 which is valid if $\nu n>4$. Simple cases where $\nu n\le 4$ will be
 handled separately below.
 
@@ -117,7 +120,7 @@ negative value after EOF }\6
 ${}\\{lb}\K\|i+\T{3}{}$;\2\par
 \U1.\fi
 
-\M{5}Three elementary and well-known upper bounds are considered:
+\M[95 achain1.w]{5}Three elementary and well-known upper bounds are considered:
 (i)~$l(n)\le\lfloor\lg n\rfloor+\nu n-1$;
 (ii)~$l(n)\le l(n-1)+1$;
 (iii)~$l(n)\le l(p)+l(q)$ if $n=pq$.
@@ -151,8 +154,8 @@ ${}\|l[\|n]\K\|i+\T{2};{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{6}It's important to try the factor method even when \PB{$\|j\Z\T{4}$},
-because
+\M[122 achain1.w]{6}It's important to try the factor method even when \PB{$\|j%
+\Z\T{4}$}, because
 of the way prime numbers are recognized here: We would miss the
 prime~3, for example.
 
@@ -180,7 +183,7 @@ ${}\\{prime}[\\{pr}\PP]\K\|n;{}$\2\6
 \4${}\}{}$\2\2\par
 \U5.\fi
 
-\N{1}{7}The interesting part.
+\N[143 achain1.w]{1}{7}The interesting part.
 If \PB{$\\{lb}<\\{ub}$}, we will try to build an addition chain of length \PB{%
 \\{lb}}.
 If that fails, we increase \PB{\\{lb}} and try again. Finally we will
@@ -218,7 +221,8 @@ ${}\|l[\|n]\K\PP\\{lb};{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{8}We maintain a stack of subproblems, as usual when backtracking.
+\M[170 achain1.w]{8}We maintain a stack of subproblems, as usual when
+backtracking.
 Suppose \PB{\|a[\|t]} is the sum of two items already present, for all
 $t>s$; we want to make sure that \PB{\|a[\|s]} is legitimate too.
 For this purpose we try all combinations \PB{$\|a[\|s]\K\|p+\|q$} where
@@ -304,8 +308,8 @@ ${}\|p\PP,\39\|q\MM;{}$\2\6
 \4\\{impossible}:\par
 \U7.\fi
 
-\M{9}After the test in this step is passed, we'll have \PB{$\\{ubp}>\\{ubq}$}
-and \PB{$\\{lbp}>\\{lbq}$}.
+\M[230 achain1.w]{9}After the test in this step is passed, we'll have \PB{$%
+\\{ubp}>\\{ubq}$} and \PB{$\\{lbp}>\\{lbq}$}.
 
 \Y\B\4\X9:Find bounds $(\PB{\\{lbp}},\PB{\\{ubp}})$ and $(\PB{\\{lbq}},\PB{%
 \\{ubq}})$ on where \PB{\|p} and \PB{\|q} can be inserted; but go to \PB{%
@@ -343,7 +347,8 @@ ${}\\{lbp}\PP;{}$\2\6
 \4${}\}{}$\2\par
 \U8.\fi
 
-\M{10}The undoing mechanism is very simple: When changing \PB{\|a[\|j]}, we
+\M[250 achain1.w]{10}The undoing mechanism is very simple: When changing \PB{%
+\|a[\|j]}, we
 put \PB{$(\|j\LL\T{24})+\|x$} on the \PB{\\{undo}} stack, where \PB{\|x} was
 the former value.
 Similarly, when changing \PB{\|b[\|j]}, we stack the value \PB{$(\T{1}\LL%
@@ -364,7 +369,7 @@ ${}\|b[(\|i\AND\T{\^3fffffff})\GG\T{24}]\K\|i\AND\T{\^ffffff};{}$\2\6
 \4${}\}{}$\2\par
 \U8.\fi
 
-\M{11}At this point we know that $a[ubp]\le p\le b[ubp]$.
+\M[264 achain1.w]{11}At this point we know that $a[ubp]\le p\le b[ubp]$.
 
 \Y\B\4\X11:Put \PB{\|p} into the chain at location \PB{\\{ubp}}; \PB{\&{goto} %
 \\{failp}} if there's a problem\X${}\E{}$\6
@@ -410,7 +415,8 @@ ${}\\{newb}(\|j,\39\|i);{}$\6
 \4${}\}{}$\2\par
 \U8.\fi
 
-\M{12}At this point we had better not assume that $a[ubq]\le q\le b[ubq]$,
+\M[294 achain1.w]{12}At this point we had better not assume that $a[ubq]\le q%
+\le b[ubq]$,
 because \PB{\|p} has just been inserted. That insertion can mess up the
 bounds that we looked at when \PB{\\{lbq}} and \PB{\\{ubq}} were computed.
 
@@ -462,7 +468,7 @@ ${}\\{newb}(\|j,\39\|i);{}$\6
 \4${}\}{}$\2\par
 \U8.\fi
 
-\N{1}{13}Index.
+\N[328 achain1.w]{1}{13}Index.
 
 
 \fi

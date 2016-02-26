@@ -1,10 +1,12 @@
 \input cwebmac
+\srcloctrue
 \datethis
 \input epsf
 \def\lab#1:#2/{$\.{#1}_{#2}$}
 
 
-\N{1}{1}Introduction. The purpose of this program is to enumerate polyominoes
+\N[6 polyenum.w]{1}{1}Introduction. The purpose of this program is to enumerate
+polyominoes
 of up to 30 cells. The method---possibly new?---is based on a sequence of
 diagonal slices through the shape, proceeding from the upper left to
 the lower right. For example, the curious polyomino
@@ -75,7 +77,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Subroutines\X${}\E{}$\6
+\M[78 polyenum.w]{2}\B\X2:Subroutines\X${}\E{}$\6
 \&{void} \\{panic}(\&{char} ${}{*}\\{mess}){}$\1\1\2\2\6
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"\%s!\\n"},\39\\{mess});{}$\6
@@ -84,13 +86,14 @@ ${}\\{exit}({-}\T{1});{}$\6
 \As5, 15, 35, 52, 53, 54\ETs59.
 \U1.\fi
 
-\M{3}The base name of the output file should be given as a command-line
+\M[85 polyenum.w]{3}The base name of the output file should be given as a
+command-line
 argument. This name will actually be extended by \.{.0}, \.{.1}, \dots,
 as explained below, because there might be an enormous amount of output.
 
 \fi
 
-\M{4}\B\X4:Scan the command line\X${}\E{}$\6
+\M[89 polyenum.w]{4}\B\X4:Scan the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{2}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ outfilena}\)\.{me\\n"},\39%
@@ -99,7 +102,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ outfilena}\)\.{me\\n"},\39%
 ${}\\{base\_name}\K\\{argv}[\T{1}]{}$;\par
 \U1.\fi
 
-\N{1}{5}Connectivity. By definition, a polyomino is a rookwise connected
+\N[95 polyenum.w]{1}{5}Connectivity. By definition, a polyomino is a rookwise
+connected
 set of cells. We'll want to restrict consideration to slices that can
 actually lead to a 30-omino; this means that we reject any slice for which
 one cannot connect all the so-far-unconnected pieces with \PB{$\T{30}-\|m$}
@@ -153,13 +157,14 @@ ${}\\{acc}\MRL{-{\K}}\|k;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{6}\B\X6:Global variables\X${}\E{}$\6
+\M[138 polyenum.w]{6}\B\X6:Global variables\X${}\E{}$\6
 \&{char} \\{stk}[\T{16}]${},{}$ \\{dst}[\T{16}];\C{ stacks for component
 numbers and distances }\par
 \As13, 14, 18, 21, 31, 34, 37, 40, 48, 51, 58\ETs63.
 \U1.\fi
 
-\M{7}The \PB{\\{conn\_distance}} of an initial, totally disconnected slice like
+\M[141 polyenum.w]{7}The \PB{\\{conn\_distance}} of an initial, totally
+disconnected slice like
 \lab102300400056:6/, having $k$ nonzero digits and length~$l$, is $2l-1-k$.
 Thus we see that the set of all 30-ominoes has exactly $2^{14}$ possible
 initial states, corresponding to the bits of the odd numbers less
@@ -181,8 +186,8 @@ $((\\{nmax}+\T{1})\GG\T{1}{}$)\C{ usable patterns won't be longer than this }%
 \par
 \U49.\fi
 
-\N{1}{8}Successive slices. Before we choose data structures for the main part
-of the
+\N[159 polyenum.w]{1}{8}Successive slices. Before we choose data structures for
+the main part of the
 computation, let's look at the key problem that faces us, namely the
 determination of all feasible slices that can follow a given slice.
 Ignoring the subscripts for the moment, what are the possible successors of a
@@ -219,7 +224,8 @@ method.
 
 \fi
 
-\M{9}Several slices will have the same pattern of digits but different
+\M[194 polyenum.w]{9}Several slices will have the same pattern of digits but
+different
 subscripts. In such cases both slices have the same successors, except for
 cutoffs based on the subscripts.
 
@@ -252,8 +258,8 @@ slices less than 600,000. But the number of arcs between slices is
 
 \fi
 
-\N{1}{10}Data structures. If you've been reading this commentary sequentially
-instead
+\N[221 polyenum.w]{1}{10}Data structures. If you've been reading this
+commentary sequentially instead
 of hypertextually, you will now understand that the task of designing
 efficient data structures for our network of slices is
 quite interesting, although elementary.
@@ -285,8 +291,8 @@ ${}\}{}$ \&{patkey};\par
 \As11\ET12.
 \U1.\fi
 
-\M{11}In the present program I'm also putting an \PB{\\{aux}} field into each
-pattern
+\M[251 polyenum.w]{11}In the present program I'm also putting an \PB{\\{aux}}
+field into each pattern
 node, with the aim of eliminating a potentially long search when deciding
 whether a pattern has appeared before as a successor. This field takes
 up space, but it probably saves enough time to make it worthwhile.
@@ -303,7 +309,7 @@ same birthdate }\2\6
 ${}\}{}$ \&{patt};\par
 \fi
 
-\M{12}Each successor to the current pattern
+\M[266 polyenum.w]{12}Each successor to the current pattern
 has a table entry telling its weight, date of death,
 and the number of ways in which it succeeds.
 
@@ -316,7 +322,8 @@ and the number of ways in which it succeeds.
 ${}\}{}$ \&{succ};\par
 \fi
 
-\M{13}Here I use a generous upper bound on the number of possible successors of
+\M[278 polyenum.w]{13}Here I use a generous upper bound on the number of
+possible successors of
 any pattern that might arise.
 
 \Y\B\4\D$\\{succ\_size}$ \5
@@ -328,8 +335,8 @@ $(\\{maxlen}*(\T{1}\LL\\{maxlen}){}$)\par
 \_table}} }\par
 \fi
 
-\M{14}The pattern table is the big memory hog; when \PB{$\\{nmax}\K\T{30}$},
-more than
+\M[287 polyenum.w]{14}The pattern table is the big memory hog; when \PB{$%
+\\{nmax}\K\T{30}$}, more than
 three million patterns are involved.
 
 \Y\B\4\D$\\{patt\_size}$ \5
@@ -345,7 +352,8 @@ by birthdate }\6
 first unusable slot }\par
 \fi
 
-\M{15}The \PB{\\{lookup}} routine finds a node given its pattern.
+\M[299 polyenum.w]{15}The \PB{\\{lookup}} routine finds a node given its
+pattern.
 I'm using separate chains because I want patterns to be encoded as consecutive
 numbers in the output.
 
@@ -388,8 +396,8 @@ ${}\|p\K\|p\MG\\{link};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{16}\B\X16:Insert a new pattern into \PB{\\{patt\_table}} and return\X${}%
-\E{}$\6
+\M[330 polyenum.w]{16}\B\X16:Insert a new pattern into \PB{\\{patt\_table}} and
+return\X${}\E{}$\6
 \&{if} ${}(\\{patt\_ptr}\E\\{bad\_patt}){}$\1\5
 \\{panic}(\.{"Pattern\ memory\ over}\)\.{flow"});\2\6
 ${}\\{patt\_ptr}\MG\\{key}\K\\{key};{}$\6
@@ -399,7 +407,8 @@ ${}\\{patt\_count}[\|m]\PP;{}$\6
 \&{return} \\{patt\_ptr}${}\PP{}$;\par
 \U15.\fi
 
-\M{17}``Universal hashing'' (TAOCP exercise 6.4--72) is used to get a good hash
+\M[338 polyenum.w]{17}``Universal hashing'' (TAOCP exercise 6.4--72) is used to
+get a good hash
 function, because most of the key bits are zero.
 
 \Y\B\4\D$\\{hash\_width}$ \5
@@ -418,14 +427,15 @@ ${}\\{length}(\\{key})\K\\{len};{}$\6
 ${}\|h\MRL{\AND{\K}}\\{hash\_mask}{}$;\par
 \U15.\fi
 
-\M{18}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[353 polyenum.w]{18}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{patt} ${}{*}\\{hash\_table}[\\{hash\_mask}+\T{1}]{}$;\C{ heads of the chains
 }\6
 \&{unsigned} \&{int} \\{hash}[\T{8}][\T{256}];\C{ random bits for universal
 hashing }\par
 \fi
 
-\M{19}The random number generator used here doesn't have to be of sensational
+\M[357 polyenum.w]{19}The random number generator used here doesn't have to be
+of sensational
 quality.
 
 \Y\B\4\X19:Initialize\X${}\E{}$\6
@@ -439,12 +449,13 @@ ${}\\{hash}[\|j][\|k]\K\|m\GG(\T{32}-\\{hash\_width});{}$\6
 \As24\ET55.
 \U1.\fi
 
-\M{20}\B\X20:Local variables\X${}\E{}$\6
+\M[367 polyenum.w]{20}\B\X20:Local variables\X${}\E{}$\6
 \&{register} \&{int} \|j${},{}$ \|k${},{}$ \|l${},{}$ \|m;\par
 \As23\ET45.
 \U1.\fi
 
-\N{1}{21}Computing the successors. Now let's turn to the details of the
+\N[370 polyenum.w]{1}{21}Computing the successors. Now let's turn to the
+details of the
 procedure sketched earlier. We will want some special data structures
 for that, in addition to the major structures used for patterns.
 
@@ -503,7 +514,8 @@ pattern }\6
 }\par
 \fi
 
-\M{22}Given a pattern \PB{\|p} whose successors need to be found,
+\M[414 polyenum.w]{22}Given a pattern \PB{\|p} whose successors need to be
+found,
 we begin by initializing the structures just mentioned.
 
 Later we will mention a \PB{\\{leader}} table, which might as well be
@@ -546,11 +558,11 @@ ${}\\{intcell}[\|l\PP]\K\|j,\39\\{leader}[\|j]\K\|j;{}$\2\6
 ${}\\{adjcell}[\|k]\K\\{intcell}[\|l]\K\T{0}{}$;\par
 \U27.\fi
 
-\M{23}\B\X20:Local variables\X${}\mathrel+\E{}$\6
+\M[446 polyenum.w]{23}\B\X20:Local variables\X${}\mathrel+\E{}$\6
 \&{register} \&{patt} ${}{*}\|p{}$;\par
 \fi
 
-\M{24}\B\X19:Initialize\X${}\mathrel+\E{}$\6
+\M[449 polyenum.w]{24}\B\X19:Initialize\X${}\mathrel+\E{}$\6
 $\\{dig}[\T{16}]\K\T{1};{}$\6
 \&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\T{16};{}$ ${}\|j\PP){}$\1\5
 ${}\\{leader}[\|j]\K\|j;{}$\2\6
@@ -558,8 +570,8 @@ ${}\\{leader}[\|j]\K\|j;{}$\2\6
 ${}\\{leader}[\|j]\K\|j{}$;\2\par
 \fi
 
-\M{25}A setting of the \PB{\\{occ}} array for adjacent cells is valid if and
-only
+\M[454 polyenum.w]{25}A setting of the \PB{\\{occ}} array for adjacent cells is
+valid if and only
 if each component is adjacent to at least one occupied cell. The
 simple algorithm in this step moves from one valid setting to the
 colexicographically next one, or does a \PB{\&{break}} if the last valid
@@ -587,8 +599,8 @@ ${}\\{touched}[\\{dig}[\|j-\T{1}]]\PP,\39\\{touched}[\\{dig}[\|j]]\PP,\39%
 \X26:Move up to the next valid setting\X;\par
 \U27.\fi
 
-\M{26}We have essentially added 1 in binary notation, clearing \PB{\\{occ}}
-bits
+\M[474 polyenum.w]{26}We have essentially added 1 in binary notation, clearing %
+\PB{\\{occ}} bits
 to zero when ``carrying.'' Now we might have to reset some of them
 in order to keep components alive.
 
@@ -606,7 +618,8 @@ ${}\\{touched}[\\{dig}[\|j-\T{1}]]\PP,\39\\{touched}[\\{dig}[\|j]]\PP,\39%
 \4${}\}{}$\2\par
 \Us25\ET27.\fi
 
-\M{27}Fans of top-down programming will have noticed that we've recently been
+\M[488 polyenum.w]{27}Fans of top-down programming will have noticed that we've
+recently been
 working bottom-up. Now let's get back in balance by giving an outline of
 the successor generation process.
 
@@ -638,8 +651,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U49.\fi
 
-\M{28}\B\X28:Run through all patterns of nonadjacent cells that might be
-relevant\X${}\E{}$\6
+\M[514 polyenum.w]{28}\B\X28:Run through all patterns of nonadjacent cells that
+might be relevant\X${}\E{}$\6
 \&{while} (\T{1})\5
 ${}\{{}$\1\6
 \X29:Run through all patterns of nonadjacent cells at the left\X;\6
@@ -662,7 +675,8 @@ ${}\\{occ}[\|j]\K\T{1};{}$\6
 \4${}\}{}$\2\par
 \U27.\fi
 
-\M{29}Here I make use of Mathematics, although it saves only a little
+\M[529 polyenum.w]{29}Here I make use of Mathematics, although it saves only a
+little
 computation: When the \&{while} loop in this section ends,
 \PB{\\{occ}[\|j]} will be zero
 for $\PB{\\{leftbound}}<j<16$, because of a property of the \PB{\\{conn%
@@ -695,8 +709,8 @@ ${}\\{occ}[\\{leftbound}]\K\T{0}{}$;\C{ this clears out the whole left end }\6
 ${}\\{leftbound}\K\\{save\_leftbound}{}$;\par
 \U28.\fi
 
-\M{30}\B\X30:Run through all patterns of nonadjacent cells at the right\X${}%
-\E{}$\6
+\M[553 polyenum.w]{30}\B\X30:Run through all patterns of nonadjacent cells at
+the right\X${}\E{}$\6
 $\\{save\_rightbound}\K\\{rightbound};{}$\6
 ${}\\{rightbound}\K\\{rightend};{}$\6
 ${}\\{occ}[\\{rightend}]\K\T{1};{}$\6
@@ -723,13 +737,13 @@ ${}\\{occ}[\\{rightbound}]\K\T{0}{}$;\C{ this clears out the whole right end }\6
 ${}\\{rightbound}\K\\{save\_rightbound}{}$;\par
 \U29.\fi
 
-\M{31}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[572 polyenum.w]{31}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{save\_leftbound}${},{}$ \\{save\_rightbound};\C{ boundaries within
 the previous pattern }\par
 \fi
 
-\N{1}{32}Canonization. Once a sequence of occupied cells has been proposed, we
-need
+\N[576 polyenum.w]{1}{32}Canonization. Once a sequence of occupied cells has
+been proposed, we need
 to represent it in canonical form as a sequence of component digits. For
 example, if we occupy the four cells marked \.x in
 $$\vbox{\halign{\hfil\.{#}\hfil\cr
@@ -753,7 +767,8 @@ ${}\\{leftbound}\K\|j;{}$\6
 ${}\\{rightbound}\K\|j{}$;\par
 \Us41\ET42.\fi
 
-\M{33}Our next job is more interesting: After changing the status of
+\M[596 polyenum.w]{33}Our next job is more interesting: After changing the
+status of
 adjacent cells, we need to merge components that are being joined.
 
 A simple ``union--find'' algorithm is appropriate for this task.
@@ -791,12 +806,12 @@ ${}\\{merge}(\\{leader}[\|j+\T{1}],\39\\{leader}[\\{appeared}[\|k]]);{}$\2\6
 \4${}\}{}$\2\2\par
 \U41.\fi
 
-\M{34}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[622 polyenum.w]{34}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{circ}[\T{50}];\C{ circular links for component classes }\6
 \&{char} \\{leader}[\T{50}];\C{ class representatives }\par
 \fi
 
-\M{35}\B\X2:Subroutines\X${}\mathrel+\E{}$\6
+\M[626 polyenum.w]{35}\B\X2:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{merge}(\&{int} \|j${},\39{}$\&{int} \|k)\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{int} \|p${},{}$ \|t;\7
@@ -819,7 +834,8 @@ ${}\\{circ}[\|p]\K\\{circ}[\|k],\39\\{circ}[\|k]\K\|t;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{36}The \PB{\\{newpat}} array, which contains the canonical component
+\M[641 polyenum.w]{36}The \PB{\\{newpat}} array, which contains the canonical
+component
 numbers starting with~\.1, can now be written down without further ado.
 
 \Y\B\4\X36:Establish the \PB{\\{newpat}} array\X${}\E{}$\6
@@ -833,11 +849,11 @@ ${}\\{newpat}[\|k]\K\\{class}[\\{leader}[\|j]];{}$\2\6
 ${}\\{newpat}[\|k]\K\\{class}[\|j]\K\PP\|l{}$;\2\2\par
 \U39.\fi
 
-\M{37}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[650 polyenum.w]{37}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{class}[\T{50}];\C{ canonical component number }\par
 \fi
 
-\M{38}We aren't done yet, however. The reverse of a pattern is
+\M[653 polyenum.w]{38}We aren't done yet, however. The reverse of a pattern is
 computationally equivalent to the pattern itself; so we gain
 a factor of roughly two (in both time and space)
 by switching to the reverse pattern when
@@ -855,7 +871,8 @@ ${}\\{backpat}[\|k]\K\PP\|l,\39\\{class}[\\{leader}[\|j]]\K\|l+\T{\^10}{}$;\2\2%
 \par
 \U39.\fi
 
-\M{39}Here then is how we compute the cost of a purported successor.
+\M[665 polyenum.w]{39}Here then is how we compute the cost of a purported
+successor.
 (Again we bypass computation when a detailed calculation would be fruitless.)
 
 \Y\B\4\X39:Determine the cost of the new pattern\X${}\E{}$\6
@@ -883,15 +900,15 @@ ${}\|l\K\\{weight}+\|k;{}$\6
 \4${}\}{}$\2\par
 \Us41, 42\ETs43.\fi
 
-\M{40}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[686 polyenum.w]{40}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{newpat}[\T{16}];\C{ canonical sequence for the new pattern }\6
 \&{char} \\{backpat}[\T{16}];\C{ canonical sequence for its reversal }\6
 \&{char} ${}{*}\\{bestpat}{}$;\C{ the lexicographically smaller }\6
 \&{int} \\{weight};\C{ the number of occupied cells }\par
 \fi
 
-\M{41}\B\X41:Canonize the new pattern based on adjacent occupied cells\X${}%
-\E{}$\6
+\M[692 polyenum.w]{41}\B\X41:Canonize the new pattern based on adjacent
+occupied cells\X${}\E{}$\6
 \X32:Find the proper \PB{\\{leftbound}} and \PB{\\{rightbound}}\X;\6
 \&{if} ${}(\\{rightbound}-\\{leftbound}\G\\{maxlen}){}$\5
 ${}\{{}$\1\6
@@ -903,8 +920,8 @@ ${}\|l\K\\{nmax}{}$;\5
 \4\\{done}:\par
 \U27.\fi
 
-\M{42}At this point the new classes of adjacent cells have already been
-determined.
+\M[701 polyenum.w]{42}At this point the new classes of adjacent cells have
+already been determined.
 Interior cells cannot make \PB{$\\{rightbound}-\\{leftbound}\G\\{maxlen}$}.
 
 \Y\B\4\X42:Canonize the new pattern based on adjacent and interior occupied
@@ -913,14 +930,15 @@ cells\X${}\E{}$\6
 \X39:Determine the cost of the new pattern\X;\par
 \U28.\fi
 
-\M{43}And at this point the \PB{\\{leftbound}} and \PB{\\{rightbound}} are
-already known.
+\M[708 polyenum.w]{43}And at this point the \PB{\\{leftbound}} and \PB{%
+\\{rightbound}} are already known.
 
 \Y\B\4\X43:Canonize the new pattern based on all occupied cells\X${}\E{}$\6
 \X39:Determine the cost of the new pattern\X;\par
 \Us29\ET30.\fi
 
-\N{1}{44}Loose ends. We have finished the complicated decision-making that goes
+\N[713 polyenum.w]{1}{44}Loose ends. We have finished the complicated
+decision-making that goes
 into listing all successors of a given slice, but we still haven't
 actually generated any successors. Now we're ready to do that simple task,
 thereby unmasking the mystery of \PB{\\{aux}}.
@@ -940,13 +958,13 @@ ${}\|s\MG\\{death}\K\\{nmax}-\|l+\\{weight};{}$\6
 \4${}\}{}$\2\par
 \Us27, 28, 29\ETs30.\fi
 
-\M{45}\B\X20:Local variables\X${}\mathrel+\E{}$\6
+\M[730 polyenum.w]{45}\B\X20:Local variables\X${}\mathrel+\E{}$\6
 \&{register} \&{patt} ${}{*}\|q;{}$\6
 \&{register} \&{succ} ${}{*}\|s{}$;\par
 \fi
 
-\M{46}The special successor pattern \PB{$\NULL$}, of cost 0, is added to the
-list
+\M[734 polyenum.w]{46}The special successor pattern \PB{$\NULL$}, of cost 0, is
+added to the list
 if slice \PB{\|p} had only one component. This will be true if and only
 if \PB{\\{appeared}[\T{2}]} is zero. It means, ``We can stop now if we like,
 having
@@ -961,7 +979,8 @@ ${}\|s\MG\\{pat}\K\NULL,\39\|s\MG\\{degree}\K\T{1},\39\|s\MG\\{weight}\K\T{0},%
 \4${}\}{}$\2\par
 \U27.\fi
 
-\M{47}Placing initial slices is complicated by the fact that we want to gain
+\M[745 polyenum.w]{47}Placing initial slices is complicated by the fact that we
+want to gain
 a factor of two by symmetry. Thus if \PB{\|k} is palindromic, we start with
 pattern \PB{\|k} itself; otherwise we consider \PB{\|k} and its reflection but
 with double weight. The latter case is essentially the same as a degree-2
@@ -1007,12 +1026,13 @@ ${}\\{mult}\K\T{2};{}$\6
 \4${}\}{}$\2\par
 \U7.\fi
 
-\M{48}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[778 polyenum.w]{48}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{len};\C{ the pattern length }\6
 \&{int} \\{mult};\C{ its multiplicity }\par
 \fi
 
-\M{49}The heart of the computation is, of course, the process of generating the
+\M[782 polyenum.w]{49}The heart of the computation is, of course, the process
+of generating the
 non-initial slices.
 
 \Y\B\4\X49:Compute\X${}\E{}$\6
@@ -1033,7 +1053,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{50}\B\X50:Output all transitions from \PB{\|p}\X${}\E{}$\6
+\M[798 polyenum.w]{50}\B\X50:Output all transitions from \PB{\|p}\X${}\E{}$\6
 \X60:Record \PB{\|p} as the current predecessor\X;\6
 \&{for} ${}(\|s\K\\{succ\_table};{}$ ${}\|s<\\{succ\_ptr};{}$ ${}\|s\PP){}$\5
 ${}\{{}$\1\6
@@ -1043,7 +1063,7 @@ ${}\|s\MG\\{pat}\MG\\{aux}\K\NULL;{}$\2\6
 \4${}\}{}$\2\par
 \U49.\fi
 
-\N{1}{51}Output. Finally we must deal with transition records,
+\N[805 polyenum.w]{1}{51}Output. Finally we must deal with transition records,
 which are sent to a file for subsequent processing.
 That file might be huge,
 so it is generated in a compact binary format.
@@ -1071,7 +1091,7 @@ file }\6
 \&{char} ${}{*}\\{base\_name},{}$ \\{filename}[\T{100}];\par
 \fi
 
-\M{52}\B\X2:Subroutines\X${}\mathrel+\E{}$\6
+\M[831 polyenum.w]{52}\B\X2:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{open\_it}(\,)\1\1\2\2\6
 ${}\{{}$\1\6
 ${}\\{sprintf}(\\{filename},\39\.{"\%.90s.\%d"},\39\\{base\_name},\39\\{file%
@@ -1087,7 +1107,7 @@ ${}\\{words\_out}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{53}\B\X2:Subroutines\X${}\mathrel+\E{}$\6
+\M[843 polyenum.w]{53}\B\X2:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{close\_it}(\,)\1\1\2\2\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{fclose}(\\{out\_file})\I\T{0}){}$\1\5
@@ -1097,7 +1117,7 @@ ${}\\{printf}(\.{"[\%d\ bytes\ written\ o}\)\.{n\ file\ \%s.]\\n"},\39\T{4}*%
 \4${}\}{}$\2\par
 \fi
 
-\M{54}\B\X2:Subroutines\X${}\mathrel+\E{}$\6
+\M[850 polyenum.w]{54}\B\X2:Subroutines\X${}\mathrel+\E{}$\6
 \&{int} \\{out\_it}(\,)\1\1\2\2\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{words\_out}\E\\{filelength\_threshold}){}$\5
@@ -1112,12 +1132,12 @@ ${}\\{words\_out}\PP;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{55}\B\X19:Initialize\X${}\mathrel+\E{}$\6
+\M[862 polyenum.w]{55}\B\X19:Initialize\X${}\mathrel+\E{}$\6
 \\{open\_it}(\,);\par
 \fi
 
-\M{56}How should we encode the binary output? Each transition has a
-multiplicity,
+\M[865 polyenum.w]{56}How should we encode the binary output? Each transition
+has a multiplicity,
 and the multiplicity can get as large as~30.
 Therefore we will devote 5~bits to that piece of information.
 We can also give special meaning to the code numbers 0 and 31
@@ -1154,7 +1174,8 @@ $\\{buf}\K(\\{new\_level\_code}\LL\T{27})+\|m;{}$\6
 \\{panic}(\.{"Bad\ write\ of\ newlev}\)\.{el\ message"});\2\par
 \U49.\fi
 
-\M{57}The first pattern has serial number 1, not 0, because we let 0 stand for
+\M[899 polyenum.w]{57}The first pattern has serial number 1, not 0, because we
+let 0 stand for
 the sink vertex.
 
 \Y\B\4\D$\\{patt\_code}(\|q)$ \5
@@ -1178,11 +1199,12 @@ birth, death }\6
 ${}\\{slices}\MRL{+{\K}}\|l-\\{weight}+\T{1}{}$;\par
 \U47.\fi
 
-\M{58}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[916 polyenum.w]{58}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{prev\_pat};\C{ the number of patterns encountered so far }\par
 \fi
 
-\M{59}The verbose output marks the first appearance of a slice by
+\M[919 polyenum.w]{59}The verbose output marks the first appearance of a slice
+by
 printing both birth and death dates as a range of subscripts.
 Later it will use a single subscript within that interval. (For
 example, if \PB{$\\{nmax}\K\T{30}$} the simple pattern \.1 will be shown
@@ -1208,7 +1230,8 @@ ${}\\{printf}(\.{":\%d\\n"},\39\|m);{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{60}\B\X60:Record \PB{\|p} as the current predecessor\X${}\E{}$\6
+\M[939 polyenum.w]{60}\B\X60:Record \PB{\|p} as the current predecessor\X${}%
+\E{}$\6
 ${}\{{}$\1\6
 \&{if} (\\{verbose})\1\5
 ${}\\{print\_slice}(\|p,\39\|m,\39\T{0});{}$\2\6
@@ -1218,7 +1241,7 @@ ${}\\{buf}\K(\\{new\_pred\_code}\LL\T{27})+\\{patt\_code}(\|p);{}$\6
 \4${}\}{}$\2\par
 \U50.\fi
 
-\M{61}\B\X61:Record a transition to \PB{\|s}\X${}\E{}$\6
+\M[946 polyenum.w]{61}\B\X61:Record a transition to \PB{\|s}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} (\\{verbose})\5
 ${}\{{}$\1\6
@@ -1251,7 +1274,7 @@ ${}\\{arcs}\PP;{}$\6
 \4${}\}{}$\2\par
 \U50.\fi
 
-\M{62}Hooray, we are done.
+\M[967 polyenum.w]{62}Hooray, we are done.
 
 \Y\B\4\X62:Print the results\X${}\E{}$\6
 \&{if} ${}(\\{patt\_ptr}\I\\{patt\_table}+\\{prev\_pat}){}$\1\5
@@ -1263,20 +1286,21 @@ ${}\\{printf}(\.{"\ \%d\ arcs.\\n"},\39\\{arcs});{}$\6
 \\{close\_it}(\,);\par
 \U1.\fi
 
-\M{63}Multiplicity of arcs is not taken into account.
+\M[977 polyenum.w]{63}Multiplicity of arcs is not taken into account.
 
 \Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{slices};\C{ total number of slices }\6
 \&{int} \\{arcs};\C{ total number of arcs (double precision) }\par
 \fi
 
-\M{64}Note, added two weeks later: This program, though interesting, is
+\M[983 polyenum.w]{64}Note, added two weeks later: This program, though
+interesting, is
 obsolete. See the much better {\mc POLYNUM}, which runs hundreds of
 times faster when $n=30$ and faster yet for larger values of $n$.
 
 \fi
 
-\N{1}{65}Index.
+\N[987 polyenum.w]{1}{65}Index.
 \fi
 
 \inx

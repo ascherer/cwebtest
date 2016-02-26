@@ -1,10 +1,12 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
 
 
 
-\N{1}{1}Introduction. This program combines the ideas of {\mc GRAYSPAN}
+\N[6 grayspspan.w]{1}{1}Introduction. This program combines the ideas of {\mc
+GRAYSPAN}
 and {\mc SPSPAN}, resulting in a glorious routine that generates
 all spanning trees of a given graph, changing only one edge at a time,
 with ``guaranteed efficiency''---in the sense that the total running
@@ -59,7 +61,7 @@ ${}\\{printf}(\.{"Altogether\ \%.15g\ sp}\)\.{anning\ trees,\ using\ }\)\.{%
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Input the graph\X${}\E{}$\6
+\M[52 grayspspan.w]{2}\B\X2:Input the graph\X${}\E{}$\6
 \&{if} ${}(\\{argc}<\T{2}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ foo.gb\ [[}\)\.{gory]\ details]%
@@ -79,7 +81,7 @@ ${}\\{exit}({-}\T{2});{}$\6
 \X18:Check the graph for validity and prepare it for action\X;\par
 \U1.\fi
 
-\M{3}\B\X3:Local variables\X${}\E{}$\6
+\M[68 grayspspan.w]{3}\B\X3:Local variables\X${}\E{}$\6
 \&{register} \&{Graph} ${}{*}\|g{}$;\C{ the graph we're dealing with }\6
 \&{register} \&{int} \|n;\C{ the number of vertices }\6
 \&{register} \&{int} \|m;\C{ the number of edges }\6
@@ -92,7 +94,8 @@ vertices of interest }\6
 \&{register} \&{Bond} ${}{*}\|b{}$;\C{ current interest-bearing bond }\par
 \U1.\fi
 
-\N{1}{4}The method and its data structures. The basic idea of this program,
+\N[78 grayspspan.w]{1}{4}The method and its data structures. The basic idea of
+this program,
 which goes back to Malcolm Smith's M.S. thesis, ``Generating spanning trees''
 (University of Victoria, 1997), is to modify the {\mc GRAYSPAN} algorithm,
 replacing edges by series-parallel subgraphs that we will call ``bonds.''
@@ -141,7 +144,8 @@ into the highly efficient {\mc SPSPAN} domain.
 
 \fi
 
-\M{5}A suitable data structure to support all this machinery can be
+\M[125 grayspspan.w]{5}A suitable data structure to support all this machinery
+can be
 fashioned from a struct of type \&{Bond}, which contains the fields
 \PB{\\{typ}}, \PB{\\{val}}, \PB{\\{des}}, \PB{\\{done}}, \PB{\\{focus}}, and %
 \PB{\\{rsib}} that we used in
@@ -191,7 +195,8 @@ bond }\2\6
 ${}\}{}$ \&{Bond};\par
 \U1.\fi
 
-\M{6}If the graph has \PB{\|m} edges, we put the basic one-edge bonds into
+\M[155 grayspspan.w]{6}If the graph has \PB{\|m} edges, we put the basic
+one-edge bonds into
 \PB{$\\{bondbase}+\|k$} for $1\le k\le m$; series and parallel combinations,
 and ``deletion records'' for undoing a bond deletion, go into the
 subsequent locations, in a last-in-first-out manner.
@@ -213,7 +218,7 @@ ${}\\{tree}\MG\\{up}\K\\{tree}\MG\\{down}\K\\{tree}{}$;\C{ and so does the tree
 list }\par
 \U2.\fi
 
-\M{7}\B\X7:Global variables\X${}\E{}$\6
+\M[171 grayspspan.w]{7}\B\X7:Global variables\X${}\E{}$\6
 \&{Bond} ${}{*}\\{bondbase}{}$;\C{ base address for almost all \&{Bond} structs
 }\6
 \&{int} \\{bondcount};\C{ the number of bonds currently defined }\6
@@ -224,7 +229,8 @@ excluded next }\6
 \&{Bond} \\{James};\C{ my little joke }\par
 \U1.\fi
 
-\M{8}The bonds between vertices are represented as \&{Arc} structs in
+\M[179 grayspspan.w]{8}The bonds between vertices are represented as \&{Arc}
+structs in
 almost the usual way; namely, a bond between \PB{\|u} and \PB{\|v} appears as
 an arc \PB{\|e} with \PB{$\|e\MG\\{tip}\K\|v$} in the list \PB{$\|u\MG%
 \\{arcs}$}, and as an arc \PB{\|f}
@@ -263,8 +269,8 @@ $\\{ee}\K\|e,\39\\{oooo},\39\\{ee}\MG\\{next}\MG\\{prev}\K\\{ee},\39\\{ee}\MG%
 \\{prev}\MG\\{next}\K{}$\\{ee}\par
 \fi
 
-\N{1}{9}Diagnostic routines. Here are a few handy ways to look at the current
-data.
+\N[200 grayspspan.w]{1}{9}Diagnostic routines. Here are a few handy ways to
+look at the current data.
 
 \Y\B\4\X9:Subroutines\X${}\E{}$\6
 \&{void} \\{printgraph}(\&{void})\C{ prints the current graph }\6
@@ -286,7 +292,7 @@ ${}\\{printf}(\.{"\ \%s(\%d)"},\39\|e\MG\\{tip}\MG\\{name},\39\\{ebn}(\|e));{}$%
 \As10, 11, 12, 31, 38\ETs39.
 \U1.\fi
 
-\M{10}\B\X9:Subroutines\X${}\mathrel+\E{}$\6
+\M[215 grayspspan.w]{10}\B\X9:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{printbond}(\&{Bond} ${}{*}\|b){}$\1\1\2\2\6
 ${}\{{}$\1\6
 ${}\\{printf}(\.{"\%d:\%c"},\39\\{bn}(\|b),\39\\{isleaf}(\|b)\?\.{'l'}:\|b\MG%
@@ -316,7 +322,7 @@ ${}\\{printf}(\.{"\ lchild=\%d,\ scope=\%}\)\.{d,\ des=\%d,\ done=\%d"},\39%
 \4${}\}{}$\2\par
 \fi
 
-\M{11}\B\X9:Subroutines\X${}\mathrel+\E{}$\6
+\M[234 grayspspan.w]{11}\B\X9:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{printaction}(\&{void})\C{ prints the current action list }\6
 ${}\{{}$\1\6
 \&{register} \&{Bond} ${}{*}\|b;{}$\7
@@ -340,8 +346,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{12}Since there's so much redundancy in the data structures, I need
-reassurance
+\M[253 grayspspan.w]{12}Since there's so much redundancy in the data
+structures, I need reassurance
 that I haven't slipped up and forgotten to keep everything shipshape.
 ``A~data structure is only as strong as its weakest link.''
 
@@ -370,7 +376,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{13}\B\X13:Do a sanity check on the graph\X${}\E{}$\6
+\M[278 grayspspan.w]{13}\B\X13:Do a sanity check on the graph\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|n\K\T{0},\39\|v\K\\{gg}\MG\\{vertices};{}$ ${}\|v<\\{gg}\MG%
 \\{vertices}+\\{gg}\MG\|n;{}$ ${}\|v\PP){}$\1\6
@@ -379,7 +385,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{14}Some of the ``bugs'' detected in this routine are, of course,
+\M[284 grayspspan.w]{14}Some of the ``bugs'' detected in this routine are, of
+course,
 harmless in certain contexts. My goal is to call attention to
 things that might be unexpected, but to keep going in any case.
 
@@ -430,7 +437,8 @@ ${}\\{bugs}\PP,\39\\{printf}(\.{"Vertex\ \%s\ has\ more\ }\)\.{than\ \%d\ bonds%
 \4${}\}{}$\2\par
 \U13.\fi
 
-\M{15}The action list is essentially a forest of bonds, in preorder.
+\M[318 grayspspan.w]{15}The action list is essentially a forest of bonds, in
+preorder.
 
 \Y\B\4\X15:Do a sanity check on the action list\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -460,7 +468,8 @@ ${}\|b\K\|b\MG\\{scope};{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{16}\B\X16:Declare the recursive routine \PB{\\{bondsanity}}\X${}\E{}$\6
+\M[338 grayspspan.w]{16}\B\X16:Declare the recursive routine \PB{%
+\\{bondsanity}}\X${}\E{}$\6
 \&{int} \\{bondsanity}(\&{Bond} ${}{*}\|b){}$\1\1\2\2\6
 ${}\{{}$\1\6
 \&{int} \\{bugs}${}\K\T{0};{}$\6
@@ -511,8 +520,8 @@ ${}\\{bugs}\PP,\39\\{printf}(\.{"Bond\ \%d\ should\ have}\)\.{\ scope\ \%d%
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{17}If \PB{$\\{flags}\AND\T{1}$}, we've computed the number \PB{\|n} of
-current vertices.
+\M[374 grayspspan.w]{17}If \PB{$\\{flags}\AND\T{1}$}, we've computed the number
+\PB{\|n} of current vertices.
 
 \Y\B\4\X17:Do a sanity check on the tree list\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -536,7 +545,8 @@ ${}\\{bugs}\PP,\39\\{printf}(\.{"The\ tree\ list\ holds}\)\.{\ \%d\ bonds,\ not%
 \4${}\}{}$\2\par
 \U12.\fi
 
-\N{1}{18}Graph preparation. At the beginning, we want to make sure that the
+\N[391 grayspspan.w]{1}{18}Graph preparation. At the beginning, we want to make
+sure that the
 given graph is truly undirected, and that we can find mates of its
 edges using the infamous \PB{\\{edge\_trick}}. We also need to change its
 representation from singly linked edges to doubly linked bonds,
@@ -624,7 +634,8 @@ ${}\\{exit}({-}\T{4});{}$\6
 ${}\|o,\39\\{topleaf}\K\\{bondbase}+\|m,\39\\{bondcount}\K\|m{}$;\par
 \U2.\fi
 
-\N{1}{19}Reduction. Let's start to write real code now. This program reaches
+\N[451 grayspspan.w]{1}{19}Reduction. Let's start to write real code now. This
+program reaches
 a crucial step when we get to the label called \PB{\\{reduce}}, corresponding
 roughly to the point where {\mc GRAYSPAN} gets to its label called \\{enter}.
 
@@ -693,7 +704,7 @@ ${}\\{oo},\39\|e\K\|b\MG\\{lhist},\39\\{aa}(\|l)\K\|e{}$;\C{ we have \PB{$\|b%
 \&{goto} \\{reduce};\par
 \U25.\fi
 
-\M{20}\B\D$\\{dup}$ \5
+\M[504 grayspspan.w]{20}\B\D$\\{dup}$ \5
 $\|w.{}$\|A\C{ utility field \PB{\|w} points to a previous edge }\par
 \Y\B\4\X20:Parallelize duplicate bonds from \PB{\|v}\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -716,7 +727,8 @@ ${}\|o,\39\|u\MG\\{dup}\K\|e;{}$\2\6
 \4${}\}{}$\2\par
 \U19.\fi
 
-\M{21}A deleted vertex is marked $-1$, for debugging purposes only.
+\M[518 grayspspan.w]{21}A deleted vertex is marked $-1$, for debugging purposes
+only.
 
 \Y\B\4\X21:Eliminate \PB{\|v}, then \PB{\&{goto} \\{trivialgraph}} if only one
 vertex is left\X${}\E{}$\6
@@ -735,7 +747,8 @@ vertices remain }\6
 \4${}\}{}$\2\par
 \U19.\fi
 
-\M{22}If the single bond touching \PB{\|v} isn't in the tree list,
+\M[531 grayspspan.w]{22}If the single bond touching \PB{\|v} isn't in the tree
+list,
 we know that the tree list must specify only a near-spanning tree.
 So we set \PB{\\{inbond}}, which will complete a spanning tree later.
 And we eliminate \PB{\|v}; thus the tree list henceforth is a spanning
@@ -766,7 +779,8 @@ ${}\\{oo},\39\|u\MG\\{mark}\K\T{1},\39\\{stack}(\|k\PP)\K\|u;{}$\2\6
 \4${}\}{}$\2\par
 \U21.\fi
 
-\M{23}A subtle point arises here: We might be serializing two bonds not
+\M[553 grayspspan.w]{23}A subtle point arises here: We might be serializing two
+bonds not
 in the spanning tree, if \PB{\|v} happens to be the only vertex not reachable
 from the current near-spanning tree. In that case we want to set
 \PB{\\{inbond}} to the subbond of the new series bond that will {\it not\/} be
@@ -803,7 +817,8 @@ ${}\\{oo},\39\|w\MG\\{mark}\K\T{2},\39\\{stack}(\|k\PP)\K\|w;{}$\2\6
 \4${}\}{}$\2\par
 \U21.\fi
 
-\M{24}At this point the graph is irreducible, so \PB{\|v} appears only once
+\M[579 grayspspan.w]{24}At this point the graph is irreducible, so \PB{\|v}
+appears only once
 in \PB{\|u}'s list.
 
 \Y\B\4\X24:Shrink bond \PB{\|e}\X${}\E{}$\6
@@ -828,7 +843,8 @@ ${}\\{oo},\39\|u\MG\\{mark}\K{-}\T{1},\39\|v\MG\\{mark}\K\T{2},\39\|k\K\T{1},%
 \39\\{stack}(\T{0})\K\|v{}$;\par
 \U19.\fi
 
-\N{1}{25}The main algorithm. Now that we understand reduction, we're ready to
+\N[596 grayspspan.w]{1}{25}The main algorithm. Now that we understand
+reduction, we're ready to
 complete the {\mc GRAYSPAN} portion of this program, except for low-level
 details.
 
@@ -870,7 +886,7 @@ ${}\\{oooooo},\39\|b\K{}$(\&{Bond} ${}{*}){}$ \|e${}\MG\\{bond},\39\|b\MG\\{up}%
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{26}After unshrinking, the graph will still be irreducible.
+\M[627 grayspspan.w]{26}After unshrinking, the graph will still be irreducible.
 
 \Y\B\4\X26:Unshrink bond \PB{\|e}\X${}\E{}$\6
 $\\{ooooo},\39\|u\K\|e\MG\\{tip},\39\|v\K\\{mate}(\|e)\MG\\{tip},\39\|v\MG%
@@ -890,8 +906,8 @@ ${}\\{printf}(\.{"\ unshrinking\ \%d;\ no}\)\.{w\ \%s\ has\ degree\ \%d\\n}\)%
 ${}\|u\MG\\{mark}\K\T{0}{}$;\C{ it was $-1$ }\par
 \U25.\fi
 
-\M{27}We use a field \PB{\\{bfs}} that shares space with \PB{\\{mark}}, because
-\PB{\\{mark}}
+\M[640 grayspspan.w]{27}We use a field \PB{\\{bfs}} that shares space with \PB{%
+\\{mark}}, because \PB{\\{mark}}
 is zero in all relevant vertices at this time.
 
 \Y\B\4\D$\\{bfs}$ \5
@@ -925,7 +941,7 @@ ${}\\{printf}(\.{"Leaving\ level\ \%d:\ \%}\)\.{d\ is\ a\ bridge\\n"},\39\|l+%
 ${}\|o,\39\|w\K\|u\MG\\{bfs}{}$;\2\par
 \U25.\fi
 
-\M{28}We have discovered that \PB{\|e} is not a bridge.
+\M[659 grayspspan.w]{28}We have discovered that \PB{\|e} is not a bridge.
 
 \Y\B\4\X28:Nullify all \PB{\\{bfs}} links, delete \PB{\|e}, and \PB{\&{goto} %
 \\{reduce}}\X${}\E{}$\6
@@ -943,15 +959,15 @@ ${}\\{oo},\39\|e\MG\\{tip}\MG\\{mark}\K\\{mate}(\|e)\MG\\{tip}\MG\\{mark}\K%
 \4${}\}{}$\2\par
 \U27.\fi
 
-\M{29}\B\X29:Undo all changes to the graph since entering level \PB{\|l}\X${}%
-\E{}$\6
+\M[671 grayspspan.w]{29}\B\X29:Undo all changes to the graph since entering
+level \PB{\|l}\X${}\E{}$\6
 \|o;\5
 \&{while} ${}(\\{bondcount}>\\{bonds}(\|l)){}$\1\5
 \\{unbuildbond}(\,);\2\par
 \U25.\fi
 
-\M{30}When the program reaches \PB{\\{trivialgraph}}, the variables \PB{%
-\\{outbond}}
+\M[674 grayspspan.w]{30}When the program reaches \PB{\\{trivialgraph}}, the
+variables \PB{\\{outbond}}
 and \PB{\\{inbond}} point to bonds whose values are to become 0 and~1,
 respectively, in the next spanning tree.
 
@@ -1009,7 +1025,8 @@ ${}\\{printf}(\.{"\ \%d"},\39\\{bn}(\|b));{}$\2\2\6
 ${}\\{inbond}\K\\{outbond}\K\NULL{}$;\par
 \U25.\fi
 
-\N{1}{31}Construction. Reducing the main graph means constructing more bonds.
+\N[714 grayspspan.w]{1}{31}Construction. Reducing the main graph means
+constructing more bonds.
 
 The down side of having a complex data structure is that
 we have to do tedious maintenance work when conditions change. The following
@@ -1086,7 +1103,8 @@ ${}\\{ooooo},\39\|c\MG\\{up}\K\\{tree}\MG\\{up},\39\\{tree}\MG\\{up}\K\|c\MG%
 \4${}\}{}$\2\par
 \fi
 
-\M{32}The new series bond has to agree with its mate. So we move
+\M[764 grayspspan.w]{32}The new series bond has to agree with its mate. So we
+move
 the arc node \PB{\\{aa}} from one list to another.
 
 \Y\B\4\X32:Update \PB{\\{aa}} and \PB{\\{bb}} for a new series bond\X${}\E{}$\6
@@ -1103,8 +1121,8 @@ ${}\\{oo},\39\\{mate}(\\{aa})\MG\\{tip}\K\\{bb}\MG\\{tip};{}$\6
 \4${}\}{}$\2\par
 \U31.\fi
 
-\M{33}\B\X33:Update \PB{\\{aa}} and \PB{\\{bb}} for a new parallel bond\X${}%
-\E{}$\6
+\M[777 grayspspan.w]{33}\B\X33:Update \PB{\\{aa}} and \PB{\\{bb}} for a new
+parallel bond\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{oo},\39\|u\K\\{aa}\MG\\{tip},\39\|v\K\\{mate}(\\{aa})\MG\\{tip};{}$\6
 \&{if} (\\{extraverbose})\1\5
@@ -1116,7 +1134,7 @@ ${}\\{oooo},\39\\{delete}(\\{bb}),\39\\{delete}(\\{mate}(\\{bb})),\39\|u\MG%
 \4${}\}{}$\2\par
 \U31.\fi
 
-\M{34}\B\X34:Build leaf with leaf\X${}\E{}$\6
+\M[786 grayspspan.w]{34}\B\X34:Build leaf with leaf\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{oooo},\39\|a\MG\\{lsib}\K\|a\MG\\{rsib}\K\|b,\39\|b\MG\\{lsib}\K\|b\MG%
 \\{rsib}\K\|a;{}$\6
@@ -1128,7 +1146,7 @@ ${}\|o,\39\|c\MG\\{scope}\K\|c;{}$\6
 \4${}\}{}$\2\par
 \U31.\fi
 
-\M{35}\B\X35:Build leaf with branch\X${}\E{}$\6
+\M[795 grayspspan.w]{35}\B\X35:Build leaf with branch\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{bt}\I\|t){}$\5
 ${}\{{}$\1\6
@@ -1150,7 +1168,7 @@ ${}\\{oo},\39\|c\MG\\{left}\MG\\{right}\K\|c\MG\\{right}\MG\\{left}\K\|c;{}$\6
 \4${}\}{}$\2\par
 \U31.\fi
 
-\M{36}\B\X36:Build branch with leaf\X${}\E{}$\6
+\M[810 grayspspan.w]{36}\B\X36:Build branch with leaf\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{at}\I\|t){}$\5
 ${}\{{}$\1\6
@@ -1173,7 +1191,7 @@ ${}\\{oo},\39\|c\MG\\{left}\MG\\{right}\K\|c\MG\\{right}\MG\\{left}\K\|c;{}$\6
 \4${}\}{}$\2\par
 \U31.\fi
 
-\M{37}\B\X37:Build branch with branch\X${}\E{}$\6
+\M[825 grayspspan.w]{37}\B\X37:Build branch with branch\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{ooo},\39\|d\K\|a\MG\\{scope},\39\|c\MG\\{rsave}\K\|d\MG\\{right};{}$\6
 ${}\\{oooo},\39\|a\MG\\{left}\MG\\{right}\K\|d\MG\\{right},\39\|d\MG\\{right}%
@@ -1234,7 +1252,8 @@ ${}\\{oo},\39\|c\MG\\{scope}\K(\|b\MG\\{scope}\E\|b\?(\|a\MG\\{scope}\E\|a\?%
 \4${}\}{}$\2\par
 \U31.\fi
 
-\M{38}A much simpler subroutine is used to record the fact that one or
+\M[862 grayspspan.w]{38}A much simpler subroutine is used to record the fact
+that one or
 two bonds are temporarily being deleted from the graph.
 
 \Y\B\4\X9:Subroutines\X${}\mathrel+\E{}$\6
@@ -1260,7 +1279,8 @@ ${}\\{oo},\39\\{delete}(\\{bb}),\39\|v\MG\\{deg}\MM;{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{39}Deconstruction. Every change to the graph after we first reach level~1
+\N[882 grayspspan.w]{1}{39}Deconstruction. Every change to the graph after we
+first reach level~1
 must be undone again before we finish the program. But fortunately
 the changes are always made in a strictly last-done-first-undone
 manner. Therefore we can use the ``dancing links'' principle to
@@ -1327,8 +1347,8 @@ ${}\\{ooooo},\39\|b\MG\\{up}\K\\{tree}\MG\\{up},\39\\{tree}\MG\\{up}\K\|b\MG%
 \4${}\}{}$\2\par
 \fi
 
-\M{40}\B\X40:Downdate \PB{\\{aa}} and \PB{\\{bb}} from an old series bond\X${}%
-\E{}$\6
+\M[926 grayspspan.w]{40}\B\X40:Downdate \PB{\\{aa}} and \PB{\\{bb}} from an old
+series bond\X${}\E{}$\6
 ${}\{{}$\1\6
 \\{undelete}(\\{mate}(\\{bb}));\C{ now \PB{$\\{ee}\K\\{mate}(\\{bb})$} }\6
 ${}\\{oo},\39\|v\K\\{ee}\MG\\{tip},\39\\{mate}(\\{aa})\MG\\{tip}\K\|v,\39\|v\MG%
@@ -1342,8 +1362,8 @@ ${}\\{printf}(\.{"\ removing\ \%d=series}\)\.{(\%d,\%d)\ between\ \%s\ a}\)%
 \4${}\}{}$\2\par
 \U39.\fi
 
-\M{41}\B\X41:Downdate \PB{\\{aa}} and \PB{\\{bb}} from an old parallel bond%
-\X${}\E{}$\6
+\M[936 grayspspan.w]{41}\B\X41:Downdate \PB{\\{aa}} and \PB{\\{bb}} from an old
+parallel bond\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{oo},\39\|u\K\\{aa}\MG\\{tip},\39\|v\K\\{mate}(\\{aa})\MG\\{tip};{}$\6
 ${}\\{oooo},\39\\{undelete}(\\{mate}(\\{bb})),\39\\{undelete}(\\{bb}),\39\|u\MG%
@@ -1355,7 +1375,8 @@ and\ \%s\\n"},\39\\{bn}(\|c),\39\\{bn}(\|a),\39\\{bn}(\|b),\39\|u\MG\\{name},%
 \4${}\}{}$\2\par
 \U39.\fi
 
-\M{42}Sibling links of bonds at the top level are never examined.
+\M[945 grayspspan.w]{42}Sibling links of bonds at the top level are never
+examined.
 This program nullifies them only to be tidy and possibly catch
 errors, but no mems are counted.
 
@@ -1367,7 +1388,8 @@ ${}\\{ooo},\39\\{action}\MG\\{right}\K\|c\MG\\{right},\39\\{action}\MG\\{right}%
 \4${}\}{}$\2\par
 \U39.\fi
 
-\M{43}The nonobvious part here is the calculation of \PB{\\{des}} when a
+\M[955 grayspspan.w]{43}The nonobvious part here is the calculation of \PB{%
+\\{des}} when a
 disabled bond reenters the picture.
 
 \Y\B\4\X43:Unbuild leaf with branch\X${}\E{}$\6
@@ -1395,7 +1417,7 @@ ${}\\{oo},\39\|b\MG\\{left}\MG\\{right}\K\|b;{}$\6
 \4${}\}{}$\2\par
 \U39.\fi
 
-\M{44}\B\X44:Unbuild branch with leaf\X${}\E{}$\6
+\M[975 grayspspan.w]{44}\B\X44:Unbuild branch with leaf\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{at}\I\|t){}$\5
 ${}\{{}$\1\6
@@ -1420,7 +1442,8 @@ ${}\\{oo},\39\|a\MG\\{left}\MG\\{right}\K\|a;{}$\6
 \4${}\}{}$\2\par
 \U39.\fi
 
-\M{45}If we previously combined two series bonds into a larger series bond, or
+\M[992 grayspspan.w]{45}If we previously combined two series bonds into a
+larger series bond, or
 two parallel bonds into a larger parallel bond, we may have to search through
 the children in order to figure out where \PB{$\|c\MG\\{des}$} lies.
 
@@ -1504,7 +1527,8 @@ ${}\\{oooo},\39\|a\MG\\{left}\MG\\{right}\K\|a,\39\|d\MG\\{right}\MG\\{left}\K%
 \4${}\}{}$\2\par
 \U39.\fi
 
-\M{46}\B\X46:Restore one or two deleted bonds and \PB{\&{return}}\X${}\E{}$\6
+\M[1042 grayspspan.w]{46}\B\X46:Restore one or two deleted bonds and \PB{%
+\&{return}}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{oo},\39\|u\K\\{mate}(\\{aa})\MG\\{tip},\39\|a\K{}$(\&{Bond} ${}{*}){}$ %
 \\{aa}${}\MG\\{bond};{}$\6
@@ -1525,7 +1549,8 @@ ${}\\{ooooo},\39\|a\MG\\{up}\K\\{tree}\MG\\{up},\39\\{tree}\MG\\{up}\K\|a\MG%
 \4${}\}{}$\2\par
 \U39.\fi
 
-\N{1}{47}Pulsing the action list. OK, all the hard stuff is done; only one
+\N[1056 grayspspan.w]{1}{47}Pulsing the action list. OK, all the hard stuff is
+done; only one
 more piece of the program needs to be put in place. And from {\mc SPSPAN},
 we know how to do the remaining job nicely.
 
@@ -1548,8 +1573,8 @@ ${}\\{oo},\39\|b\K\|r\MG\\{focus},\39\|r\MG\\{focus}\K\|r{}$;\C{ steps (1) and
 \4${}\}{}$\2\par
 \U25.\fi
 
-\M{48}All uneasy nodes to the right of \PB{\|b} are now active, and \PB{\|l} is
-the
+\M[1073 grayspspan.w]{48}All uneasy nodes to the right of \PB{\|b} are now
+active, and \PB{\|l} is the
 former \PB{$\|b\MG\\{des}$}.
 
 \Y\B\4\X48:Passivate \PB{\|b}\X${}\E{}$\6
@@ -1562,7 +1587,8 @@ ${}\\{ooo},\39\|b\MG\\{focus}\K\|l\MG\\{focus},\39\|l\MG\\{focus}\K\|l;{}$\6
 \4${}\}{}$\2\par
 \U47.\fi
 
-\M{49}If the user has asked for \PB{\\{verbose}} output, we print only the
+\M[1084 grayspspan.w]{49}If the user has asked for \PB{\\{verbose}} output, we
+print only the
 edge that has entered the spanning tree and the edge that has left.
 
 \Y\B\4\X49:Change \PB{$\|b\MG\\{des}$} and visit a new spanning tree\X${}\E{}$\6
@@ -1602,8 +1628,8 @@ ${}\\{printf}(\.{"\ \%d"},\39\\{bn}(\|q));{}$\2\2\6
 ${}\|o,\39\|b\MG\\{des}\K\|r{}$;\C{ ``visiting'' }\par
 \U47.\fi
 
-\M{50}Note: I haven't proved the efficiency claim made in the opening
-paragraph.
+\M[1110 grayspspan.w]{50}Note: I haven't proved the efficiency claim made in
+the opening paragraph.
 I don't have time to write the proof down now, sorry. But it is based on
 the fact that a connected graph on $n$ vertices
 with all vertices of degree 3~or~more
@@ -1614,7 +1640,7 @@ less than the time needed to spew out the trees.
 
 \fi
 
-\N{1}{51}Index.
+\N[1119 grayspspan.w]{1}{51}Index.
 \fi
 
 \inx

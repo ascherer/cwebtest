@@ -1,8 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This program takes the output of {\mc SIMPATH} (on \PB{%
-\\{stdin}})
+\N[2 simpath-reduce.w]{1}{1}Intro. This program takes the output of {\mc
+SIMPATH} (on \PB{\\{stdin}})
 and converts it to a ZDD (on \PB{\\{stdout}}).
 
 The output is in the same format as might be output by {\mc BDD15},
@@ -47,7 +48,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\%d\ branch\ nodes\ out}\)\.{put.\\n"},\39%
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Store all the input in \PB{\\{lo}} and \PB{\\{hi}}\X${}\E{}$\6
+\M[43 simpath-reduce.w]{2}\B\X2:Store all the input in \PB{\\{lo}} and \PB{%
+\\{hi}}\X${}\E{}$\6
 $\\{tempfile}\K\\{fopen}(\.{"/tmp/simpath-names"},\39\.{"w"});{}$\6
 \&{if} ${}(\R\\{tempfile}){}$\5
 ${}\{{}$\1\6
@@ -112,7 +114,8 @@ successfull}\)\.{y\ read.\\n"},\39\|t,\39\|s-\T{2});{}$\6
 ${}\\{firstnode}[\|t+\T{1}]\K\|s{}$;\par
 \U1.\fi
 
-\M{3}Here I use an algorithm something like that of Sieling and Wegener,
+\M[86 simpath-reduce.w]{3}Here I use an algorithm something like that of
+Sieling and Wegener,
 and something like the ones I used in {\mc BDD9} and {\mc CONNECTED}
 and other programs. But I've changed it again, for fun and variety.
 
@@ -153,7 +156,8 @@ ${}\\{hi}[\|k]\K\|q\K\\{lo}[\|q]{}$;\C{ likewise \PB{\\{hi}[\|k]} }\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{4}\B\X4:Put \PB{\|k} onto the list for \PB{\|q}\X${}\E{}$\6
+\M[117 simpath-reduce.w]{4}\B\X4:Put \PB{\|k} onto the list for \PB{\|q}\X${}%
+\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{hi}[\|q]\G\T{0}){}$\1\5
 ${}\\{hi}[\|k]\K{-}\\{head},\39\\{head}\K\|q{}$;\C{ start a new list }\2\6
@@ -163,7 +167,8 @@ ${}\\{hi}[\|q]\K{-}\|k;{}$\6
 \4${}\}{}$\2\par
 \U3.\fi
 
-\M{5}We go through each list twice, once to output instructions
+\M[124 simpath-reduce.w]{5}We go through each list twice, once to output
+instructions
 and once to clean up our tracks.
 
 \Y\B\4\X5:Go through the list of lists\X${}\E{}$\6
@@ -193,7 +198,7 @@ ${}\\{hi}[\|r]\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U3.\fi
 
-\N{1}{6}Index.
+\N[144 simpath-reduce.w]{1}{6}Index.
 \fi
 
 \inx

@@ -1,9 +1,11 @@
 \input cwebmac
+\srcloctrue
 \datethis
 \def\SET/{{\mc SET\null}}
 
 
-\N{1}{1}Introduction. This program finds all nonisomorphic sets of \SET/ cards
+\N[4 setset-all.w]{1}{1}Introduction. This program finds all nonisomorphic sets
+of \SET/ cards
 that contain no \SET/s.
 
 In case you don't know what that means, a \SET/ card is a vector
@@ -73,7 +75,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}Our basic approach is to define a linear ordering on solutions, and to
+\M[75 setset-all.w]{2}Our basic approach is to define a linear ordering on
+solutions, and to
 look only for solutions that are smallest in their isomorphism class.
 In other words, we will count the sets $S$ such that $S\le\alpha S$ for
 all automorphisms~$\alpha$. We'll also count the number $t$ of cases where
@@ -94,7 +97,8 @@ and so on, until we've either found inequality or established that $S=T$.)
 
 \fi
 
-\M{3}The automorphisms can be thought of as the collection of all linear
+\M[94 setset-all.w]{3}The automorphisms can be thought of as the collection of
+all linear
 mappings that take $x\mapsto Ax+b$, where $x$ is the column vector
 $(c_1,c_2,c_3,c_4)^T$, $A$ is a nonsingular $4\times4$
 matrix (mod~3), and $b$ is an arbitrary vector. Alternatively we can
@@ -122,7 +126,8 @@ in the previous setup.
 
 \fi
 
-\M{4}We will generate the elements of a $k$-set in order. If we have
+\M[120 setset-all.w]{4}We will generate the elements of a $k$-set in order. If
+we have
 $s_1<\cdots<s_k$ and $\{s_1,\ldots,s_k\}\le\{\alpha s_1,\ldots,\alpha s_k\}$
 for all $\alpha$, it is not hard to prove that $\{s_1,\ldots,s_j\}\le\{\alpha
 s_1,\ldots,\alpha s_j\}$ for all $\alpha$ and $1\le j\le k$.
@@ -133,7 +138,7 @@ canonical $(k-1)$-set.
 
 \fi
 
-\N{1}{5}Permutations.
+\N[129 setset-all.w]{1}{5}Permutations.
 It's convenient to represent \SET/ card vectors in a compact code,
 as an integer between 0 and 80.
 
@@ -143,7 +148,7 @@ represented as $\PB{\\{encode}}[(c_1 c_2 c_3 c_4)_3]$ }\par
 \A20.
 \U1.\fi
 
-\M{6} Lexicographic order would correspond
+\M[137 setset-all.w]{6} Lexicographic order would correspond
 to ternary notation, but our weight-first ordering is slightly different.
 Here we specify the card ranks in the desired order.
 
@@ -168,7 +173,8 @@ Here we specify the card ranks in the desired order.
 \As7, 9, 11, 15, 16, 21, 23, 28, 41\ETs46.
 \U1.\fi
 
-\M{7}When we output a \SET/ card, however, we prefer a decimal code.
+\M[155 setset-all.w]{7}When we output a \SET/ card, however, we prefer a
+decimal code.
 
 \Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{decimalform}[\\{nn}]${}\K\{\T{0},\39\T{1},\39\T{2},\39\T{10},\39%
@@ -188,13 +194,14 @@ Here we specify the card ranks in the desired order.
 \&{int} \\{decode}[\\{nn}];\par
 \fi
 
-\M{8}\B\X8:Initialize\X${}\E{}$\6
+\M[170 setset-all.w]{8}\B\X8:Initialize\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\1\5
 ${}\\{decode}[\\{encode}[\|k]]\K\\{decimalform}[\|k]{}$;\2\par
 \As10, 12\ETs17.
 \U1.\fi
 
-\M{9}We will frequently need to find the third card of a \SET/,
+\M[174 setset-all.w]{9}We will frequently need to find the third card of a %
+\SET/,
 given any two distinct cards $x$ and $y$, so we store the answers
 in a precomputed table.
 
@@ -205,7 +212,7 @@ in a precomputed table.
 \&{char} \\{third}[\\{nn}][\\{nnn}];\par
 \fi
 
-\M{10}\B\D$\\{pack}(\|a,\|b,\|c,\|d)$ \5
+\M[182 setset-all.w]{10}\B\D$\\{pack}(\|a,\|b,\|c,\|d)$ \5
 $\\{encode}[(((\|a)*\T{3}+(\|b))*\T{3}+(\|c))*\T{3}+(\|d){}$]\par
 \Y\B\4\X8:Initialize\X${}\mathrel+\E{}$\6
 ${}\{{}$\1\6
@@ -225,7 +232,8 @@ ${}\\{third}[\\{pack}(\|a,\39\|b,\39\|c,\39\|d)][\\{pack}(\|e,\39\|f,\39\|g,\39%
 \4${}\}{}$\2\par
 \fi
 
-\M{11}The set of automorphisms is conveniently represented by a mapping
+\M[192 setset-all.w]{11}The set of automorphisms is conveniently represented by
+a mapping
 table, as in the author's paper ``Efficient representation of
 perm groups,'' {\sl Combinatorica\/ \bf11} (1991), 33--43.
 If there is an $\alpha$ such that $\alpha k=j$ and $\alpha$ fixes
@@ -266,8 +274,8 @@ with here is handled satisfactorily because of its highly transitive nature.
 \&{char} \\{perm}[\\{dd}][\\{nnn}][\\{nnn}];\C{ mapping table }\par
 \fi
 
-\M{12}Now let's set up the mapping table for the affine transformations we
-need.
+\M[227 setset-all.w]{12}Now let's set up the mapping table for the affine
+transformations we need.
 The basic idea is simple. For example, the group of all $5\times 5$ matrices
 that fix $(0,0,0,0)=0$ and $(0,0,0,1)=1$ is the set of all nonsingular~$A$
 of the form
@@ -316,7 +324,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{13}\B\X13:Complete \PB{\\{aa}} to a nonsingular matrix\X${}\E{}$\6
+\M[259 setset-all.w]{13}\B\X13:Complete \PB{\\{aa}} to a nonsingular matrix%
+\X${}\E{}$\6
 \&{for} ${}(\\{jj}\K\T{0};{}$ ${}\\{jj}<\|j;{}$ ${}\\{jj}\PP){}$\5
 ${}\{{}$\1\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{4};{}$ ${}\|k\PP){}$\1\5
@@ -325,8 +334,8 @@ ${}\\{aa}[\\{jj}][(\\{jj}+\\{kk}+\T{1})\MOD(\|j+\T{1})]\K\T{1};{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{14}\B\X14:Use \PB{\\{aa}} to define the mapping \PB{$\\{perm}[\T{4}-\|j][%
-\\{pack}(\|a,\|b,\|c,\|d)]$}\X${}\E{}$\6
+\M[265 setset-all.w]{14}\B\X14:Use \PB{\\{aa}} to define the mapping \PB{$%
+\\{perm}[\T{4}-\|j][\\{pack}(\|a,\|b,\|c,\|d)]$}\X${}\E{}$\6
 $\\{kk}\K\\{pack}(\|a,\39\|b,\39\|c,\39\|d);{}$\6
 \&{for} ${}(\|e\K\T{0};{}$ ${}\|e<\T{3};{}$ ${}\|e\PP){}$\1\6
 \&{for} ${}(\|f\K\T{0};{}$ ${}\|f<\T{3};{}$ ${}\|f\PP){}$\1\6
@@ -341,13 +350,13 @@ ${}\\{perm}[\T{4}-\|j][\\{kk}][\\{pack}(\\{trit}[\T{0}],\39\\{trit}[\T{1}],\39%
 \4${}\}{}$\2\2\2\2\par
 \U12.\fi
 
-\M{15}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[273 setset-all.w]{15}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{trit}[\T{4}];\C{ four ternary digits }\6
 \&{char} \\{aa}[\T{5}][\T{8}];\C{ matrix $A$, stored columnwise }\par
 \fi
 
-\M{16}The algorithm below also needs another table of permutations: For $j<D$
-and
+\M[277 setset-all.w]{16}The algorithm below also needs another table of
+permutations: For $j<D$ and
 $k\ge j$, we let \PB{\\{minp}[\|j][\|k]} be a permutation that takes $k$ into
 the
 smallest possible value, among all permutations that fix all elements
@@ -357,8 +366,8 @@ less than~$j$.
 \&{char} ${}\\{minp}[\\{dd}][\\{nnn}][\\{nnn}+\\{nnn}]{}$;\par
 \fi
 
-\M{17}The \PB{\\{minp}} table is readily built from the \PB{\\{perm}} table,
-working from
+\M[285 setset-all.w]{17}The \PB{\\{minp}} table is readily built from the \PB{%
+\\{perm}} table, working from
 bottom to top. (In the affine linear group under the ordering we have chosen,
 \PB{\\{minp}} actually is the same as \PB{\\{perm}} if we plug the identity in
 place
@@ -406,7 +415,8 @@ ${}\\{minp}[\|j][\|k][\\{minp}[\|j][\|k][\|l]+\\{nnn}]\K\|l;{}$\2\6
 \4${}\}{}$\2\2\par
 \fi
 
-\M{18}The mapping table of a permutation group has many magical properties.
+\M[314 setset-all.w]{18}The mapping table of a permutation group has many
+magical properties.
 For example, consider the digraph with arcs from $(j,x)$ to $(j+1,y)$
 whenever there is a $k$ with \PB{\\{perm}[\|j][\|k]} mapping $x$ to $y$.
 This digraph has a path from $(j,x)$ to $(D,y)$ if and only if
@@ -424,7 +434,8 @@ property in the algorithm below.
 
 \fi
 
-\N{1}{19}Data structures. I'm going to try to describe the algorithm
+\N[330 setset-all.w]{1}{19}Data structures. I'm going to try to describe the
+algorithm
 simultaneously as I explain its main data structures, because the
 two are somewhat intertwined.
 
@@ -447,8 +458,8 @@ is proved below.)
 
 \fi
 
-\M{20}The data structure we use to support such an approach has one node \PB{%
-\|p} for
+\M[351 setset-all.w]{20}The data structure we use to support such an approach
+has one node \PB{\|p} for
 each subtask. If we are currently trying to see whether $\{y_1,\ldots,y_r\}$
 can be mapped into a set smaller than $\{x_d,\ldots,x_l\}$, by automorphisms
 that fix all elements $\le x_{d-1}$, then $p$ will be on level~$d$ of the
@@ -488,8 +499,8 @@ transformed into anything $\le x_d$.
 ${}\}{}$ \&{node};\par
 \fi
 
-\M{21}Part of the algorithm is somewhat subtle and requires proof, so I shall
-try
+\M[382 setset-all.w]{21}Part of the algorithm is somewhat subtle and requires
+proof, so I shall try
 to state the inductive assumptions carefully. But I will state them only in a
 particular case, in order to keep the notation simple. The general case can
 easily be inferred from the special case considered here.
@@ -594,7 +605,8 @@ order if I ever write this up.)
 subtasks }\par
 \fi
 
-\M{22}Nodes come and go in a last-in-first-out fashion, so we can allocate them
+\M[479 setset-all.w]{22}Nodes come and go in a last-in-first-out fashion, so we
+can allocate them
 sequentially.
 
 \Y\B\4\D$\\{max\_node\_count}$ \5
@@ -614,14 +626,15 @@ ${}\|p\MG\\{kid}\K\NULL;{}$\6
 \As24, 25, 30, 34, 36, 37, 38\ETs44.
 \U1.\fi
 
-\M{23}\B\D$\\{root}$ \5
+\M[496 setset-all.w]{23}\B\D$\\{root}$ \5
 ${\AND}\\{nodes}{}$[\T{0}]\par
 \Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{node} \\{nodes}[\\{max\_node\_count}];\6
 \&{node} ${}{*}\\{node\_ptr}\K{\AND}\\{nodes}[\T{1}]{}$;\par
 \fi
 
-\M{24}When we're processing a set $\{x_1,\ldots,x_l\}$, every active node on
+\M[502 setset-all.w]{24}When we're processing a set $\{x_1,\ldots,x_l\}$, every
+active node on
 level~$d$ of the tree has $l-d$ children. Thus when $l$ increases by~1, every
 active node gains a child; this leads to an interesting recursive algorithm.
 
@@ -651,8 +664,8 @@ ${}\\{new\_kid}(\|q,\39\|d+\T{1},\39\|q\MG\\{trans}[\|v]);{}$\2\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{25}At this point we've reached the heart of the algorithm, the \PB{%
-\\{launch}}
+\M[527 setset-all.w]{25}At this point we've reached the heart of the algorithm,
+the \PB{\\{launch}}
 subroutine that initializes each new node created by \PB{\\{new\_kid}} (or by
 \PB{\\{launch}} itself). When \PB{$\\{launch}(\|p,\|d,\|q)$} is called, node~%
 \PB{\|q} is a child of~\PB{\|p}
@@ -676,7 +689,8 @@ ${}\|q\MG\\{trans}\K\NULL{}$;\C{ this branch is dormant }\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{26}We can exclude values that will map between $x_{d-1}$ and $x_{d+1}$,
+\M[544 setset-all.w]{26}We can exclude values that will map between $x_{d-1}$
+and $x_{d+1}$,
 at least when $d<l$. By setting $x_{l+1}=x_l$ below, we make this
 work also when $d=l$.
 
@@ -712,8 +726,8 @@ ${}\\{launch}(\|q,\39\|d+\T{1},\39\|r);{}$\2\6
 \4${}\}{}$\2\par
 \U25.\fi
 
-\M{27}The \PB{\\{forbidden}} table is used in the algorithm below to ensure
-that no
+\M[566 setset-all.w]{27}The \PB{\\{forbidden}} table is used in the algorithm
+below to ensure that no
 \SET/ occurs among the elements $\{x_1,\ldots,x_l\}$. We also use it here
 to forbid card values that will be transformed into~\PB{\|w}
 by a sequence of permutations ending with \PB{$\|q\MG\\{trans}$}. (Since all
@@ -735,7 +749,7 @@ ${}\\{forbidden}[\|v]\K\T{1};{}$\6
 \4${}\}{}$\2\par
 \U26.\fi
 
-\M{28}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[584 setset-all.w]{28}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{SETcard} \|x[\T{22}];\C{ here's where we remember $x_1$, $x_2$, etc. }\6
 \&{char} ${}\\{forbidden}[\\{nn}+\T{1}]{}$;\C{ nonzero for noncanonical choices
 }\6
@@ -743,7 +757,8 @@ ${}\\{forbidden}[\|v]\K\T{1};{}$\6
 \&{int} \|l;\C{ the current level }\par
 \fi
 
-\M{29}Eventually we get to a level so deep that only the identity mapping fixes
+\M[590 setset-all.w]{29}Eventually we get to a level so deep that only the
+identity mapping fixes
 all elements $\le x_d$. Then the algorithm we have described so far,
 although correct, begins to spin its wheels as it laboriously finds at
 most one active child of each node.
@@ -790,7 +805,8 @@ ${}\|q\MG\\{level}\K\|l;{}$\2\6
 \4${}\}{}$\2\par
 \U24.\fi
 
-\M{30}The \PB{\\{kid}} links in terminal nodes are {\it not\/} used for
+\M[624 setset-all.w]{30}The \PB{\\{kid}} links in terminal nodes are {\it not%
+\/} used for
 parenting; they jump across siblings known to be irrelevant in future
 searches. (This is just a heuristic, designed to ameliorate the fact
 that we don't want to complicate the backtracking process by updating
@@ -815,8 +831,8 @@ ${}\|r\MG\\{kid}\K\|p;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{31}\B\X31:Find the index $k$ such that we've matched $\{x_1,\ldots,x_{k-1}%
-\}$ and such that all other values exceed~$x_k$\X${}\E{}$\6
+\M[644 setset-all.w]{31}\B\X31:Find the index $k$ such that we've matched $%
+\{x_1,\ldots,x_{k-1}\}$ and such that all other values exceed~$x_k$\X${}\E{}$\6
 $\|k\K\|r\MG\\{sib}\MG\\{level};{}$\6
 \&{while} (\T{1})\5
 ${}\{{}$\C{ \PB{\|v} is the smallest value greater than $x_{k-1}$ }\1\6
@@ -838,7 +854,8 @@ ${}\|v\K\|p\MG\\{val};{}$\2\2\6
 \4${}\}{}$\2\par
 \U30.\fi
 
-\M{32}We can exclude values that will map between $x_{k-1}$ and $x_{k+1}$,
+\M[660 setset-all.w]{32}We can exclude values that will map between $x_{k-1}$
+and $x_{k+1}$,
 at least when $k<l$. By setting $x_{l+1}=x_l$ below, we make this
 work also when $k=l$.
 
@@ -855,7 +872,8 @@ ${}\\{forbidden}[\|v]\K\T{1};{}$\6
 \4${}\}{}$\2\2\par
 \U31.\fi
 
-\M{33}When all children of a newly launched node \PB{\|q} are terminal,
+\M[671 setset-all.w]{33}When all children of a newly launched node \PB{\|q} are
+terminal,
 we append them in reverse order. This is done only for convenience,
 because the order
 is unimportant in newly launched nodes. (Such nodes will disappear completely
@@ -889,7 +907,8 @@ ${}\\{new\_terminal\_kid}(\|q,\39\|q\MG\\{trans}[\|s\MG\\{val}]);{}$\2\2\6
 \4${}\}{}$\2\par
 \U26.\fi
 
-\M{34}Here's a subroutine that I expect will be useful during the debugging
+\M[694 setset-all.w]{34}Here's a subroutine that I expect will be useful during
+the debugging
 process.
 
 \Y\B\4\X22:Subroutines\X${}\mathrel+\E{}$\6
@@ -918,7 +937,8 @@ ${}\\{print\_subtree}(\|r,\39\|d+\T{1});{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{35}We print the matrix by giving five vectors $y_i$ such that
+\M[714 setset-all.w]{35}We print the matrix by giving five vectors $y_i$ such
+that
 $(x_1,x_2,x_3,x_4)\mapsto y_0+x_1y_1+x_2y_2+x_3y_3+x_4y_4$.
 
 \Y\B\4\X35:Print the current transform matrix\X${}\E{}$\6
@@ -930,7 +950,7 @@ ${}\\{printf}(\.{"\ [\%04d,\%04d,\%04d,\%0}\)\.{4d,\%04d]\\n"},\39\\{decode}[%
 \\{decode}[\\{third}[\|k][\\{third}[\T{0}][\|p\MG\\{trans}[\T{1}]]]]){}$;\par
 \U34.\fi
 
-\M{36}\B\X22:Subroutines\X${}\mathrel+\E{}$\6
+\M[726 setset-all.w]{36}\B\X22:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_trees}(\,)\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{node} ${}{*}\|r;{}$\7
@@ -939,8 +959,8 @@ ${}\\{print\_subtree}(\|r,\39\T{0});{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{37}More help for debugging: \PB{\\{nod}(\.{"123"})} gives the third-youngest
-child of the
+\M[733 setset-all.w]{37}More help for debugging: \PB{\\{nod}(\.{"123"})} gives
+the third-youngest child of the
 second-youngest child of the youngest child of the root.
 
 \Y\B\4\X22:Subroutines\X${}\mathrel+\E{}$\6
@@ -968,7 +988,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{38}And here's a sort of converse routine, \PB{\\{whoami}}.
+\M[756 setset-all.w]{38}And here's a sort of converse routine, \PB{\\{whoami}}.
 
 \Y\B\4\X22:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_id}(\&{node} ${}{*}\|p){}$\1\1\2\2\6
@@ -997,7 +1017,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{39}Backtracking. Now we're ready to construct the tree of all canonical
+\N[779 setset-all.w]{1}{39}Backtracking. Now we're ready to construct the tree
+of all canonical
 \SET/-free sets $\{x_1,\ldots,x_l\}$.
 
 \Y\B\4\X39:Enumerate and print all solutions\X${}\E{}$\6
@@ -1032,17 +1053,17 @@ ${}\|j\K\|x[\|l+\T{1}]+\T{1};{}$\6
 \&{goto} \\{moveup};\2\par
 \U1.\fi
 
-\M{40}\B\X40:Local variables\X${}\E{}$\6
+\M[803 setset-all.w]{40}\B\X40:Local variables\X${}\E{}$\6
 \&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k;\C{ miscellaneous indices }\par
 \U1.\fi
 
-\M{41}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[806 setset-all.w]{41}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{forbidden\_back}[\T{22}][\\{nnn}];\C{ brute-force undoing }\6
 \&{node} ${}{*}\\{node\_ptr\_back}[\T{22}]{}$;\par
 \fi
 
-\M{42}If the recursive procedures invoked by \PB{\\{new\_kid}} lead to a
-non-canonical
+\M[810 setset-all.w]{42}If the recursive procedures invoked by \PB{\\{new%
+\_kid}} lead to a non-canonical
 situation, we leave them and back up by using \CEE/'s \PB{\\{longjmp}}
 library function. (The code above will then cause control to pass
 to the label \PB{\\{rejected}}.)
@@ -1051,13 +1072,14 @@ to the label \PB{\\{rejected}}.)
 $\\{longjmp}(\\{restart\_point},\39\T{1}){}$;\par
 \Us25, 29, 31\ETs33.\fi
 
-\M{43}\B\X43:Forbid all \SET/s that include $\{x_k,x_l\}$ for $1\le k<l$\X${}%
-\E{}$\6
+\M[818 setset-all.w]{43}\B\X43:Forbid all \SET/s that include $\{x_k,x_l\}$ for
+$1\le k<l$\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\|l;{}$ ${}\|k\PP){}$\1\5
 ${}\\{forbidden}[\\{third}[\|x[\|k]][\|x[\|l]]]\K\T{1}{}$;\2\par
 \U39.\fi
 
-\M{44}The data structures have been designed so that all changes invoked by
+\M[821 setset-all.w]{44}The data structures have been designed so that all
+changes invoked by
 \PB{\\{new\_kid}} and \PB{\\{launch}} are easily undone. Indeed, if \PB{$\\{new%
 \_kid}(\\{root},\T{0},\|x[\|l])$}
 terminates normally, it has added precisely one child to each active node
@@ -1083,8 +1105,8 @@ ${}\|p\MG\\{kid}\K\|q\K\|q\MG\\{sib}{}$;\C{ the youngest should be pruned away
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{45}The totals. I want to know not only the nonisomorphic solutions but
-also
+\N[840 setset-all.w]{1}{45}The totals. I want to know not only the
+nonisomorphic solutions but also
 the exact number of \SET/-less $k$ sets that are possible. Then I'll know the
 precise odds of having no \SET/ in a random deal.
 
@@ -1113,7 +1135,8 @@ ${}\\{printf}(\.{"\%04d\ (\%d:\%d)\ \%d\\n"},\39\\{decode}[\|x[\|l]],\39%
 \\{auts},\39\|k,\39\\{node\_ptr}-\\{nodes}){}$;\par
 \U39.\fi
 
-\M{46}Integers of 32 bits are insufficient to hold the numbers we're counting,
+\M[861 setset-all.w]{46}Integers of 32 bits are insufficient to hold the
+numbers we're counting,
 but double precision floating point turns out to be good enough
 for exact values in this problem.
 
@@ -1124,13 +1147,13 @@ for exact values in this problem.
 \39\T{36391680.0},\39\T{1965150720.0}\}{}$;\par
 \fi
 
-\M{47}\B\X47:Print the totals\X${}\E{}$\6
+\M[870 setset-all.w]{47}\B\X47:Print the totals\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\T{21};{}$ ${}\|j\PP){}$\1\5
 ${}\\{printf}(\.{"\%20.20g\ SETless\ \%d-}\)\.{sets\ (\%d\ cases)\\n"},\39%
 \\{total\_count}[\|j],\39\|j,\39\\{non\_iso\_count}[\|j]){}$;\2\par
 \U1.\fi
 
-\N{1}{48}Index.
+\N[875 setset-all.w]{1}{48}Index.
 
 \fi
 

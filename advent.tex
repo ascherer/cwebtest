@@ -1,4 +1,5 @@
 \input cwebmac
+\srcloctrue
 % Copyright 1998 by Donald R Woods and Donald E Knuth
 % Don't change this file without the authors' permission!
 
@@ -30,8 +31,8 @@
 
 \datethis
 
-\N{1}{1}Introduction. The ur-game for computers --- Adventure --- was
-originally
+\N[34 advent.w]{1}{1}Introduction. The ur-game for computers --- Adventure ---
+was originally
 written by Will Crowther in 1975 or 1976 and significantly extended by
 Don Woods in 1977. I have taken Woods's original {\mc FORTRAN} program
 for Adventure Version~1.0 and recast it in the \.{CWEB} idiom.
@@ -85,7 +86,8 @@ read any other programs that simulate multistate systems.)
 \ reserved\ */}\par
 \fi
 
-\M{2}To run the program with, say, a {\mc UNIX} shell, just type `\.{advent}'
+\M[90 advent.w]{2}To run the program with, say, a {\mc UNIX} shell, just type `%
+\.{advent}'
 and follow instructions. (Many {\mc UNIX} systems come with an
 almost identical program called `\.{adventure}' already built in;
 you might want to try it too, for comparison.)
@@ -120,7 +122,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{3}The subroutines of this program are declared first with a prototype,
+\M[120 advent.w]{3}The subroutines of this program are declared first with a
+prototype,
 as in {\mc ANSI C}, then with an old-style \CEE/ function definition.
 The following preprocessor commands make this work correctly with both
 new-style and old-style compilers.
@@ -133,8 +136,8 @@ new-style and old-style compilers.
 \8\#\&{endif}\par
 \U2.\fi
 
-\N{1}{4}The vocabulary. Throughout the remainder of this documentation, ``you''
-are
+\N[133 advent.w]{1}{4}The vocabulary. Throughout the remainder of this
+documentation, ``you'' are
 the user and ``we'' are the game author and the computer. We don't tell you
 what words to use, except indirectly; but we try to understand enough words of
 English so that you can play without undue frustration. The first part of the
@@ -142,8 +145,8 @@ program specifies what we know about your language --- about 300 words.
 
 \fi
 
-\M{5}When you type a word, we first convert uppercase letters to lowercase;
-then
+\M[139 advent.w]{5}When you type a word, we first convert uppercase letters to
+lowercase; then
 we chop off all but the first five characters, if the word was longer than
 that, and we look for your word in a small hash table. Each hash table entry
 contains a string of length 5~or~less, and two additional bytes for the word's
@@ -164,7 +167,8 @@ ${}\}{}$ \&{hash\_entry};\par
 \As9, 11, 13, 18\ETs19.
 \U2.\fi
 
-\M{6}Here is the subroutine that puts words into our vocabulary, when the
+\M[157 advent.w]{6}Here is the subroutine that puts words into our vocabulary,
+when the
 program is getting ready to run.
 
 \Y\B\4\D$\\{hash\_prime}$ \5
@@ -193,7 +197,7 @@ ${}\\{hash\_table}[\|h].\\{meaning}\K\|m;{}$\6
 \As8, 64, 65, 66, 71, 72, 154, 160, 194\ETs197.
 \U2.\fi
 
-\M{7}\B\X7:Global variables\X${}\E{}$\6
+\M[179 advent.w]{7}\B\X7:Global variables\X${}\E{}$\6
 \&{hash\_entry} \\{hash\_table}[\\{hash\_prime}];\C{ the table of words we know
 }\6
 \&{wordtype} \\{current\_type};\C{ the kind of word we are dealing with }\par
@@ -201,7 +205,8 @@ ${}\\{hash\_table}[\|h].\\{meaning}\K\|m;{}$\6
 165, 168, 171, 177, 185, 190, 193, 196\ETs199.
 \U2.\fi
 
-\M{8}While we're at it, let's write the program that will look up a word.
+\M[183 advent.w]{8}While we're at it, let's write the program that will look up
+a word.
 It returns the location of the word in the hash table, or $-1$ if
 you've given a word like `\.{tickle}' or `\.{terse}' that is unknown.
 
@@ -236,8 +241,8 @@ ${}\|h\K\T{0};{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{9}The \PB{\&{motion}} words specify either a direction or a simple action or
-a place.
+\M[207 advent.w]{9}The \PB{\&{motion}} words specify either a direction or a
+simple action or a place.
 Motion words take you from one location to another, when the motion is
 permitted. Here is a list of their possible meanings.
 
@@ -263,7 +268,7 @@ ${}\|N,\39\|S,\39\|E,\39\|W,\39\.{NE},\39\.{SE},\39\.{NW},\39\.{SW},\39\|U,\39%
 ${}\}{}$ \&{motion};\par
 \fi
 
-\M{10}And here is how they enter our vocabulary.
+\M[226 advent.w]{10}And here is how they enter our vocabulary.
 
 If I were writing this program,
 I~would allow the word \.{woods}, but Don apparently didn't want to.
@@ -377,8 +382,8 @@ ${}\\{new\_word}(\.{"nowhe"},\39\.{NOWHERE}){}$;\par
 \As12, 14\ETs16.
 \U200.\fi
 
-\M{11}The \PB{\&{object}} words refer to things like a lamp, a bird, batteries,
-etc.;
+\M[339 advent.w]{11}The \PB{\&{object}} words refer to things like a lamp, a
+bird, batteries, etc.;
 objects have properties that will be described later.
 Here is a list of the basic objects. Objects \PB{\.{GOLD}} and higher
 are the ``treasures.'' Extremely large objects, which appear in more than one
@@ -412,7 +417,7 @@ ${}\.{NOTHING},\39\.{KEYS},\39\.{LAMP},\39\.{GRATE},\39\.{GRATE\_},\39\.{CAGE},%
 ${}\}{}$ \&{object};\par
 \fi
 
-\M{12}Most of the objects correspond to words in our vocabulary.
+\M[364 advent.w]{12}Most of the objects correspond to words in our vocabulary.
 
 \Y\B\4\X10:Build the vocabulary\X${}\mathrel+\E{}$\6
 $\\{current\_type}\K\\{object\_type};{}$\6
@@ -496,8 +501,8 @@ ${}\\{new\_word}(\.{"spice"},\39\.{SPICES});{}$\6
 ${}\\{new\_word}(\.{"chain"},\39\.{CHAIN}){}$;\par
 \fi
 
-\M{13}The \PB{\&{action}} words tell us to do something that's usually
-nontrivial.
+\M[447 advent.w]{13}The \PB{\&{action}} words tell us to do something that's
+usually nontrivial.
 
 \Y\B\4\X5:Type definitions\X${}\mathrel+\E{}$\6
 \&{typedef} \&{enum} ${}\{{}$\1\6
@@ -510,7 +515,7 @@ ${}\.{ABSTAIN},\39\.{TAKE},\39\.{DROP},\39\.{OPEN},\39\.{CLOSE},\39\.{ON},\39%
 ${}\}{}$ \&{action};\par
 \fi
 
-\M{14}Many of the action words have several synonyms.
+\M[456 advent.w]{14}Many of the action words have several synonyms.
 If an action does not meet special conditions, we will issue a default message.
 
 \Y\B\4\D$\\{ok}$ \5
@@ -639,12 +644,13 @@ ${}\\{new\_word}(\.{"quit"},\39\.{QUIT});{}$\6
 ${}\\{default\_msg}[\.{QUIT}]\K\\{default\_msg}[\.{SCORE}]{}$;\par
 \fi
 
-\M{15}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[577 advent.w]{15}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{char} ${}{*}\\{default\_msg}[\T{30}]{}$;\C{ messages for untoward actions,
 if nonzero }\par
 \fi
 
-\M{16}Finally, our vocabulary is rounded out by words like \.{help}, which
+\M[580 advent.w]{16}Finally, our vocabulary is rounded out by words like %
+\.{help}, which
 trigger the printing of fixed messages.
 
 \Y\B\4\D$\\{new\_mess}(\|x)$ \5
@@ -760,12 +766,13 @@ to."});\6
 \\{new\_mess}(\.{"I\ don't\ know\ how."});\par
 \fi
 
-\M{17}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[674 advent.w]{17}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{char} ${}{*}\\{message}[\T{13}]{}$;\C{ messages tied to certain vocabulary
 words }\par
 \fi
 
-\N{1}{18}Cave data. You might be in any of more than 100 places as you wander
+\N[677 advent.w]{1}{18}Cave data. You might be in any of more than 100 places
+as you wander
 about in Colossal Cave. Let's enumerate them now, so that we can
 build the data structures that define the travel restrictions.
 
@@ -846,7 +853,8 @@ ${}\\{inhand}\K{-}\T{1},\39\\{limbo},{}$\6
 ${}\}{}$ \&{location};\par
 \fi
 
-\M{19}Speaking of program logic, the complex cave dynamics are essentially
+\M[740 advent.w]{19}Speaking of program logic, the complex cave dynamics are
+essentially
 kept in a table. The table tells us what to do when you ask for a particular
 motion in a particular location. Each entry of the table is called
 an instruction; and each instruction has three parts: a motion,
@@ -896,7 +904,8 @@ complete details of the table-driven logic can be found in section
 ${}\}{}$ \&{instruction};\par
 \fi
 
-\M{20}Suppose you're at location $l$. Then \PB{\\{start}[\|l]} is the first
+\M[787 advent.w]{20}Suppose you're at location $l$. Then \PB{\\{start}[\|l]} is
+the first
 relevant instruction, and \PB{$\\{start}[\|l+\T{1}]-\T{1}$} is the last. Also
 \PB{\\{long\_desc}[\|l]} is a string that fully describes~$l$; \PB{\\{short%
 \_desc}[\|l]}
@@ -944,7 +953,8 @@ descriptions, or 0 }\6
 }\par
 \fi
 
-\N{1}{21}Cave connections. Now we are ready to build the fundamental table
+\N[818 advent.w]{1}{21}Cave connections. Now we are ready to build the
+fundamental table
 of location and transition data, by filling in the arrays just declared.
 We will fill them in strict order of their \PB{\&{location}} codes.
 
@@ -990,13 +1000,13 @@ little\ pass}\)\.{ages,\ all\ alike."};{}$\6
 \\{loop\_rmk};\C{ messages used more than once }\par
 \fi
 
-\M{22}\B\X22:Additional local registers\X${}\E{}$\6
+\M[842 advent.w]{22}\B\X22:Additional local registers\X${}\E{}$\6
 \&{register} \&{instruction} ${}{*}\|q,{}$ ${}{*}\\{qq}{}$;\par
 \As68\ET144.
 \U2.\fi
 
-\M{23}The \PB{\\{road}} is where you start; its \PB{\\{long\_desc}} is now
-famous,
+\M[845 advent.w]{23}The \PB{\\{road}} is where you start; its \PB{\\{long%
+\_desc}} is now famous,
 having been quoted by Steven Levy in his book {\sl Hackers}.
 
 The instructions here say that if you want to go west, or up, or on the road,
@@ -1034,7 +1044,8 @@ ${}\\{make\_inst}(\.{DEPRESSION},\39\T{0},\39\\{outside}){}$;\par
 \ETs62.
 \U200.\fi
 
-\M{24}There's nothing up the hill, but a good explorer has to try anyway.
+\M[869 advent.w]{24}There's nothing up the hill, but a good explorer has to try
+anyway.
 
 \Y\B\4\X23:Build the travel table\X${}\mathrel+\E{}$\6
 $\\{make\_loc}(\\{hill},{}$\6
@@ -1052,7 +1063,8 @@ ${}\\{make\_inst}(\.{WOODS},\39\T{0},\39\\{forest}){}$;\5
 \\{ditto}(\|S);\par
 \fi
 
-\M{25}The house initially contains several objects: keys, food, a bottle, and
+\M[879 advent.w]{25}The house initially contains several objects: keys, food, a
+bottle, and
 a lantern. We'll put them in there later.
 
 Two magic words are understood in this house, to teleport spelunkers who have
@@ -1075,7 +1087,8 @@ ${}\\{make\_inst}(\.{DOWNSTREAM},\39\T{0},\39\\{sewer}){}$;\5
 \\{ditto}(\.{STREAM});\par
 \fi
 
-\M{26}A foolish consistency is the hobgoblin of little minds. (Emerson)
+\M[897 advent.w]{26}A foolish consistency is the hobgoblin of little minds.
+(Emerson)
 
 \Y\B\4\X23:Build the travel table\X${}\mathrel+\E{}$\6
 $\\{make\_loc}(\\{valley},{}$\6
@@ -1095,8 +1108,8 @@ ${}\\{make\_inst}(\.{DOWNSTREAM},\39\T{0},\39\\{slit}){}$;\5
 ${}\\{make\_inst}(\.{DEPRESSION},\39\T{0},\39\\{outside}){}$;\par
 \fi
 
-\M{27}The instructions here keep you in the \PB{\\{forest}} with probability 50%
-\%,
+\M[910 advent.w]{27}The instructions here keep you in the \PB{\\{forest}} with
+probability 50\%,
 otherwise they take you to the \PB{\\{woods}}. This gives the illusion that
 we maintain more state information about you than we really do.
 
@@ -1128,7 +1141,7 @@ ${}\\{make\_inst}(\.{WOODS},\39\T{0},\39\\{forest}){}$;\5
 \\{ditto}(\|S);\par
 \fi
 
-\M{28}You're getting closer. (But the program has forgotten that
+\M[930 advent.w]{28}You're getting closer. (But the program has forgotten that
 \PB{\.{DEPRESSION}} leads \PB{\\{outside}}; it knew this when you were at
 the \PB{\\{road}} or the \PB{\\{valley}}.)
 
@@ -1155,8 +1168,8 @@ ${}\\{make\_inst}(\.{SLIT},\39\T{0},\39\\{sayit}){}$;\5
 ${}\\{slit\_rmk}\K\\{sayit}{}$;\par
 \fi
 
-\M{29}We'll see later that the \PB{\.{GRATE}} will change from state 0 to state
-1 if you
+\M[947 advent.w]{29}We'll see later that the \PB{\.{GRATE}} will change from
+state 0 to state 1 if you
 unlock it. So let's hope you have the \PB{\.{KEYS}}.
 
 \Y\B\4\X23:Build the travel table\X${}\mathrel+\E{}$\6
@@ -1184,7 +1197,8 @@ ${}\\{grate\_rmk}\K\\{sayit};{}$\6
 ${}\\{make\_inst}(\.{ENTER},\39\T{0},\39\\{sayit}){}$;\par
 \fi
 
-\M{30}If you've come this far, you're probably hooked, although your adventure
+\M[964 advent.w]{30}If you've come this far, you're probably hooked, although
+your adventure
 has barely begun.
 
 \Y\B\4\X23:Build the travel table\X${}\mathrel+\E{}$\6
@@ -1205,7 +1219,7 @@ ${}\\{make\_inst}(\.{PIT},\39\T{0},\39\\{spit});{}$\6
 ${}\\{make\_inst}(\.{DEBRIS},\39\T{0},\39\\{debris}){}$;\par
 \fi
 
-\M{31}Go West, young man. (If you've got a lamp.)
+\M[978 advent.w]{31}Go West, young man. (If you've got a lamp.)
 
 \Y\B\4\X23:Build the travel table\X${}\mathrel+\E{}$\6
 $\\{make\_loc}(\\{cobbles},{}$\6
@@ -1291,7 +1305,8 @@ ${}\\{make\_inst}(\.{CRACK},\39\T{0},\39\\{crack}){}$;\5
 \\{ditto}(\|W);\par
 \fi
 
-\M{32}Welcome to the main caverns and a deeper level of adventures.
+\M[1033 advent.w]{32}Welcome to the main caverns and a deeper level of
+adventures.
 
 \Y\B\4\X23:Build the travel table\X${}\mathrel+\E{}$\6
 $\\{make\_loc}(\\{emist},{}$\6
@@ -1321,8 +1336,8 @@ ${}\\{make\_inst}(\|U,\39\T{0},\39\\{spit});{}$\6
 ${}\\{make\_inst}(\.{Y2},\39\T{0},\39\\{jumble}){}$;\par
 \fi
 
-\M{33}To the left or south of the misty threshold, you might spot the first
-treasure.
+\M[1051 advent.w]{33}To the left or south of the misty threshold, you might
+spot the first treasure.
 
 \Y\B\4\X23:Build the travel table\X${}\mathrel+\E{}$\6
 $\\{make\_loc}(\\{nugget},{}$\6
@@ -1335,8 +1350,8 @@ ${}\\{make\_inst}(\.{HALL},\39\T{0},\39\\{emist}){}$;\5
 \\{ditto}(\|N);\par
 \fi
 
-\M{34}Unless you take a circuitous route to the other side of the Hall of
-Mists,
+\M[1060 advent.w]{34}Unless you take a circuitous route to the other side of
+the Hall of Mists,
 via the Hall of the Mountain King, you should make the \PB{\.{CRYSTAL}} bridge
 appear (by getting it into state~1).
 
@@ -1376,7 +1391,8 @@ ${}\\{make\_inst}(\|N,\39\T{0},\39\\{thru});{}$\6
 ${}\\{make\_inst}(\|W,\39\T{0},\39\\{wmist}){}$;\par
 \fi
 
-\M{35}What you see here isn't exactly what you get; \.N takes you east and
+\M[1087 advent.w]{35}What you see here isn't exactly what you get; \.N takes
+you east and
 \.S sucks you in to an amazing maze.
 
 \Y\B\4\X23:Build the travel table\X${}\mathrel+\E{}$\6
@@ -1396,7 +1412,8 @@ ${}\\{make\_inst}(\|W,\39\T{0},\39\\{elong}){}$;\5
 \\{ditto}(\.{CRAWL});\par
 \fi
 
-\M{36}The twisty little passages of this maze are said to be all alike,
+\M[1101 advent.w]{36}The twisty little passages of this maze are said to be all
+alike,
 but they respond differently to different motions. For example,
 you can go north, east, south, or west from \PB{\\{like1}}, but you can't go
 north
@@ -1475,7 +1492,7 @@ ${}\\{make\_inst}(\|U,\39\T{0},\39\\{like4}){}$;\5
 \\{ditto}(\|D);\par
 \fi
 
-\M{37}\B\X23:Build the travel table\X${}\mathrel+\E{}$\6
+\M[1187 advent.w]{37}\B\X23:Build the travel table\X${}\mathrel+\E{}$\6
 $\\{make\_loc}(\\{brink},{}$\6
 \.{"You\ are\ on\ the\ brin}\)\.{k\ of\ a\ thirty-foot\ p}\)\.{it\ with\ a\
 massive\ or}\)\.{ange\ column\\ndown\ on}\)\.{e\ wall.\ \ You\ could\ c}\)%
@@ -1490,7 +1507,8 @@ ${}\\{make\_inst}(\|N,\39\T{0},\39\\{like12});{}$\6
 ${}\\{make\_inst}(\|E,\39\T{0},\39\\{like13}){}$;\par
 \fi
 
-\M{38}Crawling west from \PB{\\{wmist}} instead of south, you encounter this.
+\M[1199 advent.w]{38}Crawling west from \PB{\\{wmist}} instead of south, you
+encounter this.
 
 \Y\B\4\X23:Build the travel table\X${}\mathrel+\E{}$\6
 $\\{make\_loc}(\\{elong},{}$\6
@@ -1516,7 +1534,8 @@ ${}\\{make\_inst}(\|N,\39\T{0},\39\\{cross});{}$\6
 ${}\\{make\_inst}(\|S,\39\T{100},\39\\{diff0}){}$;\par
 \fi
 
-\M{39}Recall that the `100' on the last instruction above means, ``Dwarves
+\M[1219 advent.w]{39}Recall that the `100' on the last instruction above means,
+``Dwarves
 not permitted.'' It keeps them out of the following maze, which is
 based on an $11\times11$ latin square. (Each of the eleven locations
 leads to each of the others under the ten motions \PB{\|N}, \PB{\|S}, \PB{\|E},
@@ -1600,7 +1619,8 @@ ${}\\{make\_inst}(\|N,\39\T{0},\39\\{diff10}){}$;\5
 \\{ditto}(\.{OUT});\par
 \fi
 
-\M{40}Going north from the long hall, we come to the vicinity of another large
+\M[1282 advent.w]{40}Going north from the long hall, we come to the vicinity of
+another large
 room, with royal treasures nearby. (You probably first reached this part of the
 cavern from the east, via the Hall of Mists.) Unfortunately, a vicious snake
 is here too; the conditional instructions for getting past the snake are
@@ -1648,8 +1668,8 @@ ${}\\{make\_inst}(\.{HALL},\39\T{0},\39\\{hmk}){}$;\5
 \\{ditto}(\|N);\par
 \fi
 
-\M{41}North of the mountain king's domain is a curious shuttle station
-called~Y2,
+\M[1320 advent.w]{41}North of the mountain king's domain is a curious shuttle
+station called~Y2,
 with magic connections to two other places.
 
 (Crowther led a team in 1974 that explored region ``Y'' of Colossal Cave;
@@ -1704,7 +1724,8 @@ ${}\\{make\_inst}(\|E,\39\T{0},\39\\{y2}){}$;\5
 ${}\\{make\_inst}(\.{JUMP},\39\T{0},\39\\{neck}){}$;\par
 \fi
 
-\M{42}Next let's consider the east/west passage below \PB{\\{ns}}.
+\M[1365 advent.w]{42}Next let's consider the east/west passage below \PB{%
+\\{ns}}.
 
 \Y\B\4\X23:Build the travel table\X${}\mathrel+\E{}$\6
 $\\{make\_loc}(\\{dirty},{}$\6
@@ -1768,7 +1789,8 @@ ${}\\{make\_inst}(\|N,\39\T{0},\39\\{shell}){}$;\5
 ${}\\{make\_inst}(\|E,\39\T{0},\39\\{ante}){}$;\par
 \fi
 
-\M{43}A more-or-less self-contained cavelet can be found north of the complex
+\M[1409 advent.w]{43}A more-or-less self-contained cavelet can be found north
+of the complex
 passage. Its connections are more vertical than horizontal.
 
 \Y\B\4\X23:Build the travel table\X${}\mathrel+\E{}$\6
@@ -1812,7 +1834,7 @@ ${}\\{make\_inst}(\|U,\39\T{0},\39\\{ragged}){}$;\5
 ${}\\{make\_inst}(\.{SHELL},\39\T{0},\39\\{shell}){}$;\par
 \fi
 
-\M{44}A dangerous section lies east of the complex junction.
+\M[1443 advent.w]{44}A dangerous section lies east of the complex junction.
 
 \Y\B\4\X23:Build the travel table\X${}\mathrel+\E{}$\6
 $\\{make\_loc}(\\{ante},{}$\6
@@ -1849,7 +1871,8 @@ and\ found\ your}\)\.{\ way\\nblocked\ by\ a\ r}\)\.{ecent\ cave-in.\ \ You\ }%
 ${}\\{make\_inst}(\|W,\39\T{0},\39\\{sayit}){}$;\par
 \fi
 
-\M{45}Will Crowther, who actively explored and mapped many caves in Kentucky
+\M[1469 advent.w]{45}Will Crowther, who actively explored and mapped many caves
+in Kentucky
 before inventing Adventure, named Bedquilt after the Bedquilt Entrance
 to Colossal Cave. (The real Colossal Cave was discovered near Mammoth Cave
 in 1895, and its Bedquilt Entrance was found in 1896; see {\sl The Longest
@@ -1897,7 +1920,7 @@ ${}\\{make\_inst}(\|W,\39\T{0},\39\\{cheese}){}$;\5
 \\{ditto}(\.{OUT});\par
 \fi
 
-\M{46}West of the quilt and the cheese is a room with two pits.
+\M[1518 advent.w]{46}West of the quilt and the cheese is a room with two pits.
 
 Why would you want
 to descend into the pits? Keep playing and you'll find out.
@@ -1948,7 +1971,8 @@ ${}\\{make\_inst}(\.{CLIMB},\39\\{not}(\.{PLANT},\39\T{4}),\39\\{check});{}$\6
 ${}\\{make\_inst}(\.{CLIMB},\39\T{0},\39\\{climb}){}$;\par
 \fi
 
-\M{47}Oho, you climbed the plant in the west pit! Now you're in another
+\M[1559 advent.w]{47}Oho, you climbed the plant in the west pit! Now you're in
+another
 scenic area with rare treasures---if you can get through the door.
 
 \Y\B\4\X23:Build the travel table\X${}\mathrel+\E{}$\6
@@ -2016,7 +2040,8 @@ ${}\\{make\_inst}(\|D,\39\T{0},\39\\{low}){}$;\5
 \\{ditto}(\.{CLIMB});\par
 \fi
 
-\M{48}Meanwhile let's backtrack to another part of the cave possibly reachable
+\M[1609 advent.w]{48}Meanwhile let's backtrack to another part of the cave
+possibly reachable
 from Bedquilt.
 
 \Y\B\4\X23:Build the travel table\X${}\mathrel+\E{}$\6
@@ -2065,7 +2090,7 @@ ${}\\{make\_inst}(\|S,\39\T{0},\39\\{low}){}$;\5
 \\{ditto}(\.{OUT});\par
 \fi
 
-\M{49}The described view from the west window, \PB{\\{window}},
+\M[1649 advent.w]{49}The described view from the west window, \PB{\\{window}},
 is identical to the view from the east window, \PB{\\{windoe}}, except for one
 word.
 What on earth do you see from those windows? (Don Woods has confided
@@ -2089,7 +2114,7 @@ ${}\\{make\_inst}(\|W,\39\T{0},\39\\{sjunc});{}$\6
 ${}\\{make\_inst}(\.{JUMP},\39\T{0},\39\\{neck}){}$;\par
 \fi
 
-\M{50}More treasures await you via the \PB{\\{low}} corridor.
+\M[1669 advent.w]{50}More treasures await you via the \PB{\\{low}} corridor.
 
 \Y\B\4\X23:Build the travel table\X${}\mathrel+\E{}$\6
 $\\{make\_loc}(\\{oriental},{}$\6
@@ -2116,7 +2141,8 @@ ${}\\{make\_inst}(\|S,\39\T{0},\39\\{oriental}){}$;\5
 ${}\\{make\_inst}(\|W,\39\T{0},\39\\{alcove}){}$;\par
 \fi
 
-\M{51}One of the darkest secrets is hidden here. You will discover that
+\M[1690 advent.w]{51}One of the darkest secrets is hidden here. You will
+discover that
 you must take the emerald from the Plover Room to the alcove. But you
 don't learn the name of the Plover Room until the second time you've
 been there, since your first visit will be lampless until you know the secret.
@@ -2158,7 +2184,8 @@ ${}\\{make\_inst}(\|S,\39\T{0},\39\\{proom}){}$;\5
 \\{ditto}(\.{OUT});\par
 \fi
 
-\M{52}We forgot to mention the circuitous passage leading west from the
+\M[1720 advent.w]{52}We forgot to mention the circuitous passage leading west
+from the
 Twopit Room. It winds around and takes you to a somewhat more mundane
 area, yet not without interest.
 
@@ -2213,7 +2240,8 @@ ${}\\{make\_inst}(\|S,\39\T{0},\39\\{mirror}){}$;\5
 \\{ditto}(\.{OUT});\par
 \fi
 
-\M{53}Four more secret canyons lead back to the Hall of the Mountain King.
+\M[1765 advent.w]{53}Four more secret canyons lead back to the Hall of the
+Mountain King.
 Three of them are actually the same, but the dragon blocks the
 connection between the northern passage (to \PB{\\{abover}}) and the
 eastern passage (to \PB{\\{secret}}). Once you've vanquished the dragon,
@@ -2250,7 +2278,8 @@ ${}\\{make\_inst}(\|W,\39\T{0},\39\\{scan3});{}$\6
 ${}\\{make\_inst}(\|D,\39\T{0},\39\\{wide}){}$;\par
 \fi
 
-\M{54}Below \PB{\\{secret}} there's another way to reach the cheese.
+\M[1796 advent.w]{54}Below \PB{\\{secret}} there's another way to reach the
+cheese.
 
 \Y\B\4\X23:Build the travel table\X${}\mathrel+\E{}$\6
 $\\{make\_loc}(\\{wide},{}$\6
@@ -2276,8 +2305,8 @@ end."}${},\39\T{0},\39\T{0});{}$\6
 ${}\\{make\_inst}(\|S,\39\T{0},\39\\{tall}){}$;\par
 \fi
 
-\M{55}If you aren't having fun yet, wait till you meet the troll. The only way
-to
+\M[1820 advent.w]{55}If you aren't having fun yet, wait till you meet the
+troll. The only way to
 get here is to crawl southwest from the \PB{\\{low}} room. And then you have
 a new problem to solve; we'll see later that the \PB{\.{TROLL}} and the \PB{%
 \.{BRIDGE}}
@@ -2314,7 +2343,8 @@ ${}\\{make\_inst}(\.{JUMP},\39\\{not}(\.{BRIDGE},\39\T{0}),\39\\{lose});{}$\6
 ${}\\{make\_inst}(\.{JUMP},\39\T{0},\39\\{bridge\_rmk}){}$;\par
 \fi
 
-\M{56}The only things not yet explored on this side of the troll bridge are
+\M[1853 advent.w]{56}The only things not yet explored on this side of the troll
+bridge are
 a dozen dead ends. They appear at this place in the ordering of
 all locations because of the pirate logic explained later: The pirate
 will never go to locations \PB{$\G$ \\{dead3}}.
@@ -2359,7 +2389,8 @@ ${}\\{make\_inst}(\|U,\39\T{0},\39\\{like8}){}$;\5
 \\{ditto}(\.{OUT});\par
 \fi
 
-\M{57}A whole nuther cave with nine sites and additional treasures
+\M[1897 advent.w]{57}A whole nuther cave with nine sites and additional
+treasures
 is on tuther side of the troll bridge! This cave was inspired in part
 by J.~R.~R. Tolkien's stories.
 
@@ -2499,7 +2530,7 @@ ${}\\{make\_inst}(\.{FORK},\39\T{0},\39\\{fork});{}$\6
 ${}\\{make\_inst}(\.{VIEW},\39\T{0},\39\\{view}){}$;\par
 \fi
 
-\M{58}The two storage locations are accessible only from
+\M[2006 advent.w]{58}The two storage locations are accessible only from
 each other, and they lead only to each other.
 
 \Y\B\4\X23:Build the travel table\X${}\mathrel+\E{}$\6
@@ -2537,8 +2568,8 @@ ${}\\{make\_inst}(\.{NE},\39\T{0},\39\\{neend});{}$\6
 ${}\\{make\_inst}(\|D,\39\T{0},\39\\{grate\_rmk}){}$;\par
 \fi
 
-\M{59}When the current location is \PB{\\{crack}} or higher, it's a
-pseudo-location.
+\M[2038 advent.w]{59}When the current location is \PB{\\{crack}} or higher,
+it's a pseudo-location.
 In such cases we don't ask you for input; we assume that you have told
 us to force another instruction through. For example,
 if you try to go through the crack by the small pit
@@ -2557,7 +2588,7 @@ $\\{make\_loc}(\\{crack},{}$\6
 ${}\\{make\_inst}(\.{FORCE},\39\T{0},\39\\{spit}){}$;\par
 \fi
 
-\M{60}Here are some forced actions that are less pleasant.
+\M[2053 advent.w]{60}Here are some forced actions that are less pleasant.
 \Y\B\4\X23:Build the travel table\X${}\mathrel+\E{}$\6
 $\\{make\_loc}(\\{neck},{}$\6
 \.{"You\ are\ at\ the\ bott}\)\.{om\ of\ the\ pit\ with\ a}\)\.{\ broken\
@@ -2568,8 +2599,8 @@ ${}\\{make\_loc}(\\{lose},\39\.{"You\ didn't\ make\ it.}\)\.{"},\39\T{0},\39%
 ${}\\{make\_inst}(\.{FORCE},\39\T{0},\39\\{limbo}){}$;\par
 \fi
 
-\M{61}The rest are more-or-less routine, except for \PB{\\{check}}---which
-executes
+\M[2062 advent.w]{61}The rest are more-or-less routine, except for \PB{%
+\\{check}}---which executes
 a {\it conditional\/} forced command.
 
 \Y\B\4\X23:Build the travel table\X${}\mathrel+\E{}$\6
@@ -2608,7 +2639,8 @@ pit."}${},\39\T{0},\39\T{0});{}$\6
 ${}\\{make\_inst}(\.{FORCE},\39\T{0},\39\\{w2pit}){}$;\par
 \fi
 
-\M{62}The table of instructions ends here; the remaining ``locations''
+\M[2103 advent.w]{62}The table of instructions ends here; the remaining
+``locations''
 \PB{\\{ppass}}, \PB{\\{pdrop}}, and \PB{\\{troll}} are special.
 
 \Y\B\4\X23:Build the travel table\X${}\mathrel+\E{}$\6
@@ -2621,7 +2653,8 @@ ${}\\{exit}({-}\T{1});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{63}Data structures for objects. A fixed universe of objects was
+\N[2112 advent.w]{1}{63}Data structures for objects. A fixed universe of
+objects was
 enumerated in the vocabulary section. Most of the objects can move
 or be moved from place to place; so we maintain linked lists of the
 objects at each location. The first object at location~\PB{\|l} is \PB{%
@@ -2693,7 +2726,8 @@ start }\6
 \&{int} \\{note\_ptr}${}\K\T{0}{}$;\C{ how many notes have we stored? }\par
 \fi
 
-\M{64}Here then is a simple subroutine to place an object at a given
+\M[2168 advent.w]{64}Here then is a simple subroutine to place an object at a
+given
 location, when the object isn't presently in a list.
 
 \Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
@@ -2715,7 +2749,7 @@ ${}\\{first}[\|l]\K\|t;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{65}Similarly, we need a subroutine to pick up an object.
+\M[2186 advent.w]{65}Similarly, we need a subroutine to pick up an object.
 
 \Y\B\4\D$\\{move}(\|t,\|l)$ \5
 ${}\{{}$\5
@@ -2749,8 +2783,8 @@ ${}\\{link}[\|r]\K\\{link}[\|s]{}$;\C{ remove \PB{\|t} from list }\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{66}The \PB{\\{is\_at\_loc}} subroutine tests if a possibly multipart object
-is
+\M[2208 advent.w]{66}The \PB{\\{is\_at\_loc}} subroutine tests if a possibly
+multipart object is
 at a particular place, represented by the global variable \PB{\\{loc}}.
 It uses the fact that multipart objects
 have consecutive values, and \PB{$\\{base}[\\{max\_obj}+\T{1}]\E\.{NOTHING}$}.
@@ -2770,7 +2804,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{67}A few macros make it easy to get each object started.
+\M[2223 advent.w]{67}A few macros make it easy to get each object started.
 
 \Y\B\4\D$\\{new\_obj}(\|t,\|n,\|b,\|l)$ \6
 ${}\{{}$\C{ object \PB{\|t} named \PB{\|n} with base \PB{\|b} starts at \PB{%
@@ -2785,11 +2819,12 @@ ${}\\{drop}(\|t,\39\|l);{}$\6
 $\\{note}[\\{note\_ptr}\PP]\K{}$\|n\par
 \fi
 
-\M{68}\B\X22:Additional local registers\X${}\mathrel+\E{}$\6
+\M[2235 advent.w]{68}\B\X22:Additional local registers\X${}\mathrel+\E{}$\6
 \&{register} \&{object} \|t;\par
 \fi
 
-\N{1}{69}Object data. Now it's time to build the object structures just
+\N[2238 advent.w]{1}{69}Object data. Now it's time to build the object
+structures just
 defined.
 
 We put the objects into their initial locations backwards,
@@ -2864,7 +2899,8 @@ up with \PB{\.{MIRROR}} later }\par
 \A70.
 \U200.\fi
 
-\M{70}And here are the one-place objects, some of which are immovable
+\M[2298 advent.w]{70}And here are the one-place objects, some of which are
+immovable
 (because they are in a group of size one).
 
 \Y\B\4\X69:Build the object tables\X${}\mathrel+\E{}$\6
@@ -3036,7 +3072,8 @@ ${}\\{new\_obj}(\.{KEYS},\39\.{"Set\ of\ keys"},\39\T{0},\39\\{house});{}$\6
 \.{"});\par
 \fi
 
-\N{1}{71}Low-level input. Sometimes we need to ask you a question, for which
+\N[2418 advent.w]{1}{71}Low-level input. Sometimes we need to ask you a
+question, for which
 the answer is either yes or no. The subroutine \PB{$\\{yes}(\|q,\|y,\|n)$}
 prints~\PB{\|q},
 waits for you to answer, and then prints \PB{\|y} or \PB{\|n} depending on your
@@ -3071,7 +3108,8 @@ ${}\\{printf}(\.{"\%s\\n"},\39\|n){}$;\5
 \4${}\}{}$\2\par
 \fi
 
-\M{72}The only other kind of input is almost as simple. You are supposed to
+\M[2439 advent.w]{72}The only other kind of input is almost as simple. You are
+supposed to
 tell us what to do next in your adventure, by typing one- or two-word commands.
 We put the first word in \PB{\\{word1}} and the (possibly null)
 second word in \PB{\\{word2}}. Words are separated by white space; otherwise
@@ -3125,7 +3163,8 @@ ${}{*}\|q\K\.{'\\0'}{}$;\C{ end of \PB{\\{word2}} }\6
 \4${}\}{}$\2\par
 \fi
 
-\M{73}A 20-character buffer would probably be big enough, but what the heck.
+\M[2474 advent.w]{73}A 20-character buffer would probably be big enough, but
+what the heck.
 
 \Y\B\4\D$\\{buf\_size}$ \5
 \T{72}\par
@@ -3135,7 +3174,8 @@ ${}{*}\|q\K\.{'\\0'}{}$;\C{ end of \PB{\\{word2}} }\6
 we snarf it to here }\par
 \fi
 
-\N{1}{74}The main control loop. Now we've got enough low-level mechanisms in
+\N[2482 advent.w]{1}{74}The main control loop. Now we've got enough low-level
+mechanisms in
 place to start thinking of the program from the top down, and to
 specify the high-level control.
 
@@ -3160,7 +3200,8 @@ $((\\{flags}[\\{loc}]\AND\\{liquid})\E\T{0}{}$)\par
 \C{ recent and future locations }\par
 \fi
 
-\M{75}Here is our overall strategy for administering the game. It is understood
+\M[2500 advent.w]{75}Here is our overall strategy for administering the game.
+It is understood
 that the program might \PB{\&{goto} \\{quit}} from within any of the
 subsections
 named here, even though the section names don't mention this explicitly.
@@ -3197,7 +3238,8 @@ ${}\\{oldloc}\K\\{loc};{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{76}Our main task in the simulation loop is to parse your input.
+\M[2529 advent.w]{76}Our main task in the simulation loop is to parse your
+input.
 Depending on the kind of command you give, the following section
 of the program will exit in one of four ways:
 
@@ -3251,7 +3293,7 @@ ${}{*}\\{word2}\K\.{'\\0'}{}$;\5
 \&{goto} \\{parse};\par
 \U75.\fi
 
-\M{77}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[2570 advent.w]{77}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{motion} \\{mot};\C{ currently specified motion, if any }\6
 \&{action} \\{verb};\C{ currently specified action, if any }\6
 \&{action} \\{oldverb};\C{ \PB{\\{verb}} before it was changed }\6
@@ -3261,7 +3303,8 @@ ${}{*}\\{word2}\K\.{'\\0'}{}$;\5
 \&{int} \\{turns};\C{ how many times we've read your commands }\par
 \fi
 
-\M{78}The \PB{\\{try\_motion}} macro is often used to end a major cycle.
+\M[2579 advent.w]{78}The \PB{\\{try\_motion}} macro is often used to end a
+major cycle.
 
 \Y\B\4\D$\\{try\_motion}(\|m)$ \5
 ${}\{{}$\5
@@ -3310,7 +3353,8 @@ ${}\\{obj}\K{*}\\{word2};{}$\2\6
 \4${}\}{}$\2\par
 \U76.\fi
 
-\M{79}Here is the multiway branch where many kinds of actions can be launched.
+\M[2604 advent.w]{79}Here is the multiway branch where many kinds of actions
+can be launched.
 
 If a verb can only be transitive, but no object has been given,
 we must go back and ask for an object.
@@ -3383,7 +3427,7 @@ ${}\\{printf}(\.{"I\ see\ no\ \%s\ here.\\n}\)\.{"},\39\\{word1}){}$;\5
 \&{continue};\par
 \U75.\fi
 
-\M{80}Here's a freely offered hint that may save you typing.
+\M[2644 advent.w]{80}Here's a freely offered hint that may save you typing.
 
 \Y\B\4\X80:Give advice about going \PB{\.{WEST}}\X${}\E{}$\6
 \&{if} ${}(\\{streq}(\\{word1},\39\.{"west"})){}$\5
@@ -3394,12 +3438,13 @@ WEST.\\n"});\2\6
 \4${}\}{}$\2\par
 \U76.\fi
 
-\M{81}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[2652 advent.w]{81}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{west\_count};\C{ how many times have we parsed the word `\.{west}'?
 }\par
 \fi
 
-\M{82}Maybe you said `\.{say}' and we said `\.{Say} \.{what?}' and you replied
+\M[2655 advent.w]{82}Maybe you said `\.{say}' and we said `\.{Say} \.{what?}'
+and you replied
 with two things to say. Then we assume you don't really want us to
 say anything.
 
@@ -3414,7 +3459,8 @@ ${}\\{verb}\K\.{ABSTAIN}{}$;\5
 \A138.
 \U76.\fi
 
-\M{83}The verb `\.{enter}' is listed in our vocabulary as a motion rather than
+\M[2664 advent.w]{83}The verb `\.{enter}' is listed in our vocabulary as a
+motion rather than
 an action. Here we deal with cases where you try to use it as an action.
 Notice that `\.{H2O}' is not a synonym for `\.{water}' in this context.
 
@@ -3434,7 +3480,8 @@ ${}\{{}$\1\6
 \A105.
 \U76.\fi
 
-\M{84}Cavers can become cadavers if they don't have light. We keep a variable
+\M[2676 advent.w]{84}Cavers can become cadavers if they don't have light. We
+keep a variable
 \PB{\\{was\_dark}} to remember how dark things were when you gave your last
 command.
 
@@ -3445,12 +3492,13 @@ $((\\{flags}[\\{loc}]\AND\\{lighted})\E\T{0}\W(\\{prop}[\.{LAMP}]\E\T{0}\V\R%
 \&{boolean} \\{was\_dark};\C{ you've recently been in the dark }\par
 \fi
 
-\M{85}\B\X85:Make special adjustments before looking at new input\X${}\E{}$\6
+\M[2684 advent.w]{85}\B\X85:Make special adjustments before looking at new
+input\X${}\E{}$\6
 $\\{was\_dark}\K\\{dark}{}$;\par
 \As158, 169\ETs182.
 \U76.\fi
 
-\M{86}After moving to \PB{\\{newloc}}, we act as your eyes.
+\M[2687 advent.w]{86}After moving to \PB{\\{newloc}}, we act as your eyes.
 We print the long description of \PB{\\{newloc}} if you haven't been there
 before;
 but when you return to a previously seen place, we often use a short form.
@@ -3483,7 +3531,7 @@ ${}\\{printf}(\.{"\\n\%s\\n"},\39\|p);{}$\6
 \X88:Describe the objects at this location\X;\2\par
 \U75.\fi
 
-\M{87}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[2708 advent.w]{87}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{interval}${}\K\T{5}{}$;\C{ will change to 10000 if you want us to be
 \PB{\.{BRIEF}} }\6
 \&{char} \\{pitch\_dark\_msg}[\,]${}\K\.{"It\ is\ now\ pitch\ dar}\)\.{k.\ \ If%
@@ -3491,8 +3539,8 @@ ${}\\{printf}(\.{"\\n\%s\\n"},\39\|p);{}$\6
 \par
 \fi
 
-\M{88}If \PB{\.{TREADS}} are present but you have a heavy load, we don't
-describe them.
+\M[2713 advent.w]{88}If \PB{\.{TREADS}} are present but you have a heavy load,
+we don't describe them.
 The treads never actually get property value~1; we use the \PB{\\{note}} for
 property~1 only when they are seen from above.
 
@@ -3526,13 +3574,13 @@ ${}\\{printf}(\.{"\%s\\n"},\39\|p);{}$\2\6
 \4${}\}{}$\2\par
 \U86.\fi
 
-\M{89}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[2737 advent.w]{89}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{tally}${}\K\T{15}{}$;\C{ treasures awaiting you }\6
 \&{int} \\{lost\_treasures};\C{ treasures that you won't find }\par
 \fi
 
-\M{90}When you specify an object, it must be at the current location, unless
-the
+\M[2741 advent.w]{90}When you specify an object, it must be at the current
+location, unless the
 verb is already known to be \PB{\.{FIND}} or \PB{\.{INVENTORY}}. A few other
 special cases
 also are permitted; for example, water and oil are funny, since they are never
@@ -3586,8 +3634,8 @@ ${}\\{obj}\K\.{ROD2}{}$;\5
 \4${}\}{}$\2\2\par
 \U78.\fi
 
-\M{91}Henning Makholm has pointed out that the logic here makes \PB{\.{GRATE}}
-a motion
+\M[2768 advent.w]{91}Henning Makholm has pointed out that the logic here makes %
+\PB{\.{GRATE}} a motion
 word regardless of the verb.
 For example, you can get to the grate by
 saying `\.{wave}~\.{grate}' from the \PB{\\{road}} or the \PB{\\{valley}} (but
@@ -3613,7 +3661,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\2\par
 \U90.\fi
 
-\N{1}{92}Simple verbs. Let's get experience implementing the actions by
+\N[2783 advent.w]{1}{92}Simple verbs. Let's get experience implementing the
+actions by
 dispensing with the easy cases first.
 
 First there are several ``intransitive'' verbs that reduce to transitive
@@ -3635,8 +3684,8 @@ ${}\\{obj}\K\.{FOOD}{}$;\5
 \As93, 94, 95\ETs136.
 \U79.\fi
 
-\M{93}Only the objects \PB{\.{GRATE}}, \PB{\.{DOOR}}, \PB{$\.{CLAM}/%
-\.{OYSTER}$}, and \PB{\.{CHAIN}} can
+\M[2797 advent.w]{93}Only the objects \PB{\.{GRATE}}, \PB{\.{DOOR}}, \PB{$%
+\.{CLAM}/\.{OYSTER}$}, and \PB{\.{CHAIN}} can
 be opened or closed. And only a few objects can be read.
 
 \Y\B\4\X92:Handle cases of intransitive verbs and \PB{\&{continue}}\X${}%
@@ -3689,7 +3738,7 @@ ${}\\{obj}\K\.{OYSTER};{}$\2\6
 \&{goto} \\{get\_object};\2\par
 \fi
 
-\M{94}A request for an inventory is pretty simple too.
+\M[2822 advent.w]{94}A request for an inventory is pretty simple too.
 
 \Y\B\4\X92:Handle cases of intransitive verbs and \PB{\&{continue}}\X${}%
 \mathrel+\E{}$\6
@@ -3711,7 +3760,7 @@ ${}\\{printf}(\.{"\ \%s\\n"},\39\\{name}[\|t]);{}$\6
 \&{continue};\par
 \fi
 
-\M{95}Here are other requests about the mechanics of the game.
+\M[2834 advent.w]{95}Here are other requests about the mechanics of the game.
 
 \Y\B\4\X92:Handle cases of intransitive verbs and \PB{\&{continue}}\X${}%
 \mathrel+\E{}$\6
@@ -3738,11 +3787,12 @@ ${}\\{gave\_up}\K\\{true}{}$;\5
 \&{goto} \\{quit};\par
 \fi
 
-\M{96}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[2851 advent.w]{96}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{boolean} \\{gave\_up};\C{ did you quit while you were alive? }\par
 \fi
 
-\M{97}The \PB{\.{SAY}} routine is just an echo unless you say a magic word.
+\M[2854 advent.w]{97}The \PB{\.{SAY}} routine is just an echo unless you say a
+magic word.
 
 \Y\B\4\X97:Handle cases of transitive verbs and \PB{\&{continue}}\X${}\E{}$\6
 \4\&{case} \.{SAY}:\5
@@ -3768,7 +3818,7 @@ ${}\\{printf}(\.{"Okay,\ \\"\%s\\".\\n"},\39\\{word1}){}$;\5
 \As98, 99, 100, 101, 102, 106, 107, 110, 112, 117, 122, 125, 129, 130\ETs135.
 \U79.\fi
 
-\M{98}Hungry?
+\M[2867 advent.w]{98}Hungry?
 
 \Y\B\4\X97:Handle cases of transitive verbs and \PB{\&{continue}}\X${}\mathrel+%
 \E{}$\6
@@ -3792,7 +3842,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{99}Waving to the shadowy figure has no effect; but you might
+\M[2879 advent.w]{99}Waving to the shadowy figure has no effect; but you might
 wave a rod at the fissure. Blasting has no effect unless you've
 got dynamite, which is a neat trick! Rubbing yields only snide remarks.
 
@@ -3825,7 +3875,8 @@ ${}\\{printf}(\.{"\%s\\n"},\39\\{message}[\\{bonus}/\T{5}]){}$;\5
 \\{default\_to}(\.{TOSS});\par
 \fi
 
-\M{100}If asked to find an object that isn't visible, we give a caveat.
+\M[2900 advent.w]{100}If asked to find an object that isn't visible, we give a
+caveat.
 
 \Y\B\4\X97:Handle cases of transitive verbs and \PB{\&{continue}}\X${}\mathrel+%
 \E{}$\6
@@ -3844,7 +3895,8 @@ you."});\2\6
 \&{goto} \\{report\_default};\par
 \fi
 
-\M{101}Breaking and/or waking have no effect until the cave is closed,
+\M[2911 advent.w]{101}Breaking and/or waking have no effect until the cave is
+closed,
 except of course that you might break the vase. The dwarves like
 mirrors and hate being awakened.
 
@@ -3883,7 +3935,8 @@ hi}\)\.{s\ axe.\\n"});\5
 \&{goto} \\{report\_default};\2\par
 \fi
 
-\M{102}Here we deal with lighting or extinguishing the lamp. The variable
+\M[2935 advent.w]{102}Here we deal with lighting or extinguishing the lamp. The
+variable
 \PB{\\{limit}} tells how much juice you've got left.
 
 \Y\B\4\X97:Handle cases of transitive verbs and \PB{\&{continue}}\X${}\mathrel+%
@@ -3908,11 +3961,12 @@ ${}\\{printf}(\.{"\%s\\n"},\39\\{pitch\_dark\_msg});{}$\2\6
 \&{continue};\par
 \fi
 
-\M{103}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[2952 advent.w]{103}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{limit};\C{ countdown till darkness }\par
 \fi
 
-\N{1}{104}Liquid assets. Readers of this program will already have noticed that
+\N[2955 advent.w]{1}{104}Liquid assets. Readers of this program will already
+have noticed that
 the \PB{\.{BOTTLE}} is a rather complicated object, since it can be empty
 or filled with either water or oil.  Let's consider now the main
 actions that involve liquids.
@@ -3930,7 +3984,7 @@ cave.)
 $(\\{prop}[\.{BOTTLE}]\E\T{1}\V\\{prop}[\.{BOTTLE}]<\T{0}{}$)\par
 \fi
 
-\M{105}Sometimes `\.{water}' and `\.{oil}' are used as verbs.
+\M[2970 advent.w]{105}Sometimes `\.{water}' and `\.{oil}' are used as verbs.
 
 \Y\B\4\X83:Handle additional special cases of input\X${}\mathrel+\E{}$\6
 \&{if} ${}((\\{streq}(\\{word1},\39\.{"water"})\V\\{streq}(\\{word1},\39%
@@ -3940,7 +3994,8 @@ $(\\{prop}[\.{BOTTLE}]\E\T{1}\V\\{prop}[\.{BOTTLE}]<\T{0}{}$)\par
 ${}\\{strcpy}(\\{word2},\39\.{"pour"}){}$;\2\par
 \fi
 
-\M{106}If you ask simply to drink, we assume that you want water. If there's
+\M[2977 advent.w]{106}If you ask simply to drink, we assume that you want
+water. If there's
 water in the bottle, you drink that; otherwise you must be at a
 water location.
 
@@ -3962,7 +4017,7 @@ ${}\\{place}[\.{WATER}]\K\\{limbo};{}$\6
 \\{report}(\.{"The\ bottle\ of\ water}\)\.{\ is\ now\ empty."});\par
 \fi
 
-\M{107}Pouring involves liquid from the bottle.
+\M[2989 advent.w]{107}Pouring involves liquid from the bottle.
 
 \Y\B\4\X97:Handle cases of transitive verbs and \PB{\&{continue}}\X${}\mathrel+%
 \E{}$\6
@@ -3988,7 +4043,7 @@ ${}\\{place}[\\{obj}]\K\\{limbo};{}$\6
 \.{wet."});\par
 \fi
 
-\M{108}\B\X108:Try to water the plant\X${}\E{}$\6
+\M[3003 advent.w]{108}\B\X108:Try to water the plant\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{obj}\I\.{WATER}){}$\1\5
 \\{report}(\.{"The\ plant\ indignant}\)\.{ly\ shakes\ the\ oil\ of}\)\.{f\ its\
@@ -4003,7 +4058,7 @@ ${}\\{prop}[\.{PLANT2}]\K\\{prop}[\.{PLANT}]\GG\T{1};{}$\6
 \4${}\}{}$\2\par
 \U107.\fi
 
-\M{109}\B\X109:Pour water or oil on the door\X${}\E{}$\6
+\M[3013 advent.w]{109}\B\X109:Pour water or oil on the door\X${}\E{}$\6
 \&{switch} (\\{obj})\5
 ${}\{{}$\1\6
 \4\&{case} \.{WATER}:\5
@@ -4017,7 +4072,8 @@ ${}\\{prop}[\.{DOOR}]\K\T{1};{}$\6
 \4${}\}{}$\2\par
 \U107.\fi
 
-\M{110}You can fill the bottle only when it's empty and liquid is available.
+\M[3021 advent.w]{110}You can fill the bottle only when it's empty and liquid
+is available.
 You can't fill the lamp with oil.
 
 \Y\B\4\X97:Handle cases of transitive verbs and \PB{\&{continue}}\X${}\mathrel+%
@@ -4047,7 +4103,7 @@ ${}\\{printf}(\.{"Your\ bottle\ is\ now\ }\)\.{full\ of\ \%s.\\n"},\39\\{prop}[%
 \&{continue};\par
 \fi
 
-\M{111}Filling the vase is a nasty business.
+\M[3037 advent.w]{111}Filling the vase is a nasty business.
 
 \Y\B\4\X111:Try to fill the vase\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -4062,7 +4118,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U110.\fi
 
-\M{112}Picking up a liquid depends, of course, on the status of the bottle.
+\M[3048 advent.w]{112}Picking up a liquid depends, of course, on the status of
+the bottle.
 Other objects need special handling, too, because of various side
 effects and the fact that we can't take bird and cage separately
 when the bird is in the cage.
@@ -4098,7 +4155,8 @@ ${}\\{place}[\\{prop}[\.{BOTTLE}]\?\.{OIL}:\.{WATER}]\K\\{inhand};{}$\2\6
 \\{default\_to}(\.{RELAX});\C{ OK, we've taken it }\par
 \fi
 
-\M{113}\B\X113:Check special cases for taking a liquid\X${}\E{}$\6
+\M[3072 advent.w]{113}\B\X113:Check special cases for taking a liquid\X${}\E{}$%
+\6
 \&{if} ${}(\\{here}(\.{BOTTLE})\W\\{object\_in\_bottle}){}$\1\5
 ${}\\{obj}\K\.{BOTTLE};{}$\2\6
 \&{else}\5
@@ -4110,7 +4168,7 @@ ${}\\{obj}\K\.{BOTTLE};{}$\6
 \4${}\}{}$\2\par
 \U112.\fi
 
-\M{114}\B\X114:Check special cases for taking a bird\X${}\E{}$\6
+\M[3080 advent.w]{114}\B\X114:Check special cases for taking a bird\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} (\\{toting}(\.{ROD}))\1\5
 \\{report}(\.{"The\ bird\ was\ unafra}\)\.{id\ when\ you\ entered,}\)\.{\ but\
@@ -4124,8 +4182,8 @@ ${}\\{prop}[\.{BIRD}]\K\T{1};{}$\2\6
 \4${}\}{}$\2\par
 \U112.\fi
 
-\M{115}Similarly, when dropping the bottle we must drop also its liquid
-contents,
+\M[3089 advent.w]{115}Similarly, when dropping the bottle we must drop also its
+liquid contents,
 if any.
 
 \Y\B\4\X115:Check special cases for dropping a liquid\X${}\E{}$\6
@@ -4135,13 +4193,14 @@ ${}\\{obj}\K\.{BOTTLE};{}$\2\6
 ${}\\{place}[\\{prop}[\.{BOTTLE}]\?\.{OIL}:\.{WATER}]\K\\{limbo}{}$;\2\par
 \U117.\fi
 
-\N{1}{116}The other actions. Now that we understand how to write action
-routines,
+\N[3097 advent.w]{1}{116}The other actions. Now that we understand how to write
+action routines,
 we're ready to complete the set.
 
 \fi
 
-\M{117}Dropping an object has special cases for the bird (which might attack
+\M[3100 advent.w]{117}Dropping an object has special cases for the bird (which
+might attack
 the snake or the dragon), the cage, the vase, etc. The verb \PB{\.{THROW}} also
 reduces to \PB{\.{DROP}} for most objects.
 
@@ -4176,7 +4235,7 @@ ${}\\{drop}(\\{obj},\39\\{loc});{}$\6
 \\{default\_to}(\.{RELAX});\2\par
 \fi
 
-\M{118}\B\X118:Put coins in the vending machine\X${}\E{}$\6
+\M[3120 advent.w]{118}\B\X118:Put coins in the vending machine\X${}\E{}$\6
 ${}\{{}$\1\6
 \\{destroy}(\.{COINS});\6
 ${}\\{drop}(\.{BATTERIES},\39\\{loc});{}$\6
@@ -4185,8 +4244,8 @@ ${}\\{prop}[\.{BATTERIES}]\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U117.\fi
 
-\M{119}\PB{\.{TROLL2}} is the absent troll. We move the troll bridge up to
-first in
+\M[3128 advent.w]{119}\PB{\.{TROLL2}} is the absent troll. We move the troll
+bridge up to first in
 the list of things at its location.
 
 \Y\B\4\X119:Chase the troll away\X${}\E{}$\6
@@ -4205,7 +4264,8 @@ ${}\\{move}(\.{BRIDGE\_},\39\\{neside}){}$;\C{ put first in their lists }\6
 \4${}\}{}$\2\par
 \U117.\fi
 
-\M{120}\B\X120:Check special cases for dropping the bird\X${}\E{}$\6
+\M[3143 advent.w]{120}\B\X120:Check special cases for dropping the bird\X${}%
+\E{}$\6
 ${}\{{}$\1\6
 \&{if} (\\{here}(\.{SNAKE}))\5
 ${}\{{}$\1\6
@@ -4231,7 +4291,8 @@ ${}\\{lost\_treasures}\PP;{}$\2\6
 \4${}\}{}$\2\par
 \U117.\fi
 
-\M{121}\B\X121:Check special cases for dropping the vase\X${}\E{}$\6
+\M[3161 advent.w]{121}\B\X121:Check special cases for dropping the vase\X${}%
+\E{}$\6
 ${}\{{}$\1\6
 ${}\\{prop}[\.{VASE}]\K(\\{place}[\.{PILLOW}]\E\\{loc}\?\T{0}:\T{2});{}$\6
 ${}\\{printf}(\.{"\%s\\n"},\39\\{note}[\\{offset}[\.{VASE}]+\T{1}+\\{prop}[%
@@ -4242,7 +4303,8 @@ ${}\\{base}[\.{VASE}]\K\.{VASE};{}$\2\6
 \4${}\}{}$\2\par
 \U117.\fi
 
-\M{122}Throwing is like dropping, except that it covers a few more cases.
+\M[3168 advent.w]{122}Throwing is like dropping, except that it covers a few
+more cases.
 
 \Y\B\4\X97:Handle cases of transitive verbs and \PB{\&{continue}}\X${}\mathrel+%
 \E{}$\6
@@ -4280,7 +4342,7 @@ ${}\\{drop}(\.{AXE},\39\\{loc}){}$;\5
 \\{stay\_put};\par
 \fi
 
-\M{123}This'll teach you a lesson.
+\M[3191 advent.w]{123}This'll teach you a lesson.
 
 \Y\B\4\X123:Throw the axe at the bear\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -4294,7 +4356,8 @@ ${}\\{move}(\.{BEAR},\39\\{loc}){}$;\C{ put bear first in its list }\2\6
 \4${}\}{}$\2\par
 \U122.\fi
 
-\M{124}If you toss the vase, the skillful troll will catch it before it breaks.
+\M[3201 advent.w]{124}If you toss the vase, the skillful troll will catch it
+before it breaks.
 
 \Y\B\4\X124:Snarf a treasure for the troll\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -4310,7 +4373,7 @@ away\ out\ of\ si}\)\.{ght."});\6
 \4${}\}{}$\2\par
 \U122.\fi
 
-\M{125}When you try to attack, the action becomes violent.
+\M[3212 advent.w]{125}When you try to attack, the action becomes violent.
 
 \Y\B\4\X97:Handle cases of transitive verbs and \PB{\&{continue}}\X${}\mathrel+%
 \E{}$\6
@@ -4361,8 +4424,8 @@ your\ friend."});\6
 \4${}\}{}$\2\par
 \fi
 
-\M{126}Attackable objects fall into two categories: enemies (snake, dwarf,
-etc.)\
+\M[3238 advent.w]{126}Attackable objects fall into two categories: enemies
+(snake, dwarf, etc.)\
 and others (bird, clam).
 
 We might get here when you threw an axe; you can't attack the bird with an axe.
@@ -4392,7 +4455,7 @@ this case }\2\6
 \4${}\}{}$\2\par
 \U125.\fi
 
-\M{127}\B\X127:Dispatch the poor bird\X${}\E{}$\6
+\M[3258 advent.w]{127}\B\X127:Dispatch the poor bird\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} (\\{closed})\1\5
 \\{report}(\.{"Oh,\ leave\ the\ poor\ }\)\.{unhappy\ bird\ alone."});\2\6
@@ -4405,7 +4468,7 @@ ${}\\{lost\_treasures}\PP;{}$\2\6
 \4${}\}{}$\2\par
 \U125.\fi
 
-\M{128}Here we impersonate the main dialog loop.
+\M[3266 advent.w]{128}Here we impersonate the main dialog loop.
 If you insist on attacking the dragon, you win! He dies, the Persian
 rug becomes free, and \PB{\\{scan2}} takes the place of \PB{\\{scan1}} and \PB{%
 \\{scan3}}.
@@ -4435,7 +4498,8 @@ ${}\\{loc}\K\\{scan2}{}$;\5
 \4${}\}{}$\2\par
 \U125.\fi
 
-\M{129}Feeding various animals leads to various quips. Feeding a dwarf
+\M[3286 advent.w]{129}Feeding various animals leads to various quips. Feeding a
+dwarf
 is a bad idea. The bear is special.
 
 \Y\B\4\X97:Handle cases of transitive verbs and \PB{\&{continue}}\X${}\mathrel+%
@@ -4489,7 +4553,8 @@ ${}\\{dflag}\PP;{}$\6
 perhaps\ you)."});\par
 \fi
 
-\M{130}Locking and unlocking involves several interesting special cases.
+\M[3318 advent.w]{130}Locking and unlocking involves several interesting
+special cases.
 
 \Y\B\4\X97:Handle cases of transitive verbs and \PB{\&{continue}}\X${}\mathrel+%
 \E{}$\6
@@ -4520,7 +4585,7 @@ open."});\6
 \4${}\}{}$\2\par
 \fi
 
-\M{131}\B\X131:Open/close grate/chain\X${}\E{}$\6
+\M[3334 advent.w]{131}\B\X131:Open/close grate/chain\X${}\E{}$\6
 \&{if} ${}(\\{obj}\E\.{CHAIN}){}$\1\5
 \X132:Open/close chain\X;\2\6
 \&{if} (\\{closing})\5
@@ -4543,7 +4608,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U130.\fi
 
-\M{132}\B\X132:Open/close chain\X${}\E{}$\6
+\M[3348 advent.w]{132}\B\X132:Open/close chain\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{verb}\E\.{OPEN}){}$\1\5
 \X133:Open chain\X;\2\6
@@ -4559,7 +4624,7 @@ ${}\\{drop}(\.{CHAIN},\39\\{loc});{}$\2\6
 \4${}\}{}$\2\par
 \U131.\fi
 
-\M{133}\B\X133:Open chain\X${}\E{}$\6
+\M[3359 advent.w]{133}\B\X133:Open chain\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{prop}[\.{CHAIN}]\E\T{0}){}$\1\5
 \\{report}(\.{"It\ was\ already\ unlo}\)\.{cked."});\2\6
@@ -4576,8 +4641,8 @@ ${}\\{prop}[\.{BEAR}]\K\T{2},\39\\{base}[\.{BEAR}]\K\.{NOTHING};{}$\2\6
 \4${}\}{}$\2\par
 \U132.\fi
 
-\M{134}The clam/oyster is extremely heavy to carry, although not as heavy as
-the
+\M[3371 advent.w]{134}The clam/oyster is extremely heavy to carry, although not
+as heavy as the
 gold.
 
 \Y\B\4\D$\\{clam\_oyster}$ \5
@@ -4612,7 +4677,8 @@ ${}\\{drop}(\.{PEARL},\39\\{sac});{}$\6
 oyster\ inside}\)\.{.\\nIt\ promptly\ snaps}\)\.{\ shut\ again."});\2\par
 \U130.\fi
 
-\M{135}You get little satisfaction from asking us to read, unless you hold
+\M[3394 advent.w]{135}You get little satisfaction from asking us to read,
+unless you hold
 the oyster---{\it after\/} the cave is closed.
 
 \Y\B\4\X97:Handle cases of transitive verbs and \PB{\&{continue}}\X${}\mathrel+%
@@ -4647,8 +4713,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{136}OK, that just about does it. We're left with only one more ``action
-verb'' to
+\M[3413 advent.w]{136}OK, that just about does it. We're left with only one
+more ``action verb'' to
 handle, and it is intransitive. In order to penetrate this puzzle, you must
 pronounce the magic incantation in its correct order, as it appears on the
 wall of the Giant Room. A global variable \PB{\\{foobar}} records your
@@ -4667,14 +4733,14 @@ ${}\|k\PP;{}$\2\6
 you'd\ best\ start\ ov}\)\.{er."});\par
 \fi
 
-\M{137}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[3424 advent.w]{137}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{char} ${}{*}\\{incantation}[\,]\K\{\.{"fee"},\39\.{"fie"},\39\.{"foe"},\39%
 \.{"foo"},\39\.{"fum"}\};{}$\6
 \&{int} \\{foobar};\C{ current incantation progress }\par
 \fi
 
-\M{138}Just after every command you give, we make the \PB{\\{foobar}} counter
-negative if
+\M[3428 advent.w]{138}Just after every command you give, we make the \PB{%
+\\{foobar}} counter negative if
 you're on track, otherwise we zero it.
 
 \Y\B\4\X82:Handle special cases of input\X${}\mathrel+\E{}$\6
@@ -4684,7 +4750,8 @@ ${}\\{foobar}\K{-}\\{foobar};{}$\2\6
 ${}\\{foobar}\K\T{0}{}$;\2\par
 \fi
 
-\M{139}If you get all the way through, we zip the eggs back to the Giant Room,
+\M[3435 advent.w]{139}If you get all the way through, we zip the eggs back to
+the Giant Room,
 unless they're already there.
 The troll returns if you've stolen the eggs back from him.
 
@@ -4707,8 +4774,8 @@ ${}\\{report}(\\{note}[\\{offset}[\.{EGGS}]+\|k]);{}$\6
 \4${}\}{}$\2\par
 \U136.\fi
 
-\N{1}{140}Motions. A major cycle comes to an end when a motion verb \PB{%
-\\{mot}} has
+\N[3453 advent.w]{1}{140}Motions. A major cycle comes to an end when a motion
+verb \PB{\\{mot}} has
 been given and we have computed the appropriate \PB{\\{newloc}} accordingly.
 
 First, we deal with motions that don't refer directly to the travel table.
@@ -4734,7 +4801,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U75.\fi
 
-\M{141}When looking around, we pretend that it wasn't dark (though it may {\it
+\M[3471 advent.w]{141}When looking around, we pretend that it wasn't dark
+(though it may {\it
 now\/} be dark), so you won't fall into a pit while staring into the gloom.
 
 \Y\B\4\X141:Repeat the long description and \PB{\&{continue}}\X${}\E{}$\6
@@ -4749,12 +4817,12 @@ ${}\\{visits}[\\{loc}]\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U140.\fi
 
-\M{142}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[3484 advent.w]{142}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{look\_count};\C{ how many times you've asked us to look }\par
 \fi
 
-\M{143}If you ask us to go back, we look for a motion that goes from \PB{%
-\\{loc}}
+\M[3487 advent.w]{143}If you ask us to go back, we look for a motion that goes
+from \PB{\\{loc}}
 to \PB{\\{oldloc}}, or to \PB{\\{oldoldloc}} if \PB{\\{oldloc}} has forced
 motion.
 Otherwise we can't take you back.
@@ -4789,11 +4857,11 @@ ${}\\{mot}\K\|q\MG\\{mot};{}$\6
 \4${}\}{}$\2\par
 \U140.\fi
 
-\M{144}\B\X22:Additional local registers\X${}\mathrel+\E{}$\6
+\M[3509 advent.w]{144}\B\X22:Additional local registers\X${}\mathrel+\E{}$\6
 \&{register} \&{location} \|l${},{}$ \\{ll};\par
 \fi
 
-\M{145}\B\X145:Apologize for inability to backtrack\X${}\E{}$\6
+\M[3512 advent.w]{145}\B\X145:Apologize for inability to backtrack\X${}\E{}$\6
 ${}\{{}$\1\6
 \\{printf}(\.{"Sorry,\ but\ I\ no\ lon}\)\.{ger\ seem\ to\ remember}\)\.{\ how\
 you\ got\ here.\\n}\)\.{"});\6
@@ -4801,7 +4869,8 @@ you\ got\ here.\\n}\)\.{"});\6
 \4${}\}{}$\2\par
 \U143.\fi
 
-\M{146}Now we are ready to interpret the instructions in the travel table.
+\M[3518 advent.w]{146}Now we are ready to interpret the instructions in the
+travel table.
 The following code implements the conventions of section~\instspecs.
 
 \Y\B\4\X146:Determine the next location, \PB{\\{newloc}}\X${}\E{}$\6
@@ -4838,8 +4907,8 @@ ${}\{{}$\1\6
 \Q19.
 \U75.\fi
 
-\M{147}\B\X147:If the condition of instruction \PB{\|q} isn't satisfied,
-advance \PB{\|q}\X${}\E{}$\6
+\M[3539 advent.w]{147}\B\X147:If the condition of instruction \PB{\|q} isn't
+satisfied, advance \PB{\|q}\X${}\E{}$\6
 \&{while} (\T{1})\5
 ${}\{{}$\1\6
 ${}\|j\K\|q\MG\\{cond};{}$\6
@@ -4864,8 +4933,8 @@ ${}\|q\PP){}$\1\5
 \4${}\}{}$\2\par
 \U146.\fi
 
-\M{148}Here we look at \PB{\\{verb}} just in case you asked us to `\.{find} %
-\.{gully}'
+\M[3552 advent.w]{148}Here we look at \PB{\\{verb}} just in case you asked us
+to `\.{find} \.{gully}'
 or something like that.
 
 \Y\B\4\X148:Report on inapplicable motion and \PB{\&{continue}}\X${}\E{}$\6
@@ -4903,7 +4972,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U146.\fi
 
-\M{149}Only the emerald can be toted through the plover-alcove passage ---
+\M[3571 advent.w]{149}Only the emerald can be toted through the plover-alcove
+passage ---
 not even the lamp.
 
 \Y\B\4\X149:Choose \PB{\\{newloc}} via plover-alcove passage\X${}\E{}$\6
@@ -4922,8 +4992,8 @@ the\ tunnel\ with}\)\.{\ you.\\nYou'd\ best\ ta}\)\.{ke\ inventory\ and\ dro}\)%
 \4${}\}{}$\2\par
 \U146.\fi
 
-\M{150}The \PB{\\{pdrop}} command applies only when you're carrying the
-emerald. We make
+\M[3583 advent.w]{150}The \PB{\\{pdrop}} command applies only when you're
+carrying the emerald. We make
 you drop it, thereby forcing you to use the plover-alcove passage if
 you want to get it out. We don't actually tell you that it was
 dropped; we just pretend you weren't carrying it after all.
@@ -4932,7 +5002,8 @@ dropped; we just pretend you weren't carrying it after all.
 $\\{drop}(\.{EMERALD},\39\\{loc}){}$;\par
 \U146.\fi
 
-\M{151}Troll bridge crossing is treated as a special motion so that dwarves
+\M[3591 advent.w]{151}Troll bridge crossing is treated as a special motion so
+that dwarves
 won't wander across and encounter the bear.
 
 You can get here only if \PB{\.{TROLL}} is in limbo but \PB{\.{TROLL2}} has
@@ -4968,7 +5039,7 @@ ${}\\{oldoldloc}\K\\{newloc}{}$;\C{ if you are revived, you got across }\6
 \&{goto} \\{death};\par
 \U146.\fi
 
-\M{152}\B\X152:Block the troll bridge and stay put\X${}\E{}$\6
+\M[3616 advent.w]{152}\B\X152:Block the troll bridge and stay put\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{move}(\.{TROLL},\39\\{swside}){}$;\5
 ${}\\{move}(\.{TROLL\_},\39\\{neside}){}$;\5
@@ -4982,8 +5053,8 @@ ${}\\{printf}(\.{"\%s\\n"},\39\\{note}[\\{offset}[\.{TROLL}]+\T{1}]);{}$\6
 \4${}\}{}$\2\par
 \U151.\fi
 
-\M{153}Obstacles might still arise after the choice of \PB{\\{newloc}} has been
-made.
+\M[3625 advent.w]{153}Obstacles might still arise after the choice of \PB{%
+\\{newloc}} has been made.
 The following program is executed at the beginning of each major cycle.
 
 \Y\B\4\X153:Check for interference with the proposed move to \PB{\\{newloc}}%
@@ -4999,7 +5070,8 @@ ${}\\{newloc}\K\\{loc};{}$\6
 \2\par
 \U75.\fi
 
-\N{1}{154}Random numbers. You won't realize it until you have played the game
+\N[3634 advent.w]{1}{154}Random numbers. You won't realize it until you have
+played the game
 for awhile, but adventures in Colossal Cave are not deterministic. Lots of
 things can happen differently when you give the same input, because
 caves are continually changing, and the dwarves don't have
@@ -5020,17 +5092,18 @@ $2^{20}$ }\6
 \4${}\}{}$\2\par
 \fi
 
-\M{155}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[3652 advent.w]{155}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{rx};\C{ the last random value generated }\par
 \fi
 
-\M{156}Each run is different.
+\M[3655 advent.w]{156}Each run is different.
 
 \Y\B\4\X156:Initialize the random number generator\X${}\E{}$\6
 $\\{rx}\K{}$(((\&{int}) \\{time}${}(\NULL))\AND\T{\^fffff})\OR\T{1}{}$;\par
 \U200.\fi
 
-\M{157}The \PB{\\{pct}} macro returns true a given percentage of the time.
+\M[3660 advent.w]{157}The \PB{\\{pct}} macro returns true a given percentage of
+the time.
 
 \Y\B\4\D$\\{pct}(\|r)$ \5
 $(\\{ran}(\T{100})<\|r{}$)\par
@@ -5039,16 +5112,16 @@ $(\\{ran}(\T{100})<\|r{}$)\par
 \\{printf}(\.{"A\ hollow\ voice\ says}\)\.{\ \\"PLUGH\\".\\n"});\2\par
 \U86.\fi
 
-\M{158}We kick the random number generator often, just to add variety to the
-chase.
+\M[3668 advent.w]{158}We kick the random number generator often, just to add
+variety to the chase.
 
 \Y\B\4\X85:Make special adjustments before looking at new input\X${}\mathrel+%
 \E{}$\6
 $\|k\K\\{ran}(\T{0}){}$;\par
 \fi
 
-\N{1}{159}Dwarf stuff. We've said a lot of vague stuff about dwarves; now is
-the time
+\N[3673 advent.w]{1}{159}Dwarf stuff. We've said a lot of vague stuff about
+dwarves; now is the time
 to be explicit. Five dwarves roam about the cave. Initially they are
 dormant but eventually they each walk about at random.
 A global variable called \PB{\\{dflag}} governs their level of activity:
@@ -5089,7 +5162,7 @@ dwarves are adjacent. The value of
 \&{boolean} ${}\\{dseen}[\\{nd}+\T{1}]{}$;\C{ have you been spotted? }\par
 \fi
 
-\M{160}The following subroutine is often useful.
+\M[3708 advent.w]{160}The following subroutine is often useful.
 
 \Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
 \&{boolean} \\{dwarf}\,\,\.{ARGS}((\&{void}));\7
@@ -5105,7 +5178,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{161}Just after you've moved to a new \PB{\\{loc}}, we move the other guys.
+\M[3720 advent.w]{161}Just after you've moved to a new \PB{\\{loc}}, we move
+the other guys.
 But we bypass all dwarf motion if you are in a place forbidden
 to the pirate, or if your next motion is forced. In particular,
 this means that the pirate can't steal the return toll, and
@@ -5131,7 +5205,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U75.\fi
 
-\M{162}When level 2 is reached, we silently kill 0, 1, or 2 of the dwarves.
+\M[3737 advent.w]{162}When level 2 is reached, we silently kill 0, 1, or 2 of
+the dwarves.
 Then if any of the survivors is in the current location, we move him
 to \PB{\\{nugget}}; thus no dwarf is presently tracking you. Another
 dwarf does, however, toss an axe and grumpily leave the scene.
@@ -5158,7 +5233,8 @@ ${}\\{drop}(\.{AXE},\39\\{loc});{}$\6
 \4${}\}{}$\2\par
 \U161.\fi
 
-\M{163}It turns out that the only way you can get rid of a dwarf is to
+\M[3758 advent.w]{163}It turns out that the only way you can get rid of a dwarf
+is to
 attack him with the axe. You'll hit him 2/3 of the time; in either case,
 the axe will be available for reuse.
 
@@ -5186,7 +5262,8 @@ ${}\\{drop}(\.{AXE},\39\\{loc}){}$;\5
 \4${}\}{}$\2\par
 \U122.\fi
 
-\M{164}Now things are in full swing. Dead dwarves don't do much of anything,
+\M[3775 advent.w]{164}Now things are in full swing. Dead dwarves don't do much
+of anything,
 but each live dwarf tends to stay with you
 if he's seen you. Otherwise he moves at random, never backing up
 unless there's no alternative.
@@ -5215,7 +5292,7 @@ ${}\\{dseen}[\|j]\K(\\{dloc}[\|j]\E\\{loc}\V\\{odloc}[\|j]\E\\{loc}\V(%
 \4${}\}{}$\2\par
 \U161.\fi
 
-\M{165}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[3795 advent.w]{165}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{dtotal};\C{ this many dwarves are in the room with you }\6
 \&{int} \\{attack};\C{ this many have had time to draw their knives }\6
 \&{int} \\{stick};\C{ this many have hurled their knives accurately }\6
@@ -5223,8 +5300,8 @@ ${}\\{dseen}[\|j]\K(\\{dloc}[\|j]\E\\{loc}\V\\{odloc}[\|j]\E\\{loc}\V(%
 }\par
 \fi
 
-\M{166}Random-moving dwarves think \PB{\\{scan1}}, \PB{\\{scan2}}, and \PB{%
-\\{scan3}} are three different
+\M[3801 advent.w]{166}Random-moving dwarves think \PB{\\{scan1}}, \PB{%
+\\{scan2}}, and \PB{\\{scan3}} are three different
 locations, although you will never have that perception.
 
 \Y\B\4\X166:Make a table of all potential exits, \PB{\\{ploc}[\T{0}]} through %
@@ -5241,8 +5318,8 @@ ${}\\{ploc}[\|i\PP]\K\\{newloc};{}$\2\6
 \4${}\}{}$\2\par
 \U164.\fi
 
-\M{167}A global variable \PB{\\{knife\_loc}} is used to remember where dwarves
-have
+\M[3813 advent.w]{167}A global variable \PB{\\{knife\_loc}} is used to remember
+where dwarves have
 most recently thrown knives at you. But as soon as you try to refer to the
 knife, we tell you it's pointless to do so; \PB{\\{knife\_loc}} is $-1$
 thereafter.
@@ -5267,17 +5344,18 @@ ${}\\{stick}\PP;{}$\2\6
 \4${}\}{}$\2\par
 \U164.\fi
 
-\M{168}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[3831 advent.w]{168}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{knife\_loc};\C{ place where knife was mentioned, or $-1$ }\par
 \fi
 
-\M{169}\B\X85:Make special adjustments before looking at new input\X${}%
-\mathrel+\E{}$\6
+\M[3834 advent.w]{169}\B\X85:Make special adjustments before looking at new
+input\X${}\mathrel+\E{}$\6
 \&{if} ${}(\\{knife\_loc}>\\{limbo}\W\\{knife\_loc}\I\\{loc}){}$\1\5
 ${}\\{knife\_loc}\K\\{limbo}{}$;\2\par
 \fi
 
-\M{170}We actually know the results of the attack already; this is where
+\M[3837 advent.w]{170}We actually know the results of the attack already; this
+is where
 we inform you of the outcome, pretending that the battle is
 now taking place.
 
@@ -5313,13 +5391,14 @@ ${}\\{oldoldloc}\K\\{loc}{}$;\5
 \4${}\}{}$\2\par
 \U164.\fi
 
-\M{171}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[3859 advent.w]{171}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{char} ${}{*}\\{attack\_msg}[\,]\K\{\.{"it\ misses"},\39\.{"it\ gets\ you"},%
 \3{-1}\39\.{"none\ of\ them\ hit\ yo}\)\.{u"},\39\.{"one\ of\ them\ gets\ yo}\)%
 \.{u"}\}{}$;\par
 \fi
 
-\M{172}The pirate leaves you alone once you have found the chest. Otherwise he
+\M[3863 advent.w]{172}The pirate leaves you alone once you have found the
+chest. Otherwise he
 steals all of the treasures you're carrying, although he ignores a treasure
 that's too easy. (The pyramid is too easy,
 if you're in the Plover Room or the Dark-Room.)
@@ -5366,7 +5445,8 @@ darkness\ behind\ yo}\)\.{u.\\n"});\2\6
 \4${}\}{}$\2\par
 \U167.\fi
 
-\M{173}The pirate isn't secretive about the fact that his chest is somewhere
+\M[3899 advent.w]{173}The pirate isn't secretive about the fact that his chest
+is somewhere
 in a maze. However, he doesn't say which maze he means. Nor does he explain
 why he is interested in treasures only when you are carrying them;
 evidently he just likes to see you squirm.
@@ -5390,7 +5470,8 @@ ${}\\{dseen}[\T{0}]\K\\{false};{}$\6
 \4${}\}{}$\2\par
 \U172.\fi
 
-\M{174}\B\X174:Snatch all treasures that are snatchable here\X${}\E{}$\6
+\M[3918 advent.w]{174}\B\X174:Snatch all treasures that are snatchable here%
+\X${}\E{}$\6
 \&{for} ${}(\|i\K\\{min\_treasure};{}$ ${}\|i\Z\\{max\_obj};{}$ ${}\|i\PP){}$\1%
 \6
 \&{if} ${}(\R\\{too\_easy}(\|i)){}$\5
@@ -5402,8 +5483,8 @@ ${}\\{drop}(\|i,\39\\{chest\_loc});{}$\2\6
 \4${}\}{}$\2\2\par
 \U173.\fi
 
-\M{175}The window rooms are slightly lighted, but you don't spot the pirate
-there
+\M[3924 advent.w]{175}The window rooms are slightly lighted, but you don't spot
+the pirate there
 unless your lamp is on. (And you do spot him even if
 the lighted lamp is on the ground.)
 
@@ -5420,7 +5501,8 @@ vanishes\ into\ the\ }\)\.{gloom.\\n"});\6
 \4${}\}{}$\2\par
 \U172.\fi
 
-\M{176}One more loose end related to dwarfs needs to be addressed here.
+\M[3938 advent.w]{176}One more loose end related to dwarfs needs to be
+addressed here.
 If you're coming from a place forbidden to the pirate, so that the dwarves
 are rooted in place, we let you get out (and be attacked). Otherwise,
 if a dwarf has seen you and has come from where you want to go, he
@@ -5444,7 +5526,8 @@ ${}\\{newloc}\K\\{loc}{}$;\5
 \4${}\}{}$\2\par
 \U153.\fi
 
-\N{1}{177}Closing the cave. You get to wander around until you've located all
+\N[3954 advent.w]{1}{177}Closing the cave. You get to wander around until
+you've located all
 fifteen treasures, although you need not have taken them yet. After that,
 you enter a new level of complexity: A global variable called
 \PB{\\{clock1}} starts ticking downwards, every time you take a turn inside the
@@ -5461,8 +5544,8 @@ govern closing time }\6
 \&{boolean} \\{panic}${},{}$ \\{closed};\C{ various stages of closedness }\par
 \fi
 
-\M{178}Location Y2 is virtually outside the cave, so \PB{\\{clock1}} doesn't
-tick there.
+\M[3968 advent.w]{178}Location Y2 is virtually outside the cave, so \PB{%
+\\{clock1}} doesn't tick there.
 If you stay outside the cave with all your treasures, and with the lamp
 switched off, the game might go on forever; but you wouldn't be having
 any fun.
@@ -5501,8 +5584,8 @@ ${}\\{clock2}\MM;{}$\2\6
 \4${}\}{}$\2\par
 \U76.\fi
 
-\M{179}At the time of first warning, we lock the grate, destroy the crystal
-bridge,
+\M[3995 advent.w]{179}At the time of first warning, we lock the grate, destroy
+the crystal bridge,
 kill all the dwarves (and the pirate), remove the troll and the bear
 (unless dead), and set \PB{\\{closing}} to true. It's too much trouble to move
 the dragon, so we leave it. From now on until \PB{\\{clock2}} runs out, you
@@ -5534,8 +5617,8 @@ ${}\\{base}[\.{AXE}]\K\.{NOTHING};{}$\6
 \4${}\}{}$\2\par
 \U178.\fi
 
-\M{180}If you try to get out while the cave is closing, we assume that you
-panic;
+\M[4018 advent.w]{180}If you try to get out while the cave is closing, we
+assume that you panic;
 we give you a few additional turns to get frantic before we close.
 
 \Y\B\4\X180:Panic at closing time\X${}\E{}$\6
@@ -5548,8 +5631,8 @@ and\ announces:}\)\.{\\n\\"This\ exit\ is\ clo}\)\.{sed.\ \ Please\ leave\ v}\)%
 \4${}\}{}$\2\par
 \Us131\ET153.\fi
 
-\M{181}Finally, after \PB{\\{clock2}} hits zero, we transport you to the final
-puzzle,
+\M[4028 advent.w]{181}Finally, after \PB{\\{clock2}} hits zero, we transport
+you to the final puzzle,
 which takes place in the previously inaccessible storage room. We have to
 set everything up anew, in order to use the existing machinery instead
 of writing a special program. We are careful not to include keys
@@ -5621,8 +5704,8 @@ ${}\\{bonus}\K\T{10};{}$\6
 \4${}\}{}$\2\par
 \U178.\fi
 
-\M{182}Once the cave has closed, we look for objects being toted with \PB{$%
-\\{prop}<\T{0}$};
+\M[4082 advent.w]{182}Once the cave has closed, we look for objects being toted
+with \PB{$\\{prop}<\T{0}$};
 their property value is changed to \PB{${-}\T{1}-\\{prop}$}. This means they
 won't be
 described until they've been picked up and put down, separate from their
@@ -5640,7 +5723,8 @@ ${}\\{prop}[\|j]\K{-}\T{1}-\\{prop}[\|j];{}$\2\2\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{183}Death and resurrection. Only the most persistent adventurers get to
+\N[4094 advent.w]{1}{183}Death and resurrection. Only the most persistent
+adventurers get to
 see the closing of the cave, because their lamp gives out first.
 For example, if you have lost the ability to find any treasures,
 \PB{\\{tally}} will never go to zero.
@@ -5651,7 +5735,8 @@ For example, if you have lost the ability to find any treasures,
 ${}\\{limit}\K\T{35}{}$;\2\par
 \U88.\fi
 
-\M{184}On every turn, we check to see if you are in trouble lampwise.
+\M[4102 advent.w]{184}On every turn, we check to see if you are in trouble
+lampwise.
 
 \Y\B\4\X184:Check the lamp\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -5688,12 +5773,12 @@ ${}\\{warned}\K\\{true};{}$\6
 \4${}\}{}$\2\par
 \U178.\fi
 
-\M{185}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[4128 advent.w]{185}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{boolean} \\{warned};\C{ have you been warned about the low power supply? }%
 \par
 \fi
 
-\M{186}The batteries hold a pretty hefty charge.
+\M[4131 advent.w]{186}The batteries hold a pretty hefty charge.
 
 \Y\B\4\X186:Replace the batteries\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -5706,7 +5791,7 @@ ${}\\{limit}\K\T{2500};{}$\6
 \4${}\}{}$\2\par
 \U184.\fi
 
-\M{187}\B\X187:Extinguish the lamp\X${}\E{}$\6
+\M[4142 advent.w]{187}\B\X187:Extinguish the lamp\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{limit}\K{-}\T{1}{}$;\5
 ${}\\{prop}[\.{LAMP}]\K\T{0};{}$\6
@@ -5715,7 +5800,8 @@ ${}\\{prop}[\.{LAMP}]\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U184.\fi
 
-\M{188}The easiest way to get killed is to fall into a pit in pitch darkness.
+\M[4148 advent.w]{188}The easiest way to get killed is to fall into a pit in
+pitch darkness.
 
 \Y\B\4\X188:Deal with death and resurrection\X${}\E{}$\6
 \4\\{pitch\_dark}:\5
@@ -5725,7 +5811,7 @@ ${}\\{oldoldloc}\K\\{loc}{}$;\par
 \As189, 191\ETs192.
 \U2.\fi
 
-\M{189}``You're dead, Jim.''
+\M[4154 advent.w]{189}``You're dead, Jim.''
 
 When you die, \PB{\\{newloc}} is undefined (often \PB{\\{limbo}})
 and \PB{\\{oldloc}} is what killed you.
@@ -5752,7 +5838,7 @@ let's\ j}\)\.{ust\ call\ it\ a\ day.\\n}\)\.{"});\6
 \&{goto} \\{quit};\2\par
 \fi
 
-\M{190}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[4176 advent.w]{190}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{death\_count};\C{ how often have you kicked the bucket? }\6
 \&{char} ${}{*}\\{death\_wishes}[\T{2}*\\{max\_deaths}]\K\{{}$\6
 ${}\.{"Oh\ dear,\ you\ seem\ t}\)\.{o\ have\ gotten\ yourse}\)\.{lf\ killed.\ \
@@ -5777,7 +5863,8 @@ without\ any\ ora}\)\.{nge\ smoke,\ do\ you?"}${},{}$\6
 leaving!"}${}\}{}$;\par
 \fi
 
-\M{191}At this point you are reborn. All objects you were carrying
+\M[4194 advent.w]{191}At this point you are reborn. All objects you were
+carrying
 are dropped at \PB{\\{oldoldloc}} (presumably your last place prior to being
 killed), with their properties unchanged. The loop runs backwards, so
 that the bird is dropped before the cage. The lamp is a special case,
@@ -5799,7 +5886,7 @@ ${}\\{loc}\K\\{oldloc}\K\\{house};{}$\6
 \&{goto} \\{commence};\par
 \fi
 
-\M{192}Oh dear, you've disturbed the dwarves.
+\M[4211 advent.w]{192}Oh dear, you've disturbed the dwarves.
 
 \Y\B\4\X188:Deal with death and resurrection\X${}\mathrel+\E{}$\6
 \4\\{dwarves\_upset}:\5
@@ -5809,7 +5896,7 @@ ${}\\{loc}\K\\{oldloc}\K\\{house};{}$\6
 you!\ \ Al}\)\.{l\ of\ them\ get\ you!\\n}\)\.{"});\par
 \fi
 
-\N{1}{193}Scoring. Here is the scoring algorithm we use:
+\N[4219 advent.w]{1}{193}Scoring. Here is the scoring algorithm we use:
 $$\vcenter{\halign{#\hfil&&\hskip5em\hfil#\cr
 \hfil\it Objective&\hidewidth\it Points\hfil\hidewidth
 &\hidewidth\it Total possible\hfil\hidewidth\cr
@@ -5842,7 +5929,7 @@ seeing a treasure.
 \par
 \fi
 
-\M{194}The hints are table driven, using several arrays:
+\M[4250 advent.w]{194}The hints are table driven, using several arrays:
 
 \item{$\bullet$} \PB{\\{hint\_count}[\|j]}
 is the number of recent turns whose location is relevant to hint~\PB{\|j};
@@ -5892,7 +5979,8 @@ ${}\\{limit}\MRL{+{\K}}\T{30}*\\{hint\_cost}[\|j];{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{195}\B\X195:Check if a hint applies, and give it if requested\X${}\E{}$\6
+\M[4288 advent.w]{195}\B\X195:Check if a hint applies, and give it if requested%
+\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{2},\39\|k\K\\{cave\_hint};{}$ ${}\|j\Z\T{7};{}$ ${}\|j\PP,%
 \39\|k\MRL{+{\K}}\|k){}$\1\6
 \&{if} ${}(\R\\{hinted}[\|j]){}$\5
@@ -5940,7 +6028,7 @@ ${}\\{hint\_count}[\|j]\K\T{0};{}$\6
 \4${}\}{}$\2\2\par
 \U76.\fi
 
-\M{196}\B\D$\\{n\_hints}$ \5
+\M[4309 advent.w]{196}\B\D$\\{n\_hints}$ \5
 \T{8}\par
 \Y\B\4\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{hint\_count}[\\{n\_hints}];\C{ how long you have needed this hint }\6
@@ -6003,7 +6091,7 @@ objects\ available}\)\.{\ is\ immediately\\nuse}\)\.{ful\ for\ discovering\ }\)%
 \&{boolean} \\{hinted}[\\{n\_hints}];\C{ have you seen the hint? }\par
 \fi
 
-\M{197}Here's a subroutine that computes the current score.
+\M[4359 advent.w]{197}Here's a subroutine that computes the current score.
 
 \Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
 \&{int} \\{score}\,\,\.{ARGS}((\&{void}));\7
@@ -6037,7 +6125,7 @@ ${}\|s\MRL{-{\K}}\\{hint\_cost}[\|j];{}$\2\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{198}The worst possible score is $-3$.
+\M[4384 advent.w]{198}The worst possible score is $-3$.
 It is possible (but unusual) to earn exactly 1 point.
 
 \Y\B\4\D$\\{highest\_class}$ \5
@@ -6059,7 +6147,7 @@ ${}\\{printf}(\.{",\ you\ need\ \%d\ more\ }\)\.{point\%s.\\n"},\39\\{class%
 \\n"});\2\par
 \U2.\fi
 
-\M{199}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\M[4400 advent.w]{199}\B\X7:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{class\_score}[\,]${}\K\{\T{35},\39\T{100},\39\T{130},\39\T{200},\39%
 \T{250},\39\T{300},\39\T{330},\39\T{349},\39\T{9999}\};{}$\6
 \&{char} ${}{*}\\{class\_message}[\,]\K\{{}$\6
@@ -6082,7 +6170,8 @@ A."}${},{}$\6
 Grandma}\)\.{ster!"}${}\}{}$;\par
 \fi
 
-\N{1}{200}Launching the program. The program is now complete; all we must
+\N[4413 advent.w]{1}{200}Launching the program. The program is now complete;
+all we must
 do is put a few of the pieces together.
 
 Most of the initialization takes place while you are reading the opening
@@ -6099,8 +6188,8 @@ ${}\\{limit}\K(\\{hinted}[\T{0}]\?\T{1000}:\T{330}){}$;\C{ set lifetime of lamp
 ${}\\{oldoldloc}\K\\{oldloc}\K\\{loc}\K\\{newloc}\K\\{road}{}$;\par
 \U2.\fi
 
-\N{1}{201}Index. A large cloud of green smoke appears in front of you. It
-clears away
+\N[4428 advent.w]{1}{201}Index. A large cloud of green smoke appears in front
+of you. It clears away
 to reveal a tall wizard, clothed in grey. He fixes you with a steely glare and
 declares, ``This adventure has lasted too long.'' With that he makes a single
 pass over you with his hands, and everything around you fades away into a grey

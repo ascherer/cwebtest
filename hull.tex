@@ -1,9 +1,11 @@
 \input cwebmac
+\srcloctrue
 % This file is part of the Stanford GraphBase (c) Stanford University 1990
 \nocon
 
 
-\N{1}{1}Introduction. This is a hastily written implementation of the daghull
+\N[4 hull.w]{1}{1}Introduction. This is a hastily written implementation of the
+daghull
 algorithm.
 
 \Y\B\F\\{Graph} \5
@@ -32,7 +34,7 @@ ${}\\{printf}(\.{"Total\ of\ \%d\ mems\ an}\)\.{d\ \%d\ calls\ on\ ccw.\\n}\)%
 \4${}\}{}$\2\par
 \fi
 
-\M{2}I'm instrumenting this in a simple way.
+\M[29 hull.w]{2}I'm instrumenting this in a simple way.
 
 \Y\B\4\D$\|o$ \5
 $\\{mems}\PP{}$\par
@@ -44,7 +46,7 @@ $\\{mems}\MRL{+{\K}}{}$\T{2}\par
 \A5.
 \U1.\fi
 
-\N{1}{3}Data structures.
+\N[38 hull.w]{1}{3}Data structures.
 For now, each vertex is represented by two coordinates stored in the
 utility fields \PB{$\|x.\|i$} and \PB{$\|y.\|i$}. I'm also putting a serial
 number into
@@ -75,7 +77,7 @@ $\|v.{}$\|v\par
 $\|w.{}$\|a\par
 \fi
 
-\M{4}\B\X4:Initialize the array of instructions\X${}\E{}$\6
+\M[60 hull.w]{4}\B\X4:Initialize the array of instructions\X${}\E{}$\6
 $\\{first\_inst}\K{}$(\&{Arc} ${}{*}){}$ \\{gb\_alloc}${}((\T{4}*\|g\MG\|n-%
 \T{2})*\&{sizeof}(\&{Arc}),\39\\{working\_storage});{}$\6
 \&{if} ${}(\\{first\_inst}\E\NULL){}$\1\5
@@ -83,7 +85,7 @@ $\\{first\_inst}\K{}$(\&{Arc} ${}{*}){}$ \\{gb\_alloc}${}((\T{4}*\|g\MG\|n-%
 ${}\\{next\_inst}\K\\{first\_inst}{}$;\par
 \U6.\fi
 
-\M{5}\B\X2:Global variables\X${}\mathrel+\E{}$\6
+\M[65 hull.w]{5}\B\X2:Global variables\X${}\mathrel+\E{}$\6
 \&{Arc} ${}{*}\\{first\_inst}{}$;\C{ beginning of the array of instructions }\6
 \&{Arc} ${}{*}\\{next\_inst}{}$;\C{ first unused slot in that array }\6
 \&{Vertex} ${}{*}\\{rover}{}$;\C{ one of the vertices in the convex hull }\6
@@ -92,7 +94,8 @@ ${}\\{next\_inst}\K\\{first\_inst}{}$;\par
 coordinates }\par
 \fi
 
-\M{6}We assume that the vertices have been given to us in a GraphBase-type
+\M[72 hull.w]{6}We assume that the vertices have been given to us in a
+GraphBase-type
 graph. The algorithm begins with a trivial hull that contains
 only the first two vertices.
 
@@ -117,8 +120,8 @@ ${}\\{printf}(\.{"Beginning\ with\ (\%s;}\)\.{\ \%s)\\n"},\39\|u\MG\\{name},\39%
 \|v\MG\\{name}){}$;\2\par
 \U8.\fi
 
-\M{7}We'll probably need a bunch of local variables to do elementary operations
-on
+\M[91 hull.w]{7}We'll probably need a bunch of local variables to do elementary
+operations on
 data structures.
 
 \Y\B\4\X7:Local variables\X${}\E{}$\6
@@ -126,7 +129,7 @@ data structures.
 \&{Arc} ${}{*}\|p,{}$ ${}{*}\|q,{}$ ${}{*}\|r,{}$ ${}{*}\|s{}$;\par
 \U1.\fi
 
-\N{1}{8}Hull updating.
+\N[98 hull.w]{1}{8}Hull updating.
 The main loop of the algorithm updates the data structure incrementally
 by adding one new vertex at a time. If the new vertex lies outside the
 current convex hull, we put it into the cycle and possibly delete some
@@ -146,7 +149,8 @@ consecutive hull vertices \PB{\|u} and \PB{\|v}\X;\6
 \X9:Print the convex hull\X;\par
 \U1.\fi
 
-\M{9}Let me do the easy part first, since it's bedtime and I can worry about
+\M[114 hull.w]{9}Let me do the easy part first, since it's bedtime and I can
+worry about
 the rest tomorrow.
 
 \Y\B\4\X9:Print the convex hull\X${}\E{}$\6
@@ -160,8 +164,8 @@ ${}\|u\K\|u\MG\\{succ};{}$\6
 \&{while} ${}(\|u\I\\{rover}){}$;\par
 \U8.\fi
 
-\M{10}\B\X10:Follow the instructions; \PB{\&{continue}} if \PB{\\{vv}} is
-inside the current hull\X${}\E{}$\6
+\M[125 hull.w]{10}\B\X10:Follow the instructions; \PB{\&{continue}} if \PB{%
+\\{vv}} is inside the current hull\X${}\E{}$\6
 $\|p\K\\{first\_inst};{}$\6
 \&{do}\5
 ${}\{{}$\1\6
@@ -178,8 +182,8 @@ ${}\|o,\39\|v\K\|q\MG\\{tip};{}$\6
 ${}\|o,\39\|u\K\|v\MG\\{pred}{}$;\par
 \U8.\fi
 
-\M{11}\B\X11:Update the convex hull, knowing that \PB{\\{vv}} lies outside the
-consecutive hull vertices \PB{\|u} and \PB{\|v}\X${}\E{}$\6
+\M[136 hull.w]{11}\B\X11:Update the convex hull, knowing that \PB{\\{vv}} lies
+outside the consecutive hull vertices \PB{\|u} and \PB{\|v}\X${}\E{}$\6
 $\|o,\39\|q\MG\\{next}\K\\{next\_inst};{}$\6
 \&{while} (\T{1})\5
 ${}\{{}$\1\6
@@ -212,8 +216,8 @@ ${}\\{vv}\MG\\{succ}\K\|v;{}$\6
 \|v)$}\X;\par
 \U8.\fi
 
-\M{12}\B\X12:Compile two new instructions, for \PB{$(\|u,\\{vv})$} and \PB{$(%
-\\{vv},\|v)$}\X${}\E{}$\6
+\M[159 hull.w]{12}\B\X12:Compile two new instructions, for \PB{$(\|u,\\{vv})$}
+and \PB{$(\\{vv},\|v)$}\X${}\E{}$\6
 $\|o,\39\\{next\_inst}\MG\\{tip}\K\\{vv};{}$\6
 ${}\|o,\39\\{next\_inst}\MG\\{next}\K\\{first\_inst};{}$\6
 ${}\|o,\39\\{vv}\MG\\{inst}\K\\{next\_inst};{}$\6
@@ -233,7 +237,8 @@ ${}\\{printf}(\.{"New\ hull\ sequence\ (}\)\.{\%s;\ \%s;\ \%s)\\n"},\39\|u\MG%
 \\{name},\39\\{vv}\MG\\{name},\39\|v\MG\\{name}){}$;\2\par
 \U11.\fi
 
-\N{1}{13}Determinants. I need code for the primitive function \PB{\\{ccw}}.
+\N[176 hull.w]{1}{13}Determinants. I need code for the primitive function \PB{%
+\\{ccw}}.
 Floating-point arithmetic suffices for my purposes.
 
 We want to evaluate the determinant

@@ -1,7 +1,8 @@
 \input cwebmac
+\srcloctrue
 
-\N{1}{1}An example of backtracking. Given a list of $m$-letter words and
-another
+\N[1 back-mxn-words-mxn.w]{1}{1}An example of backtracking. Given a list of
+$m$-letter words and another
 list of $n$-letter words, we find all $m\times n$ matrices whose rows and
 columns are all listed. This program was written a week or so after I wrote
 {\mc BACK-MXN-WORDS}, because I realized that I ought to try a scheme
@@ -70,13 +71,13 @@ mems).\\n"},\39\\{count},\39\\{mems});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Print the profile\X${}\E{}$\6
+\M[58 back-mxn-words-mxn.w]{2}\B\X2:Print the profile\X${}\E{}$\6
 $\\{fprintf}(\\{stderr},\39\.{"Profile:\ \ \ \ \ \ \ \ \ \ 1}\)\.{\\n"});{}$\6
 \&{for} ${}(\|k\K\T{2};{}$ ${}\|k\Z\|m*\|n+\T{1};{}$ ${}\|k\PP){}$\1\5
 ${}\\{fprintf}(\\{stderr},\39\.{"\%19lld\\n"},\39\\{profile}[\|k]){}$;\2\par
 \U1.\fi
 
-\M{3}\B\X3:Process the command line\X${}\E{}$\6
+\M[62 back-mxn-words-mxn.w]{3}\B\X3:Process the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{3}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ mwords[:m}\)\.{m]\ nwords[:nn]%
@@ -119,7 +120,8 @@ ${}\\{exit}({-}\T{3});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{4}\B\X4:Input the $m$-words and make the tri\X${}\E{}$\6
+\M[92 back-mxn-words-mxn.w]{4}\B\X4:Input the $m$-words and make the tri\X${}%
+\E{}$\6
 $\|m\K\\{mm}\K\T{0};{}$\6
 \&{while} (\T{1})\5
 ${}\{{}$\1\6
@@ -160,7 +162,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"(The\ tri\ has\ \%d\ ele}\)\.{ments.)\\n"},\39%
 \\{triptr}){}$;\par
 \U1.\fi
 
-\M{5}For simplicity, I make a sparse trie with 27 branches at every node.
+\M[118 back-mxn-words-mxn.w]{5}For simplicity, I make a sparse trie with 27
+branches at every node.
 An $n$-letter word $w_1\ldots w_n$ leads to entries
 \PB{\\{trie}}$[p_{k-1}][[w_k]=p_k$ for $1\le k\le n$, where $p_0=0$ and
 $p_k>0$.
@@ -222,7 +225,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"(The\ trie\ has\ \%d\ no}\)\.{des.)\\n"},\39%
 \\{trieptr}){}$;\par
 \U1.\fi
 
-\M{6}\B\X6:Check the length of the new line\X${}\E{}$\6
+\M[161 back-mxn-words-mxn.w]{6}\B\X6:Check the length of the new line\X${}\E{}$%
+\6
 \&{if} ${}(\|n\E\T{0}){}$\5
 ${}\{{}$\1\6
 ${}\|n\K\|j;{}$\6
@@ -253,8 +257,8 @@ ${}\\{exit}({-}\T{6});{}$\6
 \4${}\}{}$\2\par
 \U5.\fi
 
-\M{7}In this program I build what's called here (only) a ``tri,'' by which I
-mean
+\M[181 back-mxn-words-mxn.w]{7}In this program I build what's called here
+(only) a ``tri,'' by which I mean
 a trie that has been compressed into the following simple format: When
 node~$k$ has $c$ children, the \PB{\&{trielt}} entries
 \PB{\\{tri}[\|k]}, \PB{$\\{tri}[\|k+\T{1}]$}, \dots, \PB{$\\{tri}[\|k+\|c-%
@@ -298,7 +302,8 @@ remember the word }\6
 ${}\\{compress}(\T{0},\39\|m){}$;\par
 \U4.\fi
 
-\M{8}With a small change (namely to cache the value of a compressed node)
+\M[212 back-mxn-words-mxn.w]{8}With a small change (namely to cache the value
+of a compressed node)
 this program would actually compress a trie that has
 overlapping subtries. But our trie doesn't have that property,
 so I don't worry about it here.
@@ -333,7 +338,7 @@ ${}\|o,\39\\{trie}[\|p][\|k]\K\T{0}{}$;\C{ clear the trie for the next user }\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{9}Here I follow Algorithm 7.2.2B.
+\M[237 back-mxn-words-mxn.w]{9}Here I follow Algorithm 7.2.2B.
 
 \Y\B\4\X9:Backtrack thru all solutions\X${}\E{}$\6
 \4\\{b1}:\5
@@ -378,7 +383,8 @@ ${}\\{lj}\K((\|l-\T{1})/\|m)+\T{1};{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{10}\B\X10:Print a solution and \PB{\&{goto} \\{b5}}\X${}\E{}$\6
+\M[267 back-mxn-words-mxn.w]{10}\B\X10:Print a solution and \PB{\&{goto} %
+\\{b5}}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{count}\PP{}$;\5
 ${}\\{printf}(\.{"\%d:"},\39\\{count});{}$\6
@@ -397,8 +403,8 @@ ${}\\{printf}(\.{"\ (\%06d,\%06d;\ sum\ \%0}\)\.{7d,\ prod\ \%012d)\\n"},\39%
 \4${}\}{}$\2\par
 \U9.\fi
 
-\M{11}\B\X11:Report the current state, if \PB{$\\{mems}\G\\{thresh}$}\X${}\E{}$%
-\6
+\M[278 back-mxn-words-mxn.w]{11}\B\X11:Report the current state, if \PB{$%
+\\{mems}\G\\{thresh}$}\X${}\E{}$\6
 \&{if} ${}(\\{mems}\G\\{thresh}){}$\5
 ${}\{{}$\1\6
 ${}\\{thresh}\MRL{+{\K}}\T{10000000000};{}$\6
@@ -409,7 +415,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
 \4${}\}{}$\2\par
 \U9.\fi
 
-\N{1}{12}Index.
+\N[286 back-mxn-words-mxn.w]{1}{12}Index.
 \fi
 
 \inx

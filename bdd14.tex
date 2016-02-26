@@ -1,8 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This program is the fourteenth in a series of exploratory
-studies by
+\N[2 bdd14.w]{1}{1}Intro. This program is the fourteenth in a series of
+exploratory studies by
 which I'm attempting to gain first-hand experience with OBDD structures, as I
 prepare Section 7.1.4 of {\sl The Art of Computer Programming}.
 It's basically the same as {\mc BDD11}, but extended to include some
@@ -79,7 +80,7 @@ in the index at the end.
 
 \fi
 
-\M{2}Here's the overall program structure:
+\M[80 bdd14.w]{2}Here's the overall program structure:
 
 \Y\B\8\#\&{include} \.{<stdio.h>}\6
 \8\#\&{include} \.{<stdlib.h>}\6
@@ -104,7 +105,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{3}\B\D$\\{file\_given}$ \5
+\M[103 bdd14.w]{3}\B\D$\\{file\_given}$ \5
 $(\\{argc}\E\T{2}{}$)\par
 \Y\B\4\X3:Check the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}>\T{2}\V(\\{file\_given}\W\R(\\{infile}\K\\{fopen}(\\{argv}[%
@@ -116,19 +117,20 @@ ${}\\{exit}({-}\T{1});{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{4}\B\X4:Global variables\X${}\E{}$\6
+\M[111 bdd14.w]{4}\B\X4:Global variables\X${}\E{}$\6
 \&{FILE} ${}{*}\\{infile}{}$;\C{ input file containing commands }\6
 \&{int} \\{verbose}${}\K{-}\T{1}{}$;\C{ master control for debugging output;
 $-1$ gives all }\par
 \As8, 13, 22, 30, 40, 42, 51, 59, 101, 112, 132, 136, 154, 158\ETs161.
 \U2.\fi
 
-\M{5}\B\X5:Initialize everything\X${}\E{}$\6
+\M[115 bdd14.w]{5}\B\X5:Initialize everything\X${}\E{}$\6
 \\{gb\_init\_rand}(\T{0});\C{ initialize the random number generator }\par
 \As9, 12, 23, 44\ETs62.
 \U2.\fi
 
-\M{6}One of the main things I hope to learn with this program is the total
+\M[118 bdd14.w]{6}One of the main things I hope to learn with this program is
+the total
 number of \PB{\\{mems}} that the computation needs, namely the total number of
 memory references to octabytes.
 
@@ -158,7 +160,7 @@ ${}\\{printf}(\.{"\ \ \%llu\ mems\ plus\ \%l}\)\.{lu\ rmems\ plus\ \%llu\ z}\)%
 \X18:Print total memory usage\X;\par
 \Us2\ET159.\fi
 
-\M{7}\B\X7:Subroutines\X${}\E{}$\6
+\M[143 bdd14.w]{7}\B\X7:Subroutines\X${}\E{}$\6
 \&{void} \\{show\_stats}(\&{void})\1\1\2\2\6
 ${}\{{}$\1\6
 ${}\\{printf}(\.{"stats:\ \%d/\%d\ nodes,}\)\.{\ \%d\ dead,\ \%d\ pages,"},\39%
@@ -172,7 +174,8 @@ ${}\\{printf}(\.{"\ \%llu\ mems,\ \%llu\ rm}\)\.{ems,\ \%llu\ zmems\\n"},\39%
 137, 138, 141, 145, 148, 151, 156, 159\ETs162.
 \U2.\fi
 
-\M{8}This program uses `\PB{\&{long} \&{long}}' to refer to 64-bit integers,
+\M[150 bdd14.w]{8}This program uses `\PB{\&{long} \&{long}}' to refer to 64-bit
+integers,
 because a single `\PB{\&{long}}' isn't treated consistently by the
 \CEE/~compilers available to me. (When I first learned~\CEE/,
 `\PB{\&{int}}' was traditionally `\PB{\&{short}}', so I was obliged
@@ -186,7 +189,7 @@ C'est tragique; c'est la vie.)
 mem counters }\par
 \fi
 
-\M{9}\B\X5:Initialize everything\X${}\mathrel+\E{}$\6
+\M[162 bdd14.w]{9}\B\X5:Initialize everything\X${}\mathrel+\E{}$\6
 \&{if} (\&{sizeof}(\&{long} \&{long})${}\I\T{8}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ I\ assume\ tha}\)\.{t\ sizeof(long\
@@ -195,7 +198,7 @@ ${}\\{exit}({-}\T{2});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{10}Speaking of compilers, the one I use at present insists that
+\M[168 bdd14.w]{10}Speaking of compilers, the one I use at present insists that
 pointers occupy 64 bits. As a result, I need to pack and unpack
 pointer data, in all the key data structures of this program;
 otherwise I would basically be giving up half of my memory and half
@@ -236,7 +239,8 @@ The \PB{\\{addr\_}} macro converts an arbitrary pointer to an \PB{\\{addr}}.
 \As11, 20\ETs39.
 \U2.\fi
 
-\N{1}{11}Dynamic arrays. Before I get into the BDD stuff, I might as well
+\N[207 bdd14.w]{1}{11}Dynamic arrays. Before I get into the BDD stuff, I might
+as well
 give myself some infrastructure to work with.
 
 The giant \PB{\\{mem}} array mentioned earlier has nodes at the bottom,
@@ -283,7 +287,7 @@ ${}\}{}$ \&{node};\6
 ${}\}{}$ \&{page};\par
 \fi
 
-\M{12}Here's how we launch the dynamic memory setup.
+\M[247 bdd14.w]{12}Here's how we launch the dynamic memory setup.
 
 Incidentally, I tried to initialize \PB{\\{mem}} by declaring it to be
 a variable of type \PB{\&{void} ${}{*}$}, then saying `\PB{$\\{mem}\K%
@@ -313,7 +317,7 @@ ${}\\{nodeptr}\K\\{topsink}+\T{1};{}$\6
 ${}\\{pageptr}\K\\{topofmem}{}$;\par
 \fi
 
-\M{13}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[271 bdd14.w]{13}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{mem}[\\{memsize}];\C{ where we store most of the stuff }\6
 \&{node} ${}{*}\\{nodeptr}{}$;\C{ the smallest unused node in \PB{\\{mem}} }\6
 \&{page} ${}{*}\\{pageptr}{}$;\C{ the smallest used page in \PB{\\{mem}} }\6
@@ -327,7 +331,7 @@ never go away }\6
 \&{int} \\{leasesonlife}${}\K\T{10}{}$;\par
 \fi
 
-\M{14}Here's how we get a fresh (but uninitialized) node.
+\M[282 bdd14.w]{14}Here's how we get a fresh (but uninitialized) node.
 The \PB{\\{nodeavail}} stack is linked by its \PB{\\{xref}} fields.
 
 If memory is completely full, \PB{$\NULL$} is returned. In such cases
@@ -367,7 +371,8 @@ ${}\\{totalnodes}\PP;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{15}Conversely, nodes can always be recycled. In such cases, there
+\M[312 bdd14.w]{15}Conversely, nodes can always be recycled. In such cases,
+there
 had better not be any other nodes pointing to them.
 
 \Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
@@ -379,7 +384,8 @@ ${}\\{totalnodes}\MM;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{16}Occupation and liberation of pages is similar, but it takes place
+\M[322 bdd14.w]{16}Occupation and liberation of pages is similar, but it takes
+place
 at the top of \PB{\\{mem}}.
 
 \Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
@@ -418,8 +424,8 @@ ${}\\{pageavail}\K\|p;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{17}\B\X17:If there are at least three free pages and at least three free
-nodes, \PB{\&{break}}\X${}\E{}$\6
+\M[351 bdd14.w]{17}\B\X17:If there are at least three free pages and at least
+three free nodes, \PB{\&{break}}\X${}\E{}$\6
 $\|j\K{}$(\&{node} ${}{*})(\\{pageptr}-\T{3})-\\{nodeptr};{}$\6
 \&{if} ${}(\|j\G\T{0}){}$\5
 ${}\{{}$\1\6
@@ -431,7 +437,7 @@ ${}\|j\PP;{}$\2\6
 \4${}\}{}$\2\par
 \U111.\fi
 
-\M{18}\B\X18:Print total memory usage\X${}\E{}$\6
+\M[358 bdd14.w]{18}\B\X18:Print total memory usage\X${}\E{}$\6
 $\|j\K\\{nodeptr}-{}$(\&{node} ${}{*}){}$ \\{mem};\6
 ${}\|k\K\\{topofmem}-\\{pageptr};{}$\6
 ${}\\{printf}(\.{"\ \ \%llu\ bytes\ of\ mem}\)\.{ory\ (\%d\ nodes,\ \%d\ pa}\)%
@@ -439,12 +445,13 @@ ${}\\{printf}(\.{"\ \ \%llu\ bytes\ of\ mem}\)\.{ory\ (\%d\ nodes,\ \%d\ pa}\)%
 \&{long} \&{long}) \|k)${}*\&{sizeof}(\&{page}),\39\|j,\39\|k){}$;\par
 \U6.\fi
 
-\M{19}\B\X19:Local variables\X${}\E{}$\6
+\M[363 bdd14.w]{19}\B\X19:Local variables\X${}\E{}$\6
 \&{register} \&{int} \|j${},{}$ \|k;\par
 \A115.
 \U2.\fi
 
-\N{1}{20}Variables and hash tables. Our BDD base represents functions
+\N[366 bdd14.w]{1}{20}Variables and hash tables. Our BDD base represents
+functions
 on the variables $x_v$ for $0\le v<\PB{\\{varsize}}$, where \PB{\\{varsize}}
 is a power of~2.
 
@@ -497,8 +504,8 @@ neighboring active variables }\2\6
 ${}\}{}$ \&{var};\par
 \fi
 
-\M{21}Every node \PB{\|p} that branches on $x_v$ in the BDD has a field \PB{$%
-\|p\MG\\{index}$},
+\M[412 bdd14.w]{21}Every node \PB{\|p} that branches on $x_v$ in the BDD has a
+field \PB{$\|p\MG\\{index}$},
 whose leftmost \PB{\\{logvarsize}} bits contain the index~$v$. The rightmost
 \PB{$\T{32}-\\{logvarsize}$} bits of \PB{$\|p\MG\\{index}$} are chosen
 randomly, in order to
@@ -522,7 +529,8 @@ $\\{oo},\39\|p\MG\\{lo}\K\\{addr\_}(\|l),\39\|p\MG\\{hi}\K\\{addr\_}(\|h),\39%
 \\{logvarsize}))+(\\{gb\_next\_rand}(\,)\GG(\\{logvarsize}-\T{1}){}$)\par
 \fi
 
-\M{22}Variable $x_v$ in this documentation means the variable whose information
+\M[430 bdd14.w]{22}Variable $x_v$ in this documentation means the variable
+whose information
 record is \PB{\\{varhead}[\|v]}. But the user's variable `\.{x5}' might not be
 represented by \PB{\\{varhead}[\T{5}]}, because the ordering of variables can
 change
@@ -539,13 +547,13 @@ ${\AND}\\{varhead}{}$[\\{varsize}]\par
 \&{int} \\{varmap}[\\{varsize}];\C{ the variable that has a given name }\par
 \fi
 
-\M{23}\B\X5:Initialize everything\X${}\mathrel+\E{}$\6
+\M[443 bdd14.w]{23}\B\X5:Initialize everything\X${}\mathrel+\E{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{varsize};{}$ ${}\|k\PP){}$\1\5
 ${}\\{varmap}[\|k]\K\|k{}$;\2\par
 \fi
 
-\M{24}The simplest nonconstant Boolean expression is a projection function,
-$x_v$.
+\M[446 bdd14.w]{24}The simplest nonconstant Boolean expression is a projection
+function, $x_v$.
 We access it with the following subroutine, creating it from scratch
 if necessary.
 
@@ -578,7 +586,8 @@ ${}\|o,\39\\{hv}\MG\\{name}\K\|v;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{25}I sometimes like to use a subroutine before I'm in the mood to write
+\M[471 bdd14.w]{25}I sometimes like to use a subroutine before I'm in the mood
+to write
 its innards. In such cases, a pre-specification
 like the one given here allows me to procrastinate.
 
@@ -588,8 +597,8 @@ like the one given here allows me to procrastinate.
 \As27, 90\ETs107.
 \U2.\fi
 
-\M{26}Now, however, I'm ready to tackle the subroutine just named, \PB{%
-\\{unique\_find}},
+\M[478 bdd14.w]{26}Now, however, I'm ready to tackle the subroutine just named,
+\PB{\\{unique\_find}},
 which is one of the most crucial in the entire program.
 Given a variable~\PB{\|v}, together with node pointers \PB{\|l} and~\PB{\|h},
 we often
@@ -673,7 +682,7 @@ ${}\\{oooo},\39\|l\MG\\{xref}\MM,\39\|h\MG\\{xref}\MM;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{27}\B\X25:Templates for subroutines\X${}\mathrel+\E{}$\6
+\M[542 bdd14.w]{27}\B\X25:Templates for subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{recursively\_revive}(\&{node} ${}{*}\|p){}$;\C{ recursive
 resuscitation }\6
 \&{void} \\{recursively\_kill}(\&{node} ${}{*}\|p){}$;\C{ recursive
@@ -682,8 +691,8 @@ euthanization }\6
 }\par
 \fi
 
-\M{28}Before we can call \PB{\\{unique\_find}}, we need a hash table to work
-with.
+\M[547 bdd14.w]{28}Before we can call \PB{\\{unique\_find}}, we need a hash
+table to work with.
 We start small.
 
 \Y\B\4\D$\\{storenulls}(\|k)$ \5
@@ -696,7 +705,8 @@ ${}\\{storenulls}(\\{hv}\MG\\{base}[\T{0}]){}$;\C{ both slots start out \PB{$%
 ${}\\{zmems}\PP{}$;\par
 \U24.\fi
 
-\M{29}A little timer starts ticking at the beginning of this program,
+\M[557 bdd14.w]{29}A little timer starts ticking at the beginning of this
+program,
 and it advances whenever we reach the present point.
 Whenever the timer reaches a multiple of \PB{\\{timerinterval}}, we pause to
 examine the memory situation, in an attempt to keep node growth under
@@ -726,11 +736,11 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U26.\fi
 
-\M{30}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[585 bdd14.w]{30}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{unsigned} \&{long} \&{long} \\{timer};\par
 \fi
 
-\M{31}Brand-new nodes enter the fray here.
+\M[588 bdd14.w]{31}Brand-new nodes enter the fray here.
 
 \Y\B\4\X31:Create a new node and return it\X${}\E{}$\6
 $\|p\K\\{reserve\_node}(\,);{}$\6
@@ -752,7 +762,8 @@ dead }\6
 \&{return} ${}\NULL{}$;\par
 \U26.\fi
 
-\M{32}We get to this part of the code when the table has become too dense.
+\M[605 bdd14.w]{32}We get to this part of the code when the table has become
+too dense.
 The density will now decrease from 3/4 to 3/8.
 
 \Y\B\4\X32:Double the table size and \PB{\&{goto} \\{restart}}\X${}\E{}$\6
@@ -782,7 +793,7 @@ ${}\|v\MG\\{free}\K\\{free}+\T{1}+(\\{newmask}-\\{mask})/\&{sizeof}(%
 \4${}\}{}$\2\par
 \Us31, 138\ETs142.\fi
 
-\M{33}\B\D$\\{maxmask}$ \5
+\M[626 bdd14.w]{33}\B\D$\\{maxmask}$ \5
 $((\T{1}\LL\\{logmaxhashsize})*\&{sizeof}(\&{addr})-\T{1}{}$)\C{ the biggest
 possible \PB{\\{mask}} }\par
 \Y\B\4\X33:Reserve new all-\PB{$\NULL$} pages for the bigger table\X${}\E{}$\6
@@ -814,7 +825,7 @@ ${}\\{zmems}\MRL{+{\K}}\\{pagesize}/{}$\&{sizeof}(\&{long} \&{long});\6
 \4${}\}{}$\2\par
 \U32.\fi
 
-\M{34}Some subtle cases can arise at this point.
+\M[650 bdd14.w]{34}Some subtle cases can arise at this point.
 For example, consider the hash table
 {\let\\=\Lambda $(a,\\,\\,b)$, with hash$(a)=3$ and hash$(b)=7$; when
 doubling the size, we need to rehash $a$ twice, going from
@@ -849,7 +860,8 @@ ${}\\{storenode}(\|v,\39\|j,\39\|r);{}$\6
 \4${}\}{}$\2\par
 \U32.\fi
 
-\M{35}While I've got linear probing firmly in mind, I might as well
+\M[677 bdd14.w]{35}While I've got linear probing firmly in mind, I might as
+well
 write a subroutine that will be needed later for garbage collection.
 The \PB{\\{table\_purge}} routine deletes all dead nodes that branch
 on a given variable~$x_v$.
@@ -883,7 +895,8 @@ ${}\|o,\39\|v\MG\\{free}\K\\{free};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{36}Deletion from a linearly probed hash table is tricky, as noted in
+\M[703 bdd14.w]{36}Deletion from a linearly probed hash table is tricky, as
+noted in
 Algorithm 6.4R of TAOCP. Here I can speed that algorithm up slightly,
 because there's no need to move dead entries that will be deleted later.
 
@@ -915,8 +928,8 @@ ${}\\{storenode}(\|v,\39\\{kk},\39\NULL);{}$\6
 ${}\|k\K\|j{}$;\C{ the last run through that loop saw no dead nodes }\par
 \U35.\fi
 
-\M{37}At least one node, \PB{$\|v\MG\\{proj}$}, branches on $x_v$ at this
-point.
+\M[726 bdd14.w]{37}At least one node, \PB{$\|v\MG\\{proj}$}, branches on $x_v$
+at this point.
 
 \Y\B\4\X37:Downsize the table if only a few entries are left\X${}\E{}$\6
 $\|k\K(\\{mask}\GG\T{2})+\T{1}-\\{free}{}$;\C{ this many nodes still branch on
@@ -939,7 +952,8 @@ ${}\|v\MG\\{mask}\K\\{newmask};{}$\6
 \4${}\}{}$\2\par
 \U35.\fi
 
-\M{38}Finally, another algorithm learned from Rudell. To prove its correctness,
+\M[742 bdd14.w]{38}Finally, another algorithm learned from Rudell. To prove its
+correctness,
 one can verify the following fact:
 Any entries that wrapped around from the upper half to
 the bottom in the original table will still wrap around in the smaller table.
@@ -963,8 +977,8 @@ ${}\\{storenode}(\|v,\39\|j,\39\|r);{}$\6
 \4${}\}{}$\2\par
 \U37.\fi
 
-\N{1}{39}The cache. The other principal data structure we need, besides the BDD
-base
+\N[761 bdd14.w]{1}{39}The cache. The other principal data structure we need,
+besides the BDD base
 itself, is a software cache that helps us avoid repeating the calculations
 that we've already done. If, for example, $f$ and $g$ are nodes of the BDD for
 which we've already computed $h=f\land g$, the cache should contain the
@@ -1029,7 +1043,7 @@ not-yet-implemented~(4--15).
 ${}\}{}$ \&{memo};\par
 \fi
 
-\M{40}The cache always occupies $2^e$ pages of the dynamic memory,
+\M[827 bdd14.w]{40}The cache always occupies $2^e$ pages of the dynamic memory,
 for some integer $e\ge0$. If we have leisure to choose this size, we pick
 the smallest $e\ge0$ such that the cache has at least $\max(4m,n/4)$ slots,
 where $m$ is the number of nonempty items in the cache and $n$ is
@@ -1054,7 +1068,8 @@ $(\\{pagesize}/\&{sizeof}(\&{memo}){}$)\par
 }\par
 \fi
 
-\M{41}The following subroutines, useful for debugging, print out the
+\M[848 bdd14.w]{41}The following subroutines, useful for debugging, print out
+the
 cache contents in symbolic form.
 
 If \PB{\|p} points to a node, \PB{\\{id}(\|p)} is \PB{$\|p-\\{botsink}$}.
@@ -1089,7 +1104,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{42}Many of the symbolic names here are presently unused. I've filled them
+\M[873 bdd14.w]{42}Many of the symbolic names here are presently unused. I've
+filled them
 in just to facilitate extensions to this program.
 
 \Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
@@ -1104,7 +1120,8 @@ in just to facilitate extensions to this program.
 \39\.{"-"},\39\.{"+"},\39\.{"|"},\39\.{"/"},\39\.{"\\\\"},\39\.{"\~"}\}{}$;\par
 \fi
 
-\M{43}The threshold is set to half the total number of cache slots,
+\M[884 bdd14.w]{43}The threshold is set to half the total number of cache
+slots,
 because this many random insertions will keep about $e^{-1/2}\approx
 61$\% of the cache slots unclobbered. (If $p$ denotes this probability,
 a random large binary tree will need about $E$ steps to recalculate a
@@ -1154,11 +1171,12 @@ ${}\\{threshold}\K\T{1}+(\\{cachepages}*\\{cacheslotsperpage})/\T{2};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{44}\B\X5:Initialize everything\X${}\mathrel+\E{}$\6
+\M[924 bdd14.w]{44}\B\X5:Initialize everything\X${}\mathrel+\E{}$\6
 \\{cache\_init}(\,);\par
 \fi
 
-\M{45}Here's how we look for a memo in the cache. Memos might point to dead
+\M[927 bdd14.w]{45}Here's how we look for a memo in the cache. Memos might
+point to dead
 nodes, as long as those nodes still exist.
 
 A simple hash function is adequate for caching, because no clustering
@@ -1206,7 +1224,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{46}Insertion into the cache is even easier, except that we might
+\M[963 bdd14.w]{46}Insertion into the cache is even easier, except that we
+might
 want to double the cache size while we're at it.
 
 \Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
@@ -1240,7 +1259,7 @@ ${}\\{printf}(\.{"set\ \%x:\ "},\39(\\{slot}\AND\\{cachemask})/\&{sizeof}(%
 \4${}\}{}$\2\par
 \fi
 
-\M{47}\B\X47:Double the cache size\X${}\E{}$\6
+\M[985 bdd14.w]{47}\B\X47:Double the cache size\X${}\E{}$\6
 \&{if} ${}(\\{cachepages}<\\{maxcachepages}){}$\5
 ${}\{{}$\1\6
 \&{if} ${}(\\{verbose}\AND(\T{8}+\T{16}+\T{32}+\T{512})){}$\1\5
@@ -1271,7 +1290,7 @@ ${}\\{threshold}\K\T{1}+(\\{cachepages}*\\{cacheslotsperpage})/\T{2};{}$\6
 \4\\{done}:\par
 \U46.\fi
 
-\M{48}\B\X48:Recache the items in the bottom half\X${}\E{}$\6
+\M[1007 bdd14.w]{48}\B\X48:Recache the items in the bottom half\X${}\E{}$\6
 \&{for} ${}(\|k\K\\{cachepages}\GG\T{1};{}$ ${}\|k<\\{cachepages};{}$ ${}\|k%
 \PP){}$\5
 ${}\{{}$\1\6
@@ -1294,7 +1313,8 @@ ${}\|o,\39\|m\MG\|r\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U47.\fi
 
-\M{49}Before we purge elements from the unique tables, we need to purge all
+\M[1020 bdd14.w]{49}Before we purge elements from the unique tables, we need to
+purge all
 references to dead nodes from the cache. At the same time, we might as
 well purge items whose time stamp has expired.
 
@@ -1339,7 +1359,8 @@ ${}\\{cacheinserts}\K\\{items};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{50}\B\X50:Downsize the cache if it has now become too sparse\X${}\E{}$\6
+\M[1048 bdd14.w]{50}\B\X50:Downsize the cache if it has now become too sparse%
+\X${}\E{}$\6
 $\\{newcachepages}\K\\{choose\_cache\_size}(\\{items});{}$\6
 \&{if} ${}(\\{newcachepages}<\\{cachepages}){}$\5
 ${}\{{}$\1\6
@@ -1371,7 +1392,8 @@ ${}\\{threshold}\K\T{1}+(\\{cachepages}*\\{cacheslotsperpage})/\T{2};{}$\6
 \4${}\}{}$\2\par
 \U49.\fi
 
-\N{1}{51}BDD structure. The reader of this program ought to be familiar with
+\N[1070 bdd14.w]{1}{51}BDD structure. The reader of this program ought to be
+familiar with
 the basics of BDDs, namely the facts that a BDD base consists of
 two sink nodes together with an unlimited number of branch nodes,
 where each branch node $(v,l,h)$ names a variable $x_v$ and points
@@ -1390,7 +1412,8 @@ BDD node.
 BDD base }\par
 \fi
 
-\M{52}Sometimes we want to mark the nodes of a subfunction temporarily.
+\M[1087 bdd14.w]{52}Sometimes we want to mark the nodes of a subfunction
+temporarily.
 The following routine sets the leading bit of the \PB{\\{xref}} field
 in all nodes reachable from~\PB{\|p}.
 
@@ -1410,7 +1433,8 @@ ${}\|o,\39\|p\K\\{node\_}(\|p\MG\\{hi});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{53}We need to remove those marks soon after \PB{\\{mark}} has been called,
+\M[1102 bdd14.w]{53}We need to remove those marks soon after \PB{\\{mark}} has
+been called,
 because the \PB{\\{xref}} field is really supposed to count references.
 
 \Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
@@ -1429,7 +1453,8 @@ ${}\|o,\39\|p\K\\{node\_}(\|p\MG\\{hi});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{54}Here's a simple routine that prints out the current BDDs, in order
+\M[1116 bdd14.w]{54}Here's a simple routine that prints out the current BDDs,
+in order
 of the variables in branch nodes. If the \PB{\\{marked}} parameter is nonzero,
 the output is restricted to branch nodes whose \PB{\\{xref}} field is
 marked. Otherwise all nodes are shown, with nonzero \PB{\\{xref}}s in
@@ -1482,8 +1507,8 @@ ${}\\{printf}(\.{"f\%d=\%x\\n"},\39\|j,\39\\{id}(\|f[\|j]));{}$\2\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{55}The marking feature is useful when we want to print out only a single
-BDD.
+\M[1149 bdd14.w]{55}The marking feature is useful when we want to print out
+only a single BDD.
 
 \Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_function}(\&{node} ${}{*}\|p,\39{}$\&{int} \\{unmapped})\1\1%
@@ -1503,7 +1528,7 @@ ${}\\{mems}\K\\{savemems},\39\\{rmems}\K\\{savermems};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{56}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
+\M[1164 bdd14.w]{56}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_profile}(\&{node} ${}{*}\|p){}$\1\1\2\2\6
 ${}\{{}$\1\6
 \&{unsigned} \&{long} \&{long} \\{savemems}${}\K\\{mems},{}$ \\{savermems}${}\K%
@@ -1530,8 +1555,8 @@ ${}\\{mems}\K\\{savemems},\39\\{rmems}\K\\{savermems};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{57}\B\X57:Print the number of marked nodes that branch on \PB{\|v}\X${}\E{}$%
-\6
+\M[1183 bdd14.w]{57}\B\X57:Print the number of marked nodes that branch on \PB{%
+\|v}\X${}\E{}$\6
 \&{for} ${}(\|j\K\|k\K\T{0};{}$ ${}\|k<\|v\MG\\{mask};{}$ ${}\|k\MRL{+{\K}}%
 \&{sizeof}(\&{addr})){}$\5
 ${}\{{}$\1\6
@@ -1543,7 +1568,8 @@ ${}\\{printf}(\.{"\ \%d"},\39\|j);{}$\6
 ${}\\{tot}\MRL{+{\K}}\|j{}$;\par
 \U56.\fi
 
-\M{58}In order to deal efficiently with large BDDs, we've introduced highly
+\M[1191 bdd14.w]{58}In order to deal efficiently with large BDDs, we've
+introduced highly
 redundant data structures, including things like hash tables and the cache.
 Furthermore, we assume that every BDD node~\PB{\|p} has a redundant field
 \PB{$\|p\MG\\{xref}$}, which counts the total number of branch nodes, external
@@ -1592,8 +1618,8 @@ ${}\\{mems}\K\\{savemems};{}$\6
 \8\#\&{endif}\par
 \fi
 
-\M{59}Sanity checking is done with a ``shadow memory'' \PB{\\{smem}}, which is
-just
+\M[1232 bdd14.w]{59}Sanity checking is done with a ``shadow memory'' \PB{%
+\\{smem}}, which is just
 as big as~\PB{\\{mem}}. If \PB{\|p} points to a node in \PB{\\{mem}}, there's a
 corresponding
 ``ghost'' in \PB{\\{smem}}, pointed to by \PB{$\|q\K\\{ghost}(\|p)$}. The ghost
@@ -1624,7 +1650,7 @@ $\\{node\_}((\&{size\_t})(\|p)-{}$(\&{size\_t}) \\{mem}${}+{}$(\&{size\_t}) %
 \8\#\&{endif}\par
 \fi
 
-\M{60}\B\D$\\{complain}(\\{complaint})$ \6
+\M[1252 bdd14.w]{60}\B\D$\\{complain}(\\{complaint})$ \6
 ${}\{{}$\5
 \1${}\\{printf}(\.{"!\ \%s\ in\ node\ "},\39\\{complaint}){}$;\5
 \\{print\_node}(\|p);\5
@@ -1681,13 +1707,13 @@ ${}\\{printf}(\.{"!\ \%d\ nodes\ have\ lea}\)\.{ked\\n"},\39\\{extra}-%
 \\{totalnodes}){}$;\2\par
 \U58.\fi
 
-\M{61}The macros above and the \PB{\\{who\_points\_to}} routine below rely on
-the fact that
+\M[1290 bdd14.w]{61}The macros above and the \PB{\\{who\_points\_to}} routine
+below rely on the fact that
 \PB{$\&{sizeof}(\&{node})\K\T{16}$}.
 
 \fi
 
-\M{62}\B\X5:Initialize everything\X${}\mathrel+\E{}$\6
+\M[1293 bdd14.w]{62}\B\X5:Initialize everything\X${}\mathrel+\E{}$\6
 \&{if} ${}(\&{sizeof}(\&{node})\I\T{16}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ I\ assume\ tha}\)\.{t\ sizeof(node)\
@@ -1696,7 +1722,8 @@ ${}\\{exit}({-}\T{3});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{63}\B\X63:Check that \PB{\|p} is findable in the unique table\X${}\E{}$\6
+\M[1299 bdd14.w]{63}\B\X63:Check that \PB{\|p} is findable in the unique table%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{addr} ${}{*}\\{hash};{}$\6
 \&{register} \&{var} ${}{*}\|v\K\\{thevar}(\|p);{}$\7
@@ -1719,7 +1746,7 @@ ${}\\{addr\_\_}((\&{size\_t})(\|v\MG\\{base}[\|k\GG\\{logpagesize}]+(\|k\AND%
 \4${}\}{}$\2\par
 \U60.\fi
 
-\M{64}\B\X64:Check the list of free nodes\X${}\E{}$\6
+\M[1316 bdd14.w]{64}\B\X64:Check the list of free nodes\X${}\E{}$\6
 $\\{extra}\K\\{nodeptr}-\\{botsink};{}$\6
 \&{for} ${}(\|p\K\\{nodeavail};{}$ \|p; ${}\|p\K\\{node\_}(\|p\MG\\{xref})){}$\5
 ${}\{{}$\1\6
@@ -1731,7 +1758,7 @@ ${}\\{extra}\MM,\39\\{ghost}(\|p)\MG\\{xref}\K{-}\T{1};{}$\2\6
 \4${}\}{}$\2\par
 \U60.\fi
 
-\M{65}\B\X65:Compute the ghost index fields\X${}\E{}$\6
+\M[1324 bdd14.w]{65}\B\X65:Compute the ghost index fields\X${}\E{}$\6
 $\\{ghost}(\\{botsink})\MG\\{index}\K\\{ghost}(\\{topsink})\MG\\{index}\K%
 \T{0};{}$\6
 \&{for} ${}(\|v\K\\{varhead};{}$ ${}\|v<\\{topofvars};{}$ ${}\|v\PP){}$\1\6
@@ -1761,7 +1788,7 @@ ${}\\{ghost}(\|f[\|j])\MG\\{index}\PP;{}$\2\6
 \4${}\}{}$\2\2\par
 \U60.\fi
 
-\M{66}\B\X66:Check the reference counts\X${}\E{}$\6
+\M[1342 bdd14.w]{66}\B\X66:Check the reference counts\X${}\E{}$\6
 \&{for} ${}(\|p\K\\{botsink},\39\\{count}\K\T{0};{}$ ${}\|p<\\{nodeptr};{}$ ${}%
 \|p\PP){}$\5
 ${}\{{}$\1\6
@@ -1782,8 +1809,8 @@ ${}\\{printf}(\.{"!\ deadnodes\ should\ }\)\.{be\ \%d,\ not\ \%d\\n"},\39%
 \\{count},\39\\{deadnodes}){}$;\2\par
 \U58.\fi
 
-\M{67}If a reference count turns out to be wrong, I'll probably want to know
-why.
+\M[1354 bdd14.w]{67}If a reference count turns out to be wrong, I'll probably
+want to know why.
 The following subroutine provides additional clues.
 
 \Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
@@ -1802,7 +1829,7 @@ ${}\\{print\_node}(\\{node\_}(\|q\AND{-}\&{sizeof}(\&{node})));{}$\6
 \8\#\&{endif}\par
 \fi
 
-\M{68}We've seen that every superlegimate node is findable in the
+\M[1368 bdd14.w]{68}We've seen that every superlegimate node is findable in the
 proper unique table. Conversely, we want to check that everything
 is those tables is superlegitimate, and found.
 
@@ -1845,7 +1872,8 @@ ${}\\{printf}(\.{"!\ unique\ table\ \%d\ h}\)\.{as\ \%d\ free\ slots,\ no}\)%
 \4${}\}{}$\2\2\par
 \U58.\fi
 
-\M{69}The fields in cache memos that refer to nodes should refer to
+\M[1400 bdd14.w]{69}The fields in cache memos that refer to nodes should refer
+to
 legitimate nodes.
 
 \Y\B\4\X69:Check the cache\X${}\E{}$\6
@@ -1882,8 +1910,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U58.\fi
 
-\M{70}Finally, \PB{\\{sanity\_check}} ensures that we haven't forgotten to free
-unused
+\M[1424 bdd14.w]{70}Finally, \PB{\\{sanity\_check}} ensures that we haven't
+forgotten to free unused
 pages, nor have we freed a page that was already free.
 
 \Y\B\4\X70:Check the list of free pages\X${}\E{}$\6
@@ -1902,7 +1930,7 @@ ${}\\{printf}(\.{"!\ \%d\ pages\ have\ lea}\)\.{ked\\n"},\39\\{extra});{}$\2\6
 \4${}\}{}$\2\par
 \U58.\fi
 
-\M{71}The following routine brings a dead node back to life.
+\M[1441 bdd14.w]{71}The following routine brings a dead node back to life.
 It also increases the reference counts of the node's children,
 and resuscitates them if they were dead.
 
@@ -1929,7 +1957,8 @@ ${}\|o,\39\|p\MG\\{xref}\PP;{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{72}Conversely, we sometimes must go the other way, with as much dignity
+\M[1460 bdd14.w]{72}Conversely, we sometimes must go the other way, with as
+much dignity
 as we can muster.
 
 \Y\B\4\D$\\{deref}(\|p)$ \6
@@ -1959,8 +1988,8 @@ ${}\|o,\39\|p\MG\\{xref}\MM;{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{73}Binary operations. OK, now we've got a bunch of powerful routines for
-making
+\N[1480 bdd14.w]{1}{73}Binary operations. OK, now we've got a bunch of powerful
+routines for making
 and maintaining BDDs, and it's time to have fun. Let's start with a typical
 synthesis routine, which constructs the BDD for $f\land g$ from the BDDs for
 $f$ and~$g$.
@@ -2005,8 +2034,8 @@ mems for \PB{$\|f\MG\\{index}$}, \PB{$\|g\MG\\{index}$} }\6
 \4${}\}{}$\2\par
 \fi
 
-\M{74}I assume that \PB{$\|f\MG\\{lo}$} and \PB{$\|f\MG\\{hi}$} belong to the
-same octabyte.
+\M[1515 bdd14.w]{74}I assume that \PB{$\|f\MG\\{lo}$} and \PB{$\|f\MG\\{hi}$}
+belong to the same octabyte.
 
 The \PB{\\{rmems}} counter is incremented only after we've checked for
 special terminal cases. When none of the simplifications apply,
@@ -2044,7 +2073,8 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{1}),\39\|r);{}$\6
 \&{return} \|r;\par
 \U73.\fi
 
-\M{75}Of course $f\lor g$ is dual to $f\land g$. I could have combined
+\M[1542 bdd14.w]{75}Of course $f\lor g$ is dual to $f\land g$. I could have
+combined
 the two routines into one, but what the heck; a long program is more
 impressive.
 
@@ -2072,7 +2102,7 @@ ${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{7}));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{76}\B\X76:Find $f\lor g$ recursively\X${}\E{}$\6
+\M[1561 bdd14.w]{76}\B\X76:Find $f\lor g$ recursively\X${}\E{}$\6
 $\\{rmems}\PP{}$;\C{ track recursion overhead }\6
 ${}\\{vf}\K\\{thevar}(\|f);{}$\6
 ${}\\{vg}\K\\{thevar}(\|g);{}$\6
@@ -2102,7 +2132,7 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{7}),\39\|r);{}$\6
 \&{return} \|r;\par
 \U75.\fi
 
-\M{77}Exclusive or is much the same.
+\M[1582 bdd14.w]{77}Exclusive or is much the same.
 
 \Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
 \&{node} ${}{*}{}$\\{xor\_rec}(\&{node} ${}{*}\|f,\39{}$\&{node} ${}{*}\|g){}$%
@@ -2124,7 +2154,8 @@ ${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{6}));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{78}After discovering that $f\oplus g=r$, we could also put $f\oplus r=g$ and
+\M[1596 bdd14.w]{78}After discovering that $f\oplus g=r$, we could also put $f%
+\oplus r=g$ and
 $g\oplus r=f$ into the cache. I tried that, in the first draft of this code.
 Unfortunately it cost more than it saved.
 
@@ -2162,8 +2193,8 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{6}),\39\|r);{}$\6
 \&{return} \|r;\par
 \U77.\fi
 
-\M{79}Now for variety, let's do the ``constrain'' operator of Coudert and
-Madre.
+\M[1623 bdd14.w]{79}Now for variety, let's do the ``constrain'' operator of
+Coudert and Madre.
 The function $f\downarrow g$ returned by this routine depends on the
 current variable ordering. In brief, $f\downarrow g=0$ if $g$ is
 identically zero; otherwise $(f\downarrow g)(x)=f(y)$ when $y$ is the
@@ -2193,7 +2224,7 @@ ${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{8}));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{80}\B\X80:Find $f\downarrow g$ recursively\X${}\E{}$\6
+\M[1646 bdd14.w]{80}\B\X80:Find $f\downarrow g$ recursively\X${}\E{}$\6
 $\\{rmems}\PP{}$;\C{ track recursion overhead }\6
 ${}\\{vf}\K\\{thevar}(\|f);{}$\6
 ${}\\{vg}\K\\{thevar}(\|g);{}$\6
@@ -2238,8 +2269,8 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{8}),\39\|r);{}$\6
 \&{return} \|r;\par
 \U79.\fi
 
-\N{1}{81}Quantifiers. Are we having fun yet? Sure, and quantifiers are even
-funner.
+\N[1677 bdd14.w]{1}{81}Quantifiers. Are we having fun yet? Sure, and
+quantifiers are even funner.
 
 In each of the following routines, the second operand \PB{\|g} is supposed
 to be a conjunction of positive literals, like $x_2\land x_4\land x_5$. Then,
@@ -2261,7 +2292,8 @@ time can be as bad as the $2^k$th power of that BDD size(!).
 
 \fi
 
-\M{82}The first case, existential quantification ($f\(E)g$), is typical.
+\M[1698 bdd14.w]{82}The first case, existential quantification ($f\(E)g$), is
+typical.
 Notice that we don't use the cache unless there are multiple references
 to~\PB{\|f}. The number of references to~\PB{\|g} is immaterial here, since
 we're
@@ -2293,8 +2325,8 @@ ${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{15}));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{83}When the top variable of \PB{\|g} is the same as the top variable of~\PB{%
-\|f},
+\M[1719 bdd14.w]{83}When the top variable of \PB{\|g} is the same as the top
+variable of~\PB{\|f},
 we always descend to the \PB{\\{hi}} branch below node~\PB{\|g}, since \PB{\|g}
 is
 supposed to be a conjunction.
@@ -2337,7 +2369,8 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{15}),\39\|r);{}$\6
 \&{return} \|r;\par
 \U82.\fi
 
-\M{84}The code for universal quantification ($\forall$) is almost line-for-line
+\M[1748 bdd14.w]{84}The code for universal quantification ($\forall$) is almost
+line-for-line
 identical to the code for existential quantification.
 
 \Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
@@ -2366,7 +2399,7 @@ ${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{9}));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{85}\B\X85:Find $f\(A)g$ recursively\X${}\E{}$\6
+\M[1767 bdd14.w]{85}\B\X85:Find $f\(A)g$ recursively\X${}\E{}$\6
 $\\{rmems}\PP{}$;\C{ track recursion overhead }\6
 ${}\|o,\39\\{r0}\K\\{all\_rec}(\\{node\_}(\|f\MG\\{lo}),\39(\\{vg}\E\|v\?\|o,%
 \39\\{node\_}(\|g\MG\\{hi}):\|g));{}$\6
@@ -2404,7 +2437,8 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{9}),\39\|r);{}$\6
 \&{return} \|r;\par
 \U84.\fi
 
-\M{86}The Boolean difference, $f\(D)g$, is easier, because $f\oplus f=0$.
+\M[1792 bdd14.w]{86}The Boolean difference, $f\(D)g$, is easier, because $f%
+\oplus f=0$.
 
 \Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
 \&{node} ${}{*}{}$\\{diff\_rec}(\&{node} ${}{*}\|f,\39{}$\&{node} ${}{*}\|g){}$%
@@ -2429,7 +2463,7 @@ ${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{14}));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{87}\B\X87:Find $f\(D)g$ recursively\X${}\E{}$\6
+\M[1810 bdd14.w]{87}\B\X87:Find $f\(D)g$ recursively\X${}\E{}$\6
 $\\{rmems}\PP{}$;\C{ track recursion overhead }\6
 ${}\|o,\39\\{r0}\K\\{diff\_rec}(\\{node\_}(\|f\MG\\{lo}),\39(\\{vg}\E\|v\?\|o,%
 \39\\{node\_}(\|g\MG\\{hi}):\|g));{}$\6
@@ -2460,7 +2494,8 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{14}),\39\|r);{}$\6
 \&{return} \|r;\par
 \U86.\fi
 
-\M{88}The other two quantifiers are unusual; in fact, I haven't seen
+\M[1831 bdd14.w]{88}The other two quantifiers are unusual; in fact, I haven't
+seen
 them in any books, although I haven't read all possible books.
 Still, the concept is natural enough, when \PB{\|g} is a {\it single\/}
 variable $x_v$. In that case, $f\(Y)x_v$ is the function of the remaining
@@ -2498,7 +2533,7 @@ ${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\\{curop}));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{89}\B\X89:Find $f\(Y)g$ or $f\(N)g$ recursively\X${}\E{}$\6
+\M[1862 bdd14.w]{89}\B\X89:Find $f\(Y)g$ or $f\(N)g$ recursively\X${}\E{}$\6
 $\\{rmems}\PP{}$;\C{ track recursion overhead }\6
 ${}\|o,\39\\{r0}\K\\{yes\_no\_rec}(\\{curop},\39\\{node\_}(\|f\MG\\{lo}),\39(%
 \\{vg}\E\|v\?\|o,\39\\{node\_}(\|g\MG\\{hi}):\|g));{}$\6
@@ -2546,15 +2581,16 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\\{curop}),\39\|r);{}$\6
 \&{return} \|r;\par
 \U88.\fi
 
-\M{90}Stay tuned: The \PB{\\{mux\_rec}} subroutine is coming soon.
+\M[1891 bdd14.w]{90}Stay tuned: The \PB{\\{mux\_rec}} subroutine is coming
+soon.
 
 \Y\B\4\X25:Templates for subroutines\X${}\mathrel+\E{}$\6
 \&{node} ${}{*}{}$\\{mux\_rec}(\&{node} ${}{*}\|f,\39{}$\&{node} ${}{*}\|g,%
 \39{}$\&{node} ${}{*}\|h){}$;\par
 \fi
 
-\N{1}{91}Ternary operations. All operations can be reduced to binary
-operations,
+\N[1896 bdd14.w]{1}{91}Ternary operations. All operations can be reduced to
+binary operations,
 but it should be interesting to see if we get a speedup by staying ternary.
 
 I like to call the first one ``mux,'' although many other authors have
@@ -2600,7 +2636,7 @@ ${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\|h);{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{92}\B\X92:Find $(f{?}\ g{:}\ h)$ recursively\X${}\E{}$\6
+\M[1930 bdd14.w]{92}\B\X92:Find $(f{?}\ g{:}\ h)$ recursively\X${}\E{}$\6
 $\\{rmems}\PP{}$;\C{ track recursion overhead }\6
 ${}\|v\K\\{vf}\K\\{thevar}(\|f);{}$\6
 \&{if} ${}(\|g\E\\{botsink}){}$\1\5
@@ -2643,7 +2679,8 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\|h,\39\|r);{}$\6
 \&{return} \|r;\par
 \U91.\fi
 
-\M{93}The median (or majority) operation $\langle fgh\rangle$ has lots of nice
+\M[1956 bdd14.w]{93}The median (or majority) operation $\langle fgh\rangle$ has
+lots of nice
 symmetry.
 
 \Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
@@ -2688,7 +2725,7 @@ ${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\\{addr\_}(\|h)+%
 \4${}\}{}$\2\par
 \fi
 
-\M{94}\B\X94:Find $\langle fgh\rangle$ recursively\X${}\E{}$\6
+\M[1982 bdd14.w]{94}\B\X94:Find $\langle fgh\rangle$ recursively\X${}\E{}$\6
 $\\{rmems}\PP{}$;\C{ track recursion overhead }\6
 ${}\\{vf}\K\\{thevar}(\|f);{}$\6
 ${}\\{vg}\K\\{thevar}(\|g);{}$\6
@@ -2724,7 +2761,7 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\\{addr\_}(\|h)+\T{1}),\39%
 \&{return} \|r;\par
 \U93.\fi
 
-\M{95}We can also exploit the symmetry of $f\land g\land h$.
+\M[2006 bdd14.w]{95}We can also exploit the symmetry of $f\land g\land h$.
 (If I had lots of time, I could play similarly with $f\lor g\lor h$ and
 $f\oplus g\oplus h$.)
 
@@ -2769,7 +2806,7 @@ ${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\\{addr\_}(\|h)+%
 \4${}\}{}$\2\par
 \fi
 
-\M{96}\B\X96:Find $f\land g\land h$ recursively\X${}\E{}$\6
+\M[2033 bdd14.w]{96}\B\X96:Find $f\land g\land h$ recursively\X${}\E{}$\6
 $\\{rmems}\PP{}$;\C{ track recursion overhead }\6
 ${}\\{vf}\K\\{thevar}(\|f);{}$\6
 ${}\\{vg}\K\\{thevar}(\|g);{}$\6
@@ -2805,7 +2842,8 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\\{addr\_}(\|h)+\T{2}),\39%
 \&{return} \|r;\par
 \U95.\fi
 
-\M{97}The final ternary operation computes $(f\land g)\(E)h$, when \PB{\|h} is
+\M[2057 bdd14.w]{97}The final ternary operation computes $(f\land g)\(E)h$,
+when \PB{\|h} is
 a conjunction of positive literals as before. Ken McMillan noticed that one can
 often save a lot of time computing this ternary function recursively, instead
 of first forming $f\land g$. We combine the ideas of \PB{\\{and\_rec}} and \PB{%
@@ -2852,7 +2890,7 @@ ${}\|o,\39\|h\K\\{node\_}(\|h\MG\\{hi}){}$;\5
 \4${}\}{}$\2\par
 \fi
 
-\M{98}\B\X98:Find $(f\land g)\(E)h$ recursively\X${}\E{}$\6
+\M[2087 bdd14.w]{98}\B\X98:Find $(f\land g)\(E)h$ recursively\X${}\E{}$\6
 $\\{rmems}\PP{}$;\C{ track recursion overhead }\6
 ${}\\{r0}\K\\{and\_exist\_rec}((\\{vf}\E\|v\?\|o,\39\\{node\_}(\|f\MG\\{lo}):%
 \|f),\39(\\{vg}\E\|v\?\|o,\39\\{node\_}(\|g\MG\\{lo}):\|g),\39(\\{vh}\E\|v\?%
@@ -2893,7 +2931,7 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\\{addr\_}(\|h)+\T{3}),\39%
 \&{return} \|r;\par
 \U97.\fi
 
-\N{1}{99}Composition of functions.
+\N[2114 bdd14.w]{1}{99}Composition of functions.
 Now we're ready for the biggie, the most powerful recursive command
 in our arsenal: Given the BDDs for a master function $f(x_0,\ldots,x_n)$
 and for replacement functions $y_0(x_0,\ldots,x_n)$,
@@ -2916,7 +2954,8 @@ specified, the identity function $y_k=x_k$ is assumed.
 
 \fi
 
-\M{100}Our main tool for efficiency in not-so-bad cases is the cache,
+\M[2135 bdd14.w]{100}Our main tool for efficiency in not-so-bad cases is the
+cache,
 so that previously known results needn't be recalculated.
 Each node in the BDD base represents a function of the variables
 $(x_v,x_{v+1},\ldots{})$, for some variable index~$v$, and we can
@@ -2942,15 +2981,15 @@ we've performed a composition operation.
 
 \fi
 
-\M{101}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[2158 bdd14.w]{101}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{timestamp};\C{ the number of distinct compositions done or prepared
 }\6
 \&{int} \\{timestamp\_changed};\C{ has it changed since the last composition
 was done? }\par
 \fi
 
-\M{102}Here's how the individual time stamps are updated when the user gives a
-new
+\M[2163 bdd14.w]{102}Here's how the individual time stamps are updated when the
+user gives a new
 specification for $y_k$:
 
 \Y\B\4\X102:Assign \PB{\|q} as the new value of \PB{$\|v\MG\\{repl}$}\X${}\E{}$%
@@ -2983,7 +3022,8 @@ when \PB{$\|v\MG\\{proj}\K\T{0}$} }\2\6
 \4${}\}{}$\2\par
 \U128.\fi
 
-\M{103}A special adjustment to the time stamps is needed when we're wiping out
+\M[2182 bdd14.w]{103}A special adjustment to the time stamps is needed when
+we're wiping out
 the whole cache.
 
 \Y\B\4\X103:Clear out the time stamps\X${}\E{}$\6
@@ -2998,7 +3038,7 @@ ${}\|o,\39\|v\MG\\{timestamp}\K\T{1};{}$\2\6
 \4${}\}{}$\2\par
 \U156.\fi
 
-\M{104}Okay, we're ready for the master recursion.
+\M[2193 bdd14.w]{104}Okay, we're ready for the master recursion.
 
 \Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
 \&{node} ${}{*}{}$\\{compose\_rec}(\&{node} ${}{*}\|f){}$\1\1\2\2\6
@@ -3019,7 +3059,8 @@ ${}\|o,\39\|r\K\\{cache\_lookup}(\|f,\39\\{node\_}(\\{vf}\MG\\{timestamp}),\39%
 \4${}\}{}$\2\par
 \fi
 
-\M{105}The computations here look basically the same as those we've been
+\M[2208 bdd14.w]{105}The computations here look basically the same as those
+we've been
 seeing in previous recursions. But in fact there is a huge difference:
 The functions \PB{\\{r0}} and~\PB{\\{r1}} now can involve {\it all\/}
 variables,
@@ -3055,8 +3096,8 @@ ${}\\{cache\_insert}(\|f,\39\\{node\_}(\\{vf}\MG\\{timestamp}),\39\\{node\_}(%
 \&{return} \|r;\par
 \U104.\fi
 
-\N{1}{106}Top-level calls. As mentioned above, there's a top-level ``wrapper''
-around
+\N[2232 bdd14.w]{1}{106}Top-level calls. As mentioned above, there's a
+top-level ``wrapper'' around
 each of the recursive synthesis routines, so that we can launch them properly.
 
 Here's the top-level routine for binary operators.
@@ -3124,12 +3165,12 @@ ${}\\{printf}(\.{"\ \%x=\%x\%s\%x\ (\%llu\ me}\)\.{ms,\ \%llu\ rmems,\ \%llu}\)%
 \4${}\}{}$\2\par
 \fi
 
-\M{107}\B\X25:Templates for subroutines\X${}\mathrel+\E{}$\6
+\M[2269 bdd14.w]{107}\B\X25:Templates for subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{attempt\_repairs}(\&{void});\C{ collect garbage or something if
 there's hope }\par
 \fi
 
-\M{108}Have you any wool? Yes sir, yes sir.
+\M[2272 bdd14.w]{108}Have you any wool? Yes sir, yes sir.
 
 \Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
 \&{node} ${}{*}{}$\\{ternary\_top}(\&{int} \\{curop}${},\39{}$\&{node} ${}{*}%
@@ -3177,7 +3218,7 @@ ${}\\{printf}(\.{"\ \%x=\%x\%s\%x\%s\%x\ (\%ll}\)\.{u\ mems,\ \%llu\ rmems,\ }%
 \4${}\}{}$\2\par
 \fi
 
-\M{109}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
+\M[2300 bdd14.w]{109}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
 \&{node} ${}{*}{}$\\{compose\_top}(\&{node} ${}{*}\|f){}$\1\1\2\2\6
 ${}\{{}$\1\6
 \&{node} ${}{*}\|r;{}$\6
@@ -3206,7 +3247,7 @@ ${}\\{printf}(\.{"\ \%x=\%x[\%u]\ (\%llu\ me}\)\.{ms,\ \%llu\ rmems,\ \%llu}\)%
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{110}Parsing the commands.
+\N[2322 bdd14.w]{1}{110}Parsing the commands.
 We're almost done, but we need to control the overall process by
 obeying the user's instructions.
 The syntax for elementary user commands appeared at the beginning of this
@@ -3221,7 +3262,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{111}Before we do any commands, it's helpful to ensure that no embarrassing
+\M[2335 bdd14.w]{111}Before we do any commands, it's helpful to ensure that no
+embarrassing
 anomalies will arise. For example, a command like `\.{f0=x1{\tta}x2{\tta}x3}'
 might necessitate making space for up to three new variables;
 it would be a nuisance if those attempts failed. (See the
@@ -3251,15 +3293,15 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U110.\fi
 
-\M{112}
+\M[2358 bdd14.w]{112}
 \Y\B\4\D$\\{bufsize}$ \5
 \T{100}\C{ all commands are very short, but comments might be long }\par
 \Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{buf}[\\{bufsize}];\C{ our master's voice }\par
 \fi
 
-\M{113}\B\X113:Fill \PB{\\{buf}} with the next command, or \PB{\&{goto} %
-\\{alldone}}\X${}\E{}$\6
+\M[2364 bdd14.w]{113}\B\X113:Fill \PB{\\{buf}} with the next command, or \PB{%
+\&{goto} \\{alldone}}\X${}\E{}$\6
 \&{if} (\\{infile})\5
 ${}\{{}$\1\6
 \&{if} ${}(\R\\{fgets}(\\{buf},\39\\{bufsize},\39\\{infile})){}$\5
@@ -3286,8 +3328,8 @@ command-line \PB{\\{stdin}} }\6
 \4${}\}{}$\2\2\par
 \U110.\fi
 
-\M{114}The first nonblank character of each line identifies the type of
-command.
+\M[2380 bdd14.w]{114}The first nonblank character of each line identifies the
+type of command.
 All-blank lines are ignored; so are lines that begin with `\.\#'.
 
 I haven't attempted to make this interface the slightest bit fancy.
@@ -3387,7 +3429,7 @@ ${}\\{verbose}\K{-}\T{1}{}$;\5
 \&{continue};\par
 \U110.\fi
 
-\M{115}\B\X19:Local variables\X${}\mathrel+\E{}$\6
+\M[2427 bdd14.w]{115}\B\X19:Local variables\X${}\mathrel+\E{}$\6
 \&{char} ${}{*}\|c,{}$ ${}{*}\\{cc}{}$;\C{ characters being scanned }\6
 \&{node} ${}{*}\|p,{}$ ${}{*}\|q,{}$ ${}{*}\|r{}$;\C{ operands }\6
 \&{var} ${}{*}\|v{}$;\C{ a variable }\6
@@ -3395,7 +3437,8 @@ ${}\\{verbose}\K{-}\T{1}{}$;\5
 \&{int} \\{curop};\C{ current operator }\par
 \fi
 
-\M{116}The \<special> command \.{include} \<filename> starts up a new infile.
+\M[2434 bdd14.w]{116}The \<special> command \.{include} \<filename> starts up a
+new infile.
 (Instead of \.{include}, you could also say \.{input} or \.i, or
 even \.{ignore}.)
 
@@ -3419,7 +3462,8 @@ ${}\\{printf}(\.{"Sorry\ ---\ I\ couldn'}\)\.{t\ open\ file\ `\%s'!\\n"},\39%
 \4${}\}{}$\2\par
 \U114.\fi
 
-\M{117}The command `\.{p3}' prints out the BDD for $f_3$; the command
+\M[2452 bdd14.w]{117}The command `\.{p3}' prints out the BDD for $f_3$; the
+command
 `\.{pp3}' prints just the profile.
 
 \Y\B\4\D$\\{getkf}$ \5
@@ -3452,7 +3496,8 @@ ${}\\{print\_function}(\|f[\|k],\39\T{0});{}$\6
 \4${}\}{}$\2\par
 \U114.\fi
 
-\M{118}The command `\.{o3}' outputs the BDD for $f_3$; the command
+\M[2471 bdd14.w]{118}The command `\.{o3}' outputs the BDD for $f_3$; the
+command
 `\.{ou3}' outputs it with variable names ``unmapped'',
 so that all branches go to variables with higher numbers (in spite of any
 reordering that has been done). Unmapped
@@ -3475,14 +3520,14 @@ ${}\\{freopen}(\.{"/dev/tty"},\39\.{"w"},\39\\{stdout}){}$;\C{ restore normal %
 \4${}\}{}$\2\par
 \U114.\fi
 
-\M{119}\B\X119:Print the current variable ordering\X${}\E{}$\6
+\M[2490 bdd14.w]{119}\B\X119:Print the current variable ordering\X${}\E{}$\6
 \&{for} ${}(\|v\K\\{varhead};{}$ ${}\|v<\\{topofvars};{}$ ${}\|v\PP){}$\1\6
 \&{if} ${}(\|v\MG\\{proj}){}$\1\5
 ${}\\{printf}(\.{"\ x\%d"},\39\|v\MG\\{name});{}$\2\2\6
 \\{printf}(\.{"\\n"});\par
 \U114.\fi
 
-\M{120}My little finite-state automaton.
+\M[2495 bdd14.w]{120}My little finite-state automaton.
 
 \Y\B\4\X120:Parse and execute an assignment to $f_k$\X${}\E{}$\6
 \\{getkf};\5
@@ -3501,7 +3546,7 @@ ${}\\{lhs}\K\|k;{}$\6
 \X126:Assign \PB{\|r} to $f_k$, where \PB{$\|k\K\\{lhs}$}\X;\par
 \U114.\fi
 
-\M{121}\B\D$\\{checknull}(\|p)$ \6
+\M[2508 bdd14.w]{121}\B\D$\\{checknull}(\|p)$ \6
 \&{if} ${}(\R\|p){}$\5
 ${}\{{}$\5
 \1${}\\{printf}(\.{"f\%d\ is\ null!\\n"},\39\|k){}$;\5
@@ -3539,7 +3584,7 @@ ${}\\{curop}\K\T{6}{}$;\5
 \4${}\}{}$\2\par
 \U120.\fi
 
-\M{122}Quantification uses the following conventions:
+\M[2523 bdd14.w]{122}Quantification uses the following conventions:
 \smallskip\noindent{$\bullet$}
 A command like `\.{f1=f2 A x2}' sets $f_1\gets\forall x_2\,f_2$.
 \smallskip\noindent{$\bullet$}
@@ -3607,7 +3652,7 @@ ${}\\{curop}\K\T{7},\39\|q\K\|p,\39\|c\MM{}$;\5
 \4${}\}{}$\2\par
 \U120.\fi
 
-\M{123}\B\X123:Get the second operand, \PB{\|q}\X${}\E{}$\6
+\M[2560 bdd14.w]{123}\B\X123:Get the second operand, \PB{\|q}\X${}\E{}$\6
 \\{passblanks};\6
 \&{switch} ${}({*}\|c\PP){}$\5
 ${}\{{}$\1\6
@@ -3632,8 +3677,8 @@ ${}\|q\K\\{botsink}+\|k{}$;\5
 \4${}\}{}$\2\par
 \Us120\ET128.\fi
 
-\M{124}\B\X124:If the operator is ternary, get the third operand, \PB{\|r}\X${}%
-\E{}$\6
+\M[2569 bdd14.w]{124}\B\X124:If the operator is ternary, get the third operand,
+\PB{\|r}\X${}\E{}$\6
 \\{passblanks};\6
 \&{if} ${}(\\{curop}\E\T{1}\W{*}\|c\E\.{'\&'}){}$\1\5
 ${}\\{curop}\K\T{18}{}$;\C{ and-and }\2\6
@@ -3670,7 +3715,8 @@ ${}\|r\K\\{botsink}+\|k{}$;\5
 \4${}\}{}$\2\par
 \U120.\fi
 
-\M{125}We have made sure that all the necessary operands are non-\PB{$\NULL$}.
+\M[2586 bdd14.w]{125}We have made sure that all the necessary operands are non-%
+\PB{$\NULL$}.
 
 \Y\B\4\X125:Evaluate the right-hand side and put the answer in \PB{\|r}\X${}%
 \E{}$\6
@@ -3689,7 +3735,7 @@ ${}\|r\K\\{binary\_top}(\\{curop},\39\|p,\39\|q);{}$\2\6
 ${}\|r\K\\{ternary\_top}(\\{curop},\39\|p,\39\|q,\39\|r){}$;\2\par
 \U120.\fi
 
-\M{126}The \PB{\\{sanity\_check}} routine tells me that
+\M[2598 bdd14.w]{126}The \PB{\\{sanity\_check}} routine tells me that
 I don't need to increase \PB{$\|r\MG\\{xref}$} here (although I'm not sure that
 I
 totally understand why).
@@ -3700,7 +3746,7 @@ totally understand why).
 ${}\|o,\39\|f[\\{lhs}]\K\|r{}$;\par
 \U120.\fi
 
-\M{127}\B\X127:Dereference the left-hand side\X${}\E{}$\6
+\M[2606 bdd14.w]{127}\B\X127:Dereference the left-hand side\X${}\E{}$\6
 \&{if} ${}(\|o,\39\|f[\\{lhs}]){}$\5
 ${}\{{}$\1\6
 \\{deref}(\|f[\\{lhs}]);\6
@@ -3708,7 +3754,8 @@ ${}\|o,\39\|f[\\{lhs}]\K\NULL;{}$\6
 \4${}\}{}$\2\par
 \U121.\fi
 
-\M{128}\B\X128:Parse and execute an assignment to $y_k$\X${}\E{}$\6
+\M[2612 bdd14.w]{128}\B\X128:Parse and execute an assignment to $y_k$\X${}\E{}$%
+\6
 \\{getkv};\5
 ${}\|v\K{\AND}\\{varhead}[\\{varmap}[\|k]];{}$\6
 \&{if} ${}(\|o,\39\R\|v\MG\\{proj}){}$\1\5
@@ -3737,7 +3784,8 @@ ${}\|p\K\\{node\_}(\|v\MG\\{repl});{}$\6
 \4${}\}{}$\2\par
 \U114.\fi
 
-\M{129}In a long calculation, it's nice to get progress reports by setting
+\M[2631 bdd14.w]{129}In a long calculation, it's nice to get progress reports
+by setting
 bit 128 of the \PB{\\{verbose}} switch. But we want to see such reports only
 near the top of the BDDs. (Note that \PB{\\{varmap}} is not relevant here.)
 
@@ -3746,7 +3794,8 @@ near the top of the BDDs. (Note that \PB{\\{varmap}} is not relevant here.)
 ${}\\{tvar}\K{\AND}\\{varhead}[\|k+\T{1}]{}$;\par
 \U114.\fi
 
-\N{1}{130}Reordering. Now comes the new stuff, where {\mc BDD14} enters the
+\N[2639 bdd14.w]{1}{130}Reordering. Now comes the new stuff, where {\mc BDD14}
+enters the
 territory into which {\mc BDD11} was afraid to tread. Everything is
 based on a primitive swap-in-place operation, which is made available
 to the user as an `\.s' command for online experimentation.
@@ -3771,7 +3820,8 @@ ${}\\{swap}(\|v\MG\\{up},\39\|v);{}$\2\6
 \\{reorder\_fin}(\,);\C{ go back to normal processing }\par
 \U114.\fi
 
-\M{131}Before we diddle with such a sensitive thing as the order of branching,
+\M[2660 bdd14.w]{131}Before we diddle with such a sensitive thing as the order
+of branching,
 we must clear the cache. We also remove all dead nodes, which otherwise
 get in the way. Furthermore, we set the \PB{\\{up}} and \PB{\\{down}} links
 inside \PB{\&{var}} nodes.
@@ -3815,13 +3865,14 @@ ${}\\{leasesonlife}\K\\{oldleases};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{132}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[2692 bdd14.w]{132}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{totalvars};\C{ this many \PB{\&{var}} records are in use }\6
 \&{var} ${}{*}\\{firstvar}{}$;\C{ and this one is the smallest in use }\6
 \&{int} \\{oldleases};\C{ this many ``leases on life'' have been held over }\par
 \fi
 
-\M{133}We classify the nodes on levels $u$ and $v$ into four categories:
+\M[2697 bdd14.w]{133}We classify the nodes on levels $u$ and $v$ into four
+categories:
 Level-$u$ nodes that branch to at least one level-$v$ node are called
 ``tangled''; the others are ``solitary.'' Level-$v$ nodes that are
 reachable from levels above~$u$ or from external pointers ($f_j$ or
@@ -3905,7 +3956,8 @@ ${}\\{printf}(\.{"\ newbies\ \%d,\ change}\)\.{\ \%d,\ mems\ (\%llu,0,\%l}\)%
 \4${}\}{}$\2\par
 \U145.\fi
 
-\M{134}Here's a cute algorithm something like the inner loop of quicksort.
+\M[2768 bdd14.w]{134}Here's a cute algorithm something like the inner loop of
+quicksort.
 By decreasing the reference counts of the tangled nodes' children, we will
 be able to distinguish remote nodes from hidden nodes in the next step.
 
@@ -3958,7 +4010,8 @@ ${}\|j\MRL{+{\K}}\&{sizeof}(\&{addr});{}$\6
 \4${}\}{}$\2\par
 \U133.\fi
 
-\M{135}We temporarily save the pages of the old unique table, since they
+\M[2805 bdd14.w]{135}We temporarily save the pages of the old unique table,
+since they
 now contain the sequential lists of solitary and tangled nodes.
 
 The hidden nodes are linked together by \PB{\\{xref}} fields, but not yet
@@ -4002,13 +4055,13 @@ below) }\6
 \4${}\}{}$\2\par
 \U133.\fi
 
-\M{136}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[2830 bdd14.w]{136}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{addr} \\{savebase}[\\{maxhashpages}];\C{ pages to be discarded after
 swapping }\par
 \fi
 
-\M{137}The \PB{\\{new\_unique}} routine inaugurates an empty unique table with
-room for
+\M[2833 bdd14.w]{137}The \PB{\\{new\_unique}} routine inaugurates an empty
+unique table with room for
 at least \PB{\|m} nodes before its size will have to double.
 Those nodes will be inserted soon, so we don't mind
 that it is initially sparse.
@@ -4043,8 +4096,8 @@ ${}\\{zmems}\MRL{+{\K}}(\|f+\T{1})/{}$\&{sizeof}(\&{long} \&{long});\6
 \4${}\}{}$\2\par
 \fi
 
-\M{138}The \PB{\\{insert\_node}} subroutine is somewhat analogous to \PB{%
-\\{unique\_find}}, but its
+\M[2857 bdd14.w]{138}The \PB{\\{insert\_node}} subroutine is somewhat analogous
+to \PB{\\{unique\_find}}, but its
 parameter~\PB{\|q} is a node that's known to
 be unique and not already present. The task is simply to insert
 this node into the hash table. Complications arise only if the
@@ -4080,8 +4133,8 @@ ${}\\{exit}({-}\T{96});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{139}\B\X139:Create a new unique table for $x_v$ and move the solitary nodes
-to it\X${}\E{}$\6
+\M[2884 bdd14.w]{139}\B\X139:Create a new unique table for $x_v$ and move the
+solitary nodes to it\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\\{vmask}\GG\\{logpagesize};{}$ ${}\|k%
 \PP){}$\1\5
 ${}\|o,\39\\{free\_page}(\\{page\_}(\|v\MG\\{base}[\|k]));{}$\2\6
@@ -4097,7 +4150,8 @@ ${}\\{insert\_node}(\|v,\39\|p);{}$\6
 \4${}\}{}$\2\par
 \U133.\fi
 
-\M{140}The most dramatic change caused by swapping occurs in this step.
+\M[2893 bdd14.w]{140}The most dramatic change caused by swapping occurs in this
+step.
 Suppose \PB{\|f} is a tangled node on level~$u$ before the swap, and suppose
 \PB{$\|g\K\|f\MG\\{lo}$} and \PB{$\|h\K\|f\MG\\{hi}$} are on level~$v$ at that
 time. After swapping, we want
@@ -4138,7 +4192,8 @@ ${}\\{insert\_node}(\|u,\39\|f);{}$\6
 \4${}\}{}$\2\par
 \U133.\fi
 
-\M{141}The \PB{\\{swap\_find}} procedure in the transmogrification step is
+\M[2915 bdd14.w]{141}The \PB{\\{swap\_find}} procedure in the
+transmogrification step is
 almost identical to \PB{\\{unique\_find}}; it differs only in the treatment
 of reference counts (and the knowledge that no nodes are currently dead).
 
@@ -4170,7 +4225,7 @@ ${}\\{oo},\39\|p\K\\{fetchnode}(\|v,\39\|k);{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{142}\B\X142:Create a newbie and return it\X${}\E{}$\6
+\M[2938 bdd14.w]{142}\B\X142:Create a newbie and return it\X${}\E{}$\6
 \&{if} ${}(\MM\\{free}\Z\\{mask}\GG\T{4}){}$\1\5
 \X32:Double the table size and \PB{\&{goto} \\{restart}}\X;\2\6
 ${}\|p\K\\{reserve\_node}(\,);{}$\6
@@ -4186,8 +4241,8 @@ continue!\\n"});\6
 ${}\\{exit}({-}\T{95}){}$;\par
 \U141.\fi
 
-\M{143}\B\X143:Delete the lists of solitary, tangled, and hidden nodes\X${}%
-\E{}$\6
+\M[2949 bdd14.w]{143}\B\X143:Delete the lists of solitary, tangled, and hidden
+nodes\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\\{umask}\GG\\{logpagesize};{}$ ${}\|k%
 \PP){}$\1\5
 ${}\|o,\39\\{free\_page}(\\{page\_}(\\{savebase}[\|k]));{}$\2\6
@@ -4199,8 +4254,8 @@ ${}\\{totalnodes}\MRL{-{\K}}\\{hcount};{}$\6
 \4${}\}{}$\2\par
 \U133.\fi
 
-\M{144}Several of the following operations are unnecessary overkill. For
-example,
+\M[2957 bdd14.w]{144}Several of the following operations are unnecessary
+overkill. For example,
 instead of interchanging \PB{$\|u\MG\\{proj}$} with \PB{$\|v\MG\\{proj}$}, and
 using
 \PB{\\{projection}(\\{varmap}[\|k])} to access the projection function for
@@ -4244,14 +4299,16 @@ ${}\|o,\39\\{varhead}[\|j].\\{timestamp}\K\T{0};{}$\2\6
 \4${}\}{}$\2\par
 \U133.\fi
 
-\M{145}The \PB{\\{swap}} subroutine is now complete. I can safely declare it,
+\M[2983 bdd14.w]{145}The \PB{\\{swap}} subroutine is now complete. I can safely
+declare it,
 since its sub-subroutines have already been declared.
 
 \Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
 \X133:Declare the \PB{\\{swap}} subroutine\X\par
 \fi
 
-\M{146}\B\X146:Bubble sort to reestablish the natural variable order\X${}\E{}$\6
+\M[2989 bdd14.w]{146}\B\X146:Bubble sort to reestablish the natural variable
+order\X${}\E{}$\6
 \&{if} (\\{totalvars})\5
 ${}\{{}$\1\6
 \\{reorder\_init}(\,);\C{ prepare for reordering }\6
@@ -4272,7 +4329,8 @@ ${}\|o,\39\|v\K\|v\MG\\{down};{}$\2\6
 \4${}\}{}$\2\par
 \U114.\fi
 
-\M{147}Now we come to the \PB{\\{sift}} routine, which finds the best position
+\M[3003 bdd14.w]{147}Now we come to the \PB{\\{sift}} routine, which finds the
+best position
 for a given variable when the relative positions of the others
 are left unchanged.
 
@@ -4289,7 +4347,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U114.\fi
 
-\M{148}At this point \PB{$\|v\MG\\{aux}$} is the position of \PB{\|v} among all
+\M[3017 bdd14.w]{148}At this point \PB{$\|v\MG\\{aux}$} is the position of \PB{%
+\|v} among all
 active variables. Thus \PB{$\|v\MG\\{aux}\K\T{1}$} if and only if \PB{$\|v\MG%
 \\{up}\K\NULL$}
 if and only if \PB{$\|v\K\\{firstvar}$}; \PB{$\|v\MG\\{aux}\K\\{totalvars}$} if
@@ -4326,7 +4385,8 @@ been sifted }\6
 \4${}\}{}$\2\par
 \fi
 
-\M{149}In a production version of this program, I would stop sifting
+\M[3041 bdd14.w]{149}In a production version of this program, I would stop
+sifting
 in a given direction when the ratio \PB{$\\{totalnodes}/\\{bestscore}$} exceeds
 some threshold. Here, on the other hand, I'm sifting completely;
 but I calculate the \PB{\\{saferatio}} for which a production version
@@ -4365,7 +4425,7 @@ ${}\|u\K\|u\MG\\{down};{}$\6
 \&{goto} \\{wrapup};\par
 \U148.\fi
 
-\M{150}\B\X150:Explore in the downward direction\X${}\E{}$\6
+\M[3072 bdd14.w]{150}\B\X150:Explore in the downward direction\X${}\E{}$\6
 \&{while} ${}(\|o,\39\|u\MG\\{down}){}$\5
 ${}\{{}$\1\6
 ${}\\{swaps}\PP,\39\\{swap}(\|u,\39\|u\MG\\{down});{}$\6
@@ -4398,7 +4458,8 @@ ${}\|u\K\|u\MG\\{up};{}$\6
 \&{goto} \\{wrapup};\par
 \U148.\fi
 
-\M{151}The \PB{\\{siftall}} subroutine sifts until every variable has found
+\M[3097 bdd14.w]{151}The \PB{\\{siftall}} subroutine sifts until every variable
+has found
 a local sweet spot. This is as good as it gets, unless the user elects
 to sift some more.
 
@@ -4426,7 +4487,8 @@ ${}\|o,\39\|v\K\|v\MG\\{down};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{152}Sifting is invoked automatically when the number of nodes is
+\M[3122 bdd14.w]{152}Sifting is invoked automatically when the number of nodes
+is
 \PB{\\{toobig}} or more. By default, the \PB{\\{toobig}} threshold is
 essentially
 infinite, hence autosifting is disabled. But if a trigger of~$k$
@@ -4442,7 +4504,7 @@ ${}\\{toobig}\K\\{memsize};{}$\2\6
 ${}\\{toobig}\K\\{trigger}*\\{totalnodes}{}$;\2\par
 \U114.\fi
 
-\M{153}\B\X153:Invoke autosifting\X${}\E{}$\6
+\M[3134 bdd14.w]{153}\B\X153:Invoke autosifting\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{verbose}\AND(\T{4096}+\T{8192})){}$\1\5
 ${}\\{printf}(\.{"autosifting\ (totaln}\)\.{odes=\%d,\ trigger=\%.2}\)\.{f,\
@@ -4455,13 +4517,14 @@ ${}\\{toobig}\K\\{trigger}*\\{totalnodes};{}$\2\6
 \4${}\}{}$\2\par
 \U111.\fi
 
-\M{154}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[3144 bdd14.w]{154}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{double} \\{trigger};\C{ multiplier that governs automatic sifting }\6
 \&{int} \\{toobig}${}\K\\{memsize}{}$;\C{ threshold for automatic sifting
 (initially disabled) }\par
 \fi
 
-\M{155}I should mention a surprising feature of {\mc BDD14} that is not a bug:
+\M[3148 bdd14.w]{155}I should mention a surprising feature of {\mc BDD14} that
+is not a bug:
 Sometimes a sifting operation can actually {\it increase\/} the size of a
 function, even when only one $f_k$ is defined!
 
@@ -4477,7 +4540,7 @@ before and after swapping.
 
 \fi
 
-\N{1}{156}Triage and housekeeping.
+\N[3162 bdd14.w]{1}{156}Triage and housekeeping.
 Hmmm; we can't postpone the dirty work any longer. In emergency situations,
 garbage collection is a necessity. And occasionally, as a BDD base grows,
 garbage collection is a nicety, to keep our house in order.
@@ -4513,8 +4576,8 @@ ${}\\{printf}(\.{"collecting\ garbage\ }\)\.{(\%d/\%d)\\n"},\39\\{deadnodes},%
 \4${}\}{}$\2\par
 \fi
 
-\M{157}The global variable \PB{\\{last\_ditch}} is set nonzero when we resort
-to
+\M[3189 bdd14.w]{157}The global variable \PB{\\{last\_ditch}} is set nonzero
+when we resort to
 garbage collection without a guarantee of gaining at least
 \PB{$\\{totalnodes}/\\{deadfraction}$} free nodes in the process.
 If a last-ditch attempt fails, there's little likelihood that
@@ -4523,11 +4586,11 @@ so we give up in that case.
 
 \fi
 
-\M{158}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[3196 bdd14.w]{158}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{last\_ditch};\C{ are we backed up against the wall? }\par
 \fi
 
-\M{159}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
+\M[3199 bdd14.w]{159}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{attempt\_repairs}(\&{void})\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{int} \|j${},{}$ \|k;\7
@@ -4547,7 +4610,8 @@ ${}\\{last\_ditch}\K\T{1}{}$;\C{ and try one last(?) time }\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{160}Mathematica output. An afterthought: It's easy to output a
+\N[3213 bdd14.w]{1}{160}Mathematica output. An afterthought: It's easy to
+output a
 (possibly huge) file from which Mathematica will compute the
 generating function.
 
@@ -4558,12 +4622,12 @@ ${}\\{fprintf}(\\{stderr},\39\.{"(generating\ functio}\)\.{n\ for\ f\%d\
 written\ to}\)\.{\ \%s)\\n"},\39\|k,\39\\{buf}){}$;\par
 \U114.\fi
 
-\M{161}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[3222 bdd14.w]{161}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{FILE} ${}{*}\\{outfile};{}$\6
 \&{int} \\{outcount};\C{ the number of files output so far }\par
 \fi
 
-\M{162}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
+\M[3226 bdd14.w]{162}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{math\_print}(\&{node} ${}{*}\|p){}$\1\1\2\2\6
 ${}\{{}$\1\6
 \&{var} ${}{*}\|v;{}$\6
@@ -4595,7 +4659,8 @@ ${}\\{fprintf}(\\{outfile},\39\.{"g\%x\\n"},\39\\{id}(\|p));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{163}\B\X163:Generate Mathematica outputs for variable \PB{\|v}\X${}\E{}$\6
+\M[3250 bdd14.w]{163}\B\X163:Generate Mathematica outputs for variable \PB{\|v}%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|t\K\T{0};{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|v\MG\\{mask};{}$ ${}\|k\MRL{+{\K}}%
@@ -4613,7 +4678,8 @@ ${}\|v\MG\\{aux}\K\PP\|s{}$;\C{ this many levels exist below \PB{\|v} }\2\6
 \4${}\}{}$\2\par
 \U162.\fi
 
-\M{164}\B\X164:Generate a Mathematica line for node \PB{\|q}\X${}\E{}$\6
+\M[3263 bdd14.w]{164}\B\X164:Generate a Mathematica line for node \PB{\|q}\X${}%
+\E{}$\6
 $\\{fprintf}(\\{outfile},\39\.{"g\%x=Expand["},\39\\{id}(\|q));{}$\6
 ${}\|r\K\\{node\_}(\|q\MG\\{lo});{}$\6
 ${}\\{ss}\K(\|r\Z\\{topsink}\?\T{0}:\\{thevar}(\|r)\MG\\{aux});{}$\6
@@ -4637,7 +4703,7 @@ ${}\\{fprintf}(\\{outfile},\39\.{"(1+z)\^\%d*"},\39\|s-\\{ss});{}$\2\6
 ${}\\{fprintf}(\\{outfile},\39\.{"g\%x]\\n"},\39\\{id}(\|r)){}$;\par
 \U163.\fi
 
-\N{1}{165}Index.
+\N[3280 bdd14.w]{1}{165}Index.
 \fi
 
 \inx

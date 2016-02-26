@@ -1,4 +1,5 @@
 \input cwebmac
+\srcloctrue
 \datethis
 \input epsf
 \def\dts{\mathinner{\ldotp\ldotp}}
@@ -7,7 +8,8 @@
 \def\losub#1{^{\vphantom\prime}_{#1}} % for contexts like $x'_n+x\losub n$
 
 
-\N{1}{1}Introduction. The purpose of this program is to implement a pretty
+\N[8 spiders.w]{1}{1}Introduction. The purpose of this program is to implement
+a pretty
 algorithm that has a very pleasant theory. But I apologize
 at the outset that the algorithm seems to be rather subtle, and
 I have not been able to think of any way to explain it to dummies.
@@ -33,7 +35,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}Given a digraph that is {\it totally acyclic}, in the sense that it has
+\M[33 spiders.w]{2}Given a digraph that is {\it totally acyclic}, in the sense
+that it has
 no cycles when we ignore the arc directions, we want to find all ways to
 label its vertices with 0s and 1s in such a way that
 $x\to y$ implies $\bit x\le\bit y$.
@@ -75,8 +78,8 @@ from the spiders.
 
 \fi
 
-\M{3}In the following program, the parent of node $k$ is \PB{\\{par}[\|k]}, and
-the
+\M[73 spiders.w]{3}In the following program, the parent of node $k$ is \PB{%
+\\{par}[\|k]}, and the
 arc between $k$ and its parent goes toward \PB{\\{par}[\|k]} if \PB{$\\{sign}[%
 \|k]\K\T{1}$},
 toward~$k$ if \PB{$\\{sign}[\|k]\K\T{0}$}.
@@ -140,7 +143,7 @@ ${}\\{lsib}[\|l]\K\\{stack}[\|j-\T{1}];{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{4}\B\X4:Global variables\X${}\E{}$\6
+\M[113 spiders.w]{4}\B\X4:Global variables\X${}\E{}$\6
 \&{int} \\{par}[\\{maxn}];\C{ the parent of $k$ }\6
 \&{int} \\{sign}[\\{maxn}];\C{ 0 if $\PB{\\{par}}[k]\to k$,\quad 1 if $\PB{%
 \\{par}}[k]\from k$ }\6
@@ -152,13 +155,13 @@ traversal }\6
 \As9, 12, 18, 25\ETs32.
 \U1.\fi
 
-\M{5}\B\X5:Local variables\X${}\E{}$\6
+\M[121 spiders.w]{5}\B\X5:Local variables\X${}\E{}$\6
 \&{register} \&{int} \|j${},{}$ \|k${},{}$ \|l${}\K\T{0}{}$;\C{ heavily-used
 miscellaneous indices }\6
 \&{int} \|n;\C{ size of the input graph }\par
 \U1.\fi
 
-\M{6}Consider the example spider
+\M[125 spiders.w]{6}Consider the example spider
 $$\epsfbox{deco.5}$$
 in which all arcs are directed upward; it could be written
 \.{....+-.--..+-..-+} in Polish notation. Vertex~1 is the root.
@@ -233,7 +236,8 @@ k&\PB{\\{sign}}[k]&\PB{\\{scope}}[k]&\PB{\\{par}}[k]&\PB{\\{rchild}}[k]&\PB{%
 
 \fi
 
-\M{7}We don't want to compute the sets $U_1$, \dots, $U_n$ explicitly,
+\M[197 spiders.w]{7}We don't want to compute the sets $U_1$, \dots, $U_n$
+explicitly,
 because the total number of elements $\vert U_1\vert+\cdots+\vert U_n\vert$
 can be $\Omega(n^2)$ in cases like $\..^{n/2}(\.{.+})^{n/2}\.+^{n/2-1}$.
 But luckily for us, there is a nice way to represent all of those sets
@@ -288,7 +292,7 @@ postorder\X;\par
 \As10, 11\ETs16.
 \U1.\fi
 
-\M{8}Tree traversal is great fun, when it works.
+\M[240 spiders.w]{8}Tree traversal is great fun, when it works.
 
 \Y\B\4\X8:Fill in all \PB{\\{umax}} and \PB{\\{vmax}} links, traversing in
 reverse postorder\X${}\E{}$\6
@@ -330,7 +334,8 @@ ${}\|j\K\\{lsib}[\|j];{}$\6
 \4${}\}{}$\2\par
 \U7.\fi
 
-\M{9}The sample spider leads, for example, to the following values:
+\M[268 spiders.w]{9}The sample spider leads, for example, to the following
+values:
 $$\vbox{\halign{$\hfil#\hfil$\quad&
 $\hfil#\hfil$\quad&
 $\hfil#\hfil$\quad&
@@ -360,7 +365,8 @@ k&\PB{\\{ppro}}[k]&\PB{\\{npro}}[k]&\PB{\\{prev}}[k]&\PB{\\{umax}}[k]&\PB{%
 $U_k$, $V_k$ }\par
 \fi
 
-\M{10}Aha! We can begin to see how to get the desired Gray path. The well-known
+\M[294 spiders.w]{10}Aha! We can begin to see how to get the desired Gray path.
+The well-known
 reflected Gray code for mixed-radix number systems tells us how to obtain a
 path $P_k$ of length $\prod_{u\in U_k}n_u$ for the labelings of
 spider~$k$ with $\bit k=0$, as
@@ -438,7 +444,8 @@ ${}\\{veven}[\\{npro}[\|k]]\K\|j;{}$\2\6
 ${}\\{ueven}[\T{0}]\K\\{maxn}{}$;\par
 \fi
 
-\M{11}Another thing we'll need to know is \PB{\\{umaxbit}[\|k]}, the value of
+\M[354 spiders.w]{11}Another thing we'll need to know is \PB{\\{umaxbit}[\|k]},
+the value of
 \PB{\\{bit}[\\{umax}[\|k]]} when \PB{\\{bit}[\|k]} changes from 0 to~1. And of
 course
 the dual value \PB{\\{vmaxbit}[\|k]} will be equally important.
@@ -476,7 +483,8 @@ ${}\\{vmaxbit}[\|l]\K\T{1}\XOR\\{vmaxbit}[\|k];{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{12}For the record, our example spider has the following additional
+\M[379 spiders.w]{12}For the record, our example spider has the following
+additional
 characteristics (including some that we'll introduce later):
 $$\vbox{\halign{$\hfil#\hfil$\enspace&
 $\hfil#\hfil$\enspace&
@@ -514,7 +522,8 @@ transition bits }\6
 \&{int} \\{bit}[\\{maxn}];\C{ the current labeling }\par
 \fi
 
-\M{13}A somewhat subtle point arises here, and it provides an important
+\M[412 spiders.w]{13}A somewhat subtle point arises here, and it provides an
+important
 simplification: Suppose $j$ is a negative child of~$k$,
 and $\PB{\\{ueven}}[k]\ge j$. Then the initial bits of spider~$j$ in the
 sequence
@@ -588,7 +597,8 @@ ${}\\{bit}[\|k]\K\|b;{}$\6
 \A19.
 \U1.\fi
 
-\N{1}{14}The active list. Reflected Gray code is nicely generated by a process
+\N[467 spiders.w]{1}{14}The active list. Reflected Gray code is nicely
+generated by a process
 based on a list of elements that are alternately active and passive.
 (See, for example, Algorithm 7.2.1.1L in {\sl The Art of Computer
 Programming}.) A slight generalization of that notion works admirably for the
@@ -659,8 +669,8 @@ And finally the whole list is asleep; all 60 labelings have been generated.
 
 \fi
 
-\M{15}Using the active list protocol, the average amount of work per bit change
-is
+\M[534 spiders.w]{15}Using the active list protocol, the average amount of work
+per bit change is
 only $O(1)$ when amortized over the entire computation, even if we do a
 sequential search for~$k$ in step~(1) and recopy all elements greater than~$k$
 in step~(2). Our implementation goes beyond the notion of amortization,
@@ -706,7 +716,8 @@ by setting
 
 \fi
 
-\M{16}Now let's focus on the implementation of step (2), which is the
+\M[572 spiders.w]{16}Now let's focus on the implementation of step (2), which
+is the
 heart of the computation.
 
 A positive child $j$ of $k$ is called ``simple'' if $V_j$ is empty; a
@@ -754,7 +765,8 @@ ${}\\{vmaxscope}[\|k]\K(\\{vmaxbit}[\|k]\E\T{0}\?(\\{umax}[\|j]\?\\{umax}[\|j]:%
 \4${}\}{}$\2\par
 \fi
 
-\M{17}\B\X17:Compute the \PB{\\{bstart}} links for \PB{\|k}'s family\X${}\E{}$\6
+\M[604 spiders.w]{17}\B\X17:Compute the \PB{\\{bstart}} links for \PB{\|k}'s
+family\X${}\E{}$\6
 \&{for} ${}(\|j\K\|l\K\|k;{}$ \|j; ${}\|j\K\\{right}[\|j]){}$\5
 ${}\{{}$\1\6
 \&{if} ${}(\\{right}[\|j]\W\\{sign}[\|j]\E\\{sign}[\\{right}[\|j]]\W\3{-1}((%
@@ -765,7 +777,7 @@ ${}\\{bstart}[\|j]\K\|l,\39\|l\K\\{right}[\|j];{}$\6
 \4${}\}{}$\2\par
 \U16.\fi
 
-\M{18}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[611 spiders.w]{18}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{left}[\\{maxn}]${},{}$ \\{right}[\\{maxn}];\C{ neighbors in the
 active list }\6
 \&{int} \\{bstart}[\\{maxn}];\C{ start of a block }\6
@@ -776,8 +788,8 @@ nodes when \PB{\\{bit}[\|k]} changes }\6
 \&{int} \\{focus}[\\{maxn}];\C{ pointers that encode wakefulness }\par
 \fi
 
-\M{19}When \PB{\\{bit}[\|k]} changes from 0 to 1, we want to delete $k$'s
-positive blocks of
+\M[618 spiders.w]{19}When \PB{\\{bit}[\|k]} changes from 0 to 1, we want to
+delete $k$'s positive blocks of
 children from the active list and insert the negative ones. The rightmost
 block is addressed by \PB{\\{rchild}[\|k]}, and we get to the others by
 following
@@ -806,8 +818,8 @@ ${}\\{flag}[\|l]\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{20}Once the process has gotten started, \PB{\\{left}[\|j]} and \PB{%
-\\{right}[\|k]} will
+\M[642 spiders.w]{20}Once the process has gotten started, \PB{\\{left}[\|j]}
+and \PB{\\{right}[\|k]} will
 already have the correct values, unchanged from the time block $k$ was
 previously deleted. But we don't make use of this fact, because we don't
 want to worry about presetting \PB{\\{left}[\|j]} and \PB{\\{right}[\|k]} when
@@ -849,7 +861,8 @@ ${}\\{flag}[\|j]\K\|i;{}$\6
 \4${}\}{}$\2\par
 \U19.\fi
 
-\M{21}A block being deleted might be preceded by a simple block of the
+\M[670 spiders.w]{21}A block being deleted might be preceded by a simple block
+of the
 other sign that wants to be inserted. In that case we insert the latter
 in place of the former.
 
@@ -887,7 +900,8 @@ ${}\\{flag}[\|j]\K\|i;{}$\6
 \4${}\}{}$\2\par
 \U19.\fi
 
-\M{22}\B\X22:Replace block $k$ by block $i$ and \PB{\&{return}}\X${}\E{}$\6
+\M[694 spiders.w]{22}\B\X22:Replace block $k$ by block $i$ and \PB{\&{return}}%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{left}[\|l]\K\|i,\39\\{right}[\|i]\K\|l;{}$\6
 ${}\|k\K\\{bstart}[\|i],\39\\{left}[\|k]\K\\{left}[\|j],\39\\{right}[\\{left}[%
@@ -923,7 +937,7 @@ ${}\\{flag}[\|k]\K\|i;{}$\6
 \4${}\}{}$\2\par
 \U21.\fi
 
-\M{23}How does the active list get there in the first place? We
+\M[716 spiders.w]{23}How does the active list get there in the first place? We
 compute it from the \PB{\\{bit}} table, as follows.
 
 \Y\B\4\X23:Launch the active list\X${}\E{}$\6
@@ -939,8 +953,8 @@ ${}\\{right}[\|l]\K\T{0},\39\\{left}[\T{0}]\K\|l{}$;\C{ link in the rightmost
 node of the active list }\par
 \U24.\fi
 
-\N{1}{24}Doing it. The time has come to construct the loopless implementation
-in
+\N[727 spiders.w]{1}{24}Doing it. The time has come to construct the loopless
+implementation in
 practice, as we have been doing so far in theory.
 
 Of course the printout in each step does involve a loop. This printout
@@ -979,18 +993,19 @@ ${}\\{been\_there\_and\_done\_that}\K\T{1};{}$\6
 ${}\\{printf}(\.{"Altogether\ \%d/2\ lab}\)\.{elings.\\n"},\39\\{count}){}$;\par
 \U1.\fi
 
-\M{25}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[753 spiders.w]{25}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{count};\C{ the number of labelings found so far }\6
 \&{int} \\{been\_there\_and\_done\_that};\C{ have we reached all-asleep state
 before? }\par
 \fi
 
-\M{26}\B\X26:Set \PB{\|k} to the rightmost nonsleeping node of the active list%
-\X${}\E{}$\6
+\M[757 spiders.w]{26}\B\X26:Set \PB{\|k} to the rightmost nonsleeping node of
+the active list\X${}\E{}$\6
 $\|j\K\\{left}[\T{0}],\39\|k\K\\{focus}[\|j],\39\\{focus}[\|j]\K\|j{}$;\par
 \U24.\fi
 
-\M{27}At this point we know that all nodes greater than $k$ are awake and
+\M[760 spiders.w]{27}At this point we know that all nodes greater than $k$ are
+awake and
 that \PB{$\\{flag}[\|k]\K\T{0}$}.
 
 \Y\B\4\X27:Put \PB{\|k} to sleep\X${}\E{}$\6
@@ -998,7 +1013,8 @@ $\|j\K\\{left}[\|k],\39\\{focus}[\|k]\K\\{focus}[\|j],\39\\{focus}[\|j]\K%
 \|j{}$;\par
 \U24.\fi
 
-\M{28}\B\X28:Move forward, setting \PB{$\\{bit}[\|k]\K\T{1}$}\X${}\E{}$\6
+\M[766 spiders.w]{28}\B\X28:Move forward, setting \PB{$\\{bit}[\|k]\K\T{1}$}%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{bit}[\|k]\K\T{1},\39\|j\K\\{rchild}[\|k];{}$\6
 \&{if} (\|j)\5
@@ -1024,7 +1040,8 @@ block }\2\6
 \4${}\}{}$\2\par
 \U24.\fi
 
-\M{29}\B\X29:Move backward, setting \PB{$\\{bit}[\|k]\K\T{0}$}\X${}\E{}$\6
+\M[782 spiders.w]{29}\B\X29:Move backward, setting \PB{$\\{bit}[\|k]\K\T{0}$}%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{bit}[\|k]\K\T{0},\39\|j\K\\{rchild}[\|k];{}$\6
 \&{if} (\|j)\5
@@ -1050,7 +1067,7 @@ block }\2\6
 \4${}\}{}$\2\par
 \U24.\fi
 
-\M{30}\B\X30:Print out all the current bits\X${}\E{}$\6
+\M[798 spiders.w]{30}\B\X30:Print out all the current bits\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\1\5
 ${}\\{putchar}(\.{'0'}+\\{bit}[\|k]);{}$\2\6
@@ -1060,7 +1077,8 @@ ${}\\{putchar}(\.{'0'}+\\{bit}[\|k]);{}$\2\6
 \4${}\}{}$\2\par
 \U24.\fi
 
-\M{31}Here I recompute what the active list should be, and compare it
+\M[805 spiders.w]{31}Here I recompute what the active list should be, and
+compare it
 to the current links. Discrepancies are noted only if no flagged nodes
 follow.
 
@@ -1098,11 +1116,12 @@ ${}\|j\K\|k;{}$\6
 \4${}\}{}$\2\par
 \U30.\fi
 
-\M{32}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[832 spiders.w]{32}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{asleep}[\\{maxn}];\C{ sleeping (or inactive) nodes }\par
 \fi
 
-\M{33}Finally, we print even more stuff when the user calls for an
+\M[835 spiders.w]{33}Finally, we print even more stuff when the user calls for
+an
 exceptional level of absolute verbosity.
 
 \Y\B\4\X33:Print out the results of initialization\X${}\E{}$\6
@@ -1125,7 +1144,7 @@ vmaxscope=\%d\\n"},\39\\{vmin}[\|k],\39\\{veven}[\|k],\39\\{vmax}[\|k],\39%
 \4${}\}{}$\2\par
 \U24.\fi
 
-\N{1}{34}Index.
+\N[852 spiders.w]{1}{34}Index.
 \fi
 
 \inx

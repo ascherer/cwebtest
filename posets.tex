@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. Sequence M1805, posets with linear order $1\ldots n$.
+\N[2 posets.w]{1}{1}Intro. Sequence M1805, posets with linear order $1\ldots
+n$.
 Same as upper triangular $n\times n$ Boolean matrices $B$
 such that $I\subseteq B^2\subseteq B$.
 
@@ -59,7 +61,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}First we initialize the \PB{\\{uni}} table, for hashing.
+\M[53 posets.w]{2}First we initialize the \PB{\\{uni}} table, for hashing.
 
 \Y\B\4\X2:Initialize\X${}\E{}$\6
 \\{gb\_init\_rand}(\T{0});\6
@@ -69,14 +71,14 @@ ${}\\{uni}[\|j][\|k]\K\\{gb\_next\_rand}(\,){}$;\2\2\par
 \A4.
 \U1.\fi
 
-\M{3}If \PB{\\{thresh}} is \PB{$\T{1}\LL\|k$}, the \PB{\\{bits}} field will
-contain rows having
+\M[59 posets.w]{3}If \PB{\\{thresh}} is \PB{$\T{1}\LL\|k$}, the \PB{\\{bits}}
+field will contain rows having
 \PB{\|k}~or fewer bits, and the \PB{\\{aux}} field will contain the longer
 rows.
 
 \fi
 
-\M{4}\B\X2:Initialize\X${}\mathrel+\E{}$\6
+\M[62 posets.w]{4}\B\X2:Initialize\X${}\mathrel+\E{}$\6
 \&{for} ${}(\|j\K\T{0},\39\|k\K\T{1},\39\|l\K\T{2};{}$ ${}\|l\Z\\{thresh};{}$
 ${}\|k\PP,\39\|l\MRL{{\LL}{\K}}\T{1}){}$\1\5
 ${}\\{offset}[\|l-\T{1}]\K\|j,\39\|j\MRL{+{\K}}\|k;{}$\2\6
@@ -85,8 +87,8 @@ ${}\\{offset}[\|l-\T{1}]\K\|j,\39\|j\MRL{+{\K}}\|k;{}$\2\6
 ${}\\{offset}[\|l-\T{1}]\K\|j,\39\|j\MRL{+{\K}}\|k{}$;\2\par
 \fi
 
-\M{5}Data is kept sequentially in \PB{\\{mem}}, beginning at \PB{\\{start}};
-the first
+\M[66 posets.w]{5}Data is kept sequentially in \PB{\\{mem}}, beginning at \PB{%
+\\{start}}; the first
 available location is \PB{\\{top}}. During the first phase the data appears
 in four-word packets, because we want link fields for hashing.
 
@@ -140,8 +142,8 @@ ${}\\{printf}(\.{"\ \%d\ item\%s\ on\ list\ }\)\.{\%d;\\n"},\39\\{count},\39%
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{6}\B\X6:Put \PB{\\{curbits}} and \PB{\\{curaux}} into the new list with
-weight \PB{\|w}\X${}\E{}$\6
+\M[100 posets.w]{6}\B\X6:Put \PB{\\{curbits}} and \PB{\\{curaux}} into the new
+list with weight \PB{\|w}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{int} \|h;\6
 \&{register} \&{uint} ${}{*}\|q;{}$\7
@@ -175,7 +177,8 @@ ${}\\{wt}(\|q)\MRL{+{\K}}\\{wt}(\|p);{}$\6
 \4${}\}{}$\2\par
 \U5.\fi
 
-\M{7}In the second phase we use the \PB{\\{hash}} table as a direct pointer to
+\M[122 posets.w]{7}In the second phase we use the \PB{\\{hash}} table as a
+direct pointer to
 the data.
 
 \Y\B\4\X7:Do the second phase\X${}\E{}$\6
@@ -212,8 +215,8 @@ ${}\\{printf}(\.{"...and\ the\ solution}\)\.{\ for\ \%d\ is\ \%d\%09d.\\n}\)%
 \.{"},\39\|n,\39\\{aux}(\\{start}),\39\\{wt}(\\{start})){}$;\par
 \U1.\fi
 
-\M{8}\B\X8:Put \PB{\\{curbits}} into the new list with weight \PB{\|w}\X${}%
-\E{}$\6
+\M[147 posets.w]{8}\B\X8:Put \PB{\\{curbits}} into the new list with weight %
+\PB{\|w}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{uint} ${}{*}\|q;{}$\7
 ${}\|y\K\\{curbits}\AND\\{hmask};{}$\6
@@ -240,7 +243,7 @@ ${}\\{aux}(\|q)\MRL{+{\K}}\T{1},\39\\{wt}(\|q)\MRL{-{\K}}\T{1000000000};{}$\2\6
 \4${}\}{}$\2\par
 \U7.\fi
 
-\M{9}\B\X9:Repack the data into shorter packets\X${}\E{}$\6
+\M[166 posets.w]{9}\B\X9:Repack the data into shorter packets\X${}\E{}$\6
 $\\{ostart}\K\\{top};{}$\6
 ${}\|x\K(\\{top}-\\{mem})\MOD\T{3};{}$\6
 \&{if} (\|x)\1\5
@@ -257,7 +260,7 @@ ${}\\{top}\K{\AND}\\{mem}[\T{0}];{}$\2\6
 \4${}\}{}$\2\par
 \U7.\fi
 
-\N{1}{10}Index.
+\N[176 posets.w]{1}{10}Index.
 \fi
 
 \inx

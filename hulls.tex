@@ -1,10 +1,11 @@
 \input cwebmac
+\srcloctrue
 % This file is part of the Stanford GraphBase (c) Stanford University 1990
 \nocon
 
 
-\N{1}{1}Introduction. This is a hastily written implementation of hull
-insertion.
+\N[4 hulls.w]{1}{1}Introduction. This is a hastily written implementation of
+hull insertion.
 
 \Y\B\F\\{Graph} \5
 \\{int}\C{ \PB{\\{gb\_graph}} defines the \PB{\&{Graph}} type and a few others
@@ -32,7 +33,7 @@ ${}\\{printf}(\.{"Total\ of\ \%d\ mems\ an}\)\.{d\ \%d\ calls\ on\ ccw.\\n}\)%
 \4${}\}{}$\2\par
 \fi
 
-\M{2}I'm instrumenting this in a simple way.
+\M[28 hulls.w]{2}I'm instrumenting this in a simple way.
 
 \Y\B\4\D$\|o$ \5
 $\\{mems}\PP{}$\par
@@ -46,7 +47,7 @@ coordinates }\par
 \A4.
 \U1.\fi
 
-\N{1}{3}Data structures.
+\N[38 hulls.w]{1}{3}Data structures.
 For now, each vertex is represented by two coordinates stored in the
 utility fields \PB{$\|x.\|i$} and \PB{$\|y.\|i$}. I'm also putting a serial
 number into
@@ -68,11 +69,12 @@ $\|u.{}$\|v\par
 $\|v.{}$\|v\par
 \fi
 
-\M{4}\B\X2:Global variables\X${}\mathrel+\E{}$\6
+\M[54 hulls.w]{4}\B\X2:Global variables\X${}\mathrel+\E{}$\6
 \&{Vertex} ${}{*}\\{rover}{}$;\C{ one of the vertices in the convex hull }\par
 \fi
 
-\M{5}We assume that the vertices have been given to us in a GraphBase-type
+\M[57 hulls.w]{5}We assume that the vertices have been given to us in a
+GraphBase-type
 graph. The algorithm begins with a trivial hull that contains
 only the first two vertices.
 
@@ -89,15 +91,15 @@ ${}\\{printf}(\.{"Beginning\ with\ (\%s;}\)\.{\ \%s)\\n"},\39\|u\MG\\{name},\39%
 \|v\MG\\{name}){}$;\2\par
 \U7.\fi
 
-\M{6}We'll probably need a bunch of local variables to do elementary operations
-on
+\M[70 hulls.w]{6}We'll probably need a bunch of local variables to do
+elementary operations on
 data structures.
 
 \Y\B\4\X6:Local variables\X${}\E{}$\6
 \&{Vertex} ${}{*}\|u,{}$ ${}{*}\|v,{}$ ${}{*}\\{vv},{}$ ${}{*}\|w{}$;\par
 \U1.\fi
 
-\N{1}{7}Hull updating.
+\N[76 hulls.w]{1}{7}Hull updating.
 The main loop of the algorithm updates the data structure incrementally
 by adding one new vertex at a time. If the new vertex lies outside the
 current convex hull, we put it into the cycle and possibly delete some
@@ -117,7 +119,8 @@ consecutive hull vertices \PB{\|u} and \PB{\|v}\X;\6
 \X8:Print the convex hull\X;\par
 \U1.\fi
 
-\M{8}Let me do the easy part first, since it's bedtime and I can worry about
+\M[92 hulls.w]{8}Let me do the easy part first, since it's bedtime and I can
+worry about
 the rest tomorrow.
 
 \Y\B\4\X8:Print the convex hull\X${}\E{}$\6
@@ -131,8 +134,8 @@ ${}\|u\K\|u\MG\\{succ};{}$\6
 \&{while} ${}(\|u\I\\{rover}){}$;\par
 \U7.\fi
 
-\M{9}\B\X9:Go around the current hull; \PB{\&{continue}} if \PB{\\{vv}} is
-inside it\X${}\E{}$\6
+\M[103 hulls.w]{9}\B\X9:Go around the current hull; \PB{\&{continue}} if \PB{%
+\\{vv}} is inside it\X${}\E{}$\6
 $\|u\K\\{rover};{}$\6
 \&{do}\5
 ${}\{{}$\1\6
@@ -147,8 +150,8 @@ ${}\|u\K\|v;{}$\6
 ;\par
 \U7.\fi
 
-\M{10}\B\X10:Update the convex hull, knowing that \PB{\\{vv}} lies outside the
-consecutive hull vertices \PB{\|u} and \PB{\|v}\X${}\E{}$\6
+\M[113 hulls.w]{10}\B\X10:Update the convex hull, knowing that \PB{\\{vv}} lies
+outside the consecutive hull vertices \PB{\|u} and \PB{\|v}\X${}\E{}$\6
 \&{if} ${}(\|u\E\\{rover}){}$\5
 ${}\{{}$\1\6
 \&{while} (\T{1})\5
@@ -179,7 +182,8 @@ ${}\\{printf}(\.{"New\ hull\ sequence\ (}\)\.{\%s;\ \%s;\ \%s)\\n"},\39\|u\MG%
 \\{name},\39\\{vv}\MG\\{name},\39\|v\MG\\{name}){}$;\2\par
 \U7.\fi
 
-\N{1}{11}Determinants. I need code for the primitive function \PB{\\{ccw}}.
+\N[134 hulls.w]{1}{11}Determinants. I need code for the primitive function \PB{%
+\\{ccw}}.
 Floating-point arithmetic suffices for my purposes.
 
 We want to evaluate the determinant

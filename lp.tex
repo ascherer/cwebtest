@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Introduction. I'm writing this program in order to gain personal
+\N[2 lp.w]{1}{1}Introduction. I'm writing this program in order to gain
+personal
 experience implementing the simplex algorithm---even though I know
 that commercial codes do the job much, much better.
 My aim is to learn, to make the logic ``crystal clear'' if not
@@ -84,7 +86,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}The algorithm is very sensitive to zeroness or nonzeroness of numbers.
+\M[80 lp.w]{2}The algorithm is very sensitive to zeroness or nonzeroness of
+numbers.
 I'll try to avoid problems with floating-point roundoff by zapping
 anything near 0.0 to 0.0. For speed, I do this in ``machine language.''
 
@@ -108,7 +111,8 @@ ${}\\{zbuf}.\\{dbl}\K\T{0.0};{}$\2\7
 ${}\}{}$ \\{zbuf};\par
 \U1.\fi
 
-\M{3}Here's a test that my intentions are being fulfilled by that trickery.
+\M[99 lp.w]{3}Here's a test that my intentions are being fulfilled by that
+trickery.
 
 \Y\B\4\X3:Check the zap trick\X${}\E{}$\6
 $\\{zbuf}.\\{dbl}\K\T{.000000001}{}$;\C{ this value should not be zapped }\6
@@ -125,7 +129,7 @@ ${}\\{exit}({-}\T{666});{}$\6
 \4\\{zap\_OK}:\par
 \U1.\fi
 
-\M{4}\B\X4:Read the input matrix\X${}\E{}$\6
+\M[113 lp.w]{4}\B\X4:Read the input matrix\X${}\E{}$\6
 \&{for} ${}(\|i\K\|n\K\T{0};{}$  ; ${}\|i\PP){}$\5
 ${}\{{}$\1\6
 \&{if} ${}(\R\\{fgets}(\\{buf},\39\\{buf\_size},\39\\{stdin})){}$\1\5
@@ -186,7 +190,8 @@ ${}\\{exit}({-}\T{4});{}$\6
 ${}\|m\K\|i-\T{1}{}$;\par
 \U1.\fi
 
-\N{1}{5}The algorithm: An example. The famous simplex procedure is subtle
+\N[152 lp.w]{1}{5}The algorithm: An example. The famous simplex procedure is
+subtle
 yet not difficult to fathom, even when we are careful to avoid infinite
 loops. But I always tend to forget the details a short time after seeing them
 explained in a book. Therefore I will try here to present the algorithm
@@ -205,7 +210,8 @@ $$3v_1-v_2+5v_3\le 8,\qquad
 
 \fi
 
-\M{6}The first step in the simplex method is to introduce $m$ additional
+\M[169 lp.w]{6}The first step in the simplex method is to introduce $m$
+additional
 nonnegative variables called ``slack variables'' $(s_1,\ldots,s_m)$,
 which allow us to deal with equivalities instead of inequalities.
 For example, the inequality $3v_1-v_2+5v_3\le 8$ becomes the equality
@@ -243,8 +249,8 @@ we will see below.
 
 \fi
 
-\M{7}The algorithm also maintains two other invariants. First, there will
-always
+\M[206 lp.w]{7}The algorithm also maintains two other invariants. First, there
+will always
 be $m$ special columns called ``basis columns,'' one for each index~$i$
 in the range $1\le i\le m$. All entries of basis column~$i$ are~0
 except for a 1 in row~$i$. When we begin, the initial basis columns are those
@@ -258,7 +264,8 @@ entirely zero, because of the~1 in its basis column.)
 
 \fi
 
-\M{8}Elementary row operations on this array do not change the set~$X$.
+\M[219 lp.w]{8}Elementary row operations on this array do not change the
+set~$X$.
 Namely, we can multiply each element of row~$i$ by a nonzero constant,
 when $i\ne0$; and we can also add any multiple of row~$i\ne0$ to any
 other row $j\ne i$, even when $j=0$.
@@ -309,7 +316,8 @@ which we wish to take a maximum.
 
 \fi
 
-\M{9}But oops, we've now run into fractions instead of nice, simple integers.
+\M[269 lp.w]{9}But oops, we've now run into fractions instead of nice, simple
+integers.
 No problem: We can also scale the columns, by changing the labels:
 $$\def\\{\phantom-}
 \vcenter{\halign{\hfil$#$\hfil\enspace&&\quad\hfil$#$\hfil\cr
@@ -322,7 +330,7 @@ $$\def\\{\phantom-}
 
 \fi
 
-\M{10}Okay, let's continue.
+\M[280 lp.w]{10}Okay, let's continue.
 Another pivot operation, in column $(v_2)$ and row 2, followed by
 another rescaling, yields
 $$\def\\{\phantom-}
@@ -336,7 +344,8 @@ $$\def\\{\phantom-}
 
 \fi
 
-\M{11}And now we're done! From this tableau we can read off the answer to the
+\M[292 lp.w]{11}And now we're done! From this tableau we can read off the
+answer to the
 maximization problem, namely that the desired maximum of $v_1+3v_2-v_3$ is
 $27/8$, and that it is obtained when $v_1=6/8$, $v_2=7/8$, and $v_3=0$.
 
@@ -359,7 +368,7 @@ get any lower than 27/8.
 
 \fi
 
-\M{12}There's more good news, too: The solution to the corresponding
+\M[313 lp.w]{12}There's more good news, too: The solution to the corresponding
 {\it minimization\/} problem, namely to minimize $8u_1+u_2+5u_3$ subject to
 $u_1,u_2,u_3\ge0$ and
 $$3u_1-u_2+2u_3\ge1,\qquad
@@ -411,7 +420,7 @@ by adding $0\cdot 5+{1\over4}\cdot1+{5\over8}\cdot5$.
 
 \fi
 
-\N{1}{13}The algorithm: An implementation.
+\N[363 lp.w]{1}{13}The algorithm: An implementation.
 We've been looking at a small example, but our reasoning has been perfectly
 general. The main point is that we were able to find a sequence of pivot steps
 that preserved the desired invariants and that also led to a tableau
@@ -434,7 +443,8 @@ ${}\\{count}\PP;{}$\6
 \X23:Report the answers\X;\par
 \U1.\fi
 
-\M{14}Instead of distinguishing slack variables $s_i$ from ordinary variables
+\M[381 lp.w]{14}Instead of distinguishing slack variables $s_i$ from ordinary
+variables
 $v_j$, we will henceforth call the variables $w_1$, \dots,~$w_{m+n}$,
 with $w_i=s_i$ for $1\le i\le m$ and $w_{m+j}=v_j$ for $1\le j\le n$.
 
@@ -470,7 +480,8 @@ ${}\\{denom}[\|j]\K\T{1};{}$\2\6
 ${}\\{aa}[\|i][\|j]\K\|a[\|i][\|j]{}$;\2\2\par
 \U13.\fi
 
-\M{15}At this point we have reached a tableau with a negative entry in row~0
+\M[406 lp.w]{15}At this point we have reached a tableau with a negative entry
+in row~0
 and column~$(w_j)$. Two cases arise: The corresponding column might
 contain at least one positive entry; or it might not.
 
@@ -497,7 +508,8 @@ solution!\\n"});\6
 \X17:Pivot at $(l,j)$\X;\par
 \U13.\fi
 
-\M{16}When $a_{0j}<0$ and $a_{ij}>0$, a pivot step in row $i$ and column~$j$
+\M[429 lp.w]{16}When $a_{0j}<0$ and $a_{ij}>0$, a pivot step in row $i$ and
+column~$j$
 always increases the lexicographic value of row~0, because it adds a positive
 multiple of the (lexicographically positive) row~$i$. Therefore Pivoting
 is a Good Thing: It leads to continual progress toward larger and larger
@@ -549,13 +561,13 @@ is best so far, for $0\le h<s$ }\2\6
 \4${}\}{}$\2\par
 \U15.\fi
 
-\M{17}\B\X17:Pivot at $(l,j)$\X${}\E{}$\6
+\M[472 lp.w]{17}\B\X17:Pivot at $(l,j)$\X${}\E{}$\6
 \X18:Do floating-point pivoting\X;\6
 \X20:Do integer pivoting\X;\6
 ${}\|q[\|p[\|l]]\K\T{0},\39\|p[\|l]\K\|j,\39\|q[\|j]\K\|l{}$;\par
 \U15.\fi
 
-\M{18}Before we do any integer pivoting, we'd like to be sure that
+\M[477 lp.w]{18}Before we do any integer pivoting, we'd like to be sure that
 an all-floating-point method would make the same decision.
 So this step repeats some of the work we've already done, but
 it uses the \PB{\\{aa}} tableau instead of \PB{\|a}.
@@ -606,7 +618,7 @@ ${}\\{exit}({-}\T{99});{}$\6
 \4\\{fp\_pivot\_done}:\par
 \U17.\fi
 
-\N{1}{19}Pivoting. We're ready at last to update the tableaux:
+\N[511 lp.w]{1}{19}Pivoting. We're ready at last to update the tableaux:
 Arithmetic happens here, as we pivot on column~$j$ of row~$l$.
 
 \Y\B\4\X19:Really do floating-point pivoting\X${}\E{}$\6
@@ -630,7 +642,8 @@ ${}\\{aa}[\|i][\|k]\K\\{zbuf}.\\{dbl};{}$\6
 \4${}\}{}$\2\2\par
 \U18.\fi
 
-\M{20}In the all-integer version I'm hoping with fingers crossed that the
+\M[526 lp.w]{20}In the all-integer version I'm hoping with fingers crossed that
+the
 numerators and denominators will stay small, at least in the simple cases that
 are greatest interest to me at the moment.
 
@@ -676,11 +689,11 @@ ${}\|a[\|l][\|k]\MRL{*{\K}}\|h;{}$\2\2\6
 \4${}\}{}$\2\par
 \U17.\fi
 
-\N{1}{21}Final touches. A few last-minute odds and ends remain.
+\N[551 lp.w]{1}{21}Final touches. A few last-minute odds and ends remain.
 
 \fi
 
-\M{22}\B\X22:Print out the current state\X${}\E{}$\6
+\M[553 lp.w]{22}\B\X22:Print out the current state\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{printf}(\.{"Step\ \%d:\\n"},\39\\{count});{}$\6
 \&{for} ${}(\|i\K\T{0};{}$ ${}\|i\Z\|m;{}$ ${}\|i\PP){}$\5
@@ -702,7 +715,7 @@ ${}\\{printf}(\.{"\ \%.15g"},\39\\{aa}[\|i][\|j]);{}$\2\6
 \4${}\}{}$\2\par
 \Us13, 15\ETs18.\fi
 
-\M{23}\B\X23:Report the answers\X${}\E{}$\6
+\M[569 lp.w]{23}\B\X23:Report the answers\X${}\E{}$\6
 $\\{printf}(\.{"Optimal\ value\ \%.15g}\)\.{=\%d/\%d\ found\ after\ \%}\)\.{d\
 pivots.\\n"},\39\\{aa}[\T{0}][\T{0}],\39\|a[\T{0}][\T{0}],\39\\{denom}[\T{0}],%
 \39\\{count});{}$\6
@@ -720,7 +733,8 @@ ${}\\{printf}(\.{"\ \%.15g=\%d/\%d"},\39\\{aa}[\T{0}][\|j],\39\|a[\T{0}][\|j],%
 \\{printf}(\.{"\\n"});\par
 \U13.\fi
 
-\M{24}Well, our little program is done. But an attentive reader may well have
+\M[580 lp.w]{24}Well, our little program is done. But an attentive reader may
+well have
 noticed that an important point has not yet been considered: We haven't proved
 that the algorithm must terminate.
 
@@ -747,7 +761,7 @@ only finitely many bases. Termination is inevitable.
 
 \fi
 
-\N{1}{25}Index.
+\N[605 lp.w]{1}{25}Index.
 \fi
 
 \inx

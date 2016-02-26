@@ -1,8 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Introduction. This program solves a fairly general kind of sliding
-block
+\N[2 sliding.w]{1}{1}Introduction. This program solves a fairly general kind of
+sliding block
 puzzle. Indeed, it emphasizes generality over speed, although it does try to
 implement breadth-first search on large graphs in a reasonably efficient
 way. (I~plan to write a program based on more advanced techniques later, with
@@ -12,8 +13,8 @@ find here is a shortest-path-to-solution-of-a-sliding-block-puzzle engine.
 
 \fi
 
-\M{2}The puzzle can have up to 15 different kinds of pieces, named in
-hexadecimal
+\M[10 sliding.w]{2}The puzzle can have up to 15 different kinds of pieces,
+named in hexadecimal
 from \.1 to~\.f. These pieces are specified in the standard input file, one
 line per piece, by giving a rectangular pattern of 0s and~1s, where 0 means
 `empty' and 1~means `occupied'. Rows of the pattern are separated by slashes
@@ -74,7 +75,8 @@ another piece name, for example by saying `\.{4 = 1}'.
 
 \fi
 
-\M{3}Six different styles of sliding-block moves are supported by this program,
+\M[69 sliding.w]{3}Six different styles of sliding-block moves are supported by
+this program,
 and the user should specify the desired style on the command line.
 \smallskip
 \def\sty#1. {\par\noindent\hangindent 30pt\hbox{\bf Style #1.\enspace}}
@@ -106,7 +108,7 @@ simply luxuries, they might be necessary when solving certain puzzles.
 
 \fi
 
-\M{4}OK, here now is the general outline of the program.
+\M[99 sliding.w]{4}OK, here now is the general outline of the program.
 There are no surprises yet, except perhaps for the fact that we
 prepare to make a \PB{\\{longjmp}}.
 
@@ -135,7 +137,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{5}If the style parameter is followed by another parameter on the command
+\M[127 sliding.w]{5}If the style parameter is followed by another parameter on
+the command
 line, the second parameter causes verbose output if it is positive,
 or suppresses the solution details if it is negative.
 
@@ -156,7 +159,8 @@ ${}\\{exit}({-}\T{2});{}$\6
 \4${}\}{}$\2\par
 \U4.\fi
 
-\N{1}{6}Representing the board. An $r\times c$ board will be represented as
+\N[143 sliding.w]{1}{6}Representing the board. An $r\times c$ board will be
+represented as
 an array of $rc+2c+r+1$ entries.
 The upper left corner corresponds to position $c+1$ in this array;
 moving up, down, left, or right corresponds to
@@ -189,7 +193,8 @@ in the board }\6
 \As8, 11, 18, 21, 25, 27, 49\ETs53.
 \U4.\fi
 
-\M{7}Every type of piece is specified by a list of board offsets from the
+\M[169 sliding.w]{7}Every type of piece is specified by a list of board offsets
+from the
 piece's topmost/leftmost cell, terminated by zero. For example, the
 offsets for the piece named \.1 in the silly example are
 $(1, 2, 7, 0)$ because there are five columns.
@@ -246,7 +251,7 @@ ${}\\{off}[\\{curo}\PP]\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U15.\fi
 
-\M{8}\B\D$\\{bufsize}$ \5
+\M[205 sliding.w]{8}\B\D$\\{bufsize}$ \5
 \T{1024}\C{ maximum length of input lines }\par
 \Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{off}[\\{maxsize}];\C{ offset lists for pieces }\6
@@ -255,7 +260,8 @@ ${}\\{off}[\\{curo}\PP]\K\T{0};{}$\6
 \&{char} \\{buf}[\\{bufsize}];\C{ input buffer }\par
 \fi
 
-\M{9}A board position is specified by putting block numbers in each occupied
+\M[213 sliding.w]{9}A board position is specified by putting block numbers in
+each occupied
 cell. The number of blocks on the board might exceed the number of piece
 types, since different blocks can have the same type; we assign numbers
 arbitrarily to the blocks.
@@ -275,7 +281,8 @@ Any permutation of the numbers $\{1,2,3,4\}$ would be equally valid.
 
 \fi
 
-\M{10}Here is a subroutine that fills the board from a specification in
+\M[230 sliding.w]{10}Here is a subroutine that fills the board from a
+specification in
 the input buffer. It returns \PB{${-}\T{1}$} if too many cells are specified,
 or \PB{${-}\T{2}$} if an illegal character is found.
 Otherwise it returns the number of conflicts found, namely the
@@ -335,7 +342,7 @@ ${}\\{board}[\|j]\K\T{0};{}$\2\2\6
 \As12, 20, 22, 23, 26, 28, 43, 50\ETs55.
 \U4.\fi
 
-\M{11}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[267 sliding.w]{11}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{bcount};\C{ the number of blocks on the board }\6
 \&{int} \\{piece}[\\{maxsize}]${},{}$ \\{apiece}[\\{maxsize}];\C{ the piece
 names of each block }\6
@@ -344,7 +351,8 @@ topmost/leftmost                                          positions of each
 block }\par
 \fi
 
-\M{12}The next subroutine prints a given board on standard output,
+\M[273 sliding.w]{12}The next subroutine prints a given board on standard
+output,
 in a somewhat readable format that shows connections between
 adjacent cells of each block. The starting position
 specified by the ``silly'' input would, for example, be rendered thus:
@@ -388,7 +396,7 @@ ${}\\{printf}(\.{"\%c\%x"},\39\\{cell}(\|j,\39\|k)\E\\{cell}(\|j,\39\|k-\T{1})%
 \4${}\}{}$\2\par
 \fi
 
-\M{13}Armed with those routines and subroutines,
+\M[311 sliding.w]{13}Armed with those routines and subroutines,
 we're ready to process the entire input file.
 
 \Y\B\4\X13:Read the puzzle specification; abort if it isn't right\X${}\E{}$\6
@@ -398,7 +406,7 @@ we're ready to process the entire input file.
 \X17:Read the stopping configuration into \PB{\\{aboard}}\X;\par
 \U4.\fi
 
-\M{14}\B\X14:Read the board size\X${}\E{}$\6
+\M[320 sliding.w]{14}\B\X14:Read the board size\X${}\E{}$\6
 $\\{fgets}(\\{buf},\39\\{bufsize},\39\\{stdin});{}$\6
 \&{if} ${}(\\{sscanf}(\\{buf},\39\.{"\%d\ x\ \%d"},\39{\AND}\\{rows},\39{\AND}%
 \\{cols})\I\T{2}\V\\{rows}\Z\T{0}\V\\{cols}\Z\T{0}){}$\5
@@ -415,7 +423,7 @@ ${}\\{ul}\K\\{colsp};{}$\6
 ${}\\{lr}\K(\\{rows}+\T{1})*\\{colsp}-\T{2}{}$;\par
 \U13.\fi
 
-\M{15}\B\X15:Read the piece specs\X${}\E{}$\6
+\M[332 sliding.w]{15}\B\X15:Read the piece specs\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\T{16};{}$ ${}\|j\PP){}$\1\5
 ${}\\{offstart}[\|j]\K{-}\T{1};{}$\2\6
 \&{while} (\T{1})\5
@@ -450,7 +458,8 @@ ${}\\{offstart}[\|t]\K\\{curo};{}$\6
 \4${}\}{}$\2\par
 \U13.\fi
 
-\M{16}\B\X16:Read the starting configuration into \PB{\\{board}}\X${}\E{}$\6
+\M[354 sliding.w]{16}\B\X16:Read the starting configuration into \PB{\\{board}}%
+\X${}\E{}$\6
 $\|t\K\\{fill\_board}(\\{board},\39\\{piece},\39\\{place});{}$\6
 \\{printf}(\.{"Starting\ configurat}\)\.{ion:\\n"});\6
 ${}\\{print\_board}(\\{board},\39\\{piece});{}$\6
@@ -477,7 +486,8 @@ ${}\\{exit}({-}\T{9});{}$\6
 \4${}\}{}$\2\par
 \U13.\fi
 
-\M{17}\B\X17:Read the stopping configuration into \PB{\\{aboard}}\X${}\E{}$\6
+\M[372 sliding.w]{17}\B\X17:Read the stopping configuration into \PB{%
+\\{aboard}}\X${}\E{}$\6
 $\\{fgets}(\\{buf},\39\\{bufsize},\39\\{stdin});{}$\6
 ${}\|t\K\\{fill\_board}(\\{aboard},\39\\{apiece},\39\\{aplace});{}$\6
 \\{printf}(\.{"\\nStopping\ configur}\)\.{ation:\\n"});\6
@@ -520,13 +530,13 @@ ${}\\{exit}({-}\T{12});{}$\6
 \4${}\}{}$\2\2\par
 \U13.\fi
 
-\M{18}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[400 sliding.w]{18}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{balance}[\T{16}];\C{ counters used to ensure that no pieces are lost
 }\par
 \fi
 
-\N{1}{19}Breadth-first search. Now we're ready for the heart of the
-calculation,
+\N[403 sliding.w]{1}{19}Breadth-first search. Now we're ready for the heart of
+the calculation,
 which is conceptually very simple: If we have found all configurations
 reachable in fewer than $d$ moves, those reachable in $d$ moves are obtained
 by making one more move from each of those that are reachable in $d-1$.
@@ -559,7 +569,8 @@ less than $m_{d-2}$, we can stop looking further in a chain.
 
 \fi
 
-\M{20}A configuration is represented internally as a sequence of nybbles
+\M[434 sliding.w]{20}A configuration is represented internally as a sequence of
+nybbles
 that list successive piece names, just as in the shorthand form
 used for starting and stopping configurations in the input but
 omitting the \.x's. For example, the ``silly'' starting configuration
@@ -599,12 +610,12 @@ ${}\\{config}[\|i\PP]\K\|s;{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{21}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[463 sliding.w]{21}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{xboard}[\\{boardsize}];\C{ places filled ahead of time }\6
 \&{uint} ${}\\{config}[\\{maxsize}/\T{8}]{}$;\C{ a packed configuration }\par
 \fi
 
-\M{22}\B\X10:Subroutines\X${}\mathrel+\E{}$\6
+\M[467 sliding.w]{22}\B\X10:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_config}(\&{uint} \\{config}[\,]${},\39{}$\&{int} \|n)\1\1\2%
 \2\6
 ${}\{{}$\1\6
@@ -618,7 +629,8 @@ ${}\\{printf}(\.{"\%0*x"},\39\|j,\39\|t){}$;\C{ we omit the trailing zeros }\6
 \4${}\}{}$\2\par
 \fi
 
-\M{23}Conversely, we can reconstruct a board from its packed representation.
+\M[476 sliding.w]{23}Conversely, we can reconstruct a board from its packed
+representation.
 
 \Y\B\4\X10:Subroutines\X${}\mathrel+\E{}$\6
 \&{int} \\{unpack}(\&{int} \\{board}[\,]${},\39{}$\&{int} \\{piece}[\,]${},%
@@ -655,7 +667,8 @@ ${}\\{board}[\|j]\K\T{0};{}$\2\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{24}We use ``universal hashing'' to compute hash codes, xoring random bits
+\M[498 sliding.w]{24}We use ``universal hashing'' to compute hash codes, xoring
+random bits
 based on individual bytes. These random bits appear in tables called \PB{%
 \\{uni}}.
 
@@ -667,7 +680,8 @@ ${}\\{uni}[\|j][\|k]\K\\{gb\_next\_rand}(\,){}$;\2\2\par
 \A30.
 \U4.\fi
 
-\M{25}The number of hash chains, \PB{\\{hashsize}}, should be a power of 2,
+\M[505 sliding.w]{25}The number of hash chains, \PB{\\{hashsize}}, should be a
+power of 2,
 and it deserves to be chosen somewhat carefully.
 If it is too large, we'll interfere with our machine's cache memory;
 if it is too small, we'll spend too much time going through hash chains.
@@ -694,7 +708,7 @@ $(\\{uni}[\T{0}][\|x\AND\T{\^ff}]+\\{uni}[\T{1}][(\|x\GG\T{8})\AND\T{\^ff}]+%
 \&{uint} \\{hashh}[\\{hashsize}];\C{ hash table pointers (high half) }\par
 \fi
 
-\M{26}\B\X10:Subroutines\X${}\mathrel+\E{}$\6
+\M[528 sliding.w]{26}\B\X10:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_big}(\&{uint} \\{hi}${},\39{}$\&{uint} \\{lo})\1\1\2\2\6
 ${}\{{}$\1\6
 ${}\\{printf}(\.{"\%.15g"},\39{}$((\&{double}) \\{hi})${}*\T{4294967296.0}+{}$(%
@@ -709,8 +723,8 @@ ${}\\{printf}(\.{"\%x"},\39\\{lo});{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{27}Of course I don't expect to keep all configurations in memory
-simultaneously,
+\M[540 sliding.w]{27}Of course I don't expect to keep all configurations in
+memory simultaneously,
 except on simple problems. Instead, I keep a table of \PB{\\{memsize}}
 integers,
 containing variable-size packets that represent individual configurations.
@@ -774,8 +788,8 @@ position }\6
 position }\par
 \fi
 
-\M{28}The \PB{\\{hashin}} subroutine looks for a given \PB{\\{board}}
-configuration in the
+\M[585 sliding.w]{28}The \PB{\\{hashin}} subroutine looks for a given \PB{%
+\\{board}} configuration in the
 master table, inserting it if it is new.
 The value returned is 0 unless the \PB{\\{trick}} parameter is nonzero.
 In the latter case, which is used for moves of style 2 or style 5,
@@ -820,8 +834,8 @@ ${}\\{bound}\MRL{-{\K}}\\{pos}[\|j];{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{29}If the current configuration achieves the goal, \PB{\\{hashin}} happily
-terminates
+\M[614 sliding.w]{29}If the current configuration achieves the goal, \PB{%
+\\{hashin}} happily terminates
 the search process, and sends control immediately to the external label
 called `\PB{\\{hurray}}'.
 
@@ -836,12 +850,13 @@ ${}\\{longjmp}(\\{success\_point},\39\T{1});{}$\6
 \4${}\}{}$\2\par
 \U28.\fi
 
-\M{30}\B\X24:Initialize\X${}\mathrel+\E{}$\6
+\M[625 sliding.w]{30}\B\X24:Initialize\X${}\mathrel+\E{}$\6
 \&{if} (\\{setjmp}(\\{success\_point}))\1\5
 \&{goto} \\{hurray};\C{ get ready for \PB{\\{longjmp}} }\2\par
 \fi
 
-\M{31}\B\X31:Insert \PB{\\{config}} into the \PB{\\{pos}} table\X${}\E{}$\6
+\M[628 sliding.w]{31}\B\X31:Insert \PB{\\{config}} into the \PB{\\{pos}} table%
+\X${}\E{}$\6
 $\|j\K\\{curpos}\AND(\\{memsize}-\T{1});{}$\6
 ${}\\{pos}[\|j]\K\\{curpos}-\\{hash}[\|h];{}$\6
 \&{if} ${}(\\{pos}[\|j]>\\{memsize}\V\\{curposh}>\\{hashh}[\|h]+(\\{pos}[\|j]>%
@@ -856,7 +871,8 @@ ${}\\{hash}[\|h]\K\\{curpos},\39\\{hashh}[\|h]\K\\{curposh};{}$\6
 \X33:Update \PB{\\{curpos}}\X;\par
 \U28.\fi
 
-\M{32}When we encounter a new configuration, we print it if it's the
+\M[639 sliding.w]{32}When we encounter a new configuration, we print it if it's
+the
 first to be found at the current distance, or if \PB{\\{verbose}} is set.
 
 \Y\B\4\X32:Update \PB{\\{configs}}\X${}\E{}$\6
@@ -879,7 +895,7 @@ ${}\\{configs}\PP;{}$\6
 ${}\\{configsh}\PP{}$;\2\par
 \U31.\fi
 
-\M{33}\B\X33:Update \PB{\\{curpos}}\X${}\E{}$\6
+\M[658 sliding.w]{33}\B\X33:Update \PB{\\{curpos}}\X${}\E{}$\6
 $\\{curpos}\MRL{+{\K}}\|n+\T{2};{}$\6
 \&{if} ${}(\\{curpos}<\|n+\T{2}){}$\1\5
 ${}\\{curposh}\PP;{}$\2\6
@@ -898,7 +914,8 @@ ${}\\{exit}({-}\T{13});{}$\6
 \4\\{okay}:\par
 \U31.\fi
 
-\M{34}So now we know how to deal with configurations, and we're ready to
+\M[669 sliding.w]{34}So now we know how to deal with configurations, and we're
+ready to
 carry out our overall search plan.
 
 \Y\B\4\X34:Solve the puzzle\X${}\E{}$\6
@@ -924,7 +941,7 @@ ${}\\{printf}(\.{"No\ solution\ found\ y}\)\.{et\ (maxmoves=\%d)!\\n"},\39%
 \\{exit}(\T{0});\par
 \U4.\fi
 
-\M{35}\B\X35:Remember the stopping configuration\X${}\E{}$\6
+\M[688 sliding.w]{35}\B\X35:Remember the stopping configuration\X${}\E{}$\6
 $\|t\K\\{pack}(\\{aboard},\39\\{apiece});{}$\6
 \&{for} ${}(\|k\K\\{goalhash}\K\T{0};{}$ ${}\|k<\|t;{}$ ${}\|k\PP){}$\1\5
 ${}\\{goal}[\|k]\K\\{config}[\|k],\39\\{goalhash}\MRL{{\XOR}{\K}}\\{hashcode}(%
@@ -932,7 +949,8 @@ ${}\\{goal}[\|k]\K\\{config}[\|k],\39\\{goalhash}\MRL{{\XOR}{\K}}\\{hashcode}(%
 ${}\\{goalhash}\MRL{\AND{\K}}\\{hashsize}-\T{1}{}$;\par
 \U34.\fi
 
-\M{36}We might need to return to the starting position when reconstructing
+\M[693 sliding.w]{36}We might need to return to the starting position when
+reconstructing
 a solution.
 
 \Y\B\4\X36:Remember the starting configuration\X${}\E{}$\6
@@ -941,7 +959,8 @@ $\|t\K\\{pack}(\\{board},\39\\{piece});{}$\6
 ${}\\{start}[\|k]\K\\{config}[\|k]{}$;\2\par
 \U34.\fi
 
-\M{37}\B\X37:Put the starting configuration into \PB{\\{pos}}\X${}\E{}$\6
+\M[700 sliding.w]{37}\B\X37:Put the starting configuration into \PB{\\{pos}}%
+\X${}\E{}$\6
 $\\{curpos}\K\\{cutoff}\K\\{milestone}[\T{0}]\K\T{1},\39\\{curposh}\K%
 \\{cutoffh}\K\\{milestoneh}[\T{0}]\K\T{0};{}$\6
 ${}\\{source}\K\\{sourceh}\K\\{configs}\K\\{configsh}\K\\{oldconfigs}\K\|d\K%
@@ -953,7 +972,8 @@ ${}\\{maxposh}\K\T{1};{}$\6
 \\{printf}(\.{".\\n"});\2\par
 \U34.\fi
 
-\M{38}\B\X38:Generate all positions at distance \PB{\|d}\X${}\E{}$\6
+\M[708 sliding.w]{38}\B\X38:Generate all positions at distance \PB{\|d}\X${}%
+\E{}$\6
 \&{if} ${}(\|d>\T{1}){}$\1\5
 ${}\\{cutoff}\K\\{milestone}[\|d-\T{2}],\39\\{cutoffh}\K\\{milestoneh}[\|d-%
 \T{2}];{}$\2\6
@@ -975,7 +995,7 @@ ${}\\{nextsource}\MRL{\AND{\K}}{-}\\{memsize};{}$\2\6
 \4${}\}{}$\2\par
 \U34.\fi
 
-\N{1}{39}The answer. We've found a solution in \PB{\|d} moves.
+\N[721 sliding.w]{1}{39}The answer. We've found a solution in \PB{\|d} moves.
 
 \Y\B\4\X39:Print the solution\X${}\E{}$\6
 \&{if} ${}(\|d\E\T{0}){}$\5
@@ -993,7 +1013,8 @@ done\X;\6
 problem\X;\par
 \U4.\fi
 
-\M{40}Going backward, we can reconstruct the winning line, as long as the data
+\M[734 sliding.w]{40}Going backward, we can reconstruct the winning line, as
+long as the data
 appears in the top \PB{\\{memsize}} positions of our configuration list.
 
 \Y\B\4\X40:Print all of the key moves that survive in \PB{\\{pos}}; \PB{%
@@ -1024,8 +1045,8 @@ ${}\\{source}\K\\{source}-\\{pos}[\|k+\T{1}];{}$\6
 \4${}\}{}$\2\par
 \U39.\fi
 
-\M{41}\B\X41:Apologize for lack of memory and go back to square one with
-reduced problem\X${}\E{}$\6
+\M[754 sliding.w]{41}\B\X41:Apologize for lack of memory and go back to square
+one with reduced problem\X${}\E{}$\6
 $\\{printf}(\.{"(Unfortunately\ I've}\)\.{\ forgotten\ how\ to\ ge}\)\.{t\ to\
 level\ \%d,\\n"},\39\|d);{}$\6
 \\{printf}(\.{"\ so\ I'll\ have\ to\ re}\)\.{construct\ that\ part.}\)\.{\
@@ -1036,7 +1057,8 @@ ${}\\{unpack}(\\{board},\39\\{piece},\39\\{place},\39\\{start});{}$\6
 \&{goto} \\{restart};\par
 \U39.\fi
 
-\N{1}{42}Moving. The last thing we need to do is actually slide the blocks.
+\N[761 sliding.w]{1}{42}Moving. The last thing we need to do is actually slide
+the blocks.
 It seems simple, but the task can be tricky when we get into
 moves of high-order styles.
 
@@ -1049,7 +1071,8 @@ ${}\\{move}(\|k,\39\\{delta}[\|j],\39\\{delta}[\|j]);{}$\2\2\2\6
 \X57:Try all supermoves\X;\2\par
 \U38.\fi
 
-\M{43}In the \PB{\\{move}} subroutine, parameter \PB{\|k} is a block number,
+\M[771 sliding.w]{43}In the \PB{\\{move}} subroutine, parameter \PB{\|k} is a
+block number,
 parameter \PB{\\{del}} is a displacement, and parameter \PB{\\{delo}} is such
 that we've recently considered a board with displacement \PB{$\\{del}-%
 \\{delo}$}.
@@ -1100,8 +1123,8 @@ ${}\\{board}[\|s+\\{off}[\|j]]\K\|k;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{44}Style 1 is straightforward: We keep moving in direction \PB{\\{delo}}
-until we
+\M[805 sliding.w]{44}Style 1 is straightforward: We keep moving in direction %
+\PB{\\{delo}} until we
 bump into an obstacle. But style~2 is more subtle, because we need to explore
 all reachable possibilities. I thank Gary McDonald for pointing out a
 serious blunder in my first attempt to find all of the style-2 moves.
@@ -1161,8 +1184,8 @@ ${}\\{pos}[\|j+\T{1}]\K\|n{}$;\C{ otherwise make $\alpha$ precede $\beta$ }\6
 \4${}\}{}$\2\par
 \U28.\fi
 
-\M{45}Local variables \PB{\|s} and \PB{\|t} need not be preserved across the
-recursive
+\M[859 sliding.w]{45}Local variables \PB{\|s} and \PB{\|t} need not be
+preserved across the recursive
 call in this part of the \PB{\\{move}} routine. (I don't expect a typical
 compiler
 to recognize that fact; but maybe I underestimate the current state
@@ -1191,8 +1214,8 @@ ${}\\{move}(\|k,\39\\{del}+\\{delta}[\|j],\39\\{delta}[\|j]);{}$\2\2\2\6
 \4${}\}{}$\2\par
 \U43.\fi
 
-\N{1}{46}Supermoving. The remaining job is the most interesting one: How should
-we
+\N[878 sliding.w]{1}{46}Supermoving. The remaining job is the most interesting
+one: How should we
 deal with the possibility of sliding several blocks simultaneously?
 
 A puzzle with $m$ blocks has $2^m-1$ potential superpieces,
@@ -1229,7 +1252,7 @@ ${}\\{aboard}[\|j]\K{-}\T{1};{}$\2\6
 \4${}\}{}$\2\par
 \U57.\fi
 
-\M{47}Elementary graph theory helps now.
+\M[906 sliding.w]{47}Elementary graph theory helps now.
 
 Consider the digraph whose vertices are blocks, with arcs $u\to v$
 whenever $u$ would bump into $v$ when block $u$ is shifted by a given amount.
@@ -1274,7 +1297,8 @@ ${}\\{ilink}[\|k-\T{1}]\K\\{in}[\|j],\39\\{in}[\|j]\K\|k-\T{1};{}$\6
 \4${}\}{}$\2\2\par
 \U57.\fi
 
-\M{48}And the problem of generating all superpieces for up/down slides
+\M[942 sliding.w]{48}And the problem of generating all superpieces for up/down
+slides
 is equivalent to generating all ideals of a very similar digraph.
 
 \Y\B\4\X48:Construct the digraph for \PB{$\\{del}\K\\{colsp}$}\X${}\E{}$\6
@@ -1294,14 +1318,15 @@ ${}\\{ilink}[\|k-\\{colsp}]\K\\{in}[\|j],\39\\{in}[\|j]\K\|k-\\{colsp};{}$\6
 \4${}\}{}$\2\2\par
 \U57.\fi
 
-\M{49}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[956 sliding.w]{49}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{int} ${}\\{head}[\\{maxsize}+\T{1}],{}$ ${}\\{out}[\\{maxsize}+\T{1}],{}$
 ${}\\{in}[\\{maxsize}+\T{1}]{}$;\C{ list heads }\6
 \&{int} \\{link}[\\{boardsize}]${},{}$ \\{olink}[\\{boardsize}]${},{}$ %
 \\{ilink}[\\{boardsize}];\C{ links }\par
 \fi
 
-\M{50}The following subroutine for ideals of a digraph maintains a permutation
+\M[960 sliding.w]{50}The following subroutine for ideals of a digraph maintains
+a permutation
 of the vertices in an array \PB{\\{perm}}, with the inverse permutation in \PB{%
 \\{iperm}}.
 Elements \PB{\\{inx}[\|l]} through \PB{$\\{inx}[\|l+\T{1}]-\T{1}$} of this
@@ -1379,8 +1404,8 @@ ${}\|l\MM;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{51}\B\X51:Put all vertices that lead to \PB{\\{perm}[\|j]} into positions
-near $j$\X${}\E{}$\6
+\M[1013 sliding.w]{51}\B\X51:Put all vertices that lead to \PB{\\{perm}[\|j]}
+into positions near $j$\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|v\K\\{perm}[\|j];{}$\6
 \&{for} ${}(\|k\K\\{in}[\|v];{}$ ${}\|k\G\T{0};{}$ ${}\|k\K\\{ilink}[\|k]){}$\5
@@ -1402,8 +1427,8 @@ ${}\\{super}[\|p\PP]\K\|v;{}$\2\2\6
 \4${}\}{}$\2\par
 \U50.\fi
 
-\M{52}\B\X52:Put all vertices that lead from \PB{\\{perm}[\|j]} into positions
-near $j$\X${}\E{}$\6
+\M[1028 sliding.w]{52}\B\X52:Put all vertices that lead from \PB{\\{perm}[\|j]}
+into positions near $j$\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|u\K\\{perm}[\|j];{}$\6
 \&{for} ${}(\|k\K\\{out}[\|u];{}$ ${}\|k\G\T{0};{}$ ${}\|k\K\\{olink}[\|k]){}$\5
@@ -1425,7 +1450,7 @@ ${}\\{super}[\|p\PP]\K\|u;{}$\2\2\6
 \4${}\}{}$\2\par
 \U50.\fi
 
-\M{53}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[1043 sliding.w]{53}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{int} ${}\\{perm}[\\{maxsize}+\T{1}],{}$ ${}\\{iperm}[\\{maxsize}+\T{1}]{}$;%
 \C{ basic permutation and its inverse }\6
 \&{char} \\{decision}[\\{maxsize}];\C{ decisions }\6
@@ -1434,7 +1459,7 @@ at decision points }\6
 \&{int} \\{super}[\\{maxsize}];\C{ offsets for the current superpiece }\par
 \fi
 
-\M{54}\B\X54:Process an ideal\X${}\E{}$\6
+\M[1049 sliding.w]{54}\B\X54:Process an ideal\X${}\E{}$\6
 \&{if} (\|p)\5
 ${}\{{}$\1\6
 ${}\\{super}[\|p]\K\T{0}{}$;\C{ sentinel at end of the superpiece }\6
@@ -1445,8 +1470,8 @@ ${}\\{supermove}({-}\\{del},\39{-}\\{del});{}$\2\6
 \4${}\}{}$\2\par
 \U50.\fi
 
-\M{55}The \PB{\\{supermove}} routine is like \PB{\\{move}}, but it uses the
-superpiece
+\M[1056 sliding.w]{55}The \PB{\\{supermove}} routine is like \PB{\\{move}}, but
+it uses the superpiece
 defined in \PB{\\{super}} instead of using block~\PB{\|k}.
 
 \Y\B\4\X10:Subroutines\X${}\mathrel+\E{}$\6
@@ -1483,7 +1508,8 @@ ${}\\{board}[\\{super}[\|j]]\K\\{aboard}[\\{super}[\|j]];{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{56}After we've moved a superpiece once, the digraph changes and so do the
+\M[1084 sliding.w]{56}After we've moved a superpiece once, the digraph changes
+and so do the
 ideals. But that's OK; the \PB{\\{supermove}} routine checks that
 we aren't blocked at any step of the way.
 
@@ -1506,7 +1532,8 @@ ${}\\{supermove}(\\{del}+\\{delta}[\|j],\39\\{delta}[\|j]);{}$\2\2\2\6
 \4${}\}{}$\2\par
 \U55.\fi
 
-\M{57}The program now comes to a glorious conclusion as we put the remaining
+\M[1101 sliding.w]{57}The program now comes to a glorious conclusion as we put
+the remaining
 pieces of code together.
 
 \Y\B\4\X57:Try all supermoves\X${}\E{}$\6
@@ -1521,7 +1548,7 @@ optimization }\6
 \4${}\}{}$\2\par
 \U42.\fi
 
-\N{1}{58}Index.
+\N[1114 sliding.w]{1}{58}Index.
 \fi
 
 \inx

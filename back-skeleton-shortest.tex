@@ -1,9 +1,10 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
 
-\N{1}{1}Intro. This program is designed to compose multiplication-skeleton
-puzzles
+\N[3 back-skeleton-shortest.w]{1}{1}Intro. This program is designed to compose
+multiplication-skeleton puzzles
 of a type pioneered by Junya Take. For example, consider his puzzle for
 the lettter \.O, in {\sl Journal of Recreational Mathematics\/ \bf38} (2014),
 132:
@@ -50,7 +51,8 @@ $$\vcenter{\halign{\hfill\tt#\cr
 
 \fi
 
-\M{2}The examples above show that zeros in the multiplier will ``offset''
+\M[47 back-skeleton-shortest.w]{2}The examples above show that zeros in the
+multiplier will ``offset''
 the shape in different ways. We try all possible offsets, for a
 given number $m$ of nonzero multiplier digits.
 
@@ -116,7 +118,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"...\ \%d\ cases\ were\ u}\)\.{nresolved!\\n"},%
 \4${}\}{}$\2\par
 \fi
 
-\M{3}\B\X3:Process the command line\X${}\E{}$\6
+\M[98 back-skeleton-shortest.w]{3}\B\X3:Process the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}<\T{3}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
 \|m)\I\T{1}\V\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}\|z)\I\T{1}){}$\5
 ${}\{{}$\1\6
@@ -139,7 +141,7 @@ ${}\\{exit}({-}\T{3});{}$\6
 ${}\\{vbose}\K\\{argc}-\T{3}{}$;\par
 \U2.\fi
 
-\M{4}\B\X4:Input the pattern\X${}\E{}$\6
+\M[118 back-skeleton-shortest.w]{4}\B\X4:Input the pattern\X${}\E{}$\6
 \&{for} ${}(\|n\K\|k\K\T{0};{}$  ; ${}\|n\PP){}$\5
 ${}\{{}$\1\6
 \&{if} ${}(\R\\{fgets}(\\{buf},\39\\{bufsize},\39\\{stdin})){}$\1\5
@@ -162,7 +164,8 @@ ${}\\{exit}({-}\T{2});{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{5}\B\X5:Input row \PB{\|n} of the shape\X${}\E{}$\6
+\M[136 back-skeleton-shortest.w]{5}\B\X5:Input row \PB{\|n} of the shape\X${}%
+\E{}$\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\\{buf}[\|j]\W\\{buf}[\|j]\I\.{'\\n'};{}$ ${}\|j%
 \PP){}$\5
 ${}\{{}$\1\6
@@ -180,8 +183,8 @@ ${}\\{oo},\39\\{rawpat}[\|n][\|j]\K\T{1},\39\|k\PP,\39\\{last}[\|n]\K\|j+%
 \4${}\}{}$\2\par
 \U4.\fi
 
-\N{1}{6}Bignums. We implement elementary decimal addition on nonnegative
-integers.
+\N[148 back-skeleton-shortest.w]{1}{6}Bignums. We implement elementary decimal
+addition on nonnegative integers.
 Each integer is represented by an array of bytes, in which the first
 byte specifies the number of significant digits, and the remaining bytes
 specify the digits themselves (right to left).
@@ -190,7 +193,8 @@ specify the digits themselves (right to left).
 \&{typedef} \&{char} \&{bignum}[\\{maxdigs}];\par
 \U2.\fi
 
-\M{7}For example, it's easy to test equality of two such bignums,
+\M[156 back-skeleton-shortest.w]{7}For example, it's easy to test equality of
+two such bignums,
 or to copy one to another.
 
 \Y\B\4\X7:Subroutines\X${}\E{}$\6
@@ -213,8 +217,8 @@ ${}\\{oo},\39\|a[\|i]\K\|b[\|i];{}$\2\6
 \As8\ET9.
 \U2.\fi
 
-\M{8}Here's the basic routine. It's OK to have \PB{$\|a\K\|b$} or \PB{$\|b\K%
-\|c$}.
+\M[172 back-skeleton-shortest.w]{8}Here's the basic routine. It's OK to have %
+\PB{$\|a\K\|b$} or \PB{$\|b\K\|c$}.
 (But beware of \PB{$\|a\K\|c$}.)
 
 \Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
@@ -253,7 +257,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"why?\\n"});{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{9}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
+\M[198 back-skeleton-shortest.w]{9}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_bignum}(\&{bignum} \|a)\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{int} \|i${},{}$ \\{la}${}\K\|a[\T{0}];{}$\7
@@ -265,7 +269,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\%d"},\39\|a[\|i]);{}$\2\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{10}We might as well have a primitive multiplication table.
+\M[206 back-skeleton-shortest.w]{10}We might as well have a primitive
+multiplication table.
 
 \Y\B\4\X10:Build the table of constants\X${}\E{}$\6
 $\|o,\39\\{cnst}[\T{0}][\T{0}]\K\T{0};{}$\6
@@ -276,12 +281,12 @@ ${}\\{oo},\39\|o,\39\\{cnst}[\|k][\T{0}]\K\T{2},\39\\{cnst}[\|k][\T{2}]\K\|k/%
 \T{10},\39\\{cnst}[\|k][\T{1}]\K\|k\MOD\T{10}{}$;\2\par
 \U2.\fi
 
-\M{11}\B\X11:Global variables\X${}\E{}$\6
+\M[213 back-skeleton-shortest.w]{11}\B\X11:Global variables\X${}\E{}$\6
 \&{bignum} \\{cnst}[\T{82}];\par
 \As17, 21\ETs40.
 \U2.\fi
 
-\N{1}{12}Offsets and constraints.
+\N[216 back-skeleton-shortest.w]{1}{12}Offsets and constraints.
 The $k$th partial product, for $0\le k\le m$, will be shifted left
 by \PB{\\{off}[\|k]}. (When $k=m$ this is the entire product, the sum of the
 shifted partials.) It inherits the constraints of row $k-(m+1-n)$ of
@@ -306,12 +311,14 @@ potential puzzles, some of which won't have unique solutions.
 
 \fi
 
-\M{13}\B\X13:Establish the minimum offsets\X${}\E{}$\6
+\M[239 back-skeleton-shortest.w]{13}\B\X13:Establish the minimum offsets\X${}%
+\E{}$\6
 \&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|m;{}$ ${}\|i\PP){}$\1\5
 ${}\|o,\39\\{off}[\|i]\K\|i{}$;\2\par
 \U2.\fi
 
-\M{14}The offset table runs through all combinations $s_0<s_1<\cdots<s_{m-1}$
+\M[242 back-skeleton-shortest.w]{14}The offset table runs through all
+combinations $s_0<s_1<\cdots<s_{m-1}$
 with $s_0=0$ and $s_{m-1}<m+z$, in lexicographic order.
 
 \Y\B\4\X14:Advance to the next offset, or \PB{\&{break}} if it needs too many
@@ -326,8 +333,8 @@ ${}\|o,\39\\{off}[\|i]\PP;{}$\6
 ${}\\{oo},\39\\{off}[\|i]\K\\{off}[\|i-\T{1}]+\T{1}{}$;\2\par
 \U2.\fi
 
-\M{15}We must choose the position \PB{\\{pos}} where column 0 of the raw
-pattern
+\M[252 back-skeleton-shortest.w]{15}We must choose the position \PB{\\{pos}}
+where column 0 of the raw pattern
 will appear in the final product. Then column~\PB{\|j} of the \PB{\|k}th
 partial
 product will be in position \PB{$\\{pos}-\\{off}[\|k]-\|j$}.
@@ -349,8 +356,8 @@ ${}\\{pos}\K\\{off}[\|m+\T{1}-\|n+\|i]+\\{last}[\|i];{}$\2\2\6
 ${}\\{pos}\MRL{+{\K}}\\{slack}-\T{1}{}$;\par
 \U18.\fi
 
-\M{16}Sometimes two constraints are identical, and we'll want to know that
-fact.
+\M[270 back-skeleton-shortest.w]{16}Sometimes two constraints are identical,
+and we'll want to know that fact.
 So we set up a table called \PB{\\{id}}, where \PB{$\\{id}[\|j]\K\\{id}[\|k]$}
 if and only if
 $c_j=c_k$.
@@ -384,7 +391,7 @@ ${}\|o,\39\\{id}[\|k]\K\\{ids}\PP;{}$\2\6
 \4${}\}{}$\2\par
 \U18.\fi
 
-\M{17}\B\X11:Global variables\X${}\mathrel+\E{}$\6
+\M[289 back-skeleton-shortest.w]{17}\B\X11:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{off}[\\{maxm}];\C{ blanks at right of partial products }\6
 \&{bignum} \\{constr}[\\{maxm}];\C{ the constraint patterns, decimalized }\6
 \&{char} \\{id}[\\{maxm}];\C{ equivalence class number for a given constraint }%
@@ -392,7 +399,8 @@ ${}\|o,\39\\{id}[\|k]\K\\{ids}\PP;{}$\2\6
 \&{char} \\{ids};\C{ how many classes are there? }\par
 \fi
 
-\M{18}\B\X18:Create detailed specifications from the pattern\X${}\E{}$\6
+\M[295 back-skeleton-shortest.w]{18}\B\X18:Create detailed specifications from
+the pattern\X${}\E{}$\6
 ${}\{{}$\1\6
 \X15:Choose \PB{\\{pos}}\X;\6
 \X16:Set up the constraints\X;\6
@@ -412,7 +420,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{".\\n"});{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\N{1}{19}Backtracking.
+\N[312 back-skeleton-shortest.w]{1}{19}Backtracking.
 Let the multiplicand be $(a_l\ldots a_2a_1a_0)_{10}$. We proceed by
 trying all possibilities $\ne d$ for $a_0$, then all possibilities
 consistent with $a_0$ for $a_1$, and so on. The upper limit on~$l$
@@ -480,7 +488,8 @@ This version of the program does {\it not\/} look for such extensions.
 
 \fi
 
-\M{20}Such considerations lead us to a standard backtracking scheme
+\M[377 back-skeleton-shortest.w]{20}Such considerations lead us to a standard
+backtracking scheme
 that takes the following overall form, if we follow the recipe of
 Algorithm 7.2.2B:
 
@@ -533,7 +542,8 @@ ${}\|o,\39\|x\K\|a[\|l];{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{21}What data structures will support this computation nicely?
+\M[415 back-skeleton-shortest.w]{21}What data structures will support this
+computation nicely?
 First, there's an array
 of bignums: \PB{\\{ja}[\|l][\|j]} contains $j$ times the partial multiplier
 $(a_l\ldots a_0)_{10}$ at a given level. Clearly
@@ -566,7 +576,8 @@ satisfied }\6
 \&{bignum} \\{total};\C{ grand total when checking for a solution }\par
 \fi
 
-\M{22}\B\X22:Initialize the data structures\X${}\E{}$\6
+\M[443 back-skeleton-shortest.w]{22}\B\X22:Initialize the data structures\X${}%
+\E{}$\6
 \&{if} ${}(\|d\E\T{0}\W\\{off}[\|m-\T{1}]\G\|m){}$\1\5
 \&{goto} \\{b5};\C{ forbid zeros in multiplier if \PB{$\|d\K\T{0}$} }\2\6
 \&{for} ${}(\|i\K\T{0},\39\|j\K\T{1};{}$ ${}\|j<\T{10};{}$ ${}\|j\PP){}$\1\6
@@ -582,13 +593,14 @@ ${}\\{oo},\39\\{oo},\39\\{csize}[\T{0}][\|k]\K\|i,\39\\{choice}[\|k][\|i]\K\|d,%
 \PB{$\|i\K\T{9}$} if \PB{$\|d\K\T{0}$}, otherwise 8 }\2\par
 \U20.\fi
 
-\M{23}\B\X23:Print the \PB{\\{csize}} status information\X${}\E{}$\6
+\M[453 back-skeleton-shortest.w]{23}\B\X23:Print the \PB{\\{csize}} status
+information\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|m;{}$ ${}\|k\PP){}$\1\5
 ${}\\{fprintf}(\\{stderr},\39\.{"\%d"},\39\\{csize}[\|l][\|k]);{}$\2\6
 ${}\\{fprintf}(\\{stderr},\39\.{"\\n"}){}$;\par
 \U20.\fi
 
-\M{24}\B\D$\\{thresh}$ \5
+\M[458 back-skeleton-shortest.w]{24}\B\D$\\{thresh}$ \5
 \T{25}\par
 \Y\B\4\X24:If some constraint can't be satisfied when $a_l=x$, \PB{\&{goto} %
 \\{b4}}\X${}\E{}$\6
@@ -621,7 +633,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\ b\%d\ has\ to\ be\ \%d\\n}\)\.{"},\39%
 \4${}\}{}$\2\par
 \U20.\fi
 
-\M{25}Now we've come to the heart and soul of the program. As we test
+\M[480 back-skeleton-shortest.w]{25}Now we've come to the heart and soul of the
+program. As we test
 each constraint, we also store some data that will be needed on
 level~\PB{$\|l+\T{1}$} if we get there.
 
@@ -653,7 +666,8 @@ ${}\|o,\39\\{stack}[\\{stackptr}\PP]\K\|k;{}$\2\6
 \4${}\}{}$\2\par
 \U24.\fi
 
-\M{26}We've previously verified constraint \PB{\|k} in the least significant
+\M[503 back-skeleton-shortest.w]{26}We've previously verified constraint \PB{%
+\|k} in the least significant
 \PB{\|l} digits, and those digits don't depend on $a_l$. Thus it suffices
 to do an ``incremental'' test, looking only at digit~\PB{\|l} of the
 constraint.
@@ -677,8 +691,8 @@ ${}\|o,\39\\{tt}\K(\\{constr}[\|k][\T{0}]\Z\|l\?\T{0}:\|o,\39\\{constr}[\|k][%
 \&{goto} \\{jok};\2\par
 \U25.\fi
 
-\M{27}\B\X27:Delete \PB{\\{choice}[\|k][\T{0}]} from all constraints $\ne c_k$%
-\X${}\E{}$\6
+\M[517 back-skeleton-shortest.w]{27}\B\X27:Delete \PB{\\{choice}[\|k][\T{0}]}
+from all constraints $\ne c_k$\X${}\E{}$\6
 \&{for} ${}(\|o,\39\\{kk}\K\T{0},\39\|j\K\\{choice}[\|k][\T{0}];{}$ ${}\\{kk}<%
 \|m;{}$ ${}\\{kk}\PP){}$\1\6
 \&{if} ${}(\\{oo},\39\\{id}[\\{kk}]\I\\{id}[\|k]){}$\5
@@ -700,7 +714,8 @@ ${}\\{oo},\39\\{oo},\39\\{oo},\39\\{choice}[\\{kk}][\\{ii}]\K\\{choice}[%
 \4${}\}{}$\2\2\par
 \U24.\fi
 
-\M{28}The data structures that I've got don't seem to need any updating
+\M[530 back-skeleton-shortest.w]{28}The data structures that I've got don't
+seem to need any updating
 (other than what has already been done during the tests),
 except in one respect: When a zero digit is prepended to the multiplicand,
 we may have already printed the current solution. Otherwise we haven't.
@@ -710,15 +725,16 @@ we may have already printed the current solution. Otherwise we haven't.
 ${}\\{printed}\K\T{0}{}$;\2\par
 \U20.\fi
 
-\M{29}Downdating seems to be completely unnecessary, thanks largely to
+\M[538 back-skeleton-shortest.w]{29}Downdating seems to be completely
+unnecessary, thanks largely to
 the \PB{\\{choice}} and \PB{\\{csize}} mechanism, and the fact that other data
 is recomputed at each level.
 
 \Y\B\4\X29:Downdate the data structures\X${}\E{}$\par
 \U20.\fi
 
-\M{30}\B\X30:If all constraints are totally satisfied, print a solution\X${}%
-\E{}$\6
+\M[544 back-skeleton-shortest.w]{30}\B\X30:If all constraints are totally
+satisfied, print a solution\X${}\E{}$\6
 \&{if} (\\{printed})\1\5
 \&{goto} \\{nope};\C{ we've already printed this guy }\2\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|m;{}$ ${}\|k\PP){}$\1\6
@@ -733,8 +749,8 @@ ${}\|l\MM;{}$\2\6
 \&{goto} \\{b5}; \\{nope}:\par
 \U20.\fi
 
-\M{31}\B\X31:If constraint $c_k$ isn't totally satisfied, \PB{\&{goto} %
-\\{nope}}\X${}\E{}$\6
+\M[555 back-skeleton-shortest.w]{31}\B\X31:If constraint $c_k$ isn't totally
+satisfied, \PB{\&{goto} \\{nope}}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{oo},\39\|o,\39\|j\K\\{choice}[\|k][\T{0}],\39\\{lj}\K\\{ja}[\|l-\T{1}][%
 \|j][\T{0}],\39\\{lc}\K\\{constr}[\|k][\T{0}];{}$\6
@@ -750,8 +766,8 @@ ${}\|o,\39\|t\K\\{ja}[\|l-\T{1}][\|j][\|i],\39\\{tt}\K(\|i\Z\\{lc}\?\|o,\39%
 \4${}\}{}$\2\par
 \U30.\fi
 
-\M{32}\B\X32:If constraint $c_m$ isn't totally satisfied, \PB{\&{goto} %
-\\{nope}}\X${}\E{}$\6
+\M[565 back-skeleton-shortest.w]{32}\B\X32:If constraint $c_m$ isn't totally
+satisfied, \PB{\&{goto} \\{nope}}\X${}\E{}$\6
 $\\{oo},\39\\{oo},\39\\{add}(\\{total},\39\\{ja}[\|l-\T{1}][\\{choice}[\T{0}][%
 \T{0}]],\39\\{ja}[\|l-\T{1}][\\{choice}[\T{1}][\T{0}]],\39\\{off}[\T{1}]);{}$\6
 \&{for} ${}(\|k\K\T{2};{}$ ${}\|k<\|m;{}$ ${}\|k\PP){}$\1\5
@@ -769,7 +785,8 @@ ${}\|o,\39\|t\K\\{total}[\|i],\39\\{tt}\K(\|i\Z\\{lc}\?\|o,\39\\{constr}[\|m][%
 \4${}\}{}$\2\par
 \U30.\fi
 
-\M{33}When a solution is found, I first print out the lengths of
+\M[575 back-skeleton-shortest.w]{33}When a solution is found, I first print out
+the lengths of
 the multiplicand, multiplier, partial products, and total product.
 (By sorting these lines later, I can distinguish unique solutions.)
 Then I print the multiplicand, multiplier, \PB{\|d}, and the solution number.
@@ -797,7 +814,8 @@ ${}\\{printf}(\.{",d=\%d\ (\#\%d)\\n"},\39\|d,\39\\{count});{}$\6
 ${}\\{printed}\K\T{1}{}$;\par
 \U30.\fi
 
-\M{34}It's conceivable that we've constructed a max-length multiplicand
+\M[601 back-skeleton-shortest.w]{34}It's conceivable that we've constructed a
+max-length multiplicand
 without finding enough obstructions to force all digits of the
 multiplier. In such cases constraint~\PB{\|m} (the constraint on the
 entire product) has probably not yet been fully tested. We should
@@ -841,8 +859,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"!\\n"});{}$\6
 \4${}\}{}$\2\par
 \U20.\fi
 
-\N{1}{35}An inner loop. When we're testing the ``bottom line''
-constraint~$c_m$,
+\N[640 back-skeleton-shortest.w]{1}{35}An inner loop. When we're testing the
+``bottom line'' constraint~$c_m$,
 we might need to vary several of the multiplier digits independently.
 The process is a bit tedious, but straightforward: It's just
 a loop over all $m$-tuples that haven't yet been filtered out,
@@ -895,7 +913,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U24.\fi
 
-\M{36}\B\X36:Run through all $m$-tuples $g_0\ldots g_{m-1}$\X${}\E{}$\6
+\M[685 back-skeleton-shortest.w]{36}\B\X36:Run through all $m$-tuples $g_0%
+\ldots g_{m-1}$\X${}\E{}$\6
 \4\\{bb1}:\5
 ${}\|k\K\T{0};{}$\6
 \4\\{bb2}:\5
@@ -917,8 +936,8 @@ ${}\|k\MM;{}$\6
 \&{goto} \\{bb4};\2\par
 \U35.\fi
 
-\M{37}\B\X37:Set \PB{\\{acc}[\|k]} to the least significant digits of the $k$th
-partial sum\X${}\E{}$\6
+\M[697 back-skeleton-shortest.w]{37}\B\X37:Set \PB{\\{acc}[\|k]} to the least
+significant digits of the $k$th partial sum\X${}\E{}$\6
 $\\{oo},\39\|o,\39\|j\K\\{choice}[\|k][\|g[\|k]],\39\\{lj}\K\\{ja}[\|l][\|j][%
 \T{0}];{}$\6
 \&{for} ${}(\|i\K\T{0};{}$ \|o${},\39\|i<\\{off}[\|k];{}$ ${}\|i\PP){}$\1\5
@@ -936,7 +955,8 @@ ${}\|o,\39\\{acc}[\|k][\|i]\K\|t,\39\\{kk}\K\T{0};{}$\2\6
 \4${}\}{}$\2\par
 \U36.\fi
 
-\M{38}\B\X38:Test compliance with $c_m$ and \PB{\&{goto} \\{bb5}}\X${}\E{}$\6
+\M[706 back-skeleton-shortest.w]{38}\B\X38:Test compliance with $c_m$ and \PB{%
+\&{goto} \\{bb5}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|o,\39\|i\K\T{0},\39\\{lc}\K\\{constr}[\|m][\T{0}];{}$ ${}\|i\Z%
 \|l;{}$ ${}\|i\PP){}$\5
@@ -963,7 +983,8 @@ ${}\\{oo},\39\\{shadow}[\|k]\MRL{{\OR}{\K}}\T{1}\LL\|g[\|k];{}$\2\6
 \4${}\}{}$\2\par
 \U36.\fi
 
-\M{39}\B\X39:Remove items from \PB{\\{choice}[\|k]}\X${}\E{}$\6
+\M[723 back-skeleton-shortest.w]{39}\B\X39:Remove items from \PB{\\{choice}[%
+\|k]}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|o,\39\\{imax}\K\\{csize}[\|l+\T{1}][\|k];{}$\6
 \&{for} ${}(\|i\K\\{imax}-\T{1};{}$ ${}\|i\G\T{0};{}$ ${}\|i\MM){}$\1\6
@@ -984,13 +1005,13 @@ ${}\|o,\39\\{stack}[\\{stackptr}\PP]\K\|k;{}$\2\6
 \4${}\}{}$\2\par
 \U35.\fi
 
-\M{40}\B\X11:Global variables\X${}\mathrel+\E{}$\6
+\M[739 back-skeleton-shortest.w]{40}\B\X11:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{acc}[\\{maxm}][\\{maxdigs}];\C{ partial sums }\6
 \&{char} \|g[\\{maxm}];\C{ indices for inner loop }\6
 \&{int} \\{shadow}[\\{maxm}];\C{ bits where solutions were found }\par
 \fi
 
-\N{1}{41}Index.
+\N[744 back-skeleton-shortest.w]{1}{41}Index.
 \fi
 
 \inx

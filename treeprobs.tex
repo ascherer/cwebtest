@@ -1,10 +1,12 @@
 \input cwebmac
+\srcloctrue
 \datethis
 \def\[#1]{[\hbox{$\mkern1mu\thickmuskip=\thinmuskip#1\mkern1mu$}]} % Iverson
 \input epsf
 
 
-\N{1}{1}Intro. I'm experimenting with what may be a new twist(?) on dynamic
+\N[5 treeprobs.w]{1}{1}Intro. I'm experimenting with what may be a new twist(?)
+on dynamic
 programming. It's motivated by ``Bayesian networks'' that form a binary tree.
 With this method we can answer queries that are much different from
 the usual ``marginal'' distributions. For example, with binary states,
@@ -47,7 +49,8 @@ $S_m(x_1,\ldots,x_n)=\[x_1+\cdots+x_n=m]$.
 
 \fi
 
-\M{2}For $1\le i\le n$, let $W_i(x_i,\ldots,x_n)=\prod w_k(x_j,x_k)$,
+\M[46 treeprobs.w]{2}For $1\le i\le n$, let $W_i(x_i,\ldots,x_n)=\prod
+w_k(x_j,x_k)$,
 where the product includes only edges $jk$ with $j\ge i$. Thus, for instance,
 $W_7(x_7,x_8,x_9,x_{10})$ in the example above is
 $\,w_8(x_7,x_8)\,w_9(x_8,x_9)\,w_{10}(x_8,x_{10})$.
@@ -89,7 +92,8 @@ S_j\cup\{x_k\},         &if its children are $j+1$ and $k$.\cr}$$
 
 \fi
 
-\M{3}What's the point? Well, the $S$'s allow us to compute the functions
+\M[86 treeprobs.w]{3}What's the point? Well, the $S$'s allow us to compute the
+functions
 $$T_j(s,x_j,S_j)=\sum\,\{W_j(x_j,\ldots,x_n)\mid x_j+\cdots+x_n=s\},$$
 where the sum is over all variables $x_k$ with $k>j$ that are not
 in $S_j$. For example, in the tree above,
@@ -118,7 +122,7 @@ of $s$ at step $j$ contribute to the final $T_1(m,0)$ and $T_1(m,1)$.
 
 \fi
 
-\M{4}Still we might ask, what's the point? We've computed each
+\M[113 treeprobs.w]{4}Still we might ask, what's the point? We've computed each
 function value for $T_j$ with only a few multiplications and additions,
 but the number of such function values is potentially huge.
 If $S_j$ has $r$ elements, we need to keep $2^{r+1}$ values
@@ -147,7 +151,8 @@ and have submitted it as OEIS sequence A193494.)
 
 \fi
 
-\N{1}{5}Implementation. Instead of allocating storage and computing the
+\N[140 treeprobs.w]{1}{5}Implementation. Instead of allocating storage and
+computing the
 results myself, I'm just testing the formulas today. So this program
 simply outputs a Mathematica program that does the actual computation.
 
@@ -182,7 +187,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{6}\B\X6:Parse the command line\X${}\E{}$\6
+\M[173 treeprobs.w]{6}\B\X6:Parse the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{2}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
 \|m)\I\T{1}){}$\5
 ${}\{{}$\1\6
@@ -191,7 +196,7 @@ ${}\\{exit}({-}\T{99});{}$\6
 \4${}\}{}$\2\par
 \U5.\fi
 
-\M{7}\B\D$\\{panic}(\\{mess})$ \6
+\M[179 treeprobs.w]{7}\B\D$\\{panic}(\\{mess})$ \6
 ${}\{{}$\5
 \1${}\\{fprintf}(\\{stderr},\39\.{"\%s!\\n"},\39\\{mess}){}$;\5
 ${}\\{exit}({-}\T{1}){}$;\5
@@ -213,7 +218,7 @@ ${}\\{where}[\\{edgej}[\|n]]\K\|n;{}$\6
 \\{panic}(\.{"inconsistent\ input"});\2\par
 \U5.\fi
 
-\M{8}\B\X8:Compute the $S$'s\X${}\E{}$\6
+\M[194 treeprobs.w]{8}\B\X8:Compute the $S$'s\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
 ${}\{{}$\1\6
 \&{switch} (\\{kids}[\|j])\5
@@ -245,7 +250,7 @@ ${}\|S[\|j+\T{1}][\|k-\T{1}]\K\|S[\|j][\|k];{}$\2\6
 \\{panic}(\.{"S[n]\ not\ empty"});\2\par
 \U5.\fi
 
-\M{9}\B\X9:Output the necessary computations\X${}\E{}$\6
+\M[216 treeprobs.w]{9}\B\X9:Output the necessary computations\X${}\E{}$\6
 \&{for} ${}(\|s\K\T{0};{}$ ${}\|s<\T{2};{}$ ${}\|s\PP){}$\1\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{2};{}$ ${}\|k\PP){}$\1\5
 ${}\\{printf}(\.{"T[\%d,\%d,\%d]=\%d\\n"},\39\|n,\39\|s,\39\|k,\39\|s\E\|k);{}$%
@@ -277,7 +282,7 @@ ${}\|x[\|k]\K\T{1};{}$\6
 ${}\\{printf}(\.{"ans=T[1,\%d,0]+T[1,\%}\)\.{d,1]\\n"},\39\|m,\39\|m){}$;\par
 \U5.\fi
 
-\M{10}\B\X10:Output $T[j,s,x[0],\ldots,x[r]]$\X${}\E{}$\6
+\M[237 treeprobs.w]{10}\B\X10:Output $T[j,s,x[0],\ldots,x[r]]$\X${}\E{}$\6
 $\\{printf}(\.{"T[\%d,\%d"},\39\|j,\39\|s);{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\|r;{}$ ${}\|k\PP){}$\1\5
 ${}\\{printf}(\.{",\%d"},\39\|x[\|k]);{}$\2\6
@@ -300,14 +305,14 @@ ${}\{{}$\1\6
 \\{printf}(\.{"\\n"});\par
 \U9.\fi
 
-\M{11}\B\X11:Output the no-kid case\X${}\E{}$\6
+\M[249 treeprobs.w]{11}\B\X11:Output the no-kid case\X${}\E{}$\6
 $\\{printf}(\.{"T[\%d,\%d"},\39\|j+\T{1},\39\|s-\|x[\T{0}]);{}$\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|r;{}$ ${}\|k\PP){}$\1\5
 ${}\\{printf}(\.{",\%d"},\39\|x[\|k]);{}$\2\6
 \\{printf}(\.{"]"});\par
 \U10.\fi
 
-\M{12}\B\X12:Output the one-kid case\X${}\E{}$\6
+\M[254 treeprobs.w]{12}\B\X12:Output the one-kid case\X${}\E{}$\6
 \&{for} ${}(\|p\K\T{0};{}$ ${}\|p<\T{2};{}$ ${}\|p\PP){}$\5
 ${}\{{}$\1\6
 \&{if} (\|p)\1\5
@@ -320,7 +325,7 @@ ${}\\{printf}(\.{",\%d"},\39\|x[\|k]);{}$\2\6
 \4${}\}{}$\2\par
 \U10.\fi
 
-\M{13}\B\X13:Output the two-kid case\X${}\E{}$\6
+\M[263 treeprobs.w]{13}\B\X13:Output the two-kid case\X${}\E{}$\6
 \&{for} ${}(\|p\K\T{0};{}$ ${}\|p<\T{2};{}$ ${}\|p\PP){}$\5
 ${}\{{}$\1\6
 \&{if} (\|p)\1\5
@@ -342,7 +347,7 @@ ${}\\{printf}(\.{",\%d"},\39\|x[\|k]);{}$\2\6
 \4${}\}{}$\2\par
 \U10.\fi
 
-\N{1}{14}Index.
+\N[277 treeprobs.w]{1}{14}Index.
 \fi
 
 \inx

@@ -1,8 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This program constructs segments of the ``sieve of
-Erasthosthenes,''
+\N[2 prime-sieve-sparse.w]{1}{1}Intro. This program constructs segments of the
+``sieve of Erasthosthenes,''
 and outputs the largest prime gaps that it finds. More precisely, it
 works with sets of prime numbers between $s_i$ and $s_{i+1}=s_i+\delta$,
 represented as an array of bits, and it examines these arrays for
@@ -64,7 +65,8 @@ become relevant in each future segment and their starting places.
 
 \fi
 
-\M{2}The sieve size $\delta$ and queue size~$q$ are specified at compile time.
+\M[62 prime-sieve-sparse.w]{2}The sieve size $\delta$ and queue size~$q$ are
+specified at compile time.
 They are preferably powers of two, because we'll want to divide
 by~$\delta$ and compute remainders modulo~$q$.
 
@@ -158,7 +160,8 @@ ${}\\{printf}(\.{"(The\ maximum\ list\ s}\)\.{ize\ needed\ was\ \%d.)\\}\)%
 \4${}\}{}$\2\par
 \fi
 
-\M{3}\B\X3:Process the command line and input the primes\X${}\E{}$\6
+\M[142 prime-sieve-sparse.w]{3}\B\X3:Process the command line and input the
+primes\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{5}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%llu"},\39{\AND}%
 \\{s0})\I\T{1}\V\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}\\{tt})\I%
 \T{1}){}$\5
@@ -205,7 +208,8 @@ ${}\\{printf}(\.{"Sieving\ between\ s[0}\)\.{]=\%llu\ and\ s[t]=\%llu}\)\.{:%
 \\n"},\39\\{s0},\39\\{st}){}$;\par
 \U2.\fi
 
-\M{4}Primes are divided into three classes: small, medium, and large.
+\M[174 prime-sieve-sparse.w]{4}Primes are divided into three classes: small,
+medium, and large.
 The small primes (actually ``tiny'') are less than 32; they appear
 at least twice in every octabyte of the sieve.
 The large primes are greater than $\delta/4$; they appear at most once
@@ -263,8 +267,8 @@ ${}\\{printf}(\.{"\%d\ primes\ successfu}\)\.{lly\ loaded\ from\ \%s\\n}\)%
 \.{"},\39\|k,\39\\{argv}[\T{3}]){}$;\par
 \U3.\fi
 
-\N{1}{5}Sieving. Let's say that the prime $p_k$ is ``active'' if
-$p_k^2<s_{i+1}$.
+\N[215 prime-sieve-sparse.w]{1}{5}Sieving. Let's say that the prime $p_k$ is
+``active'' if $p_k^2<s_{i+1}$.
 Variable \PB{\\{kk}} is the index of the first inactive prime.
 The main task of sieving is to mark the multiples of all active
 primes in the current segment.
@@ -316,7 +320,8 @@ ${}\\{kk}\K\|k;{}$\6
 \X6:Initialize the tiny active primes\X;\par
 \U7.\fi
 
-\M{6}Primes less than 32 will appear at least twice in every octabyte of
+\M[254 prime-sieve-sparse.w]{6}Primes less than 32 will appear at least twice
+in every octabyte of
 the sieve. So we handle them in a slightly more efficient way, unless
 they're initially inactive.
 
@@ -332,13 +337,13 @@ ${}\\{sv}[\|k]\K\|x,\39\\{rem}[\|k]\K\T{64}\MOD\\{prime}[\|k];{}$\6
 ${}\|d\K\|k{}$;\C{ \PB{\|d} is the smallest nontiny prime }\par
 \U5.\fi
 
-\M{7}\B\X7:Get ready for the first segment\X${}\E{}$\6
+\M[265 prime-sieve-sparse.w]{7}\B\X7:Get ready for the first segment\X${}\E{}$\6
 \X5:Initialize the active primes\X;\6
 ${}\\{ss}\K\\{s0}{}$;\C{ base address of the next segment }\6
 ${}\\{sieve}[\T{1}+\\{del}/\T{256}]\K{-}\T{1}{}$;\C{ store a sentinel }\par
 \U2.\fi
 
-\M{8}\B\X8:Do segment \PB{\\{ii}}\X${}\E{}$\6
+\M[270 prime-sieve-sparse.w]{8}\B\X8:Do segment \PB{\\{ii}}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|s\K\\{ss},\39\\{ss}\K\|s+\\{del},\39\\{qq}\K\\{ii}\MOD\\{qsize}{}$;\C{
 $s=s_i$, $\PB{\\{ss}}=s_{i+1}$ }\6
@@ -357,7 +362,8 @@ ${}\\{timer}\K\|j;{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{9}\B\X9:Initialize the sieve from the tiny primes\X${}\E{}$\6
+\M[285 prime-sieve-sparse.w]{9}\B\X9:Initialize the sieve from the tiny primes%
+\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{del}/\T{256};{}$ ${}\|j\PP){}$\5
 ${}\{{}$\1\6
 \&{for} ${}(\|z\K\T{0},\39\|k\K\T{1};{}$ ${}\|k<\|d;{}$ ${}\|k\PP){}$\5
@@ -370,7 +376,8 @@ ${}\\{sieve}[\|j]\K\|z;{}$\6
 \4${}\}{}$\2\par
 \U8.\fi
 
-\M{10}Now we want to set 1 bits for every odd multiple of \PB{\\{prime}[\|k]}
+\M[294 prime-sieve-sparse.w]{10}Now we want to set 1 bits for every odd
+multiple of \PB{\\{prime}[\|k]}
 in the current segment, whenever \PB{\\{prime}[\|k]} is active.
 The bit for the integer $s_i+4j+1$ is
 \PB{$\T{1}\LL(\|j\AND\T{\^3f})$} in \PB{$\\{sieve}[\|j\GG\T{6}]$}, for $0\le j<%
@@ -400,8 +407,8 @@ ${}\\{start}[\|k]\K\|j-\\{ddel};{}$\6
 \4${}\}{}$\2\par
 \U8.\fi
 
-\M{11}Each \PB{\|s} entry in \PB{\\{list}} is an offset relative to the
-beginning of the
+\M[313 prime-sieve-sparse.w]{11}Each \PB{\|s} entry in \PB{\\{list}} is an
+offset relative to the beginning of the
 previous segment with \PB{$\\{qq}\K\T{0}$}. Thus, for example, \PB{$\\{list}[%
 \T{3}][\|k].\|s$} holds
 a number of the form \PB{$\\{ddel}*\T{3}+\|x$}, \PB{$\\{ddel}*(\T{3}+%
@@ -443,8 +450,8 @@ ${}\\{count}[\\{jj}]\PP;{}$\6
 ${}\\{count}[\\{qq}]\K\|j{}$;\par
 \U10.\fi
 
-\M{12}The test is \PB{$\\{jj}>\\{qq}$} here, but \PB{$\\{jj}\G\\{qq}$} in the
-previous code. Do you see why?
+\M[342 prime-sieve-sparse.w]{12}The test is \PB{$\\{jj}>\\{qq}$} here, but %
+\PB{$\\{jj}\G\\{qq}$} in the previous code. Do you see why?
 
 \Y\B\4\X12:Sieve in the newly active primes\X${}\E{}$\6
 \&{for} ${}(\|k\K\\{kk};{}$ ((\&{unsigned} \&{long} \&{long}) \\{prime}[%
@@ -480,7 +487,7 @@ ${}\\{count}[\\{jj}]\PP;{}$\6
 ${}\\{kk}\K\|k{}$;\par
 \U8.\fi
 
-\N{1}{13}Processing gaps.
+\N[366 prime-sieve-sparse.w]{1}{13}Processing gaps.
 If $p_{k+1}-p_k\ge512$, we're bound to find an octabyte of all 1s in the
 sieve between the 0~for~$p_k$ and the 0~for~$p_{k+1}$. In such cases,
 we check for a potential ``kilogap'' (a gap of length 1000 or more).
@@ -536,7 +543,8 @@ ${}\\{lastprime}\K\|z{}$;\5
 \4\\{donewithseg}:\par
 \U8.\fi
 
-\M{14}\B\X14:Set \PB{\\{lastprime}} to the smallest prime $\ge s_0$\X${}\E{}$\6
+\M[404 prime-sieve-sparse.w]{14}\B\X14:Set \PB{\\{lastprime}} to the smallest
+prime $\ge s_0$\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|z\K\|s+\T{3};{}$ ${}\|z<\|x;{}$ ${}\|z\MRL{+{\K}}\T{4}){}$\1\6
 \&{if} (\\{isprime}(\|z))\5
@@ -554,8 +562,8 @@ ${}\\{fprintf}(\\{outfile},\39\.{"The\ first\ prime\ is\ }\)\.{\%llu\ =\ s[0]+%
 \4${}\}{}$\2\par
 \U13.\fi
 
-\M{15}\B\X15:Set \PB{\|x} to the smallest prime in \PB{\\{sieve}[\|j]}\X${}%
-\E{}$\6
+\M[416 prime-sieve-sparse.w]{15}\B\X15:Set \PB{\|x} to the smallest prime in %
+\PB{\\{sieve}[\|j]}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|y\K\CM\\{sieve}[\|j];{}$\6
 ${}\|y\K\|y\AND{-}\|y{}$;\C{ extract the rightmost 1 bit }\6
@@ -565,8 +573,8 @@ prime after a gap }\6
 \4${}\}{}$\2\par
 \U13.\fi
 
-\M{16}\B\X16:Set \PB{\\{lastprime}} to the largest prime in \PB{\\{sieve}[\|k]}%
-\X${}\E{}$\6
+\M[424 prime-sieve-sparse.w]{16}\B\X16:Set \PB{\\{lastprime}} to the largest
+prime in \PB{\\{sieve}[\|k]}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|y\K\CM\\{sieve}[\|k],\39\|z\K\|y\AND(\|y-\T{1});{}$ \|z; ${}\|y\K%
 \|z,\39\|z\K\|y\AND(\|y-\T{1})){}$\1\5
@@ -576,7 +584,8 @@ ${}\\{lastprime}\K\|s+(\|k\LL\T{8})+(\|y\LL\T{2})+\T{1};{}$\6
 \4${}\}{}$\2\par
 \U13.\fi
 
-\M{17}As far as I know, the following method is the fastest way to compute
+\M[431 prime-sieve-sparse.w]{17}As far as I know, the following method is the
+fastest way to compute
 binary logarithms on an Opteron computer (which is the machine
 I'm targeting here).
 
@@ -586,7 +595,8 @@ ${}\|y\K\\{nu}[\|y\AND\T{\^ffff}]+\\{nu}[(\|y\GG\T{16})\AND\T{\^ffff}]+\\{nu}[(%
 \|y\GG\T{32})\AND\T{\^ffff}]+\\{nu}[(\|y\GG\T{48})\AND\T{\^ffff}]{}$;\par
 \Us15\ET16.\fi
 
-\M{18}With a more extensive table, I could count the 1s in an arbitrary
+\M[439 prime-sieve-sparse.w]{18}With a more extensive table, I could count the
+1s in an arbitrary
 binary word. But seventeen table entries are sufficient for present purposes.
 
 \Y\B\4\X18:Initialize the bit-counting table\X${}\E{}$\6
@@ -594,8 +604,8 @@ binary word. But seventeen table entries are sufficient for present purposes.
 ${}\\{nu}[((\T{1}\LL\|j)-\T{1})]\K\|j{}$;\2\par
 \U2.\fi
 
-\M{19}When \PB{$\\{sieve}[\|k]\I{-}\T{1}$} and \PB{$\\{sieve}[\|j]\I{-}\T{1}$}
-and everything between them
+\M[445 prime-sieve-sparse.w]{19}When \PB{$\\{sieve}[\|k]\I{-}\T{1}$} and \PB{$%
+\\{sieve}[\|j]\I{-}\T{1}$} and everything between them
 is \PB{${-}\T{1}$} (all ones), there's a gap of size~$g$ where
 $256\vert j-k\vert-126\le g\le256\vert j-k\vert+126$.
 
@@ -642,7 +652,8 @@ ${}\\{lastprime}\K\|x,\39\|x\K\\{xx}{}$;\5
 \4\\{done\_here}:\par
 \U13.\fi
 
-\M{20}\B\X20:Report a gap, if it's big enough\X${}\E{}$\6
+\M[476 prime-sieve-sparse.w]{20}\B\X20:Report a gap, if it's big enough\X${}%
+\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\|x-\\{lastprime}\G\\{bestgap}){}$\5
 ${}\{{}$\1\6
@@ -653,7 +664,7 @@ length\ \%d\\}\)\.{n"},\39\\{lastprime},\39\|x-\\{lastprime});{}$\6
 \4${}\}{}$\2\par
 \U19.\fi
 
-\M{21}\B\X21:Report the final prime\X${}\E{}$\6
+\M[485 prime-sieve-sparse.w]{21}\B\X21:Report the final prime\X${}\E{}$\6
 \&{if} (\\{lastprime})\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{outfile},\39\.{"The\ final\ prime\ is\ }\)\.{\%llu\ =\ s[t]-%
@@ -664,7 +675,8 @@ ${}\\{fprintf}(\\{outfile},\39\.{"No\ prime\ numbers\ ex}\)\.{ist\ between\
 s[0]\ and}\)\.{\ s[t].\\n"}){}$;\2\par
 \U2.\fi
 
-\N{1}{22}Random numbers. The following code comes directly from
+\N[491 prime-sieve-sparse.w]{1}{22}Random numbers. The following code comes
+directly from
 \.{rng.c}, the random number generator in Section 3.6.
 
 \Y\B\4\D$\.{KK}$ \5
@@ -694,7 +706,7 @@ ${}\\{ran\_x}[\|i]\K\\{mod\_diff}(\\{aa}[\|j-\.{KK}],\39\\{ran\_x}[\|i-%
 \As23, 25, 26\ETs27.
 \U2.\fi
 
-\M{23}\B\D$\.{QUALITY}$ \5
+\M[510 prime-sieve-sparse.w]{23}\B\D$\.{QUALITY}$ \5
 \T{1009}\C{ recommended quality level for high-res use }\par
 \B\4\D$\.{TT}$ \5
 \T{70}\C{ guaranteed separation between streams }\par
@@ -749,11 +761,13 @@ ${}\\{ran\_arr\_ptr}\K{\AND}\\{ran\_arr\_started};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{24}\B\X24:Initialize the random number generator\X${}\E{}$\6
+\M[546 prime-sieve-sparse.w]{24}\B\X24:Initialize the random number generator%
+\X${}\E{}$\6
 \\{ran\_start}(\T{314159\$L});\par
 \U2.\fi
 
-\M{25}After calling \PB{\\{ran\_start}}, we get new randoms by saying
+\M[549 prime-sieve-sparse.w]{25}After calling \PB{\\{ran\_start}}, we get new
+randoms by saying
 ``\PB{$\|x\K\\{ran\_arr\_next}(\,)$}''.
 
 \Y\B\4\D$\\{ran\_arr\_next}()$ \5
@@ -771,7 +785,7 @@ ${}\\{ran\_arr\_ptr}\K\\{ran\_arr\_buf}+\T{1};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{26}Double precision multiplication.
+\N[565 prime-sieve-sparse.w]{1}{26}Double precision multiplication.
 We'll need a subroutine that computes the 128-bit
 product of two 64-bit integers. The product goes into \PB{\\{acc\_hi}} and
 \PB{\\{acc\_lo}}.
@@ -798,8 +812,8 @@ ${}\\{acc\_lo}\MRL{+{\K}}(\|t\AND\T{\^ffffffff})\LL\T{32};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{27}Prime testing. I've saved the most interesting part of this program
-for
+\N[584 prime-sieve-sparse.w]{1}{27}Prime testing. I've saved the most
+interesting part of this program for
 last. It's a subroutine that tries to decide whether a given \PB{\&{long} %
 \&{long}}
 number~\PB{\|z} is prime. In the experiments I'm doing, \PB{\|z} lies
@@ -855,7 +869,8 @@ ${}\\{fprintf}(\\{outfile},\39\.{"(\%lld\ is\ a\ pseudopr}\)\.{ime\ of\ rank\ %
 \4${}\}{}$\2\par
 \fi
 
-\M{28}Miller and Rabin's algorithm is based on the fact that
+\M[629 prime-sieve-sparse.w]{28}Miller and Rabin's algorithm is based on the
+fact that
 $x^q\equiv\pm1$ (modulo~\PB{\|z}) when \PB{\|z} is prime and $q=(z-1)/2$.
 The loop above actually computes $(2^{64}(x/2^{64})^q)\bmod z$,
 so the result should be $(\pm2^{64})\bmod z$.
@@ -876,7 +891,8 @@ ${}\\{goal}\MRL{-{\K}}\|z;{}$\2\6
 \X29:Set \PB{\\{zp}} to the inverse of \PB{\|z} modulo $2^{64}$\X;\par
 \U27.\fi
 
-\M{29}Here I'm using ``Newton's method.'' (If $z\bmod4=1$, the first step
+\M[645 prime-sieve-sparse.w]{29}Here I'm using ``Newton's method.'' (If $z%
+\bmod4=1$, the first step
 should be changed to \PB{$\\{zp}\K(\|z\AND\T{4}\?\|z\XOR\T{8}:\|z)$}.)
 
 \Y\B\4\X29:Set \PB{\\{zp}} to the inverse of \PB{\|z} modulo $2^{64}$\X${}\E{}$%
@@ -894,7 +910,8 @@ ${}\\{zp}\K(\T{2}-\\{zp}*\|z)*\\{zp}{}$;\C{ now $zz'\equiv1$ (modulo $2^{64}$)
 \4${}\}{}$\2\par
 \U28.\fi
 
-\M{30}To compute $xy/2^{64}\bmod z$, we compute the 128-bit product $xy=
+\M[657 prime-sieve-sparse.w]{30}To compute $xy/2^{64}\bmod z$, we compute the
+128-bit product $xy=
 2^{64}t_1+t_0$, then subtract $(z't_0\bmod2^{64})z$ and return the
 leading 64~bits.
 
@@ -910,7 +927,8 @@ ${}\|y\MRL{-{\K}}\\{acc\_hi};{}$\2\6
 \4${}\}{}$\2\par
 \U27.\fi
 
-\M{31}\B\X31:Set $y\gets (xy/2^{64})\bmod z$\X${}\E{}$\6
+\M[670 prime-sieve-sparse.w]{31}\B\X31:Set $y\gets (xy/2^{64})\bmod z$\X${}%
+\E{}$\6
 ${}\{{}$\1\6
 ${}\\{mult}(\|x,\39\|y);{}$\6
 ${}\|y\K\\{acc\_hi};{}$\6
@@ -922,8 +940,8 @@ ${}\|y\MRL{-{\K}}\\{acc\_hi};{}$\2\6
 \4${}\}{}$\2\par
 \U27.\fi
 
-\M{32}The following simple test for nonprimality will rule out most cases
-before
+\M[679 prime-sieve-sparse.w]{32}The following simple test for nonprimality will
+rule out most cases before
 we need to resort to the Miller--Rabin scheme.
 Algorithm 4.5.2B is a nice divisionless method to use here.
 (Note that the product $3\cdot5\cdot\ldots\cdot53$ is between $2^{63}$
@@ -958,7 +976,7 @@ ${}\|t\K(\|u-\|v)/\T{2};{}$\6
 \4${}\}{}$\2\par
 \U27.\fi
 
-\N{1}{33}Index.
+\N[700 prime-sieve-sparse.w]{1}{33}Index.
 \fi
 
 \inx

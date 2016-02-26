@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. I'm hurriedly experimenting with a new(?) way to explore the
+\N[2 fchains4x.w]{1}{1}Intro. I'm hurriedly experimenting with a new(?) way to
+explore the
 complexity of 4-variable Boolean functions. Namely, I calculate the
 ``footprint'' of each function, the set of all first steps by which I
 know how to evaluate the function in $k$ steps. Then, if the footprints
@@ -46,7 +48,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Read the initial functions\X${}\E{}$\6
+\M[46 fchains4x.w]{2}\B\X2:Read the initial functions\X${}\E{}$\6
 $\|m\K\\{argc}+\T{3};{}$\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|m;{}$ ${}\|k\PP){}$\5
 ${}\{{}$\1\6
@@ -70,8 +72,8 @@ ${}\|x[\|k]\MRL{{\XOR}{\K}}\T{\^ffff};{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}\B\X3:Combine all functions of costs \PB{\|k} and \PB{$\|r-\T{1}-\|k$}%
-\X${}\E{}$\6
+\M[61 fchains4x.w]{3}\B\X3:Combine all functions of costs \PB{\|k} and \PB{$%
+\|r-\T{1}-\|k$}\X${}\E{}$\6
 \&{for} ${}(\|p\K\\{head}[\|k].\\{next};{}$ ${}\|p\MG\\{parent}\G\T{0};{}$ ${}%
 \|p\K\|p\MG\\{next}){}$\1\6
 \&{for} ${}(\|q\K\\{head}[\|r-\T{1}-\|k].\\{next};{}$ ${}\|q\MG\\{parent}\G%
@@ -86,7 +88,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\2\par
 \U1.\fi
 
-\M{4}\B\D$\\{fun}(\|p)$ \5
+\M[71 fchains4x.w]{4}\B\D$\\{fun}(\|p)$ \5
 $((\|p)-\\{func}{}$)\par
 \Y\B\4\X4:Try for new function\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -108,7 +110,7 @@ ${}\|t\K\\{fun}(\|p)\XOR\\{fun}(\|q);{}$\6
 \4${}\}{}$\2\par
 \U3.\fi
 
-\M{5}\B\X5:Update the table for cost \PB{\|r}\X${}\E{}$\6
+\M[87 fchains4x.w]{5}\B\X5:Update the table for cost \PB{\|r}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{pp}\K{\AND}\\{func}[\|t];{}$\6
 \&{if} ${}(\\{pp}\MG\\{cost}>\|r){}$\5
@@ -132,7 +134,8 @@ ${}\\{pp}\MG\\{footprint}[\|j]\MRL{{\OR}{\K}}\|p\MG\\{footprint}[\|j]\OR\|q\MG%
 \4${}\}{}$\2\par
 \U4.\fi
 
-\M{6}\B\X6:Try for breakthru and \PB{\&{goto} \\{pqdone}}\X${}\E{}$\6
+\M[101 fchains4x.w]{6}\B\X6:Try for breakthru and \PB{\&{goto} \\{pqdone}}\X${}%
+\E{}$\6
 ${}\{{}$\1\6
 ${}\|t\K\\{fun}(\|p)\AND\\{fun}(\|q);{}$\6
 \&{if} ${}(\\{func}[\|t].\\{cost}\G\|r-\T{1}){}$\1\5
@@ -153,7 +156,8 @@ ${}\|t\K\\{fun}(\|p)\XOR\\{fun}(\|q);{}$\6
 \4${}\}{}$\2\par
 \U3.\fi
 
-\M{7}This code is not executed when $k=0$, because \PB{\|q}'s footprint is zero
+\M[116 fchains4x.w]{7}This code is not executed when $k=0$, because \PB{\|q}'s
+footprint is zero
 in that case.
 
 \Y\B\4\X7:Update the table for cost \PB{$\|r-\T{1}$}\X${}\E{}$\6
@@ -180,7 +184,7 @@ ${}\\{pp}\MG\\{footprint}[\|j]\MRL{{\OR}{\K}}\|p\MG\\{footprint}[\|j]\AND\|q\MG%
 \4${}\}{}$\2\par
 \U6.\fi
 
-\M{8}\B\X8:Initialize the tables\X${}\E{}$\6
+\M[133 fchains4x.w]{8}\B\X8:Initialize the tables\X${}\E{}$\6
 \&{for} ${}(\|p\K{\AND}\\{func}[\T{2}];{}$ ${}\|p<{\AND}\\{func}[\T{%
 \^8000}];{}$ ${}\|p\PP){}$\1\5
 ${}(\|p-\T{1})\MG\\{next}\K\|p,\39\|p\MG\\{prev}\K\|p-\T{1},\39\|p\MG\\{cost}\K%
@@ -201,7 +205,7 @@ ${}\\{head}[\T{8}].\\{prev}\K{\AND}\\{func}[\T{\^7fff}],\39\\{func}[\T{%
 \X10:Initialize the functions of cost 1\X;\par
 \U1.\fi
 
-\M{9}\B\X9:Initialize the functions of cost 0\X${}\E{}$\6
+\M[146 fchains4x.w]{9}\B\X9:Initialize the functions of cost 0\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|m;{}$ ${}\|k\PP){}$\5
 ${}\{{}$\1\6
 ${}\|p\K{\AND}\\{func}[\|x[\|k]];{}$\6
@@ -217,7 +221,7 @@ ${}\|p\MG\\{next}\MG\\{prev}\K\|p,\39\|p\MG\\{prev}\MG\\{next}\K\|p;{}$\6
 ${}\|c\K(\T{1}\LL\T{15})-\T{1}-\|m{}$;\par
 \U8.\fi
 
-\M{10}\B\X10:Initialize the functions of cost 1\X${}\E{}$\6
+\M[157 fchains4x.w]{10}\B\X10:Initialize the functions of cost 1\X${}\E{}$\6
 $\|s\K\T{0};{}$\6
 \&{for} ${}(\|r\K\T{2};{}$ ${}\|r\Z\|m;{}$ ${}\|r\PP){}$\1\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\|r;{}$ ${}\|k\PP){}$\5
@@ -241,7 +245,7 @@ ${}\|t\K\|x[\|k]\XOR\|x[\|r],\39\\{sprintf}(\\{name}[\|s],\39\.{"\%d\^\%d(%
 ${}\\{mm}\K(\|s+\T{31})/\T{32}{}$;\par
 \U8.\fi
 
-\M{11}\B\X11:Update for cost 1\X${}\E{}$\6
+\M[168 fchains4x.w]{11}\B\X11:Update for cost 1\X${}\E{}$\6
 $\|p\K{\AND}\\{func}[\|t];{}$\6
 \&{if} ${}(\|p\MG\\{cost}>\T{1}){}$\5
 ${}\{{}$\1\6
@@ -263,7 +267,7 @@ ${}\|c\MM;{}$\6
 \4${}\}{}$\2\par
 \U10.\fi
 
-\M{12}\B\X12:Answer queries\X${}\E{}$\6
+\M[184 fchains4x.w]{12}\B\X12:Answer queries\X${}\E{}$\6
 \&{while} (\T{1})\5
 ${}\{{}$\1\6
 \\{printf}(\.{"Truth\ table\ (hex):\ }\)\.{"});\6
@@ -291,7 +295,7 @@ ${}\\{printf}(\.{"\ \%s"},\39\\{name}[\|s]);{}$\2\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{13}Index.
+\N[202 fchains4x.w]{1}{13}Index.
 \fi
 
 \inx

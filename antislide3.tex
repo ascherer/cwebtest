@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Antisliding blocks. This program illustrates techniques of finding all
+\N[2 antislide3.w]{1}{1}Antisliding blocks. This program illustrates techniques
+of finding all
 nonequivalent solutions to an exact cover problem. I wrote it after returning
 from Japan in November, 1996, because Nob was particularly interested in the
 answers. (Two years ago I had written a similar program, which however did not
@@ -85,7 +87,7 @@ ${}\\{printf}(\.{"Altogether\ \%d\ solut}\)\.{ions.\\n"},\39\\{count});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Global variables\X${}\E{}$\6
+\M[82 antislide3.w]{2}\B\X2:Global variables\X${}\E{}$\6
 \&{int} \\{verbose}${}\K\T{0}{}$;\C{ $>0$ to show solutions, $>1$ to show
 partial ones too }\6
 \&{int} \\{count}${}\K\T{0}{}$;\C{ number of antisliding solutions found so far
@@ -98,8 +100,8 @@ when \PB{$\\{count}\MOD\\{spacing}\E\T{0}$} }\6
 \As5, 7\ETs23.
 \U1.\fi
 
-\N{1}{3}Data structures. An exact cover problem is defined by a matrix $M$ of
-0s
+\N[89 antislide3.w]{1}{3}Data structures. An exact cover problem is defined by
+a matrix $M$ of 0s
 and~1s. The goal is to find a set of rows containing exactly one~1 in each
 column.
 
@@ -140,7 +142,8 @@ ${}\}{}$ \&{node};\par
 \As4\ET6.
 \U1.\fi
 
-\M{4}Each column corresponds to a cell of the array. Special information for
+\M[124 antislide3.w]{4}Each column corresponds to a cell of the array. Special
+information for
 each cell is stored in an appropriate record, which points to the
 $1\times1\times1$ block node for that cell (also called the cell head).
 We maintain a doubly linked list of the
@@ -168,7 +171,8 @@ option? }\6
 ${}\}{}$ \&{cell};\par
 \fi
 
-\M{5}One \PB{\&{cell}} struct is called the root. It serves as the head of the
+\M[146 antislide3.w]{5}One \PB{\&{cell}} struct is called the root. It serves
+as the head of the
 list of columns that need to be covered, and is identifiable by the fact
 that its \PB{\\{name}} is empty.
 
@@ -176,7 +180,7 @@ that its \PB{\\{name}} is empty.
 \&{cell} \\{root};\C{ gateway to the unsettled columns }\par
 \fi
 
-\M{6}The rows of $M$ also have special data structures:
+\M[153 antislide3.w]{6}The rows of $M$ also have special data structures:
 We need to know which sets of two or four cells are neighbors of the
 faces of a block. These are listed in the option records,
 followed by null pointers.
@@ -189,7 +193,8 @@ empty }\6
 ${}\}{}$ \&{option};\par
 \fi
 
-\N{1}{7}Initialization. Like most table-driven programs, this one needs to
+\N[164 antislide3.w]{1}{7}Initialization. Like most table-driven programs, this
+one needs to
 construct its tables, using a rather long and boring routine. In compensation,
 we will be able to avoid tedious details in the rest of the code.
 
@@ -203,13 +208,14 @@ ${}\\{optz}[\\{ll}-\T{1}][\\{mm}-\T{1}][\\{nn}]{}$;\C{ rows }\6
 \T{1}][\\{mm}-\T{1}][\\{nn}][\T{4}]{}$;\C{ nodes }\par
 \fi
 
-\M{8}\B\X8:Set up data structures for antisliding blocks\X${}\E{}$\6
+\M[175 antislide3.w]{8}\B\X8:Set up data structures for antisliding blocks\X${}%
+\E{}$\6
 \X9:Set up the cells\X;\6
 \X11:Set up the options\X;\6
 \X15:Set up the nodes\X;\par
 \U1.\fi
 
-\M{9}\B\X9:Set up the cells\X${}\E{}$\6
+\M[180 antislide3.w]{9}\B\X9:Set up the cells\X${}\E{}$\6
 $\|q\K{\AND}\\{root};{}$\6
 \&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{ll};{}$ ${}\|i\PP){}$\1\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm};{}$ ${}\|j\PP){}$\1\6
@@ -233,7 +239,8 @@ ${}\|q\MG\\{next}\K{\AND}\\{root};{}$\6
 ${}\\{root}.\\{prev}\K\|q{}$;\par
 \U8.\fi
 
-\M{10}\B\X10:Fill in the symmetry pointers of \PB{\|c}\X${}\E{}$\6
+\M[192 antislide3.w]{10}\B\X10:Fill in the symmetry pointers of \PB{\|c}\X${}%
+\E{}$\6
 \&{for} ${}(\|s\K\T{0};{}$ ${}\|s<\\{ss};{}$ ${}\|s\PP){}$\5
 ${}\{{}$\1\6
 \&{switch} ${}(\|s\GG\T{3}){}$\5
@@ -280,13 +287,13 @@ ${}\\{cells}[\\{ii}][\\{jj}][\\{kk}].\\{invsym}[\|s]\K\|c;{}$\6
 \4${}\}{}$\2\par
 \U9.\fi
 
-\M{11}\B\X11:Set up the options\X${}\E{}$\6
+\M[209 antislide3.w]{11}\B\X11:Set up the options\X${}\E{}$\6
 \X12:Set up the \PB{\\{optx}} options\X;\6
 \X13:Set up the \PB{\\{opty}} options\X;\6
 \X14:Set up the \PB{\\{optz}} options\X;\par
 \U8.\fi
 
-\M{12}\B\D$\\{ox}(\\{j1},\\{k1},\\{j2},\\{k2})$ \6
+\M[214 antislide3.w]{12}\B\D$\\{ox}(\\{j1},\\{k1},\\{j2},\\{k2})$ \6
 ${}\{{}$\1\6
 ${}\\{optx}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\|i][%
 \\{j1}][\\{k1}];{}$\6
@@ -328,7 +335,7 @@ ${}\\{optx}[\|i][\|j][\|k].\\{neighbor\_ptr}\K\\{kk};{}$\6
 \4${}\}{}$\2\2\2\par
 \U11.\fi
 
-\M{13}\B\D$\\{oy}(\\{i1},\\{k1},\\{i2},\\{k2})$ \6
+\M[235 antislide3.w]{13}\B\D$\\{oy}(\\{i1},\\{k1},\\{i2},\\{k2})$ \6
 ${}\{{}$\1\6
 ${}\\{opty}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\\{i1}][%
 \|j][\\{k1}];{}$\6
@@ -370,7 +377,7 @@ ${}\\{opty}[\|i][\|j][\|k].\\{neighbor\_ptr}\K\\{kk};{}$\6
 \4${}\}{}$\2\2\2\par
 \U11.\fi
 
-\M{14}\B\D$\\{oz}(\\{i1},\\{j1},\\{i2},\\{j2})$ \6
+\M[256 antislide3.w]{14}\B\D$\\{oz}(\\{i1},\\{j1},\\{i2},\\{j2})$ \6
 ${}\{{}$\1\6
 ${}\\{optz}[\|i][\|j][\|k].\\{neighbor}[\\{kk}\PP]\K{\AND}\\{cells}[\\{i1}][%
 \\{j1}][\|k];{}$\6
@@ -412,13 +419,13 @@ ${}\\{optz}[\|i][\|j][\|k].\\{neighbor\_ptr}\K\\{kk};{}$\6
 \4${}\}{}$\2\2\2\par
 \U11.\fi
 
-\M{15}\B\X15:Set up the nodes\X${}\E{}$\6
+\M[277 antislide3.w]{15}\B\X15:Set up the nodes\X${}\E{}$\6
 \X16:Set up the \PB{\\{blockx}} nodes\X;\6
 \X17:Set up the \PB{\\{blocky}} nodes\X;\6
 \X18:Set up the \PB{\\{blockz}} nodes\X;\par
 \U8.\fi
 
-\M{16}\B\X16:Set up the \PB{\\{blockx}} nodes\X${}\E{}$\6
+\M[282 antislide3.w]{16}\B\X16:Set up the \PB{\\{blockx}} nodes\X${}\E{}$\6
 \&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{ll};{}$ ${}\|i\PP){}$\1\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm}-\T{1};{}$ ${}\|j\PP){}$\1\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn}-\T{1};{}$ ${}\|k\PP){}$\5
@@ -442,7 +449,7 @@ ${}\|c\MG\\{len}\PP;{}$\6
 \4${}\}{}$\2\2\2\par
 \U15.\fi
 
-\M{17}\B\X17:Set up the \PB{\\{blocky}} nodes\X${}\E{}$\6
+\M[297 antislide3.w]{17}\B\X17:Set up the \PB{\\{blocky}} nodes\X${}\E{}$\6
 \&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{ll}-\T{1};{}$ ${}\|i\PP){}$\1\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm};{}$ ${}\|j\PP){}$\1\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn}-\T{1};{}$ ${}\|k\PP){}$\5
@@ -466,7 +473,7 @@ ${}\|c\MG\\{len}\PP;{}$\6
 \4${}\}{}$\2\2\2\par
 \U15.\fi
 
-\M{18}\B\X18:Set up the \PB{\\{blockz}} nodes\X${}\E{}$\6
+\M[312 antislide3.w]{18}\B\X18:Set up the \PB{\\{blockz}} nodes\X${}\E{}$\6
 \&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{ll}-\T{1};{}$ ${}\|i\PP){}$\1\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm}-\T{1};{}$ ${}\|j\PP){}$\1\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\5
@@ -490,7 +497,7 @@ ${}\|c\MG\\{len}\PP;{}$\6
 \4${}\}{}$\2\2\2\par
 \U15.\fi
 
-\M{19}\B\X19:Subroutines\X${}\E{}$\6
+\M[327 antislide3.w]{19}\B\X19:Subroutines\X${}\E{}$\6
 \\{make\_syms}(\\{pp})\1\1\6
 \&{node} \\{pp}[\,];\2\2\6
 ${}\{{}$\1\6
@@ -532,7 +539,7 @@ ${}\\{kmax}\K\|k;{}$\2\6
 \As27, 28\ETs43.
 \U1.\fi
 
-\M{20}\B\X20:Map to \PB{\\{blockx}} nodes\X${}\E{}$\6
+\M[347 antislide3.w]{20}\B\X20:Map to \PB{\\{blockx}} nodes\X${}\E{}$\6
 \&{for} ${}(\|t\K\T{0};{}$ ${}\|t<\T{4};{}$ ${}\|t\PP){}$\5
 ${}\{{}$\1\6
 ${}\|q\K\\{pp}[\|t].\\{col}\MG\\{head}.\\{sym}[\|s]\MG\\{col}\MG\\{name};{}$\6
@@ -544,7 +551,7 @@ ${}\\{pp}[\|t].\\{sym}[\|s]\K{\AND}\\{blockx}[\|i][\\{jmin}][\\{kmin}][(\|j-%
 \4${}\}{}$\2\par
 \U19.\fi
 
-\M{21}\B\X21:Map to \PB{\\{blocky}} nodes\X${}\E{}$\6
+\M[353 antislide3.w]{21}\B\X21:Map to \PB{\\{blocky}} nodes\X${}\E{}$\6
 \&{for} ${}(\|t\K\T{0};{}$ ${}\|t<\T{4};{}$ ${}\|t\PP){}$\5
 ${}\{{}$\1\6
 ${}\|q\K\\{pp}[\|t].\\{col}\MG\\{head}.\\{sym}[\|s]\MG\\{col}\MG\\{name};{}$\6
@@ -556,7 +563,7 @@ ${}\\{pp}[\|t].\\{sym}[\|s]\K{\AND}\\{blocky}[\\{imin}][\|j][\\{kmin}][(\|i-%
 \4${}\}{}$\2\par
 \U19.\fi
 
-\M{22}\B\X22:Map to \PB{\\{blockz}} nodes\X${}\E{}$\6
+\M[359 antislide3.w]{22}\B\X22:Map to \PB{\\{blockz}} nodes\X${}\E{}$\6
 \&{for} ${}(\|t\K\T{0};{}$ ${}\|t<\T{4};{}$ ${}\|t\PP){}$\5
 ${}\{{}$\1\6
 ${}\|q\K\\{pp}[\|t].\\{col}\MG\\{head}.\\{sym}[\|s]\MG\\{col}\MG\\{name};{}$\6
@@ -568,7 +575,7 @@ ${}\\{pp}[\|t].\\{sym}[\|s]\K{\AND}\\{blockz}[\\{imin}][\\{jmin}][\|k][(\|i-%
 \4${}\}{}$\2\par
 \U19.\fi
 
-\N{1}{23}Backtracking and isomorph rejection.
+\N[365 antislide3.w]{1}{23}Backtracking and isomorph rejection.
 The basic operation of this program is a backtrack
 search, which repeatedly finds an uncovered cell and tries to cover it in
 all possible ways. We save lots of work if we always choose a cell that has the
@@ -631,7 +638,7 @@ for covering on each level }\6
 each level }\par
 \fi
 
-\M{24}\B\X24:Local variables\X${}\E{}$\6
+\M[419 antislide3.w]{24}\B\X24:Local variables\X${}\E{}$\6
 \&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|s;\C{ miscellaneous
 indices }\6
 \&{register} \&{int} \|l;\C{ the current level }\6
@@ -644,7 +651,8 @@ level }\6
 \&{node} ${}{*}\\{pp}{}$;\par
 \U1.\fi
 
-\M{25}As usual, I'm using labels and \PB{\&{goto}} statements as I backtrack,
+\M[429 antislide3.w]{25}As usual, I'm using labels and \PB{\&{goto}} statements
+as I backtrack,
 and making only a half-hearted apology for my outrageous style.
 
 \Y\B\4\X25:Backtrack through all solutions\X${}\E{}$\6
@@ -669,8 +677,8 @@ ${}\|l\MM;{}$\6
 \&{goto} \\{backup}; \\{done}:\par
 \U1.\fi
 
-\M{26}The usual trick in backtracking is to update the data structures in such
-a
+\M[446 antislide3.w]{26}The usual trick in backtracking is to update the data
+structures in such a
 way that we can faithfully downdate them as we back up. The harder cases,
 namely the symcheck list and the constraint list, are explicitly recomputed on
 each level so that downdating is unnecessary. The \PB{\\{force\_ptr}} array is
@@ -704,8 +712,8 @@ ${}\|c\K\\{best\_cell}[\|l];{}$\6
 \\{uncover}(\|c);\par
 \U25.\fi
 
-\M{27}Here's a subroutine that removes all options that cover cell~\PB{\|c}
-from all
+\M[474 antislide3.w]{27}Here's a subroutine that removes all options that cover
+cell~\PB{\|c} from all
 cell lists except list~\PB{\|c}.
 
 \Y\B\4\X19:Subroutines\X${}\mathrel+\E{}$\6
@@ -733,7 +741,8 @@ ${}\\{pp}\MG\\{col}\MG\\{len}\MM;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{28}Uncovering is done in precisely the reverse order. The pointers thereby
+\M[492 antislide3.w]{28}Uncovering is done in precisely the reverse order. The
+pointers thereby
 execute an exquisitely choreo\-graphed dance, which returns them almost
 magically to their former state---because the old pointers still exist!
 (I think this technique was invented in Japan.)
@@ -761,22 +770,22 @@ ${}\|l\MG\\{next}\K\|r\MG\\{prev}\K\|c;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{29}\B\X29:Remove options that cover cells other than \PB{\\{best\_cell}[%
-\|l]}\X${}\E{}$\6
+\M[512 antislide3.w]{29}\B\X29:Remove options that cover cells other than \PB{%
+\\{best\_cell}[\|l]}\X${}\E{}$\6
 \&{for} ${}(\|p\K\\{move}[\|l]\MG\\{right};{}$ ${}\|p\I\\{move}[\|l];{}$ ${}\|p%
 \K\|p\MG\\{right}){}$\1\5
 ${}\\{cover}(\|p\MG\\{col}){}$;\2\par
 \U25.\fi
 
-\M{30}\B\X30:Unremove options that cover cells other than \PB{\\{best\_cell}[%
-\|l]}\X${}\E{}$\6
+\M[515 antislide3.w]{30}\B\X30:Unremove options that cover cells other than %
+\PB{\\{best\_cell}[\|l]}\X${}\E{}$\6
 \&{for} ${}(\|p\K\\{move}[\|l]\MG\\{left};{}$ ${}\|p\I\\{move}[\|l];{}$ ${}\|p%
 \K\|p\MG\\{left}){}$\1\5
 ${}\\{uncover}(\|p\MG\\{col}){}$;\2\par
 \U25.\fi
 
-\M{31}\B\X31:Select \PB{$\|c\K\\{best\_cell}[\|l]$}, or \PB{\&{goto} %
-\\{solution}} if all cells are covered\X${}\E{}$\6
+\M[518 antislide3.w]{31}\B\X31:Select \PB{$\|c\K\\{best\_cell}[\|l]$}, or \PB{%
+\&{goto} \\{solution}} if all cells are covered\X${}\E{}$\6
 $\|q\K\\{root}.\\{next};{}$\6
 \&{if} ${}(\|q\E{\AND}\\{root}){}$\1\5
 \&{goto} \\{solution};\2\6
@@ -787,7 +796,7 @@ ${}\|c\K\|q,\39\|j\K\|q\MG\\{len};{}$\2\2\6
 ${}\\{best\_cell}[\|l]\K\|c{}$;\par
 \U26.\fi
 
-\M{32}\B\X32:Mark the newly covered elements\X${}\E{}$\6
+\M[525 antislide3.w]{32}\B\X32:Mark the newly covered elements\X${}\E{}$\6
 \&{for} ${}(\|p\K\\{move}[\|l]\MG\\{right};{}$ ${}\|p\I\\{move}[\|l];{}$ ${}\|p%
 \K\|p\MG\\{right}){}$\5
 ${}\{{}$\1\6
@@ -799,7 +808,7 @@ ${}\|p\MG\\{col}\MG\\{filled}\K\|p;{}$\6
 ${}\|p\MG\\{col}\MG\\{nonempty}\PP{}$;\2\par
 \U26.\fi
 
-\M{33}\B\X33:Unmark the newly covered elements\X${}\E{}$\6
+\M[533 antislide3.w]{33}\B\X33:Unmark the newly covered elements\X${}\E{}$\6
 \&{for} ${}(\|p\K\\{move}[\|l]\MG\\{left};{}$ ${}\|p\I\\{move}[\|l];{}$ ${}\|p%
 \K\|p\MG\\{left}){}$\5
 ${}\{{}$\1\6
@@ -811,8 +820,8 @@ ${}\|p\MG\\{col}\MG\\{filled}\K\NULL;{}$\6
 ${}\|p\MG\\{col}\MG\\{nonempty}\MM{}$;\2\par
 \U26.\fi
 
-\M{34}\B\X34:Compute the new constraint list; \PB{\&{goto} \\{unmark}} if
-previous choices are disallowed\X${}\E{}$\6
+\M[541 antislide3.w]{34}\B\X34:Compute the new constraint list; \PB{\&{goto} %
+\\{unmark}} if previous choices are disallowed\X${}\E{}$\6
 $\|j\K\\{constraint\_ptr}[\|l-\T{1}];{}$\6
 ${}\|k\K\\{constraint\_ptr}[\|l];{}$\6
 \&{if} ${}(\|p\MG\\{right}\E\|p){}$\1\5
@@ -827,8 +836,8 @@ disallowed\X;\6
 ${}\\{constraint\_ptr}[\|l+\T{1}]\K\|k{}$;\par
 \U26.\fi
 
-\M{35}\B\X35:Delete current cell from the constraint list, possibly forcing
-other cells to be nonempty\X${}\E{}$\6
+\M[552 antislide3.w]{35}\B\X35:Delete current cell from the constraint list,
+possibly forcing other cells to be nonempty\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|c\K\|p\MG\\{col};{}$\6
 \&{while} ${}(\|j<\\{constraint\_ptr}[\|l]){}$\5
@@ -849,7 +858,8 @@ ${}\\{constraint}[\|k\PP]\K\NULL;{}$\2\6
 \4${}\}{}$\2\par
 \U34.\fi
 
-\M{36}\B\X36:Force \PB{\\{constraint}[\\{kk}]} to be nonempty\X${}\E{}$\6
+\M[568 antislide3.w]{36}\B\X36:Force \PB{\\{constraint}[\\{kk}]} to be nonempty%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|k\K\\{kk};{}$\6
 ${}\|q\K\\{constraint}[\|k];{}$\6
@@ -862,8 +872,8 @@ ${}\\{force}[\\{force\_ptr}[\|l]\PP]\K\|q;{}$\6
 \4${}\}{}$\2\par
 \U35.\fi
 
-\M{37}\B\X37:Add new constraints; \PB{\&{goto} \\{unmark}} if previous choices
-are disallowed\X${}\E{}$\6
+\M[577 antislide3.w]{37}\B\X37:Add new constraints; \PB{\&{goto} \\{unmark}} if
+previous choices are disallowed\X${}\E{}$\6
 $\|r\K\|p\MG\\{row};{}$\6
 \&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|r\MG\\{neighbor\_ptr};{}$ ${}\|i\PP){}$\5
 ${}\{{}$\1\6
@@ -898,7 +908,8 @@ ${}\|k\K\\{kk};{}$\6
 \4${}\}{}$\2\par
 \U34.\fi
 
-\M{38}\B\X38:Copy former constraints that are still unsatisfied\X${}\E{}$\6
+\M[597 antislide3.w]{38}\B\X38:Copy former constraints that are still
+unsatisfied\X${}\E{}$\6
 \&{while} ${}(\|j<\\{constraint\_ptr}[\|l]){}$\5
 ${}\{{}$\1\6
 ${}\\{kk}\K\|k;{}$\6
@@ -922,7 +933,7 @@ ${}\|j\PP;{}$\6
 \4${}\}{}$\2\par
 \U34.\fi
 
-\M{39}\B\X39:Delete the new forcing table entries\X${}\E{}$\6
+\M[611 antislide3.w]{39}\B\X39:Delete the new forcing table entries\X${}\E{}$\6
 \&{while} ${}(\\{force\_ptr}[\|l]\I\\{force\_ptr}[\|l-\T{1}]){}$\5
 ${}\{{}$\1\6
 ${}\|q\K\\{force}[\MM\\{force\_ptr}[\|l]];{}$\6
@@ -931,8 +942,8 @@ ${}\|q\MG\\{nonempty}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U26.\fi
 
-\M{40}\B\X40:Compute the new symcheck list; \PB{\&{goto} \\{unmark}} if $a_1%
-\,a_2\ldots a_l$ is rejected\X${}\E{}$\6
+\M[618 antislide3.w]{40}\B\X40:Compute the new symcheck list; \PB{\&{goto} %
+\\{unmark}} if $a_1\,a_2\ldots a_l$ is rejected\X${}\E{}$\6
 \&{for} ${}(\|k\K\\{symcheck\_ptr}[\|l-\T{1}],\39\\{kk}\K\\{symcheck\_ptr}[%
 \|l];{}$ ${}\|k<\\{symcheck\_ptr}[\|l];{}$ ${}\|k\PP){}$\5
 ${}\{{}$\1\6
@@ -957,14 +968,14 @@ ${}\\{kk}\PP;{}$\6
 ${}\\{symcheck\_ptr}[\|l+\T{1}]\K\\{kk}{}$;\par
 \U26.\fi
 
-\M{41}\B\X41:Set $a_l$ to the empty option of \PB{\|c}; \PB{\&{goto} \\{try%
-\_again}} if that option isn't allowed\X${}\E{}$\6
+\M[633 antislide3.w]{41}\B\X41:Set $a_l$ to the empty option of \PB{\|c}; \PB{%
+\&{goto} \\{try\_again}} if that option isn't allowed\X${}\E{}$\6
 $\\{move}[\|l]\K{\AND}(\|c\MG\\{head});{}$\6
 \&{if} ${}(\|c\MG\\{nonempty}){}$\1\5
 \&{goto} \\{try\_again};\2\par
 \U26.\fi
 
-\M{42}\B\X42:Record a solution\X${}\E{}$\6
+\M[638 antislide3.w]{42}\B\X42:Record a solution\X${}\E{}$\6
 $\\{count}\PP;{}$\6
 \&{if} (\\{verbose})\5
 ${}\{{}$\1\6
@@ -984,7 +995,7 @@ ${}\\{printf}(\.{"(\%d\ syms,\ \%d\ blks)\\}\)\.{n"},\39\\{symcheck\_ptr}[\|l]-%
 \4${}\}{}$\2\par
 \U25.\fi
 
-\M{43}\B\X19:Subroutines\X${}\mathrel+\E{}$\6
+\M[652 antislide3.w]{43}\B\X19:Subroutines\X${}\mathrel+\E{}$\6
 \\{print\_move}(\|p)\1\1\6
 \&{node} ${}{*}\|p;\2\2{}$\6
 ${}\{{}$\1\6
@@ -996,7 +1007,7 @@ ${}\\{printf}(\.{"\%s\ "},\39\|q\MG\\{col}\MG\\{name});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{44}\B\X44:Handle diagnostic info\X${}\E{}$\6
+\M[661 antislide3.w]{44}\B\X44:Handle diagnostic info\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{profile}[\|l]\PP;{}$\6
 ${}\\{prof\_syms}[\|l]\MRL{+{\K}}\\{symcheck\_ptr}[\|l+\T{1}]-\\{symcheck%
@@ -1016,7 +1027,7 @@ ${}\\{printf}(\.{"(\%d,\%d,\%d)\\n"},\39\\{symcheck\_ptr}[\|l+\T{1}]-%
 \4${}\}{}$\2\par
 \U25.\fi
 
-\M{45}\B\X45:Print a profile of the search tree\X${}\E{}$\6
+\M[677 antislide3.w]{45}\B\X45:Print a profile of the search tree\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\\{ll}*\\{mm}*\\{nn};{}$ ${}\|j\PP){}$\1\5
 ${}\\{printf}(\.{"\ Level\ \%d:\ \%d\ sols,}\)\.{\ \%\#.1f\ syms,\ \%\#.1f\ c}%
@@ -1027,7 +1038,7 @@ ${}\\{printf}(\.{"\ Level\ \%d:\ \%d\ sols,}\)\.{\ \%\#.1f\ syms,\ \%\#.1f\ c}%
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{46}\B\X46:Initialize for level 0\X${}\E{}$\6
+\M[687 antislide3.w]{46}\B\X46:Initialize for level 0\X${}\E{}$\6
 \&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{ll};{}$ ${}\|i\PP){}$\1\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm};{}$ ${}\|j\PP){}$\1\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\5
@@ -1040,8 +1051,8 @@ ${}\\{symcheck\_sig}[\|k]\K\|k+\T{1};{}$\2\6
 ${}\\{symcheck\_ptr}[\T{1}]\K\\{ss}-\T{1}{}$;\par
 \U25.\fi
 
-\M{47}\B\X47:Make redundancy checks to see if the backtracking was consistent%
-\X${}\E{}$\6
+\M[695 antislide3.w]{47}\B\X47:Make redundancy checks to see if the
+backtracking was consistent\X${}\E{}$\6
 $\|q\K{\AND}\\{root};{}$\6
 \&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{ll};{}$ ${}\|i\PP){}$\1\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{mm};{}$ ${}\|j\PP){}$\1\6
@@ -1055,7 +1066,7 @@ ${}\|q\K\|c;{}$\6
 \4${}\}{}$\2\2\2\par
 \U1.\fi
 
-\N{1}{48}Index.
+\N[704 antislide3.w]{1}{48}Index.
 \fi
 
 \inx

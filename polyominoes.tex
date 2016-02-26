@@ -1,8 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Data for dancing. This program creates data suitable for the {\mc
-DANCE}
+\N[2 polyominoes.w]{1}{1}Data for dancing. This program creates data suitable
+for the {\mc DANCE}
 routine, given the description of a board to be covered and
 a set of polyomino shapes.
 
@@ -70,7 +71,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\D$\\{panic}(\|m)$ \6
+\M[69 polyominoes.w]{2}\B\D$\\{panic}(\|m)$ \6
 ${}\{{}$\5
 \1${}\\{fprintf}(\\{stderr},\39\.{"\%s!\\n\%s"},\39\|m,\39\\{buf}){}$;\5
 ${}\\{exit}({-}\T{1}){}$;\5
@@ -113,7 +114,7 @@ ${}\\{fwrite}(\\{buf},\39\T{1},\39\\{strlen}(\\{buf})-\T{1},\39\\{stdout}){}$;%
 \C{ output all but the newline }\par
 \U1.\fi
 
-\M{3}\B\X3:Subroutines\X${}\E{}$\6
+\M[93 polyominoes.w]{3}\B\X3:Subroutines\X${}\E{}$\6
 \&{int} \\{decode}(\|c)\1\1\6
 \&{char} \|c;\2\2\6
 ${}\{{}$\1\6
@@ -132,7 +133,7 @@ ${}\{{}$\1\6
 \A12.
 \U1.\fi
 
-\M{4}\B\X4:Global variables\X${}\E{}$\6
+\M[105 polyominoes.w]{4}\B\X4:Global variables\X${}\E{}$\6
 \&{char} \\{buf}[\\{buf\_size}];\6
 \&{int} \\{board}[\T{36}][\T{36}];\C{ cells present }\6
 \&{int} \\{bxmin}${},{}$ \\{bxmax}${},{}$ \\{bymin}${},{}$ \\{bymax};\C{ used
@@ -140,14 +141,14 @@ portion of the board }\par
 \A7.
 \U1.\fi
 
-\M{5}\B\X5:Read and output the piece names\X${}\E{}$\6
+\M[110 polyominoes.w]{5}\B\X5:Read and output the piece names\X${}\E{}$\6
 \&{if} ${}(\R\\{fgets}(\\{buf},\39\\{buf\_size},\39\\{stdin})){}$\1\5
 \\{panic}(\.{"No\ piece\ names"});\2\6
 ${}\\{printf}(\.{"\ \%s"},\39\\{buf}){}$;\C{ just pass the piece names through
 }\par
 \U1.\fi
 
-\M{6}\B\X6:Read and output the pieces\X${}\E{}$\6
+\M[114 polyominoes.w]{6}\B\X6:Read and output the pieces\X${}\E{}$\6
 \&{while} ${}(\\{fgets}(\\{buf},\39\\{buf\_size},\39\\{stdin})){}$\5
 ${}\{{}$\1\6
 \&{if} ${}(\\{buf}[\\{strlen}(\\{buf})-\T{1}]\I\.{'\\n'}){}$\1\5
@@ -212,7 +213,7 @@ ${}\\{ymax}\K\|y;{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{7}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[150 polyominoes.w]{7}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{name}[\T{4}];\C{ name of current piece }\6
 \&{int} \|s${},{}$ \|t;\C{ symmetry type of current piece }\6
 \&{int} ${}\\{xx}[\T{36}*\T{36}],{}$ ${}\\{yy}[\T{36}*\T{36}]{}$;\C{
@@ -221,7 +222,7 @@ coordinates of current piece }\6
 coordinates }\par
 \fi
 
-\M{8}\B\X8:Generate the possible piece placements\X${}\E{}$\6
+\M[156 polyominoes.w]{8}\B\X8:Generate the possible piece placements\X${}\E{}$\6
 \&{while} (\|t)\5
 ${}\{{}$\1\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\T{4};{}$ ${}\|k\PP){}$\5
@@ -235,7 +236,7 @@ ${}\|t\MM;{}$\6
 \4${}\}{}$\2\par
 \U6.\fi
 
-\M{9}\B\X9:Transpose the current piece\X${}\E{}$\6
+\M[166 polyominoes.w]{9}\B\X9:Transpose the current piece\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
 ${}\{{}$\1\6
 ${}\|z\K\\{xx}[\|j];{}$\6
@@ -250,7 +251,7 @@ ${}\\{xmax}\K\\{ymax}{}$;\5
 ${}\\{ymax}\K\|z{}$;\par
 \U8.\fi
 
-\M{10}\B\X10:Rotate the current piece\X${}\E{}$\6
+\M[175 polyominoes.w]{10}\B\X10:Rotate the current piece\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
 ${}\{{}$\1\6
 ${}\|z\K\\{xx}[\|j];{}$\6
@@ -264,7 +265,8 @@ ${}\\{xmax}\K\T{35}-\\{ymin}{}$;\5
 ${}\\{ymin}\K\|z{}$;\par
 \U8.\fi
 
-\M{11}\B\X11:Output translates of the current piece\X${}\E{}$\6
+\M[183 polyominoes.w]{11}\B\X11:Output translates of the current piece\X${}%
+\E{}$\6
 \&{for} ${}(\|x\K\\{bxmin}-\\{xmin};{}$ ${}\|x\Z\\{bxmax}-\\{xmax};{}$ ${}\|x%
 \PP){}$\1\6
 \&{for} ${}(\|y\K\\{bymin}-\\{ymin};{}$ ${}\|y\Z\\{bymax}-\\{ymax};{}$ ${}\|y%
@@ -283,7 +285,7 @@ ${}\\{printf}(\.{"\ \%c\%c"},\39\\{encode}(\|x+\\{xx}[\|j]),\39\\{encode}(\|y+%
 \4${}\}{}$\2\2\par
 \U8.\fi
 
-\M{12}\B\X3:Subroutines\X${}\mathrel+\E{}$\6
+\M[195 polyominoes.w]{12}\B\X3:Subroutines\X${}\mathrel+\E{}$\6
 \&{char} \\{encode}(\|x)\1\1\6
 \&{int} \|x;\2\2\6
 ${}\{{}$\1\6
@@ -293,7 +295,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{13}Index.
+\N[203 polyominoes.w]{1}{13}Index.
 \fi
 
 \inx

@@ -1,11 +1,12 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
 
 
 
-\N{1}{1}Intro. This program was written (somewhat hastily) in order to
-experiment
+\N[5 grayspan.w]{1}{1}Intro. This program was written (somewhat hastily) in
+order to experiment
 with an algorithm that generates all spanning trees of a given graph,
 changing only one edge at a time. Most of the basic ideas are adapted from
 Malcolm Smith's M.S. thesis, ``Generating spanning trees'' (University
@@ -53,7 +54,7 @@ ${}\\{printf}(\.{"Altogether\ \%.15g\ sp}\)\.{anning\ trees,\ using\ }\)\.{%
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Input the graph\X${}\E{}$\6
+\M[46 grayspan.w]{2}\B\X2:Input the graph\X${}\E{}$\6
 \&{if} ${}(\\{argc}<\T{2}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ foo.gb\ [[}\)\.{gory]\ details]%
@@ -72,7 +73,7 @@ ${}\|n\K\|g\MG\|n;{}$\6
 \X4:Check the graph for validity and prepare it for action\X;\par
 \U1.\fi
 
-\M{3}\B\X3:Local variables\X${}\E{}$\6
+\M[61 grayspan.w]{3}\B\X3:Local variables\X${}\E{}$\6
 \&{register} \&{Graph} ${}{*}\|g{}$;\C{ the graph we're dealing with }\6
 \&{register} \&{int} \|n;\C{ the number of vertices }\6
 \&{register} \&{int} \|k;\C{ current integer of interest }\6
@@ -83,7 +84,7 @@ vertices of interest }\6
 \A8.
 \U1.\fi
 
-\N{1}{4}Graph preparation.
+\N[68 grayspan.w]{1}{4}Graph preparation.
 While we're checking to see that the graph meets certain minimal standards, we
 might as well also compute the degree of each vertex, since our algorithm
 will be using that information. We also ensure that the SGB ``edge trick''
@@ -157,7 +158,7 @@ ${}\\{exit}({-}\T{5});{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{5}Here's something I might like to use when debugging.
+\M[117 grayspan.w]{5}Here's something I might like to use when debugging.
 
 \Y\B\4\X5:Subroutines\X${}\E{}$\6
 \&{void} \\{print\_arcs}(\&{Vertex} ${}{*}\|v){}$\1\1\2\2\6
@@ -172,7 +173,7 @@ ${}\\{printf}(\.{"\ \%d\ (to\ \%s)\\n"},\39\|a\MG\\{len},\39\|a\MG\\{tip}\MG%
 \A17.
 \U1.\fi
 
-\N{1}{6}The method. Let $G$ be a graph with $n>1$ vertices.
+\N[128 grayspan.w]{1}{6}The method. Let $G$ be a graph with $n>1$ vertices.
 The basic idea of Smith's algorithm is to generate all spanning trees of~$G$
 in such a way that the first one includes a given {\it near-tree}, namely
 a set of $n-2$ edges that don't contain a cycle. This task is easy if $n=2$:
@@ -193,7 +194,8 @@ graph $G\setminus e_1$, starting with the near-tree $\{f_1,\ldots,f_{n-2}\}$.
 
 \fi
 
-\M{7}This program implements the recursion directly by maintaining an array
+\M[147 grayspan.w]{7}This program implements the recursion directly by
+maintaining an array
 of edges $a_1\ldots a_n$. When we enter level~$l$, positions $a_1\ldots
 a_{l-1}$ contain edges to include in the tree, and those edges have
 been shrunk in the current graph. Position~$a_l$ is effectively blank,
@@ -255,13 +257,13 @@ ${}\|e\K\\{aa}(\|l),\39\|u\K\|e\MG\\{tip},\39\|v\K\\{mate}(\|e)\MG\\{tip};{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{8}\B\X3:Local variables\X${}\mathrel+\E{}$\6
+\M[196 grayspan.w]{8}\B\X3:Local variables\X${}\mathrel+\E{}$\6
 \&{register} \&{int} \|l;\C{ the current level }\6
 \&{Arc} ${}{*}\\{change\_e}{}$;\C{ edge that may change next }\par
 \fi
 
-\M{9}\B\X9:Produce a new spanning tree by changing \PB{\\{change\_e}} to \PB{%
-\|e}\X${}\E{}$\6
+\M[200 grayspan.w]{9}\B\X9:Produce a new spanning tree by changing \PB{%
+\\{change\_e}} to \PB{\|e}\X${}\E{}$\6
 $\\{count}\PP;{}$\6
 \&{if} (\\{verbose})\5
 ${}\{{}$\1\6
@@ -282,8 +284,8 @@ ${}\\{printf}(\.{"\%.15g:\ -\%d+\%d\\n"},\39\\{count},\39\\{change\_e}\MG%
 \4${}\}{}$\2\par
 \U7.\fi
 
-\M{10}To shrink an edge between \PB{\|u} and \PB{\|v}, we insert \PB{\|u}'s
-adjacency list
+\M[211 grayspan.w]{10}To shrink an edge between \PB{\|u} and \PB{\|v}, we
+insert \PB{\|u}'s adjacency list
 into \PB{\|v}'s, changing all references to \PB{\|u} into references to~\PB{%
 \|v};
 those references occur in \PB{\\{tip}} fields of mates of the arcs in
@@ -323,7 +325,8 @@ ${}\\{ooo},\39\|f\MG\\{next}\MG\\{prev}\K\\{ff},\39\\{ff}\MG\\{next}\K\|f\MG%
 \\{next}{}$;\par
 \U7.\fi
 
-\M{11}Unshrinking uses the principle of ``dancing links,'' whereby we exploit
+\M[238 grayspan.w]{11}Unshrinking uses the principle of ``dancing links,''
+whereby we exploit
 the fact that previously deleted nodes still have good information in
 their \PB{\\{prev}} and \PB{\\{next}} fields, provided that we undelete in
 reverse order.
@@ -351,7 +354,8 @@ ${}\\{printf}(\.{"level\ \%d:\ Unshrinki}\)\.{ng\ \%d;\ now\ \%s\ has\ de}\)%
 \\{deg}){}$;\2\par
 \U7.\fi
 
-\M{12}For bridge detection, we try a heuristic that often gives a quick answer
+\M[256 grayspan.w]{12}For bridge detection, we try a heuristic that often gives
+a quick answer
 when the graph is sparse (namely, to test if \PB{\|u} has degree~1).
 Or if \PB{$\|e\MG\\{link}\MG\\{link}\I\NULL$}, there was another edge between %
 \PB{\|u} and \PB{\|v}.
@@ -412,8 +416,8 @@ ${}\\{change\_e}\K\|e;{}$\6
 \4\\{bridge}:\par
 \U7.\fi
 
-\M{13}\B\X13:Nullify all \PB{\\{bfs}} links and \PB{\&{goto} \\{nonbridge}}%
-\X${}\E{}$\6
+\M[295 grayspan.w]{13}\B\X13:Nullify all \PB{\\{bfs}} links and \PB{\&{goto} %
+\\{nonbridge}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|o,\39\|u\K\|e\MG\\{tip};{}$ ${}\|u\I\|v;{}$ \|o${},\39\|u\MG%
 \\{bfs}\K\NULL,\39\|u\K\|w){}$\1\5
@@ -422,7 +426,8 @@ ${}\|o,\39\|w\K\|u\MG\\{bfs};{}$\2\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{14}\B\X14:Delete \PB{\|e} and \PB{\&{goto} \\{enter}}\X${}\E{}$\6
+\M[301 grayspan.w]{14}\B\X14:Delete \PB{\|e} and \PB{\&{goto} \\{enter}}\X${}%
+\E{}$\6
 \&{if} (\\{extraverbose})\1\5
 ${}\\{printf}(\.{"level\ \%d:\ deleting\ }\)\.{\%d\\n"},\39\|l,\39\|e\MG%
 \\{len});{}$\2\6
@@ -432,8 +437,8 @@ ${}\\{delete}(\|e),\39\\{delete}(\\{mate}(\|e)),\39\\{oo},\39\|e\MG\\{tip}\MG%
 \&{goto} \\{enter};\par
 \U12.\fi
 
-\M{15}\B\X15:Undelete all edges deleted since entering level \PB{\|l}\X${}\E{}$%
-\6
+\M[307 grayspan.w]{15}\B\X15:Undelete all edges deleted since entering level %
+\PB{\|l}\X${}\E{}$\6
 \&{for} ${}(\|o,\39\|e\K\\{del}(\|l);{}$ \|e; \|o${},\39\|e\K\|e\MG\\{link}){}$%
 \5
 ${}\{{}$\1\6
@@ -444,7 +449,8 @@ ${}\\{printf}(\.{"undeleting\ \%d\\n"},\39\|e\MG\\{len});{}$\2\6
 \4${}\}{}$\2\par
 \U7.\fi
 
-\N{1}{16}Getting started. We're done, except for one embarrassing detail:
+\N[313 grayspan.w]{1}{16}Getting started. We're done, except for one
+embarrassing detail:
 It is necessary to prime the pump by setting up the original
 near-tree $a_2\ldots a_{n-1}$. For this purpose I'll use
 depth-first search, since it seems a bit faster than the alternatives.
@@ -488,7 +494,7 @@ ${}\\{printf}(\.{"(\%.15g\ mems\ for\ ini}\)\.{tialization)\\n"},\39%
 \\{mems}){}$;\2\par
 \U1.\fi
 
-\M{17}One final debugging aid.
+\M[340 grayspan.w]{17}One final debugging aid.
 
 \Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_a}(\&{register} \&{Graph} ${}{*}\|g){}$\1\1\2\2\6
@@ -501,7 +507,7 @@ ${}\\{printf}(\.{"\ a\%d=\%d\ (\%s\ --\ \%s)\\}\)\.{n"},\39\|k,\39\\{aa}(\|k)%
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{18}Index.
+\N[351 grayspan.w]{1}{18}Index.
 
 \fi
 

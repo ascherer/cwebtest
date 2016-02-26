@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This program tests an amazingly simple algorithm that
+\N[2 linked-trees.w]{1}{1}Intro. This program tests an amazingly simple
+algorithm that
 generates all $n$-node trees with the property that the $k$th node in preorder
 has $t_k$ link fields. (A link field is either zero or it points to
 a subtree.) In the special case that $t_k=2$ for $1\le k\le n$, we
@@ -55,7 +57,7 @@ ${}\|l[\|j][\T{0}]\K\T{0},\39\|l[\|j][\|r-\T{1}]\K\|y,\39\|l[\|y][\T{0}]\K%
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\D$\\{abort}(\|m)$ \6
+\M[44 linked-trees.w]{2}\B\D$\\{abort}(\|m)$ \6
 ${}\{{}$\5
 \1${}\\{fprintf}(\\{stderr},\39\.{"\%s!\\n"},\39\|m);{}$\6
 \\{exit}(\|j);\5
@@ -83,7 +85,8 @@ ${}\|h[\|j]\MM;{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}For each tree, we print out the array of links, with link~0 last.
+\M[61 linked-trees.w]{3}For each tree, we print out the array of links, with
+link~0 last.
 
 \Y\B\4\X3:Visit the current tree\X${}\E{}$\6
 $\\{count}\PP;{}$\6
@@ -98,7 +101,7 @@ ${}\\{printf}(\.{"\ \%d"},\39\|l[\|j][\|k]);{}$\2\6
 \\{printf}(\.{"\\n"});\par
 \U1.\fi
 
-\N{1}{4}Index.
+\N[72 linked-trees.w]{1}{4}Index.
 
 \fi
 

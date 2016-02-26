@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This program is a sequel to {\mc ACHAIN2}, which you should
+\N[2 achain3.w]{1}{1}Intro. This program is a sequel to {\mc ACHAIN2}, which
+you should
 read first. I'm experimenting with a brand-new way to find shortest
 addition chains. Maybe it will be good, maybe not; but in either
 case the results should be interesting (at least to me).
@@ -81,7 +83,7 @@ ${}\\{timer}\K\|j;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Process the command line\X${}\E{}$\6
+\M[71 achain3.w]{2}\B\X2:Process the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{3}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ foo\ bar\\n}\)\.{"},\39\\{argv}[%
@@ -90,7 +92,7 @@ ${}\\{exit}({-}\T{1});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}\B\X3:Output the value of $l_k(n)$\X${}\E{}$\6
+\M[77 achain3.w]{3}\B\X3:Output the value of $l_k(n)$\X${}\E{}$\6
 \&{if} ${}(\R\\{outfile}[\\{kk}]){}$\5
 ${}\{{}$\1\6
 ${}\\{sprintf}(\\{buf},\39\.{"\%s-\%d"},\39\\{argv}[\T{2}],\39\\{kk});{}$\6
@@ -108,7 +110,8 @@ ${}\\{fprintf}(\\{outfile}[\\{kk}],\39\.{"\%c"},\39\|l[\\{kk}][\|n]+\.{'\
 immediately }\par
 \U1.\fi
 
-\M{4}Note that the input file for $l_1(n)$ starts with $n=2$, not $n=1$ as
+\M[89 achain3.w]{4}Note that the input file for $l_1(n)$ starts with $n=2$, not
+$n=1$ as
 in the previous programs.
 
 \Y\B\4\X4:Try to input $l_k(n)$; \PB{\&{goto} \\{done}} if successful\X${}\E{}$%
@@ -130,15 +133,15 @@ something fails }\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{5}\B\X5:Determine $\lfloor\lg n\rfloor$ and the binary upper bound\X${}\E{}$%
-\6
+\M[105 achain3.w]{5}\B\X5:Determine $\lfloor\lg n\rfloor$ and the binary upper
+bound\X${}\E{}$\6
 \&{for} ${}(\|q\K\|n,\39\|i\K{-}\T{1},\39\|j\K\T{0};{}$ \|q; ${}\|q\MRL{{\GG}{%
 \K}}\T{1},\39\|i\PP){}$\1\5
 ${}\|j\MRL{+{\K}}\|q\AND\T{1};{}$\2\6
 ${}\\{lg2n}\K\|i,\39\\{ub}\K\|i+\|j-\T{1}{}$;\par
 \U1.\fi
 
-\N{1}{6}The interesting part.
+\N[110 achain3.w]{1}{6}The interesting part.
 The canonical-chain reduction of {\mc ACHAIN2} works for $l_k(n)$ as
 well as for $l(n)$, because the first $k$ steps of an $l_k$~chain
 are always reduced in the digraph. So I've taken it over here without
@@ -188,7 +191,8 @@ ${}\\{ub}\K\\{lb};{}$\6
 \&{goto} \\{loop};\par
 \U1.\fi
 
-\M{7}The only change to this algorithm for {\mc ACHAIN2} occurs when we happen
+\M[148 achain3.w]{7}The only change to this algorithm for {\mc ACHAIN2} occurs
+when we happen
 to encounter an empty slot (namely when \PB{$\\{outdeg}[\|s]\E\T{0}$} and \PB{%
 \|s}
 isn't the top level). Then we simply reject the current solution.
@@ -280,7 +284,8 @@ ${}\|p\PP,\39\|q\MM;{}$\2\6
 \\{possible}:\par
 \U6.\fi
 
-\M{8}\B\X8:Put local variables on the stack and update outdegrees\X${}\E{}$\6
+\M[203 achain3.w]{8}\B\X8:Put local variables on the stack and update
+outdegrees\X${}\E{}$\6
 $\\{tail}[\|s]\K\|q,\39\\{stack}[\|s].\|r\K\|r;{}$\6
 ${}\\{outdeg}[\\{ubq}]\PP,\39\\{outsum}[\\{ubq}]\MRL{+{\K}}\|s;{}$\6
 ${}\\{outdeg}[\\{ubq}]\PP,\39\\{outsum}[\\{ubq}]\MRL{+{\K}}\|s;{}$\6
@@ -290,8 +295,8 @@ ${}\\{stack}[\|s].\\{ptrp}\K\\{ptrp},\39\\{stack}[\|s].\\{ptrq}\K\\{ptrq}{}$;%
 \par
 \U7.\fi
 
-\M{9}\B\X9:Restore local variables from the stack and downdate outdegrees\X${}%
-\E{}$\6
+\M[211 achain3.w]{9}\B\X9:Restore local variables from the stack and downdate
+outdegrees\X${}\E{}$\6
 $\\{ptrq}\K\\{stack}[\|s].\\{ptrq},\39\\{ptrp}\K\\{stack}[\|s].\\{ptrp};{}$\6
 ${}\\{lbq}\K\\{stack}[\|s].\\{lbq},\39\\{ubq}\K\\{stack}[\|s].\\{ubq};{}$\6
 ${}\\{lbp}\K\\{stack}[\|s].\\{lbp},\39\\{ubq}\K\\{stack}[\|s].\\{ubq};{}$\6
@@ -300,8 +305,8 @@ ${}\\{outdeg}[\\{ubq}]\MM,\39\\{outsum}[\\{ubq}]\MRL{-{\K}}\|s;{}$\6
 ${}\|q\K\\{tail}[\|s],\39\|p\K\|a[\|s]-\|q,\39\|r\K\\{stack}[\|s].\|r{}$;\par
 \U7.\fi
 
-\M{10}After the test in this step is passed, we'll have \PB{$\\{ubq}>\\{ubq}$}
-and \PB{$\\{lbp}>\\{lbq}$}.
+\M[219 achain3.w]{10}After the test in this step is passed, we'll have \PB{$%
+\\{ubq}>\\{ubq}$} and \PB{$\\{lbp}>\\{lbq}$}.
 
 \Y\B\4\X10:Find bounds $(\PB{\\{lbp}},\PB{\\{ubq}})$ and $(\PB{\\{lbq}},\PB{%
 \\{ubq}})$ on where \PB{\|p} and \PB{\|q} can be inserted; but go to \PB{%
@@ -339,7 +344,8 @@ ${}\\{lbp}\PP;{}$\2\6
 \4${}\}{}$\2\par
 \U7.\fi
 
-\M{11}The undoing mechanism is very simple: When changing \PB{\|a[\|j]}, we
+\M[239 achain3.w]{11}The undoing mechanism is very simple: When changing \PB{%
+\|a[\|j]}, we
 put \PB{$(\|j\LL\T{24})+\|x$} on the \PB{\\{undo}} stack, where \PB{\|x} was
 the former value.
 Similarly, when changing \PB{\|b[\|j]}, we stack the value \PB{$(\T{1}\LL%
@@ -360,7 +366,7 @@ ${}\|b[(\|i\AND\T{\^3fffffff})\GG\T{24}]\K\|i\AND\T{\^ffffff};{}$\2\6
 \4${}\}{}$\2\par
 \U7.\fi
 
-\M{12}At this point we know that $a[ubq]\le p\le b[ubq]$.
+\M[253 achain3.w]{12}At this point we know that $a[ubq]\le p\le b[ubq]$.
 
 \Y\B\4\X12:Put \PB{\|p} into the chain at location \PB{\\{ubq}}; \PB{\&{goto} %
 \\{failp}} if there's a problem\X${}\E{}$\6
@@ -407,8 +413,8 @@ ${}\\{newb}(\|j,\39\|i);{}$\6
 \X13:Make forced moves if \PB{\|p} has a special form\X;\par
 \U7.\fi
 
-\M{13}If, say, we've just set \PB{$\|a[\T{8}]\K\|b[\T{8}]\K\T{132}$}, special
-considerations apply,
+\M[284 achain3.w]{13}If, say, we've just set \PB{$\|a[\T{8}]\K\|b[\T{8}]\K%
+\T{132}$}, special considerations apply,
 because the only addition chains of length~8 for 132 are
 $$\eqalign{
 &1,2,4,8,16,32,64,128,132;\cr
@@ -440,7 +446,8 @@ ${}\\{newa}(\|j,\39\T{1}\LL\|j);{}$\2\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{14}At this point we had better not assume that $a[ubq]\le q\le b[ubq]$,
+\M[308 achain3.w]{14}At this point we had better not assume that $a[ubq]\le q%
+\le b[ubq]$,
 because \PB{\|p} has just been inserted. That insertion can mess up the
 bounds that we looked at when \PB{\\{lbq}} and \PB{\\{ubq}} were computed.
 
@@ -493,7 +500,8 @@ ${}\\{newb}(\|j,\39\|i);{}$\6
 \X15:Make forced moves if \PB{\|q} has a special form\X;\par
 \U7.\fi
 
-\M{15}\B\X15:Make forced moves if \PB{\|q} has a special form\X${}\E{}$\6
+\M[343 achain3.w]{15}\B\X15:Make forced moves if \PB{\|q} has a special form%
+\X${}\E{}$\6
 $\|i\K\|q-(\T{1}\LL(\\{ubq}-\T{1}));{}$\6
 \&{if} ${}(\|i\W((\|i\AND(\|i-\T{1}))\E\T{0})\W(\|i\LL\T{4})<\|q){}$\5
 ${}\{{}$\1\6
@@ -507,7 +515,8 @@ ${}\\{newa}(\|j,\39\T{1}\LL\|j);{}$\2\6
 \4${}\}{}$\2\par
 \U14.\fi
 
-\M{16}The bottom line: Alas, this method turns out to be by far the
+\M[351 achain3.w]{16}The bottom line: Alas, this method turns out to be by far
+the
 slowest of all. But maybe somebody will find a use for it?
 The most interesting thing I noticed is that $l_1(n)=l_2(n)$
 for $4\le n<14759$; in other words, when $n$ is small there's
@@ -523,7 +532,7 @@ the first three counterexamples in an unpublished preprint of 1997.)
 
 \fi
 
-\N{1}{17}Index.
+\N[365 achain3.w]{1}{17}Index.
 \fi
 
 \inx

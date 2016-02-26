@@ -1,9 +1,10 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
 
-\N{1}{1}Intro. Counting closure operators on six elements that are
-nonisomorphic
+\N[3 horn-count.w]{1}{1}Intro. Counting closure operators on six elements that
+are nonisomorphic
 under permutations. (My program for $n=5$ used a too-slow method;
 here I speed up by a factor of $n!$, I hope.)
 
@@ -48,7 +49,7 @@ ${}\\{printf}(\.{"Altogether\ \%d\ solut}\)\.{ions\ (reduced\ from\ \%}\)\.{d).%
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Find all the solutions\X${}\E{}$\6
+\M[40 horn-count.w]{2}\B\X2:Find all the solutions\X${}\E{}$\6
 $\|l\K\\{logptr}\K\T{0};{}$\6
 ${}\\{auts}\K\\{nfactorial};{}$\6
 \4\\{newlevel}:\5
@@ -107,7 +108,7 @@ ${}\\{printf}(\.{"error:\ forced[\%x]\ n}\)\.{ot\ restored\ to\ zero!}\)\.{%
 \\n"},\39\|k){}$;\2\2\par
 \U1.\fi
 
-\M{3}Algorithm 7.2.1.2T.
+\M[79 horn-count.w]{3}Algorithm 7.2.1.2T.
 
 \Y\B\4\X3:Make the permutation tables\X${}\E{}$\6
 $\|d\K\\{nfactorial}\GG\T{1},\39\\{perm}[\|d][\T{0}]\K\T{1};{}$\6
@@ -143,12 +144,13 @@ ${}\\{perm}[\|k][\|j]\K\\{perm}[\|k-\T{1}][\|j]\XOR\|d;{}$\6
 ${}\\{iperm}[\|p][\\{perm}[\|p][\|k]]\K\|k{}$;\2\2\par
 \U1.\fi
 
-\M{4}\B\X4:Put all permutations into \PB{\\{wait}[\T{0}]}\X${}\E{}$\6
+\M[105 horn-count.w]{4}\B\X4:Put all permutations into \PB{\\{wait}[\T{0}]}%
+\X${}\E{}$\6
 \&{for} ${}(\|p\K\T{1};{}$ ${}\|p<\\{nfactorial};{}$ ${}\|p\PP){}$\1\5
 ${}\\{link}[\|p]\K\\{wait}[\T{0}],\39\\{wait}[\T{0}]\K\|p{}$;\2\par
 \U1.\fi
 
-\M{5}\B\X5:Reject \PB{\|l} if it violates closure\X${}\E{}$\6
+\M[108 horn-count.w]{5}\B\X5:Reject \PB{\|l} if it violates closure\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|l;{}$ ${}\|j\PP){}$\1\6
 \&{if} ${}(\|f[\|j]\W\R(\|f[\|j\AND\|l])){}$\5
 ${}\{{}$\1\6
@@ -158,7 +160,7 @@ ${}\\{printf}(\.{"\ rejecting\ \%x\ for\ c}\)\.{losure\\n"},\39\|l);{}$\2\6
 \4${}\}{}$\2\2\par
 \U2.\fi
 
-\M{6}\B\X6:Record a solution\X${}\E{}$\6
+\M[114 horn-count.w]{6}\B\X6:Record a solution\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{sols}\PP;{}$\6
 ${}\\{tsols}\MRL{+{\K}}\\{nfactorial}/\\{auts};{}$\6
@@ -174,7 +176,8 @@ ${}\\{printf}(\.{"\ (\%d\ aut\%s)\\n"},\39\\{auts},\39\\{auts}>\T{1}\?\.{"s"}:%
 \4${}\}{}$\2\par
 \U2.\fi
 
-\N{1}{7}The interesting part. When writing this program, I didn't have to work
+\N[126 horn-count.w]{1}{7}The interesting part. When writing this program, I
+didn't have to work
 nearly as hard  as I did in {\mc GROPESX} (a program for algebraic
 structures that I wrote a few months ago).
 But still there are a few nontrivial points
@@ -189,7 +192,8 @@ the right way to tackle this problem.
 
 \fi
 
-\M{8}The basic idea is simple: Each closure operation corresponds to
+\M[139 horn-count.w]{8}The basic idea is simple: Each closure operation
+corresponds to
 a sequence $(f[0],\ldots,f[\PB{\\{nn}}-2])$ with the property that
 $f[j]=f[k]=1$ implies $f[j\AND k]=1$. This program produces only
 canonical solutions, namely solutions with the property that
@@ -225,7 +229,8 @@ each perm remains relevant.
 
 \fi
 
-\M{9}Okay, now let me write the most critical part of the program.
+\M[173 horn-count.w]{9}Okay, now let me write the most critical part of the
+program.
 At this point in the computation
 we are planning to set \PB{$\|f[\|l]\K\T{1}$}. But we may have to
 abandon that plan, if ``immediate rejection'' would result.
@@ -286,7 +291,8 @@ ${}\\{log}[\\{logptr}\PP]\K\T{0},\39\\{link}[\|p]\K\\{wait}[\T{0}],\39\\{wait}[%
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{10}After we've made it through \PB{\\{wait}[\|l]}, we are able to set
+\M[214 horn-count.w]{10}After we've made it through \PB{\\{wait}[\|l]}, we are
+able to set
 \PB{$\|f[\|l]\K\T{1}$}. The items of \PB{\\{wait}[\T{0}]} might now be
 automorphisms,
 or they might need to be moved to other waiting lists.
@@ -316,7 +322,8 @@ ${}\\{auts}\PP;{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{11}Here I've made a point to ``undo'' in precisely the reverse order
+\M[232 horn-count.w]{11}Here I've made a point to ``undo'' in precisely the
+reverse order
 of what I ``did,'' so that lists are perfectly restored to their
 former condition.
 
@@ -362,14 +369,14 @@ ${}\|k\MM;{}$\6
 ${}\\{wait}[\|l]\K\|t{}$;\C{ I think it's ``all together now'' }\par
 \U2.\fi
 
-\M{12}\B\X12:Reject \PB{\|l} immediately\X${}\E{}$\6
+\M[262 horn-count.w]{12}\B\X12:Reject \PB{\|l} immediately\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|t\K\|p;{}$\6
 \&{goto} \\{kludge};\6
 \4${}\}{}$\2\par
 \U9.\fi
 
-\M{13}\B\X13:Downdate \PB{\\{wait}[\T{0}]}\X${}\E{}$\6
+\M[268 horn-count.w]{13}\B\X13:Downdate \PB{\\{wait}[\T{0}]}\X${}\E{}$\6
 $\|t\K\T{0};{}$\6
 \&{while} ${}(\\{logptr}>\\{log0}[\|l]){}$\5
 ${}\{{}$\1\6
@@ -383,7 +390,7 @@ ${}\\{link}[\|p]\K\|t,\39\|t\K\|p;{}$\6
 ${}\\{wait}[\T{0}]\K\|t{}$;\par
 \U2.\fi
 
-\M{14}\B\X14:Check for new forced moves\X${}\E{}$\6
+\M[278 horn-count.w]{14}\B\X14:Check for new forced moves\X${}\E{}$\6
 \&{for} ${}(\\{auts}\K\T{1},\39\|p\K\\{wait}[\T{0}];{}$ \|p; ${}\|p\K\\{link}[%
 \|p]){}$\5
 ${}\{{}$\1\6
@@ -401,7 +408,7 @@ ${}\\{auts}\PP;{}$\2\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{15}\B\X15:Uncheck for new forced moves\X${}\E{}$\6
+\M[289 horn-count.w]{15}\B\X15:Uncheck for new forced moves\X${}\E{}$\6
 \&{for} ${}(\|p\K\\{wait}[\T{0}];{}$ \|p; ${}\|p\K\\{link}[\|p]){}$\5
 ${}\{{}$\1\6
 ${}\|j\K\\{perm}[\|p][\|l];{}$\6
@@ -414,7 +421,8 @@ ${}\\{forcings}[\|p]\PP;{}$\2\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{16}Finally, here's a routine that documents the main invariant
+\M[298 horn-count.w]{16}Finally, here's a routine that documents the main
+invariant
 relations that I expect to be true when this program enters level~\PB{\|l}.
 (The \PB{\\{sanity}} routine sure did prove to be useful when I was
 debugging the twisted logic above.)
@@ -444,7 +452,7 @@ ${}\\{printf}(\.{"(Detected\ at\ level\ }\)\.{\%x)\\n"},\39\|l){}$;\5
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{17}\B\X17:Sanity check the wait lists\X${}\E{}$\6
+\M[322 horn-count.w]{17}\B\X17:Sanity check the wait lists\X${}\E{}$\6
 \&{for} ${}(\|k\K\|l;{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\1\6
 \&{for} ${}(\|p\K\\{wait}[\|k];{}$ \|p; ${}\|p\K\\{link}[\|p]){}$\5
 ${}\{{}$\1\6
@@ -482,8 +490,8 @@ ${}\\{printf}(\.{"error:\ forcings[\%d]}\)\.{\ is\ \%d,\ not\ \%d,\ in\ w}\)%
 \4${}\}{}$\2\2\par
 \U16.\fi
 
-\M{18}The wait lists \PB{\\{wait}[\|k]} for $1\le k<l$ are essentially discards
-too,
+\M[347 horn-count.w]{18}The wait lists \PB{\\{wait}[\|k]} for $1\le k<l$ are
+essentially discards too,
 because we've set \PB{$\|f[\|k]\K\T{0}$}.
 
 I don't check the \PB{\\{forcings}} count in \PB{\\{disc}[\|k]}, because the
@@ -543,7 +551,7 @@ ${}\\{printf}(\.{"error:\ forcings[\%d]}\)\.{\ is\ \%d,\ not\ \%d,\ in\ w}\)%
 \4${}\}{}$\2\par
 \U16.\fi
 
-\M{19}\B\X19:Sanity check \PB{\\{wait}[\T{0}]}\X${}\E{}$\6
+\M[388 horn-count.w]{19}\B\X19:Sanity check \PB{\\{wait}[\T{0}]}\X${}\E{}$\6
 \&{for} ${}(\|p\K\\{wait}[\T{0}];{}$ \|p; ${}\|p\K\\{link}[\|p]){}$\5
 ${}\{{}$\1\6
 ${}\\{stamp}[\|p]\K\\{timestamp};{}$\6
@@ -572,7 +580,7 @@ ${}\\{printf}(\.{"error:\ forcings[\%d]}\)\.{\ is\ \%d,\ not\ \%d,\ in\ w}\)%
 \4${}\}{}$\2\par
 \U16.\fi
 
-\N{1}{20}Index.
+\N[408 horn-count.w]{1}{20}Index.
 \fi
 
 \inx

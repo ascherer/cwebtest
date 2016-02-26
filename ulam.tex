@@ -1,7 +1,8 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. I'm trying to calculate a few million Ulam numbers.
+\N[2 ulam.w]{1}{1}Intro. I'm trying to calculate a few million Ulam numbers.
 This sequence
 $$(U_1,U_2,\ldots{})=(1,2,3,4,6,8,11,13,16,18,26,\ldots{})$$
 is defined by setting $U_1=1$, $U_2=2$, and thereafter letting
@@ -97,8 +98,8 @@ ${}\\{printf}(\.{"There\ are\ \%d\ Ulam\ n}\)\.{umbers\ less\ than\ \%d.}\)\.{%
 \4${}\}{}$\2\par
 \fi
 
-\M{2}As we compute, we'll implicitly have $k=32\PB{\\{kq}}+\PB{\\{kr}}$, where
-$0\le\PB{\\{kr}}<32$;
+\M[82 ulam.w]{2}As we compute, we'll implicitly have $k=32\PB{\\{kq}}+\PB{%
+\\{kr}}$, where $0\le\PB{\\{kr}}<32$;
 also \PB{$\\{kk}\K\T{1}\LL\\{kr}$}. Bit~$k$ of~$u$ is \PB{$(\\{ubit}[\\{kq}]\GG%
 \\{kr})\AND\T{1}$}, etc.
 
@@ -128,14 +129,14 @@ ${}\\{jj}\PP,\39\\{del}\K\|c;{}$\6
 \4\\{update\_done}:\par
 \U1.\fi
 
-\M{3}\B\X3:Set \PB{$(\\{ubit}[\\{jj}],\\{vbit}[\\{jj}])$} to \PB{$(\\{ubit}[%
-\\{jj}],\\{vbit}[\\{jj}])$}${}\circ\PB{\\{del}}$\X${}\E{}$\6
+\M[102 ulam.w]{3}\B\X3:Set \PB{$(\\{ubit}[\\{jj}],\\{vbit}[\\{jj}])$} to \PB{$(%
+\\{ubit}[\\{jj}],\\{vbit}[\\{jj}])$}${}\circ\PB{\\{del}}$\X${}\E{}$\6
 $\|u\K(\\{ubit}[\\{jj}]\XOR\\{del})\AND\CM\\{vbit}[\\{jj}];{}$\6
 ${}\\{vbit}[\\{jj}]\MRL{{\OR}{\K}}\\{ubit}[\\{jj}]\AND\\{del};{}$\6
 ${}\\{ubit}[\\{jj}]\K\|u{}$;\par
 \U2.\fi
 
-\M{4}\B\X4:Advance $k$ to $U_{n+1}$ and advance $n$\X${}\E{}$\6
+\M[107 ulam.w]{4}\B\X4:Advance $k$ to $U_{n+1}$ and advance $n$\X${}\E{}$\6
 $\|u\K\\{ubit}[\\{kq}]\AND{-}(\\{kk}+\\{kk}){}$;\C{ erase bits $\le k$ }\6
 \&{while} ${}(\R\|u){}$\5
 ${}\{{}$\1\6
@@ -157,12 +158,12 @@ ${}\\{kr}\MRL{+{\K}}\\{table}[\|u];{}$\6
 ${}\|n\PP{}$;\par
 \U1.\fi
 
-\M{5}\B\X5:Set up the \PB{\\{table}}\X${}\E{}$\6
+\M[120 ulam.w]{5}\B\X5:Set up the \PB{\\{table}}\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{2};{}$ ${}\|j<\T{256};{}$ ${}\|j\MRL{{\LL}{\K}}\T{1}){}$\1\5
 ${}\\{table}[\|j]\K\T{1}+\\{table}[\|j\GG\T{1}]{}$;\2\par
 \U1.\fi
 
-\M{6}\B\X6:Print gap stats\X${}\E{}$\6
+\M[123 ulam.w]{6}\B\X6:Print gap stats\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\\{gap};{}$ ${}\|j\PP){}$\1\6
 \&{if} (\\{count}[\|j])\1\5
 ${}\\{printf}(\.{"gap\ \%d\ occurred\ \%d\ }\)\.{time\%s,\ last\ was\ \%d\\}\)%
@@ -170,7 +171,7 @@ ${}\\{printf}(\.{"gap\ \%d\ occurred\ \%d\ }\)\.{time\%s,\ last\ was\ \%d\\}\)%
 \\{example}[\|j]){}$;\2\2\par
 \U1.\fi
 
-\N{1}{7}Index.
+\N[128 ulam.w]{1}{7}Index.
 
 \fi
 

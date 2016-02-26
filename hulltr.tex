@@ -1,9 +1,10 @@
 \input cwebmac
+\srcloctrue
 % This file is part of the Stanford GraphBase (c) Stanford University 1990
 \nocon
 
 
-\N{1}{1}Introduction. This is a hastily written implementation of
+\N[4 hulltr.w]{1}{1}Introduction. This is a hastily written implementation of
 treehull, using treaps to guarantee good average access time.
 
 \Y\B\F\\{Graph} \5
@@ -34,7 +35,7 @@ ${}\\{printf}(\.{"Total\ of\ \%d\ mems\ an}\)\.{d\ \%d\ calls\ on\ ccw.\\n}\)%
 \4${}\}{}$\2\par
 \fi
 
-\M{2}I'm instrumenting this in a simple way.
+\M[31 hulltr.w]{2}I'm instrumenting this in a simple way.
 
 \Y\B\4\D$\|o$ \5
 $\\{mems}\PP{}$\par
@@ -48,7 +49,7 @@ $\\{mems}\MRL{+{\K}}{}$\T{3}\par
 \A5.
 \U1.\fi
 
-\N{1}{3}Data structures.
+\N[41 hulltr.w]{1}{3}Data structures.
 For now, each vertex is represented by two coordinates stored in the
 utility fields \PB{$\|x.\|i$} and \PB{$\|y.\|i$}. I'm also putting a serial
 number into
@@ -78,7 +79,7 @@ it represents the special vertex that isn't in the tree.
 ${}\}{}$ \&{node};\par
 \U1.\fi
 
-\M{4}\B\X4:Initialize the array of nodes\X${}\E{}$\6
+\M[64 hulltr.w]{4}\B\X4:Initialize the array of nodes\X${}\E{}$\6
 $\\{head}\K{}$(\&{node} ${}{*}){}$ \\{gb\_alloc}${}((\|g\MG\|n)*\&{sizeof}(%
 \&{node}),\39\\{working\_storage});{}$\6
 \&{if} ${}(\\{head}\E\NULL){}$\1\5
@@ -86,7 +87,7 @@ $\\{head}\K{}$(\&{node} ${}{*}){}$ \\{gb\_alloc}${}((\|g\MG\|n)*\&{sizeof}(%
 ${}\\{next\_node}\K\\{head}{}$;\par
 \U6.\fi
 
-\M{5}\B\X2:Global variables\X${}\mathrel+\E{}$\6
+\M[69 hulltr.w]{5}\B\X2:Global variables\X${}\mathrel+\E{}$\6
 \&{node} ${}{*}\\{head}{}$;\C{ beginning of the hull data structure }\6
 \&{node} ${}{*}\\{next\_node}{}$;\C{ first unused slot in that array }\6
 \&{Area} \\{working\_storage};\6
@@ -94,7 +95,8 @@ ${}\\{next\_node}\K\\{head}{}$;\par
 coordinates }\par
 \fi
 
-\M{6}We assume that the vertices have been given to us in a GraphBase-type
+\M[75 hulltr.w]{6}We assume that the vertices have been given to us in a
+GraphBase-type
 graph. The algorithm begins with a trivial hull that contains
 only the first two vertices.
 
@@ -121,8 +123,8 @@ ${}\\{printf}(\.{"Beginning\ with\ (\%s;}\)\.{\ \%s)\\n"},\39\|u\MG\\{name},\39%
 \|v\MG\\{name}){}$;\2\par
 \U10.\fi
 
-\M{7}We'll probably need a bunch of local variables to do elementary operations
-on
+\M[97 hulltr.w]{7}We'll probably need a bunch of local variables to do
+elementary operations on
 data structures.
 
 \Y\B\4\X7:Local variables\X${}\E{}$\6
@@ -135,7 +137,8 @@ ${}{*}\\{tt},{}$ ${}{*}{*}\\{par},{}$ ${}{*}{*}\\{ppar},{}$ ${}{*}%
 }\par
 \U1.\fi
 
-\M{8}Here's a routine I used when debugging (in fact I should have written
+\M[105 hulltr.w]{8}Here's a routine I used when debugging (in fact I should
+have written
 it sooner than I did).
 
 \Y\B\4\X8:Verify the integrity of the data structures\X${}\E{}$\6
@@ -161,7 +164,7 @@ ${}\\{count}\K\T{1};{}$\6
 ${}\\{inorder}(\\{head}\MG\\{right}){}$;\par
 \U10.\fi
 
-\M{9}\B\X9:Procedures\X${}\E{}$\6
+\M[123 hulltr.w]{9}\B\X9:Procedures\X${}\E{}$\6
 \&{int} \\{count};\7
 \\{inorder}(\|p)\1\1\6
 \&{node} ${}{*}\|p;\2\2{}$\6
@@ -181,7 +184,7 @@ ${}\\{inorder}(\|p\MG\\{right});{}$\6
 \As14, 16\ETs19.
 \U1.\fi
 
-\N{1}{10}Hull updating.
+\N[138 hulltr.w]{1}{10}Hull updating.
 The main loop of the algorithm updates the data structure incrementally
 by adding one new vertex at a time. If the new vertex lies outside the
 current convex hull, we put it into the cycle and possibly delete some
@@ -205,7 +208,8 @@ ${}\|o,\39\|u\K\\{head}\MG\\{vert};{}$\6
 \X11:Print the convex hull\X;\par
 \U1.\fi
 
-\M{11}Let me do the easy part first, since it's bedtime and I can worry about
+\M[157 hulltr.w]{11}Let me do the easy part first, since it's bedtime and I can
+worry about
 the rest tomorrow.
 
 \Y\B\4\X11:Print the convex hull\X${}\E{}$\6
@@ -219,7 +223,8 @@ ${}\|p\K\|p\MG\\{succ};{}$\6
 \&{while} ${}(\|p\I\\{head}){}$;\par
 \U10.\fi
 
-\M{12}In Case 1 we don't need the tree structure since we've already found
+\M[168 hulltr.w]{12}In Case 1 we don't need the tree structure since we've
+already found
 that the new vertex is outside the hull at the tree root position.
 
 \Y\B\4\X12:Do Case 1\X${}\E{}$\6
@@ -259,8 +264,8 @@ ${}\\{printf}(\.{"New\ hull\ sequence\ (}\)\.{\%s;\ \%s;\ \%s)\\n"},\39\|q\MG%
 \4${}\}{}$\2\par
 \U10.\fi
 
-\M{13}At this point \PB{$\|q\E\\{head}\MG\\{pred}$} is the tree's rightmost
-node.
+\M[194 hulltr.w]{13}At this point \PB{$\|q\E\\{head}\MG\\{pred}$} is the tree's
+rightmost node.
 
 \Y\B\4\X13:Insert \PB{\\{vv}} at the right of the tree\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -286,7 +291,8 @@ ${}\|o,\39\|q\MG\\{right}\K\\{tt};{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{14}The link from parent to child hasn't been set when the priorities
+\M[209 hulltr.w]{14}The link from parent to child hasn't been set when the
+priorities
 indicate necessary rotation.
 
 \Y\B\4\X9:Procedures\X${}\mathrel+\E{}$\6
@@ -337,7 +343,7 @@ ${}\|o,\39{*}\\{ppr}\K\|q;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{15}Nodes don't need to be recycled.
+\M[243 hulltr.w]{15}Nodes don't need to be recycled.
 
 \Y\B\4\X15:Delete or replace \PB{\\{qqq}} from the hull\X${}\E{}$\6
 \&{if} (\\{replaced})\5
@@ -385,7 +391,7 @@ ${}\\{replaced}\K\T{1};{}$\6
 \4${}\}{}$\2\par
 \Us12\ET17.\fi
 
-\M{16}\B\X9:Procedures\X${}\mathrel+\E{}$\6
+\M[268 hulltr.w]{16}\B\X9:Procedures\X${}\mathrel+\E{}$\6
 $\\{deldown}(\|p,\39\\{pp},\39\\{ql},\39\\{qr},\39\\{qlp},\39\\{qrp}){}$\1\1\6
 \&{node} ${}{*}\|p{}$;\C{ parent of deleted node }\6
 \&{node} ${}{*}{*}\\{pp}{}$;\C{ link field in that parent }\6
@@ -428,7 +434,7 @@ ${}\|o,\39\\{ql}\MG\\{parent}\K\\{qr};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{17}\B\X17:Do Case 2\X${}\E{}$\6
+\M[296 hulltr.w]{17}\B\X17:Do Case 2\X${}\E{}$\6
 ${}\{{}$\5
 \1${}\|o,\39\\{qq}\K\\{head}\MG\\{right};{}$\6
 \&{while} (\T{1})\5
@@ -497,7 +503,8 @@ ${}\\{printf}(\.{"New\ hull\ sequence\ (}\)\.{\%s;\ \%s;\ \%s)\\n"},\39\|r\MG%
 \4${}\}{}$\2\par
 \U10.\fi
 
-\M{18}\B\X18:Insert \PB{\\{vv}} in tree, linked by \PB{\\{ppar}}\X${}\E{}$\6
+\M[342 hulltr.w]{18}\B\X18:Insert \PB{\\{vv}} in tree, linked by \PB{\\{ppar}}%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{tt}\K\\{next\_node}\PP;{}$\6
 ${}\|o,\39\\{tt}\MG\\{vert}\K\\{vv};{}$\6
@@ -520,7 +527,8 @@ ${}\|o,\39{*}\\{ppar}\K\\{tt};{}$\6
 \4${}\}{}$\2\par
 \U17.\fi
 
-\N{1}{19}Determinants. I need code for the primitive function \PB{\\{ccw}}.
+\N[355 hulltr.w]{1}{19}Determinants. I need code for the primitive function %
+\PB{\\{ccw}}.
 Floating-point arithmetic suffices for my purposes.
 
 We want to evaluate the determinant

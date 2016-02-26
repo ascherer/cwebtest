@@ -1,8 +1,10 @@
 \input cwebmac
+\srcloctrue
 \datethis
 \nocon
 
-\M{1}This is a quick program to find all canonical forms of reflection networks
+\M[3 reflect.w]{1}This is a quick program to find all canonical forms of
+reflection networks
 for small $n$.
 
 Well, when I wrote that paragraph I believed it, but subsequently I have added
@@ -41,7 +43,8 @@ to enumerate only $B_n$ when $n=9$.
 \Y\B\8\#\&{include} \.{<stdio.h>}\par
 \fi
 
-\M{2}There's an array $a[1\mathrel{.\,.}n]$ containing $k$ inversions; an
+\M[40 reflect.w]{2}There's an array $a[1\mathrel{.\,.}n]$ containing $k$
+inversions; an
 index \PB{\|j} showing where we are going to try to reduce the inversions
 by swapping \PB{\|a[\|j]} with \PB{$\|a[\|j+\T{1}]$}; and two arrays for
 backtracking.
@@ -75,7 +78,7 @@ $B_n$, $C_{n+1}$, $D_{n+1}$, $E_{n+1}$ }\6
 \As8\ET13.
 \U3.\fi
 
-\M{3}The value of \PB{\|n} is supposed to be an argument.
+\M[63 reflect.w]{3}The value of \PB{\|n} is supposed to be an argument.
 
 \Y\B\4\D$\\{abort}(\|s)$ \6
 ${}\{{}$\5
@@ -101,7 +104,7 @@ ${}\\{printf}(\.{"scores\ min=\%d,\ max=}\)\.{\%d,\ mean=\%.1f\\n"},\39%
 \4${}\}{}$\2\par
 \fi
 
-\M{4}\B\X4:Initialize\X${}\E{}$\6
+\M[82 reflect.w]{4}\B\X4:Initialize\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\1\5
 ${}\|a[\|j]\K\|n+\T{1}-\|j;{}$\2\6
 ${}\|k\K\|n*(\|n-\T{1}){}$;\5
@@ -114,7 +117,8 @@ ${}\\{stot}\K\T{0.0};{}$\6
 ${}\\{smin}\K\T{1000000000}{}$;\par
 \U3.\fi
 
-\M{5}\B\X5:Run through all canonical reflection networks\X${}\E{}$\6
+\M[92 reflect.w]{5}\B\X5:Run through all canonical reflection networks\X${}%
+\E{}$\6
 \4\\{moveleft}:\5
 ${}\|j\MM;{}$\6
 \4\\{loop}:\6
@@ -134,8 +138,8 @@ ${}\|c[\|l\PP]\K\T{0};{}$\6
 ;\par
 \U3.\fi
 
-\M{6}\B\X6:Backtrack, either going to \PB{\\{loop}} or to \PB{\\{finished}}
-when all possibilities are exhausted\X${}\E{}$\6
+\M[105 reflect.w]{6}\B\X6:Backtrack, either going to \PB{\\{loop}} or to \PB{%
+\\{finished}} when all possibilities are exhausted\X${}\E{}$\6
 \&{while} ${}(\|c[\MM\|l]){}$\5
 ${}\{{}$\1\6
 ${}\|j\K\|t[\|l];{}$\6
@@ -153,7 +157,7 @@ ${}\|j\MM;{}$\2\6
 \&{goto} \\{loop};\par
 \U5.\fi
 
-\M{7}\B\X7:Print a solution\X${}\E{}$\6
+\M[119 reflect.w]{7}\B\X7:Print a solution\X${}\E{}$\6
 ${}\{{}$\6
 \8\#\&{ifdef} \.{DEBUG}\1\6
 \&{for} ${}(\|i\K\T{1};{}$ ${}\|i<\|l;{}$ ${}\|i\PP){}$\1\5
@@ -173,7 +177,8 @@ ${}\\{bn}\PP;{}$\6
 \4${}\}{}$\2\par
 \U5.\fi
 
-\M{8}Here's part of the program I wrote after getting the above to work.
+\M[137 reflect.w]{8}Here's part of the program I wrote after getting the above
+to work.
 The idea is to see if the almost-canonical form for an (\PB{$\|n+%
 \T{1}$})-element
 network is weakly equivalent to any lexicographically smaller
@@ -194,8 +199,8 @@ until the original form appears again.
 \&{int} \\{rrr};\C{ $n+1\choose2$ }\par
 \fi
 
-\M{9}\B\X9:Check if it gives a new CC system on \PB{$\|n+\T{1}$} elements\X${}%
-\E{}$\6
+\M[154 reflect.w]{9}\B\X9:Check if it gives a new CC system on \PB{$\|n+\T{1}$}
+elements\X${}\E{}$\6
 \&{for} ${}(\\{rr}\K\T{0};{}$ ${}\\{rr}<\|n;{}$ ${}\\{rr}\PP){}$\1\5
 ${}\|b[\\{rr}]\K\\{rr}+\T{1};{}$\2\6
 \&{for} ${}(\|i\K\T{1};{}$ ${}\|i<\|l;{}$ ${}\|i\PP){}$\1\6
@@ -215,15 +220,16 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U7.\fi
 
-\M{10}\B\X10:Shift the first transposition to the other end\X${}\E{}$\6
+\M[169 reflect.w]{10}\B\X10:Shift the first transposition to the other end\X${}%
+\E{}$\6
 $\|j\K\|n-\|b[\|r\PP];{}$\6
 \&{for} ${}(\|i\K\\{rr}\PP;{}$ ${}\|b[\|i-\T{1}]<\|j;{}$ ${}\|i\MM){}$\1\5
 ${}\|b[\|i]\K\|b[\|i-\T{1}];{}$\2\6
 ${}\|b[\|i]\K\|j+\T{1}{}$;\par
 \U9.\fi
 
-\M{11}\B\X11:Test lexicographic order; \PB{\&{break}} if equal or less\X${}%
-\E{}$\6
+\M[175 reflect.w]{11}\B\X11:Test lexicographic order; \PB{\&{break}} if equal
+or less\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|b[\\{rr}]\K\T{0}{}$;\C{ sentinel, is less than the 1 we put in \PB{\|d} }\6
 \&{for} ${}(\|i\K\|r+\|n;{}$ ${}\|b[\|i]\E\|d[\|i-\|r];{}$ ${}\|i\PP){}$\1\5
@@ -243,7 +249,8 @@ ${}\\{cn}\PP;{}$\6
 \4${}\}{}$\2\par
 \U9.\fi
 
-\M{12}Well, after I got that going I couldn't resist continuing until I had
+\M[191 reflect.w]{12}Well, after I got that going I couldn't resist continuing
+until I had
 all simple arrangements of pseudolines enumerated. That requires looking at
 another $n+1\choose2$ cases to see if they are weakly equivalent to anything
 seen before.
@@ -279,8 +286,8 @@ ${}\\{en}\PP;{}$\6
 ;\par
 \U11.\fi
 
-\M{13}For this part of the program we use an array \PB{\|x} analogous to \PB{%
-\|b}; also
+\M[219 reflect.w]{13}For this part of the program we use an array \PB{\|x}
+analogous to \PB{\|b}; also
 variables \PB{\|s} and \PB{\\{ss}} analogous to \PB{\|r} and~\PB{\\{rr}}; also
 an array \PB{\|e} analogous
 to \PB{\|d}.
@@ -297,8 +304,8 @@ to \PB{\|d}.
 \&{int} \\{ref};\C{ number of reflections }\par
 \fi
 
-\M{14}At this point \PB{$\|i-\|r$} points just past the end of the \PB{\|d}
-data, and
+\M[233 reflect.w]{14}At this point \PB{$\|i-\|r$} points just past the end of
+the \PB{\|d} data, and
 the first \PB{\|n} entries of \PB{\|b} are still equal to 1, 2, \dots,~\PB{%
 \|n}.
 The network we construct here is not necessarily in canonical form.
@@ -311,7 +318,8 @@ ${}\|b[\|i]\K\|d[\|i];{}$\2\6
 ${}\|b[\|i]\K\|n+\T{1}-\|b[\|i-\\{rr}]{}$;\2\par
 \U12.\fi
 
-\M{15}One nice thing is that reflection and turning upside down preserve
+\M[242 reflect.w]{15}One nice thing is that reflection and turning upside down
+preserve
 canonicity when we do both simultaneously.
 
 \Y\B\4\X15:Test the reverse of \PB{\|b} for weak equivalence; \PB{\&{goto} %
@@ -350,7 +358,8 @@ ${}\|x[\\{ss}]\K\T{0};{}$\6
 $\}{}$\par
 \U12.\fi
 
-\M{16}\B\X16:Replace the present \PB{\|x} by the reverse of \PB{\|y}\X${}\E{}$\6
+\M[269 reflect.w]{16}\B\X16:Replace the present \PB{\|x} by the reverse of \PB{%
+\|y}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{rrr};{}$ ${}\|i\PP){}$\1\5
 ${}\|x[\\{rrr}-\T{1}-\|i]\K\|n+\T{1}-\|y[\|i];{}$\2\6
@@ -365,8 +374,8 @@ ${}\\{ss}\K\\{rrr};{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{17}\B\X17:If the new network is weakly equivalent to a lexicographically
-smaller one, \PB{\&{goto} \\{done}}\X${}\E{}$\6
+\M[280 reflect.w]{17}\B\X17:If the new network is weakly equivalent to a
+lexicographically smaller one, \PB{\&{goto} \\{done}}\X${}\E{}$\6
 \&{for} ${}(\|i\K\|s+\|n;{}$ ${}\|i<\\{ss};{}$ ${}\|i\PP){}$\1\5
 ${}\|e[\|i-\|s]\K\|x[\|i];{}$\2\6
 \&{while} (\T{1}) $\{$ \X18:If the \PB{\|x} network is weakly equivalent to an
@@ -387,9 +396,9 @@ $\}$ \6
 ;\par
 \U12.\fi
 
-\M{18}\B\X18:If the \PB{\|x} network is weakly equivalent to an earlier one, %
-\PB{\&{goto} \\{done}}; if weakly equivalent to the present one, \PB{\&{goto} %
-\\{okay}}\X${}\E{}$\6
+\M[296 reflect.w]{18}\B\X18:If the \PB{\|x} network is weakly equivalent to an
+earlier one, \PB{\&{goto} \\{done}}; if weakly equivalent to the present one, %
+\PB{\&{goto} \\{okay}}\X${}\E{}$\6
 $\|x[\\{ss}]\K\T{0}{}$;\C{ sentinel }\6
 \&{for} ${}(\|i\K\|s+\|n;{}$ ${}\|x[\|i]\E\|d[\|i-\|s];{}$ ${}\|i\PP){}$\1\5
 ;\2\6
@@ -399,7 +408,7 @@ $\|x[\\{ss}]\K\T{0}{}$;\C{ sentinel }\6
 \&{goto} \\{done};\2\par
 \U17.\fi
 
-\M{19}\B\X19:End-around shift \PB{\|x}\X${}\E{}$\6
+\M[303 reflect.w]{19}\B\X19:End-around shift \PB{\|x}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|j\K\|n-\|x[\|s\PP];{}$\6
 \&{for} ${}(\|i\K\\{ss}\PP;{}$ ${}\|x[\|i-\T{1}]<\|j;{}$ ${}\|i\MM){}$\1\5
@@ -408,7 +417,8 @@ ${}\|x[\|i]\K\|j+\T{1};{}$\6
 \4${}\}{}$\2\par
 \Us15, 16\ETs17.\fi
 
-\M{20}The only somewhat tricky operation comes in here. We use the fact that
+\M[311 reflect.w]{20}The only somewhat tricky operation comes in here. We use
+the fact that
 the first `1' in a canonical network is always immediately followed by
 2, \dots,~\PB{\|n}; reversing these, decreasing the previous by~1, and
 increasing
@@ -467,7 +477,8 @@ ${}\|j\K\|n-\T{1}-\|y[\|i];{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{21}We must carry over items that exceed \PB{\|m}, which denotes the maximum
+\M[356 reflect.w]{21}We must carry over items that exceed \PB{\|m}, which
+denotes the maximum
 value stored so far, because we want the first element of \PB{\|x[\T{0}]} to
 remain
 in place.
@@ -487,7 +498,8 @@ ${}\|x[\\{ii}]\K\|j+\T{1};{}$\6
 \4${}\}{}$\2\par
 \U20.\fi
 
-\M{22}The score is computed in several passes, although I do know how to
+\M[369 reflect.w]{22}The score is computed in several passes, although I do
+know how to
 do it in linear time. Since the \PB{\|x} array is currently unused, I store
 in \PB{\|x[\|i]} the score for the cell following transposition \PB{\|i}.
 
@@ -516,8 +528,8 @@ ${}\\{printf}(\.{"\ [\%d]"},\39\\{score});{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{23}As we fill the cell counts, we assume that \PB{\|x[\\{ii}]} is the
-previous cell
+\M[390 reflect.w]{23}As we fill the cell counts, we assume that \PB{\|x[%
+\\{ii}]} is the previous cell
 having \PB{$\|b[\|i]\K\|j$}. We assume that \PB{$\|b[\|i]\E\|i+\T{1}$} for %
 \PB{$\T{0}\Z\|i<\|n$}.
 
@@ -546,7 +558,8 @@ ${}\|x[\\{ii}]\K\\{acc}+\|x[\\{rr}];{}$\6
 \4${}\}{}$\2\par
 \U22.\fi
 
-\M{24}\B\X24:If debugging, print the active region of \PB{\|b}\X${}\E{}$\6
+\M[410 reflect.w]{24}\B\X24:If debugging, print the active region of \PB{\|b}%
+\X${}\E{}$\6
 \8\#\&{ifdef} \.{DEBUG}\6
 \\{printf}(\.{"\\n>"});\6
 \&{for} ${}(\|m\K\|r;{}$ ${}\|m<\|r+\\{rrr};{}$ ${}\|m\PP){}$\1\5
@@ -554,7 +567,8 @@ ${}\\{putchar}(\|b[\|m]+\.{'0'}-\T{1});{}$\2\6
 \8\#\&{endif}\par
 \U20.\fi
 
-\M{25}\B\X25:If debugging, print the active region of \PB{\|x}\X${}\E{}$\6
+\M[416 reflect.w]{25}\B\X25:If debugging, print the active region of \PB{\|x}%
+\X${}\E{}$\6
 \8\#\&{ifdef} \.{DEBUG}\6
 \\{printf}(\.{"\\n\ \ "});\6
 \&{for} ${}(\|m\K\|s;{}$ ${}\|m<\\{ss};{}$ ${}\|m\PP){}$\1\5

@@ -1,8 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Data for dancing. This program creates data suitable for the {\mc
-DANCE}
+\N[2 queens.w]{1}{1}Data for dancing. This program creates data suitable for
+the {\mc DANCE}
 routine, solving the famous ``$n$ queens problem.'' The value of~$n$
 is a command-line parameter.
 
@@ -20,7 +21,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Read the command line\X${}\E{}$\6
+\M[21 queens.w]{2}\B\X2:Read the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{2}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
 \\{param})\I\T{1}){}$\5
 ${}\{{}$\1\6
@@ -31,12 +32,12 @@ ${}\|n\K\\{param};{}$\6
 ${}\\{nn}\K\|n+\|n-\T{2}{}$;\par
 \U1.\fi
 
-\M{3}\B\X3:Global variables\X${}\E{}$\6
+\M[29 queens.w]{3}\B\X3:Global variables\X${}\E{}$\6
 \&{int} \\{param};\par
 \U1.\fi
 
-\M{4}We proces the cells of the board in ``organ pipe order,'' on the
-assumption
+\M[32 queens.w]{4}We proces the cells of the board in ``organ pipe order,'' on
+the assumption
 that---all other things being equal---a move near the center yields more
 constraints on the subsequent search.
 
@@ -52,7 +53,7 @@ ${}\\{printf}(\.{"\ a\%c\ b\%c"},\39\\{encode}(\|j),\39\\{encode}(\|j));{}$\2\6
 \\{printf}(\.{"\\n"});\par
 \U1.\fi
 
-\M{5}\B\X5:Subroutines\X${}\E{}$\6
+\M[45 queens.w]{5}\B\X5:Subroutines\X${}\E{}$\6
 \&{char} \\{encode}(\|x)\1\1\6
 \&{int} \|x;\2\2\6
 ${}\{{}$\1\6
@@ -62,7 +63,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{6}\B\X6:Output the possible queen moves\X${}\E{}$\6
+\M[53 queens.w]{6}\B\X6:Output the possible queen moves\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\1\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|n;{}$ ${}\|k\PP){}$\5
 ${}\{{}$\1\6
@@ -77,7 +78,7 @@ ${}\\{printf}(\.{"\ b\%c"},\39\\{encode}(\|t));{}$\2\6
 \4${}\}{}$\2\2\par
 \U1.\fi
 
-\N{1}{7}Index.
+\N[63 queens.w]{1}{7}Index.
 \fi
 
 \inx

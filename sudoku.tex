@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. Mike Spivey announced a programming contest in February 2005,
+\N[2 sudoku.w]{1}{1}Intro. Mike Spivey announced a programming contest in
+February 2005,
 asking for a program that solves ``sudoku'' puzzles (which evidently
 appear daily in British newspapers). This program takes a sudoku
 specification in standard input and creates --- on standard output ---
@@ -34,7 +36,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}In a production system I would of course try to give more
+\M[31 sudoku.w]{2}In a production system I would of course try to give more
 informative error messages about malformed input data.
 Here I simply quit, if the rules haven't been followed.
 
@@ -70,7 +72,8 @@ ${}\\{board}[\|k][\|j]\K\T{1};{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}First we print out all the positions, rows, columns, and boxes that
+\M[57 sudoku.w]{3}First we print out all the positions, rows, columns, and
+boxes that
 need to be covered.
 
 \Y\B\4\X3:Output the column names needed by {\mc DANCE}\X${}\E{}$\6
@@ -91,7 +94,7 @@ ${}\\{printf}(\.{"\ b\%d\%d"},\39\|k,\39\|d);{}$\2\6
 \\{printf}(\.{"\\n"});\par
 \U1.\fi
 
-\M{4}Then we print out all the possible placements.
+\M[70 sudoku.w]{4}Then we print out all the possible placements.
 
 \Y\B\4\X4:Output the possibilities for filling column \PB{\|j} of row \PB{\|k}%
 \X${}\E{}$\6
@@ -104,7 +107,7 @@ ${}\\{printf}(\.{"p\%d\%d\ r\%d\%d\ c\%d\%d\ b}\)\.{\%d\%d\\n"},\39\|k,\39\|j,%
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{5}Index.
+\N[79 sudoku.w]{1}{5}Index.
 \fi
 
 \inx

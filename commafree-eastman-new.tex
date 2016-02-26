@@ -1,9 +1,11 @@
 \input cwebmac
+\srcloctrue
 \datethis
 \everypar{\looseness=-1}
 
 
-\N{1}{1}Intro. This program is an iterative implementation of
+\N[4 commafree-eastman-new.w]{1}{1}Intro. This program is an iterative
+implementation of
 an interesting recursive algorithm due to
 Willard~L. Eastman, {\sl IEEE Trans.\ \bf IT-11} (1965), 263--267:
 Given a sequence of nonnegative integers $x=x_0x_1\ldots x_{n-1}$ of
@@ -60,7 +62,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Process the command line\X${}\E{}$\6
+\M[59 commafree-eastman-new.w]{2}\B\X2:Process the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}<\T{4}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ x1\ x2\ ...}\)\.{\ xn\\n"},\39%
@@ -86,7 +88,7 @@ ${}\\{exit}({-}\T{3});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{3}The algorithm.
+\N[77 commafree-eastman-new.w]{1}{3}The algorithm.
 We think of $x$ as written cyclically, with $x_{n+j}=x_j$ for all~$j\ge0$.
 The basic idea in the algorithm below is to also think of $x$ as partitioned
 into $t\le n$ subwords by boundary markers $b_j$ where $0\le b_0<b_1<\cdots
@@ -142,8 +144,8 @@ precede those odd dips.
 into \PB{\\{bb}}\X;\2\par
 \U1.\fi
 
-\M{4}We might need to refer to \PB{$\|b[\|n+\|n-\T{1}]$}, but not \PB{$\|b[\|n+%
-\|n]$}.
+\M[130 commafree-eastman-new.w]{4}We might need to refer to \PB{$\|b[\|n+\|n-%
+\T{1}]$}, but not \PB{$\|b[\|n+\|n]$}.
 
 \Y\B\4\X4:Initialize\X${}\E{}$\6
 \&{for} ${}(\|j\K\|n;{}$ ${}\|j<\|n+\|n;{}$ ${}\|j\PP){}$\1\5
@@ -153,7 +155,8 @@ ${}\|b[\|j]\K\|j;{}$\2\6
 ${}\|t\K\|n{}$;\par
 \U3.\fi
 
-\M{5}Here's a basic subroutine that returns 1 if subword $y_{i-1}$ is less than
+\M[137 commafree-eastman-new.w]{5}Here's a basic subroutine that returns 1 if
+subword $y_{i-1}$ is less than
 subword~$y_i$, otherwise it returns~0.
 
 \Y\B\4\X5:Subroutines\X${}\E{}$\6
@@ -174,8 +177,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{6}\B\X6:Do one phase of Eastman's algorithm, putting \PB{\\{tt}} boundary
-points into \PB{\\{bb}}\X${}\E{}$\6
+\M[153 commafree-eastman-new.w]{6}\B\X6:Do one phase of Eastman's algorithm,
+putting \PB{\\{tt}} boundary points into \PB{\\{bb}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|i\K\T{1};{}$  ; ${}\|i\PP){}$\1\6
 \&{if} ${}(\R\\{less}(\|i)){}$\1\5
@@ -209,8 +212,8 @@ ${}\|b[\|k]\K\|b[\|k-\\{tt}]+\|n;{}$\2\6
 \4${}\}{}$\2\par
 \U3.\fi
 
-\M{7}If \PB{$\|i\G\|t$} at this point, we have ``wrapped around,'' so we
-actually
+\M[174 commafree-eastman-new.w]{7}If \PB{$\|i\G\|t$} at this point, we have
+``wrapped around,'' so we actually
 want to retain the boundary point \PB{$\|i-\|t$}. (This case will arise at most
 once per phase, because \PB{$\|j\G\|i+\T{3}$} and we must have \PB{$\|j\K%
 \\{i0}+\|t$}. Therefore
@@ -230,13 +233,13 @@ ${}\\{bb}[\T{0}]\K\|b[\|i-\|t];{}$\6
 \4${}\}{}$\2\par
 \U6.\fi
 
-\M{8}\B\X8:Print the solution\X${}\E{}$\6
+\M[189 commafree-eastman-new.w]{8}\B\X8:Print the solution\X${}\E{}$\6
 \&{for} ${}(\|j\K\|b[\T{0}];{}$ ${}\|j<\|b[\T{0}]+\|n;{}$ ${}\|j\PP){}$\1\5
 ${}\\{printf}(\.{"\ \%d"},\39\|x[\|j]);{}$\2\6
 \\{printf}(\.{"\\n"});\par
 \U1.\fi
 
-\N{1}{9}Index.
+\N[194 commafree-eastman-new.w]{1}{9}Index.
 \fi
 
 \inx

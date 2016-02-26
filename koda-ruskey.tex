@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This program contains two implementations of the Koda--Ruskey
+\N[2 koda-ruskey.w]{1}{1}Intro. This program contains two implementations of
+the Koda--Ruskey
 algorithm for generating all ideals of a given forest poset
 [{\sl Journal of Algorithms\/ \bf15} (1993), 324--340].
 The common goal of both implementations is, in essence, to generate all
@@ -53,7 +55,8 @@ ${}\\{printf}(\.{"Bitstrings\ generate}\)\.{d\ from\ \\"\%s\\":\\n"},\39%
 \4${}\}{}$\2\par
 \fi
 
-\M{2}In this step we parse the forest into an array of ``scopes'':
+\M[53 koda-ruskey.w]{2}In this step we parse the forest into an array of
+``scopes'':
 \PB{\\{scope}[\|j]} is the index of the smallest descendant of node~\PB{\|j},
 including node~\PB{\|j} itself.
 
@@ -96,7 +99,7 @@ ${}\\{abort}(\.{"Missing\ right\ paren}\)\.{thesis\ in\ \\"\%s\\"!\\n"},\39%
 ${}\\{nn}\K\|j{}$;\par
 \U1.\fi
 
-\M{3}\B\X3:Global variables\X${}\E{}$\6
+\M[79 koda-ruskey.w]{3}\B\X3:Global variables\X${}\E{}$\6
 \&{int} \\{stack}[\\{stacksize}];\C{ nodes preceding each open leftparen, while
 parsing }\6
 \&{int} \\{scope}[\\{forestsize}];\C{ table that exhibits each rightparen's
@@ -105,7 +108,8 @@ influence }\6
 \As11\ET17.
 \U1.\fi
 
-\N{1}{4}The coroutine implementation. Our first implementation uses a system
+\N[84 koda-ruskey.w]{1}{4}The coroutine implementation. Our first
+implementation uses a system
 of $n$ cooperating programs, each of which represents a node in the forest.
 For convenience we will call the associated record a ``cnode.''
 If \PB{\|p} points to a cnode, \PB{$\|p\MG\\{child}$} points to the cnode
@@ -179,8 +183,8 @@ ${}\}{}$ \&{cnode};\par
 \A14.
 \U1.\fi
 
-\M{5}When coroutine \PB{\|p} calls coroutine \PB{\|q}, it sets \PB{$\|p\MG%
-\\{state}$} to an
+\M[141 koda-ruskey.w]{5}When coroutine \PB{\|p} calls coroutine \PB{\|q}, it
+sets \PB{$\|p\MG\\{state}$} to an
 appropriate number and also sets \PB{$\|q\MG\\{caller}\K\|p$}. Then control
 passes
 to \PB{\|q} at the place determined by \PB{$\|q\MG\\{state}$}.
@@ -233,8 +237,8 @@ ${}\\{abort}(\.{"\%s:\ Unknown\ state\ c}\)\.{ode\ (this\ can't\ happ}\)\.{en)!%
 \4${}\}{}$\2\par
 \U9.\fi
 
-\M{6}In its initial state~0, a coroutine turns its bit on, returns~\PB{%
-\\{true}},
+\M[172 koda-ruskey.w]{6}In its initial state~0, a coroutine turns its bit on,
+returns~\PB{\\{true}},
 and enters state~1.
 
 \Y\B\4\X6:Cases for coroutine states\X${}\E{}$\6
@@ -243,7 +247,8 @@ ${}\\{bitchange}(\T{1},\39\T{1}){}$;\par
 \As7, 8\ETs12.
 \U5.\fi
 
-\M{7}The purpose of state 1 is to run through all bit patterns of the
+\M[178 koda-ruskey.w]{7}The purpose of state 1 is to run through all bit
+patterns of the
 current node's children, starting with all 0s and ending when they reach their
 final pattern.
 At that point we invoke the current node's nearest left sibling
@@ -266,7 +271,8 @@ ${}\\{cocall}(\\{cur\_cnode}\MG\\{sib},\39\T{3});{}$\6
 \\{coreturn}(\T{4});\par
 \fi
 
-\M{8}State 4 is rather like state 1, except that the child coroutine is now
+\M[196 koda-ruskey.w]{8}State 4 is rather like state 1, except that the child
+coroutine is now
 running through its bit patterns in reverse order. Finally it reduces them
 all to 0s, and returns \PB{\\{false}} the next time we attempt to invoke it.
 At that point we reset the current bit, return \PB{\\{true}}, and enter
@@ -289,7 +295,8 @@ ${}\\{cocall}(\\{cur\_cnode}\MG\\{sib},\39\T{7});{}$\6
 \\{coreturn}(\T{0});\par
 \fi
 
-\M{9}Hey, the implementation is done already, except that we have to
+\M[212 koda-ruskey.w]{9}Hey, the implementation is done already, except that we
+have to
 get it started and write the code that controls it at the outermost level.
 
 \Y\B\4\X9:Generate the strings with a coroutine implementation\X${}\E{}$\6
@@ -300,8 +307,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{10}We allocate a special cnode to represent the external world outside of
-the
+\M[222 koda-ruskey.w]{10}We allocate a special cnode to represent the external
+world outside of the
 given forest.
 
 \Y\B\4\D$\\{root\_cnode}$ \5
@@ -320,13 +327,13 @@ ${}\\{cur\_cnode}\K\\{cnode\_table}+\\{nn};{}$\6
 \&{goto} \\{upward\_step};\par
 \U9.\fi
 
-\M{11}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\M[237 koda-ruskey.w]{11}\B\X3:Global variables\X${}\mathrel+\E{}$\6
 \&{cnode} ${}\\{cnode\_table}[\\{forestsize}+\T{1}]{}$;\C{ the cnodes }\6
 \&{boolean} \\{coresult};\C{ value returned by a coroutine }\par
 \fi
 
-\M{12}States 8 and greater are reserved for the external (outermost) level,
-which
+\M[241 koda-ruskey.w]{12}States 8 and greater are reserved for the external
+(outermost) level, which
 simply invokes the coroutine for the entire forest and prints out the
 results, until the bit patterns have been generated in both the
 forward and reverse directions.
@@ -352,13 +359,14 @@ ${}\\{cocall}(\\{root\_cnode},\39\T{9});{}$\6
 \&{break};\par
 \fi
 
-\M{13}\B\X13:Print out all the current cnode bits\X${}\E{}$\6
+\M[259 koda-ruskey.w]{13}\B\X13:Print out all the current cnode bits\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\1\5
 ${}\\{putchar}(\.{'0'}+\\{cnode\_table}[\|k].\\{bit});{}$\2\6
 \\{putchar}(\.{'\\n'});\par
 \U12.\fi
 
-\N{1}{14}The loopless implementation. Our coroutine implementation solves
+\N[263 koda-ruskey.w]{1}{14}The loopless implementation. Our coroutine
+implementation solves
 the generation problem in a nice and natural fashion, but it can be
 inefficient if the given forest has numerous nodes of degree one.
 For example, a one-tree forest like \.{((...()...))} with $n$ pairs
@@ -424,7 +432,8 @@ efficiency }\2\6
 ${}\}{}$ \&{lnode};\par
 \fi
 
-\M{15}Here now is the basic outline of the loopless implementation:
+\M[318 koda-ruskey.w]{15}Here now is the basic outline of the loopless
+implementation:
 
 \Y\B\4\X15:Generate the strings with a loopless implementation\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -462,7 +471,8 @@ ${}\\{been\_there\_and\_done\_that}\K\\{true}{}$;\5
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{16}Initialization of the lnodes is similar to initialization of the cnodes,
+\M[345 koda-ruskey.w]{16}Initialization of the lnodes is similar to
+initialization of the cnodes,
 but more links need to be set up.
 
 \Y\B\4\D$\\{head}$ \5
@@ -489,20 +499,20 @@ ${}\\{head}\MG\\{right}\K\\{head}\MG\\{lchild},\39\\{head}\MG\\{lchild}\MG%
 \\{left}\K\\{head}{}$;\par
 \U15.\fi
 
-\M{17}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\M[364 koda-ruskey.w]{17}\B\X3:Global variables\X${}\mathrel+\E{}$\6
 \&{lnode} ${}\\{lnode\_table}[\\{forestsize}+\T{1}]{}$;\C{ the lnodes }\6
 \&{boolean} \\{been\_there\_and\_done\_that};\par
 \fi
 
-\M{18}\B\X18:Set \PB{\|p} to the rightmost active node of the fringe, and
-activate everything to its right\X${}\E{}$\6
+\M[368 koda-ruskey.w]{18}\B\X18:Set \PB{\|p} to the rightmost active node of
+the fringe, and activate everything to its right\X${}\E{}$\6
 $\|q\K\\{head}\MG\\{left};{}$\6
 ${}\|p\K\|q\MG\\{focus};{}$\6
 ${}\|q\MG\\{focus}\K\|q{}$;\par
 \U15.\fi
 
-\M{19}\B\X19:Insert the children of \PB{\|p} after \PB{\|p} in the fringe\X${}%
-\E{}$\6
+\M[373 koda-ruskey.w]{19}\B\X19:Insert the children of \PB{\|p} after \PB{\|p}
+in the fringe\X${}\E{}$\6
 \&{if} ${}(\|p\MG\\{lchild}){}$\5
 ${}\{{}$\1\6
 ${}\|q\K\|p\MG\\{right};{}$\6
@@ -511,7 +521,8 @@ ${}\|p\MG\\{right}\K\|p\MG\\{lchild},\39\|p\MG\\{lchild}\MG\\{left}\K\|p;{}$\6
 \4${}\}{}$\2\par
 \U15.\fi
 
-\M{20}\B\X20:Delete the children of \PB{\|p} from the fringe\X${}\E{}$\6
+\M[380 koda-ruskey.w]{20}\B\X20:Delete the children of \PB{\|p} from the fringe%
+\X${}\E{}$\6
 \&{if} ${}(\|p\MG\\{lchild}){}$\5
 ${}\{{}$\1\6
 ${}\|q\K(\|p-\T{1})\MG\\{right};{}$\6
@@ -519,20 +530,21 @@ ${}\|p\MG\\{right}\K\|q,\39\|q\MG\\{left}\K\|p;{}$\6
 \4${}\}{}$\2\par
 \U15.\fi
 
-\M{21}At this point we know that \PB{$\|p\MG\\{right}$} is active.
+\M[386 koda-ruskey.w]{21}At this point we know that \PB{$\|p\MG\\{right}$} is
+active.
 
 \Y\B\4\X21:Make node \PB{\|p} passive\X${}\E{}$\6
 $\|p\MG\\{focus}\K\|p\MG\\{left}\MG\\{focus};{}$\6
 ${}\|p\MG\\{left}\MG\\{focus}\K\|p\MG\\{left}{}$;\par
 \U15.\fi
 
-\M{22}\B\X22:Print out all the current lnode bits\X${}\E{}$\6
+\M[392 koda-ruskey.w]{22}\B\X22:Print out all the current lnode bits\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\1\5
 ${}\\{putchar}(\.{'0'}+\\{lnode\_table}[\|k].\\{bit});{}$\2\6
 \\{putchar}(\.{'\\n'});\par
 \U15.\fi
 
-\M{23}I used the following code when debugging.
+\M[396 koda-ruskey.w]{23}I used the following code when debugging.
 
 \Y\B\4\D$\\{rel}(\|f)$ \5
 $(\\{lnode\_table}[\|k].\|f\?\\{lnode\_table}[\|k].\|f-\\{lnode\_table}:{-}%
@@ -548,7 +560,7 @@ ${}\\{printf}(\.{"focus=\%d,\ left=\%d,\ }\)\.{right=\%d,\ lchild=\%d\\}\)%
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{24}Index.
+\N[407 koda-ruskey.w]{1}{24}Index.
 
 \fi
 

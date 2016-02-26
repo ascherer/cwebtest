@@ -1,8 +1,10 @@
 \input cwebmac
+\srcloctrue
 \datethis
 \input epsf
 
-\N{1}{1}Introduction. This program computes numerical coordinates so that I can
+\N[3 hyperbolic.w]{1}{1}Introduction. This program computes numerical
+coordinates so that I can
 experiment with some of the fascinating patterns that arise when the
 hyperbolic plane is tiled with $36^\circ$-$45^\circ$-$90^\circ$ triangles.
 Such a tiling is unique, but it can be viewed in many different ways.
@@ -40,7 +42,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{2}Hyperbolic data structures. I think the most convenient way to
+\N[40 hyperbolic.w]{1}{2}Hyperbolic data structures. I think the most
+convenient way to
 deal with the hyperbolic plane is to consider its points to be those
 of the Euclidean upper half plane, namely the points $(x,y)$ with $y>0$.
 Its ``lines'' are half-circles centered on the $x$-axis, namely the
@@ -62,7 +65,8 @@ $$c=x-y\cot\theta,\qquad r=y\csc\theta.$$
 \A7.
 \U1.\fi
 
-\M{3}The unique hyperbolic line that passes through two given points
+\M[54 hyperbolic.w]{3}The unique hyperbolic line that passes through two given
+points
 $(x,y)$ and $(x',y')$ is centered at
 $$c={x^2+y^2-{x'}^2-{y'}^2\over 2(x-x')}
 ={x+x'\over2}+{y^2-{y'}^2\over2(x-x')}.$$
@@ -84,7 +88,7 @@ ${}\|t.\|r\K\\{sqrt}((\|z.\|x-\|t.\|c)*(\|z.\|x-\|t.\|c)+\|z.\|y*\|z.\|y);{}$\6
 \As4, 5\ETs8.
 \U1.\fi
 
-\M{4}The main technical operation in this program is to
+\M[72 hyperbolic.w]{4}The main technical operation in this program is to
 ``reflect'' a point with respect to a given hyperbolic line.
 If the line has center~$c$ and radius~$r$, the reflection
 of $(c+s\cos\theta,s\sin\theta)$ is defined to be
@@ -126,7 +130,8 @@ ${}\|t.\|y\K\\{alpha}*\|z.\|y;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{5}As our algorithm proceeds, it will repeatedly compute points
+\M[112 hyperbolic.w]{5}As our algorithm proceeds, it will repeatedly compute
+points
 and/or circles that have already been seen. Therefore we maintain
 a dictionary of what we know.
 
@@ -201,7 +206,7 @@ ${}\\{hcircle}[\|p]\K\|l;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{6}\B\X6:Global variables\X${}\E{}$\6
+\M[163 hyperbolic.w]{6}\B\X6:Global variables\X${}\E{}$\6
 \&{point} ${}\\{hpoint}[\T{3}*\\{maxn}]{}$;\C{ dictionary of known points }\6
 \&{int} \\{pptr};\C{ the number of known points }\6
 \&{int} ${}\\{pleft}[\T{3}*\\{maxn}],{}$ ${}\\{pright}[\T{3}*\\{maxn}]{}$;\C{
@@ -214,7 +219,8 @@ links for binary tree search }\par
 \As9\ET10.
 \U1.\fi
 
-\M{7}The main component of our data structure is the table of all
+\M[171 hyperbolic.w]{7}The main component of our data structure is the table of
+all
 triangles that we have identified so far. Each triangle is
 represented by indices that point to its three vertices, its
 three edges, and its three neighbors.
@@ -239,7 +245,8 @@ of those edges.
 ${}\}{}$ \&{triangle};\par
 \fi
 
-\M{8}An auxiliary hash table keeps track of the triangles we've seen.
+\M[189 hyperbolic.w]{8}An auxiliary hash table keeps track of the triangles
+we've seen.
 
 (I've imposed the restriction \PB{$\T{3}*\\{maxn}<\T{1024}$} simply because I
 want to
@@ -268,14 +275,14 @@ ${}\\{tptr}\PP;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{9}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[209 hyperbolic.w]{9}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{triple}[\\{hprime}];\C{ the vertex triples that we've seen }\6
 \&{int} \\{tripnum}[\\{hprime}];\C{ their serial numbers }\6
 \&{int} \\{tptr};\C{ the number of triangles we've seen }\6
 \&{triangle} ${}\\{triang}[\\{maxn}+\T{3}]{}$;\C{ their details }\par
 \fi
 
-\N{1}{10}Getting started. To prime the pump, I need one
+\N[215 hyperbolic.w]{1}{10}Getting started. To prime the pump, I need one
 $36^\circ$-$45^\circ$-$90^\circ$ triangle to begin the process.
 The simplest one that I could think of
 has vertices $e^{i\theta}$, $i/r$, and $i$ in the complex plane,
@@ -293,7 +300,7 @@ $\|l.\|c\K\\{cc},\39\|l.\|r\K\\{rr},\39\|v\K\\{savecircle}{}$(\|l)\par
 \&{circle} \|l;\C{ staging area for \PB{\\{makecircle}} }\par
 \fi
 
-\M{11}\B\X11:Set up triangle 0\X${}\E{}$\6
+\M[231 hyperbolic.w]{11}\B\X11:Set up triangle 0\X${}\E{}$\6
 $\\{phi}\K(\T{1.0}+\\{sqrt}(\T{5.0}))/\T{2.0};{}$\6
 ${}\\{makepoint}(\|a,\39\\{sqrt}(\T{0.5}/\\{phi}),\39\\{sqrt}(\T{1.0}-\T{0.5}/%
 \\{phi}));{}$\6
@@ -308,7 +315,8 @@ ${}\\{printf}(\.{"\ edges\ (*,\%d,\%d)\\n"},\39\\{triang}[\T{0}].\\{e45},\39%
 \\{triang}[\T{0}].\\{e90}){}$;\par
 \U1.\fi
 
-\M{12}Edge \PB{\\{e36}} of the starting triangle is a vertical line from
+\M[242 hyperbolic.w]{12}Edge \PB{\\{e36}} of the starting triangle is a
+vertical line from
 $i/r$ to $i$. This is the only vertical line that we will need in
 the present program. (In fact, I'll explain shortly that
 the computations will be limited to the subtiling that appears
@@ -328,7 +336,8 @@ ${}\\{makecircle}(\\{triang}[\T{0}].\\{e90},\39\\{hpoint}[\|b].\|y,\39\\{sqrt}(%
 \T{2.0})*\\{hpoint}[\|b].\|y){}$;\par
 \U11.\fi
 
-\N{1}{13}The algorithm. One more important thing needs to be mentioned,
+\N[259 hyperbolic.w]{1}{13}The algorithm. One more important thing needs to be
+mentioned,
 before we put all the pieces together: I don't actually
 want to compute the entire tiling. I only want to compute it
 in the quarter-annulus that consists of the points
@@ -368,7 +377,7 @@ ${}\\{printf}(\.{"\ t90=\%d"},\39\\{triang}[\|k].\\{t90});{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{14}\B\X14:Compute \PB{\\{t36}}\X${}\E{}$\6
+\M[292 hyperbolic.w]{14}\B\X14:Compute \PB{\\{t36}}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|j\K\\{savepoint}(\\{reflect}(\\{hpoint}[\\{triang}[\|k].\\{v36}],\39%
 \\{hcircle}[\\{triang}[\|k].\\{e36}]));{}$\6
@@ -391,7 +400,7 @@ ${}\\{printf}(\.{"\ edges\ (\%d,\%d,\%d)\\n}\)\.{"},\39\\{triang}[\|t].\\{e36},%
 \4${}\}{}$\2\par
 \U13.\fi
 
-\M{15}\B\X15:Compute \PB{\\{t45}}\X${}\E{}$\6
+\M[309 hyperbolic.w]{15}\B\X15:Compute \PB{\\{t45}}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|j\K\\{savepoint}(\\{reflect}(\\{hpoint}[\\{triang}[\|k].\\{v45}],\39%
 \\{hcircle}[\\{triang}[\|k].\\{e45}]));{}$\6
@@ -414,7 +423,7 @@ ${}\\{printf}(\.{"\ edges\ (\%d,\%d,\%d)\\n}\)\.{"},\39\\{triang}[\|t].\\{e36},%
 \4${}\}{}$\2\par
 \U13.\fi
 
-\M{16}\B\X16:Compute \PB{\\{t90}}\X${}\E{}$\6
+\M[326 hyperbolic.w]{16}\B\X16:Compute \PB{\\{t90}}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|j\K\\{savepoint}(\\{reflect}(\\{hpoint}[\\{triang}[\|k].\\{v90}],\39%
 \\{hcircle}[\\{triang}[\|k].\\{e90}]));{}$\6
@@ -437,29 +446,30 @@ ${}\\{printf}(\.{"\ edges\ (\%d,\%d,\%d)\\n}\)\.{"},\39\\{triang}[\|t].\\{e36},%
 \4${}\}{}$\2\par
 \U13.\fi
 
-\N{1}{17}Output. Here's what we get when the circles \.{l1}, \.{l2}, \dots~are
+\N[343 hyperbolic.w]{1}{17}Output. Here's what we get when the circles \.{l1}, %
+\.{l2}, \dots~are
 plotted:
 \bigskip
 \centerline{\epsfbox{hyperbolic.2}}
 
 \fi
 
-\N{1}{18}Dual output. And here's what happens when those circles are reflected
-with
+\N[348 hyperbolic.w]{1}{18}Dual output. And here's what happens when those
+circles are reflected with
 respect to $\vert z\vert=1/r$:
 \bigskip
 \centerline{\epsfbox{hyperbolic.3}}
 
 \fi
 
-\N{1}{19}The overall tiling. Finally, the right half of the
+\N[353 hyperbolic.w]{1}{19}The overall tiling. Finally, the right half of the
 whole thing, omitting circles of radius $<0.007$:
 \bigskip
 \centerline{\epsfbox{hyperbolic.4}}
 
 \fi
 
-\N{1}{20}Index.
+\N[359 hyperbolic.w]{1}{20}Index.
 
 \fi
 

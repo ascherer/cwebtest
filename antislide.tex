@@ -1,8 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Introduction. This program finds all ways to pack $2\times2\times1$
-bricks
+\N[2 antislide.w]{1}{1}Introduction. This program finds all ways to pack $2%
+\times2\times1$ bricks
 into a $4\times4\times4$ box in such a way that each face of each brick
 touches the boundary of the box or the face of another brick. The program
 is also designed to be readily modified so that it applies to other sorts
@@ -44,7 +45,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{2}Data structures. This program deals chiefly with three kinds of lists,
+\N[40 antislide.w]{1}{2}Data structures. This program deals chiefly with three
+kinds of lists,
 representing cells, moves, and constraints.
 
 A move list is a circular list of nodes, one for each cell occupied by
@@ -84,7 +86,8 @@ lists for this move }\6
 ${}\}{}$ \&{node};\par
 \U1.\fi
 
-\M{3}The sizes of the basic arrays were determined experimentally; originally
+\M[73 antislide.w]{3}The sizes of the basic arrays were determined
+experimentally; originally
 I just set them to a large number and ran the program.
 
 \Y\B\4\X3:Global variables\X${}\E{}$\6
@@ -98,8 +101,8 @@ I just set them to a large number and ran the program.
 \A10.
 \U1.\fi
 
-\M{4}Here's how we get everything started, when packing bricks as mentioned
-above.
+\M[84 antislide.w]{4}Here's how we get everything started, when packing bricks
+as mentioned above.
 
 \Y\B\4\X4:Initialize the data structures\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -123,7 +126,7 @@ ${}\\{printf}(\.{"\ \%d\ constraint\ elem}\)\.{ents,\ \%d\ clist\ eleme}\)%
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{5}\B\X5:Make all cell lists empty\X${}\E{}$\6
+\M[104 antislide.w]{5}\B\X5:Make all cell lists empty\X${}\E{}$\6
 \&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{n1};{}$ ${}\|i\PP){}$\1\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{n2};{}$ ${}\|j\PP){}$\1\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{n3};{}$ ${}\|k\PP){}$\5
@@ -138,7 +141,7 @@ ${}\\{headers}[\|i][\|j][\|k].\\{up}\K\\{headers}[\|i][\|j][\|k].\\{down}\K{%
 \4${}\}{}$\2\2\2\par
 \U4.\fi
 
-\M{6}\B\D$\\{new\_node}(\\{ii},\\{jj},\\{kk})$ \6
+\M[112 antislide.w]{6}\B\D$\\{new\_node}(\\{ii},\\{jj},\\{kk})$ \6
 ${}\{{}$\1\6
 ${}\\{cur\_node}\MG\\{right}\K\\{cur\_node}+\T{1}{}$;\5
 ${}\\{cur\_node}\MG\\{left}\K\\{cur\_node}-\T{1};{}$\6
@@ -226,7 +229,8 @@ ${}\\{cur\_tag}\PP;{}$\6
 \4${}\}{}$\2\2\2\par
 \U4.\fi
 
-\M{7}\B\X7:Initialize all moves that have constant second coordinate\X${}\E{}$\6
+\M[149 antislide.w]{7}\B\X7:Initialize all moves that have constant second
+coordinate\X${}\E{}$\6
 \&{for} ${}(\|i\K\T{0};{}$ ${}\|i+\T{1}<\\{n1};{}$ ${}\|i\PP){}$\1\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{n2};{}$ ${}\|j\PP){}$\1\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k+\T{1}<\\{n3};{}$ ${}\|k\PP){}$\5
@@ -291,7 +295,8 @@ ${}\\{cur\_tag}\PP;{}$\6
 \4${}\}{}$\2\2\2\par
 \U4.\fi
 
-\M{8}\B\X8:Initialize all moves that have constant third coordinate\X${}\E{}$\6
+\M[172 antislide.w]{8}\B\X8:Initialize all moves that have constant third
+coordinate\X${}\E{}$\6
 \&{for} ${}(\|i\K\T{0};{}$ ${}\|i+\T{1}<\\{n1};{}$ ${}\|i\PP){}$\1\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j+\T{1}<\\{n2};{}$ ${}\|j\PP){}$\1\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{n3};{}$ ${}\|k\PP){}$\5
@@ -356,7 +361,8 @@ ${}\\{cur\_tag}\PP;{}$\6
 \4${}\}{}$\2\2\2\par
 \U4.\fi
 
-\M{9}\B\X9:Print the move that starts with \PB{\\{first\_node}}\X${}\E{}$\6
+\M[195 antislide.w]{9}\B\X9:Print the move that starts with \PB{\\{first%
+\_node}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{node} ${}{*}{*}\\{p1},{}$ ${}{*}{*}{*}\\{c1};{}$\7
 \&{for} ${}(\|p\K\\{first\_node};{}$  ; ${}\|p\K\|p\MG\\{right}){}$\5
@@ -376,8 +382,8 @@ ${}\\{printf}(\.{"\%s,"},\39({*}\\{p1})\MG\\{name});{}$\2\6
 \4${}\}{}$\2\par
 \Us6, 7\ETs8.\fi
 
-\N{1}{10}Backtracking. At level \PB{\|l}, we've made \PB{\|l} moves, and we
-assume that
+\N[209 antislide.w]{1}{10}Backtracking. At level \PB{\|l}, we've made \PB{\|l}
+moves, and we assume that
 we've got to satisfy constraints \PB{\|c} for \PB{$\\{constr}[\|l]\Z\|c<%
 \\{ctop}$}. We decide which
 of those constraints is strongest, in the sense that it a minimal number
@@ -403,7 +409,8 @@ given level }\6
 \&{int} \\{totsols}[\\{max\_level}];\C{ the number of solutions we found }\par
 \fi
 
-\M{11}I'm using \PB{\&{goto}} statements, as usual when I backtrack.
+\M[227 antislide.w]{11}I'm using \PB{\&{goto}} statements, as usual when I
+backtrack.
 
 \Y\B\4\X11:Backtrack thru all possibilities\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -452,8 +459,8 @@ ${}\|l\PP;{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{12}\B\X12:Find a constraint to branch on, and put its moves on the move
-stack\X${}\E{}$\6
+\M[263 antislide.w]{12}\B\X12:Find a constraint to branch on, and put its moves
+on the move stack\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{int} \\{count};\6
 \&{node} ${}{*}{*}\\{cbest};{}$\6
@@ -468,7 +475,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U11.\fi
 
-\M{13}Here's where the tag fields become important. Pay attention now.
+\M[274 antislide.w]{13}Here's where the tag fields become important. Pay
+attention now.
 
 A constraint is a list of cells, at least one of which must be occupied
 by a future move. We find all ways to satisfy the constraint by going through
@@ -498,7 +506,7 @@ ${}\\{printf}(\.{"\ \%d\\n"},\39\\{count});{}$\6
 ${}\\{best\_count}\K\\{count},\39\\{cbest}\K{*}\\{cc}{}$;\2\par
 \U12.\fi
 
-\M{14}\B\D$\\{panic}(\|s)$ \6
+\M[296 antislide.w]{14}\B\D$\\{panic}(\|s)$ \6
 ${}\{{}$\1\6
 \\{printf}(\.{"s\ stack\ overflow!\\n}\)\.{"});\6
 ${}\\{exit}({-}\T{1});{}$\6
@@ -514,7 +522,8 @@ ${}{*}\\{mtop}\PP\K\|p,\39{*}(\|p\MG\\{tag})\K\\{stamp};{}$\2\2\2\6
 \\{panic}(\\{move});\2\par
 \U12.\fi
 
-\M{15}Here I'm sorta cheating. Strictly speaking, this problem has no
+\M[305 antislide.w]{15}Here I'm sorta cheating. Strictly speaking, this problem
+has no
 constraints, so the empty solution is one valid answer; then we have
 to try every possible move. But to take advantage of symmetry, I'm
 forcing the first move to be in the corner. This will miss solutions
@@ -527,8 +536,9 @@ ${}{*}\\{mtop}\PP\K{\AND}\\{nodes}[\T{0}];{}$\6
 \&{goto} \\{advance};\C{ yes, I'm jumping right into the thick of things }\par
 \U11.\fi
 
-\M{16}This step changes \PB{\\{pp}}, inside of section \PB{$\X18:If constraint %
-\PB{$\\{pp}\K{*}\\{cc}$} is not satisfied, put it on the constraint stack\X$}.
+\M[317 antislide.w]{16}This step changes \PB{\\{pp}}, inside of section \PB{$%
+\X18:If constraint \PB{$\\{pp}\K{*}\\{cc}$} is not satisfied, put it on the
+constraint stack\X$}.
 (I could have used another variable, but I'm from an older generation
 that tries to conserve the number of registers used. Silly of me.)
 
@@ -554,8 +564,8 @@ constraint stack\X;\2\6
 \\{panic}(\\{constraint});\2\par
 \U11.\fi
 
-\M{17}When a cell is occupied by the move at level \PB{\|l}, we put \PB{$\|l+%
-\T{1}$} into
+\M[335 antislide.w]{17}When a cell is occupied by the move at level \PB{\|l},
+we put \PB{$\|l+\T{1}$} into
 the \PB{\\{right}} field of its header node. That way we can tell if the
 cell is occupied.
 
@@ -580,8 +590,8 @@ ${}\|r\MG\\{down}\MG\\{up}\K\|r\MG\\{up};{}$\6
 \4${}\}{}$\2\par
 \U16.\fi
 
-\M{18}\B\X18:If constraint \PB{$\\{pp}\K{*}\\{cc}$} is not satisfied, put it on
-the constraint stack\X${}\E{}$\6
+\M[354 antislide.w]{18}\B\X18:If constraint \PB{$\\{pp}\K{*}\\{cc}$} is not
+satisfied, put it on the constraint stack\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\\{pp}\K{*}\\{cc};{}$ ${}{*}\\{pp};{}$ ${}\\{pp}\PP){}$\1\6
 \&{if} ${}(({*}\\{pp})\MG\\{right}){}$\1\5
@@ -592,7 +602,8 @@ ${}{*}\\{ctop}\PP\K{*}\\{cc};{}$\2\6
 \Q16.
 \U16.\fi
 
-\M{19}The links do their dance in this step. We have to reconstruct the lists
+\M[360 antislide.w]{19}The links do their dance in this step. We have to
+reconstruct the lists
 in exact reverse order of the way we constructed them. (That's why I provided
 both \PB{\\{left}} and \PB{\\{right}} links in the move lists. Otherwise the
 program
@@ -613,8 +624,8 @@ other cell lists\X;\6
 ${}\\{ctop}\K\\{constr}[\|l+\T{1}]{}$;\par
 \U11.\fi
 
-\M{20}\B\X20:Unremove all other moves in the cell list containing \PB{\|p} from
-their other cell lists\X${}\E{}$\6
+\M[377 antislide.w]{20}\B\X20:Unremove all other moves in the cell list
+containing \PB{\|p} from their other cell lists\X${}\E{}$\6
 \&{for} ${}(\|q\K\|p\MG\\{up};{}$ ${}\|q\I\|p;{}$ ${}\|q\K\|q\MG\\{up}){}$\5
 ${}\{{}$\1\6
 \&{if} ${}(\|q\MG\\{left}\E\NULL){}$\1\5
@@ -629,7 +640,7 @@ ${}\|r\MG\\{down}\MG\\{up}\K\|r;{}$\6
 \4${}\}{}$\2\par
 \U19.\fi
 
-\M{21}\B\X21:Disallow move \PB{${*}\\{pp}$}\X${}\E{}$\6
+\M[387 antislide.w]{21}\B\X21:Disallow move \PB{${*}\\{pp}$}\X${}\E{}$\6
 \&{for} ${}(\|p\K({*}\\{pp})\MG\\{right};{}$  ; ${}\|p\K\|p\MG\\{right}){}$\5
 ${}\{{}$\1\6
 ${}\|q\K\|p\MG\\{down};{}$\6
@@ -641,7 +652,7 @@ ${}\|r\MG\\{down}\K\|q;{}$\6
 \4${}\}{}$\2\par
 \U11.\fi
 
-\M{22}\B\X22:Reinstate all moves from this level\X${}\E{}$\6
+\M[394 antislide.w]{22}\B\X22:Reinstate all moves from this level\X${}\E{}$\6
 \&{for} ${}(\\{pp}\K\\{mtop}-\T{1};{}$ ${}\\{pp}\G\\{first}[\|l];{}$ ${}\\{pp}%
 \MM){}$\1\6
 \&{for} ${}(\|p\K({*}\\{pp})\MG\\{right};{}$  ; ${}\|p\K\|p\MG\\{right}){}$\5
@@ -654,7 +665,8 @@ ${}\|q\MG\\{up}\K\|r\MG\\{down}\K\|p;{}$\6
 \4${}\}{}$\2\2\par
 \U11.\fi
 
-\M{23}\B\X23:Put all remaining moves on the move stack\X${}\E{}$\6
+\M[402 antislide.w]{23}\B\X23:Put all remaining moves on the move stack\X${}%
+\E{}$\6
 ${}\{{}$\1\6
 ${}\\{stamp}\PP;{}$\6
 \&{for} ${}(\|p\K{\AND}\\{headers}[\T{0}][\T{0}][\T{0}];{}$ ${}\|p<{\AND}%
@@ -667,7 +679,7 @@ ${}{*}\\{mtop}\PP\K\|q,\39{*}(\|q\MG\\{tag})\K\\{stamp};{}$\2\2\2\2\6
 \4${}\}{}$\2\par
 \U11.\fi
 
-\M{24}\B\X24:Print a progress report\X${}\E{}$\6
+\M[410 antislide.w]{24}\B\X24:Print a progress report\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{printf}(\.{"Move\ \%d:"},\39\|l+\T{1});{}$\6
 \&{for} ${}(\|p\K({*}\\{move}[\|l])\MG\\{right};{}$  ; ${}\|p\K\|p\MG%
@@ -681,7 +693,7 @@ ${}\\{printf}(\.{"\ (\%d)\\n"},\39\\{stamp});{}$\6
 \4${}\}{}$\2\par
 \U11.\fi
 
-\M{25}\B\X25:Record a solution\X${}\E{}$\6
+\M[420 antislide.w]{25}\B\X25:Record a solution\X${}\E{}$\6
 $\\{totsols}[\|l]\PP;{}$\6
 \&{if} (\\{verbose})\5
 ${}\{{}$\1\6
@@ -702,7 +714,7 @@ ${}\\{printf}(\.{"\%c"},\39\|c>\T{9}\?\|c-\T{10}+\.{'a'}:\|c+\.{'0'});{}$\6
 \4${}\}{}$\2\par
 \U11.\fi
 
-\M{26}\B\X26:Report the answers\X${}\E{}$\6
+\M[435 antislide.w]{26}\B\X26:Report the answers\X${}\E{}$\6
 \\{printf}(\.{"Total\ solutions\ fou}\)\.{nd:\\n"});\6
 ${}\{{}$\1\6
 \&{register} \&{int} \\{lev};\7
@@ -714,7 +726,7 @@ ${}\\{printf}(\.{"\ \ level\ \%d,\ \%d\\n"},\39\\{lev},\39\\{totsols}[%
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{27}Index.
+\N[442 antislide.w]{1}{27}Index.
 \fi
 
 \inx

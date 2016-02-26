@@ -1,7 +1,8 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Introduction. I'm reregenerating the illustrations for my
+\N[2 togpap.w]{1}{1}Introduction. I'm reregenerating the illustrations for my
 paper in the Transactions on Graphics. This program has little
 generality, but it could be easily modified.
 
@@ -57,7 +58,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Scan the command line, give help if necessary\X${}\E{}$\6
+\M[48 togpap.w]{2}\B\X2:Scan the command line, give help if necessary\X${}\E{}$%
+\6
 \&{if} ${}(\\{argc}\I\T{4}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
 \\{imagecode})\I\T{1}\V\3{-1}\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}%
 \\{sharpcode})\I\T{1}\V\3{-1}\\{sscanf}(\\{argv}[\T{3}],\39\.{"\%d"},\39{\AND}%
@@ -79,7 +81,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\ ARIES\ =\ \%d\\n"},\39\\{ariescode});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}\B\X3:Input the image\X${}\E{}$\6
+\M[64 togpap.w]{3}\B\X3:Input the image\X${}\E{}$\6
 \&{if} ${}(\\{imagecode}\E\\{lisacode}){}$\5
 ${}\{{}$\5
 \1\\{Area}\\{workplace};\7
@@ -110,7 +112,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"(Sphere\ image\ loade}\)\.{d)\\n"});{}$\6
 \&{goto} \\{usage};\2\par
 \U1.\fi
 
-\M{4}\B\X4:Sharpen if requested\X${}\E{}$\6
+\M[79 togpap.w]{4}\B\X4:Sharpen if requested\X${}\E{}$\6
 \&{if} ${}(\\{sharpcode}\E\T{1}){}$\5
 ${}\{{}$\1\6
 \&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\|m;{}$ ${}\|i\PP){}$\1\6
@@ -135,7 +137,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"(no\ sharpening)\\n"});{}$\2\6
 \&{goto} \\{usage};\2\par
 \U1.\fi
 
-\M{5}\B\X5:Generate and print the base matrix, if any\X${}\E{}$\6
+\M[93 togpap.w]{5}\B\X5:Generate and print the base matrix, if any\X${}\E{}$\6
 \&{switch} (\\{methodcode})\5
 ${}\{{}$\1\6
 \4\&{case} \\{fscode}:\5
@@ -181,13 +183,13 @@ ${}\\{board}[\T{0}][\|j]\K\\{board}[\T{8}][\|j],\39\\{board}[\T{9}][\|j]\K%
 \\{done}:\par
 \U1.\fi
 
-\M{6}\B\X6:Global variables\X${}\E{}$\6
+\M[120 togpap.w]{6}\B\X6:Global variables\X${}\E{}$\6
 \&{int} \\{di}[\T{4}]${}\K\{\T{0},\39\T{1},\39\T{0},\39\T{1}\};{}$\6
 \&{int} \\{dj}[\T{4}]${}\K\{\T{0},\39\T{1},\39\T{1},\39\T{0}\}{}$;\par
 \As8, 14, 16, 19\ETs26.
 \U1.\fi
 
-\M{7}\B\X7:Subroutines\X${}\E{}$\6
+\M[124 togpap.w]{7}\B\X7:Subroutines\X${}\E{}$\6
 \&{void} ${}\\{store}(\|i,\39\|j){}$\1\1\6
 \&{int} \|i${},{}$ \|j;\2\2\6
 ${}\{{}$\1\6
@@ -223,11 +225,11 @@ ${}\\{store}(\T{1}-\|i,\39\T{1}-\|j);{}$\6
 \A25.
 \U1.\fi
 
-\M{8}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[145 togpap.w]{8}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{name\_buffer}[\,]${}\K\.{"99"}{}$;\par
 \fi
 
-\M{9}\B\D$\\{row}$ \5
+\M[148 togpap.w]{9}\B\D$\\{row}$ \5
 $\|u.{}$\|I\par
 \B\4\D$\\{col}$ \5
 $\|v.{}$\|I\par
@@ -250,7 +252,7 @@ ${}\\{store\_eight}(\T{1},\39\T{2}){}$;\5
 ${}\\{store\_eight}(\T{2},\39\T{3}){}$;\par
 \U5.\fi
 
-\M{10}\B\X10:Print the board\X${}\E{}$\6
+\M[159 togpap.w]{10}\B\X10:Print the board\X${}\E{}$\6
 \&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\T{8};{}$ ${}\|i\PP){}$\5
 ${}\{{}$\1\6
 \&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\T{8};{}$ ${}\|j\PP){}$\1\5
@@ -259,7 +261,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
 \4${}\}{}$\2\par
 \U5.\fi
 
-\M{11}\B\X11:Install the vertices and arcs of the control graph\X${}\E{}$\6
+\M[165 togpap.w]{11}\B\X11:Install the vertices and arcs of the control graph%
+\X${}\E{}$\6
 \&{if} ${}(\\{methodcode}\E\\{ddiffcode}){}$\5
 ${}\{{}$\C{ dot diffusion, two dots per $8\times8$ cell }\1\6
 \&{for} ${}(\|v\K\|g\MG\\{vertices};{}$ ${}\|v<\|g\MG\\{vertices}+\T{64};{}$
@@ -312,7 +315,8 @@ ${}\\{board}[\|i][\|j]\MRL{{\GG}{\K}}\T{1};{}$\2\2\6
 \4${}\}{}$\2\par
 \U5.\fi
 
-\N{1}{12}Error diffusion. The Floyd-Steinberg algorithm uses a threshold of
+\N[194 togpap.w]{1}{12}Error diffusion. The Floyd-Steinberg algorithm uses a
+threshold of
 0.5 at each pixel and distributes the error to the four unprocessed
 neighbors.
 
@@ -350,7 +354,7 @@ ${}\\{check}(\|i+\T{1},\39\|j+\T{1});{}$\6
 \4${}\}{}$\2\2\par
 \U33.\fi
 
-\M{13}\B\X13:Print boundary leakage and extreme values\X${}\E{}$\6
+\M[216 togpap.w]{13}\B\X13:Print boundary leakage and extreme values\X${}\E{}$\6
 \&{if} ${}(\\{methodcode}\I\\{sdiffcode}){}$\5
 ${}\{{}$\1\6
 \&{for} ${}(\|i\K\T{0};{}$ ${}\|i\Z\|m+\T{1};{}$ ${}\|i\PP){}$\1\5
@@ -366,13 +370,14 @@ ${}\\{fprintf}(\\{stderr},\39\.{"Data\ remained\ betwe}\)\.{en\ \%.20g\ and\ %
 \%.20g\\n}\)\.{"},\39\\{lo\_A},\39\\{hi\_A}){}$;\par
 \U34.\fi
 
-\M{14}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[224 togpap.w]{14}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{double} \\{edge\_accum};\6
 \&{double} \\{lo\_A}${}\K\T{100000.0},{}$ \\{hi\_A}${}\K{-}\T{100000.0}{}$;\C{
 record-breaking values }\par
 \fi
 
-\N{1}{15}Ordered dithering. The ordered dither algorithm uses a threshold
+\N[228 togpap.w]{1}{15}Ordered dithering. The ordered dither algorithm uses a
+threshold
 based on the pixel's place in the grid.
 
 \Y\B\4\X15:Do ordered dither\X${}\E{}$\6
@@ -390,13 +395,13 @@ ${}\\{block\_err}[(\|i-\T{1})\GG\T{3}][(\|j-\T{1})\GG\T{3}]\MRL{+{\K}}%
 \4${}\}{}$\2\2\par
 \U33.\fi
 
-\M{16}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[241 togpap.w]{16}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{double} \\{accum};\6
 \&{double} ${}\\{block\_err}[(\|m+\T{7})\GG\T{3}][(\|n+\T{7})\GG\T{3}];{}$\6
 \&{int} \\{bad\_blocks};\par
 \fi
 
-\M{17}\B\X17:Print accumulated lossage\X${}\E{}$\6
+\M[246 togpap.w]{17}\B\X17:Print accumulated lossage\X${}\E{}$\6
 $\\{fprintf}(\\{stderr},\39\.{"Total\ undiffused\ er}\)\.{ror:\ \%.20g\\n"},\39%
 \\{accum});{}$\6
 \&{for} ${}(\|i\K\T{0},\39\\{accum}\K\T{0.0};{}$ ${}\|i<\|m;{}$ ${}\|i\MRL{+{%
@@ -411,7 +416,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"Total\ block\ error:\ }\)\.{\%.20g\ (\%d\ bad)%
 \\n"},\39\\{accum},\39\\{bad\_blocks}){}$;\par
 \U34.\fi
 
-\N{1}{18}Dot diffusion. The dot diffusion algorithm uses a fixed threshold
+\N[254 togpap.w]{1}{18}Dot diffusion. The dot diffusion algorithm uses a fixed
+threshold
 of 0.5 and distributes errors
 to higher-class neighbor pixels, except at baron positions.
 
@@ -442,14 +448,14 @@ ${}\\{hi\_err}\K\\{err};{}$\2\6
 \4${}\}{}$\2\2\2\par
 \U33.\fi
 
-\M{19}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[274 togpap.w]{19}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{barons};\C{ how many barons are there? }\6
 \&{int} \\{bad\_barons};\C{ how many of them eat more than 0.5 error? }\6
 \&{double} \\{lo\_err}${}\K\T{100000.0},{}$ \\{hi\_err}${}\K{-}\T{100000.0}{}$;%
 \C{ record-breaking errors }\par
 \fi
 
-\M{20}\B\X20:Distribute the error to near neighbors\X${}\E{}$\6
+\M[279 togpap.w]{20}\B\X20:Distribute the error to near neighbors\X${}\E{}$\6
 \&{for} ${}(\|a\K\|v\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
 ${}\{{}$\1\6
 ${}\\{ii}\K\|i+\|a\MG\\{del\_i}{}$;\5
@@ -461,7 +467,8 @@ ${}\\{check}(\\{ii},\39\\{jj});{}$\6
 \4${}\}{}$\2\par
 \U18.\fi
 
-\M{21}Smooth dot diffusion is similar, but it uses a class-based threshold
+\M[287 togpap.w]{21}Smooth dot diffusion is similar, but it uses a class-based
+threshold
 and considers a larger neighborhood of size 32.
 
 \Y\B\4\X21:Do smooth dot diffusion\X${}\E{}$\6
@@ -492,8 +499,8 @@ ${}\\{hi\_err}\K\\{err};{}$\2\6
 \4${}\}{}$\2\2\2\par
 \U33.\fi
 
-\M{22}This pixel has \PB{$\T{31}-\|k$} neighbors of higher classes; each shares
-equally
+\M[307 togpap.w]{22}This pixel has \PB{$\T{31}-\|k$} neighbors of higher
+classes; each shares equally
 in the distribution.
 
 \Y\B\4\X22:Distribute the error to dot neighbors\X${}\E{}$\6
@@ -512,14 +519,15 @@ boundary }\2\6
 \4${}\}{}$\2\par
 \U21.\fi
 
-\M{23}\B\X23:Print baronial lossage\X${}\E{}$\6
+\M[318 togpap.w]{23}\B\X23:Print baronial lossage\X${}\E{}$\6
 $\\{fprintf}(\\{stderr},\39\.{"Total\ undiffused\ er}\)\.{ror\ \%.20g\ at\ \%d\
 baro}\)\.{ns\\n"},\39\\{accum},\39\\{barons});{}$\6
 ${}\\{fprintf}(\\{stderr},\39\.{"\ \ (\%d\ bad,\ min\ \%.20}\)\.{g,\ max\ %
 \%.20g)\\n"},\39\\{bad\_barons},\39\\{lo\_err},\39\\{hi\_err}){}$;\par
 \U34.\fi
 
-\N{1}{24}Alias-Reducing Image-Enhancing Screening. The ARIES method works
+\N[322 togpap.w]{1}{24}Alias-Reducing Image-Enhancing Screening. The ARIES
+method works
 with 32-pixel dots and dithers them but adjusts the threshold
 by considering the average intensity in the dot.
 
@@ -543,7 +551,8 @@ ${}\|s\MRL{+{\K}}\|A[\\{ii}][\\{jj}],\39\\{rank}(\\{ii},\39\\{jj});{}$\2\2\6
 \4${}\}{}$\2\2\par
 \U33.\fi
 
-\M{25}The ranking procedure sorts the entries by the key $a_{ij}-k/32$,
+\M[337 togpap.w]{25}The ranking procedure sorts the entries by the key
+$a_{ij}-k/32$,
 where $k$ is the class number of cell $(i,j)$.
 
 \Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
@@ -566,14 +575,15 @@ ${}\\{ll}\PP;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{26}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\M[352 togpap.w]{26}\B\X6:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{ll};\C{ the number of items in the ranking table }\6
 \&{int} \\{inxi}[\T{32}]${},{}$ \\{inxj}[\T{32}];\C{ indices of the ranked
 pixels }\6
 \&{double} \\{val}[\T{32}];\C{ keys of the ranked pixels }\par
 \fi
 
-\M{27}I have to admit that I rather like this implementation of ARIES!
+\M[357 togpap.w]{27}I have to admit that I rather like this implementation of
+ARIES!
 
 \Y\B\4\X27:Blacken the top $\lfloor s\rfloor$ pixels of the dot\X${}\E{}$\6
 \&{if} (\\{ll})\5
@@ -594,12 +604,13 @@ ${}\|A[\\{ii}][\\{jj}]\MRL{-{\K}}\\{err}{}$;\C{ now it's 0 or 1 }\6
 \4${}\}{}$\2\par
 \U24.\fi
 
-\M{28}\B\X28:Print ARIES lossage\X${}\E{}$\6
+\M[369 togpap.w]{28}\B\X28:Print ARIES lossage\X${}\E{}$\6
 $\\{fprintf}(\\{stderr},\39\.{"Total\ lossage\ \%.20g}\)\.{\ in\ \%d\ dots%
 \\n"},\39\\{accum},\39\\{barons}){}$;\par
 \U34.\fi
 
-\N{1}{29}Encapsulated PostScript. When all has been done (but all has
+\N[372 togpap.w]{1}{29}Encapsulated PostScript. When all has been done (but all
+has
 not necessarily been
 said), we output the matrix as a PostScript file with resolution
 72 pixels per inch.
@@ -610,7 +621,7 @@ said), we output the matrix as a PostScript file with resolution
 \X32:Output the trailer of the EPS file\X;\par
 \U1.\fi
 
-\M{30}\B\X30:Output the header of the EPS file\X${}\E{}$\6
+\M[383 togpap.w]{30}\B\X30:Output the header of the EPS file\X${}\E{}$\6
 \\{printf}(\.{"\%\%!PS\\n"});\6
 ${}\\{printf}(\.{"\%\%\%\%BoundingBox:\ 0\ }\)\.{0\ \%d\ \%d\\n"},\39\|n,\39%
 \|m);{}$\6
@@ -630,7 +641,7 @@ ${}\\{printf}(\.{"\%d\ \%d\ true\ [\%d\ 0\ 0\ }\)\.{-\%d\ 0\ \%d]\\n"},\39\|n,%
 imagemask\\n"});\par
 \U29.\fi
 
-\M{31}\B\X31:Output the image\X${}\E{}$\6
+\M[397 togpap.w]{31}\B\X31:Output the image\X${}\E{}$\6
 \&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\|m;{}$ ${}\|i\PP){}$\5
 ${}\{{}$\1\6
 \&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\MRL{+{\K}}\T{8}){}$\5
@@ -643,11 +654,11 @@ ${}\\{printf}(\.{"\%02x"},\39\|l);{}$\6
 \4${}\}{}$\2\par
 \U29.\fi
 
-\M{32}\B\X32:Output the trailer of the EPS file\X${}\E{}$\6
+\M[406 togpap.w]{32}\B\X32:Output the trailer of the EPS file\X${}\E{}$\6
 \\{printf}(\.{"\%\%\%\%EOF\\n"});\par
 \U29.\fi
 
-\N{1}{33}Synthesis. And now to put the pieces together:
+\N[409 togpap.w]{1}{33}Synthesis. And now to put the pieces together:
 
 \Y\B\4\X33:Compute the answer\X${}\E{}$\6
 \&{switch} (\\{methodcode})\5
@@ -670,7 +681,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{34}\B\X34:Print relevant statistics\X${}\E{}$\6
+\M[420 togpap.w]{34}\B\X34:Print relevant statistics\X${}\E{}$\6
 \&{switch} (\\{methodcode})\5
 ${}\{{}$\1\6
 \4\&{case} \\{odithcode}:\5
@@ -688,7 +699,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{35}Index.
+\N[429 togpap.w]{1}{35}Index.
 \fi
 
 \inx

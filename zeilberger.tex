@@ -1,11 +1,13 @@
 \input cwebmac
+\srcloctrue
 % (c) 2005 D E Knuth; use and enjoy, but please don't blame me for mistakes...
 \datethis
 \def\title{ZEILBERGER}
 \def\[#1]{[\hbox{$\mkern1mu\thickmuskip=\thinmuskip#1\mkern1mu$}]} % Iverson
 
 
-\N{1}{1}Introduction. This little program implements Zeilberger's bijection
+\N[6 zeilberger.w]{1}{1}Introduction. This little program implements
+Zeilberger's bijection
 between $n$-node forests with pruning order~$s$ and
 $n$-node binary trees with Strahler number~$s$. [Doron Zeilberger,
 ``A bijection from ordered trees to binary trees that sends the
@@ -59,7 +61,8 @@ the original forest can indeed be uniquely reconstructed.
 
 \fi
 
-\M{2}Skarbek's algorithm (Algorithm 7.2.1.6B in {\sl The Art of
+\M[58 zeilberger.w]{2}Skarbek's algorithm (Algorithm 7.2.1.6B in {\sl The Art
+of
 Computer Programming}, Volume~4) is used to run through
 all linked binary trees, thereby running through all forests
 in their natural representation.
@@ -102,8 +105,8 @@ ${}\\{printf}(\.{"Altogether\ \%d\ cases}\)\.{\ with\ pruning\ order\ }\)\.{%
 \4${}\}{}$\2\par
 \fi
 
-\M{3}\B\X3:Move to the next forest \PB{$(\|l,\|r)$}, or \PB{\&{break}}\X${}%
-\E{}$\6
+\M[94 zeilberger.w]{3}\B\X3:Move to the next forest \PB{$(\|l,\|r)$}, or \PB{%
+\&{break}}\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{1};{}$ ${}\R\|l[\|j];{}$ ${}\|j\PP){}$\1\5
 ${}\|r[\|j]\K\T{0},\39\|l[\|j]\K\|j+\T{1};{}$\2\6
 \&{if} ${}(\|j>\|n){}$\1\5
@@ -118,7 +121,8 @@ ${}\|l[\|j]\K\T{0};{}$\2\6
 ${}\|r[\|y]\K\|r[\|j],\39\|r[\|j]\K\|y{}$;\par
 \U2.\fi
 
-\N{1}{4}The main algorithm. The nodes in the forest are represented by
+\N[101 zeilberger.w]{1}{4}The main algorithm. The nodes in the forest are
+represented by
 positive integers, according to their rank in preorder. For each
 node~$x>0$, we let $l[x]$ be its leftmost child (namely $x+1$),
 if it has one, but $l[x]=0$ when $x$ is childless. Similarly,
@@ -145,7 +149,7 @@ s[r[x]],&if $p[x]<q[r[x]]$.\cr}\cr}$$
 
 \fi
 
-\M{5}The following recursive procedure computes
+\M[126 zeilberger.w]{5}The following recursive procedure computes
 $(p[x],q[x],s[x])$ at each node~$x$ of the forest. It turns out
 that $p[x]$ need not be stored in memory.
 
@@ -167,7 +171,8 @@ ${}\|q[\|x]\K\\{qr},\39\|s[\|x]\K\|s[\|r[\|x]]+(\|p\E\\{qr});{}$\2\6
 \As8, 12\ETs15.
 \U2.\fi
 
-\M{6}Zeilberger's bijection is recursively defined too, and we will
+\M[142 zeilberger.w]{6}Zeilberger's bijection is recursively defined too, and
+we will
 implement it by writing another recursive procedure. But before
 we do so, let's examine how that procedure will be invoked in the program.
 
@@ -179,8 +184,8 @@ ${}\\{ll}[\|k]\K\|l[\|k],\39\\{rr}[\|k]\K\|r[\|k]{}$;\C{ clone the forest }\2\6
 \\{zeil}(\T{1});\C{ transform the binary tree }\par
 \U2.\fi
 
-\M{7}When subroutine \PB{\\{zeil}(\|x)} is called, \PB{\|x} is a node of a
-forest, represented
+\M[151 zeilberger.w]{7}When subroutine \PB{\\{zeil}(\|x)} is called, \PB{\|x}
+is a node of a forest, represented
 via left-child and right-sibling links \PB{\\{ll}} and \PB{\\{rr}}. The mission
 of \PB{\\{zeil}(\|x)} is to transform that forest in such a way that \PB{\|x}
 will
@@ -198,7 +203,7 @@ all of the right siblings.
 
 \fi
 
-\M{8}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\M[164 zeilberger.w]{8}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{zeil}(\&{register} \&{int} \|x)\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{int} \|k${},{}$ \\{ql}${},{}$ \\{qr}${},{}$ \|p${},{}$ %
@@ -216,8 +221,8 @@ involves no action }\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{9}Case 2, the tricky case, detaches all but the first of \PB{\|x}'s
-``skewers.''
+\M[176 zeilberger.w]{9}Case 2, the tricky case, detaches all but the first of %
+\PB{\|x}'s ``skewers.''
 
 When right links change, we must update the \PB{\|q} and \PB{\|s}
 numbers in each subnode of~\PB{\|x} before applying \PB{\\{zeil}} to
@@ -269,7 +274,8 @@ final siblings }\6
 \4${}\}{}$\2\par
 \U8.\fi
 
-\M{10}In Case 3, \PB{\|x} has only one skewer. But the transformation
+\M[212 zeilberger.w]{10}In Case 3, \PB{\|x} has only one skewer. But the
+transformation
 in this case demotes siblings to children, where they might become
 additional skewers. It also might promote some children to siblings.
 
@@ -286,7 +292,8 @@ ${}\\{rr}[\\{yy}]\K\\{rr}[\|x],\39\\{rr}[\|x]\K\|y;{}$\6
 \4${}\}{}$\2\par
 \U8.\fi
 
-\N{1}{11}Checking the Strahler number. If our implementation of Zeilberger's
+\N[223 zeilberger.w]{1}{11}Checking the Strahler number. If our implementation
+of Zeilberger's
 transformation is correct, it will have set \PB{\|q[\|x]} to the Strahler
 number of the binary subtree rooted at \PB{\|x} with respect to the
 \PB{\\{ll}} and \PB{\\{rr}} links, for every node~\PB{\|x}.
@@ -296,7 +303,7 @@ do the checking by brute force, so that the evidence is convincing.
 
 \fi
 
-\M{12}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\M[231 zeilberger.w]{12}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
 \&{int} \\{strahler}(\&{register} \&{int} \|x)\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{int} \\{sl}${},{}$ \\{sr}${},{}$ \|s;\7
@@ -316,12 +323,14 @@ case\ \%}\)\.{d.\\n"},\39\|x,\39\\{serial});{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{13}\B\X13:Check the pruning order and Strahler number\X${}\E{}$\6
+\M[243 zeilberger.w]{13}\B\X13:Check the pruning order and Strahler number\X${}%
+\E{}$\6
 $\\{count}[\\{strahler}(\T{1})]\PP;{}$\6
 ${}\\{serial}\PP{}$;\par
 \U2.\fi
 
-\N{1}{14}The inverse algorithm. The evidence of correctness is mounting.
+\N[247 zeilberger.w]{1}{14}The inverse algorithm. The evidence of correctness
+is mounting.
 But our argument in favor of Zeilberger's algorithm
 is still not compelling, because there are lots
 of ways to convert a forest
@@ -349,8 +358,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"Rejection\ at\ node\ \%}\)\.{d\ of\ case\ \%d!%
 \\n"},\39\|k,\39\\{serial}){}$;\2\2\par
 \U2.\fi
 
-\M{15}The \PB{\\{unzeil}} procedure also computes the \PB{\|q} and \PB{\|s}
-values at each node
+\M[270 zeilberger.w]{15}The \PB{\\{unzeil}} procedure also computes the \PB{%
+\|q} and \PB{\|s} values at each node
 of the reconstructed forest.
 
 \Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
@@ -376,7 +385,7 @@ ${}\|q[\|x]\K\\{qr},\39\|s[\|x]\K\|s[\\{rrr}[\|x]]+(\|p\E\\{qr});{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{16}\B\X16:Undo Zeilberger's Case 3\X${}\E{}$\6
+\M[288 zeilberger.w]{16}\B\X16:Undo Zeilberger's Case 3\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\|s[\\{lll}[\|x]]>\T{1}){}$\5
 ${}\{{}$\1\6
@@ -396,7 +405,7 @@ ${}\\{qr}\K\|q[\\{yy}]{}$;\C{ the subsequent program assumes that \PB{$\\{qr}\K%
 \4${}\}{}$\2\par
 \U15.\fi
 
-\M{17}We have saved the other tricky case for last:
+\M[298 zeilberger.w]{17}We have saved the other tricky case for last:
 Again we do a double-reversal in order to recompute any \PB{\|q}'s and \PB{%
 \|s}'s
 that have been obliterated. In this case the recomputation affects
@@ -436,7 +445,7 @@ former children }\6
 \4${}\}{}$\2\par
 \U15.\fi
 
-\N{1}{18}Index.
+\N[321 zeilberger.w]{1}{18}Index.
 
 \fi
 

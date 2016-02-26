@@ -1,7 +1,8 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Generalized exact cover.
+\N[2 xgdance.w]{1}{1}Generalized exact cover.
 This program implements an extension of
 the algorithm discussed in my paper about ``dancing
 links.'' I hacked it together from the {\mc XCOVER} program that I wrote in
@@ -79,7 +80,7 @@ and\ \%u\ cleansings}\)\.{.\\n"},\39\\{count},\39\\{updates},\39\\{purifs});{}$%
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Global variables\X${}\E{}$\6
+\M[74 xgdance.w]{2}\B\X2:Global variables\X${}\E{}$\6
 \&{int} \\{verbose};\C{ $>0$ to show solutions, $>1$ to show partial ones too }%
 \6
 \&{int} \\{count}${}\K\T{0}{}$;\C{ number of solutions found so far }\6
@@ -100,7 +101,7 @@ level }\6
 \As8\ET14.
 \U1.\fi
 
-\N{1}{3}Data structures.
+\N[86 xgdance.w]{1}{3}Data structures.
 Each column of the input matrix is represented by a \&{column} struct,
 and each row is represented as a linked list of \&{node} structs. There's one
 node for each nonzero entry in the matrix.
@@ -127,7 +128,7 @@ ${}\}{}$ \&{node};\par
 \A4.
 \U1.\fi
 
-\M{4}Each \&{column} struct contains five fields:
+\M[110 xgdance.w]{4}Each \&{column} struct contains five fields:
 The \PB{\\{head}} is a node that stands at the head of its list of nodes;
 the \PB{\\{len}} tells the length of that list of nodes, not counting the
 header;
@@ -154,8 +155,8 @@ of this column }\6
 ${}\}{}$ \&{column};\par
 \fi
 
-\M{5}One \PB{\&{column}} struct is called the root. It serves as the head of
-the
+\M[132 xgdance.w]{5}One \PB{\&{column}} struct is called the root. It serves as
+the head of the
 list of columns that need to be covered, and is identifiable by the fact
 that its \PB{\\{name}} is empty.
 
@@ -163,8 +164,8 @@ that its \PB{\\{name}} is empty.
 \\{col\_array}[\T{0}]\C{ gateway to the unsettled columns }\par
 \fi
 
-\M{6}A row is identified not by name but by the names of the columns it
-contains.
+\M[138 xgdance.w]{6}A row is identified not by name but by the names of the
+columns it contains.
 Here is a routine that prints a row, given a pointer to any of its
 nodes. It also prints the position of the given node in its column.
 
@@ -196,7 +197,7 @@ ${}\\{printf}(\.{"\ (\%d\ of\ \%d)\\n"},\39\|k,\39\|p\MG\\{col}\MG\\{len});{}$\6
 \As15, 16, 25, 26\ETs28.
 \U1.\fi
 
-\N{1}{7}Inputting the matrix.
+\N[159 xgdance.w]{1}{7}Inputting the matrix.
 Brute force is the rule in this part of the program.
 
 \Y\B\4\X7:Initialize the data structures\X${}\E{}$\6
@@ -204,7 +205,7 @@ Brute force is the rule in this part of the program.
 \X11:Read the rows\X;\par
 \U1.\fi
 
-\M{8}\B\D$\\{buf\_size}$ \5
+\M[166 xgdance.w]{8}\B\D$\\{buf\_size}$ \5
 $\T{4}*\\{max\_cols}+{}$\T{3}\C{ upper bound on input line length }\par
 \Y\B\4\X2:Global variables\X${}\mathrel+\E{}$\6
 \&{column} ${}\\{col\_array}[\\{max\_cols}+\T{2}]{}$;\C{ place for column
@@ -213,7 +214,7 @@ records }\6
 \&{char} \\{buf}[\\{buf\_size}];\par
 \fi
 
-\M{9}\B\D$\\{panic}(\|m)$ \6
+\M[173 xgdance.w]{9}\B\D$\\{panic}(\|m)$ \6
 ${}\{{}$\5
 \1${}\\{fprintf}(\\{stderr},\39\.{"\%s!\\n\%s"},\39\|m,\39\\{buf}){}$;\5
 ${}\\{exit}({-}\T{1}){}$;\5
@@ -266,7 +267,7 @@ ${}(\\{cur\_col}-\T{1})\MG\\{next}\K{\AND}\\{root},\39\\{root}.\\{prev}\K\\{cur%
 \4${}\}{}$\2\par
 \U7.\fi
 
-\M{10}\B\X10:Local variables\X${}\E{}$\6
+\M[203 xgdance.w]{10}\B\X10:Local variables\X${}\E{}$\6
 \&{register} \&{column} ${}{*}\\{cur\_col};{}$\6
 \&{register} \&{char} ${}{*}\|p,{}$ ${}{*}\|q;{}$\6
 \&{register} \&{node} ${}{*}\\{cur\_node};{}$\6
@@ -274,7 +275,7 @@ ${}(\\{cur\_col}-\T{1})\MG\\{next}\K{\AND}\\{root},\39\\{root}.\\{prev}\K\\{cur%
 \As13\ET20.
 \U1.\fi
 
-\M{11}\B\X11:Read the rows\X${}\E{}$\6
+\M[209 xgdance.w]{11}\B\X11:Read the rows\X${}\E{}$\6
 $\\{cur\_node}\K\\{node\_array};{}$\6
 \&{while} ${}(\\{fgets}(\\{buf},\39\\{buf\_size},\39\\{stdin})){}$\5
 ${}\{{}$\1\6
@@ -330,7 +331,7 @@ ${}\\{row\_start}\MG\\{left}\K\\{cur\_node}-\T{1},\39(\\{cur\_node}-\T{1})\MG%
 \4${}\}{}$\2\par
 \U7.\fi
 
-\N{1}{12}Backtracking.
+\N[241 xgdance.w]{1}{12}Backtracking.
 Our strategy for generating all exact covers will be to repeatedly
 choose always the column that appears to be hardest to cover, namely the
 column with shortest list, from all columns that still need to be covered.
@@ -386,13 +387,13 @@ ${}\\{cur\_node}\K\\{choice}[\\{level}]\K\\{cur\_node}\MG\\{down}{}$;\5
 \X22:Print column lengths, to make sure everything has been restored\X;\2\par
 \U1.\fi
 
-\M{13}\B\X10:Local variables\X${}\mathrel+\E{}$\6
+\M[284 xgdance.w]{13}\B\X10:Local variables\X${}\mathrel+\E{}$\6
 \&{register} \&{column} ${}{*}\\{best\_col}{}$;\C{ column chosen for branching
 }\6
 \&{register} \&{node} ${}{*}\\{pp}{}$;\C{ traverses a row }\par
 \fi
 
-\M{14}\B\X2:Global variables\X${}\mathrel+\E{}$\6
+\M[288 xgdance.w]{14}\B\X2:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{level};\C{ number of choices in current partial solution }\6
 \&{int} \\{cthresh};\C{ smallest color allowable when extending a solution }\6
 \&{int} \\{conflict};\C{ set nonzero if a conflict arises while covering }\6
@@ -400,7 +401,8 @@ ${}\\{cur\_node}\K\\{choice}[\\{level}]\K\\{cur\_node}\MG\\{down}{}$;\5
 each level }\par
 \fi
 
-\M{15}When a row is blocked, it leaves all lists except the list of the
+\M[294 xgdance.w]{15}When a row is blocked, it leaves all lists except the list
+of the
 column that is being covered. Thus a node is never removed from a list
 twice.
 
@@ -433,7 +435,8 @@ ${}\\{upd\_prof}[\\{level}]\MRL{+{\K}}\|k;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{16}Uncovering is done in precisely the reverse order. The pointers thereby
+\M[317 xgdance.w]{16}Uncovering is done in precisely the reverse order. The
+pointers thereby
 execute an exquisitely choreo\-graphed dance which returns them almost
 magically to their former state.
 
@@ -460,7 +463,8 @@ ${}\|l\MG\\{next}\K\|r\MG\\{prev}\K\|c;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{17}\B\X17:Cover all other columns of \PB{\\{cur\_node}}\X${}\E{}$\6
+\M[336 xgdance.w]{17}\B\X17:Cover all other columns of \PB{\\{cur\_node}}\X${}%
+\E{}$\6
 \&{for} ${}(\\{pp}\K\\{cur\_node}\MG\\{right};{}$ ${}\\{pp}\I\\{cur\_node};{}$
 ${}\\{pp}\K\\{pp}\MG\\{right}){}$\1\6
 \&{if} ${}(\R\\{pp}\MG\\{color}){}$\1\5
@@ -474,8 +478,8 @@ ${}\\{conflict}\K\T{1};{}$\2\6
 \4${}\}{}$\2\2\par
 \U12.\fi
 
-\M{18}We included \PB{\\{left}} links, thereby making the rows doubly linked,
-so
+\M[344 xgdance.w]{18}We included \PB{\\{left}} links, thereby making the rows
+doubly linked, so
 that columns would be uncovered in the correct LIFO order in this
 part of the program. (The \PB{\\{uncover}} routine itself could have done its
 job with \PB{\\{right}} links only.) (Think about it.)
@@ -490,7 +494,8 @@ ${}\\{uncover}(\\{pp}\MG\\{col});{}$\2\6
 \\{unpurify}(\\{pp});\2\2\par
 \U12.\fi
 
-\M{19}\B\X19:Set \PB{\\{best\_col}} to the best column for branching\X${}\E{}$\6
+\M[354 xgdance.w]{19}\B\X19:Set \PB{\\{best\_col}} to the best column for
+branching\X${}\E{}$\6
 $\\{minlen}\K\\{max\_nodes};{}$\6
 \&{if} ${}(\\{verbose}>\T{2}){}$\1\5
 ${}\\{printf}(\.{"Level\ \%d:"},\39\\{level});{}$\2\6
@@ -524,12 +529,13 @@ ${}\\{printf}(\.{"\ branching\ on\ \%s(\%d}\)\.{)\\n"},\39\\{best\_col}\MG%
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{20}\B\X10:Local variables\X${}\mathrel+\E{}$\6
+\M[374 xgdance.w]{20}\B\X10:Local variables\X${}\mathrel+\E{}$\6
 \&{register} \&{int} \\{minlen};\6
 \&{register} \&{int} \|j${},{}$ \|k${},{}$ \|x;\par
 \fi
 
-\M{21}\B\X21:Record solution and \PB{\&{goto} \\{recover}}\X${}\E{}$\6
+\M[378 xgdance.w]{21}\B\X21:Record solution and \PB{\&{goto} \\{recover}}\X${}%
+\E{}$\6
 ${}\{{}$\1\6
 ${}\\{count}\PP;{}$\6
 \&{if} (\\{verbose})\5
@@ -546,8 +552,8 @@ ${}\\{printf}(\.{"\%d:\\n"},\39\\{count});{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{22}\B\X22:Print column lengths, to make sure everything has been restored%
-\X${}\E{}$\6
+\M[391 xgdance.w]{22}\B\X22:Print column lengths, to make sure everything has
+been restored\X${}\E{}$\6
 ${}\{{}$\1\6
 \\{printf}(\.{"Final\ column\ length}\)\.{s"});\6
 \&{for} ${}(\\{cur\_col}\K\\{root}.\\{next};{}$ ${}\\{cur\_col}\I{\AND}%
@@ -558,7 +564,7 @@ ${}\\{printf}(\.{"\ \%s(\%d)"},\39\\{cur\_col}\MG\\{name},\39\\{cur\_col}\MG%
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{23}\B\X23:Print a profile of the search tree\X${}\E{}$\6
+\M[399 xgdance.w]{23}\B\X23:Print a profile of the search tree\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|x\K\T{1}{}$;\C{ the root node doesn't show up in the profile }\6
 \&{for} ${}(\\{level}\K\T{1};{}$ ${}\\{level}\Z\\{maxl}+\T{1};{}$ ${}\\{level}%
@@ -578,7 +584,8 @@ ${}\\{printf}(\.{"Total\ \%d\ nodes.\\n"},\39\|x);{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{24}Color barriers. Finally, here's the new material related to coloring.
+\N[415 xgdance.w]{1}{24}Color barriers. Finally, here's the new material
+related to coloring.
 
 \Y\B\4\X24:Read a color restriction\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -591,7 +598,8 @@ ${}\|p\MRL{+{\K}}\T{2};{}$\6
 \4${}\}{}$\2\par
 \U11.\fi
 
-\M{25}When we choose a row that specifies colors in one or more columns, we
+\M[426 xgdance.w]{25}When we choose a row that specifies colors in one or more
+columns, we
 ``purify'' those columns by removing all incompatible rows. All rows that
 want the same color in a purified column will now be given the color code~$-1$
 so that we need not purify the column again.
@@ -633,8 +641,8 @@ ${}\\{upd\_prof}[\\{level}]\MRL{+{\K}}\|k,\39\\{pur\_prof}[\\{level}]\MRL{+{%
 \4${}\}{}$\2\par
 \fi
 
-\M{26}Just as \PB{\\{purify}} is analogous to \PB{\\{cover}}, the inverse
-process is analogous
+\M[454 xgdance.w]{26}Just as \PB{\\{purify}} is analogous to \PB{\\{cover}},
+the inverse process is analogous
 to \PB{\\{uncover}}.
 
 \Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
@@ -665,12 +673,12 @@ ${}\\{cthresh}\K\|c\MG\\{color\_thresh};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{27}\B\X27:Print the color of node \PB{\|q}\X${}\E{}$\6
+\M[476 xgdance.w]{27}\B\X27:Print the color of node \PB{\|q}\X${}\E{}$\6
 $\\{printf}(\.{":\%c"},\39\|q\MG\\{color}>\T{0}\?\|q\MG\\{color}:\|q\MG\\{col}%
 \MG\\{head}.\\{color}){}$;\par
 \U6.\fi
 
-\N{1}{28}Help for debugging. Here's a subroutine for when I'm
+\N[479 xgdance.w]{1}{28}Help for debugging. Here's a subroutine for when I'm
 doing a long run and want to check the current progress.
 
 \Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
@@ -686,7 +694,7 @@ ${}\\{printf}(\.{"Solutions\ so\ far:\ \%}\)\.{d\\n"},\39\\{count});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{29}Index.
+\N[493 xgdance.w]{1}{29}Index.
 \fi
 
 \inx

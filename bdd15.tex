@@ -1,8 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This program is the fifteenth in a series of exploratory studies
-by
+\N[2 bdd15.w]{1}{1}Intro. This program is the fifteenth in a series of
+exploratory studies by
 which I'm attempting to gain first-hand experience with BDD structures, as I
 prepare Section 7.1.4 of {\sl The Art of Computer Programming}.
 It's based on {\mc BDD14}, but it does everything with ZDDs instead of BDDs.
@@ -72,7 +73,7 @@ prompted for commands.
 
 \fi
 
-\M{2}For simplicity, I do my own memory allocation in a big array
+\M[73 bdd15.w]{2}For simplicity, I do my own memory allocation in a big array
 called \PB{\\{mem}}. The bottom part of that array is devoted to
 ZDD nodes, which each occupy two octabytes. The upper part
 is divided into dynamically allocated pages of a fixed size
@@ -101,7 +102,7 @@ in the index at the end.
 
 \fi
 
-\M{3}Here's the overall program structure:
+\M[100 bdd15.w]{3}Here's the overall program structure:
 
 \Y\B\8\#\&{include} \.{<stdio.h>}\6
 \8\#\&{include} \.{<stdlib.h>}\6
@@ -126,7 +127,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{4}\B\D$\\{file\_given}$ \5
+\M[123 bdd15.w]{4}\B\D$\\{file\_given}$ \5
 $(\\{argc}\E\T{2}{}$)\par
 \Y\B\4\X4:Check the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}>\T{2}\V(\\{file\_given}\W\R(\\{infile}\K\\{fopen}(\\{argv}[%
@@ -138,19 +139,20 @@ ${}\\{exit}({-}\T{1});{}$\6
 \4${}\}{}$\2\par
 \U3.\fi
 
-\M{5}\B\X5:Global variables\X${}\E{}$\6
+\M[131 bdd15.w]{5}\B\X5:Global variables\X${}\E{}$\6
 \&{FILE} ${}{*}\\{infile}{}$;\C{ input file containing commands }\6
 \&{int} \\{verbose}${}\K{-}\T{1}{}$;\C{ master control for debugging output;
 $-1$ gives all }\par
 \As9, 14, 22, 31, 41, 43, 52, 60, 110, 130, 134, 152, 155\ETs158.
 \U3.\fi
 
-\M{6}\B\X6:Initialize everything\X${}\E{}$\6
+\M[135 bdd15.w]{6}\B\X6:Initialize everything\X${}\E{}$\6
 \\{gb\_init\_rand}(\T{0});\C{ initialize the random number generator }\par
 \As10, 13, 45\ETs63.
 \U3.\fi
 
-\M{7}One of the main things I hope to learn with this program is the total
+\M[138 bdd15.w]{7}One of the main things I hope to learn with this program is
+the total
 number of \PB{\\{mems}} that the computation needs, namely the total number of
 memory references to octabytes.
 
@@ -185,7 +187,7 @@ ${}\\{printf}(\.{"\ \ \%llu\ mems\ plus\ \%l}\)\.{lu\ rmems\ plus\ \%llu\ z}\)%
 \X18:Print total memory usage\X;\par
 \Us3\ET156.\fi
 
-\M{8}\B\X8:Subroutines\X${}\E{}$\6
+\M[166 bdd15.w]{8}\B\X8:Subroutines\X${}\E{}$\6
 \&{void} \\{show\_stats}(\&{void})\1\1\2\2\6
 ${}\{{}$\1\6
 ${}\\{printf}(\.{"stats:\ \%d/\%d\ nodes,}\)\.{\ \%d\ dead,\ \%d\ pages,"},\39%
@@ -200,7 +202,8 @@ ${}\\{printf}(\.{"\ \%llu\ mems,\ \%llu\ rm}\)\.{ems,\ \%llu\ zmems,\ \%.4}\)%
 105, 107, 120, 129, 135, 136, 139, 143, 146, 149, 153, 156\ETs159.
 \U3.\fi
 
-\M{9}This program uses `\PB{\&{long} \&{long}}' to refer to 64-bit integers,
+\M[174 bdd15.w]{9}This program uses `\PB{\&{long} \&{long}}' to refer to 64-bit
+integers,
 because a single `\PB{\&{long}}' isn't treated consistently by the
 \CEE/~compilers available to me. (When I first learned~\CEE/,
 `\PB{\&{int}}' was traditionally `\PB{\&{short}}', so I was obliged
@@ -214,7 +217,7 @@ C'est tragique; c'est la vie.)
 mem counters }\par
 \fi
 
-\M{10}\B\X6:Initialize everything\X${}\mathrel+\E{}$\6
+\M[186 bdd15.w]{10}\B\X6:Initialize everything\X${}\mathrel+\E{}$\6
 \&{if} (\&{sizeof}(\&{long} \&{long})${}\I\T{8}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ I\ assume\ tha}\)\.{t\ sizeof(long\
@@ -223,7 +226,7 @@ ${}\\{exit}({-}\T{2});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{11}Speaking of compilers, the one I use at present insists that
+\M[192 bdd15.w]{11}Speaking of compilers, the one I use at present insists that
 pointers occupy 64 bits. As a result, I need to pack and unpack
 pointer data, in all the key data structures of this program;
 otherwise I would basically be giving up half of my memory and half
@@ -264,7 +267,8 @@ The \PB{\\{addr\_}} macro converts an arbitrary pointer to an \PB{\\{addr}}.
 \As12, 20\ETs40.
 \U3.\fi
 
-\N{1}{12}Dynamic arrays. Before I get into the ZDD stuff, I might as well
+\N[231 bdd15.w]{1}{12}Dynamic arrays. Before I get into the ZDD stuff, I might
+as well
 give myself some infrastructure to work with.
 
 The giant \PB{\\{mem}} array mentioned earlier has nodes at the bottom,
@@ -311,7 +315,7 @@ ${}\}{}$ \&{node};\6
 ${}\}{}$ \&{page};\par
 \fi
 
-\M{13}Here's how we launch the dynamic memory setup.
+\M[271 bdd15.w]{13}Here's how we launch the dynamic memory setup.
 
 Incidentally, I tried to initialize \PB{\\{mem}} by declaring it to be
 a variable of type \PB{\&{void} ${}{*}$}, then saying `\PB{$\\{mem}\K%
@@ -339,7 +343,7 @@ ${}\\{nodeptr}\K\\{topsink}+\T{1};{}$\6
 ${}\\{pageptr}\K\\{topofmem}{}$;\par
 \fi
 
-\M{14}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\M[293 bdd15.w]{14}\B\X5:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{mem}[\\{memsize}];\C{ where we store most of the stuff }\6
 \&{node} ${}{*}\\{nodeptr}{}$;\C{ the smallest unused node in \PB{\\{mem}} }\6
 \&{page} ${}{*}\\{pageptr}{}$;\C{ the smallest used page in \PB{\\{mem}} }\6
@@ -353,7 +357,7 @@ never go away }\6
 \&{int} \\{leasesonlife}${}\K\T{1}{}$;\C{ times to delay before giving up }\par
 \fi
 
-\M{15}Here's how we get a fresh (but uninitialized) node.
+\M[304 bdd15.w]{15}Here's how we get a fresh (but uninitialized) node.
 The \PB{\\{nodeavail}} stack is linked by its \PB{\\{xref}} fields.
 
 If memory is completely full, \PB{$\NULL$} is returned. In such cases
@@ -393,7 +397,8 @@ ${}\\{totalnodes}\PP;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{16}Conversely, nodes can always be recycled. In such cases, there
+\M[334 bdd15.w]{16}Conversely, nodes can always be recycled. In such cases,
+there
 had better not be any other nodes pointing to them.
 
 \Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
@@ -405,7 +410,8 @@ ${}\\{totalnodes}\MM;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{17}Occupation and liberation of pages is similar, but it takes place
+\M[344 bdd15.w]{17}Occupation and liberation of pages is similar, but it takes
+place
 at the top of \PB{\\{mem}}.
 
 \Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
@@ -444,7 +450,7 @@ ${}\\{pageavail}\K\|p;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{18}\B\X18:Print total memory usage\X${}\E{}$\6
+\M[373 bdd15.w]{18}\B\X18:Print total memory usage\X${}\E{}$\6
 $\|j\K\\{nodeptr}-{}$(\&{node} ${}{*}){}$ \\{mem};\6
 ${}\|k\K\\{topofmem}-\\{pageptr};{}$\6
 ${}\\{printf}(\.{"\ \ \%llu\ bytes\ of\ mem}\)\.{ory\ (\%d\ nodes,\ \%d\ pa}\)%
@@ -452,12 +458,13 @@ ${}\\{printf}(\.{"\ \ \%llu\ bytes\ of\ mem}\)\.{ory\ (\%d\ nodes,\ \%d\ pa}\)%
 \&{long} \&{long}) \|k)${}*\&{sizeof}(\&{page}),\39\|j,\39\|k){}$;\par
 \U7.\fi
 
-\M{19}\B\X19:Local variables\X${}\E{}$\6
+\M[378 bdd15.w]{19}\B\X19:Local variables\X${}\E{}$\6
 \&{register} \&{int} \|j${},{}$ \|k;\par
 \A113.
 \U3.\fi
 
-\N{1}{20}Variables and hash tables. Our ZDD base represents functions
+\N[381 bdd15.w]{1}{20}Variables and hash tables. Our ZDD base represents
+functions
 on the variables $x_v$ for $0\le v<\PB{\\{varsize}}-1$, where \PB{\\{varsize}}
 is a power of~2.
 
@@ -509,8 +516,8 @@ neighboring active variables }\2\6
 ${}\}{}$ \&{var};\par
 \fi
 
-\M{21}Every node \PB{\|p} that branches on $x_v$ in the ZDD has a field \PB{$%
-\|p\MG\\{index}$},
+\M[427 bdd15.w]{21}Every node \PB{\|p} that branches on $x_v$ in the ZDD has a
+field \PB{$\|p\MG\\{index}$},
 whose leftmost \PB{\\{logvarsize}} bits contain the index~$v$. The rightmost
 \PB{$\T{32}-\\{logvarsize}$} bits of \PB{$\|p\MG\\{index}$} are chosen
 randomly, in order to
@@ -534,7 +541,8 @@ $\\{oo},\39\|p\MG\\{lo}\K\\{addr\_}(\|l),\39\|p\MG\\{hi}\K\\{addr\_}(\|h),\39%
 \\{logvarsize}))+(\\{gb\_next\_rand}(\,)\GG(\\{logvarsize}-\T{1}){}$)\par
 \fi
 
-\M{22}Variable $x_v$ in this documentation means the variable whose information
+\M[445 bdd15.w]{22}Variable $x_v$ in this documentation means the variable
+whose information
 record is \PB{\\{varhead}[\|v]}. But the user's variable `\.{x5}' might not be
 represented by \PB{\\{varhead}[\T{5}]}, because the ordering of variables can
 change
@@ -553,7 +561,8 @@ verbose printouts }\6
 \&{int} \\{totvars};\C{ the number of variables created }\par
 \fi
 
-\M{23}Before any variables are used, we call the \PB{\\{createvars}} routine
+\M[459 bdd15.w]{23}Before any variables are used, we call the \PB{%
+\\{createvars}} routine
 to initialize the ones that the user asks for.
 
 \Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
@@ -567,7 +576,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{24}We need a node at each level that means ``tautology from here on,''
+\M[470 bdd15.w]{24}We need a node at each level that means ``tautology from
+here on,''
 i.e., all further branches lead to \PB{\\{topsink}}. These nodes are called
 $t_0$, $t_1$, \dots, in printouts. Only $t_0$, which represents the
 constant~1, is considered external, reference-count-wise.
@@ -619,8 +629,8 @@ ${}\\{leasesonlife}\K\T{10};{}$\6
 \4${}\}{}$\2\par
 \U23.\fi
 
-\M{25}The simplest nonconstant Boolean expression is a projection function,
-$x_v$.
+\M[508 bdd15.w]{25}The simplest nonconstant Boolean expression is a projection
+function, $x_v$.
 Paradoxically, however, the ZDD for this expression is {\it not\/} so
 simple, because ZDDs are optimized for a different criterion of simplicity.
 We access it with the following subroutine, creating it from scratch
@@ -645,7 +655,8 @@ ${}\\{printf}(\.{"\ \%x=x\%d\\n"},\39\\{id}(\\{hv}\MG\\{proj}),\39\|v);{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{26}I sometimes like to use subroutines before I'm in the mood to write
+\M[528 bdd15.w]{26}I sometimes like to use subroutines before I'm in the mood
+to write
 their innards. In such cases, pre-specifications
 like the ones given here allow me to procrastinate.
 
@@ -657,7 +668,8 @@ like the ones given here allow me to procrastinate.
 \As28\ET106.
 \U3.\fi
 
-\M{27}Now, however, I'm ready to tackle the \PB{\\{unique\_find}} subroutine,
+\M[536 bdd15.w]{27}Now, however, I'm ready to tackle the \PB{\\{unique\_find}}
+subroutine,
 which is one of the most crucial in the entire program.
 Given a variable~\PB{\|v}, together with node pointers \PB{\|l} and~\PB{\|h},
 we often
@@ -742,7 +754,7 @@ ${}\\{oooo},\39\|l\MG\\{xref}\MM,\39\|h\MG\\{xref}\MM;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{28}\B\X26:Templates for subroutines\X${}\mathrel+\E{}$\6
+\M[601 bdd15.w]{28}\B\X26:Templates for subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{recursively\_revive}(\&{node} ${}{*}\|p){}$;\C{ recursive
 resuscitation }\6
 \&{void} \\{recursively\_kill}(\&{node} ${}{*}\|p){}$;\C{ recursive
@@ -751,8 +763,8 @@ euthanization }\6
 }\par
 \fi
 
-\M{29}Before we can call \PB{\\{unique\_find}}, we need a hash table to work
-with.
+\M[606 bdd15.w]{29}Before we can call \PB{\\{unique\_find}}, we need a hash
+table to work with.
 We start small.
 
 \Y\B\4\D$\\{storenulls}(\|k)$ \5
@@ -765,7 +777,8 @@ ${}\\{storenulls}(\\{varhead}[\|k].\\{base}[\T{0}]){}$;\C{ both slots start out
 ${}\\{zmems}\PP{}$;\par
 \U24.\fi
 
-\M{30}A little timer starts ticking at the beginning of this program,
+\M[616 bdd15.w]{30}A little timer starts ticking at the beginning of this
+program,
 and it advances whenever we reach the present point.
 Whenever the timer reaches a multiple of \PB{\\{timerinterval}}, we pause to
 examine the memory situation, in an attempt to keep node growth under
@@ -795,11 +808,11 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U27.\fi
 
-\M{31}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\M[644 bdd15.w]{31}\B\X5:Global variables\X${}\mathrel+\E{}$\6
 \&{unsigned} \&{long} \&{long} \\{timer};\par
 \fi
 
-\M{32}Brand-new nodes enter the fray here.
+\M[647 bdd15.w]{32}Brand-new nodes enter the fray here.
 
 \Y\B\4\X32:Create a new node and return it\X${}\E{}$\6
 $\|p\K\\{reserve\_node}(\,);{}$\6
@@ -821,7 +834,8 @@ dead }\6
 \&{return} ${}\NULL{}$;\par
 \U27.\fi
 
-\M{33}We get to this part of the code when the table has become too dense.
+\M[664 bdd15.w]{33}We get to this part of the code when the table has become
+too dense.
 The density will now decrease from 3/4 to 3/8.
 
 \Y\B\4\X33:Double the table size and \PB{\&{goto} \\{restart}}\X${}\E{}$\6
@@ -851,7 +865,7 @@ ${}\|v\MG\\{free}\K\\{free}+\T{1}+(\\{newmask}-\\{mask})/\&{sizeof}(%
 \4${}\}{}$\2\par
 \Us32, 136\ETs140.\fi
 
-\M{34}\B\D$\\{maxmask}$ \5
+\M[685 bdd15.w]{34}\B\D$\\{maxmask}$ \5
 $((\T{1}\LL\\{logmaxhashsize})*\&{sizeof}(\&{addr})-\T{1}{}$)\C{ the biggest
 possible \PB{\\{mask}} }\par
 \Y\B\4\X34:Reserve new all-\PB{$\NULL$} pages for the bigger table\X${}\E{}$\6
@@ -883,7 +897,7 @@ ${}\\{zmems}\MRL{+{\K}}\\{pagesize}/{}$\&{sizeof}(\&{long} \&{long});\6
 \4${}\}{}$\2\par
 \U33.\fi
 
-\M{35}Some subtle cases can arise at this point.
+\M[709 bdd15.w]{35}Some subtle cases can arise at this point.
 For example, consider the hash table
 {\let\\=\Lambda $(a,\\,\\,b)$, with hash$(a)=3$ and hash$(b)=7$; when
 doubling the size, we need to rehash $a$ twice, going from
@@ -918,7 +932,8 @@ ${}\\{storenode}(\|v,\39\|j,\39\|r);{}$\6
 \4${}\}{}$\2\par
 \U33.\fi
 
-\M{36}While I've got linear probing firmly in mind, I might as well
+\M[736 bdd15.w]{36}While I've got linear probing firmly in mind, I might as
+well
 write a subroutine that will be needed later for garbage collection.
 The \PB{\\{table\_purge}} routine deletes all dead nodes that branch
 on a given variable~$x_v$.
@@ -949,7 +964,8 @@ ${}\|o,\39\|v\MG\\{free}\K\\{free};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{37}Deletion from a linearly probed hash table is tricky, as noted in
+\M[760 bdd15.w]{37}Deletion from a linearly probed hash table is tricky, as
+noted in
 Algorithm 6.4R of TAOCP. Here I can speed that algorithm up slightly,
 because there's no need to move dead entries that will be deleted later.
 
@@ -981,7 +997,8 @@ ${}\\{storenode}(\|v,\39\\{kk},\39\NULL);{}$\6
 ${}\|k\K\|j{}$;\C{ the last run through that loop saw no dead nodes }\par
 \U36.\fi
 
-\M{38}At least one node, \PB{$\|v\MG\\{elt}$}, branches on $x_v$ at this point.
+\M[783 bdd15.w]{38}At least one node, \PB{$\|v\MG\\{elt}$}, branches on $x_v$
+at this point.
 
 \Y\B\4\X38:Downsize the table if only a few entries are left\X${}\E{}$\6
 $\|k\K(\\{mask}\GG\T{2})+\T{1}-\\{free}{}$;\C{ this many nodes still branch on
@@ -1004,7 +1021,8 @@ ${}\|v\MG\\{mask}\K\\{newmask};{}$\6
 \4${}\}{}$\2\par
 \U36.\fi
 
-\M{39}Finally, another algorithm learned from Rudell. To prove its correctness,
+\M[799 bdd15.w]{39}Finally, another algorithm learned from Rudell. To prove its
+correctness,
 one can verify the following fact:
 Any entries that wrapped around from the upper half to
 the bottom in the original table will still wrap around in the smaller table.
@@ -1028,8 +1046,8 @@ ${}\\{storenode}(\|v,\39\|j,\39\|r);{}$\6
 \4${}\}{}$\2\par
 \U38.\fi
 
-\N{1}{40}The cache. The other principal data structure we need, besides the ZDD
-base
+\N[818 bdd15.w]{1}{40}The cache. The other principal data structure we need,
+besides the ZDD base
 itself, is a software cache that helps us avoid repeating the calculations
 that we've already done. If, for example, $f$ and $g$ are nodes of the ZDD for
 which we've already computed $h=f\land g$, the cache should contain the
@@ -1087,7 +1105,7 @@ not-yet-implemented~(5--15).
 ${}\}{}$ \&{memo};\par
 \fi
 
-\M{41}The cache always occupies $2^e$ pages of the dynamic memory,
+\M[877 bdd15.w]{41}The cache always occupies $2^e$ pages of the dynamic memory,
 for some integer $e\ge0$. If we have leisure to choose this size, we pick
 the smallest $e\ge0$ such that the cache has at least $\max(4m,n/4)$ slots,
 where $m$ is the number of nonempty items in the cache and $n$ is
@@ -1112,7 +1130,8 @@ $(\\{pagesize}/\&{sizeof}(\&{memo}){}$)\par
 }\par
 \fi
 
-\M{42}The following subroutines, useful for debugging, print out the
+\M[898 bdd15.w]{42}The following subroutines, useful for debugging, print out
+the
 cache contents in symbolic form.
 
 If \PB{\|p} points to a node, \PB{\\{id}(\|p)} is \PB{$\|p-\\{botsink}$}.
@@ -1145,7 +1164,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{43}Many of the symbolic names here are presently unused. I've filled them
+\M[922 bdd15.w]{43}Many of the symbolic names here are presently unused. I've
+filled them
 in just to facilitate extensions to this program.
 
 \Y\B\4\X5:Global variables\X${}\mathrel+\E{}$\6
@@ -1160,7 +1180,8 @@ in just to facilitate extensions to this program.
 \39\.{"-"},\39\.{"+"},\39\.{"|"},\39\.{"/"},\39\.{"\\\\"},\39\.{"\~"}\}{}$;\par
 \fi
 
-\M{44}The threshold is set to half the total number of cache slots,
+\M[933 bdd15.w]{44}The threshold is set to half the total number of cache
+slots,
 because this many random insertions will keep about $e^{-1/2}\approx
 61$\% of the cache slots unclobbered. (If $p$ denotes this probability,
 a random large binary tree will need about $E$ steps to recalculate a
@@ -1210,11 +1231,12 @@ ${}\\{threshold}\K\T{1}+(\\{cachepages}*\\{cacheslotsperpage})/\T{2};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{45}\B\X6:Initialize everything\X${}\mathrel+\E{}$\6
+\M[973 bdd15.w]{45}\B\X6:Initialize everything\X${}\mathrel+\E{}$\6
 \\{cache\_init}(\,);\par
 \fi
 
-\M{46}Here's how we look for a memo in the cache. Memos might point to dead
+\M[976 bdd15.w]{46}Here's how we look for a memo in the cache. Memos might
+point to dead
 nodes, as long as those nodes still exist.
 
 A simple hash function is adequate for caching, because no clustering
@@ -1262,7 +1284,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{47}Insertion into the cache is even easier, except that we might
+\M[1012 bdd15.w]{47}Insertion into the cache is even easier, except that we
+might
 want to double the cache size while we're at it.
 
 \Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
@@ -1296,7 +1319,7 @@ ${}\\{printf}(\.{"set\ \%x:\ "},\39(\\{slot}\AND\\{cachemask})/\&{sizeof}(%
 \4${}\}{}$\2\par
 \fi
 
-\M{48}\B\X48:Double the cache size\X${}\E{}$\6
+\M[1034 bdd15.w]{48}\B\X48:Double the cache size\X${}\E{}$\6
 \&{if} ${}(\\{cachepages}<\\{maxcachepages}){}$\5
 ${}\{{}$\1\6
 \&{if} ${}(\\{verbose}\AND(\T{8}+\T{16}+\T{32}+\T{512})){}$\1\5
@@ -1327,7 +1350,7 @@ ${}\\{threshold}\K\T{1}+(\\{cachepages}*\\{cacheslotsperpage})/\T{2};{}$\6
 \4\\{done}:\par
 \U47.\fi
 
-\M{49}\B\X49:Recache the items in the bottom half\X${}\E{}$\6
+\M[1056 bdd15.w]{49}\B\X49:Recache the items in the bottom half\X${}\E{}$\6
 \&{for} ${}(\|k\K\\{cachepages}\GG\T{1};{}$ ${}\|k<\\{cachepages};{}$ ${}\|k%
 \PP){}$\5
 ${}\{{}$\1\6
@@ -1350,7 +1373,8 @@ ${}\|o,\39\|m\MG\|r\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U48.\fi
 
-\M{50}Before we purge elements from the unique tables, we need to purge all
+\M[1069 bdd15.w]{50}Before we purge elements from the unique tables, we need to
+purge all
 references to dead nodes from the cache.
 
 \Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
@@ -1386,7 +1410,8 @@ ${}\\{cacheinserts}\K\\{items};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{51}\B\X51:Downsize the cache if it has now become too sparse\X${}\E{}$\6
+\M[1092 bdd15.w]{51}\B\X51:Downsize the cache if it has now become too sparse%
+\X${}\E{}$\6
 $\\{newcachepages}\K\\{choose\_cache\_size}(\\{items});{}$\6
 \&{if} ${}(\\{newcachepages}<\\{cachepages}){}$\5
 ${}\{{}$\1\6
@@ -1418,7 +1443,8 @@ ${}\\{threshold}\K\T{1}+(\\{cachepages}*\\{cacheslotsperpage})/\T{2};{}$\6
 \4${}\}{}$\2\par
 \U50.\fi
 
-\N{1}{52}ZDD structure. The reader of this program ought to be familiar with
+\N[1114 bdd15.w]{1}{52}ZDD structure. The reader of this program ought to be
+familiar with
 the basics of ZDDs, namely the facts that a ZDD base consists of
 two sink nodes together with an unlimited number of branch nodes,
 where each branch node $(v,l,h)$ names a variable $x_v$ and points
@@ -1437,7 +1463,8 @@ ZDD node.
 ZDD base }\par
 \fi
 
-\M{53}Sometimes we want to mark the nodes of a subfunction temporarily.
+\M[1131 bdd15.w]{53}Sometimes we want to mark the nodes of a subfunction
+temporarily.
 The following routine sets the leading bit of the \PB{\\{xref}} field
 in all nodes reachable from~\PB{\|p}.
 
@@ -1457,7 +1484,8 @@ ${}\|o,\39\|p\K\\{node\_}(\|p\MG\\{hi});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{54}We need to remove those marks soon after \PB{\\{mark}} has been called,
+\M[1146 bdd15.w]{54}We need to remove those marks soon after \PB{\\{mark}} has
+been called,
 because the \PB{\\{xref}} field is really supposed to count references.
 
 \Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
@@ -1476,7 +1504,8 @@ ${}\|o,\39\|p\K\\{node\_}(\|p\MG\\{hi});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{55}Here's a simple routine that prints out the current ZDDs, in order
+\M[1160 bdd15.w]{55}Here's a simple routine that prints out the current ZDDs,
+in order
 of the variables in branch nodes. If the \PB{\\{marked}} parameter is nonzero,
 the output is restricted to branch nodes whose \PB{\\{xref}} field is
 marked. Otherwise all nodes are shown, with nonzero \PB{\\{xref}}s in
@@ -1526,8 +1555,8 @@ ${}\\{printf}(\.{"f\%d=\%x\\n"},\39\|j,\39\\{id}(\|f[\|j]));{}$\2\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{56}The masking feature is useful when we want to print out only a single
-ZDD.
+\M[1194 bdd15.w]{56}The masking feature is useful when we want to print out
+only a single ZDD.
 
 \Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_function}(\&{node} ${}{*}\|p){}$\1\1\2\2\6
@@ -1546,7 +1575,7 @@ ${}\\{mems}\K\\{savemems},\39\\{rmems}\K\\{savermems};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{57}\B\X8:Subroutines\X${}\mathrel+\E{}$\6
+\M[1209 bdd15.w]{57}\B\X8:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_profile}(\&{node} ${}{*}\|p){}$\1\1\2\2\6
 ${}\{{}$\1\6
 \&{unsigned} \&{long} \&{long} \\{savemems}${}\K\\{mems},{}$ \\{savermems}${}\K%
@@ -1574,8 +1603,8 @@ ${}\\{mems}\K\\{savemems},\39\\{rmems}\K\\{savermems};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{58}\B\X58:Print the number of marked nodes that branch on \PB{\|v}\X${}\E{}$%
-\6
+\M[1228 bdd15.w]{58}\B\X58:Print the number of marked nodes that branch on \PB{%
+\|v}\X${}\E{}$\6
 \&{for} ${}(\|j\K\|k\K\T{0};{}$ ${}\|k<\|v\MG\\{mask};{}$ ${}\|k\MRL{+{\K}}%
 \&{sizeof}(\&{addr})){}$\5
 ${}\{{}$\1\6
@@ -1591,7 +1620,8 @@ ${}\\{printf}(\.{"\ \%d"},\39\|j);{}$\6
 ${}\\{tot}\MRL{+{\K}}\|j{}$;\par
 \U57.\fi
 
-\M{59}In order to deal efficiently with large ZDDs, we've introduced highly
+\M[1239 bdd15.w]{59}In order to deal efficiently with large ZDDs, we've
+introduced highly
 redundant data structures, including things like hash tables and the cache.
 Furthermore, we assume that every ZDD node~\PB{\|p} has a redundant field
 \PB{$\|p\MG\\{xref}$}, which counts the total number of branch nodes, external
@@ -1639,8 +1669,8 @@ ${}\\{mems}\K\\{savemems};{}$\6
 \8\#\&{endif}\par
 \fi
 
-\M{60}Sanity checking is done with a ``shadow memory'' \PB{\\{smem}}, which is
-just
+\M[1280 bdd15.w]{60}Sanity checking is done with a ``shadow memory'' \PB{%
+\\{smem}}, which is just
 as big as~\PB{\\{mem}}. If \PB{\|p} points to a node in \PB{\\{mem}}, there's a
 corresponding
 ``ghost'' in \PB{\\{smem}}, pointed to by \PB{$\|q\K\\{ghost}(\|p)$}. The ghost
@@ -1671,7 +1701,7 @@ $\\{node\_}((\&{size\_t})(\|p)-{}$(\&{size\_t}) \\{mem}${}+{}$(\&{size\_t}) %
 \8\#\&{endif}\par
 \fi
 
-\M{61}\B\D$\\{complain}(\\{complaint})$ \6
+\M[1300 bdd15.w]{61}\B\D$\\{complain}(\\{complaint})$ \6
 ${}\{{}$\5
 \1${}\\{printf}(\.{"!\ \%s\ in\ node\ "},\39\\{complaint}){}$;\5
 \\{print\_node}(\|p);\5
@@ -1728,13 +1758,13 @@ ${}\\{printf}(\.{"!\ \%d\ nodes\ have\ lea}\)\.{ked\\n"},\39\\{extra}-%
 \\{totalnodes}){}$;\2\par
 \U59.\fi
 
-\M{62}The macros above and the \PB{\\{who\_points\_to}} routine below rely on
-the fact that
+\M[1338 bdd15.w]{62}The macros above and the \PB{\\{who\_points\_to}} routine
+below rely on the fact that
 \PB{$\&{sizeof}(\&{node})\K\T{16}$}.
 
 \fi
 
-\M{63}\B\X6:Initialize everything\X${}\mathrel+\E{}$\6
+\M[1341 bdd15.w]{63}\B\X6:Initialize everything\X${}\mathrel+\E{}$\6
 \&{if} ${}(\&{sizeof}(\&{node})\I\T{16}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ I\ assume\ tha}\)\.{t\ sizeof(node)\
@@ -1743,7 +1773,8 @@ ${}\\{exit}({-}\T{3});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{64}\B\X64:Check that \PB{\|p} is findable in the unique table\X${}\E{}$\6
+\M[1347 bdd15.w]{64}\B\X64:Check that \PB{\|p} is findable in the unique table%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{addr} ${}{*}\\{hash};{}$\6
 \&{register} \&{var} ${}{*}\|v\K\\{thevar}(\|p);{}$\7
@@ -1766,7 +1797,7 @@ ${}\\{addr\_\_}((\&{size\_t})(\|v\MG\\{base}[\|k\GG\\{logpagesize}]+(\|k\AND%
 \4${}\}{}$\2\par
 \U61.\fi
 
-\M{65}\B\X65:Check the list of free nodes\X${}\E{}$\6
+\M[1364 bdd15.w]{65}\B\X65:Check the list of free nodes\X${}\E{}$\6
 $\\{extra}\K\\{nodeptr}-\\{botsink};{}$\6
 \&{for} ${}(\|p\K\\{nodeavail};{}$ \|p; ${}\|p\K\\{node\_}(\|p\MG\\{xref})){}$\5
 ${}\{{}$\1\6
@@ -1778,7 +1809,7 @@ ${}\\{extra}\MM,\39\\{ghost}(\|p)\MG\\{xref}\K{-}\T{1};{}$\2\6
 \4${}\}{}$\2\par
 \U61.\fi
 
-\M{66}\B\X66:Compute the ghost index fields\X${}\E{}$\6
+\M[1372 bdd15.w]{66}\B\X66:Compute the ghost index fields\X${}\E{}$\6
 $\\{ghost}(\\{botsink})\MG\\{index}\K\\{ghost}(\\{topsink})\MG\\{index}\K%
 \T{0};{}$\6
 \&{for} ${}(\|v\K\\{varhead};{}$ ${}\|v<\\{topofvars};{}$ ${}\|v\PP){}$\5
@@ -1813,7 +1844,7 @@ ${}\\{ghost}(\|f[\|j])\MG\\{index}\PP;{}$\2\6
 \4${}\}{}$\2\2\par
 \U61.\fi
 
-\M{67}\B\X67:Check the reference counts\X${}\E{}$\6
+\M[1394 bdd15.w]{67}\B\X67:Check the reference counts\X${}\E{}$\6
 \&{for} ${}(\|p\K\\{botsink},\39\\{count}\K\T{0};{}$ ${}\|p<\\{nodeptr};{}$ ${}%
 \|p\PP){}$\5
 ${}\{{}$\1\6
@@ -1834,8 +1865,8 @@ ${}\\{printf}(\.{"!\ deadnodes\ should\ }\)\.{be\ \%d,\ not\ \%d\\n"},\39%
 \\{count},\39\\{deadnodes}){}$;\2\par
 \U59.\fi
 
-\M{68}If a reference count turns out to be wrong, I'll probably want to know
-why.
+\M[1406 bdd15.w]{68}If a reference count turns out to be wrong, I'll probably
+want to know why.
 The following subroutine provides additional clues.
 
 \Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
@@ -1854,7 +1885,7 @@ ${}\\{print\_node}(\\{node\_}(\|q\AND{-}\&{sizeof}(\&{node})));{}$\6
 \8\#\&{endif}\par
 \fi
 
-\M{69}We've seen that every superlegimate node is findable in the
+\M[1420 bdd15.w]{69}We've seen that every superlegimate node is findable in the
 proper unique table. Conversely, we want to check that everything
 is those tables is superlegitimate, and found.
 
@@ -1896,7 +1927,8 @@ ${}\\{printf}(\.{"!\ unique\ table\ \%d\ h}\)\.{as\ \%d\ free\ slots,\ no}\)%
 \4${}\}{}$\2\par
 \U59.\fi
 
-\M{70}The fields in cache memos that refer to nodes should refer to
+\M[1452 bdd15.w]{70}The fields in cache memos that refer to nodes should refer
+to
 legitimate nodes.
 
 \Y\B\4\X70:Check the cache\X${}\E{}$\6
@@ -1930,8 +1962,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U59.\fi
 
-\M{71}Finally, \PB{\\{sanity\_check}} ensures that we haven't forgotten to free
-unused
+\M[1474 bdd15.w]{71}Finally, \PB{\\{sanity\_check}} ensures that we haven't
+forgotten to free unused
 pages, nor have we freed a page that was already free.
 
 \Y\B\4\X71:Check the list of free pages\X${}\E{}$\6
@@ -1950,7 +1982,7 @@ ${}\\{printf}(\.{"!\ \%d\ pages\ have\ lea}\)\.{ked\\n"},\39\\{extra});{}$\2\6
 \4${}\}{}$\2\par
 \U59.\fi
 
-\M{72}The following routine brings a dead node back to life.
+\M[1491 bdd15.w]{72}The following routine brings a dead node back to life.
 It also increases the reference counts of the node's children,
 and resuscitates them if they were dead.
 
@@ -1977,7 +2009,8 @@ ${}\|o,\39\|p\MG\\{xref}\PP;{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{73}Conversely, we sometimes must go the other way, with as much dignity
+\M[1510 bdd15.w]{73}Conversely, we sometimes must go the other way, with as
+much dignity
 as we can muster.
 
 \Y\B\4\D$\\{deref}(\|p)$ \6
@@ -2007,8 +2040,8 @@ ${}\|o,\39\|p\MG\\{xref}\MM;{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{74}Binary operations. OK, now we've got a bunch of powerful routines for
-making
+\N[1530 bdd15.w]{1}{74}Binary operations. OK, now we've got a bunch of powerful
+routines for making
 and maintaining ZDDs, and it's time to have fun. Let's start with a typical
 synthesis routine, which constructs the ZDD for $f\land g$ from the ZDDs for
 $f$ and~$g$.
@@ -2065,8 +2098,8 @@ fetched \PB{$\|f\MG\\{index}$}, \PB{$\|g\MG\\{index}$} }\6
 \4${}\}{}$\2\par
 \fi
 
-\M{75}I assume that \PB{$\|f\MG\\{lo}$} and \PB{$\|f\MG\\{hi}$} belong to the
-same octabyte.
+\M[1573 bdd15.w]{75}I assume that \PB{$\|f\MG\\{lo}$} and \PB{$\|f\MG\\{hi}$}
+belong to the same octabyte.
 
 The \PB{\\{rmems}} counter is incremented only after we've checked for
 special terminal cases. When none of the simplifications apply,
@@ -2096,7 +2129,8 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{1}),\39\|r);{}$\6
 \&{return} \|r;\par
 \U74.\fi
 
-\M{76}With ZDDs, $f\lor g$ is {\it not\/} dual to $f\land g$, as it
+\M[1596 bdd15.w]{76}With ZDDs, $f\lor g$ is {\it not\/} dual to $f\land g$, as
+it
 was in {\mc BDD14}.
 
 \Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
@@ -2118,7 +2152,7 @@ ${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{7}));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{77}\B\X77:Find $f\lor g$ recursively\X${}\E{}$\6
+\M[1611 bdd15.w]{77}\B\X77:Find $f\lor g$ recursively\X${}\E{}$\6
 $\\{rmems}\PP{}$;\C{ track recursion overhead }\6
 ${}\\{vf}\K\\{thevar}(\|f);{}$\6
 ${}\\{vg}\K\\{thevar}(\|g);{}$\6
@@ -2170,7 +2204,7 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{7}),\39\|r);{}$\6
 \&{return} \|r;\par
 \U76.\fi
 
-\M{78}Exclusive or is much the same.
+\M[1646 bdd15.w]{78}Exclusive or is much the same.
 
 \Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
 \&{node} ${}{*}{}$\\{xor\_rec}(\&{node} ${}{*}\|f,\39{}$\&{node} ${}{*}\|g){}$%
@@ -2192,7 +2226,7 @@ ${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{6}));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{79}\B\X79:Find $f\oplus g$ recursively\X${}\E{}$\6
+\M[1660 bdd15.w]{79}\B\X79:Find $f\oplus g$ recursively\X${}\E{}$\6
 $\\{rmems}\PP{}$;\C{ track recursion overhead }\6
 ${}\\{vf}\K\\{thevar}(\|f);{}$\6
 ${}\\{vg}\K\\{thevar}(\|g);{}$\6
@@ -2240,7 +2274,8 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{6}),\39\|r);{}$\6
 \&{return} \|r;\par
 \U78.\fi
 
-\M{80}ZDDs work well only with ``normal'' operators $\circ$, namely operators
+\M[1693 bdd15.w]{80}ZDDs work well only with ``normal'' operators $\circ$,
+namely operators
 such that $0\circ 0=0$. We've done $\land$, $\lor$, and $\oplus$; here's
 the other one.
 
@@ -2271,7 +2306,7 @@ ${}\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{2}));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{81}\B\X81:Find $f\land\bar g$ recursively\X${}\E{}$\6
+\M[1715 bdd15.w]{81}\B\X81:Find $f\land\bar g$ recursively\X${}\E{}$\6
 $\\{rmems}\PP{}$;\C{ track recursion overhead }\6
 \&{if} ${}(\\{vf}<\\{vg}){}$\5
 ${}\{{}$\1\6
@@ -2305,8 +2340,8 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{2}),\39\|r);{}$\6
 \&{return} \|r;\par
 \U80.\fi
 
-\M{82}The product operation $f\sqcup g$ is new in {\mc BDD15}: It corresponds
-to
+\M[1738 bdd15.w]{82}The product operation $f\sqcup g$ is new in {\mc BDD15}: It
+corresponds to
 $f\sqcup g(z)=\exists x\,\exists y\,((z=x\lor y)\land f(x)\land g(y))$.
 Or, if we think of $f$ and $g$ as representing families of subsets,
 $f\sqcup g=\{\alpha\cup\beta\mid \alpha\in f, \beta\in g\}$.
@@ -2344,7 +2379,8 @@ ${}\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{5}));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{83}In this step I compute $g_l\lor g_h$ and join it with $f_h$,
+\M[1766 bdd15.w]{83}In this step I compute $g_l\lor g_h$ and join it with
+$f_h$,
 instead of joining $g_h$ with $f_l\lor f_h$. This asymmetry can
 be a big win, but I suppose it can also be a big loss. (Indeed,
 the similar choice for \PB{\\{coprod\_rec}} was a mistake, in the common
@@ -2413,7 +2449,8 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{5}),\39\|r);{}$\6
 \&{return} \|r;\par
 \U82.\fi
 
-\M{84}The disproduct operation is similar to product, but it evaluates
+\M[1816 bdd15.w]{84}The disproduct operation is similar to product, but it
+evaluates
 $\{\alpha\cup\beta\mid \alpha\in f, \beta\in g, \alpha\cup\beta=\emptyset\}$.
 (In other words, all unions of {\it disjoint\/} members of $f$ and~$g$, not
 all unions of the members.)
@@ -2449,7 +2486,7 @@ ${}\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{0}));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{85}\B\X85:Find the disjoint $f\sqcup g$ recursively\X${}\E{}$\6
+\M[1843 bdd15.w]{85}\B\X85:Find the disjoint $f\sqcup g$ recursively\X${}\E{}$\6
 $\\{rmems}\PP{}$;\C{ track recursion overhead }\6
 \&{if} ${}(\\{vf}\I\\{vg}){}$\5
 ${}\{{}$\1\6
@@ -2500,7 +2537,8 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{0}),\39\|r);{}$\6
 \&{return} \|r;\par
 \U84.\fi
 
-\M{86}The coproduct operation $f\sqcap g$, which is analogous to $f\sqcup g$,
+\M[1876 bdd15.w]{86}The coproduct operation $f\sqcap g$, which is analogous to
+$f\sqcup g$,
 is defined by the similar rule
 $f\sqcap g(z)=\exists x\,\exists y\,((z=x\land y)\land f(x)\land g(y))$.
 Or, if we think of $f$ and $g$ as representing families of subsets,
@@ -2528,7 +2566,7 @@ ${}\\{oo},\39\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{8}));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{87}\B\X87:Find $f\sqcap g$ recursively\X${}\E{}$\6
+\M[1897 bdd15.w]{87}\B\X87:Find $f\sqcap g$ recursively\X${}\E{}$\6
 $\\{rmems}\PP{}$;\C{ track recursion overhead }\6
 ${}\|v\K\\{vf}\K\\{thevar}(\|f),\39\\{vg}\K\\{thevar}(\|g);{}$\6
 \&{if} ${}(\\{vf}\I\\{vg}){}$\5
@@ -2585,7 +2623,7 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{8}),\39\|r);{}$\6
 \&{return} \|r;\par
 \U86.\fi
 
-\M{88}Similarly, there's a delta operation $f\bindel g
+\M[1932 bdd15.w]{88}Similarly, there's a delta operation $f\bindel g
 =\exists x\,\exists y\,((z=x\oplus y)\land f(x)\land g(y))$.
 Or, if we think of $f$ and $g$ as representing families of subsets,
 $f\bindel g=\{\alpha\bindel\beta\mid \alpha\in f, \beta\in g\}$.
@@ -2620,7 +2658,7 @@ ${}\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{11}));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{89}\B\X89:Find $f\bindel g$ recursively\X${}\E{}$\6
+\M[1956 bdd15.w]{89}\B\X89:Find $f\bindel g$ recursively\X${}\E{}$\6
 $\\{rmems}\PP{}$;\C{ track recursion overhead }\6
 \&{if} ${}(\\{vf}\I\\{vg}){}$\5
 ${}\{{}$\1\6
@@ -2687,7 +2725,8 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{11}),\39\|r);{}$\6
 \&{return} \|r;\par
 \U88.\fi
 
-\M{90}The quotient and remainder operations have a somewhat different
+\M[1998 bdd15.w]{90}The quotient and remainder operations have a somewhat
+different
 sort of recursion, and I don't know how slow they will be in
 the worst cases. In common cases, though, they are nice and fast.
 
@@ -2724,7 +2763,7 @@ ${}\|o,\39\|r\K\\{cache\_lookup}(\|f,\39\\{node\_}(\\{vg}\MG\\{elt}),\39\\{node%
 \4${}\}{}$\2\par
 \fi
 
-\M{91}\B\X91:Find $f\bmod g$ recursively\X${}\E{}$\6
+\M[2028 bdd15.w]{91}\B\X91:Find $f\bmod g$ recursively\X${}\E{}$\6
 $\\{rmems}\PP;{}$\6
 ${}\|o,\39\\{r0}\K\\{ezrem\_rec}(\\{node\_}(\|f\MG\\{lo}),\39\\{vg});{}$\6
 \&{if} ${}(\R\\{r0}){}$\1\5
@@ -2747,7 +2786,7 @@ ${}\\{cache\_insert}(\|f,\39\\{node\_}(\\{vg}\MG\\{elt}),\39\\{node\_}(\T{10}),%
 \&{return} \|r;\par
 \U90.\fi
 
-\M{92}\B\X8:Subroutines\X${}\mathrel+\E{}$\6
+\M[2044 bdd15.w]{92}\B\X8:Subroutines\X${}\mathrel+\E{}$\6
 \&{node} ${}{*}{}$\\{ezquot\_rec}(\&{node} ${}{*}\|f,\39{}$\&{var} ${}{*}%
 \\{vg}){}$\1\1\2\2\6
 ${}\{{}$\1\6
@@ -2769,7 +2808,7 @@ ${}\|o,\39\|r\K\\{cache\_lookup}(\|f,\39\\{node\_}(\\{vg}\MG\\{elt}),\39\\{node%
 \4${}\}{}$\2\par
 \fi
 
-\M{93}\B\X93:Find $f/g$ recursively in the easy case\X${}\E{}$\6
+\M[2059 bdd15.w]{93}\B\X93:Find $f/g$ recursively in the easy case\X${}\E{}$\6
 $\\{rmems}\PP;{}$\6
 ${}\|o,\39\\{r0}\K\\{ezquot\_rec}(\\{node\_}(\|f\MG\\{lo}),\39\\{vg});{}$\6
 \&{if} ${}(\R\\{r0}){}$\1\5
@@ -2792,7 +2831,8 @@ ${}\\{cache\_insert}(\|f,\39\\{node\_}(\\{vg}\MG\\{elt}),\39\\{node\_}(\T{9}),%
 \&{return} \|r;\par
 \U92.\fi
 
-\M{94}Now for the general case of division, which also simplifies in several
+\M[2075 bdd15.w]{94}Now for the general case of division, which also simplifies
+in several
 other ways. (This algorithm is due to Shin-ichi Minato, 1994.)
 
 \Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
@@ -2824,7 +2864,8 @@ ${}\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\T{9}));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{95}\B\X95:Find $f/g$ recursively in the general case\X${}\E{}$\6
+\M[2096 bdd15.w]{95}\B\X95:Find $f/g$ recursively in the general case\X${}\E{}$%
+\6
 $\\{rmems}\PP;{}$\6
 ${}\|o,\39\\{vg}\K\\{thevar}(\|g);{}$\6
 ${}\\{f1}\K\\{ezquot\_rec}(\|f,\39\\{vg});{}$\6
@@ -2861,7 +2902,8 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{9}),\39\|r);{}$\6
 \&{return} \|r;\par
 \U94.\fi
 
-\M{96}At present, I don't look for any special cases of the remainder operation
+\M[2123 bdd15.w]{96}At present, I don't look for any special cases of the
+remainder operation
 except the ``ezrem'' case. Everything else is done the hard way.
 
 \Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
@@ -2905,8 +2947,8 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\T{10}),\39\|r);{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{97}Ternary operations. All operations can be reduced to binary
-operations,
+\N[2154 bdd15.w]{1}{97}Ternary operations. All operations can be reduced to
+binary operations,
 but it should be interesting to see if we get a speedup by staying ternary.
 
 I like to call the first one ``mux,'' although many other authors have
@@ -2981,7 +3023,7 @@ ${}\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\|h);{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{98}\B\X98:Find $(f{?}\ g{:}\ h)$ recursively\X${}\E{}$\6
+\M[2199 bdd15.w]{98}\B\X98:Find $(f{?}\ g{:}\ h)$ recursively\X${}\E{}$\6
 $\\{rmems}\PP{}$;\C{ track recursion overhead }\6
 \&{if} ${}(\|v<\\{vf}){}$\5
 ${}\{{}$\C{ in this case \PB{$\|v\K\\{vh}$} }\1\6
@@ -3018,7 +3060,8 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\|h,\39\|r);{}$\6
 \&{return} \|r;\par
 \U97.\fi
 
-\M{99}The median (or majority) operation $\langle fgh\rangle$ has lots of nice
+\M[2225 bdd15.w]{99}The median (or majority) operation $\langle fgh\rangle$ has
+lots of nice
 symmetry.
 
 \Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
@@ -3065,7 +3108,7 @@ ${}\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\\{addr\_}(\|h)+\T{1}));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{100}\B\X100:Find $\langle fgh\rangle$ recursively\X${}\E{}$\6
+\M[2250 bdd15.w]{100}\B\X100:Find $\langle fgh\rangle$ recursively\X${}\E{}$\6
 $\\{rmems}\PP{}$;\C{ track recursion overhead }\6
 ${}\\{oo},\39\\{r0}\K\\{med\_rec}(\\{node\_}(\|f\MG\\{lo}),\39\\{node\_}(\|g\MG%
 \\{lo}),\39(\\{vh}\E\\{vf}\?\|o,\39\\{node\_}(\|h\MG\\{lo}):\|h));{}$\6
@@ -3094,7 +3137,7 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\\{addr\_}(\|h)+\T{1}),\39%
 \&{return} \|r;\par
 \U99.\fi
 
-\M{101}More symmetry here.
+\M[2269 bdd15.w]{101}More symmetry here.
 
 \Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
 \&{node} ${}{*}{}$\\{and\_and\_rec}(\&{node} ${}{*}\|f,\39{}$\&{node} ${}{*}%
@@ -3167,7 +3210,7 @@ ${}\|r\K\\{cache\_lookup}(\|f,\39\|g,\39\\{node\_}(\\{addr\_}(\|h)+\T{2}));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{102}\B\X102:Find $f\land g\land h$ recursively\X${}\E{}$\6
+\M[2311 bdd15.w]{102}\B\X102:Find $f\land g\land h$ recursively\X${}\E{}$\6
 $\\{rmems}\PP{}$;\C{ track recursion overhead }\6
 ${}\\{ooo},\39\\{r0}\K\\{and\_and\_rec}(\\{node\_}(\|f\MG\\{lo}),\39\\{node\_}(%
 \|g\MG\\{lo}),\39\\{node\_}(\|h\MG\\{lo}));{}$\6
@@ -3192,8 +3235,8 @@ ${}\\{cache\_insert}(\|f,\39\|g,\39\\{node\_}(\\{addr\_}(\|h)+\T{2}),\39%
 \&{return} \|r;\par
 \U101.\fi
 
-\M{103}The \PB{\\{symfunc}} operation is a ternary relation of a different
-kind:
+\M[2328 bdd15.w]{103}The \PB{\\{symfunc}} operation is a ternary relation of a
+different kind:
 Its first parameter is a node, its second parameter is a variable, and
 its third parameter is an integer.
 
@@ -3267,7 +3310,8 @@ ${}\\{cache\_insert}(\|p,\39\\{node\_}(\|v\MG\\{taut}),\39\\{node\_}(%
 \4${}\}{}$\2\par
 \fi
 
-\M{104}There's also a kludgy ternary operation intended for building arbitrary
+\M[2383 bdd15.w]{104}There's also a kludgy ternary operation intended for
+building arbitrary
 ZDDs from the bottom up. Namely, $f{!}\ g{:}\ h$
 returns a ZDD node that branches on $x_i$, with $g$ and $h$ as the
 lo and hi pointers, provided that $f=e_i$ and that
@@ -3300,8 +3344,8 @@ ${}\\{printf}(\.{"\ \ \ \%x=\%x!\%x:\%x\ (lev}\)\.{el\ \%d)\\n"},\39\\{id}(%
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{105}Top-level calls. As mentioned above, there's a top-level ``wrapper''
-around
+\N[2408 bdd15.w]{1}{105}Top-level calls. As mentioned above, there's a
+top-level ``wrapper'' around
 each of the recursive synthesis routines, so that we can launch them properly.
 
 Here's the top-level routine for binary operators.
@@ -3372,12 +3416,12 @@ ${}\\{printf}(\.{"\ \%x=\%x\%s\%x\ (\%llu\ me}\)\.{ms,\ \%llu\ rmems,\ \%llu}\)%
 \4${}\}{}$\2\par
 \fi
 
-\M{106}\B\X26:Templates for subroutines\X${}\mathrel+\E{}$\6
+\M[2447 bdd15.w]{106}\B\X26:Templates for subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{attempt\_repairs}(\&{void});\C{ collect garbage or something if
 there's hope }\par
 \fi
 
-\M{107}\B\X8:Subroutines\X${}\mathrel+\E{}$\6
+\M[2450 bdd15.w]{107}\B\X8:Subroutines\X${}\mathrel+\E{}$\6
 \&{node} ${}{*}{}$\\{ternary\_top}(\&{int} \\{curop}${},\39{}$\&{node} ${}{*}%
 \|f,\39{}$\&{node} ${}{*}\|g,\39{}$\&{node} ${}{*}\|h){}$\1\1\2\2\6
 ${}\{{}$\1\6
@@ -3449,7 +3493,7 @@ ${}\\{printf}(\.{"\ \%x=\%xS\%d\ (\%llu\ mem}\)\.{s,\ \%llu\ rmems,\ \%llu\ }\)%
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{108}Parsing the commands.
+\N[2497 bdd15.w]{1}{108}Parsing the commands.
 We're almost done, but we need to control the overall process by
 obeying the user's instructions.
 The syntax for elementary user commands appeared at the beginning of this
@@ -3464,7 +3508,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U3.\fi
 
-\M{109}Before we do any commands, it's helpful to ensure that no embarrassing
+\M[2510 bdd15.w]{109}Before we do any commands, it's helpful to ensure that no
+embarrassing
 anomalies will arise.
 
 \Y\B\4\D$\\{debugging}$ \5
@@ -3480,15 +3525,15 @@ anomalies will arise.
 \\{show\_stats}(\,);\2\par
 \U108.\fi
 
-\M{110}
+\M[2522 bdd15.w]{110}
 \Y\B\4\D$\\{bufsize}$ \5
 \T{100}\C{ all commands are very short, but comments might be long }\par
 \Y\B\4\X5:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{buf}[\\{bufsize}];\C{ our master's voice }\par
 \fi
 
-\M{111}\B\X111:Fill \PB{\\{buf}} with the next command, or \PB{\&{goto} %
-\\{alldone}}\X${}\E{}$\6
+\M[2528 bdd15.w]{111}\B\X111:Fill \PB{\\{buf}} with the next command, or \PB{%
+\&{goto} \\{alldone}}\X${}\E{}$\6
 \&{if} (\\{infile})\5
 ${}\{{}$\1\6
 \&{if} ${}(\R\\{fgets}(\\{buf},\39\\{bufsize},\39\\{infile})){}$\5
@@ -3515,8 +3560,8 @@ command-line \PB{\\{stdin}} }\6
 \4${}\}{}$\2\2\par
 \U108.\fi
 
-\M{112}The first nonblank character of each line identifies the type of
-command.
+\M[2544 bdd15.w]{112}The first nonblank character of each line identifies the
+type of command.
 All-blank lines are ignored; so are lines that begin with `\.\#'.
 
 I haven't attempted to make this interface the slightest bit fancy.
@@ -3622,7 +3667,7 @@ ${}\{{}$\5
 \&{continue};\par
 \U108.\fi
 
-\M{113}\B\X19:Local variables\X${}\mathrel+\E{}$\6
+\M[2591 bdd15.w]{113}\B\X19:Local variables\X${}\mathrel+\E{}$\6
 \&{char} ${}{*}\|c,{}$ ${}{*}\\{cc}{}$;\C{ characters being scanned }\6
 \&{node} ${}{*}\|p,{}$ ${}{*}\|q,{}$ ${}{*}\|r{}$;\C{ operands }\6
 \&{var} ${}{*}\|v{}$;\C{ a variable }\6
@@ -3630,7 +3675,8 @@ ${}\{{}$\5
 \&{int} \\{curop};\C{ current operator }\par
 \fi
 
-\M{114}The \<special> command \.{include} \<filename> starts up a new infile.
+\M[2598 bdd15.w]{114}The \<special> command \.{include} \<filename> starts up a
+new infile.
 (Instead of \.{include}, you could also say \.{input} or \.i, or
 even \.{ignore}.)
 
@@ -3654,7 +3700,8 @@ ${}\\{printf}(\.{"Sorry\ ---\ I\ couldn'}\)\.{t\ open\ file\ `\%s'!\\n"},\39%
 \4${}\}{}$\2\par
 \U112.\fi
 
-\M{115}The command `\.{p3}' prints out the ZDD for $f_3$; the command
+\M[2616 bdd15.w]{115}The command `\.{p3}' prints out the ZDD for $f_3$; the
+command
 `\.{pp3}' prints just the profile.
 
 \Y\B\4\D$\\{getkf}$ \5
@@ -3687,7 +3734,7 @@ ${}\\{printf}(\.{"f\%d="},\39\|k);{}$\6
 \4${}\}{}$\2\par
 \U112.\fi
 
-\M{116}\B\X116:Output a function\X${}\E{}$\6
+\M[2635 bdd15.w]{116}\B\X116:Output a function\X${}\E{}$\6
 \\{getkf};\6
 ${}\\{sprintf}(\\{buf},\39\.{"/tmp/f\%d.zdd"},\39\|k);{}$\6
 ${}\\{freopen}(\\{buf},\39\.{"w"},\39\\{stdout}){}$;\C{ redirect \PB{%
@@ -3697,13 +3744,13 @@ ${}\\{freopen}(\.{"/dev/tty"},\39\.{"w"},\39\\{stdout}){}$;\C{ restore normal %
 \PB{\\{stdout}} }\par
 \U112.\fi
 
-\M{117}\B\X117:Print the current variable ordering\X${}\E{}$\6
+\M[2642 bdd15.w]{117}\B\X117:Print the current variable ordering\X${}\E{}$\6
 \&{for} ${}(\|v\K\\{varhead};{}$ ${}\|v<\\{topofvars};{}$ ${}\|v\PP){}$\1\5
 ${}\\{printf}(\.{"\ x\%d"},\39\|v\MG\\{name});{}$\2\6
 \\{printf}(\.{"\\n"});\par
 \U112.\fi
 
-\M{118}My little finite-state automaton.
+\M[2646 bdd15.w]{118}My little finite-state automaton.
 
 \Y\B\4\X118:Parse and execute an assignment to $f_k$\X${}\E{}$\6
 \\{getkf};\5
@@ -3723,7 +3770,7 @@ ${}\\{lhs}\K\|k;{}$\6
 \X125:Assign \PB{\|r} to $f_k$, where \PB{$\|k\K\\{lhs}$}\X;\par
 \U112.\fi
 
-\M{119}\B\D$\\{checknull}(\|p)$ \6
+\M[2659 bdd15.w]{119}\B\D$\\{checknull}(\|p)$ \6
 \&{if} ${}(\R\|p){}$\5
 ${}\{{}$\5
 \1${}\\{printf}(\.{"f\%d\ is\ null!\\n"},\39\|k){}$;\5
@@ -3763,7 +3810,8 @@ ${}\\{curop}\K\T{2}{}$;\5
 \4${}\}{}$\2\par
 \U118.\fi
 
-\M{120}The user shouldn't access any constants until specifying the
+\M[2675 bdd15.w]{120}The user shouldn't access any constants until specifying
+the
 number of variables with the \.x command above.
 
 \Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
@@ -3786,7 +3834,8 @@ yet.)\\n"});\6
 \4${}\}{}$\2\par
 \fi
 
-\M{121}Many of the operations implemented in {\mc BDD14} are not present
+\M[2691 bdd15.w]{121}Many of the operations implemented in {\mc BDD14} are not
+present
 (yet?) in {\mc BDD15}.
 
 \Y\B\4\X121:Get the operator, \PB{\\{curop}}\X${}\E{}$\6
@@ -3847,7 +3896,7 @@ ${}\|r\K\\{symfunc\_top}(\|p,\39\|k){}$;\5
 \4${}\}{}$\2\par
 \U118.\fi
 
-\M{122}\B\X122:Get the second operand, \PB{\|q}\X${}\E{}$\6
+\M[2718 bdd15.w]{122}\B\X122:Get the second operand, \PB{\|q}\X${}\E{}$\6
 \\{passblanks};\6
 \&{switch} ${}({*}\|c\PP){}$\5
 ${}\{{}$\1\6
@@ -3874,8 +3923,8 @@ ${}\|q\K\\{getconst}({*}\|c\PP){}$;\5
 \4${}\}{}$\2\par
 \U118.\fi
 
-\M{123}\B\X123:If the operator is ternary, get the third operand, \PB{\|r}\X${}%
-\E{}$\6
+\M[2728 bdd15.w]{123}\B\X123:If the operator is ternary, get the third operand,
+\PB{\|r}\X${}\E{}$\6
 \\{passblanks};\6
 \&{if} ${}(\\{curop}\E\T{1}\W{*}\|c\E\.{'\&'}){}$\1\5
 ${}\\{curop}\K\T{18}{}$;\C{ and-and }\2\6
@@ -3912,7 +3961,8 @@ ${}\|r\K\\{getconst}({*}\|c\PP){}$;\5
 \4${}\}{}$\2\par
 \U118.\fi
 
-\M{124}We have made sure that all the necessary operands are non-\PB{$\NULL$}.
+\M[2745 bdd15.w]{124}We have made sure that all the necessary operands are non-%
+\PB{$\NULL$}.
 
 \Y\B\4\X124:Evaluate the right-hand side and put the answer in \PB{\|r}\X${}%
 \E{}$\6
@@ -3929,7 +3979,7 @@ ${}\|r\K\\{binary\_top}(\\{curop},\39\|p,\39\|q);{}$\2\6
 ${}\|r\K\\{ternary\_top}(\\{curop},\39\|p,\39\|q,\39\|r){}$;\2\par
 \U118.\fi
 
-\M{125}The \PB{\\{sanity\_check}} routine tells me that
+\M[2756 bdd15.w]{125}The \PB{\\{sanity\_check}} routine tells me that
 I don't need to increase \PB{$\|r\MG\\{xref}$} here (although I'm not sure that
 I
 totally understand why).
@@ -3940,7 +3990,7 @@ totally understand why).
 ${}\|o,\39\|f[\\{lhs}]\K\|r{}$;\par
 \U118.\fi
 
-\M{126}\B\X126:Dereference the left-hand side\X${}\E{}$\6
+\M[2764 bdd15.w]{126}\B\X126:Dereference the left-hand side\X${}\E{}$\6
 \&{if} ${}(\|o,\39\|f[\\{lhs}]){}$\5
 ${}\{{}$\1\6
 \\{deref}(\|f[\\{lhs}]);\6
@@ -3948,7 +3998,8 @@ ${}\|o,\39\|f[\\{lhs}]\K\NULL;{}$\6
 \4${}\}{}$\2\par
 \U119.\fi
 
-\M{127}In a long calculation, it's nice to get progress reports by setting
+\M[2770 bdd15.w]{127}In a long calculation, it's nice to get progress reports
+by setting
 bit 128 of the \PB{\\{verbose}} switch. But we want to see such reports only
 near the top of the ZDDs. (Note that \PB{\\{varmap}} is not relevant here.)
 
@@ -3957,7 +4008,8 @@ near the top of the ZDDs. (Note that \PB{\\{varmap}} is not relevant here.)
 ${}\\{tvar}\K{\AND}\\{varhead}[\|k+\T{1}]{}$;\par
 \U112.\fi
 
-\N{1}{128}Reordering. All of the algorithms for changing the order of variables
+\N[2778 bdd15.w]{1}{128}Reordering. All of the algorithms for changing the
+order of variables
 in a ZDD base are
 based on a primitive swap-in-place operation, which is made available
 to the user as an `\.s' command for online experimentation.
@@ -3980,7 +4032,8 @@ ${}\\{swap}(\|v\MG\\{up},\39\|v);{}$\2\6
 \\{reorder\_fin}(\,);\C{ go back to normal processing }\par
 \U112.\fi
 
-\M{129}Before we diddle with such a sensitive thing as the order of branching,
+\M[2798 bdd15.w]{129}Before we diddle with such a sensitive thing as the order
+of branching,
 we must clear the cache. We also remove all dead nodes, which otherwise
 get in the way. Furthermore, we set the \PB{\\{up}} and \PB{\\{down}} links
 inside \PB{\&{var}} nodes.
@@ -4028,13 +4081,14 @@ ${}\\{leasesonlife}\K\\{oldleases};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{130}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\M[2834 bdd15.w]{130}\B\X5:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{totalvars};\C{ this many \PB{\&{var}} records are in use }\6
 \&{var} ${}{*}\\{firstvar}{}$;\C{ and this one is the smallest in use }\6
 \&{int} \\{oldleases};\C{ this many ``leases on life'' have been held over }\par
 \fi
 
-\M{131}We classify the nodes on levels $u$ and $v$ into four categories:
+\M[2839 bdd15.w]{131}We classify the nodes on levels $u$ and $v$ into four
+categories:
 Level-$u$ nodes that branch to at least one level-$v$ node are called
 ``tangled''; the others are ``solitary.'' Level-$v$ nodes that are
 reachable from levels above~$u$ or from external pointers ($f_j$ or
@@ -4116,7 +4170,8 @@ ${}\\{printf}(\.{"\ newbies\ \%d,\ change}\)\.{\ \%d,\ mems\ (\%llu,0,\%l}\)%
 \4${}\}{}$\2\par
 \U143.\fi
 
-\M{132}Here's a cute algorithm something like the inner loop of quicksort.
+\M[2908 bdd15.w]{132}Here's a cute algorithm something like the inner loop of
+quicksort.
 By decreasing the reference counts of the tangled nodes' children, we will
 be able to distinguish remote nodes from hidden nodes in the next step.
 
@@ -4169,7 +4224,8 @@ ${}\|j\MRL{+{\K}}\&{sizeof}(\&{addr});{}$\6
 \4${}\}{}$\2\par
 \U131.\fi
 
-\M{133}We temporarily save the pages of the old unique table, since they
+\M[2945 bdd15.w]{133}We temporarily save the pages of the old unique table,
+since they
 now contain the sequential lists of solitary and tangled nodes.
 
 The hidden nodes are linked together by \PB{\\{xref}} fields, but not yet
@@ -4213,13 +4269,13 @@ below) }\6
 \4${}\}{}$\2\par
 \U131.\fi
 
-\M{134}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\M[2970 bdd15.w]{134}\B\X5:Global variables\X${}\mathrel+\E{}$\6
 \&{addr} \\{savebase}[\\{maxhashpages}];\C{ pages to be discarded after
 swapping }\par
 \fi
 
-\M{135}The \PB{\\{new\_unique}} routine inaugurates an empty unique table with
-room for
+\M[2973 bdd15.w]{135}The \PB{\\{new\_unique}} routine inaugurates an empty
+unique table with room for
 at least \PB{\|m} nodes before its size will have to double.
 Those nodes will be inserted soon, so we don't mind
 that it is initially sparse.
@@ -4254,8 +4310,8 @@ ${}\\{zmems}\MRL{+{\K}}(\|f+\T{1})/{}$\&{sizeof}(\&{long} \&{long});\6
 \4${}\}{}$\2\par
 \fi
 
-\M{136}The \PB{\\{insert\_node}} subroutine is somewhat analogous to \PB{%
-\\{unique\_find}}, but its
+\M[2997 bdd15.w]{136}The \PB{\\{insert\_node}} subroutine is somewhat analogous
+to \PB{\\{unique\_find}}, but its
 parameter~\PB{\|q} is a node that's known to
 be unique and not already present. The task is simply to insert
 this node into the hash table. Complications arise only if the
@@ -4291,8 +4347,8 @@ ${}\\{exit}({-}\T{96});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{137}\B\X137:Create a new unique table for $x_v$ and move the solitary nodes
-to it\X${}\E{}$\6
+\M[3024 bdd15.w]{137}\B\X137:Create a new unique table for $x_v$ and move the
+solitary nodes to it\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\\{vmask}\GG\\{logpagesize};{}$ ${}\|k%
 \PP){}$\1\5
 ${}\|o,\39\\{free\_page}(\\{page\_}(\|v\MG\\{base}[\|k]));{}$\2\6
@@ -4308,7 +4364,8 @@ ${}\\{insert\_node}(\|v,\39\|p);{}$\6
 \4${}\}{}$\2\par
 \U131.\fi
 
-\M{138}The most dramatic change caused by swapping occurs in this step.
+\M[3033 bdd15.w]{138}The most dramatic change caused by swapping occurs in this
+step.
 Suppose \PB{\|f} is a tangled node on level~$u$ before the swap, and suppose
 \PB{$\|g\K\|f\MG\\{lo}$} and \PB{$\|h\K\|f\MG\\{hi}$} are on level~$v$ at that
 time. After swapping, we want
@@ -4342,7 +4399,8 @@ ${}\\{insert\_node}(\|u,\39\|f);{}$\6
 \4${}\}{}$\2\par
 \U131.\fi
 
-\M{139}The \PB{\\{swap\_find}} procedure in the transmogrification step is
+\M[3054 bdd15.w]{139}The \PB{\\{swap\_find}} procedure in the
+transmogrification step is
 almost identical to \PB{\\{unique\_find}}; it differs only in the treatment
 of reference counts (and the knowledge that no nodes are currently dead).
 
@@ -4374,7 +4432,7 @@ ${}\\{oo},\39\|p\K\\{fetchnode}(\|v,\39\|k);{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{140}\B\X140:Create a newbie and return it\X${}\E{}$\6
+\M[3077 bdd15.w]{140}\B\X140:Create a newbie and return it\X${}\E{}$\6
 \&{if} ${}(\MM\\{free}\Z\\{mask}\GG\T{4}){}$\1\5
 \X33:Double the table size and \PB{\&{goto} \\{restart}}\X;\2\6
 ${}\|p\K\\{reserve\_node}(\,);{}$\6
@@ -4390,8 +4448,8 @@ continue!\\n"});\6
 ${}\\{exit}({-}\T{95}){}$;\par
 \U139.\fi
 
-\M{141}\B\X141:Delete the lists of solitary, tangled, and hidden nodes\X${}%
-\E{}$\6
+\M[3088 bdd15.w]{141}\B\X141:Delete the lists of solitary, tangled, and hidden
+nodes\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\\{umask}\GG\\{logpagesize};{}$ ${}\|k%
 \PP){}$\1\5
 ${}\|o,\39\\{free\_page}(\\{page\_}(\\{savebase}[\|k]));{}$\2\6
@@ -4403,8 +4461,8 @@ ${}\\{totalnodes}\MRL{-{\K}}\\{hcount};{}$\6
 \4${}\}{}$\2\par
 \U131.\fi
 
-\M{142}All \PB{\\{elt}} and \PB{\\{taut}} functions are kept internally
-consistent as if
+\M[3096 bdd15.w]{142}All \PB{\\{elt}} and \PB{\\{taut}} functions are kept
+internally consistent as if
 no reordering has taken place. The \PB{\\{varmap}} and \PB{\\{name}} tables
 provide
 an interface between the internal reality and the user's conventions
@@ -4435,14 +4493,16 @@ ${}\|o,\39\|v\MG\\{taut}\K\\{addr\_}(\\{node\_}(\|u\MG\\{taut})\MG\\{lo}){}$;%
 \par
 \U131.\fi
 
-\M{143}The \PB{\\{swap}} subroutine is now complete. I can safely declare it,
+\M[3118 bdd15.w]{143}The \PB{\\{swap}} subroutine is now complete. I can safely
+declare it,
 since its sub-subroutines have already been declared.
 
 \Y\B\4\X8:Subroutines\X${}\mathrel+\E{}$\6
 \X131:Declare the \PB{\\{swap}} subroutine\X\par
 \fi
 
-\M{144}\B\X144:Bubble sort to reestablish the natural variable order\X${}\E{}$\6
+\M[3124 bdd15.w]{144}\B\X144:Bubble sort to reestablish the natural variable
+order\X${}\E{}$\6
 \&{if} (\\{totalvars})\5
 ${}\{{}$\1\6
 \\{reorder\_init}(\,);\C{ prepare for reordering }\6
@@ -4463,7 +4523,8 @@ ${}\|v\K\|v\MG\\{down};{}$\2\6
 \4${}\}{}$\2\par
 \U112.\fi
 
-\M{145}Now we come to the \PB{\\{sift}} routine, which finds the best position
+\M[3138 bdd15.w]{145}Now we come to the \PB{\\{sift}} routine, which finds the
+best position
 for a given variable when the relative positions of the others
 are left unchanged.
 
@@ -4477,7 +4538,8 @@ ${}\|v\K{\AND}\\{varhead}[\\{varmap}[\|k]];{}$\6
 \4${}\}{}$\2\par
 \U112.\fi
 
-\M{146}At this point \PB{$\|v\MG\\{aux}$} is the position of \PB{\|v} among all
+\M[3150 bdd15.w]{146}At this point \PB{$\|v\MG\\{aux}$} is the position of \PB{%
+\|v} among all
 active variables. Thus \PB{$\|v\MG\\{aux}\K\T{1}$} if and only if \PB{$\|v\MG%
 \\{up}\K\NULL$}
 if and only if \PB{$\|v\K\\{firstvar}$}; \PB{$\|v\MG\\{aux}\K\\{totalvars}$} if
@@ -4514,7 +4576,8 @@ been sifted }\6
 \4${}\}{}$\2\par
 \fi
 
-\M{147}In a production version of this program, I would stop sifting
+\M[3174 bdd15.w]{147}In a production version of this program, I would stop
+sifting
 in a given direction when the ratio \PB{$\\{totalnodes}/\\{bestscore}$} exceeds
 some threshold. Here, on the other hand, I'm sifting completely;
 but I calculate the \PB{\\{saferatio}} for which a production version
@@ -4553,7 +4616,7 @@ ${}\|u\K\|u\MG\\{down};{}$\6
 \&{goto} \\{wrapup};\par
 \U146.\fi
 
-\M{148}\B\X148:Explore in the downward direction\X${}\E{}$\6
+\M[3205 bdd15.w]{148}\B\X148:Explore in the downward direction\X${}\E{}$\6
 \&{while} ${}(\|o,\39\|u\MG\\{down}){}$\5
 ${}\{{}$\1\6
 ${}\\{swaps}\PP,\39\\{swap}(\|u,\39\|u\MG\\{down});{}$\6
@@ -4586,7 +4649,8 @@ ${}\|u\K\|u\MG\\{up};{}$\6
 \&{goto} \\{wrapup};\par
 \U146.\fi
 
-\M{149}The \PB{\\{siftall}} subroutine sifts until every variable has found
+\M[3230 bdd15.w]{149}The \PB{\\{siftall}} subroutine sifts until every variable
+has found
 a local sweet spot. This is as good as it gets, unless the user elects
 to sift some more.
 
@@ -4614,7 +4678,8 @@ ${}\|v\K\|v\MG\\{down};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{150}Sifting is invoked automatically when the number of nodes is
+\M[3255 bdd15.w]{150}Sifting is invoked automatically when the number of nodes
+is
 \PB{\\{toobig}} or more. By default, the \PB{\\{toobig}} threshold is
 essentially
 infinite, hence autosifting is disabled. But if a trigger of~$k$
@@ -4630,7 +4695,7 @@ ${}\\{toobig}\K\\{memsize};{}$\2\6
 ${}\\{toobig}\K\\{trigger}*\\{totalnodes}{}$;\2\par
 \U112.\fi
 
-\M{151}\B\X151:Invoke autosifting\X${}\E{}$\6
+\M[3267 bdd15.w]{151}\B\X151:Invoke autosifting\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{verbose}\AND(\T{4096}+\T{8192})){}$\1\5
 ${}\\{printf}(\.{"autosifting\ (totaln}\)\.{odes=\%d,\ trigger=\%.2}\)\.{f,\
@@ -4643,13 +4708,13 @@ ${}\\{toobig}\K\\{trigger}*\\{totalnodes};{}$\2\6
 \4${}\}{}$\2\par
 \U109.\fi
 
-\M{152}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\M[3277 bdd15.w]{152}\B\X5:Global variables\X${}\mathrel+\E{}$\6
 \&{double} \\{trigger};\C{ multiplier that governs automatic sifting }\6
 \&{int} \\{toobig}${}\K\\{memsize}{}$;\C{ threshold for automatic sifting
 (initially disabled) }\par
 \fi
 
-\N{1}{153}Triage and housekeeping.
+\N[3281 bdd15.w]{1}{153}Triage and housekeeping.
 Hmmm; we can't postpone the dirty work any longer. In emergency situations,
 garbage collection is a necessity. And occasionally, as a ZDD base grows,
 garbage collection is a nicety, to keep our house in order.
@@ -4685,8 +4750,8 @@ ${}\\{printf}(\.{"collecting\ garbage\ }\)\.{(\%d/\%d)\\n"},\39\\{deadnodes},%
 \4${}\}{}$\2\par
 \fi
 
-\M{154}The global variable \PB{\\{last\_ditch}} is set nonzero when we resort
-to
+\M[3308 bdd15.w]{154}The global variable \PB{\\{last\_ditch}} is set nonzero
+when we resort to
 garbage collection without a guarantee of gaining at least
 \PB{$\\{totalnodes}/\\{deadfraction}$} free nodes in the process.
 If a last-ditch attempt fails, there's little likelihood that
@@ -4695,11 +4760,11 @@ so we give up in that case.
 
 \fi
 
-\M{155}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\M[3315 bdd15.w]{155}\B\X5:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{last\_ditch};\C{ are we backed up against the wall? }\par
 \fi
 
-\M{156}\B\X8:Subroutines\X${}\mathrel+\E{}$\6
+\M[3318 bdd15.w]{156}\B\X8:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{attempt\_repairs}(\&{void})\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{int} \|j${},{}$ \|k;\7
@@ -4719,7 +4784,8 @@ ${}\\{last\_ditch}\K\T{1}{}$;\C{ and try one last(?) time }\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{157}Mathematica output. An afterthought: It's easy to output a
+\N[3332 bdd15.w]{1}{157}Mathematica output. An afterthought: It's easy to
+output a
 (possibly huge) file from which Mathematica will compute the
 generating function. (In fact, with ZDDs it's even easier than it was before.)
 
@@ -4730,12 +4796,12 @@ ${}\\{fprintf}(\\{stderr},\39\.{"(generating\ functio}\)\.{n\ for\ f\%d\
 written\ to}\)\.{\ \%s)\\n"},\39\|k,\39\\{buf}){}$;\par
 \U112.\fi
 
-\M{158}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\M[3341 bdd15.w]{158}\B\X5:Global variables\X${}\mathrel+\E{}$\6
 \&{FILE} ${}{*}\\{outfile};{}$\6
 \&{int} \\{outcount};\C{ the number of files output so far }\par
 \fi
 
-\M{159}\B\X8:Subroutines\X${}\mathrel+\E{}$\6
+\M[3345 bdd15.w]{159}\B\X8:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{math\_print}(\&{node} ${}{*}\|p){}$\1\1\2\2\6
 ${}\{{}$\1\6
 \&{var} ${}{*}\|v;{}$\6
@@ -4766,7 +4832,8 @@ ${}\\{fprintf}(\\{outfile},\39\.{"g\%x\\n"},\39\\{id}(\|p));{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{160}\B\X160:Generate Mathematica outputs for variable \PB{\|v}\X${}\E{}$\6
+\M[3369 bdd15.w]{160}\B\X160:Generate Mathematica outputs for variable \PB{\|v}%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|v\MG\\{mask};{}$ ${}\|k\MRL{+{\K}}%
 \&{sizeof}(\&{addr})){}$\5
@@ -4780,7 +4847,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U159.\fi
 
-\M{161}\B\X161:Generate a Mathematica line for node \PB{\|q}\X${}\E{}$\6
+\M[3379 bdd15.w]{161}\B\X161:Generate a Mathematica line for node \PB{\|q}\X${}%
+\E{}$\6
 $\\{fprintf}(\\{outfile},\39\.{"g\%x=Expand["},\39\\{id}(\|q));{}$\6
 ${}\|r\K\\{node\_}(\|q\MG\\{lo});{}$\6
 ${}\\{fprintf}(\\{outfile},\39\.{"g\%x+z*"},\39\\{id}(\|r));{}$\6
@@ -4788,7 +4856,7 @@ ${}\|r\K\\{node\_}(\|q\MG\\{hi});{}$\6
 ${}\\{fprintf}(\\{outfile},\39\.{"g\%x]\\n"},\39\\{id}(\|r)){}$;\par
 \U160.\fi
 
-\N{1}{162}Index.
+\N[3386 bdd15.w]{1}{162}Index.
 \fi
 
 \inx

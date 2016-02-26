@@ -1,8 +1,10 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
 
-\N{1}{1}One-dimensional particle physics. This program is a quick-and-dirty
+\N[3 rost.w]{1}{1}One-dimensional particle physics. This program is a
+quick-and-dirty
 implementation of the random process analyzed by Hermann Rost in 1981
 (see exercise 5.1.4--40). Start with infinitely many 1s followed by
 infinitely many 0s; then randomly interchange adjacent elements that
@@ -29,7 +31,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Scan the command line\X${}\E{}$\6
+\M[29 rost.w]{2}\B\X2:Scan the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{3}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
 \|n)\I\T{1}\V\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}\\{seed})\I%
 \T{1}){}$\5
@@ -40,8 +42,8 @@ ${}\\{exit}({-}\T{1});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}We maintain the following invariants: \PB{$\\{bit}[\|k]\K\T{1}$} for \PB{$%
-\|k\Z\|l$};
+\M[34 rost.w]{3}We maintain the following invariants: \PB{$\\{bit}[\|k]\K%
+\T{1}$} for \PB{$\|k\Z\|l$};
 \PB{$\\{bit}[\|k]\K\T{0}$} for \PB{$\|k\K\|u$}; the indices \PB{\|i} where %
 \PB{$\\{bit}[\|i]>\\{bit}[\|i+\T{1}]$}
 are \PB{\\{list}[\|j]} for $0\le j<t$.
@@ -59,7 +61,7 @@ ${}\\{list}[\T{0}]\K\|n;{}$\6
 ${}\|t\K\T{1}{}$;\par
 \U1.\fi
 
-\M{4}\B\X4:Move\X${}\E{}$\6
+\M[48 rost.w]{4}\B\X4:Move\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|j\K\\{gb\_unif\_rand}(\|t);{}$\6
 ${}\|i\K\\{list}[\|j];{}$\6
@@ -78,14 +80,14 @@ ${}\\{list}[\|t\PP]\K\|i+\T{1};{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{5}\B\X5:Print the results\X${}\E{}$\6
+\M[61 rost.w]{5}\B\X5:Print the results\X${}\E{}$\6
 \X6:Print the PostScript header info\X;\6
 \X8:Print the empirical curve\X;\6
 \X9:Print the theoretical curve\X;\6
 \X7:Print the PostScript trailer info\X;\par
 \U1.\fi
 
-\M{6}\B\X6:Print the PostScript header info\X${}\E{}$\6
+\M[67 rost.w]{6}\B\X6:Print the PostScript header info\X${}\E{}$\6
 \\{printf}(\.{"\%\%!PS\\n"});\6
 \\{printf}(\.{"\%\%\%\%BoundingBox:\ -1}\)\.{\ -1\ 361\ 361\\n"});\6
 ${}\\{printf}(\.{"\%\%\%\%Creator:\ \%s\ \%s\ }\)\.{\%s\\n"},\39\\{argv}[%
@@ -95,11 +97,12 @@ ${}\\{printf}(\.{"\%\%\%\%Creator:\ \%s\ \%s\ }\)\.{\%s\\n"},\39\\{argv}[%
 \\{printf}(\.{"/r\ \{s\ 0\ rlineto\}\ bi}\)\.{nd\ def\\n"});\C{ move right }\par
 \U5.\fi
 
-\M{7}\B\X7:Print the PostScript trailer info\X${}\E{}$\6
+\M[74 rost.w]{7}\B\X7:Print the PostScript trailer info\X${}\E{}$\6
 \\{printf}(\.{"showpage\\n"});\par
 \U5.\fi
 
-\M{8}The empirical curve is scaled so that $\sqrt{6n}$ units is 5 inches.
+\M[77 rost.w]{8}The empirical curve is scaled so that $\sqrt{6n}$ units is 5
+inches.
 
 \Y\B\4\X8:Print the empirical curve\X${}\E{}$\6
 $\\{printf}(\.{"/s\ \%g\ def\\n"},\39\T{360.0}/\\{sqrt}(\T{6.0}*\|n));{}$\6
@@ -118,7 +121,8 @@ ${}\{{}$\1\6
 \\{printf}(\.{"1\ setlinewidth\ stro}\)\.{ke\\n"});\par
 \U5.\fi
 
-\M{9}The theoretical curve $\sqrt{\mathstrut x}+\sqrt{\mathstrut y}=1$ is
+\M[89 rost.w]{9}The theoretical curve $\sqrt{\mathstrut x}+\sqrt{\mathstrut
+y}=1$ is
 scaled so that 1 unit is 5 inches. We use the fact that this curve
 is {\it exactly\/} drawn by PostScript's Bezier curve routines,
 from the control points $(0,1)$, $(0,1/3)$, $(1/3,0)$, $(1,0)$.
@@ -130,7 +134,7 @@ from the control points $(0,1)$, $(0,1/3)$, $(1/3,0)$, $(1,0)$.
 \\{printf}(\.{".3\ setlinewidth\ str}\)\.{oke\\n"});\par
 \U5.\fi
 
-\N{1}{10}Index.
+\N[99 rost.w]{1}{10}Index.
 
 
 

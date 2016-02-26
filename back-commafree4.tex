@@ -1,9 +1,11 @@
 \input cwebmac
+\srcloctrue
 
 \datethis
 
 
-\N{1}{1}Intro. This is a somewhat nontrivial example of backtrack programming,
+\N[6 back-commafree4.w]{1}{1}Intro. This is a somewhat nontrivial example of
+backtrack programming,
 intended to exhibit basic ideas as well as perhaps to solve an open problem.
 
 The problem is to find the largest possible comma-free code of length~4
@@ -82,7 +84,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"(maxstack=\%d,maxpoi}\)\.{son=\%d)\\n"},\39%
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Print the profile\X${}\E{}$\6
+\M[73 back-commafree4.w]{2}\B\X2:Print the profile\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Profile:\ \ \ \ \ \ \ \ \ \ 1}\)\.{\\n"});{}$\6
 \&{for} ${}(\|k\K\T{2};{}$ ${}\|k\Z\\{maxl}+\T{1};{}$ ${}\|k\PP){}$\1\5
@@ -90,7 +92,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\%19lld\\n"},\39\\{profile}[\|k]);{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}\B\X3:Process the command line\X${}\E{}$\6
+\M[79 back-commafree4.w]{3}\B\X3:Process the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}<\T{3}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
 \|m)\I\T{1}\V\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}\\{goal})\I%
 \T{1}){}$\5
@@ -108,7 +110,7 @@ ${}\\{exit}({-}\T{2});{}$\6
 ${}\\{vbose}\K\\{argc}-\T{3}{}$;\par
 \U1.\fi
 
-\M{4}\B\X4:Subroutines\X${}\E{}$\6
+\M[91 back-commafree4.w]{4}\B\X4:Subroutines\X${}\E{}$\6
 \&{void} \\{confusion}(\&{char} ${}{*}\|s){}$\1\1\2\2\6
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"I'm\ confused\ (\%s)!\\}\)\.{n"},\39\|s);{}$\6
@@ -117,7 +119,8 @@ ${}\\{exit}({-}\T{666});{}$\6
 \As5, 18, 19, 20, 21, 31\ETs42.
 \U1.\fi
 
-\N{1}{5}Infrastructure. This program keeps its state information in an
+\N[97 back-commafree4.w]{1}{5}Infrastructure. This program keeps its state
+information in an
 array \PB{\\{mem}} of 16-bit quantities. Everything in \PB{\\{mem}} also has a
 16-bit address. Thus I can undo the changes made at one level
 if I maintain a stack that holds 32-bit items, $(\rm address,oldvalue)$.
@@ -163,7 +166,7 @@ to its former value }\6
 \4${}\}{}$\2\par
 \fi
 
-\M{6}\B\X6:Global variables\X${}\E{}$\6
+\M[134 back-commafree4.w]{6}\B\X6:Global variables\X${}\E{}$\6
 \&{unsigned} ${}\\{mem}[\T{1}\LL\T{16}];{}$\6
 \&{unsigned} \&{int} \\{undo}[\\{ustacksize}];\6
 \&{int} \\{uptr};\C{ this many entries are currently in \PB{\\{undo}} }\6
@@ -172,7 +175,7 @@ to its former value }\6
 \As9, 14, 24\ETs29.
 \U1.\fi
 
-\M{7}Here's what we do when we need a new current stamp.
+\M[141 back-commafree4.w]{7}Here's what we do when we need a new current stamp.
 
 Incidentally, my first draft of this step had a noteworthy bug: I knew that
 \PB{\\{curstamp}} won't actually overflow in this program; still, this program
@@ -200,8 +203,8 @@ ${}\\{curstamp}\K\T{1};{}$\6
 \4${}\}{}$\2\par
 \U32.\fi
 
-\M{8}This program also makes use of numerous sequential lists, kept in~\PB{%
-\\{mem}},
+\M[160 back-commafree4.w]{8}This program also makes use of numerous sequential
+lists, kept in~\PB{\\{mem}},
 for which the basic operations are to append a new item, or to remove
 an item given its name.
 
@@ -216,7 +219,8 @@ we set \PB{$\|y\K{*}\|p$} and \PB{${*}\|q\K\|y$} and \PB{$\|i[\|y]\K\|q$}.
 
 \fi
 
-\N{1}{9}Memory layout. Let $\alpha$ be a four-letter word $abcd$. We will
+\N[171 back-commafree4.w]{1}{9}Memory layout. Let $\alpha$ be a four-letter
+word $abcd$. We will
 think of $\alpha$ as the radix-$m$ integer $(abcd)_m$,
 although it will also be represented in memory as the hexadecimal
 integer $(abcd)_{16}$ since that's convenient for programming
@@ -229,7 +233,7 @@ radix $m$ }\6
 \par
 \fi
 
-\M{10}\B\X10:Initialize the tables\X${}\E{}$\6
+\M[181 back-commafree4.w]{10}\B\X10:Initialize the tables\X${}\E{}$\6
 \&{for} ${}(\|a\K\T{0};{}$ ${}\|a<\|m;{}$ ${}\|a\PP){}$\1\6
 \&{for} ${}(\|b\K\T{0};{}$ ${}\|b<\|m;{}$ ${}\|b\PP){}$\1\6
 \&{for} ${}(\|c\K\T{0};{}$ ${}\|c<\|m;{}$ ${}\|c\PP){}$\1\6
@@ -240,7 +244,8 @@ ${}\|o,\39\\{hexconv}[(\|a\LL\T{12})+(\|b\LL\T{8})+(\|c\LL\T{4})+\|d]\K((\|a*%
 \As17, 25\ETs30.
 \U1.\fi
 
-\M{11}During the backtrack process, every word $\alpha$ will be in
+\M[187 back-commafree4.w]{11}During the backtrack process, every word $\alpha$
+will be in
 one of three states, which I'll call green, red, and blue.
 (i)~Green words have been chosen (tentatively) to be in the code.
 (ii)~Red words have been ruled out, either because they're incompatible
@@ -257,8 +262,8 @@ The current state of word $\alpha$ is in \PB{\\{mem}}$[\alpha]$.
 \T{1}\par
 \fi
 
-\M{12}Let $p_1(\alpha)=(a000)_m$, $p_2(\alpha)=(ab00)_m$, $p_3(%
-\alpha)=(abc0)_m$
+\M[200 back-commafree4.w]{12}Let $p_1(\alpha)=(a000)_m$, $p_2(%
+\alpha)=(ab00)_m$, $p_3(\alpha)=(abc0)_m$
 be the three proper prefixes of~$\alpha=abcd$, and let
 $s_1(\alpha)=(d000)_m$, $s_2(\alpha)=(cd00)_m$, $s_3(\alpha)=(bcd0)_m$
 be the (shifted) proper suffixes.
@@ -311,7 +316,8 @@ ${}\|o,\39\\{mem}[\\{s3offset}+\\{mmmm}+((\|a*\|m+\|b)*\|m+\|c)*\|m]\K%
 \4${}\}{}$\2\par
 \U17.\fi
 
-\M{13}The following instructions serve to populate the lists at the beginning.
+\M[237 back-commafree4.w]{13}The following instructions serve to populate the
+lists at the beginning.
 Here \PB{\\{alpha}} is the $m$-ary number, and \PB{\|x} is its hexadecimal
 representation;
 \PB{\\{del}} is a truncated version of \PB{\\{alpha}}, identifying where the
@@ -339,8 +345,8 @@ ${}\\{insert}(\|x,\39\\{alpha},\39\\{s2}(\|x),\39\\{s2offset});{}$\6
 ${}\\{insert}(\|x,\39\\{alpha},\39\\{s3}(\|x),\39\\{s3offset}){}$;\par
 \U16.\fi
 
-\M{14}The cyclic equivalence classes of words are given identification numbers
-from
+\M[258 back-commafree4.w]{14}The cyclic equivalence classes of words are given
+identification numbers from
 0 to $(m^4-m^2)/4-1$. The number of $\alpha$'s class is precomputed in
 the \PB{\\{cl}} table.
 
@@ -362,7 +368,8 @@ numbers) }\6
 \&{int} \\{classes};\C{ the number of classes found so far }\par
 \fi
 
-\M{15}Here I use Algorithm 7.2.1.1F to find the prime binary strings.
+\M[277 back-commafree4.w]{15}Here I use Algorithm 7.2.1.1F to find the prime
+binary strings.
 
 \Y\B\4\X15:Compute the classes and initialize their lists\X${}\E{}$\6
 \4\\{f1}:\5
@@ -387,7 +394,8 @@ ${}\\{oo},\39\\{aa}[\|k]\K\\{aa}[\|k-\|j];{}$\2\6
 \\{confusion}(\.{"classes"});\2\par
 \U17.\fi
 
-\M{16}\B\X16:Visit the prime string $a_1\ldots a_4$\X${}\E{}$\6
+\M[290 back-commafree4.w]{16}\B\X16:Visit the prime string $a_1\ldots a_4$\X${}%
+\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{4};{}$ ${}\|i\PP){}$\5
 ${}\{{}$\1\6
@@ -412,7 +420,8 @@ ${}\\{classes}\PP;{}$\6
 \4${}\}{}$\2\par
 \U15.\fi
 
-\M{17}Notice that we've already allocated $22m^4$ cells of \PB{\\{mem}}.
+\M[309 back-commafree4.w]{17}Notice that we've already allocated $22m^4$ cells
+of \PB{\\{mem}}.
 Fortunately that's only 52822 when $m=7$, comfortably less than 65536.
 
 \Y\B\4\X10:Initialize the tables\X${}\mathrel+\E{}$\6
@@ -436,7 +445,8 @@ ${}\\{cloffset}\K\T{20}*\\{mmmm};{}$\6
 \X15:Compute the classes and initialize their lists\X;\par
 \fi
 
-\M{18}Diagnostic information is helped by a symbolic indication of
+\M[327 back-commafree4.w]{18}Diagnostic information is helped by a symbolic
+indication of
 each list name.
 
 \Y\B\4\X4:Subroutines\X${}\mathrel+\E{}$\6
@@ -473,7 +483,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"???"});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{19}We will actually maintain all of these lists only when none of
+\M[346 back-commafree4.w]{19}We will actually maintain all of these lists only
+when none of
 the list elements is green. As soon as a green element appears in a list
 that begins at location~\PB{\|p}, we set the corresponding pointer to
 $p+m^4-1$, as if the list length were~$-1$, and call the list ``closed.''
@@ -497,7 +508,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{20}\B\X4:Subroutines\X${}\mathrel+\E{}$\6
+\M[365 back-commafree4.w]{20}\B\X4:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_all\_lists}(\&{void})\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{int} \|a${},{}$ \|b${},{}$ \|c${},{}$ \|k;\7
@@ -521,7 +532,8 @@ ${}\\{print\_list}(\\{cloffset}+\T{4}*\|k);{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{21}Sanity checking. Whenever data structures are highly redundant,
+\N[383 back-commafree4.w]{1}{21}Sanity checking. Whenever data structures are
+highly redundant,
 we want to monitor them carefully until we're confident that our
 program isn't messing them up. The \PB{\\{sanity}} routine is intended to
 nip bugs in the bud.
@@ -538,7 +550,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{22}Here we check also the inverse property of the inverse lists.
+\M[397 back-commafree4.w]{22}Here we check also the inverse property of the
+inverse lists.
 
 \Y\B\4\D$\\{bluecheck}(\\{loc},\\{off})$ \6
 ${}\{{}$\1\6
@@ -576,7 +589,8 @@ ${}\\{bluecheck}(((\|a*\|m+\|b)*\|m+\|c)*\|m,\39\\{s3offset});{}$\6
 ${}\\{bluecheck}(\T{4}*\|k,\39\\{cloffset}){}$;\2\par
 \U21.\fi
 
-\M{23}Here we check green words also, to make sure that their lists have
+\M[426 back-commafree4.w]{23}Here we check green words also, to make sure that
+their lists have
 been ``closed.''
 
 \Y\B\4\D$\\{appcheck}(\|x,\\{alpha},\\{del},\\{off})$ \6
@@ -622,7 +636,8 @@ ${}\\{appcheck}(\|x,\39\\{alpha},\39\T{4}*\\{cl}[\\{alpha}],\39%
 \4${}\}{}$\2\2\par
 \U21.\fi
 
-\N{1}{24}The poison list. We also need to maintain another interesting data
+\N[460 back-commafree4.w]{1}{24}The poison list. We also need to maintain
+another interesting data
 structure, which remembers forbidden suffix-prefix pairs. Whenever
 we've chosen $abcd$ to be a codeword, we want to remember that
 no future codeword that ends with $a$ can be simultaneously present
@@ -647,12 +662,13 @@ or both of the lists that it points to has become empty.
 \&{int} \\{poison};\par
 \fi
 
-\M{25}\B\X10:Initialize the tables\X${}\mathrel+\E{}$\6
+\M[482 back-commafree4.w]{25}\B\X10:Initialize the tables\X${}\mathrel+\E{}$\6
 $\\{poison}\K\T{22}*\\{mmmm}+\T{1};{}$\6
 ${}\\{mem}[\\{poison}-\T{1}]\K\\{poison}{}$;\C{ empty list }\par
 \fi
 
-\M{26}When the following code is performed, \PB{\\{pp}} will point to the
+\M[486 back-commafree4.w]{26}When the following code is performed, \PB{\\{pp}}
+will point to the
 current end of the poison list.
 
 \Y\B\4\X26:Delete entry \PB{\|p} from the poison list\X${}\E{}$\6
@@ -665,15 +681,16 @@ and \PB{$\\{mem}[\\{pp}+\T{1}]$} are in the same octabyte }\6
 \4${}\}{}$\2\par
 \Us39\ET40.\fi
 
-\M{27}\B\X27:Append \PB{\|y} and \PB{\|z} to the poison list\X${}\E{}$\6
+\M[496 back-commafree4.w]{27}\B\X27:Append \PB{\|y} and \PB{\|z} to the poison
+list\X${}\E{}$\6
 $\\{store}(\\{pp},\39\|y),\39\\{store}(\\{pp}+\T{1},\39\|z),\39\\{mems}\MM;{}$\6
 ${}\\{pp}\MRL{+{\K}}\T{2};{}$\6
 \&{if} ${}(\\{pp}>\\{maxpoison}){}$\1\5
 ${}\\{maxpoison}\K\\{pp}{}$;\C{ the poison list can't overflow }\2\par
 \U38.\fi
 
-\N{1}{28}Lists outside of \PB{\\{mem}}. Some of the state information is
-sufficiently
+\N[501 back-commafree4.w]{1}{28}Lists outside of \PB{\\{mem}}. Some of the
+state information is sufficiently
 static and well-behaved that we needn't keep it in \PB{\\{mem}}. For example,
 at every level we have a ``frame'' of vital data, telling for instance
 what class was involved, what word was chosen in that class, and how big
@@ -689,8 +706,8 @@ backtracking? }\2\6
 ${}\}{}$ \&{frame};\par
 \U1.\fi
 
-\M{29}We also maintain a list called \PB{\\{clfree}}, of the classes not yet
-chosen.
+\M[515 back-commafree4.w]{29}We also maintain a list called \PB{\\{clfree}}, of
+the classes not yet chosen.
 It will contain \PB{$\\{maxl}-\|l$} items when we're on level~\PB{\|l}; but I
 maintain the
 redundant variable \PB{\\{freeptr}}, so that I don't have to worry about
@@ -705,13 +722,13 @@ an inverse list \PB{\\{ifree}}.
 \par
 \fi
 
-\M{30}\B\X10:Initialize the tables\X${}\mathrel+\E{}$\6
+\M[527 back-commafree4.w]{30}\B\X10:Initialize the tables\X${}\mathrel+\E{}$\6
 \&{for} ${}(\|k\K\T{0},\39\\{freeptr}\K\\{maxl};{}$ ${}\|k<\\{maxl};{}$ ${}\|k%
 \PP){}$\1\5
 ${}\\{oo},\39\\{clfree}[\|k]\K\\{ifree}[\|k]\K\|k{}$;\2\par
 \fi
 
-\M{31}\B\X4:Subroutines\X${}\mathrel+\E{}$\6
+\M[530 back-commafree4.w]{31}\B\X4:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_moves}(\&{int} \\{lev})\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{int} \|l;\7
@@ -724,7 +741,8 @@ ${}\\{printf}(\.{"\ (\%04x)"},\39\\{clrep}[\\{move}[\|l].\\{cls}]);{}$\2\2\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{32}Doing it. OK, we're (hopefully) ready now for the big climax.
+\N[539 back-commafree4.w]{1}{32}Doing it. OK, we're (hopefully) ready now for
+the big climax.
 
 \Y\B\4\X32:Backtrack through all solutions\X${}\E{}$\6
 $\|l\K\T{1};{}$\6
@@ -786,8 +804,8 @@ ${}\\{slack}\K\\{move}[\|l].\\{slack}{}$;\C{ this mem is covered at \PB{\\{try%
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{33}\B\X33:Report the current profile, if \PB{$\\{mems}\G\\{thresh}$}\X${}%
-\E{}$\6
+\M[581 back-commafree4.w]{33}\B\X33:Report the current profile, if \PB{$%
+\\{mems}\G\\{thresh}$}\X${}\E{}$\6
 \&{if} ${}(\\{mems}\G\\{thresh}){}$\5
 ${}\{{}$\1\6
 ${}\\{thresh}\MRL{+{\K}}\T{10000000000};{}$\6
@@ -798,7 +816,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
 \4${}\}{}$\2\par
 \U32.\fi
 
-\M{34}Two strategies are used to decide which possibility to explore next.
+\M[589 back-commafree4.w]{34}Two strategies are used to decide which
+possibility to explore next.
 First we try to find a free class that has the smallest remaining
 number of blue words. If that number is 0 or~1, we choose it.
 
@@ -834,8 +853,8 @@ ${}\|o,\39\|x\K\\{mem}[\T{4}*\\{cls}+\\{cloffset}];{}$\2\6
 \\{done}:\par
 \U32.\fi
 
-\M{35}\B\X35:Find a class \PB{\\{cls}} with fewest blue words~\PB{\|r}\X${}%
-\E{}$\6
+\M[620 back-commafree4.w]{35}\B\X35:Find a class \PB{\\{cls}} with fewest blue
+words~\PB{\|r}\X${}\E{}$\6
 \&{if} ${}(\\{vbose}>\T{3}){}$\1\5
 ${}\\{fprintf}(\\{stderr},\39\.{"\ class\ sizes"});{}$\2\6
 \&{for} ${}(\|r\K\T{5},\39\|k\K\T{0};{}$ ${}\|k<\\{freeptr};{}$ ${}\|k\PP){}$\5
@@ -856,8 +875,8 @@ ${}\|r\K\|j,\39\\{cls}\K\|c;{}$\6
 ${}\\{fprintf}(\\{stderr},\39\.{"\\n"}){}$;\2\par
 \U34.\fi
 
-\M{36}I should perhaps have added the phrase `or \PB{\&{goto} \\{try\_again}}'
-to the title
+\M[634 back-commafree4.w]{36}I should perhaps have added the phrase `or \PB{%
+\&{goto} \\{try\_again}}' to the title
 of this module, because we might find a reason to reject~\PB{\|x}.
 
 \Y\B\4\X36:Update the data structures for new codeword \PB{\|x}\X${}\E{}$\6
@@ -871,7 +890,7 @@ ${}\\{store}(\\{poison}-\T{1},\39\\{pp});{}$\6
 \4${}\}{}$\2\par
 \U32.\fi
 
-\M{37}\B\D$\\{closelist}(\\{del},\\{off})$ \6
+\M[646 back-commafree4.w]{37}\B\D$\\{closelist}(\\{del},\\{off})$ \6
 ${}\{{}$\1\6
 ${}\|p\K(\\{del})+(\\{off});{}$\6
 ${}\|o,\39\|q\K\\{mem}[\|p+\\{mmmm}];{}$\6
@@ -894,7 +913,8 @@ ${}\\{closelist}(\T{4}*\|k,\39\\{cloffset});{}$\6
 \\{redden}(\\{mem}[\|r]);\2\2\par
 \U36.\fi
 
-\M{38}\B\X38:Append \PB{\|x}'s innards to the poison list\X${}\E{}$\6
+\M[665 back-commafree4.w]{38}\B\X38:Append \PB{\|x}'s innards to the poison
+list\X${}\E{}$\6
 $\|y\K\\{p1}(\|x)+\\{s1offset};{}$\6
 ${}\|z\K\\{s3}(\|x)+\\{p3offset};{}$\6
 \X27:Append \PB{\|y} and \PB{\|z} to the poison list\X;\6
@@ -906,7 +926,8 @@ ${}\|z\K\\{s1}(\|x)+\\{p1offset};{}$\6
 \X27:Append \PB{\|y} and \PB{\|z} to the poison list\X;\par
 \U36.\fi
 
-\M{39}This section is more or less the heart of the entire program.
+\M[676 back-commafree4.w]{39}This section is more or less the heart of the
+entire program.
 Or maybe it's better described as the ``nerve center.'' Anyway,
 it enforces the comma-free condition, when you translate all of
 this esoteric logic into common sense terms.
@@ -968,8 +989,8 @@ ${}\|o,\39\\{redden}(\\{mem}[\|r]);{}$\2\6
 \4${}\}{}$\2\par
 \U36.\fi
 
-\M{40}Items in the poison list pair a suffix with a prefix, where the suffix
-list
+\M[717 back-commafree4.w]{40}Items in the poison list pair a suffix with a
+prefix, where the suffix list
 has \PB{$\\{yy}-\|y$} elements and the prefix class has \PB{$\\{zz}-\|z$}
 elements. The larger of
 these lists can be killed off by choosing \PB{\|x} in the other list.
@@ -1033,8 +1054,8 @@ ${}\\{store}(\\{poison}-\T{1},\39\\{pp}){}$;\par
 \Q1.
 \U34.\fi
 
-\M{41}Here I want to mention some code that was deleted from an earlier
-version,
+\M[766 back-commafree4.w]{41}Here I want to mention some code that was deleted
+from an earlier version,
 because it introduced a sneaky bug. I'd once had a mechanism in the \PB{%
 \&{frame}} structure
 designed to break symmetry by confining solutions to ``restricted growth
@@ -1097,7 +1118,7 @@ ${}\\{rgs}\K\|y;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{42}\B\D$\\{rem}(\\{alpha},\\{del},\\{off})$ \6
+\M[821 back-commafree4.w]{42}\B\D$\\{rem}(\\{alpha},\\{del},\\{off})$ \6
 ${}\{{}$\1\6
 ${}\|p\K(\\{del})+(\\{off});{}$\6
 ${}\|o,\39\|q\K\\{mem}[\|p+\\{mmmm}]-\T{1};{}$\6
@@ -1143,11 +1164,12 @@ its class list }\6
 \4${}\}{}$\2\par
 \fi
 
-\M{43}\B\X43:Update the data structures to forbid \PB{\|x}\X${}\E{}$\6
+\M[853 back-commafree4.w]{43}\B\X43:Update the data structures to forbid \PB{%
+\|x}\X${}\E{}$\6
 \\{redden}(\|x);\par
 \U32.\fi
 
-\M{44}\B\X44:Update the free list\X${}\E{}$\6
+\M[856 back-commafree4.w]{44}\B\X44:Update the free list\X${}\E{}$\6
 $\\{freeptr}\MM;{}$\6
 ${}\|o,\39\|p\K\\{ifree}[\\{cls}];{}$\6
 \&{if} ${}(\|p\I\\{freeptr}){}$\5
@@ -1160,11 +1182,11 @@ ${}\|o,\39\\{ifree}[\\{cls}]\K\\{freeptr};{}$\6
 \4${}\}{}$\2\par
 \U32.\fi
 
-\M{45}\B\X45:Downdate the free list\X${}\E{}$\6
+\M[867 back-commafree4.w]{45}\B\X45:Downdate the free list\X${}\E{}$\6
 $\\{freeptr}\PP{}$;\par
 \U32.\fi
 
-\M{46}And we close with a happy moment.
+\M[870 back-commafree4.w]{46}And we close with a happy moment.
 
 \Y\B\4\X46:Report a solution and \PB{\&{goto} \\{backup}}\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -1175,7 +1197,7 @@ ${}\\{printf}(\.{"\%d:"},\39\\{count});{}$\6
 \4${}\}{}$\2\par
 \U32.\fi
 
-\N{1}{47}Index.
+\N[881 back-commafree4.w]{1}{47}Index.
 \fi
 
 \inx

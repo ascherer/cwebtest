@@ -1,10 +1,12 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
 
 
 
-\N{1}{1}Introduction. This program inputs a directed graph.
+\N[4 simpath-directed-cycles.w]{1}{1}Introduction. This program inputs a
+directed graph.
 It outputs a not-necessarily-reduced binary decision diagram
 for the family of all simple oriented cycles in that graph.
 
@@ -63,7 +65,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Input the graph\X${}\E{}$\6
+\M[54 simpath-directed-cycles.w]{2}\B\X2:Input the graph\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{2}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ foo.gb\\n"},\39\\{argv}[%
@@ -96,7 +98,8 @@ ${}\\{exit}({-}\T{3});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}We create the inverse-arc list for each vertex~\PB{\|v} (the list of all
+\M[77 simpath-directed-cycles.w]{3}We create the inverse-arc list for each
+vertex~\PB{\|v} (the list of all
 vertices that point to~\PB{\|v}). Then we use a breadth-first numbering scheme
 to attach a serial number \PB{$\|v\MG\\{num}$}.
 
@@ -140,7 +143,8 @@ ${}\|u\MG\\{num}\K\PP\|k,\39\\{vert}[\|k]\K\|u;{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{4}The arcs will be either $j\to k$ or $j\gets k$ between vertex number~$j$
+\M[108 simpath-directed-cycles.w]{4}The arcs will be either $j\to k$ or $j\gets
+k$ between vertex number~$j$
 and vertex number~$k$, when $j<k$ and those vertices are adjacent in
 the graph. We process them in order of increasing~$j$; but for fixed~$j$,
 the values of~$k$ aren't necessarily increasing.
@@ -191,7 +195,7 @@ ${}\\{printf}(\.{"\ <-\ \%d(\%s,\%d)\ \#\%d\\n}\)\.{"},\39\|u\MG\\{num},\39\|u%
 ${}\\{firstarc}[\|k]\K\|m{}$;\par
 \U1.\fi
 
-\N{1}{5}The algorithm.
+\N[144 simpath-directed-cycles.w]{1}{5}The algorithm.
 Now comes the fun part. We systematically construct a binary decision
 diagram for all simple paths by working top-down, considering the
 arcs in \PB{\\{arcto}}, one by one.
@@ -259,14 +263,15 @@ ${}\\{fprintf}(\\{stderr},\39\.{"Beginning\ arc\ \%d\ (s}\)\.{erial=%
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{6}\B\X6:Initialize the queue\X${}\E{}$\6
+\M[198 simpath-directed-cycles.w]{6}\B\X6:Initialize the queue\X${}\E{}$\6
 $\\{jj}\K\\{ll}\K\T{1};{}$\6
 ${}\\{mem}[\T{0}]\K\\{mate}[\T{1}];{}$\6
 ${}\\{tail}\K\T{0},\39\\{head}\K\T{1};{}$\6
 ${}\\{serial}\K\T{2}{}$;\par
 \U5.\fi
 
-\M{7}Each state for a particular arc gets a distinguishing number.
+\M[204 simpath-directed-cycles.w]{7}Each state for a particular arc gets a
+distinguishing number.
 Two states are special: 0 means the losing state, when a simple path
 is impossible; 1 means the winning state, when a simple path has been
 completed. The other states are 2 or more.
@@ -297,7 +302,8 @@ ${}\\{serial}\PP;{}$\6
 \4${}\}{}$\2\par
 \U5.\fi
 
-\M{8}If the target vertex hasn't entered the action yet (that is, if it
+\M[230 simpath-directed-cycles.w]{8}If the target vertex hasn't entered the
+action yet (that is, if it
 exceeds~\PB{\|l}), we must update its \PB{\\{mate}} entry at this point.
 
 \Y\B\4\X8:Unpack a state, and move \PB{\\{tail}} up\X${}\E{}$\6
@@ -307,7 +313,8 @@ ${}\\{mate}[\|t]\K\\{mem}[\\{trunc}(\\{tail})];{}$\6
 \4${}\}{}$\2\par
 \U7.\fi
 
-\M{9}Here's where we update the mates. The order of doing this is carefully
+\M[238 simpath-directed-cycles.w]{9}Here's where we update the mates. The order
+of doing this is carefully
 chosen so that it works fine when \PB{$\\{mate}[\|j]\K\|j$} and/or \PB{$%
 \\{mate}[\|k]\K\|k$}.
 
@@ -354,11 +361,13 @@ ${}\\{mate}[{-}\|k]\K{-}\|k;{}$\2\6
 \4${}\}{}$\2\par
 \U7.\fi
 
-\M{10}\B\X10:Print the successor if arc \PB{\|i} is not chosen\X${}\E{}$\6
+\M[270 simpath-directed-cycles.w]{10}\B\X10:Print the successor if arc \PB{\|i}
+is not chosen\X${}\E{}$\6
 $\\{printstate}(\|j,\39\\{jj},\39\\{ll}){}$;\par
 \U7.\fi
 
-\M{11}See the note below regarding a change that will restrict consideration
+\M[273 simpath-directed-cycles.w]{11}See the note below regarding a change that
+will restrict consideration
 to Hamiltonian paths. A similar change is needed here.
 
 \Y\B\4\X11:Print 1 or 0, depending on whether this arc wins or loses\X${}\E{}$\6
@@ -376,8 +385,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U9.\fi
 
-\M{12}The \PB{\\{printstate}} subroutine does the rest of the work. It makes
-sure
+\M[285 simpath-directed-cycles.w]{12}The \PB{\\{printstate}} subroutine does
+the rest of the work. It makes sure
 that no incomplete paths linger in positions \PB{\|j} through \PB{$\\{jj}-%
 \T{1}$}, which
 are about to disappear; and it puts the contents of \PB{\\{mate}[\\{jj}]}
@@ -419,8 +428,8 @@ ${}\\{printf}(\.{"\%x"},\39\\{newserial}+\|h);{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{13}\B\X13:Move the current state into position after \PB{\\{head}}, and
-compute \PB{\\{hash}}\X${}\E{}$\6
+\M[314 simpath-directed-cycles.w]{13}\B\X13:Move the current state into
+position after \PB{\\{head}}, and compute \PB{\\{hash}}\X${}\E{}$\6
 \&{for} ${}(\|t\K\\{jj},\39\|h\K\\{trunc}(\\{head}),\39\\{hash}\K\T{0};{}$ ${}%
 \|t\Z\\{ll};{}$ ${}\|t\PP,\39\|h\K\\{trunc}(\|h+\T{1})){}$\5
 ${}\{{}$\1\6
@@ -429,8 +438,8 @@ ${}\\{hash}\K\\{hash}*\T{31415926525}+\\{mate}[\|t];{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{14}The hash table is automatically cleared whenever \PB{\\{htid}} is
-increased,
+\M[320 simpath-directed-cycles.w]{14}The hash table is automatically cleared
+whenever \PB{\\{htid}} is increased,
 because we store \PB{\\{htid}} with each relevant table entry.
 
 \Y\B\4\X14:Find the first match, \PB{\\{hh}}, for the current state after \PB{%
@@ -455,7 +464,8 @@ ${}\{{}$\1\6
 \\{found}:\par
 \U12.\fi
 
-\M{15}\B\X15:Insert new entry and \PB{\&{goto} \\{found}}\X${}\E{}$\6
+\M[335 simpath-directed-cycles.w]{15}\B\X15:Insert new entry and \PB{\&{goto} %
+\\{found}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\PP\\{htcount}>(\\{htsize}\GG\T{1})){}$\5
 ${}\{{}$\1\6
@@ -470,7 +480,7 @@ ${}\\{head}\MRL{+{\K}}\\{ss};{}$\6
 \4${}\}{}$\2\par
 \U14.\fi
 
-\N{1}{16}Index.
+\N[348 simpath-directed-cycles.w]{1}{16}Index.
 \fi
 
 \inx

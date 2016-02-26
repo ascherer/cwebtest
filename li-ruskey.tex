@@ -1,4 +1,5 @@
 \input cwebmac
+\srcloctrue
 \datethis
 \input epsf
 \let\from=\gets
@@ -6,7 +7,8 @@
 \def\losub#1{^{\vphantom\prime}_{#1}} % for contexts like $x'_n+x\losub n$
 
 
-\N{1}{1}Introduction. The purpose of this program is to implement a pretty
+\N[7 li-ruskey.w]{1}{1}Introduction. The purpose of this program is to
+implement a pretty
 algorithm that has a very pleasant theory. But I apologize
 at the outset that the algorithm seems to be rather subtle, and
 I have not been able to think of any way to explain it to dummies.
@@ -37,7 +39,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}Given a digraph that is {\it totally acyclic}, in the sense that it has
+\M[37 li-ruskey.w]{2}Given a digraph that is {\it totally acyclic}, in the
+sense that it has
 no cycles when we ignore the arc directions, we want to find all ways to
 label its vertices with 0s and 1s in such a way that
 $x\to y$ implies $\bit x\le\bit y$.
@@ -115,8 +118,8 @@ ${}\|n\K\|k-\T{1};{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}Here we test the preorder condition, using the fact that \PB{$\\{stack}[%
-\T{0}]\K\T{0}$}
+\M[99 li-ruskey.w]{3}Here we test the preorder condition, using the fact that %
+\PB{$\\{stack}[\T{0}]\K\T{0}$}
 and that \PB{\|l} is initially 0.
 
 \Y\B\4\X3:Abort if \PB{\|j} is not a legal value for $j_k$\X${}\E{}$\6
@@ -140,7 +143,7 @@ ${}\\{abort}(\.{"and\ \%d!\\n"},\39\\{stack}[\|l+\T{1}],\39\T{5});{}$\6
 ${}\\{stack}[\PP\|l]\K\|k{}$;\par
 \U2.\fi
 
-\M{4}\B\X4:Global variables\X${}\E{}$\6
+\M[115 li-ruskey.w]{4}\B\X4:Global variables\X${}\E{}$\6
 \&{char} \\{jj}[\\{maxn}];\C{ the vertex $j_k$ }\6
 \&{char} \\{js}[\\{maxn}];\C{ 0 if $j_k\to k$,\quad 1 if $j_k\from k$ }\6
 \&{char} \\{stack}[\\{maxn}];\C{ values that are legitimate for the next $j_k$
@@ -148,14 +151,14 @@ ${}\\{stack}[\PP\|l]\K\|k{}$;\par
 \As8, 14, 24, 30, 32, 37, 47, 57\ETs60.
 \U1.\fi
 
-\M{5}\B\X5:Local variables\X${}\E{}$\6
+\M[120 li-ruskey.w]{5}\B\X5:Local variables\X${}\E{}$\6
 \&{register} \&{int} \|j${},{}$ \|k${},{}$ \|l${}\K\T{0}{}$;\C{ heavily-used
 miscellaneous indices }\6
 \&{int} \|n;\C{ size of the input graph }\par
 \As9\ET45.
 \U1.\fi
 
-\M{6}Consider the example
+\M[124 li-ruskey.w]{6}Consider the example
 $$\epsfbox{li-ruskey.1}$$
 in which all arcs are directed upward; it would be written
 \.{+0+1-2+1+0-5-0+7} in the notation above. A nonroot vertex~$k$ is
@@ -208,7 +211,7 @@ ${}\}{}$ \&{info};\par
 \As29\ET55.
 \U1.\fi
 
-\M{7}\B\X7:Initialize the data structures\X${}\E{}$\6
+\M[174 li-ruskey.w]{7}\B\X7:Initialize the data structures\X${}\E{}$\6
 $\\{list}[\T{0}][\T{0}]\K\\{list}[\T{0}][\T{1}]\K\NULL;{}$\6
 \&{for} ${}(\|k\K\T{1},\39\|i\K{\AND}\\{infonode}[\T{0}];{}$ ${}\|k\Z\|n;{}$
 ${}\|k\PP,\39\|i\PP){}$\1\6
@@ -224,17 +227,18 @@ ${}\|i\MG\\{sib}\K\\{list}[\|j][\\{js}[\|k]],\39\\{list}[\|j][\\{js}[\|k]]\K%
 \As13, 16, 23, 31\ETs61.
 \U1.\fi
 
-\M{8}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[183 li-ruskey.w]{8}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{info} ${}\\{infonode}[((\\{maxn}*\\{maxn})\GG\T{2})+(\\{maxn}\GG\T{1})]{}$;%
 \C{ elements of $A_k$ and $B_k$ }\6
 \&{info} ${}{*}\\{list}[\\{maxn}][\T{2}]{}$;\C{ heads of those sets }\par
 \fi
 
-\M{9}\B\X5:Local variables\X${}\mathrel+\E{}$\6
+\M[187 li-ruskey.w]{9}\B\X5:Local variables\X${}\mathrel+\E{}$\6
 \&{info} ${}{*}\|i,{}$ ${}{*}\\{ii}{}$;\C{ pointers to \PB{\&{info}} nodes }\par
 \fi
 
-\M{10}Aha! We can begin to see how to get the desired Gray path. The well-known
+\M[190 li-ruskey.w]{10}Aha! We can begin to see how to get the desired Gray
+path. The well-known
 reflected Gray code for mixed-radix number systems tells us how to obtain a
 path $P_0$ of length $\prod_{a\in A}n_a$ for the labelings with $\bit0=0$ as
 well as a path $P_1$ of length $\prod_{b\in B}n_b$ for the labelings with
@@ -290,7 +294,7 @@ $$0000,\ 0001,\ 0101,\ 0100,\ 0110,\ 0111,\ 1111,\ 1101.$$
 
 \fi
 
-\M{11}The overall Gray path for our example starts out with
+\M[244 li-ruskey.w]{11}The overall Gray path for our example starts out with
 $\bit1=\alpha_1=0$, $\bit5=\alpha_5=1$,
 and $\bit8=\allowbreak\alpha_8=0$,
 so the first $n_1n_5n_8=48$ labelings $\bit0\ldots\bit8$ are
@@ -319,12 +323,13 @@ $$\vbox{\halign{$#$\hfill\cr
 
 \fi
 
-\M{12}\B\X12:Other fields of an \&{info} record\X${}\E{}$\6
+\M[271 li-ruskey.w]{12}\B\X12:Other fields of an \&{info} record\X${}\E{}$\6
 \&{char} \\{alfprime};\C{ $\alpha'_{ka}$ or $\beta'_{kb}$ }\6
 \&{char} \\{del};\C{ $\delta_{ka}\bmod2$ or $\epsilon_{kb}\bmod2$ }\par
 \U6.\fi
 
-\M{13}We need not actually calculate the values $n_k$ exactly; we only need
+\M[275 li-ruskey.w]{13}We need not actually calculate the values $n_k$ exactly;
+we only need
 to know if $n_k$ is even or odd. However, this program does compute the
 exact values (unless they exceed our computer's word size).
 
@@ -370,11 +375,11 @@ ${}\\{nn}[\|k]\K\|s+\|t;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{14}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[301 li-ruskey.w]{14}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{nn}[\\{maxn}];\C{ $n_k$, the number of labelings of $G_k$ }\par
 \fi
 
-\M{15}Here are two subroutines that I used when debugging.
+\M[304 li-ruskey.w]{15}Here are two subroutines that I used when debugging.
 
 \Y\B\4\X15:Subroutines\X${}\E{}$\6
 \&{void} \\{print\_info}(\&{int} \|k)\1\1\2\2\6
@@ -409,7 +414,7 @@ ${}\{{}$\1\6
 \As58\ET59.
 \U1.\fi
 
-\M{16}\B\X7:Initialize the data structures\X${}\mathrel+\E{}$\6
+\M[329 li-ruskey.w]{16}\B\X7:Initialize the data structures\X${}\mathrel+\E{}$\6
 \&{if} (\\{verbose})\5
 ${}\{{}$\1\6
 \\{print\_all\_info}(\|n);\6
@@ -418,7 +423,8 @@ ${}\\{printf}(\.{"(Altogether\ \%d\ solu}\)\.{tions.)\\n"},\39\\{nn}[%
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{17}Coroutines. As in the program {\mc KODA-RUSKEY}, we can represent
+\N[335 li-ruskey.w]{1}{17}Coroutines. As in the program {\mc KODA-RUSKEY}, we
+can represent
 the path-generation process by considering a system of cooperating programs,
 each of which has the same basic structure. There is one coroutine
 for each pair of nodes $(k,l)$ such that $k\in A_l$ or $k\in B_l$,
@@ -477,7 +483,8 @@ returning \PB{\\{false}} a second time. Then the process repeats.
 
 \fi
 
-\M{18}How many coroutines can there be? Our example graph defines a total of
+\M[381 li-ruskey.w]{18}How many coroutines can there be? Our example graph
+defines a total of
 13 coroutines (including a coroutine~0, which corresponds to the special
 case where $k=0$ and there are no siblings).
 
@@ -512,7 +519,8 @@ number of labelings must exceed $2^{\,\max(s,t)}\ge2^{\,c/2}$.
 
 \fi
 
-\M{19}In Section 1.4.2 of {\sl Fundamental Algorithms}, I wrote,
+\M[414 li-ruskey.w]{19}In Section 1.4.2 of {\sl Fundamental Algorithms}, I
+wrote,
 ``Initialization of coroutines tends
 to be a little tricky, although not really difficult.''
 Perhaps I should reconsider that statement in the light of the present
@@ -538,7 +546,8 @@ more general problem.]
 
 \fi
 
-\N{1}{20}A generalized fringe. The loopless implementation in {\mc KODA-RUSKEY}
+\N[438 li-ruskey.w]{1}{20}A generalized fringe. The loopless implementation in
+{\mc KODA-RUSKEY}
 is based on a notion called the {\it fringe}, which is a linear list
 containing nodes that are either {\it active\/} or {\it passive}.
 We are dealing here with a generalization of the problem solved there,
@@ -566,7 +575,8 @@ $b$ for $b\in B_k$ and their descendants.
 
 \fi
 
-\M{21}An example will make this clear; for simplicity, we will consider only
+\M[464 li-ruskey.w]{21}An example will make this clear; for simplicity, we will
+consider only
 the subgraph $G_1$ on the vertices $\{1,2,3,4\}$ of our larger example.
 The initial labeling 0000 means that the fringe begins with three nodes
 $$1_0\quad 2_0\quad 4_0\,,$$
@@ -587,7 +597,7 @@ The initial value of $\bit3$ is $\beta'_{23}=0$.
 
 \fi
 
-\M{22}Proceeding in this way,
+\M[483 li-ruskey.w]{22}Proceeding in this way,
 the first eight steps can be summarized as follows:
 $$\vbox{\halign{$#\hfil$&
 \quad\smash{\lower.5\baselineskip\hbox{$\cdots$ complement $\bit#$\hfil}}\cr
@@ -616,7 +626,8 @@ $$\vbox{\halign{$#\hfil$&
 
 \fi
 
-\M{23}Let's look more closely at what happens when $\bit k$ changes its state.
+\M[510 li-ruskey.w]{23}Let's look more closely at what happens when $\bit k$
+changes its state.
 Suppose the rightmost active node is~$k_0$. Then $k_0$ is immediately followed
 in the fringe by its descendants; those descendants were all passive, but
 we can reactivate them in anticipation of step~(4). The current descendants
@@ -657,12 +668,13 @@ ${}\\{fj}[\|k][\|j]\K\|k;{}$\2\6
 \4${}\}{}$\2\2\par
 \fi
 
-\M{24}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[545 li-ruskey.w]{24}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{fj}[\\{maxn}][\T{2}];\C{ final vertices in the entourages of $k_0$,
 $k_1$ }\par
 \fi
 
-\M{25}At the point where $\bit k$ is about to change from 0 to 1, the fringe
+\M[548 li-ruskey.w]{25}At the point where $\bit k$ is about to change from 0 to
+1, the fringe
 following $k_0$ contains $k$'s {\it transition string\/} $\tau_{k0}$, which
 consists again of the consecutive entourages $a_t$ of all $a\in A_k$, but
 this time with $t=\alpha'_{ka}$ instead of $t=\alpha\losub{ka}$.
@@ -681,7 +693,8 @@ when $\bit0$ becomes~0.
 
 \fi
 
-\M{26}Now comes a key observation: Recall that some elements of $A_k$ and $B_k$
+\M[565 li-ruskey.w]{26}Now comes a key observation: Recall that some elements
+of $A_k$ and $B_k$
 are called ``principal,'' namely the vertices adjacent to~$k$ (the
 ``children'' of $k$ in tree terminology). {\sl The nonprincipal vertices of
 $A_k$ and $B_k$ appear in both transition strings $\tau_{k0}$ and $\tau_{k1}$,
@@ -725,7 +738,8 @@ elements of $B_k$.
 
 \fi
 
-\M{27}The preorder assumption makes still further simplification possible.
+\M[607 li-ruskey.w]{27}The preorder assumption makes still further
+simplification possible.
 Indeed, we know that the special case in {\mc KODA-RUSKEY} requires
 at most two splices per transition, so we can expect to discover
 a generalization of the principle that led to such an improvement.
@@ -750,7 +764,8 @@ $\tau_{k1}$ by cleverly reordering the subtrees of~$k$.
 
 \fi
 
-\M{28}An algorithm that changes transition strings as just described will run
+\M[630 li-ruskey.w]{28}An algorithm that changes transition strings as just
+described will run
 in constant amortized time per output, because the cost of changing
 links in the fringe can be charged to the processing time when the
 corresponding fringe element next becomes passive.
@@ -773,7 +788,8 @@ or it will remove the flag if $j=1$.
 
 \fi
 
-\N{1}{29}Data structures. Now that we know basically what needs to be done,
+\N[651 li-ruskey.w]{1}{29}Data structures. Now that we know basically what
+needs to be done,
 we are ready to design the records that will be linked together
 to form the fringe. These records, which we will call fnodes, naturally
 contain \PB{\\{left}} and \PB{\\{right}} fields, because the fringe is doubly
@@ -811,7 +827,8 @@ string link points }\2\6
 ${}\}{}$ \&{fnode};\par
 \fi
 
-\M{30}The fringe is extended to contain a special fnode called \PB{\\{head}},
+\M[683 li-ruskey.w]{30}The fringe is extended to contain a special fnode called
+\PB{\\{head}},
 which makes the list circular. In other words, \PB{$\\{head}\MG\\{right}$} and %
 \PB{$\\{head}\MG\\{left}$}
 are the leftmost and rightmost elements of the fringe. Also,
@@ -824,8 +841,8 @@ $(\\{vertex}+\T{1}+\|n{}$)\par
 fringe nodes }\par
 \fi
 
-\M{31}And how should we store the \PB{\\{tau}} information? Let's ``compile''
-the
+\M[693 li-ruskey.w]{31}And how should we store the \PB{\\{tau}} information?
+Let's ``compile'' the
 set of necessary link changes into a sequential list $(r_1,l_1,
 \ldots, r_t, l_t,\,$\PB{$\NULL$}) with the meaning that
 we want to set \PB{$\hbox{$l_j$}\MG\\{right}\K\hbox{$r_j$}$}
@@ -845,7 +862,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{32}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[711 li-ruskey.w]{32}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{fnode} ${}{*}\\{tau\_table}[((\\{maxn}*\\{maxn})\GG\T{1})+\\{maxn}+%
 \\{maxn}]{}$;\C{ elements of \PB{\\{tau}} fields }\6
 \&{fnode} ${}{*}{*}\\{tau\_ptr}{}$;\C{ the first unused place in \PB{\\{tau%
@@ -857,7 +874,8 @@ printed? }\6
 \&{info} ${}{*}\\{ab}[\\{maxn}]{}$;\C{ an element of $A_k$ or $B_k$ }\par
 \fi
 
-\M{33}It is most convenient to sort in {\it decreasing\/} order here,
+\M[718 li-ruskey.w]{33}It is most convenient to sort in {\it decreasing\/}
+order here,
 so that the rightmost link-updates are listed first, because we have
 stored them in that order and we will need them in that order.
 
@@ -902,8 +920,8 @@ ${}\|j\MM;{}$\6
 \4${}\}{}$\2\par
 \U31.\fi
 
-\M{34}\B\X34:Compile the link-change strings \PB{$\\{vertex}[\|k].\\{tau}[\,]$}%
-\X${}\E{}$\6
+\M[754 li-ruskey.w]{34}\B\X34:Compile the link-change strings \PB{$\\{vertex}[%
+\|k].\\{tau}[\,]$}\X${}\E{}$\6
 \&{if} ${}(\R\|l){}$\1\5
 ${}\\{vertex}[\|k].\\{tau}[\T{0}]\K\\{vertex}[\|k].\\{tau}[\T{1}]\K\NULL;{}$\2\6
 \&{else}\5
@@ -917,7 +935,8 @@ ${}\\{vertex}[\|k].\\{tau}[\T{0}]\K\\{tau\_ptr};{}$\6
 \4${}\}{}$\2\par
 \U31.\fi
 
-\M{35}Our job here is to specify the links that must change when the
+\M[765 li-ruskey.w]{35}Our job here is to specify the links that must change
+when the
 principal elements of~$A_k$ are deleted and the principal elements of~$B_k$
 are inserted. In the simple example \.{(a5)} mentioned above,
 we simply set $r_1=\;$\PB{${\AND}\\{vertex}[\T{5}]$} and $l_1=\;$\PB{%
@@ -957,7 +976,7 @@ ${}\\{tau\_ptr}\PP{}$;\C{ the \PB{\\{tau}} list terminates with \PB{$\NULL$} }%
 \par
 \U34.\fi
 
-\M{36}\B\X36:Find $r_1$ for \PB{\\{tau}[\T{1}]}\X${}\E{}$\6
+\M[800 li-ruskey.w]{36}\B\X36:Find $r_1$ for \PB{\\{tau}[\T{1}]}\X${}\E{}$\6
 \&{for} ${}(\|l\K\T{0};{}$ ${}\R\\{principal}(\|l);{}$ ${}\|l\PP){}$\1\5
 ;\C{ nonprincipals at the end can be ignored }\2\6
 \&{if} (\\{ct}[\|l])\5
@@ -986,11 +1005,12 @@ ${}{*}\\{tau\_ptr}\PP\K\\{vertex}+\\{ab}[\|l]\MG\\{id};{}$\6
 \4${}\}{}$\2\par
 \U35.\fi
 
-\M{37}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[816 li-ruskey.w]{37}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{rbuf}[\T{8}];\C{ symbolic form of $r_1$ for verbose printing }\par
 \fi
 
-\M{38}Once we've found $r_1$, principal $a$'s at the end can be ignored.
+\M[819 li-ruskey.w]{38}Once we've found $r_1$, principal $a$'s at the end can
+be ignored.
 
 \Y\B\4\X38:Find $l_1$ for \PB{\\{tau}[\T{1}]}\X${}\E{}$\6
 \&{while} ${}(\\{ab}[\|l]\W\R\\{ct}[\|l]\W\\{principal}(\|l)){}$\1\5
@@ -1016,8 +1036,8 @@ ${}{*}\\{tau\_ptr}\PP\K\\{vertex}+\\{fj}[\\{ab}[\|l]\MG\\{id}][\\{ab}[\|l]\MG%
 \4${}\}{}$\2\par
 \U35.\fi
 
-\M{39}At this point \PB{\\{ab}[\|l]} is the \PB{\&{info}} node from which we
-produced $l_{j-1}$.
+\M[834 li-ruskey.w]{39}At this point \PB{\\{ab}[\|l]} is the \PB{\&{info}} node
+from which we produced $l_{j-1}$.
 If it refers to a principal element, it's an element $b$ that is absent from
 $\tau_{k0}$ but present in $\tau_{k1}$. Otherwise it's a nonprincipal
 element, which appears in both $\tau_{k0}$ and $\tau_{k1}$.
@@ -1061,7 +1081,8 @@ ${}{*}\\{tau\_ptr}\PP\K\\{vertex}+\\{fj}[\\{ab}[\|l]\MG\\{id}][\\{ab}[\|l]\MG%
 \4${}\}{}$\2\par
 \U35.\fi
 
-\M{40}The next few sections are identical to the previous ones, with
+\M[859 li-ruskey.w]{40}The next few sections are identical to the previous
+ones, with
 $a$'s and $b$'s swapped. (Unless I have erred.) The compiled instructions
 for \PB{\\{tau}[\T{0}]} in the complex example are
 $$\.{8r:10+}\quad \.{6r:8}\quad \.{5:6}\quad \.{4r:5}\quad \.{2:3}\quad \.{k:1}
@@ -1076,7 +1097,7 @@ ${}\\{tau\_ptr}\PP{}$;\C{ the \PB{\\{tau}} list terminates with \PB{$\NULL$} }%
 \par
 \U34.\fi
 
-\M{41}\B\X41:Find $r_1$ for \PB{\\{tau}[\T{0}]}\X${}\E{}$\6
+\M[871 li-ruskey.w]{41}\B\X41:Find $r_1$ for \PB{\\{tau}[\T{0}]}\X${}\E{}$\6
 \&{for} ${}(\|l\K\T{0};{}$ ${}\R\\{principal}(\|l);{}$ ${}\|l\PP){}$\1\5
 ;\C{ nonprincipals at the end can be ignored }\2\6
 \&{if} ${}(\R\\{ct}[\|l]){}$\5
@@ -1106,7 +1127,7 @@ ${}{*}\\{tau\_ptr}\PP\K\\{vertex}+\\{ab}[\|l]\MG\\{id};{}$\6
 \4${}\}{}$\2\par
 \U40.\fi
 
-\M{42}\B\X42:Find $l_1$ for \PB{\\{tau}[\T{0}]}\X${}\E{}$\6
+\M[887 li-ruskey.w]{42}\B\X42:Find $l_1$ for \PB{\\{tau}[\T{0}]}\X${}\E{}$\6
 \&{while} ${}(\\{ab}[\|l]\W\\{ct}[\|l]\W\\{principal}(\|l)){}$\1\5
 ${}\|l\PP;{}$\2\6
 \&{if} ${}(\R\\{ab}[\|l]){}$\5
@@ -1130,8 +1151,8 @@ ${}{*}\\{tau\_ptr}\PP\K\\{vertex}+\\{fj}[\\{ab}[\|l]\MG\\{id}][\\{ab}[\|l]\MG%
 \4${}\}{}$\2\par
 \U40.\fi
 
-\M{43}At this point \PB{\\{ab}[\|l]} is the \PB{\&{info}} node from which we
-produced $l_{j-1}$.
+\M[900 li-ruskey.w]{43}At this point \PB{\\{ab}[\|l]} is the \PB{\&{info}} node
+from which we produced $l_{j-1}$.
 If it refers to a principal element, it's an element $a$ that is absent from
 $\tau_{k1}$ but present in $\tau_{k0}$. Otherwise it's a nonprincipal
 element, which appears in both $\tau_{k0}$ and $\tau_{k1}$.
@@ -1175,8 +1196,8 @@ ${}{*}\\{tau\_ptr}\PP\K\\{vertex}+\\{fj}[\\{ab}[\|l]\MG\\{id}][\\{ab}[\|l]\MG%
 \4${}\}{}$\2\par
 \U40.\fi
 
-\M{44}We need to link the siblings of a family together if they are adjacent
-and
+\M[925 li-ruskey.w]{44}We need to link the siblings of a family together if
+they are adjacent and
 of the same type, because of one of the optimization we're doing.
 So we might as well link {\it all\/} siblings together.
 
@@ -1191,11 +1212,12 @@ ${}\|p\K\|q;{}$\6
 \4${}\}{}$\2\2\par
 \U34.\fi
 
-\M{45}\B\X5:Local variables\X${}\mathrel+\E{}$\6
+\M[936 li-ruskey.w]{45}\B\X5:Local variables\X${}\mathrel+\E{}$\6
 \&{fnode} ${}{*}\|p,{}$ ${}{*}\|q,{}$ ${}{*}\|r{}$;\par
 \fi
 
-\N{1}{46}Doing it. The time has come to construct the loopless implementation
+\N[939 li-ruskey.w]{1}{46}Doing it. The time has come to construct the loopless
+implementation
 in practice, as we have been doing so far in theory.
 
 \Y\B\4\X46:Generate the answers\X${}\E{}$\6
@@ -1225,12 +1247,13 @@ ${}\\{been\_there\_and\_done\_that}\K\T{1}{}$;\5
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{47}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[959 li-ruskey.w]{47}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{been\_there\_and\_done\_that};\C{ have we completed a cycle
 already? }\par
 \fi
 
-\M{48}The nice thing is that the algorithm not only is loopless, its
+\M[962 li-ruskey.w]{48}The nice thing is that the algorithm not only is
+loopless, its
 operations are simple.
 
 \Y\B\4\X48:Set \PB{\|p} to the rightmost active node of the fringe, and
@@ -1240,7 +1263,8 @@ ${}\|p\K\|q\MG\\{focus};{}$\6
 ${}\|q\MG\\{focus}\K\|q{}$;\par
 \U46.\fi
 
-\M{49}At this point we know that \PB{$\|p\MG\\{right}$} (more precisely, the
+\M[970 li-ruskey.w]{49}At this point we know that \PB{$\|p\MG\\{right}$} (more
+precisely, the
 node that would be \PB{$\|p\MG\\{right}$} if links weren't stale) is active.
 And we also know that \PB{$\|p\MG\\{left}$} is not stale.
 
@@ -1250,7 +1274,8 @@ ${}\|p\MG\\{focus}\K\|q\MG\\{focus};{}$\6
 ${}\|q\MG\\{focus}\K\|q{}$;\par
 \U46.\fi
 
-\M{50}\B\X50:Repair the stale pointer \PB{$\|p\MG\\{left}$}\X${}\E{}$\6
+\M[979 li-ruskey.w]{50}\B\X50:Repair the stale pointer \PB{$\|p\MG\\{left}$}%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|q\K{*}(\|p\MG\\{fixup}),\39\|r\K{*}(\|p\MG\\{fixup}+\T{1});{}$\6
 ${}\|p\MG\\{left}\K\|q,\39\|q\MG\\{right}\K\|p;{}$\6
@@ -1260,7 +1285,8 @@ ${}\|p\MG\\{fixup}\K\NULL;{}$\6
 \4${}\}{}$\2\par
 \U46.\fi
 
-\M{51}\B\X51:Move forward, setting \PB{$\|p\MG\\{bit}\K\T{1}$}\X${}\E{}$\6
+\M[987 li-ruskey.w]{51}\B\X51:Move forward, setting \PB{$\|p\MG\\{bit}\K\T{1}$}%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|p\MG\\{bit}\K\T{1};{}$\6
 \&{if} ${}(\|p\MG\\{tau}[\T{1}]){}$\5
@@ -1275,7 +1301,8 @@ ${}\|r\MG\\{fixup}\K\|p\MG\\{tau}[\T{1}]+\T{3};{}$\2\6
 \4${}\}{}$\2\par
 \U46.\fi
 
-\M{52}\B\X52:Move backward, setting \PB{$\|p\MG\\{bit}\K\T{0}$}\X${}\E{}$\6
+\M[999 li-ruskey.w]{52}\B\X52:Move backward, setting \PB{$\|p\MG\\{bit}\K%
+\T{0}$}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|p\MG\\{bit}\K\T{0};{}$\6
 \&{if} ${}(\|p\MG\\{tau}[\T{0}]){}$\5
@@ -1290,7 +1317,7 @@ ${}\|r\MG\\{fixup}\K\|p\MG\\{tau}[\T{0}]+\T{3};{}$\2\6
 \4${}\}{}$\2\par
 \U46.\fi
 
-\M{53}\B\X53:Print out all the current bits\X${}\E{}$\6
+\M[1011 li-ruskey.w]{53}\B\X53:Print out all the current bits\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\1\5
 ${}\\{putchar}(\.{'0'}+\\{vertex}[\|k].\\{bit});{}$\2\6
 \&{if} (\\{verbose})\1\5
@@ -1298,7 +1325,8 @@ ${}\\{putchar}(\.{'0'}+\\{vertex}[\|k].\\{bit});{}$\2\6
 \\{putchar}(\.{'\\n'});\par
 \U46.\fi
 
-\M{54}Once again, I'm writing optional code that should help me gain confidence
+\M[1016 li-ruskey.w]{54}Once again, I'm writing optional code that should help
+me gain confidence
 (and pinpoint errors) while debugging. Such code also ought to help an observer
 understand what the program thinks it is doing, or at least what I thought
 it should be doing when I wrote it.
@@ -1323,7 +1351,8 @@ ${}\|p\K\|r\MG\\{focus};{}$\2\6
 \4${}\}{}$\2\par
 \U53.\fi
 
-\M{55}Here we need to maintain a stack of currently active fixups.
+\M[1036 li-ruskey.w]{55}Here we need to maintain a stack of currently active
+fixups.
 
 \Y\B\4\X6:Type definitions\X${}\mathrel+\E{}$\6
 \&{typedef} \&{struct} ${}\{{}$\1\6
@@ -1333,8 +1362,8 @@ vertices }\2\6
 ${}\}{}$ \&{fstack\_node};\par
 \fi
 
-\M{56}\B\X56:Set \PB{\|r} to the non-stale form of \PB{$\|q\MG\\{left}$}\X${}%
-\E{}$\6
+\M[1044 li-ruskey.w]{56}\B\X56:Set \PB{\|r} to the non-stale form of \PB{$\|q%
+\MG\\{left}$}\X${}\E{}$\6
 \&{if} ${}(\|q\MG\\{fixup}){}$\1\5
 ${}\\{fstack}[\PP\|l].\\{vert}\K\|q,\39\\{fstack}[\|l].\\{ref}\K\|q\MG%
 \\{fixup};{}$\2\6
@@ -1352,11 +1381,12 @@ ${}\|l\MM;{}$\2\6
 ${}\|r\K\|q\MG\\{left}{}$;\2\par
 \U54.\fi
 
-\M{57}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[1054 li-ruskey.w]{57}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{fstack\_node} \\{fstack}[\\{maxn}];\C{ stack used in verbose printout }\par
 \fi
 
-\N{1}{58}Priming the pump. The program is complete except for one niggling
+\N[1057 li-ruskey.w]{1}{58}Priming the pump. The program is complete except for
+one niggling
 detail: We need to set up the initial contents of the fringe.
 Everything will maintain itself, once the whole structure is up and running,
 but how do we get chickens before we have eggs?
@@ -1378,7 +1408,8 @@ ${}\\{setbits}(\|i\MG\\{id});{}$\2\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{59}A global variable called \PB{\\{cur\_vert}} points to the left end of the
+\M[1076 li-ruskey.w]{59}A global variable called \PB{\\{cur\_vert}} points to
+the left end of the
 fringe-so-far. We construct the entourages from right to left, because
 that's the way the \PB{\\{list}} info is set up.
 
@@ -1400,12 +1431,12 @@ ${}\\{cur\_vert}\MG\\{left}\K\|p,\39\|p\MG\\{right}\K\\{cur\_vert},\39\\{cur%
 \4${}\}{}$\2\par
 \fi
 
-\M{60}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[1095 li-ruskey.w]{60}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{fnode} ${}{*}\\{cur\_vert}{}$;\C{ front of a doubly linked list under
 construction }\par
 \fi
 
-\M{61}And now we're done!
+\M[1098 li-ruskey.w]{61}And now we're done!
 
 \Y\B\4\X7:Initialize the data structures\X${}\mathrel+\E{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\|n+\T{1};{}$ ${}\|k\PP){}$\1\5
@@ -1416,7 +1447,8 @@ ${}\\{cur\_vert}\MG\\{left}\K\\{head},\39\\{head}\MG\\{right}\K\\{cur%
 \_vert}{}$;\par
 \fi
 
-\N{1}{62}Comment about looplessness. In practice, the algorithm
+\N[1106 li-ruskey.w]{1}{62}Comment about looplessness. In practice, the
+algorithm
 would run a bit faster if the \PB{\\{fixup}} links were dispensed with
 and all splicing were done directly at transition time. Constant
 {\it amortized\/} time---or, rather, total execution time in general---is the
@@ -1449,7 +1481,7 @@ especially when $m$ is usually (but not always) exponential in~$n$.
 
 \fi
 
-\N{1}{63}Index.
+\N[1137 li-ruskey.w]{1}{63}Index.
 \fi
 
 \inx

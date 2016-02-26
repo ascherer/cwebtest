@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Introduction. This program finds the length of the shortest strong
+\N[2 strongchain.w]{1}{1}Introduction. This program finds the length of the
+shortest strong
 addition chain that leads to a given number~$n$.
 A strong addition chain --- aka a Lucas chain or a Chebyshev chain ---
 is a sequence of integers $1=a_0<a_1<\cdots<a_m=n$ with the property that
@@ -70,7 +72,8 @@ ${}\\{work}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{2}Backtracking. The choices to be made on levels 0, 1, 2, \dots\ can
+\N[55 strongchain.w]{1}{2}Backtracking. The choices to be made on levels 0, 1,
+2, \dots\ can
 be grouped in fours, so that the actions at level $l$ depend on $l\bmod4$.
 If $l\bmod4=0$, we're given a number $a$ and we want to decide how to
 write it as a sum $a'+a''$. If $l\bmod4!=0$, we're given a number $b$ and
@@ -109,15 +112,15 @@ ${}\|m\PP;{}$\6
 \\{found}:\par
 \U1.\fi
 
-\M{3}The obvious lower bound is $\lceil\lg n\rceil$.
+\M[90 strongchain.w]{3}The obvious lower bound is $\lceil\lg n\rceil$.
 
 \Y\B\4\X3:Set $m$ to the obvious lower bound\X${}\E{}$\6
 \&{for} ${}(\|k\K(\|n-\T{1})\GG\T{1},\39\|m\K\T{1};{}$ \|k; ${}\|m\PP){}$\1\5
 ${}\|k\MRL{{\GG}{\K}}\T{1}{}$;\2\par
 \U2.\fi
 
-\M{4}A slightly subtle point arises here: We make \PB{\\{lb}[\|k]} and \PB{%
-\\{ub}[\|k]} infinite for
+\M[95 strongchain.w]{4}A slightly subtle point arises here: We make \PB{\\{lb}[%
+\|k]} and \PB{\\{ub}[\|k]} infinite for
 $k>m$, because some of our routines below will look in positions $\ge L(a)$
 when trying to insert an element~$a$.
 
@@ -142,8 +145,8 @@ ${}\\{lb}[\|k]\K\\{ub}[\|k]\K\\{maxn};{}$\2\6
 ${}\\{undo\_ptr}\K\T{0}{}$;\par
 \U2.\fi
 
-\M{5}At each level \PB{\|l} we make all choices that lie between \PB{%
-\\{choice}[\|l]} and
+\M[113 strongchain.w]{5}At each level \PB{\|l} we make all choices that lie
+between \PB{\\{choice}[\|l]} and
 \PB{\\{bound}[\|l]}, inclusive. If successful, we advance \PB{\|l} and go to %
 \PB{\\{start\_level}};
 otherwise we go to \PB{\\{backup}}.
@@ -161,7 +164,7 @@ ${}\\{work}\PP;{}$\6
 \X15:Additional code reached by \PB{\&{goto}} statements\X;\par
 \U2.\fi
 
-\M{6}\B\X6:Print diagnostic info\X${}\E{}$\6
+\M[124 strongchain.w]{6}\B\X6:Print diagnostic info\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{printf}(\.{"Entering\ level\ \%d:\\}\)\.{n"},\39\|l);{}$\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\|t;{}$ ${}\|k\PP){}$\1\5
@@ -177,7 +180,8 @@ ${}\\{printf}(\.{"\%c\%d..\%d"},\39(\|k\AND\T{3}\?\.{','}:\.{'\ '}),\39%
 \4${}\}{}$\2\par
 \U5.\fi
 
-\N{1}{7}Choosing the summands. When $a$ is in the chain and we want to
+\N[136 strongchain.w]{1}{7}Choosing the summands. When $a$ is in the chain and
+we want to
 express it as $a'+a''$, we can assume that $a'\ge a''$.
 Naturally we want to look first to see if
 suitable values of $a'$ and $a''$ are already present.
@@ -195,7 +199,7 @@ ${}\{{}$\1\6
 \As9, 12, 13\ETs20.
 \U1.\fi
 
-\M{8}The values of $a_1$ and $a_2$ can never be a problem.
+\M[150 strongchain.w]{8}The values of $a_1$ and $a_2$ can never be a problem.
 
 \Y\B\4\X8:Decrease \PB{\|t} and vet another entry, or go to \PB{\\{found}}\X${}%
 \E{}$\6
@@ -228,7 +232,8 @@ ${}\|l\PP{}$;\5
 \&{goto} \\{start\_level};\par
 \U5.\fi
 
-\M{9}The \PB{\\{impossible}} subroutine determines rapidly when there is no
+\M[169 strongchain.w]{9}The \PB{\\{impossible}} subroutine determines rapidly
+when there is no
 ``hole'' in which an element can be placed in the current chain.
 
 \Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
@@ -244,7 +249,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{10}The impossibility test here is redundant, since we would discover in any
+\M[181 strongchain.w]{10}The impossibility test here is redundant, since we
+would discover in any
 case that placement fails. But the test makes this program run
 about twice as fast.
 
@@ -260,8 +266,8 @@ ${}\\{hint}[\|l+\T{2}]\K\\{app}{}$;\5
 ${}\\{hint}[\|l+\T{3}]\K\\{ap}-\\{app}{}$;\par
 \U8.\fi
 
-\N{1}{11}Placing the summands. Any change to the \PB{\\{ub}} and \PB{\\{lb}}
-table needs to
+\N[191 strongchain.w]{1}{11}Placing the summands. Any change to the \PB{\\{ub}}
+and \PB{\\{lb}} table needs to
 be recorded in the \PB{\\{assigned}} array, because we may need to undo it.
 
 \Y\B\4\D$\\{assign}(\|x,\|y)$ \5
@@ -269,7 +275,8 @@ $\\{assigned}[\\{undo\_ptr}].\\{ptr}\K\|x,\39\\{assigned}[\\{undo\_ptr}\PP].%
 \\{val}\K{*}\|x,\39{*}\|x\K{}$\|y\par
 \fi
 
-\M{12}The algorithm for adjusting upper and lower bounds is probably the most
+\M[196 strongchain.w]{12}The algorithm for adjusting upper and lower bounds is
+probably the most
 interesting part of this whole program. I suppose I should prove it correct.
 
 (Since this subroutine is called only in one place, I might want to try
@@ -310,8 +317,8 @@ ${}\|j\PP,\39\|y\PP;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{13}We need a subroutine that does a bit more than just plain \PB{%
-\\{lookup}};
+\M[231 strongchain.w]{13}We need a subroutine that does a bit more than just
+plain \PB{\\{lookup}};
 \PB{\\{choice\_lookup}} returns zero if the entry is $\le2$, otherwise it
 returns the least index where the entry might possibly be found
 based on the \PB{\\{ub}} table.
@@ -329,7 +336,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{14}In the special case that the entry to be placed is already present,
+\M[245 strongchain.w]{14}In the special case that the entry to be placed is
+already present,
 we avoid unnecessary computation by setting \PB{\\{bound}[\|l]} to zero.
 
 (Note: I thought this would be a good idea, but it didn't actually
@@ -355,7 +363,8 @@ ${}\\{bound}[\|l]\K\|k-\T{1};{}$\6
 \4${}\}{}$\2\par
 \U5.\fi
 
-\M{15}\B\X15:Additional code reached by \PB{\&{goto}} statements\X${}\E{}$\6
+\M[265 strongchain.w]{15}\B\X15:Additional code reached by \PB{\&{goto}}
+statements\X${}\E{}$\6
 \4\\{unplace}:\6
 \&{if} ${}(\R\\{bound}[\|l]){}$\1\5
 \&{goto} \\{backup};\2\6
@@ -375,13 +384,14 @@ ${}\\{place}(\|a,\39\\{choice}[\|l]);{}$\6
 \A17.
 \U5.\fi
 
-\M{16}Finally, when we run out of steam on the current level, we reconsider
+\M[277 strongchain.w]{16}Finally, when we run out of steam on the current
+level, we reconsider
 previous choices as follows.
 
 \fi
 
-\M{17}\B\X15:Additional code reached by \PB{\&{goto}} statements\X${}\mathrel+%
-\E{}$\6
+\M[280 strongchain.w]{17}\B\X15:Additional code reached by \PB{\&{goto}}
+statements\X${}\mathrel+\E{}$\6
 \4\\{restore\_t\_and\_backup}:\5
 ${}\|t\K\\{save}[\|l];{}$\6
 \4\\{backup}:\6
@@ -398,7 +408,8 @@ ${}\\{choice}[\|l]\PP;{}$\6
 \&{goto} \\{restore\_t\_and\_backup};\par
 \fi
 
-\N{1}{18}Simple upper bounds. We can often save a lot of work by using the fact
+\N[290 strongchain.w]{1}{18}Simple upper bounds. We can often save a lot of
+work by using the fact
 that $L(mn)\le L(m)+L(n)$.
 
 \Y\B\4\X18:Check for known upper bound to simplify the work\X${}\E{}$\6
@@ -414,7 +425,7 @@ ${}\\{special}\K\|k;{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{19}Another simple upper bound,
+\M[302 strongchain.w]{19}Another simple upper bound,
 $L(n)\le\lfloor\lg n\rfloor+\lfloor\lg{2\over3}n\rfloor$,
 follows from the fact that a strong chain ending with $(a,a+1)$
 can be extended by appending either $(2a,2a+1)$ or $(2a+1,2a+2)$.
@@ -434,7 +445,7 @@ Indeed, $L(17)=6$ and $L(8)=3$.
 ${}\\{special}\K\T{1}{}$;\2\par
 \U18.\fi
 
-\M{20}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
+\M[320 strongchain.w]{20}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
 \&{int} \\{lg}(\&{int} \|n)\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{int} \|m${},{}$ \|x;\7
@@ -444,7 +455,7 @@ ${}\|x\MRL{{\GG}{\K}}\T{1};{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{21}\B\X21:Print special reason\X${}\E{}$\6
+\M[328 strongchain.w]{21}\B\X21:Print special reason\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{special}\E\T{1}){}$\1\5
 \\{printf}(\.{"\ Binary\ method"});\2\6
@@ -455,7 +466,8 @@ ${}\\{special}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{22}Experience showed that the factor method often gives an optimum result,
+\M[335 strongchain.w]{22}Experience showed that the factor method often gives
+an optimum result,
 at least for small~$n$. Indeed, the factor method was optimum for all
 nonprime $n<1219$. (The first exception, 1219, is $23\times53$, the
 product of two primes that have worse-than-normal $L$~values.)
@@ -468,7 +480,7 @@ proving that shorter chains are impossible.)
 
 \fi
 
-\N{1}{23}Index.
+\N[346 strongchain.w]{1}{23}Index.
 \fi
 
 \inx

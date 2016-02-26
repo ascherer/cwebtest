@@ -1,10 +1,11 @@
 \input cwebmac
+\srcloctrue
 \let\res=\diamond
 \datethis
 
 
-\N{1}{1}Intro. This program is part of a series of ``SAT-solvers'' that I'm
-putting
+\N[7 sat12.w]{1}{1}Intro. This program is part of a series of ``SAT-solvers''
+that I'm putting
 together for my own education as I prepare to write Section 7.2.2.2 of
 {\sl The Art of Computer Programming}. My intent is to have a variety of
 compatible programs on which I can run experiments to learn how different
@@ -53,7 +54,8 @@ input or to format the output.)
 
 \fi
 
-\M{2}One of the most important jobs of a preprocessor is to reduce the
+\M[54 sat12.w]{2}One of the most important jobs of a preprocessor is to reduce
+the
 number of variables, if possible. But when that happens, and if the
 resulting clauses are satisfiable, the user often wants to know how
 to satisfy the original clauses; should the eliminated variables be
@@ -105,7 +107,8 @@ The \.{erp} file will be \.{/tmp/erp} unless another name is specified.
 
 \fi
 
-\M{3}So here's the structure of the program. (Skip ahead if you are
+\M[104 sat12.w]{3}So here's the structure of the program. (Skip ahead if you
+are
 impatient to see the interesting stuff.)
 
 \Y\B\4\D$\|o$ \5
@@ -171,7 +174,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"erp\ data\ written\ to}\)\.{\ file\ "}\|O%
 \4${}\}{}$\2\par
 \fi
 
-\M{4}\B\D$\\{show\_basics}$ \5
+\M[155 sat12.w]{4}\B\D$\\{show\_basics}$ \5
 \T{1}\C{ \PB{\\{verbose}} code for basic stats }\par
 \B\4\D$\\{show\_rounds}$ \5
 \T{2}\C{ \PB{\\{verbose}} code to show each round of elimination }\par
@@ -219,7 +222,8 @@ mems }\6
 \As8, 39\ETs81.
 \U3.\fi
 
-\M{5}On the command line one can specify nondefault values for any of the
+\M[184 sat12.w]{5}On the command line one can specify nondefault values for any
+of the
 following parameters:
 \smallskip
 \item{$\bullet$}
@@ -325,8 +329,8 @@ ${}\\{exit}({-}\T{16});{}$\6
 \4${}\}{}$\2\par
 \U3.\fi
 
-\N{1}{6}The I/O wrapper. The following routines read the input and absorb it
-into
+\N[249 sat12.w]{1}{6}The I/O wrapper. The following routines read the input and
+absorb it into
 temporary data areas from which all of the ``real'' data structures
 can readily be initialized. My intent is to incorporate these routines into all
 of the SAT-solvers in this series. Therefore I've tried to make the code
@@ -367,7 +371,8 @@ ${}\}{}$ \&{vchunk};\par
 \As7, 25, 27, 28\ETs29.
 \U3.\fi
 
-\M{7}Each clause in the temporary tables is represented by a sequence of
+\M[286 sat12.w]{7}Each clause in the temporary tables is represented by a
+sequence of
 one or more pointers to the \PB{\&{tmp\_var}} nodes of the literals involved.
 A negated literal is indicated by adding~1 to such a pointer.
 The first literal of a clause is indicated by adding~2.
@@ -384,7 +389,7 @@ any) }\6
 ${}\}{}$ \&{chunk};\par
 \fi
 
-\M{8}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[301 sat12.w]{8}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{char} ${}{*}\\{buf}{}$;\C{ buffer for reading the lines (clauses) of \PB{%
 \\{stdin}} }\6
 \&{tmp\_var} ${}{*}{*}\\{hash}{}$;\C{ heads of the hash lists }\6
@@ -406,7 +411,7 @@ a new \PB{\&{chunk}} }\6
 \&{ullng} \\{cells};\C{ how many occurrences of literals in clauses? }\par
 \fi
 
-\M{9}\B\X9:Initialize everything\X${}\E{}$\6
+\M[316 sat12.w]{9}\B\X9:Initialize everything\X${}\E{}$\6
 \\{gb\_init\_rand}(\\{random\_seed});\6
 ${}\\{buf}\K{}$(\&{char} ${}{*}){}$ \\{malloc}${}(\\{buf\_size}*\&{sizeof}(%
 \&{char}));{}$\6
@@ -429,7 +434,8 @@ ${}\\{hash}[\|h]\K\NULL{}$;\2\par
 \A15.
 \U3.\fi
 
-\M{10}The hash address of each variable name has $h$ bits, where $h$ is the
+\M[332 sat12.w]{10}The hash address of each variable name has $h$ bits, where
+$h$ is the
 value of the adjustable parameter \PB{\\{hbits}}.
 Thus the average number of variables per hash list is $n/2^h$ when there
 are $n$ different variables. A warning is printed if this average number
@@ -496,7 +502,7 @@ ${}\\{exit}({-}\T{666});{}$\6
 \4${}\}{}$\2\par
 \U3.\fi
 
-\M{11}\B\X11:Input the clause in \PB{\\{buf}}\X${}\E{}$\6
+\M[382 sat12.w]{11}\B\X11:Input the clause in \PB{\\{buf}}\X${}\E{}$\6
 \&{for} ${}(\|j\K\|k\K\T{0};{}$  ; \,)\5
 ${}\{{}$\1\6
 \&{while} ${}(\\{buf}[\|j]\E\.{'\ '}){}$\1\5
@@ -529,7 +535,8 @@ ${}\\{nullclauses}\PP{}$;\C{ strictly speaking it would be unsatisfiable }\6
 ${}\\{cells}\MRL{+{\K}}\|k{}$;\par
 \U10.\fi
 
-\M{12}We need a hack to insert the bit codes 1 and/or 2 into a pointer value.
+\M[403 sat12.w]{12}We need a hack to insert the bit codes 1 and/or 2 into a
+pointer value.
 
 \Y\B\4\D$\\{hack\_in}(\|q,\|t)$ \5
 (\&{tmp\_var} ${}{*})(\|t\OR{}$(\&{ullng}) \|q)\par
@@ -559,7 +566,7 @@ ${}\\{cur\_cell}\PP,\39\|k\PP;{}$\6
 \4${}\}{}$\2\par
 \U11.\fi
 
-\M{13}\B\X13:Install a new \PB{\&{vchunk}}\X${}\E{}$\6
+\M[425 sat12.w]{13}\B\X13:Install a new \PB{\&{vchunk}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{vchunk} ${}{*}\\{new\_vchunk};{}$\7
 ${}\\{new\_vchunk}\K{}$(\&{vchunk} ${}{*}){}$ \\{malloc}(\&{sizeof}(%
@@ -578,7 +585,7 @@ ${}\\{bad\_tmp\_var}\K{\AND}\\{new\_vchunk}\MG\\{var}[\\{vars\_per%
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{14}\B\X14:Install a new \PB{\&{chunk}}\X${}\E{}$\6
+\M[438 sat12.w]{14}\B\X14:Install a new \PB{\&{chunk}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{chunk} ${}{*}\\{new\_chunk};{}$\7
 ${}\\{new\_chunk}\K{}$(\&{chunk} ${}{*}){}$ \\{malloc}(\&{sizeof}(\&{chunk}));\6
@@ -595,7 +602,8 @@ ${}\\{bad\_cell}\K{\AND}\\{new\_chunk}\MG\\{cell}[\\{cells\_per\_chunk}];{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{15}The hash code is computed via ``universal hashing,'' using the following
+\M[451 sat12.w]{15}The hash code is computed via ``universal hashing,'' using
+the following
 precomputed tables of random bits.
 
 \Y\B\4\X9:Initialize everything\X${}\mathrel+\E{}$\6
@@ -604,8 +612,9 @@ precomputed tables of random bits.
 ${}\\{hash\_bits}[\|j][\|k]\K\\{gb\_next\_rand}(\,){}$;\2\2\par
 \fi
 
-\M{16}\B\X16:Put the variable name beginning at \PB{\\{buf}[\|j]} in \PB{$%
-\\{cur\_tmp\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X${}\E{}$\6
+\M[458 sat12.w]{16}\B\X16:Put the variable name beginning at \PB{\\{buf}[\|j]}
+in \PB{$\\{cur\_tmp\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X${}%
+\E{}$\6
 $\\{cur\_tmp\_var}\MG\\{name}.\\{lng}\K\T{0};{}$\6
 \&{for} ${}(\|h\K\|l\K\T{0};{}$ ${}\\{buf}[\|j+\|l]>\.{'\ '}\W\\{buf}[\|j+\|l]%
 \Z\.{'\~'};{}$ ${}\|l\PP){}$\5
@@ -626,8 +635,8 @@ ${}\|j\MRL{+{\K}}\|l;{}$\6
 ${}\|h\MRL{\AND{\K}}(\T{1}\LL\\{hbits})-\T{1}{}$;\par
 \U12.\fi
 
-\M{17}\B\X17:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash table at \PB{%
-\|p}\X${}\E{}$\6
+\M[474 sat12.w]{17}\B\X17:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash
+table at \PB{\|p}\X${}\E{}$\6
 \&{for} ${}(\|p\K\\{hash}[\|h];{}$ \|p; ${}\|p\K\|p\MG\\{next}){}$\1\6
 \&{if} ${}(\|p\MG\\{name}.\\{lng}\E\\{cur\_tmp\_var}\MG\\{name}.\\{lng}){}$\1\5
 \&{break};\2\2\6
@@ -640,8 +649,8 @@ ${}\|p\MG\\{stamp}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{18}The most interesting aspect of the input phase is probably the
-``unwinding''
+\M[484 sat12.w]{18}The most interesting aspect of the input phase is probably
+the ``unwinding''
 that we might need to do when encountering a literal more than once
 in the same clause.
 
@@ -652,8 +661,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{19}An input line that begins with `\.{\~\ }' is silently treated as a
-comment.
+\M[493 sat12.w]{19}An input line that begins with `\.{\~\ }' is silently
+treated as a comment.
 Otherwise redundant clauses are logged, in case they were unintentional.
 (One can, however, intentionally
 use redundant clauses to force the order of the variables.)
@@ -670,7 +679,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"(The\ clause\ on\ line}\)\.{\ "}\|O\.{"lld\ is%
 ${}\\{nullclauses}\PP{}$;\par
 \U11.\fi
 
-\M{20}\B\X20:Move \PB{\\{cur\_cell}} backward to the previous cell\X${}\E{}$\6
+\M[507 sat12.w]{20}\B\X20:Move \PB{\\{cur\_cell}} backward to the previous cell%
+\X${}\E{}$\6
 \&{if} ${}(\\{cur\_cell}>{\AND}\\{cur\_chunk}\MG\\{cell}[\T{0}]){}$\1\5
 ${}\\{cur\_cell}\MM;{}$\2\6
 \&{else}\5
@@ -683,8 +693,8 @@ ${}\\{cur\_cell}\K\\{bad\_cell}-\T{1};{}$\6
 \4${}\}{}$\2\par
 \Us19\ET43.\fi
 
-\M{21}\B\X21:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary
-variable\X${}\E{}$\6
+\M[516 sat12.w]{21}\B\X21:Move \PB{\\{cur\_tmp\_var}} backward to the previous
+temporary variable\X${}\E{}$\6
 \&{if} ${}(\\{cur\_tmp\_var}>{\AND}\\{cur\_vchunk}\MG\\{var}[\T{0}]){}$\1\5
 ${}\\{cur\_tmp\_var}\MM;{}$\2\6
 \&{else}\5
@@ -698,13 +708,15 @@ ${}\\{cur\_tmp\_var}\K\\{bad\_tmp\_var}-\T{1};{}$\6
 \4${}\}{}$\2\par
 \U44.\fi
 
-\M{22}\B\X22:Report the successful completion of the input phase\X${}\E{}$\6
+\M[525 sat12.w]{22}\B\X22:Report the successful completion of the input phase%
+\X${}\E{}$\6
 $\\{fprintf}(\\{stderr},\39\.{"("}\|O\.{"lld\ variables,\ "}\|O\.{"lld\
 clauses,\ "}\|O\.{"llu\ literals\ succes}\)\.{sfully\ read)\\n"},\39\\{vars},%
 \39\\{clauses},\39\\{cells}){}$;\par
 \U3.\fi
 
-\N{1}{23}SAT preprocessing. This program applies transformations that
+\N[530 sat12.w]{1}{23}SAT preprocessing. This program applies transformations
+that
 either reduce the number of clauses or keep that number fixed while
 reducing the number of variables. In this process we might wind up
 with no clauses whatsoever (thus showing that the problem is satisfiable),
@@ -744,7 +756,8 @@ In such cases we can remove~$x$ from~$C'$, because $C'\setminus x=C\res C'$.
 
 \fi
 
-\M{24}I haven't spent much time trying to design data structures that
+\M[568 sat12.w]{24}I haven't spent much time trying to design data structures
+that
 are optimum for the operations needed by this program; some form of ZDD
 might well be better for subsumption, depending on the characteristics
 of the clauses that are given. But I think the
@@ -789,8 +802,8 @@ in advance how large those arrays should~be.
 
 \fi
 
-\M{25}The main \PB{\\{mem}} array contains \&{cell} structs, each occupying
-three
+\M[611 sat12.w]{25}The main \PB{\\{mem}} array contains \&{cell} structs, each
+occupying three
 octabytes. Every literal of every clause appears in a cell, with six
 32-bit fields to identify the literal and clause together with local
 \PB{$\\{left}/\\{right}$} links for that clause and local \PB{$\\{up}/%
@@ -862,7 +875,8 @@ ${}\}{}$ \&{cel};\C{ I'd call this \&{cell} except for confusion with \PB{%
 \\{cell}} fields }\par
 \fi
 
-\M{26}Here's a way to display a cell symbolically when debugging with
+\M[658 sat12.w]{26}Here's a way to display a cell symbolically when debugging
+with
 {\mc GDB} (which doesn't see those macros):
 
 \Y\B\4\X26:Subroutines\X${}\E{}$\6
@@ -886,8 +900,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"lit\ "}\|O\.{"u,\ cls\ "}\|O\.{"u,\ lft\ "}\|O%
 \As30, 31, 32, 33, 37, 38\ETs98.
 \U3.\fi
 
-\M{27}The \PB{\\{vmem}} array contains global information about individual
-variables.
+\M[675 sat12.w]{27}The \PB{\\{vmem}} array contains global information about
+individual variables.
 Variable number~$k$, for $1\le k\le n$, corresponds to the literals
 numbered $2k$ and $2k+1$.
 
@@ -944,7 +958,8 @@ $\|o,\39\\{vmem}[\\{thevar}(\|w)].\\{stable}\K{}$\T{0}\par
 ${}\}{}$ \&{variable};\par
 \fi
 
-\M{28}Three octabytes doesn't seem quite enough for the data associated with
+\M[718 sat12.w]{28}Three octabytes doesn't seem quite enough for the data
+associated with
 each literal. So here's another struct to handle the extra stuff.
 
 \Y\B\4\X6:Type definitions\X${}\mathrel+\E{}$\6
@@ -953,7 +968,7 @@ each literal. So here's another struct to handle the extra stuff.
 ${}\}{}$ \&{literal};\par
 \fi
 
-\M{29}Similarly, each clause needs more elbow room.
+\M[726 sat12.w]{29}Similarly, each clause needs more elbow room.
 
 The stack of strengthened clauses begins at \PB{\\{strengthened}} and ends at
 \PB{\\{sentinel}}. Clause~\PB{\|c} is on this list if and only if \PB{%
@@ -972,7 +987,7 @@ $\\{cmem}[\|c-\\{lit\_head\_top}].{}$\\{size}\par
 ${}\}{}$ \&{clause};\par
 \fi
 
-\M{30}Here's a subroutine that prints clause number \PB{\|c}.
+\M[741 sat12.w]{30}Here's a subroutine that prints clause number \PB{\|c}.
 
 Note that the number of a clause is its position in \PB{\\{mem}}, which is
 somewhat erratic. Initially that position is
@@ -1008,7 +1023,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"there\ is\ no\ clause\ }\)\.{"}\|O\.{"d!\\n"},%
 \4${}\}{}$\2\par
 \fi
 
-\M{31}Another subroutine shows all the clauses that are currently in memory.
+\M[765 sat12.w]{31}Another subroutine shows all the clauses that are currently
+in memory.
 
 \Y\B\4\X26:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_all}(\&{void})\1\1\2\2\6
@@ -1020,8 +1036,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{32}With a similar subroutine we can print out all of the clauses that
-involve a
+\M[774 sat12.w]{32}With a similar subroutine we can print out all of the
+clauses that involve a
 particular literal.
 
 \Y\B\4\X26:Subroutines\X${}\mathrel+\E{}$\6
@@ -1056,8 +1072,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"There\ is\ no\ literal}\)\.{\ "}\|O\.{"d!%
 \4${}\}{}$\2\par
 \fi
 
-\M{33}Speaking of debugging, here's a routine to check if the links in \PB{%
-\\{mem}}
+\M[798 sat12.w]{33}Speaking of debugging, here's a routine to check if the
+links in \PB{\\{mem}}
 have gone awry.
 
 \Y\B\4\D$\\{sanity\_checking}$ \5
@@ -1087,7 +1103,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"memory\ leak\ of\ "}\|O\.{"d\ cells!\\n"},\39(%
 \4${}\}{}$\2\par
 \fi
 
-\M{34}\B\X34:Verify the cells for literal \PB{\|l}\X${}\E{}$\6
+\M[820 sat12.w]{34}\B\X34:Verify the cells for literal \PB{\|l}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|k\K\\{down}(\|l),\39\|s\K\T{0};{}$ ${}\R\\{is\_lit}(\|k);{}$ ${}%
 \|k\K\\{down}(\|k)){}$\5
@@ -1124,7 +1140,7 @@ clauses,\ not\ "}\|O\.{"u!\\n"},\39\|l,\39\|s,\39\\{occurs}(\|l));{}$\2\6
 \4${}\}{}$\2\par
 \U33.\fi
 
-\M{35}The literals of a clause must appear in increasing order.
+\M[845 sat12.w]{35}The literals of a clause must appear in increasing order.
 
 \Y\B\4\X35:Verify the cells for clause \PB{\|c}\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -1172,8 +1188,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"clause\ "}\|O\.{"u\ has\ "}\|O\.{"u\ literals,%
 \4${}\}{}$\2\par
 \U33.\fi
 
-\M{36}Unused cells of \PB{\\{mem}} either lie above \PB{\\{xcells}} or appear
-in the
+\M[881 sat12.w]{36}Unused cells of \PB{\\{mem}} either lie above \PB{%
+\\{xcells}} or appear in the
 \PB{\\{avail}} stack. Entries of the latter list are linked together by \PB{%
 \\{left}}
 links, terminated by~0; their other fields are undefined.
@@ -1192,7 +1208,8 @@ ${}\\{counta}\PP;{}$\6
 \4${}\}{}$\2\par
 \U33.\fi
 
-\M{37}Of course we need the usual memory allocation routine, to deliver
+\M[894 sat12.w]{37}Of course we need the usual memory allocation routine, to
+deliver
 a fresh cell when needed.
 
 (The author fondly recalls the day in autumn, 1960, when he first learned
@@ -1220,8 +1237,8 @@ ${}\\{exit}({-}\T{9});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{38}Conversely, we need quick ways to recycle cells that have done their
-duty.
+\M[917 sat12.w]{38}Conversely, we need quick ways to recycle cells that have
+done their duty.
 
 \Y\B\4\X26:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{free\_cell}(\&{uint} \|k)\1\1\2\2\6
@@ -1238,7 +1255,7 @@ ${}\\{avail}\K\\{kk};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{39}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[932 sat12.w]{39}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{cel} ${}{*}\\{mem}{}$;\C{ the master array of cells }\6
 \&{uint} \\{lit\_head\_top};\C{ first cell not in a literal list head }\6
 \&{uint} \\{cls\_head\_top};\C{ first cell not in a clause list head }\6
@@ -1254,7 +1271,7 @@ ${}\\{avail}\K\\{kk};{}$\6
 \par
 \fi
 
-\N{1}{40}Initializing the real data structures.
+\N[946 sat12.w]{1}{40}Initializing the real data structures.
 We're ready now to convert the temporary chunks of data into the
 form we want, and to recycle those chunks. The code below is, of course,
 hacked from what has worked in previous programs of this series.
@@ -1270,8 +1287,8 @@ format\X;\6
 \X52:Allocate the subsidiary arrays\X;\par
 \U3.\fi
 
-\M{41}There seems to be no good way to predict how many cells we'll need,
-because
+\M[959 sat12.w]{41}There seems to be no good way to predict how many cells
+we'll need, because
 the size of clauses can grow exponentially as the number of clauses shrinks.
 Here we allow for twice the number of cells in the input, or the
 user-supplied value of \PB{\\{mem\_max}}, whichever is larger---provided that
@@ -1307,8 +1324,8 @@ ${}\\{exit}({-}\T{11});{}$\6
 ${}\\{bytes}\MRL{+{\K}}(\\{vars}+\T{1})*\&{sizeof}(\&{variable}){}$;\par
 \U40.\fi
 
-\M{42}\B\X42:Copy all the temporary cells to the \PB{\\{mem}} array in proper
-format\X${}\E{}$\6
+\M[985 sat12.w]{42}\B\X42:Copy all the temporary cells to the \PB{\\{mem}}
+array in proper format\X${}\E{}$\6
 \&{for} ${}(\|l\K\T{2};{}$ \\{is\_lit}(\|l); ${}\|l\PP){}$\1\5
 ${}\|o,\39\\{down}(\|l)\K\|l;{}$\2\6
 \&{for} ${}(\|c\K\\{clauses},\39\|j\K\\{cls\_head\_top};{}$ \|c; ${}\|c\MM){}$\5
@@ -1323,7 +1340,8 @@ ${}\\{exit}({-}\T{15});{}$\6
 \4${}\}{}$\2\par
 \U40.\fi
 
-\M{43}The basic idea is to ``unwind'' the steps that we went through while
+\M[996 sat12.w]{43}The basic idea is to ``unwind'' the steps that we went
+through while
 building up the chunks.
 
 \Y\B\4\D$\\{hack\_out}(\|q)$ \5
@@ -1344,8 +1362,8 @@ ${}\\{ooo},\39\\{down}(\|j)\K\\{down}(\|p),\39\\{down}(\|p)\K\|j\PP;{}$\6
 ${}\|o,\39\\{left}(\\{cc})\K\\{cc}{}$;\par
 \U42.\fi
 
-\M{44}\B\X44:Copy all the temporary variable nodes to the \PB{\\{vmem}} array
-in proper format\X${}\E{}$\6
+\M[1013 sat12.w]{44}\B\X44:Copy all the temporary variable nodes to the \PB{%
+\\{vmem}} array in proper format\X${}\E{}$\6
 \&{for} ${}(\|c\K\\{vars};{}$ \|c; ${}\|c\MM){}$\5
 ${}\{{}$\1\6
 \X21:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary variable\X;%
@@ -1356,7 +1374,8 @@ ${}\|o,\39\\{vmem}[\|c].\\{stable}\K\\{vmem}[\|c].\\{status}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U40.\fi
 
-\M{45}We should now have unwound all the temporary data chunks back to their
+\M[1020 sat12.w]{45}We should now have unwound all the temporary data chunks
+back to their
 beginnings.
 
 \Y\B\4\X45:Check consistency\X${}\E{}$\6
@@ -1368,7 +1387,7 @@ beginnings.
 \\{free}(\\{cur\_vchunk});\par
 \U40.\fi
 
-\M{46}\B\X46:Finish building the cell data structures\X${}\E{}$\6
+\M[1031 sat12.w]{46}\B\X46:Finish building the cell data structures\X${}\E{}$\6
 \&{for} ${}(\|l\K\T{2};{}$ \\{is\_lit}(\|l); ${}\|l\PP){}$\1\5
 \X47:Set the \PB{\\{up}} links for \PB{\|l} and the \PB{\\{left}} links of its
 cells\X;\2\6
@@ -1377,7 +1396,7 @@ cells\X;\2\6
 \par
 \U40.\fi
 
-\M{47}Since we process the literal lists in order, each clause is
+\M[1037 sat12.w]{47}Since we process the literal lists in order, each clause is
 automatically sorted, with its literals appearing in increasing order
 from left to right. (That fact will help us significantly when
 we test for subsumption or compute resolvents.)
@@ -1413,7 +1432,8 @@ literal\ "}\|O\.{"s"}\|O\.{".8s\\n"},\39\\{litname}(\|w));{}$\2\6
 \4${}\}{}$\2\par
 \U46.\fi
 
-\M{48}I'm using two hash bits here, because experiments showed that this
+\M[1065 sat12.w]{48}I'm using two hash bits here, because experiments showed
+that this
 policy was almost always better than to use a single hash bit.
 
 As in other programs of this series,
@@ -1435,8 +1455,8 @@ ${}\\{rbits}\MRL{{\GG}{\K}}\T{6};{}$\6
 \4${}\}{}$\2\par
 \U47.\fi
 
-\M{49}\B\X49:Set the \PB{\\{right}} links for \PB{\|c}, and its signature and
-size\X${}\E{}$\6
+\M[1083 sat12.w]{49}\B\X49:Set the \PB{\\{right}} links for \PB{\|c}, and its
+signature and size\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{bits}\K\T{0};{}$\6
 \&{for} ${}(\|j\K\|c,\39\|k\K\\{left}(\|j),\39\|s\K\T{0};{}$ ${}\R\\{is\_cls}(%
@@ -1463,7 +1483,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"clause\ "}\|O\.{"u\ is\ the\ single\ lit}\)%
 \4${}\}{}$\2\par
 \U46.\fi
 
-\M{50}Here we assume that \PB{\\{thevar}(\|w)} hasn't already been eliminated.
+\M[1104 sat12.w]{50}Here we assume that \PB{\\{thevar}(\|w)} hasn't already
+been eliminated.
 A unit clause has arisen, with \PB{\|w} as its only literal.
 
 A variable might be touched after it has been put into the to-do stack.
@@ -1495,7 +1516,7 @@ ${}\\{vmem}[\|k].\\{link}\K\\{to\_do},\39\\{to\_do}\K\|k;{}$\6
 \4${}\}{}$\2\par
 \Us49, 54, 64\ETs90.\fi
 
-\M{51}The logic in this step is similar to the previous one,
+\M[1126 sat12.w]{51}The logic in this step is similar to the previous one,
 except that we aren't {\it forcing\/} a value: Either
 $w$ wasn't present in any of the original clauses, or
 its final occurrence has disappeared.
@@ -1525,7 +1546,7 @@ ${}\|o,\39\\{vmem}[\|k].\\{status}\K\\{elim\_quiet},\39\\{vmem}[\|k].\\{stable}%
 \4${}\}{}$\2\par
 \Us47, 56, 60, 63\ETs88.\fi
 
-\M{52}\B\X52:Allocate the subsidiary arrays\X${}\E{}$\6
+\M[1148 sat12.w]{52}\B\X52:Allocate the subsidiary arrays\X${}\E{}$\6
 $\\{lmem}\K{}$(\&{literal} ${}{*}){}$ \\{malloc}${}(\\{lit\_head\_top}*%
 \&{sizeof}(\&{literal}));{}$\6
 \&{if} ${}(\R\\{lmem}){}$\5
@@ -1549,7 +1570,7 @@ ${}\\{bytes}\MRL{+{\K}}\\{clauses}*\&{sizeof}(\&{clause}){}$;\par
 \A82.
 \U40.\fi
 
-\N{1}{53}Clearing the to-do stack.
+\N[1163 sat12.w]{1}{53}Clearing the to-do stack.
 To warm up, let's take care of the most basic operation,
 which simply assigns a forced value to a variable and propagates
 all the consequences until nothing more is obviously forced.
@@ -1582,7 +1603,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"Timeout!\\n"});{}$\2\6
 \4${}\}{}$\2\par
 \U65.\fi
 
-\M{54}\B\X54:Delete \PB{\\{bar}(\|l)} from all clauses\X${}\E{}$\6
+\M[1188 sat12.w]{54}\B\X54:Delete \PB{\\{bar}(\|l)} from all clauses\X${}\E{}$\6
 \&{for} ${}(\|o,\39\\{ll}\K\\{down}(\\{bar}(\|l));{}$ ${}\R\\{is\_lit}(%
 \\{ll});{}$ \|o${},\39\\{ll}\K\\{down}(\\{ll})){}$\5
 ${}\{{}$\1\6
@@ -1606,7 +1627,7 @@ ${}\|o,\39\\{slink}(\|c)\K\\{strengthened},\39\\{strengthened}\K\|c;{}$\2\6
 \4${}\}{}$\2\par
 \U53.\fi
 
-\M{55}\B\X55:Recompute \PB{\\{clssig}(\|c)}\X${}\E{}$\6
+\M[1206 sat12.w]{55}\B\X55:Recompute \PB{\\{clssig}(\|c)}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{ullng} \\{bits}${}\K\T{0};{}$\6
 \&{register} \&{uint} \|t;\7
@@ -1617,7 +1638,7 @@ ${}\|o,\39\\{clssig}(\|c)\K\\{bits};{}$\6
 \4${}\}{}$\2\par
 \U54.\fi
 
-\M{56}\B\X56:Delete all clauses that contain \PB{\|l}\X${}\E{}$\6
+\M[1215 sat12.w]{56}\B\X56:Delete all clauses that contain \PB{\|l}\X${}\E{}$\6
 \&{for} ${}(\|o,\39\\{ll}\K\\{down}(\|l);{}$ ${}\R\\{is\_lit}(\\{ll});{}$ %
 \|o${},\39\\{ll}\K\\{down}(\\{ll})){}$\5
 ${}\{{}$\1\6
@@ -1647,7 +1668,7 @@ ${}\|o,\39\\{size}(\|c)\K\T{0},\39\\{clauses\_gone}\PP;{}$\6
 \4${}\}{}$\2\par
 \U53.\fi
 
-\N{1}{57}Subsumption testing. Our data structures make it fairly
+\N[1236 sat12.w]{1}{57}Subsumption testing. Our data structures make it fairly
 easy to find (and remove) all clauses that are subsumed by a
 given clause~$C$, using an algorithm proposed by Armin Biere
 [{\sl Lecture Notes in Computer Science\/ \bf3542} (2005), 59--70]:
@@ -1697,7 +1718,8 @@ ${}\\{sub\_false}\PP;{}$\2\6
 \4${}\}{}$\2\par
 \Us65\ET93.\fi
 
-\M{58}Naturally we seek a literal that appears in the fewest clauses.
+\M[1276 sat12.w]{58}Naturally we seek a literal that appears in the fewest
+clauses.
 
 \Y\B\4\X58:Choose a literal $l\in c$ on which to branch\X${}\E{}$\6
 $\\{ooo},\39\|p\K\\{right}(\|c),\39\|l\K\\{mem}[\|p].\\{lit},\39\|k\K%
@@ -1711,8 +1733,8 @@ ${}\|k\K\\{occurs}(\\{ll}),\39\|l\K\\{ll};{}$\2\6
 \4${}\}{}$\2\par
 \U57.\fi
 
-\M{59}The algorithm here actually ends up with either \PB{$\|l<\\{ll}$} or %
-\PB{$\|l>\\{ll}$}
+\M[1285 sat12.w]{59}The algorithm here actually ends up with either \PB{$\|l<%
+\\{ll}$} or \PB{$\|l>\\{ll}$}
 in all cases.
 
 \Y\B\4\X59:If \PB{\|c} is contained in \PB{\\{cc}}, make \PB{$\|l\Z\\{ll}$}%
@@ -1746,7 +1768,7 @@ ${}\\{ll}\K\T{0}{}$;\5
 \4${}\}{}$\2\par
 \U57.\fi
 
-\M{60}\B\X60:Remove the subsumed clause \PB{\\{cc}}\X${}\E{}$\6
+\M[1308 sat12.w]{60}\B\X60:Remove the subsumed clause \PB{\\{cc}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{verbose}\AND\\{show\_details}){}$\1\5
 ${}\\{fprintf}(\\{stderr},\39\.{"clause\ "}\|O\.{"u\ subsumes\ clause\ "}\|O%
@@ -1773,7 +1795,8 @@ ${}\|o,\39\\{size}(\\{cc})\K\T{0},\39\\{clauses\_gone}\PP;{}$\6
 \4${}\}{}$\2\par
 \U57.\fi
 
-\N{1}{61}Strengthening. A similar algorithm can be used to find clauses
+\N[1329 sat12.w]{1}{61}Strengthening. A similar algorithm can be used to find
+clauses
 $C'$ that, when resolved with a given clause~$C$, become
 {\it stronger\/} (shorter). This happens when $C$ contains a literal~$l$
 such that $C$ would subsume~$C'$ if $l$ were changed to $\bar l$ in~$C$;
@@ -1820,8 +1843,8 @@ ${}\\{str\_false}\PP;{}$\2\6
 \4${}\}{}$\2\par
 \Us65\ET94.\fi
 
-\M{62}\B\X62:If \PB{\|c} is contained in \PB{\\{cc}}, except for~\PB{\|u}, make
-\PB{$\|l\Z\\{ll}$}\X${}\E{}$\6
+\M[1363 sat12.w]{62}\B\X62:If \PB{\|c} is contained in \PB{\\{cc}}, except for~%
+\PB{\|u}, make \PB{$\|l\Z\\{ll}$}\X${}\E{}$\6
 $\|o,\39\|q\K\|v,\39\\{qq}\K\\{left}(\\{cc});{}$\6
 \&{while} (\T{1})\5
 ${}\{{}$\1\6
@@ -1853,7 +1876,7 @@ ${}\\{ll}\K\T{0}{}$;\5
 \4${}\}{}$\2\par
 \U61.\fi
 
-\M{63}\B\X63:Remove \PB{\\{bar}(\|u)} from \PB{\\{cc}}\X${}\E{}$\6
+\M[1384 sat12.w]{63}\B\X63:Remove \PB{\\{bar}(\|u)} from \PB{\\{cc}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{ullng} \\{ccbits}${}\K\T{0};{}$\7
 \&{if} ${}(\\{verbose}\AND\\{show\_details}){}$\1\5
@@ -1898,8 +1921,8 @@ ${}\|o,\39\\{slink}(\\{cc})\K\\{strengthened},\39\\{strengthened}\K\\{cc};{}$\2%
 \4${}\}{}$\2\par
 \U61.\fi
 
-\M{64}Clause \PB{\\{cc}} shouldn't become empty at this point. For that could
-happen
+\M[1418 sat12.w]{64}Clause \PB{\\{cc}} shouldn't become empty at this point.
+For that could happen
 only if clause \PB{\|c} had been a unit clause. (We don't use unit clauses
 for strengthening in such a baroque way; we handle them with
 the much simpler to-do list mechanism.)
@@ -1918,7 +1941,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"clause\ "}\|O\.{"u\ reduces\ to\ "}\|O\.{"s"}%
 \4${}\}{}$\2\par
 \U63.\fi
 
-\N{1}{65}Clearing the strengthened stack.
+\N[1433 sat12.w]{1}{65}Clearing the strengthened stack.
 Whenever a clause gets shorter, it has new opportunities to subsume
 and/or strengthen other clauses. So we eagerly exploit all such opportunities.
 
@@ -1948,7 +1971,8 @@ ${}\|o,\39\\{newsize}(\|c)\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \Us83, 91, 93\ETs94.\fi
 
-\N{1}{66}Variable elimination. The satisfiability problem is essentially the
+\N[1459 sat12.w]{1}{66}Variable elimination. The satisfiability problem is
+essentially the
 evaluation of the predicate $\exists x\,\exists y\,f(x,y)$, where
 $x$ is a variable and $y$ is a vector of other variables.
 Furthermore $f$ is expressed in conjunctive normal form ({\mc CNF});
@@ -2006,7 +2030,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U78.\fi
 
-\M{67}\B\X67:Move \PB{\|v} left\X${}\E{}$\6
+\M[1505 sat12.w]{67}\B\X67:Move \PB{\|v} left\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|o,\39\|v\K\\{left}(\|v);{}$\6
 \&{if} (\\{is\_cls}(\|v))\1\5
@@ -2016,7 +2040,7 @@ ${}\|o,\39\|u\K\\{mem}[\|v].\\{lit};{}$\2\6
 \4${}\}{}$\2\par
 \Us69\ET70.\fi
 
-\M{68}\B\X68:Move \PB{\\{vv}} left\X${}\E{}$\6
+\M[1512 sat12.w]{68}\B\X68:Move \PB{\\{vv}} left\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|o,\39\\{vv}\K\\{left}(\\{vv});{}$\6
 \&{if} (\\{is\_cls}(\\{vv}))\1\5
@@ -2026,14 +2050,14 @@ ${}\|o,\39\\{uu}\K\\{mem}[\\{vv}].\\{lit};{}$\2\6
 \4${}\}{}$\2\par
 \Us69\ET71.\fi
 
-\M{69}\B\X69:Move both \PB{\|v} and \PB{\\{vv}} left\X${}\E{}$\6
+\M[1519 sat12.w]{69}\B\X69:Move both \PB{\|v} and \PB{\\{vv}} left\X${}\E{}$\6
 ${}\{{}$\1\6
 \X67:Move \PB{\|v} left\X;\6
 \X68:Move \PB{\\{vv}} left\X;\6
 \4${}\}{}$\2\par
 \Us66\ET72.\fi
 
-\M{70}\B\X70:Copy \PB{\|u} and move \PB{\|v} left\X${}\E{}$\6
+\M[1525 sat12.w]{70}\B\X70:Copy \PB{\|u} and move \PB{\|v} left\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|q\K\|p,\39\|p\K\\{get\_cell}(\,);{}$\6
 ${}\\{oo},\39\\{left}(\|q)\K\|p,\39\\{mem}[\|p].\\{lit}\K\|u;{}$\6
@@ -2041,7 +2065,8 @@ ${}\\{oo},\39\\{left}(\|q)\K\|p,\39\\{mem}[\|p].\\{lit}\K\|u;{}$\6
 \4${}\}{}$\2\par
 \U66.\fi
 
-\M{71}\B\X71:Copy \PB{\\{uu}} and move \PB{\\{vv}} left\X${}\E{}$\6
+\M[1532 sat12.w]{71}\B\X71:Copy \PB{\\{uu}} and move \PB{\\{vv}} left\X${}\E{}$%
+\6
 ${}\{{}$\1\6
 ${}\|q\K\|p,\39\|p\K\\{get\_cell}(\,);{}$\6
 ${}\\{oo},\39\\{left}(\|q)\K\|p,\39\\{mem}[\|p].\\{lit}\K\\{uu};{}$\6
@@ -2049,8 +2074,8 @@ ${}\\{oo},\39\\{left}(\|q)\K\|p,\39\\{mem}[\|p].\\{lit}\K\\{uu};{}$\6
 \4${}\}{}$\2\par
 \U66.\fi
 
-\M{72}\B\X72:Copy \PB{\|u} and move both \PB{\|v} and \PB{\\{vv}} left\X${}%
-\E{}$\6
+\M[1539 sat12.w]{72}\B\X72:Copy \PB{\|u} and move both \PB{\|v} and \PB{\\{vv}}
+left\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|q\K\|p,\39\|p\K\\{get\_cell}(\,);{}$\6
 ${}\\{oo},\39\\{left}(\|q)\K\|p,\39\\{mem}[\|p].\\{lit}\K\|u;{}$\6
@@ -2058,7 +2083,7 @@ ${}\\{oo},\39\\{left}(\|q)\K\|p,\39\\{mem}[\|p].\\{lit}\K\|u;{}$\6
 \4${}\}{}$\2\par
 \U66.\fi
 
-\M{73}\B\X73:Return a tautology\X${}\E{}$\6
+\M[1546 sat12.w]{73}\B\X73:Return a tautology\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\|p\I\T{1}){}$\1\5
 ${}\|o,\39\\{free\_cells}(\|p,\39\\{left}(\T{1}));{}$\2\6
@@ -2067,7 +2092,8 @@ ${}\|p\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U66.\fi
 
-\M{74}E\'en and Biere, in their paper about preprocessing cited above,
+\M[1553 sat12.w]{74}E\'en and Biere, in their paper about preprocessing cited
+above,
 noticed that important simplifications are possible when $x$ is fully
 determined by other variables.
 
@@ -2144,8 +2170,8 @@ ${}\\{stamp}\PP;{}$\6
 \4${}\}{}$\2\par
 \U78.\fi
 
-\M{75}\B\X75:Stamp all literals that appear with \PB{\|l} in binary clauses%
-\X${}\E{}$\6
+\M[1623 sat12.w]{75}\B\X75:Stamp all literals that appear with \PB{\|l} in
+binary clauses\X${}\E{}$\6
 \&{for} ${}(\|o,\39\|p\K\\{down}(\|l);{}$ ${}\R\\{is\_lit}(\|p);{}$ \|o${},\39%
 \|p\K\\{down}(\|p)){}$\5
 ${}\{{}$\1\6
@@ -2161,8 +2187,8 @@ ${}\|o,\39\\{stbits}\MRL{{\OR}{\K}}\\{litsig}(\\{bar}(\\{mem}[\|q].%
 \4${}\}{}$\2\par
 \U74.\fi
 
-\M{76}\B\X76:If the complements of all other literals in \PB{\|c} are stamped,
-set \PB{$\\{beta0}\K\|c$} and \PB{\&{break}}\X${}\E{}$\6
+\M[1633 sat12.w]{76}\B\X76:If the complements of all other literals in \PB{\|c}
+are stamped, set \PB{$\\{beta0}\K\|c$} and \PB{\&{break}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|o,\39\|q\K\\{left}(\|p);{}$ ${}\|q\I\|p;{}$ \|o${},\39\|q\K%
 \\{left}(\|q)){}$\5
@@ -2181,7 +2207,8 @@ ${}\\{beta0}\K\|c;{}$\6
 \4${}\}{}$\2\par
 \U74.\fi
 
-\M{77}\B\X77:Stamp the literals of clause \PB{\\{beta0}}\X${}\E{}$\6
+\M[1645 sat12.w]{77}\B\X77:Stamp the literals of clause \PB{\\{beta0}}\X${}%
+\E{}$\6
 \&{if} ${}(\\{mem}[\|p].\\{cls}\I\\{beta0}\V\\{mem}[\|p].\\{lit}\I\\{ll}){}$\1\5
 \\{confusion}(\.{"partitioning"});\2\6
 \&{for} ${}(\|o,\39\|q\K\\{left}(\|p);{}$ ${}\|q\I\|p;{}$ \|o${},\39\|q\K%
@@ -2193,7 +2220,8 @@ ${}\\{oo},\39\\{lmem}[\\{bar}(\\{mem}[\|q].\\{lit})].\\{extra}\K\\{stamp};{}$\6
 \4${}\}{}$\2\par
 \U74.\fi
 
-\M{78}Now comes the main loop where we test whether the elimination
+\M[1652 sat12.w]{78}Now comes the main loop where we test whether the
+elimination
 of variable~\PB{\|x} is desirable.
 
 If both \PB{\|x} and \PB{\\{bar}(\|x)} occur in more than \PB{\\{cutoff}}
@@ -2269,8 +2297,8 @@ ${}\|o,\39\\{down}(\\{last\_new})\K\T{0}{}$;\C{ complete the vertical list of
 new clauses }\par
 \U83.\fi
 
-\M{79}\B\X79:Decide whether \PB{\|c} belongs to $\alpha^{(0)}$ or $%
-\alpha^{(1)}$\X${}\E{}$\6
+\M[1701 sat12.w]{79}\B\X79:Decide whether \PB{\|c} belongs to $\alpha^{(0)}$ or
+$\alpha^{(1)}$\X${}\E{}$\6
 \&{if} ${}(\\{beta0}\E\T{0}){}$\1\5
 ${}\\{alpha0}\K\T{1};{}$\2\6
 \&{else}\5
@@ -2287,7 +2315,8 @@ ${}\\{alpha0}\K\T{1}{}$;\C{ yes, $c\in\alpha^{(0)}$ }\2\6
 \4${}\}{}$\2\par
 \U78.\fi
 
-\M{80}Too bad: We found more resolvents than the clauses they would replace.
+\M[1713 sat12.w]{80}Too bad: We found more resolvents than the clauses they
+would replace.
 
 \Y\B\4\X80:Discard the new resolvents and \PB{\&{goto} \\{elim\_done}}\X${}%
 \E{}$\6
@@ -2303,7 +2332,8 @@ ${}\|o,\39\\{free\_cells}(\\{right}(\|p),\39\|p);{}$\6
 \4${}\}{}$\2\par
 \U78.\fi
 
-\M{81}The \PB{\\{stamp}} won't overflow because I'm not going to increase it
+\M[1724 sat12.w]{81}The \PB{\\{stamp}} won't overflow because I'm not going to
+increase it
 $2^{64}$ times. (Readers in the 22nd century might not believe me though,
 if Moore's Law continues.)
 
@@ -2321,7 +2351,7 @@ clauses }\6
 \par
 \fi
 
-\M{82}\B\X52:Allocate the subsidiary arrays\X${}\mathrel+\E{}$\6
+\M[1737 sat12.w]{82}\B\X52:Allocate the subsidiary arrays\X${}\mathrel+\E{}$\6
 \&{if} ${}(\\{buckets}<\T{2}){}$\1\5
 ${}\\{buckets}\K\T{2};{}$\2\6
 ${}\\{bucket}\K{}$(\&{uint} ${}{*}){}$ \\{malloc}${}((\\{buckets}+\T{1})*%
@@ -2335,7 +2365,7 @@ ${}\\{exit}({-}\T{14});{}$\6
 ${}\\{bytes}\MRL{+{\K}}(\\{buckets}+\T{1})*\&{sizeof}(\&{uint}){}$;\par
 \fi
 
-\M{83}\B\X83:Try to eliminate variables\X${}\E{}$\6
+\M[1746 sat12.w]{83}\B\X83:Try to eliminate variables\X${}\E{}$\6
 \X84:Place candidates for elimination into buckets\X;\6
 \&{for} ${}(\|b\K\T{2};{}$ ${}\|b\Z\\{buckets};{}$ ${}\|b\PP){}$\1\6
 \&{if} ${}(\|o,\39\\{bucket}[\|b]){}$\5
@@ -2359,7 +2389,8 @@ ${}\|o,\39\\{vmem}[\|x].\\{stable}\K\T{1};{}$\6
 \4${}\}{}$\2\2\par
 \U91.\fi
 
-\M{84}\B\X84:Place candidates for elimination into buckets\X${}\E{}$\6
+\M[1759 sat12.w]{84}\B\X84:Place candidates for elimination into buckets\X${}%
+\E{}$\6
 \&{for} ${}(\|b\K\T{2};{}$ ${}\|b\Z\\{buckets};{}$ ${}\|b\PP){}$\1\5
 ${}\|o,\39\\{bucket}[\|b]\K\T{0};{}$\2\6
 \&{for} ${}(\|x\K\\{vars};{}$ \|x; ${}\|x\MM){}$\5
@@ -2385,8 +2416,8 @@ ${}\|o,\39\\{vmem}[\|x].\\{stable}\K\T{1};{}$\6
 \4${}\}{}$\2\par
 \U83.\fi
 
-\M{85}\B\X85:Eliminate variable \PB{\|x}, replacing its clauses by the new
-resolvents\X${}\E{}$\6
+\M[1775 sat12.w]{85}\B\X85:Eliminate variable \PB{\|x}, replacing its clauses
+by the new resolvents\X${}\E{}$\6
 \&{if} ${}(\\{verbose}\AND\\{show\_details}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"elimination\ of\ "}\|O\.{"s"},\39\\{vmem}[%
@@ -2414,7 +2445,8 @@ ${}\|o,\39\\{vmem}[\|x].\\{status}\K\\{elim\_res},\39\\{vars\_gone}\PP;{}$\6
 ${}\\{clauses\_gone}\MRL{+{\K}}\\{clauses\_saved}{}$;\par
 \U83.\fi
 
-\M{86}\B\X86:Update the \.{erp} file for the elimination of \PB{\|x}\X${}\E{}$\6
+\M[1796 sat12.w]{86}\B\X86:Update the \.{erp} file for the elimination of \PB{%
+\|x}\X${}\E{}$\6
 \&{if} (\\{beta0})\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{erp\_file},\39\.{""}\|O\.{"s"}\|O\.{".8s\ <-1\\n"},\39%
@@ -2446,7 +2478,7 @@ ${}\\{fprintf}(\\{erp\_file},\39\.{"\\n"});{}$\6
 \4${}\}{}$\2\par
 \U85.\fi
 
-\M{87}We can't remove the old cells until {\it after\/}
+\M[1814 sat12.w]{87}We can't remove the old cells until {\it after\/}
 inserting the new ones, because we don't want false claims of
 pure literals. But we {\it can\/} safely detach those cells from
 the old clause heads.
@@ -2462,7 +2494,8 @@ ${}\\{oo},\39\\{left}(\|q)\K\|r,\39\\{right}(\|r)\K\|q;{}$\6
 \4${}\}{}$\2\par
 \U85.\fi
 
-\M{88}Every literal that appears in a new resolvent will be touched
+\M[1827 sat12.w]{88}Every literal that appears in a new resolvent will be
+touched
 when we recycle the clauses that were resolved.
 
 \Y\B\4\X88:Recycle the cells of clauses that involve \PB{\|v}\X${}\E{}$\6
@@ -2489,8 +2522,8 @@ ${}\\{free\_cells}(\\{right}(\|p),\39\|p);{}$\6
 \4${}\}{}$\2\par
 \U85.\fi
 
-\M{89}A new resolvent \PB{\\{last\_new}} is waiting to be launched as an
-official clause,
+\M[1847 sat12.w]{89}A new resolvent \PB{\\{last\_new}} is waiting to be
+launched as an official clause,
 unless \PB{$\\{last\_new}\K\T{0}$}.
 
 \Y\B\4\X89:Replace clause \PB{\|c} by a new resolvent, if any\X${}\E{}$\6
@@ -2511,7 +2544,8 @@ ${}\|o,\39\\{last\_new}\K\\{pp};{}$\6
 ${}\|o,\39\\{size}(\|c)\K\T{0}{}$;\2\par
 \U87.\fi
 
-\M{90}\B\X90:Install \PB{\\{last\_new}} into position \PB{\|c}\X${}\E{}$\6
+\M[1863 sat12.w]{90}\B\X90:Install \PB{\\{last\_new}} into position \PB{\|c}%
+\X${}\E{}$\6
 \&{for} ${}(\|q\K\\{last\_new},\39\|r\K\|c,\39\|s\K\T{0},\39\\{bits}\K\T{0};{}$
 \|q; \|o${},\39\|r\K\|q,\39\|q\K\\{left}(\|q)){}$\5
 ${}\{{}$\1\6
@@ -2538,8 +2572,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"clause\ "}\|O\.{"u\ is\ just\ "}\|O\.{"s"}\|O%
 \4${}\}{}$\2\par
 \U89.\fi
 
-\N{1}{91}The d\'enouement. ({\it d\'enouement}, n.:\enspace The final
-resolution
+\N[1884 sat12.w]{1}{91}The d\'enouement. ({\it d\'enouement}, n.:\enspace The
+final resolution
 of the intricacies of a plot; the outcome or resolution of a doubtful
 series of occurrences.)
 
@@ -2567,7 +2601,8 @@ vars,\ "}\|O\.{"d\ clauses\ gone,\ "}\|O\.{"llu\ mems)\\n"},\39\\{time},\39%
 ${}\\{time}\K\\{maxrounds}{}$;\2\par
 \U3.\fi
 
-\M{92}At the beginning we might as well consider every clause to be
+\M[1905 sat12.w]{92}At the beginning we might as well consider every clause to
+be
 ``strengthened,'' because we want to exploit its ability to
 subsume and strengthen other clauses.
 
@@ -2580,7 +2615,8 @@ ${}\|o,\39\\{slink}(\|c)\K\|c-\T{1},\39\\{newsize}(\|c)\K\T{0};{}$\2\6
 ${}\\{strengthened}\K\|c-\T{1}{}$;\par
 \U91.\fi
 
-\M{93}Clauses that have been strengthened have also been fully exploited at
+\M[1915 sat12.w]{93}Clauses that have been strengthened have also been fully
+exploited at
 this point. But the other existing clauses might subsume any of the new clauses
 generated by the last round of variable elimination, if all of their
 literals appear in at least one new clause. Such a clause~$C$
@@ -2636,7 +2672,7 @@ ${}\|o,\39\\{newsize}(\|c)\K\T{0};{}$\6
 \4${}\}{}$\2\2\par
 \U91.\fi
 
-\M{94}\B\X94:Maybe try to strengthen with \PB{\|c}\X${}\E{}$\6
+\M[1955 sat12.w]{94}\B\X94:Maybe try to strengthen with \PB{\|c}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{newsize}(\|c)\AND\T{1}){}$\1\5
 ${}\\{specialcase}\K\T{0}{}$;\C{ \PB{\|c} is a new clause }\2\6
@@ -2655,7 +2691,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U93.\fi
 
-\M{95}\B\X95:Reject \PB{\|u} unless it fills special conditions\X${}\E{}$\6
+\M[1968 sat12.w]{95}\B\X95:Reject \PB{\|u} unless it fills special conditions%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\|o,\39\\{littime}(\\{bar}(\|u))\I\\{time}){}$\1\5
 \&{continue};\C{ reject if $\bar u$ not new }\2\6
@@ -2665,7 +2702,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U61.\fi
 
-\M{96}\B\X96:Update \PB{\\{newsize}} info for \PB{\|l}'s clauses\X${}\E{}$\6
+\M[1975 sat12.w]{96}\B\X96:Update \PB{\\{newsize}} info for \PB{\|l}'s clauses%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|o,\39\|p\K\\{down}(\|l);{}$ ${}\R\\{is\_lit}(\|p);{}$ \|o${},\39%
 \|p\K\\{down}(\|p)){}$\5
@@ -2682,7 +2720,7 @@ ${}\\{oo},\39\\{newsize}(\|c)\MRL{{\OR}{\K}}\T{2};{}$\6
 \4${}\}{}$\2\par
 \U93.\fi
 
-\M{97}\B\X97:Output the simplified clauses\X${}\E{}$\6
+\M[1987 sat12.w]{97}\B\X97:Output the simplified clauses\X${}\E{}$\6
 \&{for} ${}(\|c\K\\{lit\_head\_top};{}$ \\{is\_cls}(\|c); ${}\|c\PP){}$\1\6
 \&{if} ${}(\|o,\39\\{size}(\|c)){}$\5
 ${}\{{}$\1\6
@@ -2717,7 +2755,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"The\ clauses\ are\ uns}\)\.{atisfiable.%
 \4${}\}{}$\2\par
 \U3.\fi
 
-\M{98}\B\X26:Subroutines\X${}\mathrel+\E{}$\6
+\M[2009 sat12.w]{98}\B\X26:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{confusion}(\&{char} ${}{*}\\{id}){}$\1\1\2\2\6
 ${}\{{}$\C{ an assertion has failed }\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"This\ can't\ happen\ (}\)\.{"}\|O\.{"s)!\\n"},%
@@ -2730,7 +2768,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"You\ rang("}\|O\.{"d)?\\n"},\39\\{foo});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{99}Index.
+\N[2019 sat12.w]{1}{99}Index.
 \fi
 
 \inx

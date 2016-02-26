@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This simple program calculates Schensted's Y function.
+\N[2 yplay.w]{1}{1}Intro. This simple program calculates Schensted's Y
+function.
 Consider the array
 $$\let\\=\null\catcode`\ =\active\def {\ }\vcenter{\halign{\tt#\hfil\cr
 \\    x\cr
@@ -31,7 +33,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Read the input into a[0], determining \PB{\|n}\X${}\E{}$\6
+\M[30 yplay.w]{2}\B\X2:Read the input into a[0], determining \PB{\|n}\X${}\E{}$%
+\6
 $\\{fgets}(\|a[\T{0}][\T{0}],\39\\{maxn}+\T{2},\39\\{stdin});{}$\6
 \&{for} ${}(\|n\K\T{0};{}$ ${}\|a[\T{0}][\T{0}][\|n]\E\.{'\ '};{}$ ${}\|n%
 \PP){}$\1\5
@@ -44,7 +47,8 @@ ${}\|a[\T{0}][\|k][\|n+\|n+\T{1}]\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}\B\X3:Compute \PB{\|a[\|k]} from \PB{$\|a[\|k-\T{1}]$}\X${}\E{}$\6
+\M[39 yplay.w]{3}\B\X3:Compute \PB{\|a[\|k]} from \PB{$\|a[\|k-\T{1}]$}\X${}%
+\E{}$\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j\Z\|n-\|k;{}$ ${}\|j\PP){}$\5
 ${}\{{}$\1\6
 \&{for} ${}(\|i\K\T{0};{}$ ${}\|i\Z\|n+\|n-\|k-\|k;{}$ ${}\|i\PP){}$\1\5
@@ -64,7 +68,7 @@ ${}\|a[\|k][\|j][\|i]\K(\|s>\T{1}\?\.{'o'}:\.{'x'});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{4}\B\X4:Print the results\X${}\E{}$\6
+\M[51 yplay.w]{4}\B\X4:Print the results\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\5
 ${}\{{}$\1\6
 \\{printf}(\|a[\T{0}][\|k]);\6
@@ -74,7 +78,7 @@ ${}\\{printf}(\.{"\ \ \%s"},\39\|a[\|j][\|k-\|j]);{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{5}Index.
+\N[58 yplay.w]{1}{5}Index.
 \fi
 
 \inx

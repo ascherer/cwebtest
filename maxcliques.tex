@@ -1,10 +1,12 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
 
 
 
-\N{1}{1}Intro. This is a simple program to find all maximal cliques of a
+\N[4 maxcliques.w]{1}{1}Intro. This is a simple program to find all maximal
+cliques of a
 graph, when the graph has at most 64 vertices and is given by
 its adjacency matrix.
 
@@ -76,7 +78,7 @@ words\ of\ workspace.}\)\.{)\\n"},\39\\{mems},\39\\{space});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Input the graph\X${}\E{}$\6
+\M[71 maxcliques.w]{2}\B\X2:Input the graph\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{2}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ inputgrap}\)\.{h.gb\\n"},\39%
@@ -102,7 +104,7 @@ ${}\\{exit}({-}\T{3});{}$\6
 \X3:Set up the \PB{\\{rho}} table\X;\par
 \U1.\fi
 
-\M{3}\B\X3:Set up the \PB{\\{rho}} table\X${}\E{}$\6
+\M[90 maxcliques.w]{3}\B\X3:Set up the \PB{\\{rho}} table\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
 ${}\{{}$\1\6
 ${}\|w\K\T{1\$L\$L}\LL\|j;{}$\6
@@ -113,7 +115,7 @@ ${}\\{rho}[\|j]\K\|w;{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{4}\B\D$\\{deBruijn}$ \5
+\M[97 maxcliques.w]{4}\B\D$\\{deBruijn}$ \5
 \T{\^03f79d71b4ca8b09}\C{ the least de Bruijn cycle of length 64 }\par
 \Y\B\4\X4:Output the maximal cliques\X${}\E{}$\6
 $\\{printf}(\.{"Graph\ \%s\ has\ \%d\ max}\)\.{imal\ cliques:\\n"},\39\|g\MG%
@@ -132,7 +134,8 @@ ${}\\{printf}(\.{"\ \%s"},\39(\|g\MG\\{vertices}+\|j)\MG\\{name});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{5}The ruler-function calculation in the previous section isn't part
+\M[112 maxcliques.w]{5}The ruler-function calculation in the previous section
+isn't part
 of the inner loop; so I could use a slower, brute-force scheme
 that simply examines each bit, one bit at a time.
 But I'm using the de Bruijn method anyway, in order to get
@@ -147,7 +150,8 @@ ${}\\{table}[\|u\GG\T{58}]\K\|j;{}$\6
 \4${}\}{}$\2\par
 \U4.\fi
 
-\N{1}{6}The algorithm. The \PB{\\{work}} area holds all maximal elements of the
+\N[124 maxcliques.w]{1}{6}The algorithm. The \PB{\\{work}} area holds all
+maximal elements of the
 $2^i$ bitwise-ands of either $\rho_v$ or $\delta_v$ for the first
 $i$ vertices. There are $m$ of them.
 
@@ -169,7 +173,8 @@ ${}\|v\K\T{1\$L\$L}\LL\|i{}$;\C{ this is the new vertex we're considering }\6
 \4${}\}{}$\2\2\par
 \U1.\fi
 
-\M{7}To visualize the current situation, suppose bit~$v$ is the leftmost.
+\M[142 maxcliques.w]{7}To visualize the current situation, suppose bit~$v$ is
+the leftmost.
 Then we want to rearrange \PB{\\{work}[\T{1}]} thru \PB{\\{work}[\|m]} so that
 they have the form
 $$\vcenter{\halign{#\thinspace&$#$\hfil\cr
@@ -201,7 +206,7 @@ ${}\|j\PP,\39\|k\MM;{}$\6
 \4${}\}{}$\2\par
 \U6.\fi
 
-\M{8}Now comes the interesting part. At this point $j=k+1$.
+\M[166 maxcliques.w]{8}Now comes the interesting part. At this point $j=k+1$.
 
 Entries 1 thru $k$ of the workspace should simply be carried
 over to the next round. For if $u=0\,\alpha_i$ in the notation above,
@@ -275,7 +280,8 @@ ${}\|o,\39\\{work}[\PP\|l]\K\|w{}$;\C{ accept $u''$ }\6
 ${}\\{oo},\39\\{work}[\PP\|m]\K\\{work}[\|p]{}$;\2\par
 \U6.\fi
 
-\M{9}Finally, we need another loop analogous to radix-exchange partitioning.
+\M[223 maxcliques.w]{9}Finally, we need another loop analogous to
+radix-exchange partitioning.
 But this time we will move all entries contained in~\PB{\|w} down, and
 all entries not contained in~\PB{\|w} up. (In fact we don't really
 move anything down, because those entries will be discarded.)
@@ -304,7 +310,7 @@ ${}\\{oo},\39\\{work}[\|q]\K\\{work}[\|r],\39\\{work}[\|r]\K\T{0},\39\|q\MM,\39%
 ${}\|o,\39\\{work}[\|q]\K\|w,\39\|p\K\|q{}$;\par
 \U8.\fi
 
-\N{1}{10}Index.
+\N[244 maxcliques.w]{1}{10}Index.
 \fi
 
 \inx

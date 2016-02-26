@@ -1,8 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This program is part of a series of ``SAT-solvers'' that I'm
-putting
+\N[4 sat8.w]{1}{1}Intro. This program is part of a series of ``SAT-solvers''
+that I'm putting
 together for my own education as I prepare to write Section 7.2.2.2 of
 {\sl The Art of Computer Programming}. My intent is to have a variety of
 compatible programs on which I can run experiments to learn how different
@@ -17,7 +18,8 @@ on Artificial Intelligence\/ \bf12} (1994), 337--343.
 
 \fi
 
-\M{2}If you have already read {\mc SAT7}, or any other program of this
+\M[17 sat8.w]{2}If you have already read {\mc SAT7}, or any other program of
+this
 series, you might as well skip now past the rest of this introduction,
 and past the code for the
 ``I/O wrapper'' that is presented in the next dozen or so
@@ -62,7 +64,7 @@ input or to format the output.)
 
 \fi
 
-\M{3}So here's the structure of the program. (Skip ahead if you are
+\M[59 sat8.w]{3}So here's the structure of the program. (Skip ahead if you are
 impatient to see the interesting stuff.)
 
 \Y\B\4\D$\|o$ \5
@@ -101,7 +103,7 @@ bytes,\ }\)\.{\%d\ trial\%s,\ \%llu\ ste}\)\.{ps.\\n"},\39\\{imems},\39%
 \4${}\}{}$\2\par
 \fi
 
-\M{4}\B\D$\\{show\_basics}$ \5
+\M[92 sat8.w]{4}\B\D$\\{show\_basics}$ \5
 \T{1}\C{ \PB{\\{verbose}} code for basic stats }\par
 \B\4\D$\\{show\_choices}$ \5
 \T{2}\C{ \PB{\\{verbose}} code for backtrack logging }\par
@@ -134,7 +136,8 @@ mems }\6
 \As8\ET25.
 \U3.\fi
 
-\M{5}On the command line one can specify any or all of the following options:
+\M[113 sat8.w]{5}On the command line one can specify any or all of the
+following options:
 \smallskip
 \item{$\bullet$}
 `\.v$\langle\,$integer$\,\rangle$' to enable various levels of verbose
@@ -232,8 +235,8 @@ ${}\\{exit}({-}\T{666});{}$\6
 \4${}\}{}$\2\par
 \U3.\fi
 
-\N{1}{6}The I/O wrapper. The following routines read the input and absorb it
-into
+\N[170 sat8.w]{1}{6}The I/O wrapper. The following routines read the input and
+absorb it into
 temporary data areas from which all of the ``real'' data structures
 can readily be initialized. My intent is to incorporate these routines in all
 of the SAT-solvers in this series. Therefore I've tried to make the code
@@ -274,7 +277,8 @@ ${}\}{}$ \&{vchunk};\par
 \As7\ET24.
 \U3.\fi
 
-\M{7}Each clause in the temporary tables is represented by a sequence of
+\M[207 sat8.w]{7}Each clause in the temporary tables is represented by a
+sequence of
 one or more pointers to the \PB{\&{tmp\_var}} nodes of the literals involved.
 A negated literal is indicated by adding~1 to such a pointer.
 The first literal of a clause is indicated by adding~2.
@@ -291,7 +295,7 @@ any) }\6
 ${}\}{}$ \&{chunk};\par
 \fi
 
-\M{8}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[222 sat8.w]{8}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{char} ${}{*}\\{buf}{}$;\C{ buffer for reading the lines (clauses) of \PB{%
 \\{stdin}} }\6
 \&{tmp\_var} ${}{*}{*}\\{hash}{}$;\C{ heads of the hash lists }\6
@@ -313,7 +317,7 @@ a new \PB{\&{chunk}} }\6
 \&{ullng} \\{cells};\C{ how many occurrences of literals in clauses? }\par
 \fi
 
-\M{9}\B\X9:Initialize everything\X${}\E{}$\6
+\M[237 sat8.w]{9}\B\X9:Initialize everything\X${}\E{}$\6
 \\{gb\_init\_rand}(\\{random\_seed});\6
 ${}\\{buf}\K{}$(\&{char} ${}{*}){}$ \\{malloc}${}(\\{buf\_size}*\&{sizeof}(%
 \&{char}));{}$\6
@@ -336,7 +340,8 @@ ${}\\{hash}[\|h]\K\NULL{}$;\2\par
 \A15.
 \U3.\fi
 
-\M{10}The hash address of each variable name has $h$ bits, where $h$ is the
+\M[253 sat8.w]{10}The hash address of each variable name has $h$ bits, where
+$h$ is the
 value of the adjustable parameter \PB{\\{hbits}}.
 Thus the average number of variables per hash list is $n/2^h$ when there
 are $n$ different variables. A warning is printed if this average number
@@ -402,7 +407,7 @@ ${}\\{exit}({-}\T{666});{}$\6
 \4${}\}{}$\2\par
 \U3.\fi
 
-\M{11}\B\X11:Input the clause in \PB{\\{buf}}\X${}\E{}$\6
+\M[303 sat8.w]{11}\B\X11:Input the clause in \PB{\\{buf}}\X${}\E{}$\6
 \&{for} ${}(\|j\K\|k\K\T{0};{}$  ; \,)\5
 ${}\{{}$\1\6
 \&{while} ${}(\\{buf}[\|j]\E\.{'\ '}){}$\1\5
@@ -434,7 +439,8 @@ ${}\\{nullclauses}\PP{}$;\C{ strictly speaking it would be unsatisfiable }\6
 ${}\\{cells}\MRL{+{\K}}\|k{}$;\par
 \U10.\fi
 
-\M{12}We need a hack to insert the bit codes 1 and/or 2 into a pointer value.
+\M[324 sat8.w]{12}We need a hack to insert the bit codes 1 and/or 2 into a
+pointer value.
 
 \Y\B\4\D$\\{hack\_in}(\|q,\|t)$ \5
 (\&{tmp\_var} ${}{*})(\|t\OR{}$(\&{ullng}) \|q)\par
@@ -464,7 +470,7 @@ ${}\\{cur\_cell}\PP,\39\|k\PP;{}$\6
 \4${}\}{}$\2\par
 \U11.\fi
 
-\M{13}\B\X13:Install a new \PB{\&{vchunk}}\X${}\E{}$\6
+\M[346 sat8.w]{13}\B\X13:Install a new \PB{\&{vchunk}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{vchunk} ${}{*}\\{new\_vchunk};{}$\7
 ${}\\{new\_vchunk}\K{}$(\&{vchunk} ${}{*}){}$ \\{malloc}(\&{sizeof}(%
@@ -483,7 +489,7 @@ ${}\\{bad\_tmp\_var}\K{\AND}\\{new\_vchunk}\MG\\{var}[\\{vars\_per%
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{14}\B\X14:Install a new \PB{\&{chunk}}\X${}\E{}$\6
+\M[359 sat8.w]{14}\B\X14:Install a new \PB{\&{chunk}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{chunk} ${}{*}\\{new\_chunk};{}$\7
 ${}\\{new\_chunk}\K{}$(\&{chunk} ${}{*}){}$ \\{malloc}(\&{sizeof}(\&{chunk}));\6
@@ -500,7 +506,8 @@ ${}\\{bad\_cell}\K{\AND}\\{new\_chunk}\MG\\{cell}[\\{cells\_per\_chunk}];{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{15}The hash code is computed via ``universal hashing,'' using the following
+\M[372 sat8.w]{15}The hash code is computed via ``universal hashing,'' using
+the following
 precomputed tables of random bits.
 
 \Y\B\4\X9:Initialize everything\X${}\mathrel+\E{}$\6
@@ -509,8 +516,9 @@ precomputed tables of random bits.
 ${}\\{hash\_bits}[\|j][\|k]\K\\{gb\_next\_rand}(\,){}$;\2\2\par
 \fi
 
-\M{16}\B\X16:Put the variable name beginning at \PB{\\{buf}[\|j]} in \PB{$%
-\\{cur\_tmp\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X${}\E{}$\6
+\M[379 sat8.w]{16}\B\X16:Put the variable name beginning at \PB{\\{buf}[\|j]}
+in \PB{$\\{cur\_tmp\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X${}%
+\E{}$\6
 $\\{cur\_tmp\_var}\MG\\{name}.\\{lng}\K\T{0};{}$\6
 \&{for} ${}(\|h\K\|l\K\T{0};{}$ ${}\\{buf}[\|j+\|l]>\.{'\ '}\W\\{buf}[\|j+\|l]%
 \Z\.{'\~'};{}$ ${}\|l\PP){}$\5
@@ -531,8 +539,8 @@ ${}\|j\MRL{+{\K}}\|l;{}$\6
 ${}\|h\MRL{\AND{\K}}(\T{1}\LL\\{hbits})-\T{1}{}$;\par
 \U12.\fi
 
-\M{17}\B\X17:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash table at \PB{%
-\|p}\X${}\E{}$\6
+\M[395 sat8.w]{17}\B\X17:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash
+table at \PB{\|p}\X${}\E{}$\6
 \&{for} ${}(\|p\K\\{hash}[\|h];{}$ \|p; ${}\|p\K\|p\MG\\{next}){}$\1\6
 \&{if} ${}(\|p\MG\\{name}.\\{lng}\E\\{cur\_tmp\_var}\MG\\{name}.\\{lng}){}$\1\5
 \&{break};\2\2\6
@@ -545,8 +553,8 @@ ${}\|p\MG\\{stamp}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{18}The most interesting aspect of the input phase is probably the
-``unwinding''
+\M[405 sat8.w]{18}The most interesting aspect of the input phase is probably
+the ``unwinding''
 that we might need to do when encountering a literal more than once
 in the same clause.
 
@@ -557,8 +565,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{19}An input line that begins with `\.{\~\ }' is silently treated as a
-comment.
+\M[414 sat8.w]{19}An input line that begins with `\.{\~\ }' is silently treated
+as a comment.
 Otherwise redundant clauses are logged, in case they were unintentional.
 (One can, however, intentionally
 use redundant clauses to force the order of the variables.)
@@ -575,7 +583,8 @@ always\ sati}\)\.{sfied)\\n"},\39\\{clauses});{}$\2\6
 ${}\\{nullclauses}\PP{}$;\par
 \U11.\fi
 
-\M{20}\B\X20:Move \PB{\\{cur\_cell}} backward to the previous cell\X${}\E{}$\6
+\M[428 sat8.w]{20}\B\X20:Move \PB{\\{cur\_cell}} backward to the previous cell%
+\X${}\E{}$\6
 \&{if} ${}(\\{cur\_cell}>{\AND}\\{cur\_chunk}\MG\\{cell}[\T{0}]){}$\1\5
 ${}\\{cur\_cell}\MM;{}$\2\6
 \&{else}\5
@@ -588,7 +597,8 @@ ${}\\{cur\_cell}\K\\{bad\_cell}-\T{1};{}$\6
 \4${}\}{}$\2\par
 \Us19\ET33.\fi
 
-\M{21}Notice that the old ``temporary variable'' data goes away here.
+\M[437 sat8.w]{21}Notice that the old ``temporary variable'' data goes away
+here.
 (A bug bit me in the first version of the code because of this.)
 
 \Y\B\4\X21:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary
@@ -606,14 +616,15 @@ ${}\\{cur\_tmp\_var}\K\\{bad\_tmp\_var}-\T{1};{}$\6
 \4${}\}{}$\2\par
 \U35.\fi
 
-\M{22}\B\X22:Report the successful completion of the input phase\X${}\E{}$\6
+\M[449 sat8.w]{22}\B\X22:Report the successful completion of the input phase%
+\X${}\E{}$\6
 $\\{fprintf}(\\{stderr},\39\.{"(\%llu\ variables,\ \%l}\)\.{lu\ clauses,\ \%llu%
 \ lit}\)\.{erals\ successfully\ r}\)\.{ead)\\n"},\39\\{vars},\39\\{clauses},\39%
 \\{cells}){}$;\par
 \U3.\fi
 
-\N{1}{23}SAT solving, version 8. The {\mc WALKSAT} algorithm is only a little
-bit
+\N[454 sat8.w]{1}{23}SAT solving, version 8. The {\mc WALKSAT} algorithm is
+only a little bit
 more complicated than the {\mc WALK} method, but the differences mean that
 we cannot simulate simultaneous runs with bitwise operations.
 
@@ -639,7 +650,8 @@ enough failures to be convinced that we're probably doomed to defeat.
 
 \fi
 
-\M{24}The data structures are somewhat interesting, but not tricky: There are
+\M[478 sat8.w]{24}The data structures are somewhat interesting, but not tricky:
+There are
 four main arrays, \PB{\\{cmem}}, \PB{\\{vmem}}, \PB{\\{mem}}, and \PB{%
 \\{tmem}}. Structured
 \PB{\&{clause}} nodes appear in \PB{\\{cmem}}, and structured \PB{\&{variable}}
@@ -679,7 +691,7 @@ this clause? }\6
 ${}\}{}$ \&{clause};\par
 \fi
 
-\M{25}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[509 sat8.w]{25}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{clause} ${}{*}\\{cmem}{}$;\C{ the master array of clauses }\6
 \&{variable} ${}{*}\\{vmem}{}$;\C{ the master array of variables }\6
 \&{uint} ${}{*}\\{mem}{}$;\C{ the master array of literals in clauses }\6
@@ -694,7 +706,8 @@ ${}\}{}$ \&{clause};\par
 clause }\par
 \fi
 
-\M{26}Here is a subroutine that prints a clause symbolically. It illustrates
+\M[520 sat8.w]{26}Here is a subroutine that prints a clause symbolically. It
+illustrates
 some of the conventions of the data structures that have been explained above.
 I use it only for debugging.
 
@@ -716,7 +729,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
 \As27\ET28.
 \U3.\fi
 
-\M{27}Another version of that routine, used to display unsatisfied clauses
+\M[535 sat8.w]{27}Another version of that routine, used to display unsatisfied
+clauses
 in verbose mode, shows the current breakcounts of each literal.
 
 \Y\B\4\X26:Subroutines\X${}\mathrel+\E{}$\6
@@ -737,7 +751,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{28}Similarly, we can list the clause numbers that contain a given literal.
+\M[550 sat8.w]{28}Similarly, we can list the clause numbers that contain a
+given literal.
 (Notice the limits on~\PB{\|c} in the loop here.)
 
 \Y\B\4\X26:Subroutines\X${}\mathrel+\E{}$\6
@@ -755,7 +770,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{29}Initializing the real data structures.
+\N[564 sat8.w]{1}{29}Initializing the real data structures.
 We're ready now to convert the temporary chunks of data into the
 form we want, and to recycle those chunks.
 
@@ -770,7 +785,7 @@ format\X;\6
 \X36:Check consistency\X;\par
 \U3.\fi
 
-\M{30}\B\X30:Allocate the main arrays\X${}\E{}$\6
+\M[577 sat8.w]{30}\B\X30:Allocate the main arrays\X${}\E{}$\6
 \\{free}(\\{buf});\5
 \\{free}(\\{hash});\C{ a tiny gesture to make a little room }\6
 ${}\\{vmem}\K{}$(\&{variable} ${}{*}){}$ \\{malloc}${}((\\{vars}+\T{1})*%
@@ -820,15 +835,15 @@ ${}\\{exit}({-}\T{11});{}$\6
 ${}\\{bytes}\MRL{+{\K}}(\\{clauses}+\T{1})*\&{sizeof}(\&{clause}){}$;\par
 \U29.\fi
 
-\M{31}\B\X31:Initialize the \PB{\\{pos\_start}} and \PB{\\{neg\_start}} fields%
-\X${}\E{}$\6
+\M[610 sat8.w]{31}\B\X31:Initialize the \PB{\\{pos\_start}} and \PB{\\{neg%
+\_start}} fields\X${}\E{}$\6
 \&{for} ${}(\|c\K\\{vars};{}$ \|c; ${}\|c\MM){}$\1\5
 ${}\|o,\39\\{vmem}[\|c-\T{1}].\\{pos\_start}\K\\{vmem}[\|c-\T{1}].\\{neg%
 \_start}\K\T{0}{}$;\2\par
 \U29.\fi
 
-\M{32}\B\X32:Copy all the temporary cells to the \PB{\\{mem}} and \PB{\\{cmem}}
-arrays in proper format\X${}\E{}$\6
+\M[613 sat8.w]{32}\B\X32:Copy all the temporary cells to the \PB{\\{mem}} and %
+\PB{\\{cmem}} arrays in proper format\X${}\E{}$\6
 \&{for} ${}(\|c\K\\{clauses},\39\\{cur\_mcell}\K\\{mem}+\\{cells},\39\\{kk}\K%
 \T{0};{}$ \|c; ${}\|c\MM){}$\5
 ${}\{{}$\1\6
@@ -855,7 +870,8 @@ ${}\\{exit}({-}\T{16});{}$\6
 ${}\\{bytes}\MRL{+{\K}}\\{kk}*\&{sizeof}(\&{uint}){}$;\par
 \U29.\fi
 
-\M{33}The basic idea is to ``unwind'' the steps that we went through while
+\M[631 sat8.w]{33}The basic idea is to ``unwind'' the steps that we went
+through while
 building up the chunks.
 
 \Y\B\4\D$\\{hack\_out}(\|q)$ \5
@@ -877,7 +893,7 @@ ${}\\{oo},\39\\{vmem}[\|l\GG\T{1}].\\{pos\_start}\PP;{}$\2\6
 \4${}\}{}$\2\par
 \U32.\fi
 
-\M{34}\B\X34:Set up the \PB{\\{tmem}} array\X${}\E{}$\6
+\M[648 sat8.w]{34}\B\X34:Set up the \PB{\\{tmem}} array\X${}\E{}$\6
 \&{for} ${}(\|j\K\|k\K\T{0};{}$ ${}\|k<\\{vars};{}$ ${}\|k\PP){}$\5
 ${}\{{}$\1\6
 ${}\|o,\39\|i\K\\{vmem}[\|k].\\{pos\_start},\39\\{ii}\K\\{vmem}[\|k].\\{neg%
@@ -903,8 +919,8 @@ ${}\\{ooo},\39\|i\K\\{vmem}[\|l\GG\T{1}].\\{pos\_start}-\T{1},\39\\{tmem}[\|i]%
 \4${}\}{}$\2\par
 \U29.\fi
 
-\M{35}\B\X35:Copy all the temporary variable nodes to the \PB{\\{nmem}} array
-in proper format\X${}\E{}$\6
+\M[662 sat8.w]{35}\B\X35:Copy all the temporary variable nodes to the \PB{%
+\\{nmem}} array in proper format\X${}\E{}$\6
 \&{for} ${}(\|c\K\\{vars};{}$ \|c; ${}\|c\MM){}$\5
 ${}\{{}$\1\6
 \X21:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary variable\X;%
@@ -914,7 +930,8 @@ ${}\|o,\39\\{nmem}[\|c-\T{1}].\\{lng}\K\\{cur\_tmp\_var}\MG\\{name}.\\{lng};{}$%
 \4${}\}{}$\2\par
 \U29.\fi
 
-\M{36}We should now have unwound all the temporary data chunks back to their
+\M[668 sat8.w]{36}We should now have unwound all the temporary data chunks back
+to their
 beginnings.
 
 \Y\B\4\X36:Check consistency\X${}\E{}$\6
@@ -930,7 +947,7 @@ ${}\\{exit}({-}\T{14});{}$\6
 \\{free}(\\{cur\_vchunk});\par
 \U29.\fi
 
-\N{1}{37}Doing it. So we take random walks.
+\N[681 sat8.w]{1}{37}Doing it. So we take random walks.
 
 \Y\B\4\X37:Solve the problem\X${}\E{}$\6
 \&{if} ${}(\\{maxsteps}\E\T{0}){}$\1\5
@@ -976,7 +993,8 @@ ${}\\{trial}\MM{}$;\C{ restore the actual number of trials made }\6
 \\{done}:\par
 \U3.\fi
 
-\M{38}The macro \PB{\\{gb\_next\_rand}(\,)} delivers a 31-bit random integer,
+\M[712 sat8.w]{38}The macro \PB{\\{gb\_next\_rand}(\,)} delivers a 31-bit
+random integer,
 and my convention is to charge four mems whenever it is called.
 
 \Y\B\4\X38:Initialize all values\X${}\E{}$\6
@@ -990,7 +1008,7 @@ ${}\\{vmem}[\|k].\\{breakcount}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U37.\fi
 
-\M{39}\B\X39:Initialize the clause data structures\X${}\E{}$\6
+\M[722 sat8.w]{39}\B\X39:Initialize the clause data structures\X${}\E{}$\6
 $\\{fcount}\K\T{0};{}$\6
 \&{for} ${}(\|c\K\|k\K\T{0};{}$ ${}\|c<\\{clauses};{}$ ${}\|c\PP){}$\5
 ${}\{{}$\1\6
@@ -1014,7 +1032,8 @@ ${}\\{oo},\39\\{cmem}[\|c].\\{fplace}\K\\{fcount},\39\\{cmem}[\\{fcount}\PP].%
 \4${}\}{}$\2\par
 \U37.\fi
 
-\M{40}\B\X40:Choose a random unsatisfied clause, \PB{\|c}\X${}\E{}$\6
+\M[738 sat8.w]{40}\B\X40:Choose a random unsatisfied clause, \PB{\|c}\X${}\E{}$%
+\6
 \&{if} ${}(\\{verbose}\AND\\{show\_gory\_details}){}$\5
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"currently\ false:\\n"});{}$\6
@@ -1028,7 +1047,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"in\ \%u(\%d)"},\39\|c+\T{1},\39\\{fcount}){}$;%
 \2\par
 \U37.\fi
 
-\M{41}\B\X41:Choose a literal \PB{\|l} in \PB{\|c}\X${}\E{}$\6
+\M[747 sat8.w]{41}\B\X41:Choose a literal \PB{\|l} in \PB{\|c}\X${}\E{}$\6
 $\\{oo},\39\|k\K\\{cmem}[\|c].\\{start},\39\\{kk}\K\\{cmem}[\|c+\T{1}].%
 \\{start},\39\|h\K\\{kk}-\|k;{}$\6
 ${}\\{ooo},\39\|p\K\\{mem}[\|k],\39\|r\K\\{vmem}[\|p\GG\T{1}].\\{breakcount},%
@@ -1073,7 +1092,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\ flip\ \%s\%.8s\ (cost\ }\)\.{\%d)\\n"},\39%
 \4${}\}{}$\2\par
 \U37.\fi
 
-\M{42}At this point \PB{$\|p\K\|l\GG\T{1}$}.
+\M[773 sat8.w]{42}At this point \PB{$\|p\K\|l\GG\T{1}$}.
 
 \Y\B\4\X42:Flip the value of \PB{\|l}\X${}\E{}$\6
 \&{if} ${}(\|l\AND\T{1}){}$\5
@@ -1103,8 +1122,8 @@ ${}\|o,\39\|k\K\\{kk},\39\\{kk}\K\\{vmem}[\|p+\T{1}].\\{pos\_start};{}$\6
 \4${}\}{}$\2\par
 \U37.\fi
 
-\M{43}\B\X43:Make clauses \PB{\\{tmem}[\|k]}, \PB{$\\{tmem}[\|k+\T{1}]$}, \dots%
-\ happier\X${}\E{}$\6
+\M[790 sat8.w]{43}\B\X43:Make clauses \PB{\\{tmem}[\|k]}, \PB{$\\{tmem}[\|k+%
+\T{1}]$}, \dots\ happier\X${}\E{}$\6
 \&{for} ${}(\|h\K\T{0};{}$ ${}\|k<\\{kk};{}$ ${}\|k\PP){}$\5
 ${}\{{}$\1\6
 ${}\\{ooo},\39\|c\K\\{tmem}[\|k],\39\|j\K\\{cmem}[\|c].\\{tcount},\39\\{cmem}[%
@@ -1124,8 +1143,8 @@ ${}\|h\PP{}$;\C{ the flipped literal is now critical }\6
 \4${}\}{}$\2\par
 \U42.\fi
 
-\M{44}\B\X44:Make clauses \PB{\\{tmem}[\|k]}, \PB{$\\{tmem}[\|k+\T{1}]$}, \dots%
-\ sadder\X${}\E{}$\6
+\M[803 sat8.w]{44}\B\X44:Make clauses \PB{\\{tmem}[\|k]}, \PB{$\\{tmem}[\|k+%
+\T{1}]$}, \dots\ sadder\X${}\E{}$\6
 \&{for} ( ; ${}\|k<\\{kk};{}$ ${}\|k\PP){}$\5
 ${}\{{}$\1\6
 ${}\\{ooo},\39\|c\K\\{tmem}[\|k],\39\|j\K\\{cmem}[\|c].\\{tcount}-\T{1},\39%
@@ -1143,7 +1162,8 @@ ${}\\{oo},\39\\{cmem}[\\{fcount}].\\{fslot}\K\|c,\39\\{cmem}[\|c].\\{fplace}\K%
 \4${}\}{}$\2\par
 \U42.\fi
 
-\M{45}We know that \PB{\|c} has exactly one true literal at this moment.
+\M[814 sat8.w]{45}We know that \PB{\|c} has exactly one true literal at this
+moment.
 
 \Y\B\4\X45:Decrease the breakcount of \PB{\|c}'s critical variable\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -1157,7 +1177,8 @@ ${}\|o,\39\\{vmem}[\|q\GG\T{1}].\\{breakcount}\MM;{}$\6
 \4${}\}{}$\2\par
 \U43.\fi
 
-\M{46}As an experiment, I'm swapping the first true literal into the first
+\M[825 sat8.w]{46}As an experiment, I'm swapping the first true literal into
+the first
 position of its clause, hoping that subsequent ``decrease'' loops will
 thereby be shortened.
 
@@ -1175,7 +1196,7 @@ ${}\\{oo},\39\\{mem}[\|i]\K\\{mem}[\\{ii}],\39\\{mem}[\\{ii}]\K\|q;{}$\2\6
 \4${}\}{}$\2\par
 \U44.\fi
 
-\M{47}\B\X47:Print the initial guess\X${}\E{}$\6
+\M[839 sat8.w]{47}\B\X47:Print the initial guess\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"\ initial\ guess"});{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{vars};{}$ ${}\|k\PP){}$\1\5
@@ -1185,7 +1206,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
 \4${}\}{}$\2\par
 \U37.\fi
 
-\M{48}\B\X48:Print a solution and \PB{\&{goto} \\{done}}\X${}\E{}$\6
+\M[847 sat8.w]{48}\B\X48:Print a solution and \PB{\&{goto} \\{done}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{vars};{}$ ${}\|k\PP){}$\1\5
 ${}\\{printf}(\.{"\ \%s\%.8s"},\39\\{vmem}[\|k].\\{val}\?\.{""}:\.{"\~"},\39%
@@ -1197,7 +1218,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"!SAT!\\n"});{}$\2\6
 \4${}\}{}$\2\par
 \U37.\fi
 
-\N{1}{49}Index.
+\N[856 sat8.w]{1}{49}Index.
 \fi
 
 \inx

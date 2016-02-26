@@ -1,8 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This program is part of a series of ``SAT-solvers'' that I'm
-putting
+\N[2 sat10.w]{1}{1}Intro. This program is part of a series of ``SAT-solvers''
+that I'm putting
 together for my own education as I prepare to write Section 7.2.2.2 of
 {\sl The Art of Computer Programming}. My intent is to have a variety of
 compatible programs on which I can run experiments to learn how different
@@ -69,7 +70,7 @@ input or to format the output.)
 
 \fi
 
-\M{2}So here's the structure of the program. (Skip ahead if you are
+\M[67 sat10.w]{2}So here's the structure of the program. (Skip ahead if you are
 impatient to see the interesting stuff.)
 
 \Y\B\4\D$\|o$ \5
@@ -112,7 +113,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"Altogether\ "}\|O\.{"llu+"}\|O\.{"llu\ mems,\
 \4${}\}{}$\2\par
 \fi
 
-\M{3}\B\D$\\{show\_basics}$ \5
+\M[102 sat10.w]{3}\B\D$\\{show\_basics}$ \5
 \T{1}\C{ \PB{\\{verbose}} code for basic stats }\par
 \B\4\D$\\{show\_choices}$ \5
 \T{2}\C{ \PB{\\{verbose}} code for backtrack logging }\par
@@ -148,7 +149,8 @@ list }\par
 \As7\ET27.
 \U2.\fi
 
-\M{4}On the command line one can specify any or all of the following options:
+\M[126 sat10.w]{4}On the command line one can specify any or all of the
+following options:
 \smallskip
 \item{$\bullet$}
 `\.v$\langle\,$integer$\,\rangle$' to enable various levels of verbose
@@ -249,8 +251,8 @@ ${}\\{exit}({-}\T{1});{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\N{1}{5}The I/O wrapper. The following routines read the input and absorb it
-into
+\N[188 sat10.w]{1}{5}The I/O wrapper. The following routines read the input and
+absorb it into
 temporary data areas from which all of the ``real'' data structures
 can readily be initialized. My intent is to incorporate these routines into all
 of the SAT-solvers in this series. Therefore I've tried to make the code
@@ -291,7 +293,8 @@ ${}\}{}$ \&{vchunk};\par
 \As6, 24, 25\ETs26.
 \U2.\fi
 
-\M{6}Each clause in the temporary tables is represented by a sequence of
+\M[225 sat10.w]{6}Each clause in the temporary tables is represented by a
+sequence of
 one or more pointers to the \PB{\&{tmp\_var}} nodes of the literals involved.
 A negated literal is indicated by adding~1 to such a pointer.
 The first literal of a clause is indicated by adding~2.
@@ -308,7 +311,7 @@ any) }\6
 ${}\}{}$ \&{chunk};\par
 \fi
 
-\M{7}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\M[240 sat10.w]{7}\B\X3:Global variables\X${}\mathrel+\E{}$\6
 \&{char} ${}{*}\\{buf}{}$;\C{ buffer for reading the lines (clauses) of \PB{%
 \\{stdin}} }\6
 \&{tmp\_var} ${}{*}{*}\\{hash}{}$;\C{ heads of the hash lists }\6
@@ -331,7 +334,7 @@ a new \PB{\&{chunk}} }\6
 \&{int} \\{non\_clause};\C{ is the current clause ignorable? }\par
 \fi
 
-\M{8}\B\X8:Initialize everything\X${}\E{}$\6
+\M[256 sat10.w]{8}\B\X8:Initialize everything\X${}\E{}$\6
 \\{gb\_init\_rand}(\\{random\_seed});\6
 ${}\\{buf}\K{}$(\&{char} ${}{*}){}$ \\{malloc}${}(\\{buf\_size}*\&{sizeof}(%
 \&{char}));{}$\6
@@ -354,7 +357,8 @@ ${}\\{hash}[\|h]\K\NULL{}$;\2\par
 \A15.
 \U2.\fi
 
-\M{9}The hash address of each variable name has $h$ bits, where $h$ is the
+\M[272 sat10.w]{9}The hash address of each variable name has $h$ bits, where
+$h$ is the
 value of the adjustable parameter \PB{\\{hbits}}.
 Thus the average number of variables per hash list is $n/2^h$ when there
 are $n$ different variables. A warning is printed if this average number
@@ -425,8 +429,8 @@ ${}\\{exit}({-}\T{666});{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{10}We input from \PB{\\{primary\_file}} just as if it were the standard
-input
+\M[324 sat10.w]{10}We input from \PB{\\{primary\_file}} just as if it were the
+standard input
 file, except that all ``clauses'' are discarded. (Line numbers in
 error messages are zero.) The effect is to place
 the primary variables first in the list of all variables: A variable
@@ -460,7 +464,7 @@ from\ "}\|O\.{"s)\\n"},\39\\{primary\_vars},\39\\{primary\_name});{}$\2\6
 \4${}\}{}$\2\par
 \U9.\fi
 
-\M{11}\B\X11:Input the clause in \PB{\\{buf}}\X${}\E{}$\6
+\M[351 sat10.w]{11}\B\X11:Input the clause in \PB{\\{buf}}\X${}\E{}$\6
 \&{for} ${}(\|j\K\|k\K\\{non\_clause}\K\T{0};{}$ ${}\R\\{non\_clause};{}$ \,)\5
 ${}\{{}$\1\6
 \&{while} ${}(\\{buf}[\|j]\E\.{'\ '}){}$\1\5
@@ -491,7 +495,8 @@ ${}\\{nullclauses}\PP{}$;\C{ strictly speaking it would be unsatisfiable }\6
 ${}\\{cells}\MRL{+{\K}}\|k{}$;\par
 \Us9\ET10.\fi
 
-\M{12}We need a hack to insert the bit codes 1 and/or 2 into a pointer value.
+\M[371 sat10.w]{12}We need a hack to insert the bit codes 1 and/or 2 into a
+pointer value.
 
 \Y\B\4\D$\\{hack\_in}(\|q,\|t)$ \5
 (\&{tmp\_var} ${}{*})(\|t\OR{}$(\&{ullng}) \|q)\par
@@ -525,7 +530,7 @@ ${}\\{cur\_cell}\PP,\39\|k\PP;{}$\6
 \4${}\}{}$\2\par
 \U11.\fi
 
-\M{13}\B\X13:Install a new \PB{\&{vchunk}}\X${}\E{}$\6
+\M[396 sat10.w]{13}\B\X13:Install a new \PB{\&{vchunk}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{vchunk} ${}{*}\\{new\_vchunk};{}$\7
 ${}\\{new\_vchunk}\K{}$(\&{vchunk} ${}{*}){}$ \\{malloc}(\&{sizeof}(%
@@ -544,7 +549,7 @@ ${}\\{bad\_tmp\_var}\K{\AND}\\{new\_vchunk}\MG\\{var}[\\{vars\_per%
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{14}\B\X14:Install a new \PB{\&{chunk}}\X${}\E{}$\6
+\M[409 sat10.w]{14}\B\X14:Install a new \PB{\&{chunk}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{chunk} ${}{*}\\{new\_chunk};{}$\7
 ${}\\{new\_chunk}\K{}$(\&{chunk} ${}{*}){}$ \\{malloc}(\&{sizeof}(\&{chunk}));\6
@@ -561,7 +566,8 @@ ${}\\{bad\_cell}\K{\AND}\\{new\_chunk}\MG\\{cell}[\\{cells\_per\_chunk}];{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{15}The hash code is computed via ``universal hashing,'' using the following
+\M[422 sat10.w]{15}The hash code is computed via ``universal hashing,'' using
+the following
 precomputed tables of random bits.
 
 \Y\B\4\X8:Initialize everything\X${}\mathrel+\E{}$\6
@@ -570,8 +576,9 @@ precomputed tables of random bits.
 ${}\\{hash\_bits}[\|j][\|k]\K\\{gb\_next\_rand}(\,){}$;\2\2\par
 \fi
 
-\M{16}\B\X16:Put the variable name beginning at \PB{\\{buf}[\|j]} in \PB{$%
-\\{cur\_tmp\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X${}\E{}$\6
+\M[429 sat10.w]{16}\B\X16:Put the variable name beginning at \PB{\\{buf}[\|j]}
+in \PB{$\\{cur\_tmp\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X${}%
+\E{}$\6
 $\\{cur\_tmp\_var}\MG\\{name}.\\{lng}\K\T{0};{}$\6
 \&{for} ${}(\|h\K\|l\K\T{0};{}$ ${}\\{buf}[\|j+\|l]>\.{'\ '}\W\\{buf}[\|j+\|l]%
 \Z\.{'\~'};{}$ ${}\|l\PP){}$\5
@@ -592,8 +599,8 @@ ${}\\{non\_clause}\K\T{1}{}$;\C{ `\.\~' by itself is like `true' }\2\6
 ${}\|j\MRL{+{\K}}\|l,\39\|h\MRL{\AND{\K}}(\T{1}\LL\\{hbits})-\T{1}{}$;\2\par
 \U12.\fi
 
-\M{17}\B\X17:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash table at \PB{%
-\|p}\X${}\E{}$\6
+\M[444 sat10.w]{17}\B\X17:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash
+table at \PB{\|p}\X${}\E{}$\6
 \&{for} ${}(\|p\K\\{hash}[\|h];{}$ \|p; ${}\|p\K\|p\MG\\{next}){}$\1\6
 \&{if} ${}(\|p\MG\\{name}.\\{lng}\E\\{cur\_tmp\_var}\MG\\{name}.\\{lng}){}$\1\5
 \&{break};\2\2\6
@@ -606,8 +613,8 @@ ${}\|p\MG\\{stamp}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{18}The most interesting aspect of the input phase is probably the
-``unwinding''
+\M[454 sat10.w]{18}The most interesting aspect of the input phase is probably
+the ``unwinding''
 that we might need to do when encountering a literal more than once
 in the same clause.
 
@@ -618,8 +625,8 @@ ${}\\{non\_clause}\K\T{1}{}$;\C{ tautology }\2\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{19}An input line that begins with `\.{\~\ }' is silently treated as a
-comment.
+\M[463 sat10.w]{19}An input line that begins with `\.{\~\ }' is silently
+treated as a comment.
 Otherwise redundant clauses are logged, in case they were unintentional.
 (One can, however, intentionally
 use redundant clauses to force the order of the variables.)
@@ -639,7 +646,8 @@ ${}\\{nullclauses}\PP;{}$\6
 \4${}\}{}$\2\par
 \Us10\ET11.\fi
 
-\M{20}\B\X20:Move \PB{\\{cur\_cell}} backward to the previous cell\X${}\E{}$\6
+\M[479 sat10.w]{20}\B\X20:Move \PB{\\{cur\_cell}} backward to the previous cell%
+\X${}\E{}$\6
 \&{if} ${}(\\{cur\_cell}>{\AND}\\{cur\_chunk}\MG\\{cell}[\T{0}]){}$\1\5
 ${}\\{cur\_cell}\MM;{}$\2\6
 \&{else}\5
@@ -652,8 +660,8 @@ ${}\\{cur\_cell}\K\\{bad\_cell}-\T{1};{}$\6
 \4${}\}{}$\2\par
 \Us19\ET36.\fi
 
-\M{21}\B\X21:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary
-variable\X${}\E{}$\6
+\M[488 sat10.w]{21}\B\X21:Move \PB{\\{cur\_tmp\_var}} backward to the previous
+temporary variable\X${}\E{}$\6
 \&{if} ${}(\\{cur\_tmp\_var}>{\AND}\\{cur\_vchunk}\MG\\{var}[\T{0}]){}$\1\5
 ${}\\{cur\_tmp\_var}\MM;{}$\2\6
 \&{else}\5
@@ -667,13 +675,15 @@ ${}\\{cur\_tmp\_var}\K\\{bad\_tmp\_var}-\T{1};{}$\6
 \4${}\}{}$\2\par
 \U37.\fi
 
-\M{22}\B\X22:Report the successful completion of the input phase\X${}\E{}$\6
+\M[497 sat10.w]{22}\B\X22:Report the successful completion of the input phase%
+\X${}\E{}$\6
 $\\{fprintf}(\\{stderr},\39\.{"("}\|O\.{"lld\ variables,\ "}\|O\.{"lld\
 clauses,\ "}\|O\.{"llu\ literals\ succes}\)\.{sfully\ read)\\n"},\39\\{vars},%
 \39\\{clauses},\39\\{cells}){}$;\par
 \U2.\fi
 
-\N{1}{23}SAT solving, version 10. Okay, now comes my hypothetical recreation
+\N[502 sat10.w]{1}{23}SAT solving, version 10. Okay, now comes my hypothetical
+recreation
 of the Brown--Purdom SAT solver. (It's unfortunate that no copy of
 their original program survives.)
 
@@ -707,7 +717,8 @@ the implicit backtrack tree.
 
 \fi
 
-\M{24}Each link is a 32-bit integer. (I don't use \CEE/ pointers in the main
+\M[533 sat10.w]{24}Each link is a 32-bit integer. (I don't use \CEE/ pointers
+in the main
 data structures, because they occupy 64 bits and clutter up the caches.)
 Links in the watch lists are indexes of clauses; links in the active ring are
 indexes of variables. A zero link indicates the end of a list.
@@ -727,7 +738,7 @@ clause start }\6
 ${}\}{}$ \&{clause};\par
 \fi
 
-\M{25}Several items are stored for each variable: The heads of its
+\M[551 sat10.w]{25}Several items are stored for each variable: The heads of its
 two watch lists; the link to the next active variable; a spare field
 for miscellaneous use; and the 8-byte symbolic name.
 
@@ -751,8 +762,8 @@ ${-}{}$\T{1}\C{ \PB{\\{val}} code for an unset literal }\par
 ${}\}{}$ \&{variable};\par
 \fi
 
-\M{26}The backtracking process maintains a sequential stack of state
-information.
+\M[570 sat10.w]{26}The backtracking process maintains a sequential stack of
+state information.
 
 \Y\B\4\X5:Type definitions\X${}\mathrel+\E{}$\6
 \&{typedef} \&{struct} ${}\{{}$\1\6
@@ -761,7 +772,7 @@ information.
 ${}\}{}$ \&{state};\par
 \fi
 
-\M{27}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\M[578 sat10.w]{27}\B\X3:Global variables\X${}\mathrel+\E{}$\6
 \&{uint} ${}{*}\\{mem}{}$;\C{ the master array of cells }\6
 \&{clause} ${}{*}\\{cmem}{}$;\C{ the master array of clauses }\6
 \&{variable} ${}{*}\\{vmem}{}$;\C{ the master array of variables }\6
@@ -771,7 +782,8 @@ ${}\}{}$ \&{state};\par
 empty }\par
 \fi
 
-\M{28}Here is a subroutine that prints a clause symbolically. It illustrates
+\M[586 sat10.w]{28}Here is a subroutine that prints a clause symbolically. It
+illustrates
 some of the conventions of the data structures that have been explained above.
 I use it only for debugging.
 
@@ -796,7 +808,8 @@ ${}\\{printf}(\.{"\ "}\|O\.{"s"}\|O\.{".8s"},\39\|l\AND\T{1}\?\.{"\~"}:\.{""},%
 \As29, 30, 31\ETs32.
 \U2.\fi
 
-\M{29}Similarly we can print out all of the clauses that currently watch
+\M[605 sat10.w]{29}Similarly we can print out all of the clauses that currently
+watch
 a particular literal.
 
 \Y\B\4\X28:Subroutines\X${}\mathrel+\E{}$\6
@@ -812,7 +825,7 @@ ${}\|c\K\\{vmem}[\|l\GG\T{1}].\\{wlist0};{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{30}\B\X28:Subroutines\X${}\mathrel+\E{}$\6
+\M[617 sat10.w]{30}\B\X28:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_ring}(\&{void})\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{int} \|p;\7
@@ -831,7 +844,8 @@ ${}\\{printf}(\.{"\ "}\|O\.{".8s"},\39\\{vmem}[\|p].\\{name}.\\{ch8});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{31}Speaking of debugging, here's a routine to check if the redundant
+\M[631 sat10.w]{31}Speaking of debugging, here's a routine to check if the
+redundant
 parts of our data structure have gone awry.
 
 \Y\B\4\D$\\{sanity\_checking}$ \5
@@ -893,7 +907,7 @@ are\ bei}\)\.{ng\ watched!\\n"},\39\|k,\39\\{clauses});{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{32}In long runs it's helpful to know how far we've gotten.
+\M[680 sat10.w]{32}In long runs it's helpful to know how far we've gotten.
 
 \Y\B\4\X28:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_state}(\&{int} \|l)\1\1\2\2\6
@@ -909,7 +923,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{33}Initializing the real data structures.
+\N[691 sat10.w]{1}{33}Initializing the real data structures.
 We're ready now to convert the temporary chunks of data into the
 form we want, and to recycle those chunks. The code below is, of course,
 similar to what has worked in previous programs of this series.
@@ -925,7 +939,7 @@ format\X;\6
 \X39:Copy all the clauses to \PB{\\{out\_file}}\X;\2\par
 \U2.\fi
 
-\M{34}\B\X34:Allocate the main arrays\X${}\E{}$\6
+\M[704 sat10.w]{34}\B\X34:Allocate the main arrays\X${}\E{}$\6
 \\{free}(\\{buf});\5
 \\{free}(\\{hash});\C{ a tiny gesture to make a little room }\6
 ${}\\{mem}\K{}$(\&{uint} ${}{*}){}$ \\{malloc}${}(\\{cells}*\&{sizeof}(%
@@ -975,8 +989,8 @@ ${}\\{exit}({-}\T{14});{}$\6
 ${}\\{bytes}\MRL{+{\K}}(\\{vars}+\T{1})*\&{sizeof}(\&{char}){}$;\par
 \U33.\fi
 
-\M{35}\B\X35:Copy all the temporary cells to the \PB{\\{mem}} and \PB{\\{cmem}}
-arrays in proper format\X${}\E{}$\6
+\M[737 sat10.w]{35}\B\X35:Copy all the temporary cells to the \PB{\\{mem}} and %
+\PB{\\{cmem}} arrays in proper format\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\\{vars};{}$ ${}\|j\PP){}$\5
 ${}\{{}$\1\6
 ${}\|o,\39\\{vmem}[\|j].\\{wlist0}\K\\{vmem}[\|j].\\{wlist1}\K\T{0};{}$\6
@@ -1003,7 +1017,8 @@ ${}\\{exit}({-}\T{15});{}$\6
 ${}\|o,\39\\{cmem}[\|c].\\{start}\K\|j{}$;\par
 \U33.\fi
 
-\M{36}The basic idea is to ``unwind'' the steps that we went through while
+\M[756 sat10.w]{36}The basic idea is to ``unwind'' the steps that we went
+through while
 building up the chunks.
 
 \Y\B\4\D$\\{hack\_out}(\|q)$ \5
@@ -1021,8 +1036,8 @@ ${}\|o,\39\\{mem}[\|j\PP]\K\|p;{}$\6
 \4${}\}{}$\2\par
 \U35.\fi
 
-\M{37}\B\X37:Copy all the temporary variable nodes to the \PB{\\{vmem}} array
-in proper format\X${}\E{}$\6
+\M[771 sat10.w]{37}\B\X37:Copy all the temporary variable nodes to the \PB{%
+\\{vmem}} array in proper format\X${}\E{}$\6
 \&{for} ${}(\|c\K\\{vars};{}$ \|c; ${}\|c\MM){}$\5
 ${}\{{}$\1\6
 \X21:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary variable\X;%
@@ -1032,7 +1047,8 @@ ${}\|o,\39\\{vmem}[\|c].\\{name}.\\{lng}\K\\{cur\_tmp\_var}\MG\\{name}.%
 \4${}\}{}$\2\par
 \U33.\fi
 
-\M{38}We should now have unwound all the temporary data chunks back to their
+\M[777 sat10.w]{38}We should now have unwound all the temporary data chunks
+back to their
 beginnings.
 
 \Y\B\4\X38:Check consistency\X${}\E{}$\6
@@ -1048,7 +1064,7 @@ ${}\\{exit}({-}\T{14});{}$\6
 \\{free}(\\{cur\_vchunk});\par
 \U33.\fi
 
-\M{39}\B\X39:Copy all the clauses to \PB{\\{out\_file}}\X${}\E{}$\6
+\M[790 sat10.w]{39}\B\X39:Copy all the clauses to \PB{\\{out\_file}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{for} ${}(\|k\K\T{0},\39\|c\K\\{clauses};{}$ \|c; ${}\|c\MM){}$\5
 ${}\{{}$\1\6
@@ -1065,7 +1081,8 @@ ${}\\{fprintf}(\\{out\_file},\39\.{"\\n"});{}$\6
 \4${}\}{}$\2\par
 \U33.\fi
 
-\N{1}{40}Doing it. Now comes ye olde basic backtrack, but simplified because
+\N[803 sat10.w]{1}{40}Doing it. Now comes ye olde basic backtrack, but
+simplified because
 updates to the watch lists don't have to be undone.
 
 At level \PB{\|l} of the backtrack process we record the variable, \PB{$%
@@ -1114,7 +1131,7 @@ ${}\\{oo},\39\|h\K\\{vmem}[\|v].\\{next},\39\\{vmem}[\\{active}].\\{next}\K%
 \X48:Backtrack to the most recent unforced move\X;\par
 \U2.\fi
 
-\M{41}\B\X41:Initialize the active ring\X${}\E{}$\6
+\M[836 sat10.w]{41}\B\X41:Initialize the active ring\X${}\E{}$\6
 \&{for} ${}(\\{active}\K\|j\K\T{0},\39\|k\K\\{vars};{}$ \|k; ${}\|k\MM){}$\1\6
 \&{if} ${}((\|o,\39\\{vmem}[\|k].\\{wlist0})\V(\\{vmem}[\|k].\\{wlist1})){}$\5
 ${}\{{}$\1\6
@@ -1126,8 +1143,8 @@ ${}\|o,\39\\{vmem}[\|k].\\{next}\K\|j,\39\|j\K\|k;{}$\6
 ${}\|o,\39\\{vmem}[\\{active}].\\{next}\K\|j{}$;\C{ complete the circle }\2\par
 \U40.\fi
 
-\M{42}The basic operation we need to do at each level is to decide which
-variable in
+\M[844 sat10.w]{42}The basic operation we need to do at each level is to decide
+which variable in
 the active ring should be set next. And experience with SAT problems shows
 that, once we get going, there's usually at least one unset variable whose
 value is forced by previous clauses.
@@ -1191,8 +1208,8 @@ ${}\\{vv}\K\|v{}$;\5
 \&{goto} \\{newv};\par
 \U40.\fi
 
-\M{43}When literal \PB{\|l} is watched in clause \PB{\|c}, we know that \PB{%
-\|l} is the first
+\M[890 sat10.w]{43}When literal \PB{\|l} is watched in clause \PB{\|c}, we know
+that \PB{\|l} is the first
 literal of~\PB{\|c}. We scan through the other literals until either
 reaching a literal that's currently unknown or true (whence nothing
 is forced), or reaching the end (whence \PB{\|l} is forced).
@@ -1225,8 +1242,8 @@ ${}\\{force}\K\T{1};{}$\6
 \\{forced0}:\par
 \U42.\fi
 
-\M{44}\B\X44:Set \PB{$\\{force}\MRL{+{\K}}\T{2}$} if variable \PB{\|v} must be
-false\X${}\E{}$\6
+\M[914 sat10.w]{44}\B\X44:Set \PB{$\\{force}\MRL{+{\K}}\T{2}$} if variable \PB{%
+\|v} must be false\X${}\E{}$\6
 \&{for} ${}(\|o,\39\|c\K\\{vmem}[\|v].\\{wlist1};{}$ \|c; \|o${},\39\|c\K%
 \\{cmem}[\|c].\\{wlink}){}$\5
 ${}\{{}$\1\6
@@ -1246,8 +1263,8 @@ ${}\\{force}\MRL{+{\K}}\T{2};{}$\6
 \\{forced1}:\par
 \U42.\fi
 
-\M{45}\B\X45:Set \PB{\|v} and update the watch lists for its new value\X${}%
-\E{}$\6
+\M[927 sat10.w]{45}\B\X45:Set \PB{\|v} and update the watch lists for its new
+value\X${}\E{}$\6
 \&{if} ${}((\\{verbose}\AND\\{show\_choices})\W\\{level}\Z\\{show\_choices%
 \_max}){}$\5
 ${}\{{}$\1\6
@@ -1296,8 +1313,8 @@ ${}\\{oo},\39\|c\K\\{vmem}[\|v].\\{wlist1},\39\\{vmem}[\|v].\\{wlist1}\K\T{0},%
 \X46:Clear the watch list for \PB{\\{ll}} that starts at \PB{\|c}\X;\par
 \U40.\fi
 
-\M{46}\B\X46:Clear the watch list for \PB{\\{ll}} that starts at \PB{\|c}\X${}%
-\E{}$\6
+\M[957 sat10.w]{46}\B\X46:Clear the watch list for \PB{\\{ll}} that starts at %
+\PB{\|c}\X${}\E{}$\6
 \&{for} ( ; \|c; ${}\|c\K\\{cc}){}$\5
 ${}\{{}$\1\6
 ${}\|o,\39\\{cc}\K\\{cmem}[\|c].\\{wlink};{}$\6
@@ -1319,7 +1336,8 @@ ${}\\{oo},\39\\{mem}[\|k]\K\\{ll},\39\\{mem}[\|j]\K\|l;{}$\6
 \4${}\}{}$\2\par
 \U45.\fi
 
-\M{47}The variable corresponding to \PB{\|l} might become active at this
+\M[973 sat10.w]{47}The variable corresponding to \PB{\|l} might become active
+at this
 point, because it might not be watched anywhere else. In such a
 case we insert it at the ``beginning'' of the active ring (that
 is, just after \PB{\\{active}}). We always have \PB{$\\{vmem}[\\{active}].%
@@ -1350,7 +1368,7 @@ ${}\\{oo},\39\\{cmem}[\|c].\\{wlink}\K\|p,\39\\{vmem}[\|l\GG\T{1}].\\{wlist0}\K%
 \|c{}$;\2\par
 \U46.\fi
 
-\M{48}If variables need to be reactivated here, we put them just
+\M[991 sat10.w]{48}If variables need to be reactivated here, we put them just
 before the place where a conflict was found.
 
 \Y\B\4\X48:Backtrack to the most recent unforced move\X${}\E{}$\6
@@ -1387,7 +1405,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"!SAT!\\n"});{}$\2\6
 \4${}\}{}$\2\par
 \U40.\fi
 
-\M{49}\B\X49:Print the solution found\X${}\E{}$\6
+\M[1016 sat10.w]{49}\B\X49:Print the solution found\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\\{level};{}$ ${}\|k\PP){}$\5
 ${}\{{}$\1\6
 ${}\|l\K(\\{smem}[\|k].\\{var}\LL\T{1})+(\\{smem}[\|k].\\{move}\AND\T{1});{}$\6
@@ -1418,7 +1436,7 @@ ${}\\{fprintf}(\\{out\_file},\39\.{"\ "}\|O\.{".8s"},\39\\{vmem}[\|v].\\{name}.%
 ${}\\{fprintf}(\\{out\_file},\39\.{"\\n"}){}$;\2\par
 \U48.\fi
 
-\N{1}{50}Index.
+\N[1033 sat10.w]{1}{50}Index.
 \fi
 
 \inx

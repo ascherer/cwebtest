@@ -1,9 +1,10 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
 
-\N{1}{1}Introduction. Nob sent me another problem today, and as usual I
-couldn't
+\N[3 decagon.w]{1}{1}Introduction. Nob sent me another problem today, and as
+usual I couldn't
 put it down. The challenge is to count how many ways we can pack isosceles
 triangles into a regular decagon. There are two kinds of triangles, one
 with base angles $72^\circ$ and the other with base angles $36^\circ$.
@@ -87,7 +88,7 @@ ${}\\{printf}(\.{"Altogether\ \%d\ solut}\)\.{ions.\\n"},\39\\{count});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{2}Polygons. Circular lists that represent polygons
+\N[81 decagon.w]{1}{2}Polygons. Circular lists that represent polygons
 are doubly linked in a straightforward way.
 The only slightly tricky thing is that we represent lengths in the
 form $s\phi^{-1}+t\phi^{-2}$, where $s$ and $t$ are integers.
@@ -105,7 +106,8 @@ which will be identified with earlier vertices.
 ${}\}{}$ \&{node};\par
 \U1.\fi
 
-\M{3}The nodes are allocated with a normal sort of available space list.
+\M[98 decagon.w]{3}The nodes are allocated with a normal sort of available
+space list.
 
 \Y\B\4\X3:Subroutines\X${}\E{}$\6
 \&{node} ${}{*}\\{get\_avail}(\,){}$\1\1\2\2\6
@@ -136,7 +138,7 @@ ${}\|p\K\\{next\_node}\PP;{}$\2\6
 \As35\ET38.
 \U1.\fi
 
-\M{4}\B\X4:Global variables\X${}\E{}$\6
+\M[121 decagon.w]{4}\B\X4:Global variables\X${}\E{}$\6
 \&{node} ${}{*}\\{avail}{}$;\C{ a node that was recycled }\6
 \&{node} ${}{*}\\{next\_node}{}$;\C{ the next node not yet used }\6
 \&{node} ${}{*}\\{bad\_node}{}$;\C{ end of currently allocated block of nodes }%
@@ -144,7 +146,7 @@ ${}\|p\K\\{next\_node}\PP;{}$\2\6
 \As5, 6, 8, 11, 13, 33\ETs36.
 \U1.\fi
 
-\M{5}Here are the six ways to place triangles---three ways each.
+\M[126 decagon.w]{5}Here are the six ways to place triangles---three ways each.
 
 \Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{triang}[\T{6}][\T{9}]${}\K\{\{\T{2},\39\T{1},\39\T{1},\39\T{1},\39%
@@ -157,8 +159,8 @@ ${}\|p\K\\{next\_node}\PP;{}$\2\6
 \39\T{1}\}\}{}$;\par
 \fi
 
-\M{6}A complication mentioned later will make it necessary to work with more
-than
+\M[137 decagon.w]{6}A complication mentioned later will make it necessary to
+work with more than
 one polygon in certain cases. So in general we assume that there is a
 stack of polygons to be filled, pointed to by \PB{\\{poly}[\T{0}]}, \dots, \PB{%
 \\{poly}[\\{top}]};
@@ -169,7 +171,8 @@ we will currently be working on \PB{\\{poly}[\\{top}]}.
 \&{int} \\{top};\C{ index to the topmost one }\par
 \fi
 
-\M{7}The \PB{\\{dir}} fields of the polygon will always satisfy the invariant
+\M[146 decagon.w]{7}The \PB{\\{dir}} fields of the polygon will always satisfy
+the invariant
 relation \PB{$\|p\MG\\{dir}\K\|p\MG\\{prev}\MG\\{prev}\MG\\{dir}+\T{5}-\|p\MG%
 \|s$}, modulo~10,
 when \PB{\|p} is an angle node. Moreover, the sum of $5-s$ over all angle
@@ -197,7 +200,8 @@ ${}\|p\MG\\{prev}\K\|q;{}$\6
 \As9, 10\ETs37.
 \U1.\fi
 
-\N{1}{8}Coordinates. The method I sketched in the introduction sounded good
+\N[163 decagon.w]{1}{8}Coordinates. The method I sketched in the introduction
+sounded good
 to me at first, but it has a fatal flaw. The problem occurs when we
 try to branch at a convex corner that has already been covered by
 another part of the polygon. (Consider, for example, the case where
@@ -252,7 +256,7 @@ coordinates }\6
 \T{0})\}{}$;\par
 \fi
 
-\M{9}\B\X7:Initialize the tables\X${}\mathrel+\E{}$\6
+\M[206 decagon.w]{9}\B\X7:Initialize the tables\X${}\mathrel+\E{}$\6
 $\|x[\T{0}]\K\\{pack}(\T{128},\39\T{128},\39\T{128},\39\T{128});{}$\6
 \&{for} ${}(\|j\K\T{1},\39\|p\K\\{poly}[\T{0}];{}$ ${}\|j<\\{init\_pts};{}$ ${}%
 \|j\PP,\39\|p\K\|p\MG\\{next}\MG\\{next}){}$\1\5
@@ -260,7 +264,8 @@ ${}\|x[\|j]\K\|x[\|j-\T{1}]+\|p\MG\\{next}\MG\|s*\\{delta\_s}[\|p\MG\\{dir}]+%
 \|p\MG\\{next}\MG\|t*\\{delta\_t}[\|p\MG\\{dir}]{}$;\2\par
 \fi
 
-\M{10}We will occasionally need to decide whether a number of the form
+\M[211 decagon.w]{10}We will occasionally need to decide whether a number of
+the form
 $s+t\phi^{-1}$ is positive, negative, or zero. There is an interesting
 recursive way to make this test: The answer is obvious unless $st<0$;
 and in the latter case $s+t\phi^{-1}$ has the same sign as $s\phi+t=
@@ -279,12 +284,12 @@ ${}\\{thresh3}[\|j]\K\T{13}*\\{triang}[\|j][\T{7}]+\T{8}*\\{triang}[\|j][%
 \4${}\}{}$\2\par
 \fi
 
-\M{11}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[226 decagon.w]{11}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{thresh1}[\T{6}];\C{ encoded version of the first length }\6
 \&{int} \\{thresh3}[\T{6}];\C{ encoded version of the third length }\par
 \fi
 
-\N{1}{12}Backtracking.
+\N[230 decagon.w]{1}{12}Backtracking.
 
 Two heuristics allow a quick decision: A triangle position is impossible
 if the existing angle is too small, or if the existing
@@ -357,7 +362,7 @@ ${}\\{small\_need}\PP;{}$\2\6
 \4\\{done}:\par
 \U1.\fi
 
-\M{13}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[274 decagon.w]{13}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{node} ${}{*}\\{bhoice}[\\{total\_req}]{}$;\C{ convex corner where branching
 occurs }\6
 \&{int} \\{way}[\\{total\_req}];\C{ which way we tried to place a triangle }\6
@@ -369,7 +374,8 @@ backtracing }\6
 \&{int} \\{ht}[\\{total\_req}];\C{ size of stack when the choice was made }\par
 \fi
 
-\M{14}After experimenting with simpler rules here, I decided it was best to
+\M[282 decagon.w]{14}After experimenting with simpler rules here, I decided it
+was best to
 choose a corner that results in the fewest possibilities with respect to
 the two heuristics just mentioned.
 
@@ -400,8 +406,8 @@ ${}\|i\K\|k,\39\\{pp}\K\|p;{}$\2\6
 ${}\\{choice}[\|l]\K\\{pp}{}$;\par
 \U12.\fi
 
-\M{15}\B\X15:Install triangle \PB{\|j} at position \PB{\\{choice}[\|l]}\X${}%
-\E{}$\6
+\M[304 decagon.w]{15}\B\X15:Install triangle \PB{\|j} at position \PB{%
+\\{choice}[\|l]}\X${}\E{}$\6
 \X16:Copy the current polygon and save the old version\X;\6
 \X17:Create new vertices \PB{\\{pp}}, \PB{\\{qq}}, and the line \PB{\|r}
 between them\X;\6
@@ -411,7 +417,8 @@ necessary\X;\6
 necessary\X;\par
 \U12.\fi
 
-\M{16}My first draft program avoided full copying by copying only the nodes
+\M[310 decagon.w]{16}My first draft program avoided full copying by copying
+only the nodes
 that changed. It was rather elegant, but alas---it implemented a bad algorithm.
 The correct algorithm manipulates the lists in more complex ways, hence
 partial copying is no longer feasible; it would be too complicated.
@@ -442,8 +449,8 @@ ${}\\{rr}\MG\\{prev}\K\\{qq}{}$;\C{ \PB{\\{poly}[\\{top}]} has not been updated
 }\par
 \U15.\fi
 
-\M{17}\B\X17:Create new vertices \PB{\\{pp}}, \PB{\\{qq}}, and the line \PB{%
-\|r} between them\X${}\E{}$\6
+\M[326 decagon.w]{17}\B\X17:Create new vertices \PB{\\{pp}}, \PB{\\{qq}}, and
+the line \PB{\|r} between them\X${}\E{}$\6
 $\\{pp}\K\\{get\_avail}(\,);{}$\6
 ${}\\{pp}\MG\|t\K\\{vert};{}$\6
 ${}\\{qq}\K\\{get\_avail}(\,);{}$\6
@@ -466,7 +473,8 @@ ${}\|x[\\{vert}+\T{1}]\K\|x[\\{vert}]+\\{triang}[\|j][\T{4}]*\\{delta\_s}[\|k]+%
 \\{triang}[\|j][\T{5}]*\\{delta\_t}[\|k]{}$;\par
 \U15.\fi
 
-\M{18}We maintain the following conditions in the polygons: (1) All angles
+\M[336 decagon.w]{18}We maintain the following conditions in the polygons: (1)
+All angles
 $s$ are in the range $s\le 9$, $s\ne0$, $s\ne5$. (2)~All vertices are at
 distinct points in the plane.
 
@@ -529,8 +537,8 @@ ${}\{{}$\C{ \PB{\\{qq}} coincides with a previous point }\1\6
 insertion stage\X;\par
 \U15.\fi
 
-\M{19}Node \PB{\|r} is the line between \PB{\\{pp}} and \PB{\\{qq}}; node \PB{%
-\|q} is the line between
+\M[378 decagon.w]{19}Node \PB{\|r} is the line between \PB{\\{pp}} and \PB{%
+\\{qq}}; node \PB{\|q} is the line between
 \PB{\\{rr}} and \PB{\|p}. We've discovered that these lines are identical; so
 we discard
 \PB{\|q} and \PB{\\{qq}}. If the new angle at \PB{\|p} is negative,
@@ -550,7 +558,8 @@ ${}\|p\MG\|s\MRL{-{\K}}\\{triang}[\|j][\T{6}];{}$\6
 \4${}\}{}$\2\par
 \U18.\fi
 
-\M{20}This part of the program is the price I had to pay to fix my original
+\M[390 decagon.w]{20}This part of the program is the price I had to pay to fix
+my original
 ill-understood algorithm. We separate out the subpolygon (\PB{\\{qq}}, \dots,
 \PB{$\|p-\\{pred}$}, \PB{\\{qq}}) and connect \PB{\\{pp}} to \PB{\|p} and its
 successors rather than to~\PB{\\{qq}}.
@@ -598,8 +607,8 @@ ${}\\{avail}\K\|q\MG\\{prev};{}$\6
 ${}\\{poly}[\\{top}\PP]\K\\{qq}{}$;\par
 \U18.\fi
 
-\M{21}If the new angle at \PB{\|p} is zero, there's a possibility that point %
-\PB{\\{pp}}
+\M[421 decagon.w]{21}If the new angle at \PB{\|p} is zero, there's a
+possibility that point \PB{\\{pp}}
 is coincident with the successor of \PB{\|p}. In that case we temporarily
 retain both points, with a line of length 0 between them.
 
@@ -625,8 +634,8 @@ ${}\\{avail}\K\|p;{}$\6
 \4${}\}{}$\2\par
 \U18.\fi
 
-\M{22}How do things stand now? We have a path from \PB{\\{pp}} to \PB{\\{rr}},
-and \PB{\|r} is
+\M[436 decagon.w]{22}How do things stand now? We have a path from \PB{\\{pp}}
+to \PB{\\{rr}}, and \PB{\|r} is
 the line out of \PB{\\{pp}}; the length of \PB{\|r} might be zero. Variables %
 \PB{\|p}, \PB{\|q},
 and \PB{\\{qq}} are currently unused. The remaining task is to insert the line
@@ -690,8 +699,8 @@ ${}\\{poly}[\\{top}]\K\|p;{}$\6
 \4\\{insert\_done}:\par
 \U15.\fi
 
-\M{23}At this point \PB{$\|q\K\\{rr}\MG\\{prev}$}. We will recycle nodes \PB{%
-\|q}, \PB{\\{rr}}, and \PB{\\{pp}}.
+\M[474 decagon.w]{23}At this point \PB{$\|q\K\\{rr}\MG\\{prev}$}. We will
+recycle nodes \PB{\|q}, \PB{\\{rr}}, and \PB{\\{pp}}.
 
 \Y\B\4\X23:Connect existing vertex \PB{$\|p\E\\{pp}$} directly to the path
 following \PB{\\{pp}}\X${}\E{}$\6
@@ -704,8 +713,8 @@ ${}\\{rr}\MG\\{next}\K\\{pp};{}$\6
 ${}\\{avail}\K\|q{}$;\par
 \U22.\fi
 
-\M{24}\B\X24:Connect vertex \PB{\|p} to \PB{\\{pp}}, removing node \PB{\\{rr}}%
-\X${}\E{}$\6
+\M[482 decagon.w]{24}\B\X24:Connect vertex \PB{\|p} to \PB{\\{pp}}, removing
+node \PB{\\{rr}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\|k>\\{thresh1}[\|j]){}$\5
 ${}\{{}$\C{ the line from \PB{\|p} to \PB{\\{rr}} is longer than needed }\1\6
@@ -727,7 +736,8 @@ ${}\\{avail}\K\\{rr};{}$\6
 \4${}\}{}$\2\par
 \U22.\fi
 
-\M{25}\B\X25:Split off a polygon at position \PB{$\\{pp}\E\|p$}\X${}\E{}$\6
+\M[495 decagon.w]{25}\B\X25:Split off a polygon at position \PB{$\\{pp}\E\|p$}%
+\X${}\E{}$\6
 $\\{qq}\K\\{pp}\MG\\{next};{}$\6
 \&{if} ${}(\\{qq}\MG\\{next}\E\|p){}$\5
 ${}\{{}$\C{ remove trivial length-0 leg }\1\6
@@ -775,7 +785,8 @@ ${}\\{poly}[\\{top}\PP]\K\\{pp};{}$\6
 \4${}\}{}$\2\par
 \U22.\fi
 
-\M{26}I sure wish I had been able to figure out an elegant way to get rid of
+\M[522 decagon.w]{26}I sure wish I had been able to figure out an elegant way
+to get rid of
 so many special cases. Sigh. This, at least, is the last.
 
 The polygon we're left with consists entirely of old vertices, so they
@@ -805,7 +816,8 @@ ${}\|p\K\|r\MG\\{next};{}$\6
 \4${}\}{}$\2\par
 \U22.\fi
 
-\M{27}\B\X27:Examine the current choice and its ramifications\X${}\E{}$\6
+\M[540 decagon.w]{27}\B\X27:Examine the current choice and its ramifications%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{int} \\{badsums}${}\K\T{0},{}$ \\{negangle}${}\K\T{0};{}$\7
 \&{if} (\\{verbose})\1\5
@@ -847,7 +859,7 @@ ${}\\{badsums}\PP;{}$\2\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{28}\B\X28:Undo the changes made in level \PB{\|l}\X${}\E{}$\6
+\M[570 decagon.w]{28}\B\X28:Undo the changes made in level \PB{\|l}\X${}\E{}$\6
 \&{for} ${}(\|j\K\\{top};{}$ ${}\|j\G\\{ht}[\|l];{}$ ${}\|j\MM){}$\5
 ${}\{{}$\1\6
 ${}\\{poly}[\|j]\MG\\{prev}\MG\\{next}\K\\{avail};{}$\6
@@ -857,12 +869,13 @@ ${}\\{top}\K\\{ht}[\|l];{}$\6
 ${}\\{poly}[\\{top}]\K\\{save}[\|l]{}$;\par
 \U12.\fi
 
-\N{1}{29}Solutions. The terminal gets only a minimum of information
+\N[576 decagon.w]{1}{29}Solutions. The terminal gets only a minimum of
+information
 from which a tiling can be constructed.
 
 \fi
 
-\M{30}\B\X30:Record a solution\X${}\E{}$\6
+\M[579 decagon.w]{30}\B\X30:Record a solution\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{count}\PP;{}$\6
 \&{if} ${}(\\{count}\MOD\\{interval}\E\T{0}){}$\5
@@ -877,7 +890,8 @@ ${}\\{printf}(\.{"\ \%d-\%d"},\39\\{choice}[\|j]\MG\|t,\39\\{way}[\|j]);{}$\2\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{31}Here's how we get encapsulated PostScript output for a solution.
+\M[590 decagon.w]{31}Here's how we get encapsulated PostScript output for a
+solution.
 
 \Y\B\4\X31:Output a PostScript version\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -888,7 +902,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U30.\fi
 
-\M{32}The PostScript `\.t' subroutine simply draws a triangle between three
+\M[599 decagon.w]{32}The PostScript `\.t' subroutine simply draws a triangle
+between three
 given points.
 
 \Y\B\4\X32:Open \PB{\\{eps\_file}} for output, and define a triangle subroutine%
@@ -907,14 +922,14 @@ ${}\\{fprintf}(\\{eps\_file},\39\.{"/t\ \{\ moveto\ lineto\ }\)\.{lineto\
 closepath\ str}\)\.{oke\ \}\ bind\ def\\n"}){}$;\par
 \U31.\fi
 
-\M{33}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\M[612 decagon.w]{33}\B\X4:Global variables\X${}\mathrel+\E{}$\6
 \&{char} \\{buffer}[\T{100}];\C{ output file name (e.g. `\.{decagon.1}') }\6
 \&{FILE} ${}{*}\\{eps\_file};{}$\6
 \&{int} \\{bbxlo}${},{}$ \\{bbylo}${},{}$ \\{bbxhi}${},{}$ \\{bbyhi};\C{
 PostScript bounding box coordinates }\par
 \fi
 
-\M{34}\B\X34:Output the triangle for level \PB{\|j}\X${}\E{}$\6
+\M[617 decagon.w]{34}\B\X34:Output the triangle for level \PB{\|j}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{print\_coord}(\\{choice}[\|j]\MG\|t);{}$\6
 ${}\\{print\_coord}(\\{init\_pts}+\|j+\|j);{}$\6
@@ -923,7 +938,7 @@ ${}\\{fprintf}(\\{eps\_file},\39\.{"\ t\\n"});{}$\6
 \4${}\}{}$\2\par
 \U31.\fi
 
-\M{35}\B\X3:Subroutines\X${}\mathrel+\E{}$\6
+\M[625 decagon.w]{35}\B\X3:Subroutines\X${}\mathrel+\E{}$\6
 \\{print\_coord}(\|j)\1\1\6
 \&{int} \|j;\2\2\6
 ${}\{{}$\1\6
@@ -941,7 +956,7 @@ ${}\\{fprintf}(\\{eps\_file},\39\.{"\ \%d\ \%d"},\39{}$(\&{int}) \\{xx}${},%
 \4${}\}{}$\2\par
 \fi
 
-\M{36}\B\D$\\{cos36}$ \5
+\M[638 decagon.w]{36}\B\D$\\{cos36}$ \5
 \T{80.9017}\C{ 100 times $\cos 36^\circ$ }\par
 \B\4\D$\\{cos72}$ \5
 \T{30.9017}\C{ 100 times $\cos 72^\circ$ }\par
@@ -956,7 +971,7 @@ ${}\\{fprintf}(\\{eps\_file},\39\.{"\ \%d\ \%d"},\39{}$(\&{int}) \\{xx}${},%
 \}{}$;\par
 \fi
 
-\M{37}\B\X7:Initialize the tables\X${}\mathrel+\E{}$\6
+\M[647 decagon.w]{37}\B\X7:Initialize the tables\X${}\mathrel+\E{}$\6
 ${}\{{}$\1\6
 \&{float} \\{xx}${},{}$ \\{yy};\6
 \&{unsigned} \|b;\7
@@ -982,7 +997,7 @@ ${}\\{bbyhi}\K{}$(\&{int}) \\{yy};\2\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{38}Index.
+\N[663 decagon.w]{1}{38}Index.
 \Y\B\4\X3:Subroutines\X${}\mathrel+\E{}$\6
 \\{temp1}(\,)\1\1\2\2\6
 ${}\{{}$\1\6

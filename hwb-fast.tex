@@ -1,7 +1,8 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This program computes the BDD size of the hidden
+\N[2 hwb-fast.w]{1}{1}Intro. This program computes the BDD size of the hidden
 weighted bit function, given a permutation of the input variables.
 After I wrote the program {\mc HWB} a few days ago, and ran it
 for an hour in the case $n=100$ with 8 gigabytes of memory,
@@ -58,8 +59,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}The purpose of this step is to set $\PB{\\{perm}}[j]=j\pi$ for $1\le j\le
-n$, where
+\M[51 hwb-fast.w]{2}The purpose of this step is to set $\PB{\\{perm}}[j]=j\pi$
+for $1\le j\le n$, where
 $\pi$ is the desired permutation of the input variables. And I set
 \PB{$\\{perm}[\T{0}]\K\|n+\T{1}$}, because \PB{$\\{perm}[\T{0}]\K\T{0}$} would
 make $x_0$ appear to be
@@ -93,7 +94,8 @@ ${}\\{printf}(\.{"\ \%d"},\39\\{perm}[\|j]);{}$\2\6
 ${}\\{perm}[\T{0}]\K\|n+\T{1}{}$;\par
 \U1.\fi
 
-\N{1}{3}Decimal addition. The \PB{\|k}th number in my decimal memory starts
+\N[77 hwb-fast.w]{1}{3}Decimal addition. The \PB{\|k}th number in my decimal
+memory starts
 at location \PB{\\{start}[\|k]} in \PB{\\{mem}}, and ends just before location
 \PB{$\\{start}[\|k+\T{1}]$}. Each byte of \PB{\\{mem}} contains a single digit,
 and
@@ -119,14 +121,14 @@ ${}\\{printf}(\.{"\%d"},\39\\{mem}[\|j]);{}$\2\6
 \As5, 6, 7\ETs9.
 \U1.\fi
 
-\M{4}\B\X4:Print the grand total\X${}\E{}$\6
+\M[95 hwb-fast.w]{4}\B\X4:Print the grand total\X${}\E{}$\6
 \\{printf}(\.{"Altogether\ "});\6
 \\{printnum}(\T{0});\6
 ${}\\{printf}(\.{"-\%d\ nodes;\ I\ used\ \%}\)\.{d\ bytes\ of\ memory\ fo}\)%
 \.{r\ \%d\ numbers.\\n"},\39\\{tnonbeads},\39\\{memptr},\39\\{numptr}){}$;\par
 \U1.\fi
 
-\M{5}\B\X3:Subroutines\X${}\mathrel+\E{}$\6
+\M[101 hwb-fast.w]{5}\B\X3:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{clearnum}(\&{int} \|k)\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{int} \|j;\7
@@ -136,7 +138,8 @@ ${}\\{mem}[\|j]\K\T{0};{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{6}The \PB{\\{add}} routine adds number \PB{\|k} to number \PB{\|l} and
+\M[107 hwb-fast.w]{6}The \PB{\\{add}} routine adds number \PB{\|k} to number %
+\PB{\|l} and
 stores the result as a brand new number, whose index is returned.
 
 We assume (conservatively) that all numbers have at most \PB{\|n} digits.
@@ -181,7 +184,8 @@ ${}\\{start}[\\{numptr}+\T{1}]\K\\{memptr};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{7}Another variant of addition adds number \PB{\|l} to number \PB{\|k},
+\M[136 hwb-fast.w]{7}Another variant of addition adds number \PB{\|l} to number
+\PB{\|k},
 and replaces number \PB{\|k} by the sum. This routine is used only
 when \PB{$\\{start}[\|k+\T{1}]-\\{start}[\|k]$} is large enough to contain the
 sum.
@@ -204,8 +208,8 @@ won't bother }\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{8}Number 2 in \PB{\\{mem}} is actually the constant `0', and number 3 is
-`1'.
+\M[151 hwb-fast.w]{8}Number 2 in \PB{\\{mem}} is actually the constant `0', and
+number 3 is `1'.
 
 \Y\B\4\D$\\{grandtotal}$ \5
 \T{0}\par
@@ -226,7 +230,7 @@ ${}\\{mem}[\\{start}[\\{one}]]\K\T{1},\39\\{start}[\\{one}+\T{1}]\K\\{start}[%
 ${}\\{numptr}\K\\{one},\39\\{memptr}\K\\{start}[\\{numptr}+\T{1}]{}$;\par
 \U1.\fi
 
-\M{9}Here's how I compute binomial coefficients $m\choose k$,
+\M[165 hwb-fast.w]{9}Here's how I compute binomial coefficients $m\choose k$,
 without attempting to optimize.
 
 \Y\B\4\X3:Subroutines\X${}\mathrel+\E{}$\6
@@ -243,7 +247,8 @@ ${}\\{bico}[\|m][\|k]\K\\{add}(\\{binom}(\|m-\T{1},\39\|k),\39\\{binom}(\|m-%
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{10}The algorithm. So much for infrastructure; let's get to work.
+\N[176 hwb-fast.w]{1}{10}The algorithm. So much for infrastructure; let's get
+to work.
 
 \Y\B\4\X10:Compute $b_k$\X${}\E{}$\6
 \\{clearnum}(\\{subtotal});\6
@@ -257,7 +262,8 @@ ${}\{{}$\1\6
 \X16:Correct for constant nonbeads\X;\par
 \U1.\fi
 
-\M{11}\B\X11:Print $b_k$ and add it to the grand total\X${}\E{}$\6
+\M[188 hwb-fast.w]{11}\B\X11:Print $b_k$ and add it to the grand total\X${}%
+\E{}$\6
 $\\{printf}(\.{"height\ \%d:\ "},\39\|m);{}$\6
 \\{printnum}(\\{subtotal});\6
 \&{if} (\\{nonbeads})\1\5
@@ -268,7 +274,8 @@ ${}\\{addto}(\\{grandtotal},\39\\{subtotal});{}$\6
 ${}\\{tnonbeads}\MRL{+{\K}}\\{nonbeads}{}$;\par
 \U1.\fi
 
-\M{12}Each slate for $(s,k)$ is $[r_0,\ldots,r_m]$, where $r_j$ is
+\M[196 hwb-fast.w]{12}Each slate for $(s,k)$ is $[r_0,\ldots,r_m]$, where $r_j$
+is
 0~or~1 when \PB{$\\{perm}[\|s+\|j]\Z\|k$}, otherwise $r_j$ is $x_l$ where \PB{$%
 \\{perm}[\|s+\|j]\K\|l$}.
 (The latter case represents one of the $m$ remaining variables.)
@@ -330,7 +337,8 @@ ${}\\{nonbeads}\PP{}$;\C{ see below }\2\6
 \4${}\}{}$\2\par
 \U10.\fi
 
-\M{13}Nonbeads $[r_0,\ldots,r_m]$ are of four kinds: (a)~$r_p=x_{k+1}$,
+\M[246 hwb-fast.w]{13}Nonbeads $[r_0,\ldots,r_m]$ are of four kinds:
+(a)~$r_p=x_{k+1}$,
 $r_j=1$ for $j<p$, and $r_j=0$ for $j>p$; (b)~$[0,x_n,1]$;
 (c)~$[r_0,\ldots,r_m]=[0,\ldots,0]$, within Type~A;
 (d)~$[r_0,\ldots,r_m]=[1,\ldots,1]$, within Type~D.
@@ -353,7 +361,8 @@ ${}\|p\K\|n+\T{1};{}$\2\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{14}Each constant type is a symmetric function. I need to contribute
+\M[263 hwb-fast.w]{14}Each constant type is a symmetric function. I need to
+contribute
 $m-1\choose r$ to the subtotal for each possible value of
 $r=r_1+\cdots+r_{m-1}$. But I want to contribute exactly once for
 every such~$r$; equal values of $r$ can arise from different values of~$s$.
@@ -368,7 +377,7 @@ ${}\\{addedA}[\|j]\K\\{addedB}[\|j]\K\\{addedC}[\|j]\K\\{addedD}[\|j]\K%
 \T{0}{}$;\2\par
 \U10.\fi
 
-\M{15}Here's where I hope logic hasn't failed me.
+\M[274 hwb-fast.w]{15}Here's where I hope logic hasn't failed me.
 
 \Y\B\4\X15:Add contributions for a constant case\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -407,14 +416,14 @@ ${}\\{addedD}[\\{ss}-\T{1}]\K\T{1},\39\\{addto}(\\{subtotal},\39\\{binom}(\|m-%
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{16}\B\X16:Correct for constant nonbeads\X${}\E{}$\6
+\M[298 hwb-fast.w]{16}\B\X16:Correct for constant nonbeads\X${}\E{}$\6
 \&{if} (\\{addedA}[\T{0}])\1\5
 ${}\\{nonbeads}\PP{}$;\C{ all 0s }\2\6
 \&{if} ${}(\\{addedD}[\|m-\T{1}]){}$\1\5
 ${}\\{nonbeads}\PP{}$;\C{ all 1s }\2\par
 \U10.\fi
 
-\N{1}{17}Index.
+\N[302 hwb-fast.w]{1}{17}Index.
 \fi
 
 \inx

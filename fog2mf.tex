@@ -1,10 +1,12 @@
 \input cwebmac
+\srcloctrue
 \datethis
 \font\logo=logo10
 \def\MF{{\logo META}\-{\logo FONT}}
 
 
-\N{1}{1}Introduction. This program is a quick-and-dirty hack to convert
+\N[5 fog2mf.w]{1}{1}Introduction. This program is a quick-and-dirty hack to
+convert
 Fontographer Type~3 font output to \MF\ code. I assume that the input
 file has been hand-converted to a mixture of the \.{afm} file and
 the \.{ps} file output by Fontographer; I also assume that the output
@@ -62,8 +64,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{2}Low-level input. At the bottom I need a way to parse the input into
-tokens.
+\N[62 fog2mf.w]{1}{2}Low-level input. At the bottom I need a way to parse the
+input into tokens.
 A token is either a number or a string of nonblank characters.
 
 To make things simple, \PB{\\{get\_token}} just finds a string of nonblank
@@ -94,7 +96,7 @@ ${}{*}\|p\K\T{0};{}$\6
 \A3.
 \U1.\fi
 
-\M{3}If the input contains any surprises, we give up immediately.
+\M[85 fog2mf.w]{3}If the input contains any surprises, we give up immediately.
 
 \Y\B\4\D$\\{get\_num}$ \5
 \\{gnum}(\,)\par
@@ -114,7 +116,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{4}Reading the font metrics. If the first line of the input is, say,
+\N[98 fog2mf.w]{1}{4}Reading the font metrics. If the first line of the input
+is, say,
 $$\.{C 36 ; WX 482 ; N dollar ; B 23 -205 437 751 ;}$$
 we want to define character number 36, whose width is 482 units.
 The name of the character is unimportant (Fontographer assigned it
@@ -164,7 +167,8 @@ ${}\\{check}(\.{"0"},\39\.{"Expected\ `0'"});{}$\6
 ${}\\{check}(\.{"Cache"},\39\.{"Expected\ `Cache'"}){}$;\par
 \U1.\fi
 
-\N{1}{5}The strokes. Each shape to be filled is presented as a sequence
+\N[132 fog2mf.w]{1}{5}The strokes. Each shape to be filled is presented as a
+sequence
 of lines beginning with `$x$ $y$ \.{moveto}' and followed by lines
 that say either `$x$ $y$ \.{rlineto}' or `$x_1$ $y_1$ $x_2$ $y_2$ $x_3$ $y_3$
 \.{rrcurveto}'; finally `\.{closepath}' ends the shape.
@@ -221,7 +225,7 @@ ${}\\{check}(\.{"rrcurveto"},\39\.{"Expected\ `rrcurveto}\)\.{'"});{}$\6
 ${}\\{check}(\.{"\}def"},\39\.{"Expected\ `\}def'"}){}$;\par
 \U1.\fi
 
-\N{1}{6}Index.
+\N[167 fog2mf.w]{1}{6}Index.
 \fi
 
 \inx

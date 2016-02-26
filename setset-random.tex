@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. This little program makes empirical tests by which I can
+\N[2 setset-random.w]{1}{1}Intro. This little program makes empirical tests by
+which I can
 check the accuracy of the {\mc SETSET} program. (See that program
 for explanations.)
 
@@ -36,7 +38,7 @@ ${}\\{printf}(\.{"\%d/\%d\\n"},\39\\{count},\39\|n);{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\D$\\{pack}(\|a,\|b,\|c,\|d)$ \5
+\M[32 setset-random.w]{2}\B\D$\\{pack}(\|a,\|b,\|c,\|d)$ \5
 $(((\|a)*\T{3}+(\|b))*\T{3}+(\|c))*\T{3}+{}$(\|d)\par
 \Y\B\4\X2:Initialize\X${}\E{}$\6
 \\{gb\_init\_rand}(\T{0});\6
@@ -61,7 +63,8 @@ ${}\\{third}[\\{pack}(\|a,\39\|b,\39\|c,\39\|d)][\\{pack}(\|e,\39\|f,\39\|g,\39%
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}\B\X3:Increase \PB{\\{count}} if there are no SETs\X${}\E{}$\6
+\M[45 setset-random.w]{3}\B\X3:Increase \PB{\\{count}} if there are no SETs%
+\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{81}-\|m;{}$ ${}\|j<\T{80};{}$ ${}\|j\PP){}$\1\6
 \&{for} ${}(\|k\K\|j+\T{1};{}$ ${}\|k<\T{81};{}$ ${}\|k\PP){}$\1\6
 \&{if} (\\{occ}[\\{third}[\\{deck}[\|j]][\\{deck}[\|k]]])\1\5
@@ -70,7 +73,7 @@ ${}\\{count}\PP;{}$\6
 \4\\{set\_found}:\par
 \U1.\fi
 
-\M{4}\B\X4:Shuffle the deck\X${}\E{}$\6
+\M[51 setset-random.w]{4}\B\X4:Shuffle the deck\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{81};{}$ ${}\|j>\T{81}-\|m;{}$ ${}\|j\MM){}$\5
 ${}\{{}$\1\6
 ${}\|t\K\\{deck}[\|j-\T{1}];{}$\6
@@ -82,7 +85,7 @@ ${}\\{deck}[\|k]\K\|t;{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{5}Index.
+\N[61 setset-random.w]{1}{5}Index.
 
 \fi
 

@@ -1,8 +1,10 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
 
-\N{1}{1}Introduction. This program obediently carries out the wishes of
+\N[3 polyslave.w]{1}{1}Introduction. This program obediently carries out the
+wishes of
 {\mc POLYNUM}, which has compiled a set of one-byte and four-byte
 instructions for us to interpret.
 
@@ -34,7 +36,8 @@ necessary }\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}It is easy to adapt this program to work with counters that occupy either
+\M[35 polyslave.w]{2}It is easy to adapt this program to work with counters
+that occupy either
 one byte (\PB{\&{unsigned} \&{char}}), two bytes (\PB{\&{unsigned} \&{short}}),
 or
 four bytes (\PB{\&{unsigned} \&{int}}), depending on how much memory is
@@ -67,7 +70,8 @@ arrays }\par
 \A11.
 \U1.\fi
 
-\M{3}The program checks frequently that everything in the input file
+\M[62 polyslave.w]{3}The program checks frequently that everything in the input
+file
 is legitimate. If not, too bad; the run is terminated (although
 a debugger can help diagnose nonobvious problems). Extensive checks like this
 have helped the author to detect errors in the program as well as errors in
@@ -82,7 +86,8 @@ ${}\\{exit}({-}\T{1});{}$\6
 \As8, 9, 10\ETs12.
 \U1.\fi
 
-\M{4}Several gigabytes of input might be needed, so the input file name will
+\M[75 polyslave.w]{4}Several gigabytes of input might be needed, so the input
+file name will
 be extended by \.{.0}, \.{.1}, \dots, just as in {\mc POLYNUM}.
 
 Output data suitable for processing by {\it Mathematica\/} will be
@@ -108,7 +113,7 @@ ${}\\{math\_file}\K\\{fopen}(\\{filename},\39\.{"w"});{}$\6
 \\{panic}(\.{"I\ can't\ open\ the\ ou}\)\.{tput\ file"});\2\par
 \U1.\fi
 
-\M{5}\B\X5:Global variables\X${}\E{}$\6
+\M[94 polyslave.w]{5}\B\X5:Global variables\X${}\E{}$\6
 \&{unsigned} \&{int} \\{modulus};\C{ results will discard multiples of this
 number }\6
 \&{char} ${}{*}\\{base\_name},{}$ \\{filename}[\T{100}];\6
@@ -116,14 +121,15 @@ number }\6
 \As7, 14, 16\ETs28.
 \U1.\fi
 
-\M{6}\B\X6:Local variables\X${}\E{}$\6
+\M[99 polyslave.w]{6}\B\X6:Local variables\X${}\E{}$\6
 \&{register} \&{int} \|k;\C{ all-purpose index register }\6
 \&{register} \&{unsigned} \&{int} \|m;\C{ register copy of \PB{\\{modulus}} }%
 \par
 \A18.
 \U1.\fi
 
-\N{1}{7}Input. Let's start with the basic routines that are needed to
+\N[103 polyslave.w]{1}{7}Input. Let's start with the basic routines that are
+needed to
 read instructions from the input file(s).
 As soon as $2^{30}$ bytes of data have been read from file \.{foo.0},
 we'll turn to file \.{foo.1}, etc.
@@ -152,7 +158,7 @@ file }\6
 \&{int} \\{file\_extension};\C{ the number of GGbytes input }\par
 \fi
 
-\M{8}\B\X3:Subroutines\X${}\mathrel+\E{}$\6
+\M[125 polyslave.w]{8}\B\X3:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{open\_it}(\,)\1\1\2\2\6
 ${}\{{}$\1\6
 ${}\\{sprintf}(\\{filename},\39\.{"\%.90s.\%d"},\39\\{base\_name},\39\\{file%
@@ -168,7 +174,8 @@ ${}\\{bytes\_in}\K\\{checksum}\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{9}If the check sum is bad, we go back to the beginning. Some incorrect
+\M[137 polyslave.w]{9}If the check sum is bad, we go back to the beginning.
+Some incorrect
 definitions may have been output to \PB{\\{math\_file}}, but we'll append
 new definitions that override them.
 
@@ -191,8 +198,8 @@ ${}\\{longjmp}(\\{restart\_point},\39\T{1});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{10}My first draft of this program simply used \PB{\\{fread}} to input one or
-three
+\M[156 polyslave.w]{10}My first draft of this program simply used \PB{%
+\\{fread}} to input one or three
 bytes at a time. But that turned out to be incredibly slow on my system,
 so now I'm doing my own buffering.
 
@@ -228,8 +235,8 @@ ${}\\{checksum}\MRL{+{\K}}\|s;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{11}A four-byte instruction has the binary form $(0xaaaaaa)_2$,
-$(bbbbbbbb)_2$,
+\M[185 polyslave.w]{11}A four-byte instruction has the binary form
+$(0xaaaaaa)_2$, $(bbbbbbbb)_2$,
 $(cccccccc)_2$, $(dddddddd)_2$, where
 $(aaaaaabbbbbbbbccccccccdddddddd)_2$ is a 30-bit address specified
 in big-endian fashion.
@@ -277,7 +284,8 @@ ${}\\{sync},\39\\{clear},\39\\{copy},\39\\{add},\39\\{inc\_src},\39\\{dec%
 ${}\}{}$ \&{opcode};\par
 \fi
 
-\M{12}The \PB{\\{get\_inst}} routine reads the next instruction from the input
+\M[226 polyslave.w]{12}The \PB{\\{get\_inst}} routine reads the next
+instruction from the input
 and returns the value of its parameter, also storing the opcode
 in the global variable \PB{\\{op}}. Changes to \PB{\|s} and \PB{\|t} are taken
 care
@@ -339,8 +347,8 @@ ${}\\{buf\_ptr}\K\|b;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{13}\B\X13:Change the source or target address and \PB{\&{goto} \\{restart}}%
-\X${}\E{}$\6
+\M[265 polyslave.w]{13}\B\X13:Change the source or target address and \PB{%
+\&{goto} \\{restart}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\|b+\T{3}\G\\{end\_of\_buffer}){}$\5
 ${}\{{}$\1\6
@@ -360,7 +368,7 @@ ${}\|b\MRL{+{\K}}\T{3};{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{14}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\M[279 polyslave.w]{14}\B\X5:Global variables\X${}\mathrel+\E{}$\6
 \&{opcode} \\{op};\C{ operation code found by \PB{\\{get\_inst}} }\6
 \&{int} \\{verbose}${}\K\T{0}{}$;\C{ set nonzero when debugging }\6
 \&{char} ${}{*}\\{sym}[\T{4}]\K\{\.{"sync"},\39\.{"clear"},\39\.{"copy"},\39%
@@ -369,7 +377,8 @@ ${}\|b\MRL{+{\K}}\T{3};{}$\6
 addresses, \PB{\|s} and \PB{\|t} }\par
 \fi
 
-\M{15}The first six bytes of the instruction file are, however, special.
+\M[285 polyslave.w]{15}The first six bytes of the instruction file are,
+however, special.
 Byte~0 is the number $n$ of cells in the largest polyominoes being
 enumerated. When a \PB{\\{sync}} is interpreted, {\mc POLYSLAVE}
 outputs the current values of \PB{\\{count}[\|j]} for $1\le j\le n$.
@@ -413,7 +422,7 @@ ${}\\{scount}\K{}$(\&{counter} ${}{*}){}$ \\{calloc}${}(\|n+\T{1},\39%
 \par
 \U1.\fi
 
-\M{16}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\M[318 polyslave.w]{16}\B\X5:Global variables\X${}\mathrel+\E{}$\6
 \&{int} \|n;\C{ the maximum polyomino size of interest }\6
 \&{int} \\{last\_row};\C{ the row whose end will complete our mission }\6
 \&{int} \\{prev\_row};\C{ the row whose end we've most recently seen }\6
@@ -425,7 +434,8 @@ ${}\\{scount}\K{}$(\&{counter} ${}{*}){}$ \\{calloc}${}(\|n+\T{1},\39%
 \\{sync}} commands }\par
 \fi
 
-\N{1}{17}Servitude. This program is so easy to write, I could even have
+\N[328 polyslave.w]{1}{17}Servitude. This program is so easy to write, I could
+even have
 done it without the use of literate programming. (But of course
 it wouldn't be nearly as much fun without \.{CWEB}.)
 
@@ -456,22 +466,23 @@ ${}\{{}$\1\6
 \4\\{done}:\par
 \U1.\fi
 
-\M{18}\B\X6:Local variables\X${}\mathrel+\E{}$\6
+\M[346 polyslave.w]{18}\B\X6:Local variables\X${}\mathrel+\E{}$\6
 \&{register} \&{int} \|p;\C{ parameter of the current instruction }\6
 \&{register} \&{unsigned} \&{int} \|a;\C{ an accumulator for arithmetic }\par
 \fi
 
-\M{19}\B\X19:Clear \PB{\|p} counters\X${}\E{}$\6
+\M[350 polyslave.w]{19}\B\X19:Clear \PB{\|p} counters\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|p;{}$ ${}\|k\PP){}$\1\5
 ${}\\{count}[\\{cur\_trg}+\|k]\K\T{0}{}$;\2\par
 \U17.\fi
 
-\M{20}\B\X20:Copy \PB{\|p} counters\X${}\E{}$\6
+\M[353 polyslave.w]{20}\B\X20:Copy \PB{\|p} counters\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|p;{}$ ${}\|k\PP){}$\1\5
 ${}\\{count}[\\{cur\_trg}+\|k]\K\\{count}[\\{cur\_src}+\|k]{}$;\2\par
 \U17.\fi
 
-\M{21}I wonder what kind of machine language code my \CEE/ compiler
+\M[356 polyslave.w]{21}I wonder what kind of machine language code my \CEE/
+compiler
 is giving me here, but I'm afraid to look.
 
 \Y\B\4\X21:Add \PB{\|p} counters\X${}\E{}$\6
@@ -484,8 +495,8 @@ ${}\\{count}[\\{cur\_trg}+\|k]\K\|a;{}$\6
 \4${}\}{}$\2\par
 \U17.\fi
 
-\M{22}The \PB{\\{sync}} instruction, at least, gives me a little chance to be
-creative,
+\M[366 polyslave.w]{22}The \PB{\\{sync}} instruction, at least, gives me a
+little chance to be creative,
 especially with respect to checking the sanity of the source file.
 
 \Y\B\4\X22:Finish a row; \PB{\&{goto} \\{done}} if it was the last\X${}\E{}$\6
@@ -497,7 +508,8 @@ ${}\\{scount}[\|k]\K\\{count}[\|k];{}$\2\6
 \&{goto} \\{done};\2\par
 \U17.\fi
 
-\M{23}\B\X23:Check that \PB{\|p} has the correct value\X${}\E{}$\6
+\M[375 polyslave.w]{23}\B\X23:Check that \PB{\|p} has the correct value\X${}%
+\E{}$\6
 \&{if} ${}(\|p\E\T{255}){}$\1\5
 \X26:Go into special shutdown mode\X;\2\6
 \&{if} ${}(\|p\E\T{1}){}$\1\5
@@ -512,7 +524,8 @@ ${}\{{}$\1\6
 ${}\\{prev\_row}\K\|p{}$;\par
 \U22.\fi
 
-\M{24}\B\X24:Output the relevant counters for completed polyominoes\X${}\E{}$\6
+\M[383 polyslave.w]{24}\B\X24:Output the relevant counters for completed
+polyominoes\X${}\E{}$\6
 $\\{printf}(\.{"Polyominoes\ that\ sp}\)\.{an\ \%dx\%d\ rectangles\ }\)\.{(mod\
 \%u):\\n"},\39\|p-\T{1},\39\|w,\39\|m);{}$\6
 ${}\\{fprintf}(\\{math\_file},\39\.{"p[\%d,\%d,\%u]=\{0"},\39\|p-\T{1},\39\|w,%
@@ -533,7 +546,7 @@ ${}\\{fprintf}(\\{math\_file},\39\.{",\%d"},\39\|a);{}$\6
 ${}\\{fprintf}(\\{math\_file},\39\.{"\}\\n"}){}$;\par
 \U22.\fi
 
-\M{25}\B\X25:Print statistics\X${}\E{}$\6
+\M[397 polyslave.w]{25}\B\X25:Print statistics\X${}\E{}$\6
 $\\{printf}(\.{"All\ done!\ Final\ tot}\)\.{als\ (mod\ \%u):\\n"},\39\|m);{}$\6
 \&{for} ${}(\|k\K\|w+\|w-\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\5
 ${}\{{}$\1\6
@@ -543,8 +556,8 @@ ${}\\{printf}(\.{"\ \%d:\%d"},\39\\{count}[\|k],\39\|k);{}$\6
 \\{close\_it}(\,);\par
 \U1.\fi
 
-\N{1}{26}Checkpointing. {\mc POLYNUM} issues the special command \PB{%
-\\{sync}}~255
+\N[405 polyslave.w]{1}{26}Checkpointing. {\mc POLYNUM} issues the special
+command \PB{\\{sync}}~255
 when it wants to pause for breath and shore up its knowledge.
 Therefore, if we see that instruction,  we must immediately
 dump all the counters into a temporary file.
@@ -569,7 +582,7 @@ ${}\\{out\_file}\K\\{fopen}(\\{filename},\39\.{"wb"});{}$\6
 \4${}\}{}$\2\par
 \U23.\fi
 
-\M{27}\B\X27:Dump all information needed to restart\X${}\E{}$\6
+\M[425 polyslave.w]{27}\B\X27:Dump all information needed to restart\X${}\E{}$\6
 $\\{dump\_data}[\T{0}]\K\|n;{}$\6
 ${}\\{dump\_data}[\T{1}]\K\|w;{}$\6
 ${}\\{dump\_data}[\T{2}]\K\|m;{}$\6
@@ -588,12 +601,13 @@ ${}\\{printf}(\.{"[\%u\ bytes\ written\ o}\)\.{n\ file\ \%s.]\\n"},\39%
 \\{ftell}(\\{out\_file}),\39\\{filename}){}$;\par
 \U26.\fi
 
-\M{28}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\M[439 polyslave.w]{28}\B\X5:Global variables\X${}\mathrel+\E{}$\6
 \&{unsigned} \&{int} \\{dump\_data}[\T{5}];\C{ parameters needed to restart }\6
 \&{FILE} ${}{*}\\{out\_file}{}$;\par
 \fi
 
-\M{29}For the record, here are three shell scripts called \.{nums},
+\M[443 polyslave.w]{29}For the record, here are three shell scripts called %
+\.{nums},
 \.{slaves}, and \.{slaves-restart}, which were used to
 run {\mc POLYNUM} and {\mc POLYSLAVE} when $n=47$:
 \bigskip
@@ -654,7 +668,7 @@ squash[a\_,w\_]:=Block[\{\},Get[fn[a,0]];Get[fn[a,1]];Get[fn[a,3]];\cr
 
 \fi
 
-\N{1}{30}Index.
+\N[502 polyslave.w]{1}{30}Index.
 \fi
 
 \inx

@@ -1,6 +1,8 @@
 \input cwebmac
+\srcloctrue
 
-\N{1}{1}Introduction. This program implements the coroutines of Algorithms
+\N[1 co-debruijn.w]{1}{1}Introduction. This program implements the coroutines
+of Algorithms
 7.2.1.1R and 7.2.1.1D, in the important case $m=2$.
 
 \Y\B\4\D$\\{nn}$ \5
@@ -21,7 +23,8 @@ ${}\\{printf}(\.{"\%d"},\39\\{co}(\\{nn}-\T{1}));{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}We simulate the behavior of recursive coroutines, in such a way that
+\M[20 co-debruijn.w]{2}We simulate the behavior of recursive coroutines, in
+such a way that
 repeated calls on \PB{$\\{co}(\|n-\T{1})$} will yield a
 cyclic sequence of period~$2^{nn}$ in which each $nn$-tuple
 occurs exactly once.
@@ -77,11 +80,12 @@ ${}\|p[\|k]\K\|p[\|k-\\{qq}],\39\|x[\|k]\K\|x[\|k-\\{qq}],\39\\{xp}[\|k]\K%
 \A4.
 \U1.\fi
 
-\M{3}\B\X3:Initialize the coroutines\X${}\E{}$\6
+\M[66 co-debruijn.w]{3}\B\X3:Initialize the coroutines\X${}\E{}$\6
 \\{init}(\\{nn});\par
 \U1.\fi
 
-\M{4}Now here's how we invoke a coroutine and obtain its next value.
+\M[69 co-debruijn.w]{4}Now here's how we invoke a coroutine and obtain its next
+value.
 
 \Y\B\4\X2:Subroutines\X${}\mathrel+\E{}$\6
 \&{int} \\{co}(\&{int} \|q)\1\1\2\2\6
@@ -93,7 +97,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{5}Each coroutine resets its \PB{\|p} before returning a value.
+\M[78 co-debruijn.w]{5}Each coroutine resets its \PB{\|p} before returning a
+value.
 For example, type S is the simplest.
 
 \Y\B\4\X5:Cases for individual coroutines\X${}\E{}$\6
@@ -112,7 +117,8 @@ ${}\|p[\|q]\K\|S+\T{1}{}$;\5
 \As6\ET7.
 \U4.\fi
 
-\M{6}Type R is next in difficulty. I change the numbering slightly here,
+\M[87 co-debruijn.w]{6}Type R is next in difficulty. I change the numbering
+slightly here,
 so that case \PB{\|R} does the first part of the text's step R1.
 The text's \PB{\|n} is \PB{$\|n[\|q-\T{1}]$} in this code, because of the
 initialization we've done.
@@ -137,8 +143,8 @@ ${}\|x[\|q]\K(\|x[\|q]+\|y[\|q])\AND\T{1}{}$;\5
 \&{goto} \.{R1};\par
 \fi
 
-\M{7}And finally there's the coroutine of type D. Again the text's parameter~%
-\PB{\|n}
+\M[100 co-debruijn.w]{7}And finally there's the coroutine of type D. Again the
+text's parameter~\PB{\|n}
 is our variable~\PB{$\|n[\|q-\T{1}]$}.
 
 \Y\B\4\X5:Cases for individual coroutines\X${}\mathrel+\E{}$\6
@@ -179,7 +185,7 @@ ${}\|p[\|q]\K\|D+\T{8}{}$;\5
 \&{goto} \.{D1};\par
 \fi
 
-\N{1}{8}Index.
+\N[117 co-debruijn.w]{1}{8}Index.
 \fi
 
 \inx

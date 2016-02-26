@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Intro. A simple program to find the vacillating tableau loop
+\N[2 vacillate.w]{1}{1}Intro. A simple program to find the vacillating tableau
+loop
 that corresponds to a given restricted growth string, given in
 the standard input file.
 
@@ -37,7 +39,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Build the rook table\X${}\E{}$\6
+\M[35 vacillate.w]{2}\B\X2:Build the rook table\X${}\E{}$\6
 $\\{printf}(\.{"Given:\ \%s"},\39\\{buf});{}$\6
 \&{for} ${}(\|k\K\T{0},\39\|m\K{-}\T{1};{}$ ${}(\\{buf}[\|k]\G\.{'0'}\W\\{buf}[%
 \|k]\Z\.{'9'})\V(\\{buf}[\|k]\G\.{'a'}\W\\{buf}[\|k]\Z\.{'z'});{}$ ${}\|k%
@@ -61,7 +63,7 @@ ${}\|a[\|k+\T{1}]\K\\{last}[\|j],\39\\{last}[\|j]\K\|k+\T{1};{}$\6
 ${}\|n\K\|k{}$;\par
 \U1.\fi
 
-\M{3}\B\X3:Make the inverse rook table\X${}\E{}$\6
+\M[53 vacillate.w]{3}\B\X3:Make the inverse rook table\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\1\5
 ${}\|b[\|k]\K\T{0};{}$\2\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\1\6
@@ -69,7 +71,7 @@ ${}\|b[\|k]\K\T{0};{}$\2\6
 ${}\|b[\|a[\|k]]\K\|k{}$;\2\2\par
 \U1.\fi
 
-\M{4}\B\D$\\{infty}$ \5
+\M[57 vacillate.w]{4}\B\D$\\{infty}$ \5
 \T{1000}\C{ infinity (approximately) }\par
 \Y\B\4\X4:Compute and print the intermediate tableaux\X${}\E{}$\6
 \X5:Initialize the tableaux\X;\6
@@ -80,7 +82,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{5}\B\X5:Initialize the tableaux\X${}\E{}$\6
+\M[66 vacillate.w]{5}\B\X5:Initialize the tableaux\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\5
 ${}\{{}$\1\6
 ${}\|r[\|k]\K\|q[\T{0}][\|k]\K\|q[\|k][\T{0}]\K\T{0},\39\|p[\T{0}][\|k]\K\|p[%
@@ -90,7 +92,8 @@ ${}\|q[\|k][\|j]\K\\{infty},\39\|p[\|k][\|j]\K\T{0};{}$\2\6
 \4${}\}{}$\2\par
 \U4.\fi
 
-\M{6}Here's Algorithm 5.1.4I, but with order reversed in the \PB{\|p} tableau.
+\M[72 vacillate.w]{6}Here's Algorithm 5.1.4I, but with order reversed in the %
+\PB{\|p} tableau.
 We insert \PB{\|b[\|k]} into~\PB{\|p} and \PB{\|k}~into~\PB{\|q}.
 
 I wouldn't actually have to work with both \PB{\|p} and \PB{\|q}; either one
@@ -126,7 +129,8 @@ ${}\\{dualins}[\|k]\K\T{0};{}$\2\6
 \X8:Print the tableau shape\X;\par
 \U4.\fi
 
-\M{7}And here's Algorithm 5.1.4D, applied to the \PB{\|q} tableau.
+\M[95 vacillate.w]{7}And here's Algorithm 5.1.4D, applied to the \PB{\|q}
+tableau.
 We delete \PB{\|k} from~\PB{\|p} and \PB{\|a[\|k]}~from~\PB{\|q}. The error
 messages
 here won't be needed unless I have made a mistake.
@@ -175,8 +179,8 @@ ${}\\{dualdel}[\|k]\K\T{0};{}$\2\6
 \X8:Print the tableau shape\X;\par
 \U4.\fi
 
-\M{8}If \PB{\\{verbose}} is nonzero, we also print out the contents of \PB{\|p}
-and \PB{\|q}.
+\M[125 vacillate.w]{8}If \PB{\\{verbose}} is nonzero, we also print out the
+contents of \PB{\|p} and \PB{\|q}.
 
 \Y\B\4\X8:Print the tableau shape\X${}\E{}$\6
 \&{for} ${}(\|i\K\T{1};{}$ \|r[\|i]; ${}\|i\PP){}$\1\5
@@ -209,7 +213,7 @@ ${}\\{printf}(\.{"\%s\%d"},\39\|j>\T{1}\?\.{","}:\.{""},\39\|q[\|i][\|j]);{}$\2%
 \\{printf}(\.{"\\n"});\2\par
 \Us6\ET7.\fi
 
-\M{9}Now for the dual, I'll work only with \PB{\|q}.
+\M[146 vacillate.w]{9}Now for the dual, I'll work only with \PB{\|q}.
 
 \Y\B\4\X9:Compute the dual rook table\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\5
@@ -221,12 +225,12 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{10}\B\X10:Dually insert \PB{\|k}\X${}\E{}$\6
+\M[154 vacillate.w]{10}\B\X10:Dually insert \PB{\|k}\X${}\E{}$\6
 $\|i\K\\{dualins}[\|k],\39\|j\K\|r[\|i]+\T{1},\39\|r[\|i]\K\|j,\39\|q[\|i][\|j]%
 \K\|k{}$;\par
 \U9.\fi
 
-\M{11}\B\X11:Dually delete \PB{\|k}\X${}\E{}$\6
+\M[157 vacillate.w]{11}\B\X11:Dually delete \PB{\|k}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|i\K\\{dualdel}[\|k],\39\|j\K\|r[\|i],\39\|r[\|i]\K\|j-\T{1},\39\\{xip}\K%
 \\{infty};{}$\6
@@ -245,7 +249,8 @@ ${}\|a[\|k]\K\\{xi};{}$\6
 \4${}\}{}$\2\par
 \U9.\fi
 
-\M{12}\B\X12:Print the restricted growth string of the dual\X${}\E{}$\6
+\M[170 vacillate.w]{12}\B\X12:Print the restricted growth string of the dual%
+\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{1},\39\|m\K{-}\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\1\6
 \&{if} (\|a[\|k])\1\5
 ${}\\{buf}[\|k-\T{1}]\K\\{buf}[\|a[\|k]-\T{1}];{}$\2\6
@@ -255,7 +260,7 @@ ${}\|m\PP,\39\\{buf}[\|k-\T{1}]\K(\|m>\T{9}\?\.{'a'}+\|m-\T{10}:\.{'0'}+%
 ${}\\{printf}(\.{"Dual:\ \%s"},\39\\{buf}){}$;\par
 \U1.\fi
 
-\N{1}{13}Index.
+\N[176 vacillate.w]{1}{13}Index.
 \fi
 
 \inx

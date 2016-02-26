@@ -1,6 +1,8 @@
 \input cwebmac
+\srcloctrue
 
-\N{1}{1}Intro. Here's an implementation of the Panholzer--Prodinger algorithm,
+\N[1 random-ternary.w]{1}{1}Intro. Here's an implementation of the
+Panholzer--Prodinger algorithm,
 which generates a uniformly random
 ``decorated'' ternary tree. (It generalizes the
 binary method of R\'emy, Algorithm 7.2.1.6R, and solves exercise
@@ -47,7 +49,7 @@ ${}\\{printf}(\.{"\ \%d"},\39\|L[\|k]);{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Process the command line\X${}\E{}$\6
+\M[43 random-ternary.w]{2}\B\X2:Process the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{3}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
 \\{nn})\I\T{1}\V\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}\\{seed})\I%
 \T{1}){}$\5
@@ -59,7 +61,7 @@ ${}\\{exit}({-}\T{1});{}$\6
 \\{gb\_init\_rand}(\\{seed});\par
 \U1.\fi
 
-\M{3}\B\D$\\{sanity\_checking}$ \5
+\M[51 random-ternary.w]{3}\B\D$\\{sanity\_checking}$ \5
 \T{1}\par
 \Y\B\4\X3:Extend a solution for \PB{\|n} to a solution for \PB{$\|n+\T{1}$},
 and increase \PB{\|n}\X${}\E{}$\6
@@ -89,7 +91,8 @@ ${}\\{exit}({-}\T{2});{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{4}Variables $j$ and $L_k$ correspond to P-and-P's nodes $y$ and $x$;
+\M[74 random-ternary.w]{4}Variables $j$ and $L_k$ correspond to P-and-P's nodes
+$y$ and $x$;
 they are random integers with $0\le j\le 3n+1$ and $0\le k\le3n$.
 The basic idea is to insert a new branch node (node number $3n-1$)
 in place of node~$L_k$; but this new node has the old node~$L_k$ as
@@ -107,7 +110,7 @@ $x$, $y$, and $p$ by looking at the switched links.
 
 \fi
 
-\M{5}\B\X5:Do the magic switcheroo\X${}\E{}$\6
+\M[90 random-ternary.w]{5}\B\X5:Do the magic switcheroo\X${}\E{}$\6
 \&{for} ${}(\|i\K\|k+\T{1}-((\|k+\T{2})\MOD\T{3});{}$ ${}\|i>\T{0}\W\|i\I%
 \|j;{}$ ${}\|i\K\|P[\|i]+\T{1}-((\|P[\|i]+\T{2})\MOD\T{3})){}$\1\5
 ;\2\6
@@ -130,7 +133,8 @@ ${}\|L[\|P[\|j]]\K\\{nnn}-\T{2},\39\|P[\\{nnn}-\T{2}]\K\|P[\|j],\39\|L[\|r]\K%
 \4${}\}{}$\2\par
 \U3.\fi
 
-\M{6}The ``harder case'' isn't really hard for the computer;
+\M[101 random-ternary.w]{6}The ``harder case'' isn't really hard for the
+computer;
 it's just harder for a human being to visualize.
 
 \Y\B\4\X6:Do the harder case\X${}\E{}$\6
@@ -142,7 +146,7 @@ ${}\|L[\|i]\K\\{nnn}-\T{1},\39\|P[\\{nnn}-\T{1}]\K\|i,\39\|L[\|r]\K\|j,\39\|P[%
 \4${}\}{}$\2\par
 \U5.\fi
 
-\N{1}{7}Index.
+\N[111 random-ternary.w]{1}{7}Index.
 \fi
 
 \inx

@@ -1,9 +1,10 @@
 \input cwebmac
+\srcloctrue
 \def\dts{\mathinner{\ldotp\ldotp}}
 
 
-\N{1}{1}Intro. This program finds all solutions to Don Woods's Twenty
-Questions,
+\N[3 back-20q.w]{1}{1}Intro. This program finds all solutions to Don Woods's
+Twenty Questions,
 having a given pattern of true/false grades, assuming that at least
 18 answers will be correct. The command line lists two answers that
 must be incorrect, if nonzero.
@@ -71,7 +72,7 @@ mems,\ \%}\)\.{llu\ nodes).\\n"},\39\\{count},\39\\{mems},\39\\{nodes});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Print the profile\X${}\E{}$\6
+\M[54 back-20q.w]{2}\B\X2:Print the profile\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"Profile:\ \ \ \ \ \ \ \ \ \ 1}\)\.{\\n"});{}$\6
 \&{for} ${}(\|k\K\T{2};{}$ ${}\|k\Z\T{21};{}$ ${}\|k\PP){}$\1\5
@@ -79,7 +80,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\%19lld\\n"},\39\\{profile}[\|k]);{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}\B\X3:Process the command line\X${}\E{}$\6
+\M[60 back-20q.w]{3}\B\X3:Process the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}<\T{3}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
 \\{false1})\I\T{1}\V\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}%
 \\{false2})\I\T{1}){}$\5
@@ -105,7 +106,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"Question\ 6\ can't\ be}\)\.{\ wrong.\\n"});{}$%
 \4${}\}{}$\2\par
 \U1.\fi
 
-\N{1}{4}The strategy. All the critical data about partial information is
+\N[76 back-20q.w]{1}{4}The strategy. All the critical data about partial
+information is
 kept in a small array called \PB{\\{mem}}, consisting of 8-bit quantities.
 Locations \PB{\\{mem}[\T{1}]} thru \PB{\\{mem}[\T{20}]} are bitmaps that show
 the nonexcluded
@@ -131,14 +133,15 @@ fancy footwork.
 \T{20}\C{ offset for tag data }\par
 \fi
 
-\M{5}Initially all of the answers are unrestricted.
+\M[97 back-20q.w]{5}Initially all of the answers are unrestricted.
 
 \Y\B\4\X5:Set the initial constraints\X${}\E{}$\6
 \&{for} ${}(\|q\K\T{1};{}$ ${}\|q\Z\T{20};{}$ ${}\|q\PP){}$\1\5
 ${}\|o,\39\\{mem}[\|q]\K\.{AA}+\.{BB}+\.{CC}+\.{DD}+\.{EE}{}$;\2\par
 \U1.\fi
 
-\M{6}Some of the questions are easy to deal with near the root of the
+\M[102 back-20q.w]{6}Some of the questions are easy to deal with near the root
+of the
 search tree, so I've chosen a heuristic order in which to build the partial
 solutions. This ordering remains fixed; thus, for example, I'll know that
 when I'm working on question~1, I've already given answers to
@@ -168,7 +171,8 @@ changes to \PB{\\{mem}} }\6
 \As31\ET52.
 \U1.\fi
 
-\M{7}Here's a subroutine that illustrates the conventions. If option \PB{\|x}
+\M[142 back-20q.w]{7}Here's a subroutine that illustrates the conventions. If
+option \PB{\|x}
 is presently available for question~\PB{\|q}, it is removed and the
 residual bitmap is returned.
 
@@ -198,8 +202,8 @@ ${}\|o,\39\\{pstack}[\\{pstackptr}\PP]\K\|q;{}$\2\6
 \As8, 9, 10\ETs11.
 \U1.\fi
 
-\M{8}The \PB{\\{innerforce}} routine throws out all options {\it but\/} \PB{%
-\|x}.
+\M[164 back-20q.w]{8}The \PB{\\{innerforce}} routine throws out all options {%
+\it but\/} \PB{\|x}.
 
 \Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
 \&{int} \\{innerforce}(\&{int} \|q${},\39{}$\&{int} \|x)\1\1\2\2\6
@@ -223,7 +227,7 @@ ${}\|o,\39\\{pstack}[\\{pstackptr}\PP]\K\|q;{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{9}I'll need some help when debugging.
+\M[181 back-20q.w]{9}I'll need some help when debugging.
 
 \Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_state}(\&{void})\1\1\2\2\6
@@ -255,7 +259,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\ "});{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{10}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
+\M[201 back-20q.w]{10}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_cols}(\&{void})\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{int} \|c${},{}$ \|q;\7
@@ -270,7 +274,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{11}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
+\M[211 back-20q.w]{11}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_stack}(\&{int} \|p)\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{int} \|i${},{}$ \|l${},{}$ \|b${},{}$ \\{ii};\7
@@ -293,8 +297,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{12}Backtracking. Here's the environment/context in which I'll embed the
-logic
+\N[226 back-20q.w]{1}{12}Backtracking. Here's the environment/context in which
+I'll embed the logic
 for individual questions.
 
 \Y\B\4\D$\\{pack}(\|u,\|q,\|x)$ \5
@@ -377,14 +381,15 @@ ${}\\{oo},\39\|y\K\\{mem}[\|q],\39\|x\K\\{rho}[\|y];{}$\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{13}\B\X13:Restore saved state\X${}\E{}$\6
+\M[277 back-20q.w]{13}\B\X13:Restore saved state\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\|o,\39\|t\K\\{stack}[\MM\\{stackptr}];{}$\6
 ${}\|o,\39\\{mem}[\|t\GG\T{8}]\K\|t\AND\T{\^1f};{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{14}\B\X14:Print a status report and reset \PB{\\{thresh}}\X${}\E{}$\6
+\M[283 back-20q.w]{14}\B\X14:Print a status report and reset \PB{\\{thresh}}%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"After\ \%llu\ mems,\ l=}\)\.{\%d,\ stackptr=%
 \%d\\n"},\39\\{mems},\39\|l,\39\\{stackptr});{}$\6
@@ -393,8 +398,8 @@ ${}\\{thresh}\MRL{+{\K}}\\{delta};{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{15}All changes to \PB{\\{mem}[\T{1}]} thru \PB{\\{mem}[\T{20}]} are made by
-the \PB{\\{remov}} and
+\M[290 back-20q.w]{15}All changes to \PB{\\{mem}[\T{1}]} thru \PB{\\{mem}[%
+\T{20}]} are made by the \PB{\\{remov}} and
 \PB{\\{innerforce}} routines. Macros \PB{\\{deny}} and \PB{\\{force}} are used
 to ensure that
 those routines don't remove an answer's final option.
@@ -442,7 +447,7 @@ ${}\\{deny}(\|t-\T{1},\39\|j);{}$\2\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{16}Finally all the deferred tests must be made.
+\M[319 back-20q.w]{16}Finally all the deferred tests must be made.
 
 \Y\B\4\X16:Check for solution and \PB{\&{goto} \\{b5}}\X${}\E{}$\6
 ${}\{{}$\1\6
@@ -469,7 +474,7 @@ ${}\\{exit}({-}\T{31});{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{17}\B\X17:Print a solution\X${}\E{}$\6
+\M[338 back-20q.w]{17}\B\X17:Print a solution\X${}\E{}$\6
 $\\{count}\PP;{}$\6
 ${}\\{printf}(\.{"\%lld:\ "},\39\\{count});{}$\6
 \&{for} ${}(\|q\K\T{1};{}$ ${}\|q\Z\T{20};{}$ ${}\|q\PP){}$\1\5
@@ -478,7 +483,8 @@ ${}\\{printf}(\.{"\%c"},\39(\\{falsity}[\|q]\?\.{'a'}:\.{'A'})+\\{rho}[\\{mem}[%
 \\{printf}(\.{"\\n"});\par
 \U16.\fi
 
-\N{1}{18}The twenty questions. I'll quote each of the questions here, verbatim,
+\N[345 back-20q.w]{1}{18}The twenty questions. I'll quote each of the questions
+here, verbatim,
 because they're a bit
 of a moving target. (Don Woods learned in 2001 that his original questions,
 proposed in 2000, could be ``cooked'' by dozens of unintended answer lists.
@@ -499,8 +505,8 @@ Each case in the big switch exits either to \PB{\\{okay}} or \PB{\\{bad}} or %
 
 \fi
 
-\M{19}``1. The first question whose answer is A is: (A)~1 (B)~2 (C)~3 (D)~4
-(E)~5''
+\M[362 back-20q.w]{19}``1. The first question whose answer is A is: (A)~1 (B)~2
+(C)~3 (D)~4 (E)~5''
 
 We can use the fact that questions 3 and 2 have preceded question~1 in the
 ordering, hence \PB{\\{mem}[\T{2}]} and \PB{\\{mem}[\T{3}]} already contain
@@ -553,7 +559,8 @@ ${}\\{deny}(\T{4},\39\|A){}$;\5
 \As21, 23, 25, 27, 28, 29, 33, 35, 37, 38, 40, 42, 44, 46, 48, 50, 51, 53\ETs55.
 \U12.\fi
 
-\M{20}Deferred cases exit to \PB{\\{b5}} if the postponed test fails.
+\M[381 back-20q.w]{20}Deferred cases exit to \PB{\\{b5}} if the postponed test
+fails.
 
 \Y\B\4\X20:Cases for the deferred switch\X${}\E{}$\6
 \4\&{case} \\{pack}${}(\T{1},\39\T{1},\39\|E){}$:\5
@@ -564,7 +571,8 @@ ${}\\{deny}(\T{4},\39\|A){}$;\5
 \As22, 24, 26, 32, 34, 36, 39, 41, 43, 45, 47, 49\ETs54.
 \U16.\fi
 
-\M{21}``2. The next question with the same answer as this one is:
+\M[386 back-20q.w]{21}``2. The next question with the same answer as this one
+is:
 (A)~4 (B)~6 (C)~8 (D)~10 (E)~12''
 
 \Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
@@ -630,7 +638,7 @@ ${}\\{deny}(\T{4},\39\|A){}$;\5
 \2\&{goto} \\{defer};\par
 \fi
 
-\M{22}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\M[404 back-20q.w]{22}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
 \4\&{case} \\{pack}${}(\T{1},\39\T{2},\39\|B){}$:\5
 \&{if} ${}((\|o,\39\\{mem}[\T{4}]\I\.{BB})\W(\|o,\39\\{mem}[\T{5}]\I\.{BB})\W(%
 \|o,\39\\{mem}[\T{6}]\E\.{BB})){}$\1\5
@@ -659,8 +667,8 @@ ${}\\{deny}(\T{4},\39\|A){}$;\5
 \&{break};\par
 \fi
 
-\M{23}``3. The only two consecutive questions with identical answers are
-questions:
+\M[418 back-20q.w]{23}``3. The only two consecutive questions with identical
+answers are questions:
 (A)~15 and 16 (B)~16 and 17 (C)~17 and 18 (D)~18 and 19 (E)~19 and 20''
 
 \Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
@@ -687,7 +695,7 @@ ${}\\{loguy}\K\T{19},\39\\{higuy}\K\T{20}{}$;\5
 \&{goto} \\{defer};\par
 \fi
 
-\M{24}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\M[430 back-20q.w]{24}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
 \4\&{case} \\{pack}${}(\T{1},\39\T{3},\39\|A){}$:\5
 \&{if} ${}((\\{oo},\39\\{mem}[\T{15}]\E\\{mem}[\T{16}])\W(\|o,\39\\{mem}[%
 \T{16}]\I\\{mem}[\T{17}])\W\3{-1}(\|o,\39\\{mem}[\T{17}]\I\\{mem}[\T{18}])\W(%
@@ -737,7 +745,8 @@ ${}\\{loguy}\K\T{19},\39\\{higuy}\K\T{20}{}$;\5
 \2\&{break};\par
 \fi
 
-\M{25}``4. The answer to this question is the same as the answers to questions:
+\M[452 back-20q.w]{25}``4. The answer to this question is the same as the
+answers to questions:
 (A)~10 and 13 (B)~14 and 16 (C)~7 and 20 (D)~1 and 15 (E)~8 and 12''
 
 Questions 1, 10, 15, and 20 precede this one in the ordering.
@@ -781,7 +790,7 @@ ${}\\{force}(\T{12},\39\|E){}$;\5
 \2\&{goto} \\{bad};\par
 \fi
 
-\M{26}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\M[468 back-20q.w]{26}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
 \4\&{case} \\{pack}${}(\T{1},\39\T{4},\39\|A){}$:\5
 \&{if} ${}((\|o,\39\\{mem}[\T{13}]\E\.{AA})){}$\1\5
 \&{goto} \\{b5};\5
@@ -802,7 +811,7 @@ ${}\\{force}(\T{12},\39\|E){}$;\5
 \2\&{break};\par
 \fi
 
-\M{27}``5. The answer to question 14 is:
+\M[474 back-20q.w]{27}``5. The answer to question 14 is:
 (A)~B (B)~E (C)~C (D)~A (E)~D''
 
 \Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
@@ -838,7 +847,7 @@ ${}\\{deny}(\T{14},\39\|D){}$;\5
 \&{goto} \\{okay};\par
 \fi
 
-\M{28}``6. The answer to this question is:
+\M[489 back-20q.w]{28}``6. The answer to this question is:
 (A)~A (B)~B (C)~C (D)~D (E)~none of those''
 
 \Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
@@ -856,7 +865,7 @@ ${}\\{deny}(\T{14},\39\|D){}$;\5
 \&{goto} \\{bad};\par
 \fi
 
-\M{29}``7. An answer that appears most often is:
+\M[498 back-20q.w]{29}``7. An answer that appears most often is:
 (A)~A (B)~B (C)~C (D)~D (E)~E''
 
 \Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
@@ -873,7 +882,7 @@ ${}\\{deny}(\T{14},\39\|D){}$;\5
 \&{goto} \\{defer};\par
 \fi
 
-\M{30}\B\X30:Compute the distribution of answers\X${}\E{}$\6
+\M[507 back-20q.w]{30}\B\X30:Compute the distribution of answers\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{int} \\{dA}${}\K\T{0},{}$ \\{dB}${}\K\T{0},{}$ \\{dC}${}\K%
 \T{0},{}$ \\{dD}${}\K\T{0},{}$ \\{dE}${}\K\T{0};{}$\7
@@ -901,13 +910,13 @@ ${}\\{trick}\K(\T{1}\LL\\{dA})+(\T{1}\LL\\{dB})+(\T{1}\LL\\{dC})+(\T{1}\LL%
 \4${}\}{}$\2\par
 \U16.\fi
 
-\M{31}\B\X6:Other global variables\X${}\mathrel+\E{}$\6
+\M[526 back-20q.w]{31}\B\X6:Other global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{dist}[\T{5}];\C{ the number of A's, B's, C's, D's, E's }\6
 \&{int} \\{tie}[\T{5}];\C{ cases that are tied with at least one other }\6
 \&{int} \\{trick};\par
 \fi
 
-\M{32}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\M[531 back-20q.w]{32}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
 \4\&{case} \\{pack}${}(\T{0},\39\T{7},\39\|A){}$:\5
 \&{case} \\{pack}${}(\T{0},\39\T{7},\39\|B){}$:\5
 \&{case} \\{pack}${}(\T{0},\39\T{7},\39\|C){}$:\5
@@ -929,8 +938,8 @@ ${}\\{trick}\K(\T{1}\LL\\{dA})+(\T{1}\LL\\{dB})+(\T{1}\LL\\{dC})+(\T{1}\LL%
 \2\&{break};\par
 \fi
 
-\M{33}``8. Ignoring answers that appear equally often, the least common answer
-is:
+\M[539 back-20q.w]{33}``8. Ignoring answers that appear equally often, the
+least common answer is:
 (A)~A (B)~B (C)~C (D)~D (E)~E''
 
 \Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
@@ -947,7 +956,7 @@ is:
 \&{goto} \\{defer};\par
 \fi
 
-\M{34}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\M[548 back-20q.w]{34}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
 \4\&{case} \\{pack}${}(\T{0},\39\T{8},\39\|A){}$:\5
 \&{case} \\{pack}${}(\T{0},\39\T{8},\39\|B){}$:\5
 \&{case} \\{pack}${}(\T{0},\39\T{8},\39\|C){}$:\5
@@ -974,8 +983,8 @@ ${}\|j\K\\{dist}[\|i]{}$;\C{ possibly \PB{$\|j\E\T{100}$} }\2\2\6
 \2\&{break};\par
 \fi
 
-\M{35}``9. The sum of all question numbers whose answers are correct and the
-same as
+\M[560 back-20q.w]{35}``9. The sum of all question numbers whose answers are
+correct and the same as
 this one is:
 (A)~$\in[59\dts62]$ (B)~$\in[52\dts55]$ (C)~$\in[44\dts49]$
 (D)~$\in[61\dts67]$ (E)~$\in[44\dts53]$''
@@ -994,7 +1003,7 @@ this one is:
 \&{goto} \\{defer};\par
 \fi
 
-\M{36}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\M[571 back-20q.w]{36}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
 \4\&{case} \\{pack}${}(\T{0},\39\T{9},\39\|A){}$:\5
 \&{case} \\{pack}${}(\T{0},\39\T{9},\39\|B){}$:\5
 \&{case} \\{pack}${}(\T{0},\39\T{9},\39\|C){}$:\5
@@ -1034,7 +1043,7 @@ ${}\|i\K(\|j\G\T{44}\W\|j\Z\T{53}){}$;\5
 \2\&{break};\par
 \fi
 
-\M{37}``10. The answer to question 17 is:
+\M[587 back-20q.w]{37}``10. The answer to question 17 is:
 (A)~D (B)~B (C)~A (D)~E (E)~wrong''
 
 \Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
@@ -1072,7 +1081,7 @@ ${}\\{deny}(\T{17},\39\|E){}$;\5
 \2\&{goto} \\{okay};\par
 \fi
 
-\M{38}``11. The number of questions whose answer is D is:
+\M[602 back-20q.w]{38}``11. The number of questions whose answer is D is:
 (A)~2 (B)~3 (C)~4 (D)~5 (E)~6''
 
 \Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
@@ -1089,7 +1098,7 @@ ${}\\{deny}(\T{17},\39\|E){}$;\5
 \&{goto} \\{defer};\par
 \fi
 
-\M{39}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\M[611 back-20q.w]{39}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
 \4\&{case} \\{pack}${}(\T{0},\39\T{11},\39\|A){}$:\5
 \&{case} \\{pack}${}(\T{0},\39\T{11},\39\|B){}$:\5
 \&{case} \\{pack}${}(\T{0},\39\T{11},\39\|C){}$:\5
@@ -1107,8 +1116,8 @@ ${}\\{deny}(\T{17},\39\|E){}$;\5
 \2\&{break};\par
 \fi
 
-\M{40}``12. The number of {\it other\/} questions with the same answer as this
-one
+\M[619 back-20q.w]{40}``12. The number of {\it other\/} questions with the same
+answer as this one
 is the same as the number of questions with answer:
 (A)~B (B)~C (C)~D (D)~E (E)~none of those''
 
@@ -1142,7 +1151,7 @@ true if and only if
 \&{goto} \\{defer};\par
 \fi
 
-\M{41}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\M[642 back-20q.w]{41}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
 \4\&{case} \\{pack}${}(\T{0},\39\T{12},\39\|A){}$:\5
 \&{case} \\{pack}${}(\T{0},\39\T{12},\39\|B){}$:\5
 \&{case} \\{pack}${}(\T{0},\39\T{12},\39\|C){}$:\5
@@ -1171,7 +1180,7 @@ true if and only if
 \2\&{break};\par
 \fi
 
-\M{42}``13. The number of questions whose answer is E is:
+\M[652 back-20q.w]{42}``13. The number of questions whose answer is E is:
 (A)~5 (B)~4 (C)~3 (D)~2 (E)~1''
 
 \Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
@@ -1188,7 +1197,7 @@ true if and only if
 \&{goto} \\{defer};\par
 \fi
 
-\M{43}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\M[661 back-20q.w]{43}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
 \4\&{case} \\{pack}${}(\T{0},\39\T{13},\39\|A){}$:\5
 \&{case} \\{pack}${}(\T{0},\39\T{13},\39\|B){}$:\5
 \&{case} \\{pack}${}(\T{0},\39\T{13},\39\|C){}$:\5
@@ -1206,7 +1215,7 @@ true if and only if
 \2\&{break};\par
 \fi
 
-\M{44}``14. No answer appears exactly this many times:
+\M[669 back-20q.w]{44}``14. No answer appears exactly this many times:
 (A)~2 (B)~3 (C)~4 (D)~5 (E)~none of those''
 
 Here I can't help using a dirty trick. Case (E) means that the digits
@@ -1231,7 +1240,7 @@ which is \PB{\T{\^7c}}.
 \&{goto} \\{defer};\par
 \fi
 
-\M{45}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\M[684 back-20q.w]{45}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
 \4\&{case} \\{pack}${}(\T{0},\39\T{14},\39\|A){}$:\5
 \&{case} \\{pack}${}(\T{0},\39\T{14},\39\|B){}$:\5
 \&{case} \\{pack}${}(\T{0},\39\T{14},\39\|C){}$:\5
@@ -1260,7 +1269,7 @@ which is \PB{\T{\^7c}}.
 \2\&{break};\par
 \fi
 
-\M{46}``15. The set of odd-numbered questions with answer A is:
+\M[695 back-20q.w]{46}``15. The set of odd-numbered questions with answer A is:
 (A)~$\{7\}$ (B)~$\{9\}$ (C)~not $\{11\}$ (D)~$\{13\}$ (E)~$\{15\}$''
 
 In the falsifying case,
@@ -1301,7 +1310,7 @@ ${}\\{deny}(\T{19},\39\|A){}$;\5
 \&{goto} \\{defer};\par
 \fi
 
-\M{47}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\M[712 back-20q.w]{47}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
 \4\&{case} \\{pack}${}(\T{1},\39\T{15},\39\|B){}$:\5
 \&{if} ${}((\|o,\39\\{mem}[\T{9}]\E\.{AA})\W(\|o,\39\\{mem}[\T{11}]\I\.{AA})\W(%
 \|o,\39\\{mem}[\T{13}]\I\.{AA})){}$\1\5
@@ -1329,7 +1338,8 @@ ${}\\{deny}(\T{19},\39\|A){}$;\5
 \&{break};\par
 \fi
 
-\M{48}``16. The answer to question 8 is the same as the answer to question:
+\M[724 back-20q.w]{48}``16. The answer to question 8 is the same as the answer
+to question:
 (A)~3 (B)~2 (C)~13 (D)~18 (E)~20''
 
 This question is considered later in the ordering than questions 2, 3, and 20.
@@ -1367,7 +1377,7 @@ ${}\\{deny}(\T{8},\39\\{rho}[\\{mem}[\T{20}]]){}$;\5
 \&{goto} \\{defer};\par
 \fi
 
-\M{49}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\M[739 back-20q.w]{49}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
 \4\&{case} \\{pack}${}(\T{0},\39\T{16},\39\|C){}$:\5
 \&{if} ${}(\|o,\39\\{mem}[\T{8}]\I\\{mem}[\T{13}]){}$\1\5
 \&{goto} \\{b5};\5
@@ -1386,7 +1396,7 @@ ${}\\{deny}(\T{8},\39\\{rho}[\\{mem}[\T{20}]]){}$;\5
 \2\&{break};\par
 \fi
 
-\M{50}``17. The answer to question 10 is:
+\M[745 back-20q.w]{50}``17. The answer to question 10 is:
 (A)~C (B)~D (C)~B (D)~A (E)~correct''
 
 An answer list is invalid if it contains both 10E and 17E, whether
@@ -1431,7 +1441,8 @@ ${}\\{deny}(\T{10},\39\|E){}$;\5
 \2\&{goto} \\{okay};\par
 \fi
 
-\M{51}``18. The number of prime-numbered questions whose answers are vowels is:
+\M[765 back-20q.w]{51}``18. The number of prime-numbered questions whose
+answers are vowels is:
 (A)~prime (B)~square (C)~odd (D)~even (E)~zero''
 
 All of the prime-numbered questions appear before this one in the ordering.
@@ -1461,7 +1472,7 @@ ${}\|j\K(\T{1}\LL\|j)\AND\\{magic}[\|x];{}$\6
 \2\&{goto} \\{bad};\par
 \fi
 
-\M{52}\B\X6:Other global variables\X${}\mathrel+\E{}$\6
+\M[782 back-20q.w]{52}\B\X6:Other global variables\X${}\mathrel+\E{}$\6
 \&{int} \\{magic}[\,] $\K$ $\{(\T{1}\LL\T{2})+(\T{1}\LL\T{3})+(\T{1}\LL\T{5})+(%
 \T{1}\LL\T{7}),\3{-1}\39(\T{1}\LL\T{0})+(\T{1}\LL\T{1})+(\T{1}\LL\T{4}),\3{-1}%
 \39(\T{1}\LL\T{1})+(\T{1}\LL\T{3})+(\T{1}\LL\T{5})+(\T{1}\LL\T{7}),\3{-1}\39(%
@@ -1469,7 +1480,7 @@ ${}\|j\K(\T{1}\LL\|j)\AND\\{magic}[\|x];{}$\6
 \3{-1}\39(\T{1}\LL\T{0})\}{}$\par
 \fi
 
-\M{53}``19. The last question whose answer is B is:
+\M[789 back-20q.w]{53}``19. The last question whose answer is B is:
 (A)~14 (B)~15 (C)~16 (D)~17 (E)~18''
 
 Question 20 has been considered before this one in the ordering.
@@ -1511,7 +1522,7 @@ ${}\\{deny}(\T{20},\39\|B){}$;\5
 \2\&{goto} \\{defer};\par
 \fi
 
-\M{54}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\M[805 back-20q.w]{54}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
 \4\&{case} \\{pack}${}(\T{1},\39\T{19},\39\|A){}$:\5
 \&{if} ${}((\|o,\39\\{mem}[\T{14}]\E\.{BB})\W(\|o,\39\\{mem}[\T{15}]\I\.{BB})%
 \W(\|o,\39\\{mem}[\T{16}]\I\.{BB})\W\3{-1}(\|o,\39\\{mem}[\T{17}]\I\.{BB})\W(%
@@ -1534,7 +1545,8 @@ ${}\\{deny}(\T{20},\39\|B){}$;\5
 \2\&{break};\par
 \fi
 
-\M{55}``20. The maximum score that can be achieved on this test is:
+\M[812 back-20q.w]{55}``20. The maximum score that can be achieved on this test
+is:
 (A)~18 (B)~19 (C)~20 (D)~indeterminate (E)~achievable only by getting this
 question wrong''
 
@@ -1568,7 +1580,7 @@ run.''
 \&{goto} \\{okay};\par
 \fi
 
-\N{1}{56}Index.
+\N[831 back-20q.w]{1}{56}Index.
 \fi
 
 \inx

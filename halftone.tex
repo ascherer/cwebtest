@@ -1,7 +1,9 @@
 \input cwebmac
+\srcloctrue
 \datethis
 
-\N{1}{1}Introduction. This program prepares data for the examples in my
+\N[2 halftone.w]{1}{1}Introduction. This program prepares data for the examples
+in my
 paper ``Fonts for digital halftones.'' The input file (\PB{\\{stdin}}) is
 assumed to be an EPS file output by Adobe Photoshop$^{\rm TM}$
 on a Macintosh with the binary EPS option, having a resolution
@@ -54,7 +56,8 @@ ${}\\{printf}(\.{"\\\\begin\%shalftone\\n}\)\.{"},\39\\{levels}\E\T{33}\?%
 \4${}\}{}$\2\par
 \fi
 
-\M{2}Optional command-line arguments allow the user to multiply the diffusion
+\M[51 halftone.w]{2}Optional command-line arguments allow the user to multiply
+the diffusion
 constants by a \PB{\\{dampening}} factor and/or to multiply the
 brightness by a \PB{\\{brightness}} factor.
 
@@ -72,7 +75,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\ \ and\ brightness\ fa}\)\.{ctor\ \%g\\n"},%
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}Macintosh conventions indicate the end of a line by the
+\M[62 halftone.w]{3}Macintosh conventions indicate the end of a line by the
 ASCII $\langle\,$carriage return$\,\rangle$ character
 (i.e., control-M, aka \.{\char`\\r}), but the \CEE/ library is
 set up to work best with newlines (i.e., control-J, aka \.{\char`\\n}).
@@ -115,13 +118,14 @@ ${}\\{levels}\K\T{33};{}$\2\6
 \\n"});\2\par
 \U1.\fi
 
-\M{4}\B\X4:Global variables\X${}\E{}$\6
+\M[88 halftone.w]{4}\B\X4:Global variables\X${}\E{}$\6
 \&{int} \\{llx}${},{}$ \\{lly}${},{}$ \\{urx}${},{}$ \\{ury};\C{ bounding box
 parameters }\par
 \A8.
 \U1.\fi
 
-\M{5}After we've seen the bounding box, we look for \.{beginimage\char`\\r};
+\M[91 halftone.w]{5}After we've seen the bounding box, we look for %
+\.{beginimage\char`\\r};
 this will be followed by the pixel data, one character per byte.
 
 \Y\B\4\X5:Input the graphic data\X${}\E{}$\6
@@ -159,7 +163,8 @@ $\|k\K\T{0};{}$\6
 \\{panic}(\.{"Wrong\ amount\ of\ pix}\)\.{el\ data!\\n"});\2\par
 \U1.\fi
 
-\M{6}Photoshop follows the conventions of photographers who consider
+\M[112 halftone.w]{6}Photoshop follows the conventions of photographers who
+consider
 0~to be black and 1~to be white; but we follow the conventions of
 computer scientists who tend to regard 0~as devoid of ink (white)
 and 1~as full of ink (black).
@@ -174,7 +179,8 @@ input data in the rectangular case.
 ${}\|a[\|i][\|j]\K\T{1.0}-\\{brightness}*\\{getchar}(\,)/\T{255.0}{}$;\2\2\par
 \U5.\fi
 
-\M{7}In the rotated case, we transpose and partially shift the input so that
+\M[125 halftone.w]{7}In the rotated case, we transpose and partially shift the
+input so that
 the eventual $i$th row is in positions $a[i][j+\lfloor i/2\rfloor]$
 for $0\le j<n$. This arrangement turns out to be most convenient
 for the output phase.
@@ -232,7 +238,7 @@ ${}\|a[\T{0}][\|n-\T{1}]\K\T{1.0}-\\{brightness}{}$;\C{ restore ``lost value''
 \4${}\}{}$\2\par
 \U5.\fi
 
-\N{1}{8}Diffusing the error. We convert the darkness values to
+\N[178 halftone.w]{1}{8}Diffusing the error. We convert the darkness values to
 65, 33, or 17 levels by generalizing the Floyd--Steinberg algorithm
 for adaptive grayscale~[{\sl Proceedings of the
 Society for Information Display\/ \bf17} (1976), 75--77].
@@ -270,7 +276,8 @@ own measurements before adapting this routine to other equipment.
 \T{1.000}\}{}$;\par
 \fi
 
-\M{9}In the main loop, we will want to find the best approximation to
+\M[211 halftone.w]{9}In the main loop, we will want to find the best
+approximation to
 $a[i][j]$ from among the available densities $d[0]$, $d[p]$, $d[2p]$,
 $d[3p]$,~\dots, where $p$ is 1, 2, or~4. A straightforward modification
 of binary search works well for this purpose:
@@ -301,7 +308,8 @@ ${}\|l\K\\{hi\_l};{}$\2\6
 \4${}\}{}$\2\par
 \Us10\ET11.\fi
 
-\M{10}The rectangular case is simplest, so we consider it first. Our strategy
+\M[229 halftone.w]{10}The rectangular case is simplest, so we consider it
+first. Our strategy
 will be to go down each column, starting at the left, and to disperse the
 error to the four unprocessed neighbors.
 
@@ -336,7 +344,8 @@ ${}\|a[\|i+\T{1}][\|j+\T{1}]\MRL{+{\K}}\\{delta}*\\{dampening}*\\{err};{}$\2\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{11}The rotated case is essentially the same, but the unprocessed
+\M[252 halftone.w]{11}The rotated case is essentially the same, but the
+unprocessed
 neighbors of \PB{\|a[\|i][\|j]} are now \PB{$\|a[\|i+\T{1}][\|j]$}, \PB{$\|a[%
 \|i][\|j+\T{1}]$}, \PB{$\|a[\|i+\T{1}][\|j+\T{1}]$},
 and~\PB{$\|a[\|i+\T{2}][\|j+\T{1}]$}. (For example, the eight neighbors of $K$
@@ -370,7 +379,7 @@ ${}\|a[\|i+\T{2}][\|j+\T{1}]\MRL{+{\K}}\\{delta}*\\{dampening}*\\{err};{}$\2\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{12}Finally we are ready to put everything together.
+\M[276 halftone.w]{12}Finally we are ready to put everything together.
 
 \Y\B\4\X12:Translate input to output\X${}\E{}$\6
 $\|p\K\T{64}/(\\{levels}-\T{1});{}$\6
@@ -403,7 +412,7 @@ ${}\\{printf}(\.{"\%c"},\39\.{'0'}+{}$(\&{int}) \|a[\|i]${}[\|j+(\|i\GG%
 \\{printf}(\.{"\\\\endhalftone\\n"});\par
 \U1.\fi
 
-\N{1}{13}Index.
+\N[298 halftone.w]{1}{13}Index.
 \fi
 
 \inx

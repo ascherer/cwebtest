@@ -1,9 +1,11 @@
 \input cwebmac
+\srcloctrue
 \datethis
 \def\adj{\mathrel{\!\mathrel-\mkern-8mu\mathrel-\mkern-8mu\mathrel-\!}}
 
 
-\N{1}{1}Intro. This is an experimental program in which I try to cut a square
+\N[4 back-dissect.w]{1}{1}Intro. This is an experimental program in which I try
+to cut a square
 into a given number of pieces, in such a way that the pieces can be reassembled
 to fill another given shape. (Everything is done pixelwise, without
 ``diagonal cuts.'') The pieces can be rotated but not flipped over.
@@ -51,7 +53,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Process the command line\X${}\E{}$\6
+\M[44 back-dissect.w]{2}\B\X2:Process the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}<\T{2}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
 \|d)\I\T{1}){}$\5
 ${}\{{}$\1\6
@@ -68,7 +70,7 @@ ${}\\{exit}({-}\T{2});{}$\6
 ${}\\{vbose}\K\\{argc}-\T{2}{}$;\par
 \U1.\fi
 
-\M{3}\B\D$\\{place}(\|i,\|j)$ \5
+\M[58 back-dissect.w]{3}\B\D$\\{place}(\|i,\|j)$ \5
 $((\|i)*\\{maxn}+(\|j){}$)\par
 \Y\B\4\X3:Input the shape\X${}\E{}$\6
 \&{for} ${}(\|i\K\\{nn}\K\T{0};{}$  ; ${}\|i\PP){}$\5
@@ -106,7 +108,7 @@ ${}\\{sprintf}(\\{aname}[\\{place}(\|i,\39\|j)],\39\.{"\%02da\%02d"},\39\|i,\39%
 ${}\\{complement}\K\\{place}(\|n-\T{1},\39\|n-\T{1}){}$;\par
 \U1.\fi
 
-\M{4}\B\X4:Input row \PB{\|i} of the shape\X${}\E{}$\6
+\M[87 back-dissect.w]{4}\B\X4:Input row \PB{\|i} of the shape\X${}\E{}$\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\\{buf}[\|j]\W\\{buf}[\|j]\I\.{'\\n'};{}$ ${}\|j%
 \PP){}$\5
 ${}\{{}$\1\6
@@ -129,7 +131,8 @@ ${}\\{sprintf}(\\{bname}[\\{place}(\|i,\39\|j)],\39\.{"\%02db\%02d"},\39\|i,\39%
 \4${}\}{}$\2\par
 \U3.\fi
 
-\N{1}{5}The algorithm. Let's consider a special case of the problem, in order
+\N[104 back-dissect.w]{1}{5}The algorithm. Let's consider a special case of the
+problem, in order
 to build some intuition and clarify the concepts. Suppose the input is
 $$\vcenter{\halign{\tt#\hfil\cr
 ****\cr *..*\cr .***\cr}}$$
@@ -233,7 +236,7 @@ $$\vcenter{\halign{\tt#\hfil\cr
 
 \fi
 
-\M{6}We save a factor of roughly $d!$ by assuming that
+\M[206 back-dissect.w]{6}We save a factor of roughly $d!$ by assuming that
 $$(s_1,t_1)\le (s_2,t_2)\le\cdots\le (s_d,t_d),\qquad\rm lexicographically,$$
 because a permutation of the colors doesn't
 change the solution. Furthermore we gain another factor of~4
@@ -281,7 +284,8 @@ ${}\|s[\|k]\K\|j;{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{7}\B\X7:Run through all sequences of shifts, $(t_2,\ldots,t_d)$\X${}\E{}$\6
+\M[247 back-dissect.w]{7}\B\X7:Run through all sequences of shifts, $(t_2,%
+\ldots,t_d)$\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{2};{}$ ${}\|k\Z\|d;{}$ ${}\|k\PP){}$\1\5
 ${}\|t[\|k]\K\T{0};{}$\2\6
 \&{while} (\T{1})\5
@@ -302,7 +306,7 @@ ${}\|t[\|k]\PP;{}$\6
 \4${}\}{}$\2\par
 \U6.\fi
 
-\M{8}\B\X8:Generate the table of legal shifts\X${}\E{}$\6
+\M[261 back-dissect.w]{8}\B\X8:Generate the table of legal shifts\X${}\E{}$\6
 \&{for} ${}(\|m\K\T{0},\39\|a\K\T{1}-\|n;{}$ ${}\|a\Z\\{maxrow};{}$ ${}\|a%
 \PP){}$\1\6
 \&{for} ${}(\|b\K\T{1}-\|n;{}$ ${}\|b\Z\\{maxcol};{}$ ${}\|b\PP){}$\5
@@ -326,8 +330,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"There\ are\ \%d\ legal\ }\)\.{shifts.\\n"},\39%
 \|m){}$;\2\par
 \U6.\fi
 
-\M{9}\B\X9:If the shape isn't covered by $\{s_1,\ldots,s_d\}$, \PB{\&{goto} %
-\\{shapenot}}\X${}\E{}$\6
+\M[275 back-dissect.w]{9}\B\X9:If the shape isn't covered by $\{s_1,\ldots,s_d%
+\}$, \PB{\&{goto} \\{shapenot}}\X${}\E{}$\6
 \&{for} ${}(\\{slack}\K{-}\\{nn},\39\|k\K\T{1};{}$ ${}\|k\Z\|d;{}$ ${}\|k%
 \PP){}$\1\5
 ${}\\{slack}\MRL{+{\K}}\\{bcovered}[\|s[\|k]];{}$\2\6
@@ -354,8 +358,8 @@ ${}\\{blen}[\|l]\PP;{}$\6
 \4${}\}{}$\2\par
 \U6.\fi
 
-\M{10}While we make the second check for coverage, we also build the table of
-edges.
+\M[291 back-dissect.w]{10}While we make the second check for coverage, we also
+build the table of edges.
 Each edge is represented by its color and the position of the neighbor.
 
 \Y\B\4\D$\\{pack}(\|c,\|p)$ \5
@@ -397,7 +401,7 @@ ${}\\{bb}[\|l][\\{blen}[\|l]\PP]\K\\{pack}(\|k,\39\\{ll});{}$\6
 \4${}\}{}$\2\par
 \U7.\fi
 
-\M{11}\B\X11:Global variables\X${}\E{}$\6
+\M[318 back-dissect.w]{11}\B\X11:Global variables\X${}\E{}$\6
 \&{char} ${}\\{alen}[\\{maxn}*\\{maxn}]{}$;\C{ how many moves remain at this
 cell in the square }\6
 \&{char} ${}\\{blen}[\\{maxn}*\\{maxn}]{}$;\C{ how many moves remain at this
@@ -415,7 +419,7 @@ covered }\6
 \As22\ET28.
 \U1.\fi
 
-\N{1}{12}Prematching.
+\N[330 back-dissect.w]{1}{12}Prematching.
 When we've managed to jump through all those hoops, we're left with
 a perfect matching problem. And most of the time that matching problem
 is quite trivial; so we might as well throw out the easy cases before
@@ -437,7 +441,8 @@ ${}\\{countd}\PP;{}$\6
 \\{done}:\par
 \U7.\fi
 
-\M{13}\B\X13:Display the matching problem on \PB{\\{stderr}}\X${}\E{}$\6
+\M[350 back-dissect.w]{13}\B\X13:Display the matching problem on \PB{%
+\\{stderr}}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"\ Trying\ to\ match"});{}$\6
 \&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|d;{}$ ${}\|k\PP){}$\1\5
@@ -458,8 +463,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{14}\B\X14:Make forced moves from the square, or \PB{\&{goto} \\{done}}\X${}%
-\E{}$\6
+\M[365 back-dissect.w]{14}\B\X14:Make forced moves from the square, or \PB{%
+\&{goto} \\{done}}\X${}\E{}$\6
 \&{for} ${}(\\{acount}\K\|i\K\T{0};{}$ ${}\|i<\|n;{}$ ${}\|i\PP){}$\1\6
 \&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
 ${}\{{}$\1\6
@@ -481,7 +486,8 @@ ${}\\{blen}[\|l]\K\T{0};{}$\2\6
 \4${}\}{}$\2\2\par
 \U12.\fi
 
-\M{15}Premature optimization is the root of all evil in programming.
+\M[377 back-dissect.w]{15}Premature optimization is the root of all evil in
+programming.
 Yet I couldn't resist trying to make this program efficient in special cases.
 
 The removal of edges might reduce \PB{\\{alen}} to 1 for square cells that are
@@ -512,8 +518,8 @@ ${}\\{blen}[\|l]\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \U14.\fi
 
-\M{16}\B\X16:Make forced moves from the shape, or \PB{\&{goto} \\{done}}\X${}%
-\E{}$\6
+\M[401 back-dissect.w]{16}\B\X16:Make forced moves from the shape, or \PB{%
+\&{goto} \\{done}}\X${}\E{}$\6
 \&{if} (\\{acount})\5
 ${}\{{}$\1\6
 \&{for} ${}(\\{bcount}\K\|i\K\T{0};{}$ ${}\|i<\\{nn};{}$ ${}\|i\PP){}$\5
@@ -538,7 +544,8 @@ ${}\\{acount}\MM;{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{17}\B\X17:Make square cell \PB{\\{ll}} inactive\X${}\E{}$\6
+\M[418 back-dissect.w]{17}\B\X17:Make square cell \PB{\\{ll}} inactive\X${}%
+\E{}$\6
 $\|j\K\\{apos}[\\{ll}];{}$\6
 \&{if} ${}(\|j\I\\{acount}){}$\1\5
 ${}\\{lll}\K\\{alist}[\\{acount}],\39\\{alist}[\|j]\K\\{lll},\39\\{apos}[%
@@ -568,8 +575,8 @@ ${}\\{alen}[\\{ll}]\K\T{0};{}$\6
 \4${}\}{}$\2\par
 \Us16\ET21.\fi
 
-\M{18}Beware: I'm using \PB{\\{acount}} and \PB{\\{bcount}} in a somewhat
-tricky way here:
+\M[438 back-dissect.w]{18}Beware: I'm using \PB{\\{acount}} and \PB{\\{bcount}}
+in a somewhat tricky way here:
 The old \PB{\\{acount}} is kept in \PB{\\{bcount}} so that a change can be
 detected.
 (Again I apologize for weak resistance.)
@@ -589,7 +596,7 @@ ${}\\{bcount}\K\\{acount};{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{19}\B\X19:Force a move from \PB{\\{ll}}\X${}\E{}$\6
+\M[452 back-dissect.w]{19}\B\X19:Force a move from \PB{\\{ll}}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{acount}\MM;{}$\6
 \&{if} ${}(\|i<\\{acount}){}$\1\5
@@ -601,7 +608,7 @@ ${}\\{acolor}[\\{ll}]\K\\{bcolor}[\|l]\K\\{aa}[\\{ll}][\T{0}]\GG\T{16};{}$\6
 \4${}\}{}$\2\par
 \U18.\fi
 
-\M{20}\B\X20:Make shape cell \PB{\|l} inactive\X${}\E{}$\6
+\M[461 back-dissect.w]{20}\B\X20:Make shape cell \PB{\|l} inactive\X${}\E{}$\6
 $\|j\K\\{bpos}[\|l];{}$\6
 \&{if} ${}(\|j<\\{acount}){}$\1\5
 ${}\\{lll}\K\\{blist}[\\{acount}],\39\\{blist}[\|j]\K\\{lll},\39\\{bpos}[%
@@ -630,7 +637,7 @@ ${}\\{aa}[\\{lll}][\|a]\K\\{aa}[\\{lll}][\\{dd}];{}$\2\6
 \4${}\}{}$\2\par
 \U19.\fi
 
-\M{21}\B\X21:Force a move from \PB{\|l}\X${}\E{}$\6
+\M[479 back-dissect.w]{21}\B\X21:Force a move from \PB{\|l}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{acount}\MM;{}$\6
 \&{if} ${}(\|i<\\{acount}){}$\1\5
@@ -642,7 +649,7 @@ ${}\\{acolor}[\\{ll}]\K\\{bcolor}[\|l]\K\\{bb}[\|l][\T{0}]\GG\T{16};{}$\6
 \4${}\}{}$\2\par
 \U18.\fi
 
-\M{22}\B\X11:Global variables\X${}\mathrel+\E{}$\6
+\M[488 back-dissect.w]{22}\B\X11:Global variables\X${}\mathrel+\E{}$\6
 \&{int} ${}\\{alist}[\\{maxn}*\\{maxn}],{}$ ${}\\{blist}[\\{maxn}*\\{maxn}]{}$;%
 \C{ list of cells not yet matched }\6
 \&{int} ${}\\{apos}[\\{maxn}*\\{maxn}],{}$ ${}\\{bpos}[\\{maxn}*\\{maxn}]{}$;%
@@ -656,7 +663,8 @@ ${}\\{acolor}[\\{ll}]\K\\{bcolor}[\|l]\K\\{bb}[\|l][\T{0}]\GG\T{16};{}$\6
 reached key points }\par
 \fi
 
-\N{1}{23}Matching. Sometimes we actually have real work to do.
+\N[497 back-dissect.w]{1}{23}Matching. Sometimes we actually have real work to
+do.
 
 At first I didn't think the problem would often be challenging.
 So I just used brute-force backtracking, \`a~la Algorithm 7.2.2B.
@@ -679,8 +687,8 @@ ${}\\{counte}\PP;{}$\6
 \4${}\}{}$\2\par
 \U12.\fi
 
-\M{24}\B\X24:Display the remaining matching problem on \PB{\\{stderr}}\X${}%
-\E{}$\6
+\M[516 back-dissect.w]{24}\B\X24:Display the remaining matching problem on \PB{%
+\\{stderr}}\X${}\E{}$\6
 ${}\{{}$\1\6
 ${}\\{fprintf}(\\{stderr},\39\.{"\ which\ reduces\ to:\\}\)\.{n"});{}$\6
 \&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{acount};{}$ ${}\|i\PP){}$\5
@@ -695,7 +703,8 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
 \4${}\}{}$\2\par
 \U23.\fi
 
-\M{25}The {\mc DANCE} program was developed to solve exact cover problems,
+\M[528 back-dissect.w]{25}The {\mc DANCE} program was developed to solve exact
+cover problems,
 and bipartite matching is a particularly easy case of that problem:
 Every column to be covered is a primary column, and every row specifies
 exactly two primary columns.
@@ -728,7 +737,7 @@ ${}\}{}$ \&{node};\par
 \A26.
 \U1.\fi
 
-\M{26}Each \&{column} struct contains five fields:
+\M[557 back-dissect.w]{26}Each \&{column} struct contains five fields:
 The \PB{\\{head}} is a node that stands at the head of its list of nodes;
 the \PB{\\{len}} tells the length of that list of nodes, not counting the
 header;
@@ -754,8 +763,8 @@ of this column }\2\6
 ${}\}{}$ \&{column};\par
 \fi
 
-\M{27}One \PB{\&{column}} struct is called the root. It serves as the head of
-the
+\M[578 back-dissect.w]{27}One \PB{\&{column}} struct is called the root. It
+serves as the head of the
 list of columns that need to be covered, and is identifiable by the fact
 that its \PB{\\{name}} is empty.
 
@@ -767,7 +776,7 @@ that its \PB{\\{name}} is empty.
 \As32\ET38.
 \U23.\fi
 
-\M{28}\B\D$\\{max\_cols}$ \5
+\M[588 back-dissect.w]{28}\B\D$\\{max\_cols}$ \5
 $(\T{2}*\\{maxn}*\\{maxn}{}$)\par
 \B\4\D$\\{max\_nodes}$ \5
 $(\\{maxn}*\\{maxn}*\\{maxn}*\\{maxn}*\\{maxd}{}$)\par
@@ -781,7 +790,7 @@ records }\6
 on each level }\par
 \fi
 
-\M{29}\B\X29:Initialize for dancing\X${}\E{}$\6
+\M[597 back-dissect.w]{29}\B\X29:Initialize for dancing\X${}\E{}$\6
 \&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{acount};{}$ ${}\|i\PP){}$\5
 ${}\{{}$\1\6
 ${}\\{ll}\K\\{alist}[\|i],\39\|l\K\\{blist}[\|i];{}$\6
@@ -810,8 +819,8 @@ ${}\\{ll}\K\\{alist}[\|i];{}$\6
 \4${}\}{}$\2\par
 \U23.\fi
 
-\M{30}\B\X30:Create the node for the \PB{\|k}th edge from \PB{\\{ll}}\X${}\E{}$%
-\6
+\M[615 back-dissect.w]{30}\B\X30:Create the node for the \PB{\|k}th edge from %
+\PB{\\{ll}}\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{column} ${}{*}\\{ccol};{}$\7
 ${}\|l\K\\{aa}[\\{ll}][\|k]\AND\T{\^ffff};{}$\6
@@ -839,7 +848,8 @@ ${}\\{cur\_node}\PP;{}$\6
 \4${}\}{}$\2\par
 \U29.\fi
 
-\M{31}Our strategy for generating all exact covers will be to repeatedly
+\M[636 back-dissect.w]{31}Our strategy for generating all exact covers will be
+to repeatedly
 choose always the column that appears to be hardest to cover, namely the
 column with shortest list, from all columns that still need to be covered.
 And we explore all possibilities via depth-first search.
@@ -886,13 +896,14 @@ ${}\\{cur\_node}\K\\{choice}[\\{level}]\K\\{cur\_node}\MG\\{down}{}$;\5
 \&{goto} \\{advance};\par
 \U23.\fi
 
-\M{32}\B\X27:Local variables\X${}\mathrel+\E{}$\6
+\M[672 back-dissect.w]{32}\B\X27:Local variables\X${}\mathrel+\E{}$\6
 \&{register} \&{int} \\{level};\6
 \&{register} \&{column} ${}{*}\\{best\_col}{}$;\C{ column chosen for branching
 }\par
 \fi
 
-\M{33}When a row is blocked, it leaves all lists except the list of the
+\M[676 back-dissect.w]{33}When a row is blocked, it leaves all lists except the
+list of the
 column that is being covered. Thus a node is never removed from a list
 twice.
 
@@ -924,7 +935,8 @@ ${}\\{nn}\MG\\{col}\MG\\{len}\MM;{}$\6
 \As34\ET42.
 \U1.\fi
 
-\M{34}Uncovering is done in precisely the reverse order. The pointers thereby
+\M[697 back-dissect.w]{34}Uncovering is done in precisely the reverse order.
+The pointers thereby
 execute an exquisitely choreo\-graphed dance which returns them almost
 magically to their former state.
 
@@ -951,12 +963,13 @@ ${}\|l\MG\\{next}\K\|r\MG\\{prev}\K\|c;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{35}\B\X35:Cover all other columns of \PB{\\{cur\_node}}\X${}\E{}$\6
+\M[716 back-dissect.w]{35}\B\X35:Cover all other columns of \PB{\\{cur\_node}}%
+\X${}\E{}$\6
 $\\{cover}(\\{cur\_node}\MG\\{right}\MG\\{col}){}$;\par
 \U31.\fi
 
-\M{36}We included \PB{\\{left}} links, thereby making the rows doubly linked,
-so
+\M[719 back-dissect.w]{36}We included \PB{\\{left}} links, thereby making the
+rows doubly linked, so
 that columns would be uncovered in the correct LIFO order in this
 part of the program. (The \PB{\\{uncover}} routine itself could have done its
 job with \PB{\\{right}} links only.) (Think about it.)
@@ -968,7 +981,8 @@ case of bipartite matching.)
 $\\{uncover}(\\{cur\_node}\MG\\{left}\MG\\{col}){}$;\par
 \U31.\fi
 
-\M{37}\B\X37:Set \PB{\\{best\_col}} to the best column for branching\X${}\E{}$\6
+\M[730 back-dissect.w]{37}\B\X37:Set \PB{\\{best\_col}} to the best column for
+branching\X${}\E{}$\6
 $\\{minlen}\K\\{max\_nodes};{}$\6
 \&{if} ${}(\\{vbose}>\T{2}){}$\1\5
 ${}\\{fprintf}(\\{stderr},\39\.{"Level\ \%d:"},\39\\{level});{}$\2\6
@@ -986,12 +1000,13 @@ ${}\\{fprintf}(\\{stderr},\39\.{"\ branching\ on\ \%s(\%d}\)\.{)\\n"},\39%
 \\{best\_col}\MG\\{name},\39\\{minlen}){}$;\2\par
 \U31.\fi
 
-\M{38}\B\X27:Local variables\X${}\mathrel+\E{}$\6
+\M[739 back-dissect.w]{38}\B\X27:Local variables\X${}\mathrel+\E{}$\6
 \&{register} \&{int} \\{minlen};\6
 \&{register} \&{int} \|j${},{}$ \|k${},{}$ \|x;\par
 \fi
 
-\M{39}\B\X39:Record solution and \PB{\&{goto} \\{recover}}\X${}\E{}$\6
+\M[743 back-dissect.w]{39}\B\X39:Record solution and \PB{\&{goto} \\{recover}}%
+\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\\{vbose}>\T{1}){}$\1\5
 ${}\\{fprintf}(\\{stderr},\39\.{"(a\ good\ dance)\\n"});{}$\2\6
@@ -1006,7 +1021,7 @@ ${}\\{acolor}[\|j\AND\T{\^fff}]\K\\{bcolor}[(\|j\GG\T{12})\AND\T{\^fff}]\K\|j%
 \4${}\}{}$\2\par
 \U31.\fi
 
-\M{40}\B\X40:Print a solution\X${}\E{}$\6
+\M[754 back-dissect.w]{40}\B\X40:Print a solution\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{register} \&{int} \.{OK}${}\K\T{1}{}$;\C{ this (declaration facilitates
 change files) }\7
@@ -1035,13 +1050,13 @@ ${}\\{printf}(\.{"\%c"},\39\\{bname}[\\{place}(\|i,\39\|j)][\T{0}]\?\\{bcolor}[%
 \4${}\}{}$\2\par
 \Us23\ET39.\fi
 
-\M{41}\B\X41:Print statistics about the run\X${}\E{}$\6
+\M[777 back-dissect.w]{41}\B\X41:Print statistics about the run\X${}\E{}$\6
 $\\{fprintf}(\\{stderr},\39\.{"\%lld\ solutions;\ run}\)\.{\ stats\ \%d,\%lld,%
 \%lld,}\)\.{\%lld,\%lld,\%lld.\\n"},\39\\{count},\39\|m,\39\\{counta},\39%
 \\{countb},\39\\{countc},\39\\{countd},\39\\{counte}){}$;\par
 \U1.\fi
 
-\M{42}\B\X33:Subroutines\X${}\mathrel+\E{}$\6
+\M[781 back-dissect.w]{42}\B\X33:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{debug}(\&{char} ${}{*}\|s){}$\1\1\2\2\6
 ${}\{{}$\1\6
 \\{fflush}(\\{stdout});\6
@@ -1049,7 +1064,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"***\%s!\\n"},\39\|s);{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{43}Index.
+\N[788 back-dissect.w]{1}{43}Index.
 \fi
 
 \inx

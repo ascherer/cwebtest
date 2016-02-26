@@ -1,4 +1,5 @@
 \input cwebmac
+\srcloctrue
 \datethis
 \input epsf
 
@@ -9,7 +10,8 @@
 \everypar{\looseness=-1}
 
 
-\N{1}{1}Introduction. This program does calculations with skew ternary trees,
+\N[11 skew-ternary-calc.w]{1}{1}Introduction. This program does calculations
+with skew ternary trees,
 and exhibits the corresponding nonseparable planar graphs.
 It implements some simple algorithms that I discovered in November, 2013,
 based on ideas of Alberto Del Lungo, Francesco Del Ristoro, and
@@ -80,7 +82,8 @@ $$\vcenter{\epsfbox{skew-ternary-calc.1}}\qquad\qquad
 
 \fi
 
-\M{2}Fact: {\sl Every family of $2n+2$ cyclically equivalent ternary trees
+\M[80 skew-ternary-calc.w]{2}Fact: {\sl Every family of $2n+2$ cyclically
+equivalent ternary trees
 includes exactly four skew ternary trees.}
 
 Moreover, this theorem---which
@@ -119,7 +122,8 @@ includes exactly six skew quinary trees.} And so on.)
 
 \fi
 
-\M{3}The four skew ternary trees of a cyclic family turn out to have
+\M[117 skew-ternary-calc.w]{3}The four skew ternary trees of a cyclic family
+turn out to have
 remarkable properties. Let's look at the state transitions that Alice
 would encounter by starting at each of the four unmatched buds:
 $$\vcenter{\halign{#\hfil\cr
@@ -140,7 +144,8 @@ and $T^{++}$ can also be called $T^{--}$.
 
 \fi
 
-\M{4}One of the first goals of this program will be to compute the
+\M[136 skew-ternary-calc.w]{4}One of the first goals of this program will be to
+compute the
 ``conjugates'' $T^+$, $T^{++}$, and $T^{+++}=T^-$, given a
 skew ternary tree~$T$. That tree is specified on the command line,
 as a sequence of four-character arguments \.{abcd}: The first character,
@@ -159,7 +164,8 @@ checks to make sure that they actually do define a skew ternary tree.
 
 \fi
 
-\M{5}OK, we now know the definition of skew ternary trees, and it's time
+\M[153 skew-ternary-calc.w]{5}OK, we now know the definition of skew ternary
+trees, and it's time
 to begin coding. Here's the structure of the program as a whole:
 
 \Y\B\8\#\&{include} \.{<stdio.h>}\6
@@ -178,7 +184,8 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{6}We don't deal with the empty tree; there must be at least one node.
+\M[171 skew-ternary-calc.w]{6}We don't deal with the empty tree; there must be
+at least one node.
 
 \Y\B\4\X6:Process the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}\E\T{1}){}$\5
@@ -191,7 +198,8 @@ ${}\\{exit}({-}\T{1});{}$\6
 define a skew tree\X;\par
 \U5.\fi
 
-\N{1}{7}Parsing. First things first: We gotta get the tree into memory
+\N[181 skew-ternary-calc.w]{1}{7}Parsing. First things first: We gotta get the
+tree into memory
 in a convenient form. The basic data structure has \PB{\\{left}}, \PB{%
 \\{middle}},
 \PB{\\{right}}, and \PB{\\{parent}} fields in each node, and a few other things
@@ -223,7 +231,7 @@ ${}\}{}$ \&{bud};\par
 \A14.
 \U5.\fi
 
-\M{8}\B\X8:Global variables\X${}\E{}$\6
+\M[208 skew-ternary-calc.w]{8}\B\X8:Global variables\X${}\E{}$\6
 \&{node} \\{inputnode}[\T{256}];\C{ actually only nodes \PB{\.{'@'}} thru \PB{%
 \.{'\~'}} are used }\6
 \&{bud} \\{inputbud}[\T{512}];\C{ data for bud number \PB{\|k} is stored in %
@@ -233,7 +241,8 @@ ${}\}{}$ \&{bud};\par
 \As15, 30\ETs41.
 \U5.\fi
 
-\M{9}The initial setup is straightforward, although a bit tedious.
+\M[214 skew-ternary-calc.w]{9}The initial setup is straightforward, although a
+bit tedious.
 
 \Y\B\4\D$\\{abort0}(\\{message},\\{code})$ \6
 ${}\{{}$\5
@@ -302,7 +311,8 @@ ${}\|n\K\\{argc}-\T{1};{}$\6
 \X10:Introduce the buds and compute the ranks\X;\par
 \U6.\fi
 
-\M{10}We need to locate the root, which should be the unique input node
+\M[264 skew-ternary-calc.w]{10}We need to locate the root, which should be the
+unique input node
 that has no parent. Then we'll attach bud \PB{${-}\T{1}$} to it.
 
 Buds $-2k-1$ and $-2k-2$ are mates; hence the mate of bud \PB{\|x} is bud \PB{$%
@@ -339,8 +349,8 @@ ${}\\{fillbuds}(\\{root},\39\T{0});{}$\6
 \X13:Check that we've filled out the whole tree\X;\par
 \U9.\fi
 
-\M{11}The \PB{\\{setmate}} subroutine allocates two new buds. Its parameter
-names
+\M[293 skew-ternary-calc.w]{11}The \PB{\\{setmate}} subroutine allocates two
+new buds. Its parameter names
 the node where we discovered the existence of such buds.
 
 In most cases, the mate is reached by going upward through middle
@@ -394,8 +404,8 @@ ${}\\{inputbud}[\\{buds}].\\{parent}\K\|q;{}$\6
 \As12, 17, 18, 19, 21, 24, 32, 33, 42\ETs55.
 \U5.\fi
 
-\M{12}The main work of filling buds and setting ranks is done by a
-straightforward
+\M[331 skew-ternary-calc.w]{12}The main work of filling buds and setting ranks
+is done by a straightforward
 recursive procedure \PB{\\{fillbuds}}, which traverses the ternary tree in
 preorder.
 
@@ -436,7 +446,8 @@ ${}\\{inputbud}[{-}\\{inputnode}[\|p].\\{right}].\\{rank}\K\|r+\T{1};{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{13}We've prepared a skewed ternary tree by filling in all the missing
+\M[358 skew-ternary-calc.w]{13}We've prepared a skewed ternary tree by filling
+in all the missing
 fields. But if the input is, say, `\.{A---} \.{B-B-}', the tree we've prepared
 won't contain all of the given nodes, because of a cycle. Thus we must
 make sure that the number of buds found is $2n+2$.
@@ -446,7 +457,7 @@ make sure that the number of buds found is $2n+2$.
 ${}\\{abort0}(\.{"The\ input\ contains\ }\)\.{a\ cycle"},\39{-}\T{66}){}$;\2\par
 \U10.\fi
 
-\N{1}{14}The state chart.
+\N[366 skew-ternary-calc.w]{1}{14}The state chart.
 Now that we've got the tree in memory, we can emulate Alice's moves.
 This program gathers more information than is absolutely needed, just in case
 the extra data will help me psych out some structural properties.
@@ -460,7 +471,7 @@ the extra data will help me psych out some structural properties.
 ${}\}{}$ \&{step};\par
 \fi
 
-\M{15}\B\X8:Global variables\X${}\mathrel+\E{}$\6
+\M[379 skew-ternary-calc.w]{15}\B\X8:Global variables\X${}\mathrel+\E{}$\6
 \&{step} ${}\\{chart}[\T{4}*\\{maxcodes}]{}$;\C{ the state chart, of length
 $4n$ }\6
 \&{int} \\{steps};\C{ the current number of entries in \PB{\\{chart}} }\6
@@ -468,13 +479,15 @@ $4n$ }\6
 \&{int} \\{stacked};\C{ the number of such buds }\par
 \fi
 
-\M{16}\B\X16:Find and print the three conjugates of \PB{\|T}\X${}\E{}$\6
+\M[385 skew-ternary-calc.w]{16}\B\X16:Find and print the three conjugates of %
+\PB{\|T}\X${}\E{}$\6
 \X20:Create the state chart\X;\6
 \X23:Print the tree with all buds shown\X;\6
 \X22:Print the conjugates from the state chart\X;\par
 \U5.\fi
 
-\M{17}The state chart is created from a recursive routine \PB{\\{createsteps}},
+\M[390 skew-ternary-calc.w]{17}The state chart is created from a recursive
+routine \PB{\\{createsteps}},
 analogous to \PB{\\{fillbuds}}.
 
 \Y\B\4\X11:Subroutines\X${}\mathrel+\E{}$\6
@@ -501,7 +514,7 @@ ${}\\{budstep}({-}\|q);{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\M{18}\B\D$\\{offset}$ \5
+\M[409 skew-ternary-calc.w]{18}\B\D$\\{offset}$ \5
 \T{2}\C{ difference between \PB{\\{stacked}} and the current rank }\par
 \Y\B\4\X11:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{budstep}(\&{int} \|b)\1\1\2\2\6
@@ -515,7 +528,7 @@ ${}\\{steps}\PP,\39\\{stack}[\\{stacked}\PP]\K\|b;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{19}\B\X11:Subroutines\X${}\mathrel+\E{}$\6
+\M[419 skew-ternary-calc.w]{19}\B\X11:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{branch}(\&{int} \|p${},\39{}$\&{int} \|q)\1\1\2\2\6
 ${}\{{}$\C{ chart passes from one arc to its dual }\1\6
 ${}\\{chart}[\\{steps}].\\{first}\K\|p,\39\\{chart}[\\{steps}].\\{second}\K\|q,%
@@ -535,7 +548,7 @@ ${}\\{steps}\PP;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{20}\B\X20:Create the state chart\X${}\E{}$\6
+\M[432 skew-ternary-calc.w]{20}\B\X20:Create the state chart\X${}\E{}$\6
 $\\{chart}[\T{0}].\\{rank}\K{-}\T{2},\39\\{chart}[\T{0}].\\{first}\K\T{1},\39%
 \\{steps}\K\T{1};{}$\6
 ${}\\{stack}[\T{0}]\K\T{1},\39\\{stacked}\K\\{offset}-\T{1};{}$\6
@@ -546,7 +559,8 @@ ${}\\{stack}[\T{0}]\K\T{1},\39\\{stacked}\K\\{offset}-\T{1};{}$\6
 \\{confusion}(\.{"total\ steps"});\2\par
 \U16.\fi
 
-\M{21}Conversely, given the state chart, there's a simple recursive routine
+\M[439 skew-ternary-calc.w]{21}Conversely, given the state chart, there's a
+simple recursive routine
 that prints a tree beginning after an unmatched bud.
 
 Interestingly, the nodes of the tree are reported in postorder although
@@ -582,7 +596,8 @@ ${}\\{printf}(\.{"\ \%c\%c\%c\%c"},\39\|p,\39\|l,\39\|m,\39\|r);{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{22}The algorithm here is very cute, so I let the reader have the
+\M[465 skew-ternary-calc.w]{22}The algorithm here is very cute, so I let the
+reader have the
 fun of deciphering it.
 
 \Y\B\4\X22:Print the conjugates from the state chart\X${}\E{}$\6
@@ -604,12 +619,13 @@ ${}\\{printfam}(\\{chart}[\|k].\\{first});{}$\6
 \4${}\}{}$\2\par
 \U16.\fi
 
-\M{23}\B\X23:Print the tree with all buds shown\X${}\E{}$\6
+\M[479 skew-ternary-calc.w]{23}\B\X23:Print the tree with all buds shown\X${}%
+\E{}$\6
 \\{print\_tree}(\\{root});\6
 \\{printf}(\.{"\\n"});\par
 \U16.\fi
 
-\M{24}\B\X11:Subroutines\X${}\mathrel+\E{}$\6
+\M[483 skew-ternary-calc.w]{24}\B\X11:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{print\_tree}(\&{int} \|p)\1\1\2\2\6
 ${}\{{}$\C{ prints node \PB{\|p}'s subtree in preorder }\1\6
 \&{register} \&{int} \|i;\7
@@ -638,7 +654,7 @@ ${}\\{print\_tree}(\\{inputnode}[\|p].\\{right});{}$\2\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{25}The quad-edge data structure for planar maps.
+\N[506 skew-ternary-calc.w]{1}{25}The quad-edge data structure for planar maps.
 Turning from trees to more complex graphs drawn in the plane,
 we now implement some beautiful data structures that were introduced
 by Leo Guibas and Jorge Stolfi in {\sl ACM Transactions on Graphics\/
@@ -675,7 +691,8 @@ $$\vcenter{\epsfbox{skew-ternary-calc.22}}\,.\eqno({*{*}*})$$
 
 \fi
 
-\M{26}Notice that each of the edges $\{a,b,c,d,e,f\}$ in $(*)$ appears as
+\M[541 skew-ternary-calc.w]{26}Notice that each of the edges $\{a,b,c,d,e,f\}$
+in $(*)$ appears as
 a vertex in~$(**)$. Every such vertex has degree~4, and it connects
 to four pips via lines numbered 0, 1, 2, and~3 in clockwise order.
 The pips on lines 0 and 2 always
@@ -705,7 +722,8 @@ would give a different graph in this case, because $(*)$ has no symmetry.
 
 \fi
 
-\M{27}Suppose there are $m$ edges. Diagram $(**)$ can also be regarded as a
+\M[569 skew-ternary-calc.w]{27}Suppose there are $m$ edges. Diagram $(**)$ can
+also be regarded as a
 {\it permutation\/} of the $4m$ pips, expressed in cycle form, namely
 $$\alpha=(a_2d_2c_2b_2)(d_0e_2)(c_0e_0f_0)(a_0b_0f_2)
 (a_1f_1e_3d_3)(c_3d_1e_1)(b_3c_1f_3)(a_3b_1).$$
@@ -763,7 +781,8 @@ pips matched by $\alpha\rho$ and $\rho\alpha$.
 
 \fi
 
-\M{28}Thus the quad-edge data structure for a planar graph with $m$ edges
+\M[625 skew-ternary-calc.w]{28}Thus the quad-edge data structure for a planar
+graph with $m$ edges
 essentially consists of $4m$ pointers, which tell us how to move
 from one pip to another. These pointers form a permutation of the
 pips, where the permutation takes vertex pips into vertex pips and
@@ -851,7 +870,8 @@ rule is also sufficient for maintaining the backup condition.
 
 \fi
 
-\M{29}Armed with all this information, we're ready at last to construct
+\M[711 skew-ternary-calc.w]{29}Armed with all this information, we're ready at
+last to construct
 the example map~$(*)$ from the initial permutation
 $\alpha_0\beta_0\gamma_0\delta_0\varepsilon_0\varphi_0$
 in a sensible way, without resorting to trial and error.
@@ -920,7 +940,8 @@ silly mistakes.
 
 \fi
 
-\M{30}So let's write that code. Each pip is conveniently represented
+\M[778 skew-ternary-calc.w]{30}So let's write that code. Each pip is
+conveniently represented
 by its subscript plus four times the ASCII code of the edge name.
 For example, $a_3$ would be \PB{$(\.{'a'}\LL\T{2})+\T{3}$}, which is 391
 because
@@ -949,7 +970,8 @@ the current planar map }\6
 \&{int} \\{verts};\C{ the current number of vertices }\par
 \fi
 
-\M{31}We'll permute only the pips for a special {\it root edge\/}
+\M[801 skew-ternary-calc.w]{31}We'll permute only the pips for a special {\it
+root edge\/}
 and for edges that correspond to nodes in the skew ternary tree that was
 input. The latter nodes are identifiable because they have left children.
 (They also have middle and root children. But we don't really care
@@ -975,7 +997,8 @@ ${}\\{verts}\MRL{+{\K}}\T{2};{}$\6
 \\{confusion}(\.{"initial\ vertex\ coun}\)\.{t"});\2\par
 \Us49\ET62.\fi
 
-\M{32}The \PB{\\{splice}} subroutine is given the addresses of two vertex pips
+\M[818 skew-ternary-calc.w]{32}The \PB{\\{splice}} subroutine is given the
+addresses of two vertex pips
 that are supposed to be interchanged. It figures out the two
 corresponding face pips, using the splice rule mentioned above.
 
@@ -1006,7 +1029,8 @@ ${}\\{verts}\MM;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{33}Here's a cute subroutine that displays all relevant information about
+\M[845 skew-ternary-calc.w]{33}Here's a cute subroutine that displays all
+relevant information about
 the planar graph by printing $\alpha$'s cycles. First come the pips
 of the vertex cycles, then the pips of the face cycles, one line at a time.
 
@@ -1030,7 +1054,8 @@ ${}\\{printf}(\.{"(Altogether\ \%d\ vert}\)\.{ices,\ \%d\ edges,\ \%d\ f}\)%
 \4${}\}{}$\2\par
 \fi
 
-\M{34}The idea is to find a cycle leader (the least \PB{\|p} whose cycle hasn't
+\M[864 skew-ternary-calc.w]{34}The idea is to find a cycle leader (the least %
+\PB{\|p} whose cycle hasn't
 already been printed), and to print its cycle, until all cycles for
 even-numbered pips have been found.
 
@@ -1059,7 +1084,8 @@ ${}\|v\PP;{}$\6
 \4${}\}{}$\2\par
 \U33.\fi
 
-\M{35}Exactly the same idea works for odd-numbered pips, of course.
+\M[887 skew-ternary-calc.w]{35}Exactly the same idea works for odd-numbered
+pips, of course.
 
 \Y\B\4\X35:Print and count the face cycles\X${}\E{}$\6
 \\{printf}(\.{"Faces:\\n"});\6
@@ -1086,7 +1112,7 @@ ${}\|f\PP;{}$\6
 \4${}\}{}$\2\par
 \U33.\fi
 
-\N{1}{36}The building blocks of planar graphs.
+\N[908 skew-ternary-calc.w]{1}{36}The building blocks of planar graphs.
 Any connected multigraph is built up in a straightforward treelike way from
 so-called blocks (aka biconnected components or nonseparable graphs),
 attached together via so-called
@@ -1123,7 +1149,8 @@ Exception: If $p=0$, that cycle is of course $(r_1r_3)$.
 
 \fi
 
-\M{37}The simplest \RNBPM/ consists of just the root edge. Otherwise
+\M[943 skew-ternary-calc.w]{37}The simplest \RNBPM/ consists of just the root
+edge. Otherwise
 we can build up any \RNBPM/ recursively in a simple way:
 Removal of the root edge leaves a graph with $m\ge1$ blocks
 (hence $m-1$ articulation points); consequently each of those blocks
@@ -1174,7 +1201,8 @@ are the appropriate splicings.
 
 \fi
 
-\M{38}Here, for handy reference, are the smallest \RNBPM/s and their
+\M[992 skew-ternary-calc.w]{38}Here, for handy reference, are the smallest %
+\RNBPM/s and their
 canonical permutations:
 $$\def\\#1{$\vcenter{\medskip\epsfbox{skew-ternary-calc.3#1}\medskip}$}
 \vcenter{\halign{\hfil\\#\hfil&\qquad$#$\hfil\cr
@@ -1192,7 +1220,8 @@ $$\def\\#1{$\vcenter{\medskip\epsfbox{skew-ternary-calc.3#1}\medskip}$}
 
 \fi
 
-\N{1}{39}Planar maps, conform\`emente \`a Jacquard et Schaeffer.
+\N[1008 skew-ternary-calc.w]{1}{39}Planar maps, conform\`emente \`a Jacquard et
+Schaeffer.
 We return now to our main theme of skew ternary trees.
 
 At the very beginning I mentioned that Del Lungo et al found an
@@ -1231,7 +1260,8 @@ but $A'$ won't contain any such nodes.
 
 \fi
 
-\M{40}To complete the construction, we need to explain how to represent
+\M[1045 skew-ternary-calc.w]{40}To complete the construction, we need to
+explain how to represent
 a doubly rooted \RNBPM/. Consider, for example, the skew ternary
 tree $T$ that appeared in the introductory sections
 at the very beginning of this program: The \RNBPM/ corresponding to
@@ -1275,7 +1305,8 @@ nonroot vertices.
 
 \fi
 
-\M{41}Our principal goal is to take a given skew ternary tree and to
+\M[1086 skew-ternary-calc.w]{41}Our principal goal is to take a given skew
+ternary tree and to
 construct the corresponding \RNBPM/, but computing the quad-tree
 permutation of that planar map. The tree will be given in
 chart form. I won't be stingy with memory, so I'll keep a stack
@@ -1293,7 +1324,8 @@ to be processed }\6
 \&{int} \\{curbud};\C{ the bud whose tree is being mapped (see below) }\par
 \fi
 
-\M{42} The \PB{\\{rnbpm\_js}} routine constructs the Jacquard--Schaeffer
+\M[1102 skew-ternary-calc.w]{42} The \PB{\\{rnbpm\_js}} routine constructs the
+Jacquard--Schaeffer
 \RNBPM/ for \PB{\\{chartstack}[\|s]}
 with root edge~\PB{\|r}. A third parameter, \PB{\|h}, tells the current height
 of the
@@ -1331,8 +1363,8 @@ ${}\\{steps}\PP;{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{43}\B\X43:Determine the number \PB{\|m} of initial rank~0 nodes, and stack
-them\X${}\E{}$\6
+\M[1132 skew-ternary-calc.w]{43}\B\X43:Determine the number \PB{\|m} of initial
+rank~0 nodes, and stack them\X${}\E{}$\6
 \&{if} ${}(\\{chartstack}[\|s][\T{0}].\\{second}){}$\1\5
 \\{confusion}(\.{"no\ root\ bud"});\2\6
 \&{for} ${}(\|m\K\T{1},\39\\{steps}\K\T{1};{}$  ; ${}\|m\PP){}$\5
@@ -1345,7 +1377,8 @@ ${}\\{stk}[\|h+\|m]\K\\{chartstack}[\|s][\\{steps}\PP].\\{second};{}$\6
 \4${}\}{}$\2\par
 \U42.\fi
 
-\M{44}At this point we're poised to look at the steps of $T^*$, where
+\M[1140 skew-ternary-calc.w]{44}At this point we're poised to look at the steps
+of $T^*$, where
 $T$ is the subtree that corresponds to edge \PB{$\|t\K\\{stk}[\|h+\|m]$}. If
 $T^*$ is the
 trivial one-edge \RNBPM/, we set \PB{$\|l\K{-}\T{1}$}; otherwise we set \PB{%
@@ -1397,7 +1430,8 @@ ${}\\{chartstack}[\|s+\T{1}][\|i+\|j-\|k]\K\\{tmpchart}[\|i];{}$\2\6
 ${}\\{steps}\PP{}$;\par
 \U42.\fi
 
-\M{45}The \RNBPM/ for an empty tree is simply the unadorned root edge \PB{\|r}.
+\M[1174 skew-ternary-calc.w]{45}The \RNBPM/ for an empty tree is simply the
+unadorned root edge \PB{\|r}.
 We've initialized that edge already (although I could have
 initialized it here, instead).
 
@@ -1405,8 +1439,8 @@ initialized it here, instead).
 $\|p\K\\{pip}(\|t,\39\T{1}){}$;\par
 \U42.\fi
 
-\M{46}There's a better way to do this step, because we can identify the pip %
-\PB{\|p}
+\M[1181 skew-ternary-calc.w]{46}There's a better way to do this step, because
+we can identify the pip \PB{\|p}
 directly while copying the chart. But I didn't have time to
 stop and figure it out.
 
@@ -1421,16 +1455,18 @@ ${}\|p\K\\{alphainv}[\|p];{}$\2\6
 \4${}\}{}$\2\par
 \U42.\fi
 
-\M{47}\B\X47:Splice the new \RNBPM/ to the previous fragment\X${}\E{}$\6
+\M[1195 skew-ternary-calc.w]{47}\B\X47:Splice the new \RNBPM/ to the previous
+fragment\X${}\E{}$\6
 $\\{splice}(\\{irot}(\|p),\39\\{apip});{}$\6
 ${}\\{apip}\K\\{pip}(\|t,\39\T{2}){}$;\par
 \U42.\fi
 
-\M{48}\B\X48:Splice everything into a cycle\X${}\E{}$\6
+\M[1199 skew-ternary-calc.w]{48}\B\X48:Splice everything into a cycle\X${}\E{}$%
+\6
 $\\{splice}(\\{pip}(\|r,\39\T{0}),\39\\{apip}){}$;\par
 \U42.\fi
 
-\M{49}Okay, \PB{\\{rnbpm\_js}} is finished.
+\M[1202 skew-ternary-calc.w]{49}Okay, \PB{\\{rnbpm\_js}} is finished.
 Here's how we apply it to each of the four skew ternary
 trees of interest.
 
@@ -1456,8 +1492,8 @@ ${}\\{rnbpm\_js}(\T{0},\39\.{'*'},\39\T{0});{}$\6
 \A62.
 \U5.\fi
 
-\M{50}Unfortunately, I must report serious disappointment with this
-correspondence
+\M[1221 skew-ternary-calc.w]{50}Unfortunately, I must report serious
+disappointment with this correspondence
 between \RNBPM/s and skew ternary trees, because its ``$T^*$ method'' of
 keeping \PB{\|l} exterior nonroot edges of a sub-\RNBPM/ in the larger
 \RNBPM/ actually keeps the {\it last\/} $l$ such edges, not the
@@ -1477,7 +1513,7 @@ $A^*$ are widely separated from node $a^1$.
 
 \fi
 
-\N{1}{51}Planar maps, conformemente Del Lungo et al.
+\N[1239 skew-ternary-calc.w]{1}{51}Planar maps, conformemente Del Lungo et al.
 The paper by Del Lungo, Del Ristoro, and Penaud presented a
 completely different way to associate \RNBPM/s with skew ternary
 trees, based on a completely different recursive decomposition.
@@ -1519,7 +1555,8 @@ doesn't ``leak out.''
 
 \fi
 
-\M{52}This construction is equivalent to making three splices in the
+\M[1279 skew-ternary-calc.w]{52}This construction is equivalent to making three
+splices in the
 the quad-edge permutations that correspond to $S$ and $T$.
 Let's assume that $S$'s root edge is called $r$,
 so that its exterior face in this example is the cycle $(r_3a^3_3a^2_3a^1_3)$.
@@ -1542,7 +1579,8 @@ Finally, a splice with $(c_2a^1_2)$ produces $S\join c T$.
 
 \fi
 
-\M{53}The canonical permutation representations are now different, because
+\M[1300 skew-ternary-calc.w]{53}The canonical permutation representations are
+now different, because
 edge labels are assigned in a different order.
 Here, again for handy reference, is the new list for all cases
 with at most three nonroot edges---showing also the skew ternary
@@ -1575,7 +1613,8 @@ $$\def\\#1{$\vcenter{\medskip\epsfbox{skew-ternary-calc.9#1}\medskip}$}
 
 \fi
 
-\M{54}The DDP correspondence between an \RNBPM/ $T$ and its
+\M[1331 skew-ternary-calc.w]{54}The DDP correspondence between an \RNBPM/ $T$
+and its
 skew ternary tree $\widehat T$ is designed to have
 two key properties, both of which can be observed in
 the examples just shown: (1)~The nodes of rank~0, from top to bottom,
@@ -1607,7 +1646,8 @@ in~$S$ corresponds to the parent node of~$c$.
 
 \fi
 
-\M{55}Here then is a subroutine that implements what was just said.
+\M[1361 skew-ternary-calc.w]{55}Here then is a subroutine that implements what
+was just said.
 The \PB{\\{rnbpm\_ddp}} routine constructs the
 \RNBPM/ for \PB{\\{chartstack}[\|s]}
 with root edge~\PB{\|r}. The chart is followed by a special step
@@ -1631,7 +1671,7 @@ subtree of~$c$\X;\6
 \4${}\}{}$\2\par
 \fi
 
-\M{56}The steps of the chart follow preorder.
+\M[1379 skew-ternary-calc.w]{56}The steps of the chart follow preorder.
 
 \Y\B\4\X56:Find the last node, \PB{\|c}, in preorder that has rank~0, and its
 parent~\PB{\|p}\X${}\E{}$\6
@@ -1663,7 +1703,8 @@ ${}\|p\K\\{chartstack}[\|s][\|j-\T{1}].\\{first};{}$\2\6
 \\{confusion}(\.{"not\ the\ last\ zero"});\2\par
 \U55.\fi
 
-\M{57}If $c$'s right child is just a bud, the subtree $R$ is empty and
+\M[1395 skew-ternary-calc.w]{57}If $c$'s right child is just a bud, the subtree
+$R$ is empty and
 it corresponds to the empty tree. Otherwise $R$ is bracketed in
 the chart by arcs from $c$ to its root node and back again,
 just as the subtree $T^*$ was bracketed in the procedure \PB{\\{rnbpm\_js}}.
@@ -1707,13 +1748,14 @@ ${}\\{chartstack}[\|s+\T{1}][\|j].\\{first}\K(\\{chartstack}[\|s+\T{1}][\T{2}].%
 ${}\\{steps}\PP{}$;\par
 \U55.\fi
 
-\M{58}\B\X58:Recursively build the \RNBPM/ for $T$\X${}\E{}$\6
+\M[1423 skew-ternary-calc.w]{58}\B\X58:Recursively build the \RNBPM/ for $T$%
+\X${}\E{}$\6
 \&{if} (\\{rr})\1\5
 ${}\\{rnbpm\_ddp}(\|s+\T{1},\39\|c){}$;\2\par
 \U55.\fi
 
-\M{59}If \PB{\|c} is the root of the tree, then \PB{\|p} is zero, subtree $%
-\widehat S$
+\M[1426 skew-ternary-calc.w]{59}If \PB{\|c} is the root of the tree, then \PB{%
+\|p} is zero, subtree $\widehat S$
 is empty, and nothing needs to be done. Otherwise the tree that
 corresponds to $\widehat S$ is obtained by simply leaving out \PB{\|c} and $R$.
 In the latter case, \PB{\\{jj}} points to the arc from \PB{\|p} to~\PB{\|c},
@@ -1737,12 +1779,14 @@ ${}\\{chartstack}[\|s+\T{1}][\|i]\K\\{chartstack}[\|s][\\{steps}];{}$\6
 \4${}\}{}$\2\par
 \U55.\fi
 
-\M{60}\B\X60:Recursively build the \RNBPM/ for $S$\X${}\E{}$\6
+\M[1442 skew-ternary-calc.w]{60}\B\X60:Recursively build the \RNBPM/ for $S$%
+\X${}\E{}$\6
 \&{if} (\|p)\1\5
 ${}\\{rnbpm\_ddp}(\|s+\T{1},\39\|r){}$;\2\par
 \U55.\fi
 
-\M{61}Finally we obey the three-step splicing protocol for $\join c$ that was
+\M[1445 skew-ternary-calc.w]{61}Finally we obey the three-step splicing
+protocol for $\join c$ that was
 described above. Some tricky maneuvering is necessary in the degenerate
 cases.
 
@@ -1768,7 +1812,7 @@ ${}\\{splice}(\\{pip}(\|c,\39\T{2}),\39\\{irot}(\\{alphainv}[\\{pip}(\|r,\39%
 \T{3})])){}$;\par
 \U55.\fi
 
-\M{62}Okay, \PB{\\{rnbpm\_ddp}} is finished.
+\M[1461 skew-ternary-calc.w]{62}Okay, \PB{\\{rnbpm\_ddp}} is finished.
 Here's how we apply it to each of the four skew ternary
 trees of interest.
 
@@ -1794,7 +1838,8 @@ ${}\\{rnbpm\_ddp}(\T{0},\39\.{'*'});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{63}Here, for instance, is the \RNBPM/ that corresponds to the example
+\M[1481 skew-ternary-calc.w]{63}Here, for instance, is the \RNBPM/ that
+corresponds to the example
 skew ternary tree~$T$ at the very beginning of this program,
 according to the DDP correspondence:
 $$\vcenter{\epsfbox{skew-ternary-calc.110}}$$
@@ -1804,7 +1849,8 @@ $$(e_2b_2a_2r_0)(f_0d_0e_0r_2)(c_0d_2f_2a_0)(c_2b_0)
 
 \fi
 
-\M{64}One can show that the number of nodes of even rank is the number
+\M[1489 skew-ternary-calc.w]{64}One can show that the number of nodes of even
+rank is the number
 of interior faces in the DDP correspondence;
 the number of nodes of odd rank is the number of vertices, minus~2.
 
@@ -1815,7 +1861,8 @@ mentioned below.)
 
 \fi
 
-\M{65}Indeed, this program led to a huge surprise, because much, much more
+\M[1498 skew-ternary-calc.w]{65}Indeed, this program led to a huge surprise,
+because much, much more
 is true. In every case that I had examined by hand, in my first explorations
 of the DDP correspondence, I noticed that {\sl the four
 \RNBPM/s obtained from $T$, $T^+$, $T^{++}$, and $T^{+++}$ are
@@ -1887,7 +1934,8 @@ $\alpha_k$ is an immediate consequence.
 
 \fi
 
-\M{66}Hey, we're finished---except for a final routine, which we fondly hope
+\M[1568 skew-ternary-calc.w]{66}Hey, we're finished---except for a final
+routine, which we fondly hope
 will never be invoked.
 
 \Y\B\4\X66:Assertion failure subroutine\X${}\E{}$\6
@@ -1899,7 +1947,7 @@ ${}\\{exit}({-}\T{666});{}$\6
 \4${}\}{}$\2\par
 \U5.\fi
 
-\N{1}{67}Index.
+\N[1577 skew-ternary-calc.w]{1}{67}Index.
 \fi
 
 \inx

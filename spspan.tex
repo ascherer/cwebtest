@@ -1,10 +1,12 @@
 \input cwebmac
+\srcloctrue
 \datethis
 \input epsf
 \def\adj{\mathrel{\!\mathrel-\mkern-8mu\mathrel-\mkern-8mu\mathrel-\!}}
    % adjacent vertices
 
-\N{1}{1}Introduction. This program generates all spanning trees of a given
+\N[5 spspan.w]{1}{1}Introduction. This program generates all spanning trees of
+a given
 series-parallel graph, changing only one edge at a time, using an
 interesting algorithm.
 
@@ -65,7 +67,8 @@ ${}\\{printf}(\.{"Altogether\ \%u\ spann}\)\.{ing\ trees,\ \%u\ additi}\)%
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{2}Parsing and preparation. We begin by converting the Polish notation
+\N[57 spspan.w]{1}{2}Parsing and preparation. We begin by converting the Polish
+notation
 into a binary tree.
 
 In the following code, we have scanned $j$ binary operators and there are
@@ -94,7 +97,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{3}\B\D$\\{maxn}$ \5
+\M[77 spspan.w]{3}\B\D$\\{maxn}$ \5
 \T{1000}\C{ the maximum number of leaves; {\it not checked\/} }\par
 \Y\B\4\X3:Global variables\X${}\E{}$\6
 \&{int} \\{stack}[\\{maxn}];\C{ stack for parsing }\6
@@ -102,7 +105,8 @@ ${}\{{}$\1\6
 \A7.
 \U1.\fi
 
-\M{4}Mems are not counted in this phase of the operation, because the
+\M[83 spspan.w]{4}Mems are not counted in this phase of the operation, because
+the
 program is essentially assumed to begin with the graph represented as
 a tree.
 
@@ -110,7 +114,7 @@ a tree.
 $\\{stack}[\|k\PP]\K\T{0}{}$;\par
 \U2.\fi
 
-\M{5}\B\X5:Create a new branch\X${}\E{}$\6
+\M[90 spspan.w]{5}\B\X5:Create a new branch\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} ${}(\|k<\T{2}){}$\1\5
 \\{abort}(\.{"missing\ operand"});\2\6
@@ -120,7 +124,8 @@ ${}\\{stack}[\|k-\T{1}]\K({*}\|p\E\.{'s'}\?\T{\^100}:\T{0})+\|j;{}$\6
 \4${}\}{}$\2\par
 \U2.\fi
 
-\M{6}Now we convert the binary tree to the desired working tree, whose branch
+\M[98 spspan.w]{6}Now we convert the binary tree to the desired working tree,
+whose branch
 nodes appear in preorder.
 
 \Y\B\4\X6:Type definitions\X${}\E{}$\6
@@ -136,7 +141,8 @@ cyclically }\7
 ${}\}{}$ \&{node};\par
 \U1.\fi
 
-\M{7}The first half of \PB{\\{nodelist}} contains up to \PB{\\{maxn}} leaves;
+\M[110 spspan.w]{7}The first half of \PB{\\{nodelist}} contains up to \PB{%
+\\{maxn}} leaves;
 the other half contains up to \PB{\\{maxn}} branches.
 
 \Y\B\4\X3:Global variables\X${}\mathrel+\E{}$\6
@@ -147,8 +153,8 @@ the other half contains up to \PB{\\{maxn}} branches.
 parent }\par
 \fi
 
-\M{8}A recursive subroutine called \PB{\\{build}} will govern the construction
-process.
+\M[119 spspan.w]{8}A recursive subroutine called \PB{\\{build}} will govern the
+construction process.
 
 \Y\B\4\D$\\{isleaf}(\|p)$ \5
 $((\|p)<\\{nodelist}+\\{maxn}{}$)\par
@@ -161,7 +167,8 @@ ${}\\{root}\K\\{build}(\\{stack}[\T{0}],\39\\{curnode});{}$\6
 ${}\\{root}\MG\\{rsib}\K\\{root}{}$;\C{ unnecessary but tidy }\par
 \U2.\fi
 
-\M{9}When we \PB{\\{build}} a leaf node, we simply allocate it. When we
+\M[130 spspan.w]{9}When we \PB{\\{build}} a leaf node, we simply allocate it.
+When we
 \PB{\\{build}} a branch node, we link its children together via their
 sibling links.
 
@@ -199,12 +206,13 @@ ${}\|p\MG\\{lchild}\K\|l,\39\|p\MG\\{rchild}\K\|r,\39\|l\MG\\{rsib}\K\|r,\39\|r%
 \As15, 16, 17, 18\ETs19.
 \U1.\fi
 
-\M{10}\B\X10:Incorporate right child into node \PB{\|p}\X${}\E{}$\6
+\M[155 spspan.w]{10}\B\X10:Incorporate right child into node \PB{\|p}\X${}\E{}$%
+\6
 $\|r\K\|p\MG\\{lchild},\39\|p\MG\\{lchild}\K\|l,\39\|l\MG\\{rsib}\K\|r,\39\|p%
 \MG\\{rchild}\MG\\{rsib}\K\|l{}$;\par
 \U9.\fi
 
-\M{11}\B\X11:Incorporate left child into node \PB{\|p}\X${}\E{}$\6
+\M[158 spspan.w]{11}\B\X11:Incorporate left child into node \PB{\|p}\X${}\E{}$\6
 \&{if} ${}(\|r\E\|p){}$\1\5
 \X12:Incorporate both children into node \PB{\|p}\X\2\6
 \&{else}\1\5
@@ -212,12 +220,14 @@ ${}\|p\MG\\{rchild}\K\|r,\39\\{rc}\MG\\{rsib}\K\|r,\39\|r\MG\\{rsib}\K%
 \\{lc}{}$;\2\par
 \U9.\fi
 
-\M{12}\B\X12:Incorporate both children into node \PB{\|p}\X${}\E{}$\6
+\M[162 spspan.w]{12}\B\X12:Incorporate both children into node \PB{\|p}\X${}%
+\E{}$\6
 $\\{rc}\MG\\{rsib}\K\|p\MG\\{lchild},\39\|p\MG\\{lchild}\K\\{lc},\39\|p\MG%
 \\{rchild}\MG\\{rsib}\K\\{lc}{}$;\par
 \U11.\fi
 
-\M{13}OK, the tree has been set up; our next goal is to decorate it.
+\M[165 spspan.w]{13}OK, the tree has been set up; our next goal is to decorate
+it.
 First let's take a closer look at the problem we're trying to solve.
 
 Each node of the tree corresponds to a series-parallel graph between
@@ -296,8 +306,8 @@ meanwhile let's put the necessary information into our data structure.
 \As22\ET25.
 \U6.\fi
 
-\M{14}To start things off, we might as well designate each node's leftmost
-child.
+\M[233 spspan.w]{14}To start things off, we might as well designate each node's
+leftmost child.
 
 Mems are computed under the assumption that a node's \PB{\\{typ}} and \PB{%
 \\{val}} can
@@ -311,7 +321,8 @@ ${}\\{trees}\K\T{1};{}$\6
 \X20:Print the first tree\X;\2\par
 \U1.\fi
 
-\M{15}A few amendments to the data structure will be desirable later, but we're
+\M[244 spspan.w]{15}A few amendments to the data structure will be desirable
+later, but we're
 ready now to write most of the tree-initializing routine.
 
 \Y\B\4\X9:Subroutines\X${}\mathrel+\E{}$\6
@@ -337,7 +348,8 @@ ${}\\{call},\39\\{init\_tree}(\|q,\39\|p);{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\N{1}{16}Diagnostic routines. Several simple subroutines are used to
+\N[263 spspan.w]{1}{16}Diagnostic routines. Several simple subroutines are used
+to
 print all or part of our data structure, as aids to debugging and/or
 when the user wants to examine all the spanning trees.
 
@@ -362,7 +374,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{17}\B\X9:Subroutines\X${}\mathrel+\E{}$\6
+\M[284 spspan.w]{17}\B\X9:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{printleaf}(\&{node} ${}{*}\|p){}$\1\1\2\2\6
 ${}\{{}$\1\6
 ${}\\{printf}(\.{"\%c:\%c\ rsib=\%c\\n"},\39\\{leafname}(\|p),\39\|p\MG\\{val}+%
@@ -386,7 +398,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{18}\B\X9:Subroutines\X${}\mathrel+\E{}$\6
+\M[306 spspan.w]{18}\B\X9:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{printtree}(\&{node} ${}{*}\|p,\39{}$\&{int} \\{indent})\1\1\2\2\6
 ${}\{{}$\1\6
 \&{register} \&{node} ${}{*}\|q;{}$\6
@@ -404,7 +416,7 @@ ${}\\{printtree}(\|q,\39\\{indent}+\T{1});{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{19}\B\X9:Subroutines\X${}\mathrel+\E{}$\6
+\M[319 spspan.w]{19}\B\X9:Subroutines\X${}\mathrel+\E{}$\6
 \&{void} \\{printedges}(\&{node} ${}{*}\|p{}$)\C{ print the leaves whose value
 is 1 }\6
 ${}\{{}$\1\6
@@ -424,7 +436,7 @@ ${}\{{}$\1\6
 \4${}\}{}$\2\par
 \fi
 
-\M{20}\B\X20:Print the first tree\X${}\E{}$\6
+\M[331 spspan.w]{20}\B\X20:Print the first tree\X${}\E{}$\6
 ${}\{{}$\1\6
 \&{if} (\\{extraverbose})\1\5
 ${}\\{printtree}(\\{root},\39\T{0});{}$\2\6
@@ -434,8 +446,8 @@ ${}\\{printtree}(\\{root},\39\T{0});{}$\2\6
 \4${}\}{}$\2\par
 \U14.\fi
 
-\N{1}{21}Overview of the algorithm. A branch node \PB{\|p} will be called {\it
-easy\/}
+\N[339 spspan.w]{1}{21}Overview of the algorithm. A branch node \PB{\|p} will
+be called {\it easy\/}
 if \PB{$\|p\MG\\{val}\K\|p\MG\\{typ}$}. In such cases the designated child %
 \PB{$\|p\MG\\{des}$} has
 no effect on the spanning tree or near-spanning tree, because all
@@ -459,7 +471,8 @@ are uneasy unless they are leaves.
 $\|o,\39\|p\MG\\{typ}\E\|p\MG{}$\\{val}\par
 \fi
 
-\M{22}Cartesian products of configurations are easily generated in Gray-code
+\M[358 spspan.w]{22}Cartesian products of configurations are easily generated
+in Gray-code
 order, using essentially a mixed-radix Gray code for $n$-tuples.
 (See Section 7.2.1.1 of {\sl The Art of Computer Programming}.) In this
 program I'm using a ``modular'' code instead of a ``reflected'' one, because
@@ -488,7 +501,8 @@ path }\6
 \&{struct} \&{node\_struct} ${}{*}\\{parent}{}$;\C{ parent of this node }\par
 \fi
 
-\M{23}These considerations lead us to the following algorithm to generate
+\M[380 spspan.w]{23}These considerations lead us to the following algorithm to
+generate
 all spanning trees: Begin with all uneasy branch nodes active. Then
 repeatedly
 \smallskip\itemitem{1)} Select the rightmost active node, \PB{\|p}, in
@@ -516,7 +530,8 @@ pointers are not needed by the main algorithm. So we can equate
 \\{rchild}\C{ the new meaning of the \PB{\\{rchild}} field }\par
 \fi
 
-\M{24}For example, let's apply the algorithm to the series-parallel graph
+\M[400 spspan.w]{24}For example, let's apply the algorithm to the
+series-parallel graph
 illustrated in the introduction. Since \PB{\|A} is a parallel node and since
 each leftmost child is initially designated, \PB{\\{init\_tree}} sets
 \PB{$\|A\MG\\{val}\K\T{1}$}, \PB{$\|B\MG\\{val}\K\T{0}$}, \PB{$\|C\MG\\{val}\K%
@@ -568,7 +583,8 @@ and so on.
 
 \fi
 
-\M{25}So-called ``focus pointers'' can be used to implement steps (1) and (3)
+\M[446 spspan.w]{25}So-called ``focus pointers'' can be used to implement steps
+(1) and (3)
 very efficiently, as discussed in Algorithm 7.2.1.1L. We set \PB{$\|p\MG%
 \\{focus}\K\|p$}
 except when \PB{\|p} is an uneasy node such that the nearest uneasy node to
@@ -595,7 +611,8 @@ trees.
 focus pointer }\par
 \fi
 
-\M{26}We can easily incorporate the new fields into our initialization
+\M[467 spspan.w]{26}We can easily incorporate the new fields into our
+initialization
 routine. It will turn out that the algorithm doesn't really have to
 look at \PB{\\{leaf}} or \PB{\\{parent}} pointers, so no mems are charged for
 the cost of
@@ -605,19 +622,19 @@ computing them.
 $\|p\MG\\{leaf}\K\|p,\39\|p\MG\\{parent}\K\\{par}{}$;\par
 \U15.\fi
 
-\M{27}\B\X27:Further initialization of a branch node\X${}\E{}$\6
+\M[475 spspan.w]{27}\B\X27:Further initialization of a branch node\X${}\E{}$\6
 $\|p\MG\\{leaf}\K\|p\MG\\{des}\MG\\{leaf},\39\|p\MG\\{parent}\K\\{par};{}$\6
 ${}\|o,\39\|p\MG\\{focus}\K\|p{}$;\par
 \U15.\fi
 
-\M{28}\B\X28:Print additional fields of a branch node\X${}\E{}$\6
+\M[479 spspan.w]{28}\B\X28:Print additional fields of a branch node\X${}\E{}$\6
 $\\{printf}(\.{"\ leaf=\%c"},\39\\{leafname}(\|p\MG\\{leaf}));{}$\6
 \&{if} ${}(\|p\MG\\{focus}\I\|p){}$\1\5
 ${}\\{printf}(\.{"\ focus=\%c"},\39\\{branchname}(\|p\MG\\{focus})){}$;\2\par
 \U17.\fi
 
-\N{1}{29}Doing it. Let's go ahead now and implement the algorithm just
-sketched.
+\N[483 spspan.w]{1}{29}Doing it. Let's go ahead now and implement the algorithm
+just sketched.
 
 \Y\B\4\X29:Do the algorithm\X${}\E{}$\6
 $\\{topnode}\MG\\{focus}\K\\{topnode};{}$\6
@@ -636,8 +653,8 @@ ${}\\{oo},\39\|p\K\|r\MG\\{focus},\39\|r\MG\\{focus}\K\|r{}$;\C{ steps (1) and
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{30}All uneasy nodes to the right of \PB{\|p} are now active, and \PB{\|l} is
-the
+\M[496 spspan.w]{30}All uneasy nodes to the right of \PB{\|p} are now active,
+and \PB{\|l} is the
 former \PB{$\|p\MG\\{des}$}.
 
 \Y\B\4\X30:Passivate \PB{\|p}\X${}\E{}$\6
@@ -649,7 +666,8 @@ ${}\\{ooo},\39\|p\MG\\{focus}\K\|l\MG\\{focus},\39\|l\MG\\{focus}\K\|l;{}$\6
 \4${}\}{}$\2\par
 \U29.\fi
 
-\M{31}If the user has asked for \PB{\\{verbose}} output, we print only the
+\M[506 spspan.w]{31}If the user has asked for \PB{\\{verbose}} output, we print
+only the
 edge that has entered the spanning tree and the edge that has left.
 
 \Y\B\4\X31:Change \PB{$\|p\MG\\{des}$} and visit a new spanning tree\X${}\E{}$\6
@@ -686,7 +704,8 @@ ${}\\{printf}(\.{";\ now\ \%c->leaf=\%c\\n}\)\.{"},\39\\{branchname}(\|r),\39%
 \4${}\}{}$\2\par
 \U29.\fi
 
-\N{1}{32}A loopless version. The algorithm implemented here contains four
+\N[530 spspan.w]{1}{32}A loopless version. The algorithm implemented here
+contains four
 loops. Two of them skip over easy nodes when finding \PB{\|r} and \PB{\|l}
 in the list of branches; two of them go down from branches to leaves
 when changing the \PB{\\{val}} fields.
@@ -781,7 +800,7 @@ of \PB{$\|p\MG\\{registry}$}, I should have spoken of \PB{$\|p\MG\\{scope%
 
 \fi
 
-\N{1}{33}Index.
+\N[612 spspan.w]{1}{33}Index.
 \fi
 
 \inx

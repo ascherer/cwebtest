@@ -1,6 +1,8 @@
 \input cwebmac
+\srcloctrue
 
-\N{1}{1}Intro. A simple program to make ``random'' squaregraphs, by sort of a
+\N[1 squaregraph-rand.w]{1}{1}Intro. A simple program to make ``random''
+squaregraphs, by sort of a
 ``crocheting'' technique. (Hacked in haste.)
 
 \Y\B\4\D$\\{maxn}$ \5
@@ -32,7 +34,7 @@ ${}\|k\K\\{gb\_unif\_rand}(\|m);{}$\6
 \4${}\}{}$\2\par
 \fi
 
-\M{2}\B\X2:Process the command line\X${}\E{}$\6
+\M[30 squaregraph-rand.w]{2}\B\X2:Process the command line\X${}\E{}$\6
 \&{if} ${}(\\{argc}\I\T{3}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
 \\{steps})\I\T{1}\V\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}\\{seed})\I%
 \T{1}){}$\5
@@ -50,7 +52,8 @@ ${}\\{exit}({-}\T{2});{}$\6
 \\{gb\_init\_rand}(\\{seed});\par
 \U1.\fi
 
-\M{3}\B\X3:Set \PB{\|m} to the number of possible moves\X${}\E{}$\6
+\M[42 squaregraph-rand.w]{3}\B\X3:Set \PB{\|m} to the number of possible moves%
+\X${}\E{}$\6
 $\|d[\|w]\K\|d[\T{0}],\39\|d[\|w+\T{1}]\K\|d[\T{1}],\39\|a[\|w]\K\|a[\T{0}],\39%
 \|a[\|w+\T{1}]\K\|a[\T{1}];{}$\6
 \&{for} ${}(\|m\K\T{0};{}$ ${}\|m<\|w;{}$ ${}\|m\PP){}$\1\5
@@ -63,7 +66,7 @@ ${}\\{move}[\|m\PP]\K\\{maxn}+\|k;{}$\2\2\6
 ${}\\{move}[\|m\PP]\K\\{maxn}+\\{maxn}+\|k{}$;\2\2\par
 \U1.\fi
 
-\M{4}\B\X4:Make move \PB{\|k}\X${}\E{}$\6
+\M[48 squaregraph-rand.w]{4}\B\X4:Make move \PB{\|k}\X${}\E{}$\6
 \&{if} ${}(\\{move}[\|k]<\\{maxn}){}$\5
 ${}\{{}$\1\6
 ${}\|w\MRL{+{\K}}\T{2},\39\|k\K\\{move}[\|k];{}$\6
@@ -100,7 +103,7 @@ ${}\|a[\|t]\K\|a[\|t+\T{2}],\39\|d[\|t]\K\|d[\|t+\T{2}];{}$\2\6
 \4${}\}{}$\2\par
 \U1.\fi
 
-\M{5}\B\X5:Check for pairs\X${}\E{}$\6
+\M[68 squaregraph-rand.w]{5}\B\X5:Check for pairs\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|j+\T{2};{}$ ${}\|k\PP){}$\1\5
 ${}\\{count}[\|k]\K\T{0};{}$\2\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|w;{}$ ${}\|k\PP){}$\1\5
@@ -111,7 +114,7 @@ ${}\\{fprintf}(\\{stderr},\39\.{"count[\%d]\ is\ \%d!\\n"},\39\|k,\39\\{count}[%
 \|k]){}$;\2\2\par
 \U1.\fi
 
-\M{6}\B\X6:Output the result\X${}\E{}$\6
+\M[75 squaregraph-rand.w]{6}\B\X6:Output the result\X${}\E{}$\6
 \&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|w;{}$ ${}\|k\PP){}$\5
 ${}\{{}$\1\6
 ${}\\{printf}(\.{"\ \%d"},\39\|a[\|k]);{}$\6
@@ -122,7 +125,7 @@ ${}\\{printf}(\.{"\ \%d"},\39\|a[\|k]);{}$\6
 \\{printf}(\.{"\\n"});\2\par
 \U1.\fi
 
-\N{1}{7}Index.
+\N[82 squaregraph-rand.w]{1}{7}Index.
 \fi
 
 \inx
