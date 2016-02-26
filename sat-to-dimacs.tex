@@ -1,0 +1,550 @@
+\input cwebmac
+
+\N{1}{1}Intro. This is a filter that inputs the format used by {\mc SAT0},
+{\mc SAT1}, etc., and outputs the well-known DIMACS format for
+satisfiability problems.
+
+DIMACS format begins with zero or more optional comment lines, indicated by
+their first character `\.c'. The next line should say `\.p \.{cnf} $n$ $m$',
+where $n$ is the number of variables and $m$ is the number of clauses.
+Then comes a string of $m$ ``clauses,'' which are sequences of
+nonzero integers of absolute value $\le n$, followed by zero.
+A literal for the $k$th variable is represented by $k$; its complement
+is represented by $-k$.
+
+SAT format is more flexible, more symbolic, and more complicated; it is
+explained in the programs cited above. I hacked this program from {\mc SAT3}.
+
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\8\#\&{include} \.{<string.h>}\6
+\8\#\&{include} \.{"gb\_flip.h"}\6
+\8\#\&{include} \.{<time.h>}\6
+\&{time\_t} \\{myclock};\6
+\&{typedef} \&{unsigned} \&{int} \&{uint};\C{ a convenient abbreviation }\6
+\&{typedef} \&{unsigned} \&{long} \&{long} \&{ullng};\C{ ditto }\7
+\X4:Type definitions\X;\6
+\X2:Global variables\X;\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{uint} \|c${},{}$ \|h${},{}$ \|i${},{}$ \|j${},{}$ \|k${},{}$ %
+\|l${},{}$ \|p${},{}$ \|q${},{}$ \|r${},{}$ \\{level}${},{}$ \\{kk}${},{}$ %
+\\{pp}${},{}$ \\{qq}${},{}$ \\{ll};\7
+\X3:Process the command line\X;\6
+\X7:Initialize everything\X;\6
+\X8:Input the clauses\X;\6
+\&{if} (\\{verbose})\1\5
+\X20:Report the successful completion of the input phase\X;\2\6
+${}\\{myclock}\K\\{time}(\T{0});{}$\6
+${}\\{printf}(\.{"c\ file\ created\ by\ S}\)\.{AT-TO-DIMACS\ \%s"},\39%
+\\{ctime}({\AND}\\{myclock}));{}$\6
+\X21:Output the clauses\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Global variables\X${}\E{}$\6
+\&{int} \\{random\_seed}${}\K\T{0}{}$;\C{ seed for the random words of \PB{%
+\\{gb\_rand}} }\6
+\&{int} \\{verbose}${}\K\T{1}{}$;\C{ level of verbosity }\6
+\&{int} \\{hbits}${}\K\T{8}{}$;\C{ logarithm of the number of the hash lists }\6
+\&{int} \\{buf\_size}${}\K\T{1024}{}$;\C{ must exceed the length of the longest
+input line }\par
+\A6.
+\U1.\fi
+
+\M{3}On the command line one can say
+\smallskip
+\item{$\bullet$}
+`\.v$\langle\,$integer$\,\rangle$' to enable various levels of verbose
+output on \PB{\\{stderr}};
+\item{$\bullet$}
+`\.h$\langle\,$positive integer$\,\rangle$' to adjust the hash table size;
+\item{$\bullet$}
+`\.b$\langle\,$positive integer$\,\rangle$' to adjust the size of the input
+buffer; and/or
+\item{$\bullet$}
+`\.s$\langle\,$integer$\,\rangle$' to define the seed for any random numbers
+that are used.
+
+\Y\B\4\X3:Process the command line\X${}\E{}$\6
+\&{for} ${}(\|j\K\\{argc}-\T{1},\39\|k\K\T{0};{}$ \|j; ${}\|j\MM){}$\1\6
+\&{switch} (\\{argv}[\|j][\T{0}])\5
+${}\{{}$\1\6
+\4\&{case} \.{'v'}:\5
+${}\|k\MRL{{\OR}{\K}}(\\{sscanf}(\\{argv}[\|j]+\T{1},\39\.{"\%d"},\39{\AND}%
+\\{verbose})-\T{1}){}$;\5
+\&{break};\6
+\4\&{case} \.{'h'}:\5
+${}\|k\MRL{{\OR}{\K}}(\\{sscanf}(\\{argv}[\|j]+\T{1},\39\.{"\%d"},\39{\AND}%
+\\{hbits})-\T{1}){}$;\5
+\&{break};\6
+\4\&{case} \.{'b'}:\5
+${}\|k\MRL{{\OR}{\K}}(\\{sscanf}(\\{argv}[\|j]+\T{1},\39\.{"\%d"},\39{\AND}%
+\\{buf\_size})-\T{1}){}$;\5
+\&{break};\6
+\4\&{case} \.{'s'}:\5
+${}\|k\MRL{{\OR}{\K}}(\\{sscanf}(\\{argv}[\|j]+\T{1},\39\.{"\%d"},\39{\AND}%
+\\{random\_seed})-\T{1}){}$;\5
+\&{break};\6
+\4\&{default}:\5
+${}\|k\K\T{1}{}$;\C{ unrecognized command-line option }\6
+\4${}\}{}$\2\2\6
+\&{if} ${}(\|k\V\\{hbits}<\T{0}\V\\{hbits}>\T{30}\V\\{buf\_size}\Z\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ [v<n>]\ [h}\)\.{<n>]\ [b<n>]\
+[s<n>]\ <}\)\.{\ foo.dat\\n"},\39\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\N{1}{4}The I/O wrapper. The following routines read the input and absorb it
+into
+temporary data areas from which all of the ``real'' data structures
+can readily be initialized. My intent is to incorporate these routines in all
+of the SAT-solvers in this series. Therefore I've tried to make the code
+short and simple, yet versatile enough so that almost no restrictions are
+placed on the sizes of problems that can be handled. These routines are
+supposed to work properly unless there are more than
+$2^{32}-1=4$,294,967,295 occurrences of literals in clauses,
+or more than $2^{31}-1=2$,147,483,647 variables or clauses.
+
+In these temporary tables, each variable is represented by four things:
+its unique name; its serial number; the clause number (if any) in which it has
+most recently appeared; and a pointer to the previous variable (if any)
+with the same hash address. Several variables at a time
+are represented sequentially in small chunks of memory called ``vchunks,''
+which are allocated as needed (and freed later).
+
+\Y\B\4\D$\\{vars\_per\_vchunk}$ \5
+\T{341}\C{ preferably $(2^k-1)/3$ for some $k$ }\par
+\Y\B\4\X4:Type definitions\X${}\E{}$\6
+\&{typedef} \&{union} ${}\{{}$\1\6
+\&{char} \\{ch8}[\T{8}];\6
+\&{uint} \\{u2}[\T{2}];\6
+\&{long} \&{long} \\{lng};\2\6
+${}\}{}$ \&{octa};\6
+\&{typedef} \&{struct} \&{tmp\_var\_struct} ${}\{{}$\1\6
+\&{octa} \\{name};\C{ the name (one to eight ASCII characters) }\6
+\&{uint} \\{serial};\C{ 0 for the first variable, 1 for the second, etc. }\6
+\&{int} \\{stamp};\C{ \PB{\|m} if positively in clause \PB{\|m}; \PB{${-}\|m$}
+if negatively there }\6
+\&{struct} \&{tmp\_var\_struct} ${}{*}\\{next}{}$;\C{ pointer for hash list }\2%
+\6
+${}\}{}$ \&{tmp\_var};\7
+\&{typedef} \&{struct} \&{vchunk\_struct} ${}\{{}$\1\6
+\&{struct} \&{vchunk\_struct} ${}{*}\\{prev}{}$;\C{ previous chunk allocated
+(if any) }\6
+\&{tmp\_var} \\{var}[\\{vars\_per\_vchunk}];\2\6
+${}\}{}$ \&{vchunk};\par
+\A5.
+\U1.\fi
+
+\M{5}Each clause in the temporary tables is represented by a sequence of
+one or more pointers to the \PB{\&{tmp\_var}} nodes of the literals involved.
+A negated literal is indicated by adding~1 to such a pointer.
+The first literal of a clause is indicated by adding~2.
+Several of these pointers are represented sequentially in chunks
+of memory, which are allocated as needed and freed later.
+
+\Y\B\4\D$\\{cells\_per\_chunk}$ \5
+\T{511}\C{ preferably $2^k-1$ for some $k$ }\par
+\Y\B\4\X4:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} \&{chunk\_struct} ${}\{{}$\1\6
+\&{struct} \&{chunk\_struct} ${}{*}\\{prev}{}$;\C{ previous chunk allocated (if
+any) }\6
+\&{tmp\_var} ${}{*}\\{cell}[\\{cells\_per\_chunk}];{}$\2\6
+${}\}{}$ \&{chunk};\par
+\fi
+
+\M{6}\B\X2:Global variables\X${}\mathrel+\E{}$\6
+\&{char} ${}{*}\\{buf}{}$;\C{ buffer for reading the lines (clauses) of \PB{%
+\\{stdin}} }\6
+\&{tmp\_var} ${}{*}{*}\\{hash}{}$;\C{ heads of the hash lists }\6
+\&{uint} \\{hash\_bits}[\T{93}][\T{8}];\C{ random bits for universal hash
+function }\6
+\&{vchunk} ${}{*}\\{cur\_vchunk}{}$;\C{ the vchunk currently being filled }\6
+\&{tmp\_var} ${}{*}\\{cur\_tmp\_var}{}$;\C{ current place to create new \PB{%
+\&{tmp\_var}} entries }\6
+\&{tmp\_var} ${}{*}\\{bad\_tmp\_var}{}$;\C{ the \PB{\\{cur\_tmp\_var}} when we
+need a new \PB{\&{vchunk}} }\6
+\&{chunk} ${}{*}\\{cur\_chunk}{}$;\C{ the chunk currently being filled }\6
+\&{tmp\_var} ${}{*}{*}\\{cur\_cell}{}$;\C{ current place to create new elements
+of a clause }\6
+\&{tmp\_var} ${}{*}{*}\\{bad\_cell}{}$;\C{ the \PB{\\{cur\_cell}} when we need
+a new \PB{\&{chunk}} }\6
+\&{ullng} \\{vars};\C{ how many distinct variables have we seen? }\6
+\&{ullng} \\{clauses};\C{ how many clauses have we seen? }\6
+\&{ullng} \\{nullclauses};\C{ how many of them were null? }\6
+\&{ullng} \\{cells};\C{ how many occurrences of literals in clauses? }\par
+\fi
+
+\M{7}\B\X7:Initialize everything\X${}\E{}$\6
+\\{gb\_init\_rand}(\\{random\_seed});\6
+${}\\{buf}\K{}$(\&{char} ${}{*}){}$ \\{malloc}${}(\\{buf\_size}*\&{sizeof}(%
+\&{char}));{}$\6
+\&{if} ${}(\R\\{buf}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Couldn't\ allocate\ t}\)\.{he\ input\ buffer\
+(buf}\)\.{\_size=\%d)!\\n"},\39\\{buf\_size});{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+${}\\{hash}\K{}$(\&{tmp\_var} ${}{*}{*}){}$ \\{malloc}${}(\&{sizeof}(\&{tmp%
+\_var})\LL\\{hbits});{}$\6
+\&{if} ${}(\R\\{hash}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Couldn't\ allocate\ \%}\)\.{d\ hash\ list\
+heads\ (h}\)\.{bits=\%d)!\\n"},\39\T{1}\LL\\{hbits},\39\\{hbits});{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|h\K\T{0};{}$ ${}\|h<\T{1}\LL\\{hbits};{}$ ${}\|h\PP){}$\1\5
+${}\\{hash}[\|h]\K\NULL{}$;\2\par
+\A13.
+\U1.\fi
+
+\M{8}The hash address of each variable name has $h$ bits, where $h$ is the
+value of the adjustable parameter \PB{\\{hbits}}.
+Thus the average number of variables per hash list is $n/2^h$ when there
+are $n$ different variables. A warning is printed if this average number
+exceeds 10. (For example, if $h$ has its default value, 8, the program will
+suggest that you might want to increase $h$ if your input has 2560
+different variables or more.)
+
+All the hashing takes place at the very beginning,
+and the hash tables are actually recycled before any SAT-solving takes place;
+therefore the setting of this parameter is by no means crucial. But I didn't
+want to bother with fancy coding that would determine $h$ automatically.
+
+\Y\B\4\X8:Input the clauses\X${}\E{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{fgets}(\\{buf},\39\\{buf\_size},\39\\{stdin})){}$\1\5
+\&{break};\2\6
+${}\\{clauses}\PP;{}$\6
+\&{if} ${}(\\{buf}[\\{strlen}(\\{buf})-\T{1}]\I\.{'\\n'}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"The\ clause\ on\ line\ }\)\.{\%lld\ (%
+\%.20s...)\ is\ t}\)\.{oo\ long\ for\ me;\\n"},\39\\{clauses},\39\\{buf});{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ my\ buf\_size\ is\ onl}\)\.{y\ \%d!\\n"},\39%
+\\{buf\_size});{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"Please\ use\ the\ comm}\)\.{and-line\ option\
+b<ne}\)\.{wsize>.\\n"});{}$\6
+${}\\{exit}({-}\T{4});{}$\6
+\4${}\}{}$\2\6
+\X9:Input the clause in \PB{\\{buf}}\X;\6
+\4${}\}{}$\2\6
+\&{if} ${}((\\{vars}\GG\\{hbits})\G\T{10}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"There\ are\ \%lld\ vari}\)\.{ables\ but\ only\
+\%d\ ha}\)\.{sh\ tables;\\n"},\39\\{vars},\39\T{1}\LL\\{hbits});{}$\6
+\&{while} ${}((\\{vars}\GG\\{hbits})\G\T{10}){}$\1\5
+${}\\{hbits}\PP;{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ maybe\ you\ should\ u}\)\.{se\ command-line\
+opti}\)\.{on\ h\%d?\\n"},\39\\{hbits});{}$\6
+\4${}\}{}$\2\6
+${}\\{clauses}\MRL{-{\K}}\\{nullclauses};{}$\6
+\&{if} ${}(\\{clauses}\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"No\ clauses\ were\ inp}\)\.{ut!\\n"});{}$\6
+${}\\{exit}({-}\T{77});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{vars}\G\T{\^80000000}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Whoa,\ the\ input\ had}\)\.{\ \%llu\
+variables!\\n"},\39\\{cells});{}$\6
+${}\\{exit}({-}\T{664});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{clauses}\G\T{\^80000000}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Whoa,\ the\ input\ had}\)\.{\ \%llu\ clauses!%
+\\n"},\39\\{cells});{}$\6
+${}\\{exit}({-}\T{665});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{cells}\G\T{\^100000000}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Whoa,\ the\ input\ had}\)\.{\ \%llu\
+occurrences\ of}\)\.{\ literals!\\n"},\39\\{cells});{}$\6
+${}\\{exit}({-}\T{666});{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{9}\B\X9:Input the clause in \PB{\\{buf}}\X${}\E{}$\6
+\&{for} ${}(\|j\K\|k\K\T{0};{}$  ; \,)\5
+${}\{{}$\1\6
+\&{while} ${}(\\{buf}[\|j]\E\.{'\ '}){}$\1\5
+${}\|j\PP{}$;\C{ scan to nonblank }\2\6
+\&{if} ${}(\\{buf}[\|j]\E\.{'\\n'}){}$\1\5
+\&{break};\2\6
+\&{if} ${}(\\{buf}[\|j]<\.{'\ '}\V\\{buf}[\|j]>\.{'\~'}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Illegal\ character\ (}\)\.{code\ \#\%x)\ in\
+the\ cla}\)\.{use\ on\ line\ \%lld!\\n"},\39\\{buf}[\|j],\39\\{clauses});{}$\6
+${}\\{exit}({-}\T{5});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{buf}[\|j]\E\.{'\~'}){}$\1\5
+${}\|i\K\T{1},\39\|j\PP;{}$\2\6
+\&{else}\1\5
+${}\|i\K\T{0};{}$\2\6
+\X10:Scan and record a variable; negate it if \PB{$\|i\E\T{1}$}\X;\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|k\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"(Empty\ line\ \%lld\ is}\)\.{\ being\ ignored)%
+\\n"},\39\\{clauses});{}$\6
+${}\\{nullclauses}\PP{}$;\C{ strictly speaking it would be unsatisfiable }\6
+\4${}\}{}$\2\6
+\&{goto} \\{clause\_done};\6
+\4\\{empty\_clause}:\5
+\X17:Remove all variables of the current clause\X;\6
+\4\\{clause\_done}:\5
+${}\\{cells}\MRL{+{\K}}\|k{}$;\par
+\U8.\fi
+
+\M{10}We need a hack to insert the bit codes 1 and/or 2 into a pointer value.
+
+\Y\B\4\D$\\{hack\_in}(\|q,\|t)$ \5
+(\&{tmp\_var} ${}{*})(\|t\OR{}$(\&{ullng}) \|q)\par
+\Y\B\4\X10:Scan and record a variable; negate it if \PB{$\|i\E\T{1}$}\X${}\E{}$%
+\6
+${}\{{}$\1\6
+\&{register} \&{tmp\_var} ${}{*}\|p;{}$\7
+\&{if} ${}(\\{cur\_tmp\_var}\E\\{bad\_tmp\_var}){}$\1\5
+\X11:Install a new \PB{\&{vchunk}}\X;\2\6
+\X14:Put the variable name beginning at \PB{\\{buf}[\|j]} in \PB{$\\{cur\_tmp%
+\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X;\6
+\X15:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash table at \PB{\|p}\X;\6
+\&{if} ${}(\|p\MG\\{stamp}\E\\{clauses}\V\|p\MG\\{stamp}\E{-}\\{clauses}){}$\1\5
+\X16:Handle a duplicate literal\X\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|p\MG\\{stamp}\K(\|i\?{-}\\{clauses}:\\{clauses});{}$\6
+\&{if} ${}(\\{cur\_cell}\E\\{bad\_cell}){}$\1\5
+\X12:Install a new \PB{\&{chunk}}\X;\2\6
+${}{*}\\{cur\_cell}\K\|p;{}$\6
+\&{if} ${}(\|i\E\T{1}){}$\1\5
+${}{*}\\{cur\_cell}\K\\{hack\_in}({*}\\{cur\_cell},\39\T{1});{}$\2\6
+\&{if} ${}(\|k\E\T{0}){}$\1\5
+${}{*}\\{cur\_cell}\K\\{hack\_in}({*}\\{cur\_cell},\39\T{2});{}$\2\6
+${}\\{cur\_cell}\PP,\39\|k\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U9.\fi
+
+\M{11}\B\X11:Install a new \PB{\&{vchunk}}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{vchunk} ${}{*}\\{new\_vchunk};{}$\7
+${}\\{new\_vchunk}\K{}$(\&{vchunk} ${}{*}){}$ \\{malloc}(\&{sizeof}(%
+\&{vchunk}));\6
+\&{if} ${}(\R\\{new\_vchunk}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Can't\ allocate\ a\ ne}\)\.{w\ vchunk!%
+\\n"});{}$\6
+${}\\{exit}({-}\T{6});{}$\6
+\4${}\}{}$\2\6
+${}\\{new\_vchunk}\MG\\{prev}\K\\{cur\_vchunk},\39\\{cur\_vchunk}\K\\{new%
+\_vchunk};{}$\6
+${}\\{cur\_tmp\_var}\K{\AND}\\{new\_vchunk}\MG\\{var}[\T{0}];{}$\6
+${}\\{bad\_tmp\_var}\K{\AND}\\{new\_vchunk}\MG\\{var}[\\{vars\_per%
+\_vchunk}];{}$\6
+\4${}\}{}$\2\par
+\U10.\fi
+
+\M{12}\B\X12:Install a new \PB{\&{chunk}}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{chunk} ${}{*}\\{new\_chunk};{}$\7
+${}\\{new\_chunk}\K{}$(\&{chunk} ${}{*}){}$ \\{malloc}(\&{sizeof}(\&{chunk}));\6
+\&{if} ${}(\R\\{new\_chunk}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Can't\ allocate\ a\ ne}\)\.{w\ chunk!%
+\\n"});{}$\6
+${}\\{exit}({-}\T{7});{}$\6
+\4${}\}{}$\2\6
+${}\\{new\_chunk}\MG\\{prev}\K\\{cur\_chunk},\39\\{cur\_chunk}\K\\{new%
+\_chunk};{}$\6
+${}\\{cur\_cell}\K{\AND}\\{new\_chunk}\MG\\{cell}[\T{0}];{}$\6
+${}\\{bad\_cell}\K{\AND}\\{new\_chunk}\MG\\{cell}[\\{cells\_per\_chunk}];{}$\6
+\4${}\}{}$\2\par
+\U10.\fi
+
+\M{13}The hash code is computed via ``universal hashing,'' using the following
+precomputed tables of random bits.
+
+\Y\B\4\X7:Initialize everything\X${}\mathrel+\E{}$\6
+\&{for} ${}(\|j\K\T{92};{}$ \|j; ${}\|j\MM){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{8};{}$ ${}\|k\PP){}$\1\5
+${}\\{hash\_bits}[\|j][\|k]\K\\{gb\_next\_rand}(\,){}$;\2\2\par
+\fi
+
+\M{14}\B\X14:Put the variable name beginning at \PB{\\{buf}[\|j]} in \PB{$%
+\\{cur\_tmp\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X${}\E{}$\6
+$\\{cur\_tmp\_var}\MG\\{name}.\\{lng}\K\T{0};{}$\6
+\&{for} ${}(\|h\K\|l\K\T{0};{}$ ${}\\{buf}[\|j+\|l]>\.{'\ '}\W\\{buf}[\|j+\|l]%
+\Z\.{'\~'};{}$ ${}\|l\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|l>\T{7}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Variable\ name\ \%.9s.}\)\.{..\ in\ the\
+clause\ on\ }\)\.{line\ \%lld\ is\ too\ lon}\)\.{g!\\n"},\39\\{buf}+\|j,\39%
+\\{clauses});{}$\6
+${}\\{exit}({-}\T{8});{}$\6
+\4${}\}{}$\2\6
+${}\|h\MRL{{\XOR}{\K}}\\{hash\_bits}[\\{buf}[\|j+\|l]-\.{'!'}][\|l];{}$\6
+${}\\{cur\_tmp\_var}\MG\\{name}.\\{ch8}[\|l]\K\\{buf}[\|j+\|l];{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|l\E\T{0}){}$\1\5
+\&{goto} \\{empty\_clause};\C{ `\.\~' by itself is like `true' }\2\6
+${}\|j\MRL{+{\K}}\|l;{}$\6
+${}\|h\MRL{\AND{\K}}(\T{1}\LL\\{hbits})-\T{1}{}$;\par
+\U10.\fi
+
+\M{15}\B\X15:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash table at \PB{%
+\|p}\X${}\E{}$\6
+\&{for} ${}(\|p\K\\{hash}[\|h];{}$ \|p; ${}\|p\K\|p\MG\\{next}){}$\1\6
+\&{if} ${}(\|p\MG\\{name}.\\{lng}\E\\{cur\_tmp\_var}\MG\\{name}.\\{lng}){}$\1\5
+\&{break};\2\2\6
+\&{if} ${}(\R\|p){}$\5
+${}\{{}$\C{ new variable found }\1\6
+${}\|p\K\\{cur\_tmp\_var}\PP;{}$\6
+${}\|p\MG\\{next}\K\\{hash}[\|h],\39\\{hash}[\|h]\K\|p;{}$\6
+${}\|p\MG\\{serial}\K\\{vars}\PP;{}$\6
+${}\|p\MG\\{stamp}\K\T{0};{}$\6
+\4${}\}{}$\2\par
+\U10.\fi
+
+\M{16}The most interesting aspect of the input phase is probably the
+``unwinding''
+that we might need to do when encountering a literal more than once
+in the same clause.
+
+\Y\B\4\X16:Handle a duplicate literal\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}((\|p\MG\\{stamp}>\T{0})\E(\|i>\T{0})){}$\1\5
+\&{goto} \\{empty\_clause};\2\6
+\4${}\}{}$\2\par
+\U10.\fi
+
+\M{17}An input line that begins with `\.{\~\ }' is silently treated as a
+comment.
+Otherwise redundant clauses are logged, in case they were unintentional.
+(One can, however, intentionally
+use redundant clauses to force the order of the variables.)
+
+\Y\B\4\X17:Remove all variables of the current clause\X${}\E{}$\6
+\&{while} (\|k)\5
+${}\{{}$\1\6
+\X18:Move \PB{\\{cur\_cell}} backward to the previous cell\X;\6
+${}\|k\MM;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}((\\{buf}[\T{0}]\I\.{'\~'})\V(\\{buf}[\T{1}]\I\.{'\ '})){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"(The\ clause\ on\ line}\)\.{\ \%lld\ is\
+always\ sati}\)\.{sfied)\\n"},\39\\{clauses});{}$\2\6
+\&{else} \&{if} ${}(\\{vars}\E\T{0}){}$\1\5
+${}\\{printf}(\.{"c\ \%s"},\39\\{buf}+\T{2}){}$;\C{ retain opening comments }\2%
+\6
+${}\\{nullclauses}\PP{}$;\par
+\U9.\fi
+
+\M{18}\B\X18:Move \PB{\\{cur\_cell}} backward to the previous cell\X${}\E{}$\6
+\&{if} ${}(\\{cur\_cell}>{\AND}\\{cur\_chunk}\MG\\{cell}[\T{0}]){}$\1\5
+${}\\{cur\_cell}\MM;{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{register} \&{chunk} ${}{*}\\{old\_chunk}\K\\{cur\_chunk};{}$\7
+${}\\{cur\_chunk}\K\\{old\_chunk}\MG\\{prev}{}$;\5
+\\{free}(\\{old\_chunk});\6
+${}\\{bad\_cell}\K{\AND}\\{cur\_chunk}\MG\\{cell}[\\{cells\_per\_chunk}];{}$\6
+${}\\{cur\_cell}\K\\{bad\_cell}-\T{1};{}$\6
+\4${}\}{}$\2\par
+\Us17\ET24.\fi
+
+\M{19}Here I must omit `\PB{\\{free}(\\{old\_vchunk})}' from the code that's
+usually
+in this section, because the variable data will be used later.
+
+\Y\B\4\X19:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary
+variable\X${}\E{}$\6
+\&{if} ${}(\\{cur\_tmp\_var}>{\AND}\\{cur\_vchunk}\MG\\{var}[\T{0}]){}$\1\5
+${}\\{cur\_tmp\_var}\MM;{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{register} \&{vchunk} ${}{*}\\{old\_vchunk}\K\\{cur\_vchunk};{}$\7
+${}\\{cur\_vchunk}\K\\{old\_vchunk}\MG\\{prev}{}$;\C{ and don't \PB{\\{free}(%
+\\{old\_vchunk})} }\6
+${}\\{bad\_tmp\_var}\K{\AND}\\{cur\_vchunk}\MG\\{var}[\\{vars\_per%
+\_vchunk}];{}$\6
+${}\\{cur\_tmp\_var}\K\\{bad\_tmp\_var}-\T{1};{}$\6
+\4${}\}{}$\2\par
+\U22.\fi
+
+\M{20}\B\X20:Report the successful completion of the input phase\X${}\E{}$\6
+$\\{fprintf}(\\{stderr},\39\.{"(\%lld\ variables,\ \%l}\)\.{ld\ clauses,\ \%llu%
+\ lit}\)\.{erals\ successfully\ r}\)\.{ead)\\n"},\39\\{vars},\39\\{clauses},\39%
+\\{cells}){}$;\par
+\U1.\fi
+
+\N{1}{21}The output phase. I had to input everything first because DIMACS
+format
+specifies the number of variables and clauses right at the beginning.
+
+\Y\B\4\X21:Output the clauses\X${}\E{}$\6
+\X22:Show the variable names as comments\X;\6
+${}\\{printf}(\.{"p\ cnf\ \%lld\ \%lld\\n"},\39\\{vars},\39\\{clauses});{}$\6
+\X23:Translate all the temporary cells into the simple DIMACS form\X;\6
+\X25:Check consistency\X;\par
+\U1.\fi
+
+\M{22}This section is optional, but I'm including it today while I remember
+how to provide it.
+
+\Y\B\4\X22:Show the variable names as comments\X${}\E{}$\6
+\&{for} ${}(\|c\K\\{vars};{}$ \|c; ${}\|c\MM){}$\5
+${}\{{}$\1\6
+\X19:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary variable\X;%
+\6
+${}\\{printf}(\.{"c\ \%.8s\ ->\ \%d\\n"},\39\\{cur\_tmp\_var}\MG\\{name}.%
+\\{ch8},\39\|c);{}$\6
+\4${}\}{}$\2\par
+\U21.\fi
+
+\M{23}\B\X23:Translate all the temporary cells into the simple DIMACS form\X${}%
+\E{}$\6
+\&{for} ${}(\|c\K\\{clauses};{}$ \|c; ${}\|c\MM){}$\5
+${}\{{}$\1\6
+\X24:Translate the cells for the literals of clause \PB{\|c}\X;\6
+\\{printf}(\.{"\ 0\\n"});\6
+\4${}\}{}$\2\par
+\U21.\fi
+
+\M{24}\B\D$\\{hack\_out}(\|q)$ \5
+(((\&{ullng}) \|q)${}\AND\T{\^3}{}$)\par
+\B\4\D$\\{hack\_clean}(\|q)$ \5
+((\&{tmp\_var} ${}{*})({}$(\&{ullng}) \|q${}\AND{-}\T{4}){}$)\par
+\Y\B\4\X24:Translate the cells for the literals of clause \PB{\|c}\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{2};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\X18:Move \PB{\\{cur\_cell}} backward to the previous cell\X;\6
+${}\|i\K\\{hack\_out}({*}\\{cur\_cell});{}$\6
+${}\|p\K\\{hack\_clean}({*}\\{cur\_cell})\MG\\{serial};{}$\6
+${}\\{printf}(\.{"\ \%s\%d"},\39\|i\AND\T{1}\?\.{"-"}:\.{""},\39\|p+\T{1});{}$\6
+\4${}\}{}$\2\par
+\U23.\fi
+
+\M{25}\B\X25:Check consistency\X${}\E{}$\6
+\&{if} ${}(\\{cur\_cell}\I{\AND}\\{cur\_chunk}\MG\\{cell}[\T{0}]\V\\{cur%
+\_chunk}\MG\\{prev}\I\NULL\V\\{cur\_tmp\_var}\I{\AND}\\{cur\_vchunk}\MG\\{var}[%
+\T{0}]\V\\{cur\_vchunk}\MG\\{prev}\I\NULL){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"This\ can't\ happen\ (}\)\.{consistency\ check%
+\ fa}\)\.{ilure)!\\n"});{}$\6
+${}\\{exit}({-}\T{14});{}$\6
+\4${}\}{}$\2\par
+\U21.\fi
+
+\N{1}{26}Index.
+
+
+\fi
+
+
+\inx
+\fin
+\con

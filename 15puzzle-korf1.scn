@@ -1,0 +1,38 @@
+\I\X5:Apply Korf's procedure\X
+\U1.
+\I\X22:Cases that move back\X
+\U8.
+\I\X10:Cases that move east from column 0\X
+\U8.
+\I\X11:Cases that move east from column 1\X
+\U8.
+\I\X12:Cases that move east from column 2\X
+\U8.
+\I\X16:Cases that move north from row 1\X
+\U8.
+\I\X17:Cases that move north from row 2\X
+\U8.
+\I\X18:Cases that move north from row 3\X
+\U8.
+\I\X19:Cases that move south from row 0\X
+\U8.
+\I\X20:Cases that move south from row 1\X
+\U8.
+\I\X21:Cases that move south from row 2\X
+\U8.
+\I\X13:Cases that move west from column 1\X
+\U8.
+\I\X14:Cases that move west from column 2\X
+\U8.
+\I\X15:Cases that move west from column 3\X
+\U8.
+\I\X2:Input the initial position\X
+\U1.
+\I\X24:Output the results\X
+\U1.
+\I\X6:Set \PB{\\{moves}} to the minimum number of happy moves\X
+\U5.
+\I\X8:Switch into action\X
+\U23.
+\I\X23:Try for a solution with \PB{\|t} more moves\X
+\U5.

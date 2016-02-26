@@ -1,0 +1,53 @@
+\I\X17:Change \PB{\|y} to its binary logarithm\X
+\Us15\ET16.
+\I\X8:Do segment \PB{\\{ii}}\X
+\U2.
+\I\X28:Get ready for Montgomery's method\X
+\U27.
+\I\X7:Get ready for the first segment\X
+\U2.
+\I\X32:If $z$ is divisible by a prime $\le53$, \PB{\&{return} \T{0}}\X
+\U27.
+\I\X5:Initialize the active primes\X
+\U7.
+\I\X18:Initialize the bit-counting table\X
+\U2.
+\I\X24:Initialize the random number generator\X
+\U2.
+\I\X9:Initialize the sieve from the tiny primes\X
+\U8.
+\I\X6:Initialize the tiny active primes\X
+\U5.
+\I\X4:Input the primes\X
+\U3.
+\I\X19:Look for and report any large gaps between \PB{\\{lastprime}} and \PB{%
+\|x}\X
+\U13.
+\I\X13:Look for large gaps\X
+\U8.
+\I\X3:Process the command line and input the primes\X
+\U2.
+\I\X20:Report a gap, if it's big enough\X
+\U19.
+\I\X21:Report the final prime\X
+\U2.
+\I\X31:Set $y\gets (xy/2^{64})\bmod z$\X
+\U27.
+\I\X30:Set $y\gets (y^2\!/2^{64})\bmod z$\X
+\U27.
+\I\X16:Set \PB{\\{lastprime}} to the largest prime in \PB{\\{sieve}[\|k]}\X
+\U13.
+\I\X14:Set \PB{\\{lastprime}} to the smallest prime $\ge s_0$\X
+\U13.
+\I\X15:Set \PB{\|x} to the smallest prime in \PB{\\{sieve}[\|j]}\X
+\U13.
+\I\X29:Set \PB{\\{zp}} to the inverse of \PB{\|z} modulo $2^{64}$\X
+\U28.
+\I\X11:Sieve in the enqueued large primes\X
+\U10.
+\I\X12:Sieve in the newly active primes\X
+\U8.
+\I\X10:Sieve in the previously active primes\X
+\U8.
+\I\X22, 23, 25, 26, 27:Subroutines\X
+\U2.

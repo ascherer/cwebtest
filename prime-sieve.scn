@@ -1,0 +1,34 @@
+\I\X16:Change \PB{\|y} to its binary logarithm\X
+\Us13, 14\ETs15.
+\I\X14:Check for a potentially interesting gap\X
+\U12.
+\I\X8:Do segment \PB{\\{ii}}\X
+\U2.
+\I\X7:Get ready for the first segment\X
+\U2.
+\I\X13:Identify the first prime in this segment, if necessary\X
+\U12.
+\I\X5:Initialize the active primes\X
+\U7.
+\I\X17:Initialize the bit-counting table\X
+\U2.
+\I\X9:Initialize the sieve from the tiny primes\X
+\U8.
+\I\X6:Initialize the tiny active primes\X
+\U5.
+\I\X4:Input the primes\X
+\U3.
+\I\X12:Look for large gaps\X
+\U8.
+\I\X3:Process the command line and input the primes\X
+\U2.
+\I\X18:Report a gap, if it's big enough\X
+\Us13\ET14.
+\I\X19:Report the final prime\X
+\U2.
+\I\X15:Set \PB{\\{lastprime}} to the largest prime in \PB{\\{sieve}[\|k]}\X
+\Us12\ET14.
+\I\X11:Sieve in the newly active primes\X
+\U8.
+\I\X10:Sieve in the previously active primes\X
+\U8.

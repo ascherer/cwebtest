@@ -1,0 +1,16 @@
+\I\X8:Compute the $S$'s\X
+\U5.
+\I\X7:Input the tree\X
+\U5.
+\I\X10:Output $T[j,s,x[0],\ldots,x[r]]$\X
+\U9.
+\I\X9:Output the necessary computations\X
+\U5.
+\I\X11:Output the no-kid case\X
+\U10.
+\I\X12:Output the one-kid case\X
+\U10.
+\I\X13:Output the two-kid case\X
+\U10.
+\I\X6:Parse the command line\X
+\U5.

@@ -1,0 +1,29 @@
+\I\X10:Check the reflected delta sequence for canonicity and possible identity\X
+\U9.
+\I\X16:Construct the graph corresponding to the chords of \PB{\\{del}}\X
+\U8.
+\I\X9:Determine the automorphisms, but \PB{\&{goto} \\{next}} if \PB{\\{del}}
+isn't canonical\X
+\U8.
+\I\X5:Generate all answers for $(p,j)$\X
+\U2.
+\I\X3, 12:Global variables\X
+\U2.
+\I\X17:Initialize for chord placement\X
+\U16.
+\I\X4:Initialize the delta sequence, with $\delta_0=j$\X
+\U2.
+\I\X22:Mark the regions, but \PB{\&{goto} \\{next}} if there's an articulation
+problem\X
+\U8.
+\I\X8:Print the current \PB{\\{del}} table if it's a solution, then \PB{%
+\&{goto} \\{next}}\X
+\U5.
+\I\X24:Print the graph\X
+\U23.
+\I\X23:Print \PB{\\{del}} and its characteristics\X
+\U8.
+\I\X6, 13, 15, 18, 19, 20:Subroutines\X
+\U2.
+\I\X25:Update the totals\X
+\U8.

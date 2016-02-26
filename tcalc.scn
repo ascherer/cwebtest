@@ -1,0 +1,36 @@
+\I\X23:Add \PB{\\{right}(\|p)} to \PB{\\{right}(\|q)} and append this to \PB{%
+\\{succ}(\\{pl})}\X
+\U21.
+\I\X13, 14, 15, 16, 17, 18, 19, 55, 60, 62:Basic subroutines\X
+\U1.
+\I\X6, 8, 32, 34, 35, 37, 39, 40, 41, 42, 43, 49, 52:Cases for one-character
+operators\X
+\U3.
+\I\X61:Check that the saved trees account for all the \PB{\\{used}} nodes\X
+\U3.
+\I\X29:Clear the current stack\X
+\U3.
+\I\X56:Compute stats for \PB{\|j} from the stats of \PB{\\{jl}}, \PB{\\{jr}}\X
+\U54.
+\I\X4, 7, 31, 33, 36, 38, 48, 51:Define the help strings\X
+\U5.
+\I\X30:Display and save all trees currently in the stack\X
+\U3.
+\I\X59:Display tree \PB{\\{saved}[\|k]}\X
+\U30.
+\I\X9:Fill \PB{\\{buf}} with the user's next sequence of commands\X
+\U3.
+\I\X2, 12, 24, 28, 45, 50, 53, 58, 63:Global variables\X
+\U1.
+\I\X5, 46:Initialize the data structures\X
+\U1.
+\I\X3:Prompt the user for a command and execute it\X
+\U1.
+\I\X10:Set \PB{\\{op}} and \PB{\\{param}} for the next operator\X
+\U3.
+\I\X20, 21, 25, 26, 27, 44, 47, 54, 57:Subroutines\X
+\U1.
+\I\X22:Swap \PB{\|p} and \PB{\|q} so that \PB{$\|p>\|q$}\X
+\U21.
+\I\X11:Type definitions\X
+\U1.

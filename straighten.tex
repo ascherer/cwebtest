@@ -1,0 +1,483 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. This program computes matrix representations of permutations,
+based on tableaux of a given shape~$\lambda$. If there are $f$
+standard Young tableaux of that shape, it produces $f\times f$ matrices
+$B_\pi$ for any given permutation $\pi$, with the property that
+$B_\pi B_\sigma=B_{\pi\sigma}$.
+
+I'm trying to learn concrete details of such representations, and my
+experience has always been that the best way to learn something is
+to try to program it whenever possible. Therefore I'm writing this
+code as part of my own education. But I haven't seen any book that
+mentions the method used below, so other readers may also find
+aspects of interest here.
+Of course I can't claim to have read very much of the huge literature
+that already exists on this topic; probably I have rediscovered
+something that's fairly well known.
+
+Let $\lambda$ be a partition of $n$, namely $\lambda=(a_1,\ldots,a_k)$ where
+$a_1\ge\cdots\ge a_k\ge1$ and $a_1+\cdots+a_k=n$. A {\it tableau\/}
+of shape~$\lambda$ is a way to place the numbers $\{1,\ldots,n\}$ into
+an array with $n$ left-justified rows and $a_j$ entries in row~$j$.
+The tableau is {\it standard\/} if the entries in each row are
+increasing from left to right and the entries in each column are
+increasing from top to bottom.
+
+\begingroup
+\setbox0=\hbox{0}
+\dimen0=\ht0 \advance\dimen0 by 2pt \ht0=\dimen0 \dp0=2pt
+\def\\#1#2#3#4#5#6#7#8#9{\vcenter{\offinterlineskip
+\hrule\halign{\vrule\vphantom{\copy0}$\,##\,$\vrule&&$\,##\,$\vrule\cr
+#1&#2&#3\cr\noalign{\hrule}
+#4&#5&#6\cr\noalign{\hrule}
+#7&#8&#9\cr\noalign{\hrule}}}}
+The method of this program is based on a straightforward algorithm that
+takes a not-necessarily-standard tableau and determines all ways to
+permute its columns in such a fashion that a subsequent row-sorting
+will produce a standard tableau. For example, if $\lambda=(3,3,3)$ and if
+the given tableau is
+$$\\314592687\,,$$
+there are nine solutions,
+$$\\312584697\quad\\312684597\quad\\512384697\quad
+\\612384597\quad\\314582697\quad\\314682597\quad
+\\317582694\quad\\514682397\quad\\614582397\,;$$
+row-sorting converts these respective solutions to the standard tableaux
+$$\\123458679\quad\\123468579\quad\\125348679\quad
+\\126348579\quad\\134258679\quad\\134268579\quad
+\\137258469\quad\\145268379\quad\\146258379\,.$$
+Another way to state the given problem is, ``Find all standard tableaux
+that can be produced from a given one by permuting columns, then
+permuting rows.''
+\endgroup
+
+The first line of standard input should contain the partition elements
+$a_1$, \dots,~$a_k$, separated by spaces and followed by~0. Subsequent
+lines should contain permutations whose representative matrices are desired;
+each permutation is given as a sequence $p_1$, \dots,~$p_n$, separated by
+spaces.
+
+N.B.: The permutation $p_1\ldots p_n$ takes $1\mapsto p_1$, $2\mapsto p_2$,
+etc., and the representation matrices produced by this program multiply
+permutations from left to right. Thus, for example, if $A$, $B$, and $C$
+are the matrices representing $132$, $213$, and $231$, respectively,
+aka the permutations (23), (12), and (123), we have $(23)(12)=(123)$
+hence $AB=C$.
+
+\fi
+
+\M{2}\B\D$\\{maxn}$ \5
+\T{100}\C{ let's not permute more than a hundred guys }\par
+\B\4\D$\\{maxf}$ \5
+\T{300}\C{ and let's not find matrices of size more than $300\times300$ }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\X3:Global variables\X\6
+\X11:Subroutines\X\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \\{jj}${},{}$ \|k${},{}$ \|l;\7
+\X4:Read the shape $\lambda$\X;\6
+\X5:Compute the transposed shape $\lambda^T$\X;\6
+\X6:Find all the standard tableaux of the given shape\X;\6
+${}\\{printf}(\.{"There\ are\ \%d\ standa}\)\.{rd\ tableaux\ of\ shape}\)\.{"},%
+\39\|f);{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\\{kk};{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\ \%d"},\39\|a[\|j]);{}$\2\6
+\\{printf}(\.{".\\n"});\6
+\X16:Compute \PB{\|f} basis vectors for the representation\X;\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\X17:Read a permutation \PB{\|p} (but \PB{\&{break}} if there's no more good
+data)\X;\6
+\\{printf}(\.{"Representation\ of"});\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\ \%d"},\39\|p[\|j]);{}$\2\6
+\\{printf}(\.{":\\n"});\6
+\&{for} ${}(\\{jj}\K\T{0};{}$ ${}\\{jj}<\|f;{}$ ${}\\{jj}\PP){}$\5
+${}\{{}$\1\6
+\X18:Compute the representation of the \PB{\\{jj}}th standard tableau, permuted
+by \PB{\|p}\X;\6
+\X19:Reduce the representation to a linear combination of basis elements\X;\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|f;{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\%\ 3d"},\39\\{rep}[\|j]);{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{3}\B\X3:Global variables\X${}\E{}$\6
+\&{int} ${}\|a[\\{maxn}+\T{2}]{}$;\C{ the shape }\6
+\&{int} ${}\|b[\\{maxn}+\T{1}]{}$;\C{ its transpose }\6
+\&{int} \|n;\C{ the number of elements permuted }\6
+\&{int} \\{kk};\C{ the number of rows }\6
+\&{int} \|f;\C{ the number of standard tableaux }\6
+\&{int} ${}\|p[\\{maxn}+\T{1}]{}$;\C{ the permutation to be represented }\6
+\&{int} ${}\|q[\\{maxn}+\T{1}]{}$;\C{ the inverse of $p$ }\6
+\&{int} \|t[\\{maxn}][\\{maxn}]${},{}$ \\{tt}[\\{maxn}][\\{maxn}];\C{ working
+tableaux }\6
+\&{int} ${}\\{aa}[\\{maxn}+\T{2}]{}$;\C{ row sizes of \PB{\\{tt}} }\6
+\&{int} \\{stand}[\\{maxf}][\\{maxn}];\C{ standard tableaux }\6
+\&{int} \\{basis}[\\{maxf}][\\{maxf}];\C{ basis elements }\6
+\&{int} \\{rep}[\\{maxf}];\C{ a linear combination of standard tableaux }\par
+\A9.
+\U2.\fi
+
+\M{4}\B\X4:Read the shape $\lambda$\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$  ; ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|j>\\{maxn}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Partition\ too\ long\ }\)\.{(maxn=\%d)!\\n"},%
+\39\\{maxn});{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{scanf}(\.{"\%d"},\39{\AND}\|a[\|j+\T{1}])\I\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Partition\ should\ en}\)\.{d\ with\ zero!%
+\\n"});{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|a[\|j+\T{1}]\E\T{0}){}$\1\5
+\&{break};\2\6
+\&{if} ${}(\|a[\|j+\T{1}]<\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Partition\ contains\ }\)\.{a\ negative\
+element\ (}\)\.{\%d)!\\n"},\39\|a[\|j+\T{1}]);{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|a[\|j+\T{1}]>\\{maxn}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Partition\ element\ \%}\)\.{d\ is\ too\ big\
+(maxn=\%}\)\.{d)!\\n"},\39\|a[\|j+\T{1}],\39\\{maxn});{}$\6
+${}\\{exit}({-}\T{4});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\\{kk}\K\|j;{}$\6
+\&{for} ${}(\|j\K\T{2},\39\|n\K\|a[\T{1}];{}$ ${}\|j\Z\\{kk};{}$ ${}\|j\PP){}$%
+\1\5
+${}\|n\MRL{+{\K}}\|a[\|j];{}$\2\6
+\&{if} ${}(\|n>\\{maxn}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Shape\ is\ too\ big\ (n}\)\.{=\%d,\ maxn=\%d)!%
+\\n"},\39\|n,\39\\{maxn});{}$\6
+${}\\{exit}({-}\T{5});{}$\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{5}This is exercise 7.2.1.4--6.
+
+\Y\B\4\X5:Compute the transposed shape $\lambda^T$\X${}\E{}$\6
+\&{for} ${}(\|k\K\|a[\T{1}],\39\|j\K\T{1};{}$ \|k; ${}\|j\PP){}$\1\6
+\&{while} ${}(\|k>\|a[\|j+\T{1}]){}$\1\5
+${}\|b[\|k\MM]\K\|j{}$;\2\2\par
+\U2.\fi
+
+\N{1}{6}Generating the standard tableaux. Here I use the Varol--Rotem algorithm
+to run through all the Young tableaux (Algorithm 7.2.1.2V).
+
+All algorithms in this program are pretty much ``brute force,'' with
+little attempt at optimization.
+
+\Y\B\4\X6:Find all the standard tableaux of the given shape\X${}\E{}$\6
+\X7:Generate the order relation for the desired tableaux\X;\6
+\4\\{v1}:\5
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\1\5
+${}\|p[\|j]\K\|q[\|j]\K\|j,\39\\{prec}[\T{0}][\|j]\K\T{1};{}$\2\6
+\4\\{v2}:\5
+\X8:Record the tableau represented by $p$ and $q$\X;\6
+${}\|k\K\|n;{}$\6
+\4\\{v3}:\5
+${}\|j\K\|q[\|k],\39\|l\K\|p[\|j-\T{1}];{}$\6
+\&{if} (\\{prec}[\|l][\|k])\1\5
+\&{goto} \\{v5};\2\6
+\4\\{v4}:\5
+${}\|p[\|j-\T{1}]\K\|k,\39\|p[\|j]\K\|l,\39\|q[\|k]\K\|j-\T{1},\39\|q[\|l]\K%
+\|j;{}$\6
+\&{goto} \\{v2};\6
+\4\\{v5}:\5
+\&{while} ${}(\|j<\|k){}$\1\5
+${}\|l\K\|p[\|j+\T{1}],\39\|p[\|j]\K\|l,\39\|q[\|l]\K\|j,\39\|j\PP;{}$\2\6
+${}\|p[\|k]\K\|q[\|k]\K\|k;{}$\6
+${}\|k\MM;{}$\6
+\&{if} (\|k)\1\5
+\&{goto} \\{v3};\2\6
+\X10:Assign index numbers to each tableau found\X;\par
+\U2.\fi
+
+\M{7}\B\X7:Generate the order relation for the desired tableaux\X${}\E{}$\6
+\&{for} ${}(\|j\K\\{jj}\K\T{0};{}$ ${}\|j<\\{kk};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|a[\|j+\T{1}];{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|t[\|j][\|k]\K\PP\\{jj};{}$\6
+\&{if} ${}(\|k>\T{0}){}$\1\5
+${}\\{prec}[\\{jj}-\T{1}][\\{jj}]\K\T{1};{}$\2\6
+\&{if} ${}(\|j>\T{0}){}$\1\5
+${}\\{prec}[\|t[\|j-\T{1}][\|k]][\\{jj}]\K\T{1};{}$\2\6
+\4${}\}{}$\2\2\par
+\U6.\fi
+
+\M{8}At this point we've found a standard tableau, whose entry in
+position \PB{\|t[\|j][\|k]} is \PB{\|q[\|t[\|j][\|k]]}.
+
+It is convenient to
+record a standard tableau as a permutation $w_1\ldots w_n$ of the multiset
+$\{a_1\cdot1,\ldots,a_k\cdot k\}$, where the $l$th element of this
+permutation specifies the row occupied by the number~$l$. Then a~trie
+is used to keep track of all such permutations we've found.
+
+\Y\B\4\X8:Record the tableau represented by $p$ and $q$\X${}\E{}$\6
+\&{if} ${}(\|f\E\\{maxf}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Too\ many\ standard\ t}\)\.{ableaux\ exist\
+(maxf=}\)\.{\%d)!\\n"},\39\\{maxf});{}$\6
+${}\\{exit}({-}\T{6});{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{kk};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|a[\|j+\T{1}];{}$ ${}\|k\PP){}$\1\5
+${}\|w[\|q[\|t[\|j][\|k]]]\K\|j+\T{1};{}$\2\2\6
+\&{for} ${}(\|j\K\T{1},\39\|k\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP,\39\|k\K%
+\|l){}$\5
+${}\{{}$\1\6
+${}\|l\K\\{trie}[\|k][\|w[\|j]];{}$\6
+\&{if} ${}(\|l\E\T{0}){}$\1\5
+${}\|l\K\\{trie}[\|k][\|w[\|j]]\K\PP\\{trienodes};{}$\2\6
+\4${}\}{}$\2\6
+${}\\{trie}[\|k][\|w[\|n]]\K\T{1}{}$;\C{ mark a unique entry in the leif }\6
+${}\|f\PP{}$;\par
+\U6.\fi
+
+\M{9}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{int} ${}\\{prec}[\\{maxn}+\T{1}][\\{maxn}+\T{1}]{}$;\C{ \PB{\\{prec}[\|j][%
+\|k]} is nonzero if $j\prec k$ }\6
+\&{int} ${}\|w[\\{maxn}+\T{1}]{}$;\C{ codeword for a standard tableau }\6
+\&{int} ${}\\{trie}[\\{maxf}*\\{maxn}][\\{maxn}+\T{1}]{}$;\C{ trie memory, see
+Algorithm 6.3T }\6
+\&{int} \\{trienodes};\C{ this many trie nodes have been allocated so far }\par
+\fi
+
+\M{10}The standard tableaux are now given code numbers from 0 to $f-1$.
+We walk through the trie in lexicographic order.
+(Yes, I could/should have done it recursively.)
+
+\Y\B\4\X10:Assign index numbers to each tableau found\X${}\E{}$\6
+$\|l\K\T{1},\39\|k\K\T{0},\39\|j\K\T{0};{}$\6
+\4\\{newlev}:\5
+${}\|w[\|l]\K\T{1};{}$\6
+\4\\{tryit}:\5
+\&{if} (\\{trie}[\|k][\|w[\|l]])\5
+${}\{{}$\1\6
+\&{if} ${}(\|l\E\|n){}$\5
+${}\{{}$\1\6
+\&{for} ( ; \|l; ${}\|l\MM){}$\1\5
+${}\\{stand}[\|j][\|l]\K\|w[\|l];{}$\2\6
+${}\|l\K\|n;{}$\6
+${}\\{trie}[\|k][\|w[\|l]]\K\|j\PP;{}$\6
+\&{goto} \\{levdone};\6
+\4${}\}{}$\2\6
+${}\|q[\|l]\K\|k,\39\|k\K\\{trie}[\|k][\|w[\|l]],\39\|l\PP;{}$\6
+\&{goto} \\{newlev};\6
+\4${}\}{}$\2\6
+\4\\{tryagain}:\5
+\&{if} ${}(\|w[\|l]\E\\{kk}){}$\1\5
+\&{goto} \\{levdone};\2\6
+${}\|w[\|l]\PP;{}$\6
+\&{goto} \\{tryit};\6
+\4\\{levdone}:\5
+${}\|l\MM;{}$\6
+\&{if} (\|l)\5
+${}\{{}$\1\6
+${}\|k\K\|q[\|l];{}$\6
+\&{goto} \\{tryagain};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|j\I\|f){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Oops,\ I\ goofed!\\n"});{}$\6
+${}\\{exit}({-}\T{7});{}$\6
+\4${}\}{}$\2\par
+\U6.\fi
+
+\N{1}{11}Finding admissible column perms. Now comes the heart of this program,
+the routine for solving the problem mentioned in the introduction.
+
+Instead of producing a list of solutions, it sets $\PB{\\{rep}}[j]=\pm1$
+for each standard tableau~$j$ achievable by column-then-row permutation,
+using the sign of the column permutation.
+
+\Y\B\4\X11:Subroutines\X${}\E{}$\6
+\&{void} \\{findrep}(\&{void})\C{ the input tableau is in \PB{\|t} }\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|l${},{}$ \\{inv}${},{}$
+\\{sign};\6
+\&{int} ${}\\{row}[\\{maxn}+\T{1}],{}$ ${}\\{col}[\\{maxn}+\T{1}]{}$;\C{
+positions inside \PB{\|t} }\7
+\X12:Sort the columns of \PB{\|t}\X;\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|f;{}$ ${}\|j\PP){}$\1\5
+${}\\{rep}[\|j]\K\T{0};{}$\2\6
+\X13:Figure out where each element is, and set \PB{\\{tt}} zero\X;\6
+\X14:Run through all solutions\X;\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{12}Insertion sort wins here, of course.
+
+\Y\B\4\X12:Sort the columns of \PB{\|t}\X${}\E{}$\6
+$\\{inv}\K\T{0};{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|a[\T{1}];{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|b[\|k+\T{1}];{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\|t[\|j][\|k]<\|t[\|j-\T{1}][\|k]){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\|j-\T{1},\39\|l\K\|t[\|j][\|k];{}$  ; ${}\|i\MM){}$\5
+${}\{{}$\1\6
+${}\|t[\|i+\T{1}][\|k]\K\|t[\|i][\|k];{}$\6
+${}\\{inv}\PP{}$;\C{ inversions removed in this column }\6
+\&{if} ${}(\|i\E\T{0}\V\|l>\|t[\|i-\T{1}][\|k]){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+${}\|t[\|i][\|k]\K\|l;{}$\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\par
+\U11.\fi
+
+\M{13}\B\X13:Figure out where each element is, and set \PB{\\{tt}} zero\X${}%
+\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{kk};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|a[\|j+\T{1}];{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|l\K\|t[\|j][\|k];{}$\6
+${}\\{row}[\|l]\K\|j,\39\\{col}[\|l]\K\|k;{}$\6
+${}\\{tt}[\|j][\|k]\K\T{0};{}$\6
+\4${}\}{}$\2\2\par
+\U11.\fi
+
+\M{14}Now we use a simple backtrack method to build a tableau \PB{\\{tt}} from
+which
+row-sorting will be standard, by first placing~1 in \PB{\\{tt}}, then~2, etc.
+
+There always is at least one solution, because row sorting does not
+``mess up'' column sorting. (See exercise 5.3.4--27.)
+
+\Y\B\4\X14:Run through all solutions\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\\{kk};{}$ ${}\|j\PP){}$\1\5
+${}\\{aa}[\|j]\K\T{0};{}$\2\6
+${}\\{aa}[\T{0}]\K\\{maxn}+\T{1};{}$\6
+${}\|l\K\T{1};{}$\6
+\4\\{newlev}:\5
+${}\|j\K\T{1};{}$\6
+\4\\{tryit}:\5
+\&{if} ${}(\\{tt}[\|j-\T{1}][\\{col}[\|l]]\E\T{0}\W\\{aa}[\|j-\T{1}]>\\{aa}[%
+\|j]){}$\5
+${}\{{}$\1\6
+${}\|w[\|l]\K\|j,\39\\{tt}[\|j-\T{1}][\\{col}[\|l]]\K\|l,\39\\{aa}[\|j]\PP;{}$\6
+\&{if} ${}(\|l\E\|n){}$\1\5
+\X15:Use this solution and go to \PB{\\{levdone}}\X;\2\6
+${}\|l\PP;{}$\6
+\&{goto} \\{newlev};\6
+\4${}\}{}$\2\6
+\4\\{tryagain}:\6
+\&{if} ${}(\PP\|j\Z\|b[\\{col}[\|l]+\T{1}]){}$\1\5
+\&{goto} \\{tryit};\2\6
+\4\\{levdone}:\5
+${}\|l\MM;{}$\6
+\&{if} (\|l)\5
+${}\{{}$\1\6
+${}\|j\K\|w[\|l],\39\\{tt}[\|j-\T{1}][\\{col}[\|l]]\K\T{0},\39\\{aa}[\|j]%
+\MM;{}$\6
+\&{goto} \\{tryagain};\6
+\4${}\}{}$\2\par
+\U11.\fi
+
+\M{15}\B\X15:Use this solution and go to \PB{\\{levdone}}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{sign}\K\\{inv};{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\\{kk};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|a[\|j+\T{1}];{}$ ${}\|k\PP){}$\1\6
+\&{for} ${}(\|l\K\T{0};{}$ ${}\|l<\|j;{}$ ${}\|l\PP){}$\1\6
+\&{if} ${}(\\{tt}[\|l][\|k]>\\{tt}[\|j][\|k]){}$\1\5
+${}\\{sign}\PP;{}$\2\2\2\2\6
+\&{for} ${}(\|k\K\T{0},\39\|j\K\T{1};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\1\5
+${}\|k\K\\{trie}[\|k][\|w[\|j]];{}$\2\6
+${}\\{rep}[\\{trie}[\|k][\|w[\|n]]]\K(\\{sign}\AND\T{1}\?{-}\T{1}:\T{1});{}$\6
+${}\|l\K\|n;{}$\6
+${}\|j\K\|w[\|l],\39\\{tt}[\|j-\T{1}][\\{col}[\|l]]\K\T{0},\39\\{aa}[\|j]%
+\MM;{}$\6
+\&{goto} \\{levdone};\6
+\4${}\}{}$\2\par
+\U14.\fi
+
+\N{1}{16}Finishing up. The theory to justify all these maneuverings can
+be found in many places; I wrote this program after reading
+Bruce Sagan's book {\sl The Symmetric Group}, and Bruce based much of
+his treatment on G.~D. James's monograph on representation theory
+[{\sl Lecture Notes in Mathematics\/ \bf682} (1978)].
+
+Those books use a more complicated ``straightening rule'' to compute
+representations and to prove important theorems. But once the theorems are
+proved, we can use them to justify the more direct approach taken here.
+
+\Y\B\4\X16:Compute \PB{\|f} basis vectors for the representation\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|f;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\\{kk};{}$ ${}\|j\PP){}$\1\5
+${}\\{aa}[\|j]\K\T{0};{}$\2\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\1\5
+${}\|l\K\\{stand}[\|k][\|j],\39\|t[\|l-\T{1}][\\{aa}[\|l]]\K\|j,\39\\{aa}[\|l]%
+\PP;{}$\2\6
+\\{findrep}(\,);\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|f;{}$ ${}\|j\PP){}$\1\5
+${}\\{basis}[\|k][\|j]\K\\{rep}[\|j];{}$\2\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{17}\B\X17:Read a permutation \PB{\|p} (but \PB{\&{break}} if there's no more
+good data)\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\\{scanf}(\.{"\%d"},\39{\AND}\|p[\|j])\I\T{1}){}$\1\5
+\&{break};\2\2\6
+\&{if} ${}(\|j\Z\|n){}$\1\5
+\&{break};\2\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\1\5
+${}\|q[\|j]\K\T{0};{}$\2\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\|p[\|j]\Z\T{0}\V\|p[\|j]>\|n\V\|q[\|p[\|j]]){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Not\ a\ permutation\ o}\)\.{f\ \{1,...,\%d%
+\}:"},\39\|n);{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ \%d"},\39\|p[\|j]);{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"!\\n"});{}$\6
+${}\\{exit}({-}\T{8});{}$\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\|q[\|p[\|j]]\K\|j{}$;\2\2\par
+\U2.\fi
+
+\M{18}\B\X18:Compute the representation of the \PB{\\{jj}}th standard tableau,
+permuted by \PB{\|p}\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\\{kk};{}$ ${}\|j\PP){}$\1\5
+${}\\{aa}[\|j]\K\T{0};{}$\2\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\1\5
+${}\|l\K\\{stand}[\\{jj}][\|j],\39\|t[\|l-\T{1}][\\{aa}[\|l]]\K\|p[\|j],\39%
+\\{aa}[\|l]\PP;{}$\2\6
+\\{findrep}(\,);\par
+\U2.\fi
+
+\M{19}\B\X19:Reduce the representation to a linear combination of basis
+elements\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|f;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|l\K\\{rep}[\|j];{}$\6
+\&{if} (\|l)\1\6
+\&{for} ${}(\|k\K\|j+\T{1};{}$ ${}\|k<\|f;{}$ ${}\|k\PP){}$\1\5
+${}\\{rep}[\|k]\MRL{-{\K}}\|l*\\{basis}[\|j][\|k];{}$\2\2\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\N{1}{20}Index.
+\fi
+
+\inx
+\fin
+\con

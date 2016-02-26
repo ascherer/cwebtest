@@ -1,0 +1,28 @@
+\I\X4:Check the graph for validity and prepare it for action\X
+\U2.
+\I\X14:Delete \PB{\|e} and \PB{\&{goto} \\{enter}}\X
+\U12.
+\I\X7:Generate all spanning trees\X
+\U1.
+\I\X12:If \PB{\|e} is not a bridge, delete it, set \PB{$\\{change\_e}\K\|e$},
+and \PB{\&{goto} \\{enter}}\X
+\U7.
+\I\X16:Initialize the algorithm\X
+\U1.
+\I\X2:Input the graph\X
+\U1.
+\I\X3, 8:Local variables\X
+\U1.
+\I\X13:Nullify all \PB{\\{bfs}} links and \PB{\&{goto} \\{nonbridge}}\X
+\U12.
+\I\X9:Produce a new spanning tree by changing \PB{\\{change\_e}} to \PB{\|e}\X
+\U7.
+\I\X10:Shrink \PB{\|e} by changing \PB{\|u} to \PB{\|v}\X
+\U7.
+\I\X5, 17:Subroutines\X
+\U1.
+\I\X15:Undelete all edges deleted since entering level \PB{\|l}\X
+\U7.
+\I\X11:Unshrink \PB{\|e} by restoring \PB{\|u}\X
+\U7.
+

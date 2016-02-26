@@ -1,0 +1,1057 @@
+\input cwebmac
+\datethis
+\def\adj{\mathrel{\!\mathrel-\mkern-8mu\mathrel-\mkern-8mu\mathrel-\!}}
+
+
+\N{1}{1}Intro. This is an experimental program in which I try to cut a square
+into a given number of pieces, in such a way that the pieces can be reassembled
+to fill another given shape. (Everything is done pixelwise, without
+``diagonal cuts.'') The pieces can be rotated but not flipped over.
+
+I don't insist that the pieces be internally connected.
+With change files I can add further restrictions.
+
+The input on \PB{\\{stdin}} is a sequence of lines containing
+periods and asterisks, where the asterisks mark usable positions.
+The number of asterisks should be a perfect square.
+
+The desired number of pieces is a command-line parameter.
+
+\Y\B\4\D$\\{maxn}$ \5
+\T{32}\C{ maximum number of input lines and characters per line }\par
+\B\4\D$\\{maxd}$ \5
+\T{7}\C{ maximum number of pieces }\par
+\B\4\D$\\{bufsize}$ \5
+$\\{maxn}+{}$\T{5}\C{ size of the input buffer }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\X25:Type definitions\X\7
+\&{int} \|d;\C{ command-line parameter: the number of colors }\6
+\&{char} \\{buf}[\\{bufsize}];\6
+\&{int} \\{maxrow};\C{ largest row number used in the shape }\6
+\&{int} \\{maxcol};\C{ largest column number used in the shape }\6
+\&{char} ${}\\{aname}[\\{maxn}*\\{maxn}][\T{8}]{}$;\C{ symbolic names of the
+cells in the square }\6
+\&{char} ${}\\{bname}[\\{maxn}*\\{maxn}][\T{8}]{}$;\C{ symbolic names of the
+cells in the shape }\6
+\&{int} ${}\\{site}[\\{maxn}*\\{maxn}]{}$;\C{ where the cells are in the shape
+}\6
+\&{int} \\{vbose};\C{ level of verbosity }\7
+\X11:Global variables\X;\6
+\X33:Subroutines\X;\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|a${},{}$ \|b${},{}$ \\{dd}${},{}$ \|i${},{}$ \|j${},{}$ %
+\|k${},{}$ \|l${},{}$ \\{ll}${},{}$ \\{lll}${},{}$ \|m${},{}$ \|n${},{}$ %
+\\{nn}${},{}$ \\{slack};\7
+\X2:Process the command line\X;\6
+\X3:Input the shape\X;\6
+\X6:Find all solutions\X;\6
+\X41:Print statistics about the run\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Process the command line\X${}\E{}$\6
+\&{if} ${}(\\{argc}<\T{2}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
+\|d)\I\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ d\ [verbos}\)\.{e]\ [extra\
+verbose]\ <}\)\.{\ foo.dots\\n"},\39\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|d<\T{2}\V\|d>\\{maxd}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"The\ number\ of\ piece}\)\.{s\ should\ be\
+between\ }\)\.{2\ and\ \%d,\ not\ \%d!\\n"},\39\\{maxd},\39\|d);{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+${}\\{vbose}\K\\{argc}-\T{2}{}$;\par
+\U1.\fi
+
+\M{3}\B\D$\\{place}(\|i,\|j)$ \5
+$((\|i)*\\{maxn}+(\|j){}$)\par
+\Y\B\4\X3:Input the shape\X${}\E{}$\6
+\&{for} ${}(\|i\K\\{nn}\K\T{0};{}$  ; ${}\|i\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{fgets}(\\{buf},\39\\{bufsize},\39\\{stdin})){}$\1\5
+\&{break};\2\6
+\&{if} ${}(\|i\G\\{maxn}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Recompile\ me:\ I\ all}\)\.{ow\ at\ most\ \%d\
+lines\ }\)\.{of\ input!\\n"},\39\\{maxn});{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+\X4:Input row \PB{\|i} of the shape\X;\6
+\4${}\}{}$\2\6
+${}\\{maxrow}\K\|i-\T{1};{}$\6
+\&{if} ${}(\\{maxrow}<\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"There\ was\ no\ input!}\)\.{\\n"});{}$\6
+${}\\{exit}({-}\T{666});{}$\6
+\4${}\}{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"OK,\ I've\ got\ a\ shap}\)\.{e\ with\ \%d\
+lines\ and\ }\)\.{\%d\ cells.\\n"},\39\|i,\39\\{nn});{}$\6
+\&{for} ${}(\|n\K\T{1};{}$ ${}\|n*\|n<\\{nn};{}$ ${}\|n\PP){}$\1\5
+;\C{ the shape has \PB{\\{nn}} asterisks }\2\6
+\&{if} ${}(\|n*\|n\I\\{nn}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"The\ number\ of\ cells}\)\.{\ should\ be\ a\
+positiv}\)\.{e\ perfect\ square!\\n"});{}$\6
+${}\\{exit}({-}\T{4});{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|n;{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\1\5
+${}\\{sprintf}(\\{aname}[\\{place}(\|i,\39\|j)],\39\.{"\%02da\%02d"},\39\|i,\39%
+\|j);{}$\2\2\6
+${}\\{complement}\K\\{place}(\|n-\T{1},\39\|n-\T{1}){}$;\par
+\U1.\fi
+
+\M{4}\B\X4:Input row \PB{\|i} of the shape\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\\{buf}[\|j]\W\\{buf}[\|j]\I\.{'\\n'};{}$ ${}\|j%
+\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{buf}[\|j]\E\.{'*'}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|j>\\{maxcol}){}$\5
+${}\{{}$\1\6
+${}\\{maxcol}\K\|j;{}$\6
+\&{if} ${}(\|j\G\\{maxn}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Recompile\ me:\ I\ all}\)\.{ow\ at\ most\ \%d\
+column}\)\.{s\ of\ input!\\n"},\39\\{maxn});{}$\6
+${}\\{exit}({-}\T{5});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\\{site}[\\{nn}\PP]\K\\{place}(\|i,\39\|j);{}$\6
+${}\\{sprintf}(\\{bname}[\\{place}(\|i,\39\|j)],\39\.{"\%02db\%02d"},\39\|i,\39%
+\|j);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U3.\fi
+
+\N{1}{5}The algorithm. Let's consider a special case of the problem, in order
+to build some intuition and clarify the concepts. Suppose the input is
+$$\vcenter{\halign{\tt#\hfil\cr
+****\cr *..*\cr .***\cr}}$$
+and we want to cut the eight cells specified by these asterisks
+into $d=2$ pieces that can be assembled into a $3\times3$ square.
+You can probably see one way to do the job: Break off the
+two cells in the leftmost column, rotate them $90^\circ$, and
+stick them into the ``jaws'' of the remaining seven. How can we
+get a computer to discover this?
+
+A solution to the general problem can be regarded as a way to color
+the square with $d$ colors. The cells of the square are $(i,j)$ for
+$0\le i,j<n$, and each of these cells is supposed to be
+mapped into a distinct position $(i',j')$ of the other shape,
+by rotation and shifting. The amount of
+rotation and shift must be the same for all cells of the same color.
+In the example, we can color the cells
+$$\vcenter{\halign{\tt#\hfil\cr
+111\cr221\cr111\cr}}$$
+and map those of color \.1 by shifting one space right; those of
+color~\.2 are mapped by, say, rotating $90^\circ$ clockwise
+about the square's center, then shifting one space left. The result is
+$$\vcenter{\halign{\tt#\hfil\cr
+2111\cr 2..1\cr .111\cr}}$$
+as desired. These two color labelings are written to \PB{\\{stdout}}.
+
+There's always a set of allowable shift amounts, $(a_0,b_0)$, $(a_1,b_1)$,
+\dots, $(a_{m-1},b_{m-1})$; these are the ways to shift the square so that
+it overlaps the other shape in at least one cell. Our example problem
+has $m=29$ such shifts, namely
+$\bar2\bar2$,
+$\bar2\bar1$,
+$\bar20$,
+$\bar21$,
+$\bar22$,
+$\bar23$,
+$\bar1\bar2$,
+$\bar1\bar1$,
+$\bar10$,
+$\bar11$,
+$\bar12$,
+$\bar13$,
+$0\bar2$,
+$0\bar1$,
+$00$,
+$01$,
+$02$,
+$03$,
+$1\bar2$,
+$1\bar1$,
+$10$,
+$11$,
+$12$,
+$13$,
+$2\bar1$,
+$20$,
+$21$,
+$22$,
+$23$. (Here $\bar2$ stands for $-2$, and so on; our program uses
+row-and-column coordinates $(i,j)$, so the left coordinate of a shift
+refers to shifting downward and the
+right coordinate refers to shifting rightward.
+This list of acceptable shifts includes all values $(a,b)$ with
+$-2\le a\le2$ and $-2\le b\le 3$ {\it except\/} for $2\bar2$. The
+latter is omitted, because shifting the square down~2 and left~2 does
+not intersect with the other shape.)
+
+Each mapping can be specified by a pair $(s,t)$ where $0\le s<m$
+and $0\le t<4$, meaning ``rotate $90t$ degrees clockwise, then
+shift by $(a_s,b_s)$.'' The outer loop of the algorithm below
+runs through all possible mappings $(s_1,t_1)$, \dots, $(s_d,t_d)$,
+and tries to solve the corresponding bipartite matching problem
+that involves those maps. For example, if $(s_1,t_1)$ is the map
+``shift right~1'' and $(s_2,t_2)$ is the map ``rotate~90 and shift
+left 1,'' the bipartite graph for which a perfect matching describes
+a solution to the example problem has the edges
+$$
+\.{0a0}\adj\.{0b1},\quad
+\.{0a1}\adj\.{0b2},\quad
+\.{0a2}\adj\.{0b3},\quad
+\.{1a2}\adj\.{1b3},\quad
+\.{2a0}\adj\.{2b1},\quad
+\.{2a1}\adj\.{2b2},\quad
+\.{2a2}\adj\.{2b3}
+$$
+for color \.1 and
+$$
+\.{0a0}\adj\.{0b1},\quad
+\.{0a2}\adj\.{2b1},\quad
+\.{1a0}\adj\.{0b0},\quad
+\.{1a1}\adj\.{1b0}
+$$
+for color \.2. (Here \.{0a0} stands for the cell in row~0 and column~0
+of the square, while \.{0b0} stands for the cell in row~0 and column~0
+of the other shape.) Notice that the edge $\.{0a0}\adj\.{0b1}$ occurs
+{\it twice}, once for each color; this leads to {\it another\/} solution:
+$$\vcenter{\halign{\tt#\hfil\cr
+211\cr221\cr111\cr}}\qquad
+\vcenter{\halign{\tt#\hfil\cr
+2211\cr 2..1\cr .111\cr}}$$
+
+\fi
+
+\M{6}We save a factor of roughly $d!$ by assuming that
+$$(s_1,t_1)\le (s_2,t_2)\le\cdots\le (s_d,t_d),\qquad\rm lexicographically,$$
+because a permutation of the colors doesn't
+change the solution. Furthermore we gain another factor of~4
+by assuming that $t_1=0$, because rotation is a symmetry of the square.
+
+(I could actually have written $(s_1,t_1)<\cdots<(s_d,t_d)$,
+with `$<$' instead of~`$\le$';
+the case $(s_k,t_k)=(s_{k+1},t_{k+1})$ won't occur in a solution
+for minimum~$d$, because colors $k$ and $k+1$ could be merged in such
+a case. However, equality might arise in
+extensions of this problem that involve further constraints.
+For example, we might
+require color classes to be connected, or to have a bounded size.)
+
+Most of the matching problems that arise are obviously unsolvable,
+because they have isolated vertices. And most of those that
+remain are quite easy to solve, because many vertices have degree~1
+and their partner is forced. The algorithm looks at all $m+d-1\choose d$
+sets of shifts with $s_1\le\cdots\le s_d$, and explores further only if those
+shifts cover all cells of the given shape. In the latter case,
+$4^{d-1}$ choices of $t_2$, \dots,~$t_d$ are considered, and the
+matching process is inaugurated only if those rotations cover
+all cells of the square.
+
+For example, the only shifts that cover more than four cells of the shape
+in our toy problem are 00, 01, and 02. At least one of these is needed, because
+we need to cover nine cells with two shifts. Thus $m+d-1\choose d$ is
+not a scary number of subproblems to consider.
+
+\Y\B\4\X6:Find all solutions\X${}\E{}$\6
+\X8:Generate the table of legal shifts\X;\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\X9:If the shape isn't covered by $\{s_1,\ldots,s_d\}$, \PB{\&{goto} %
+\\{shapenot}}\X;\6
+${}\\{counta}\PP;{}$\6
+\X7:Run through all sequences of shifts, $(t_2,\ldots,t_d)$\X;\6
+\4\\{shapenot}:\5
+\&{for} ${}(\|k\K\|d;{}$ ${}\|s[\|k]\E\|m-\T{1};{}$ ${}\|k\MM){}$\1\5
+;\2\6
+\&{if} ${}(\|k\E\T{0}){}$\1\5
+\&{break};\2\6
+\&{for} ${}(\|j\K\|s[\|k]+\T{1};{}$ ${}\|k\Z\|d;{}$ ${}\|k\PP){}$\1\5
+${}\|s[\|k]\K\|j;{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{7}\B\X7:Run through all sequences of shifts, $(t_2,\ldots,t_d)$\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{2};{}$ ${}\|k\Z\|d;{}$ ${}\|k\PP){}$\1\5
+${}\|t[\|k]\K\T{0};{}$\2\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{2};{}$ ${}\|k\Z\|d;{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\|s[\|k]\E\|s[\|k-\T{1}]\W\|t[\|k]\E\|t[\|k-\T{1}]){}$\1\5
+\&{goto} \\{squarenot};\2\2\6
+\X10:If the square isn't covered by $\{(s_1,t_1),\ldots,(s_d,t_d)\}$, \PB{%
+\&{goto} \\{squarenot}}\X;\6
+${}\\{countb}\PP;{}$\6
+\X12:Check for a perfect matching\X;\6
+\4\\{squarenot}:\5
+\&{for} ${}(\|k\K\|d;{}$ ${}\|t[\|k]\E\T{3};{}$ ${}\|k\MM){}$\1\5
+${}\|t[\|k]\K\T{0};{}$\2\6
+\&{if} ${}(\|k\E\T{1}){}$\1\5
+\&{break};\2\6
+${}\|t[\|k]\PP;{}$\6
+\4${}\}{}$\2\par
+\U6.\fi
+
+\M{8}\B\X8:Generate the table of legal shifts\X${}\E{}$\6
+\&{for} ${}(\|m\K\T{0},\39\|a\K\T{1}-\|n;{}$ ${}\|a\Z\\{maxrow};{}$ ${}\|a%
+\PP){}$\1\6
+\&{for} ${}(\|b\K\T{1}-\|n;{}$ ${}\|b\Z\\{maxcol};{}$ ${}\|b\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0},\39\|i\K(\|a<\T{0}\?{-}\|a:\T{0});{}$ ${}\|i<\|n\W\|a+%
+\|i\Z\\{maxrow};{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K(\|b<\T{0}\?{-}\|b:\T{0});{}$ ${}\|j<\|n\W\|b+\|j\Z%
+\\{maxcol};{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\\{bname}[\\{place}(\|a+\|i,\39\|b+\|j)][\T{0}]){}$\1\5
+${}\\{bcover}[\|m][\|k\PP]\K\\{place}(\|a+\|i,\39\|b+\|j);{}$\2\2\2\6
+\&{if} (\|k)\5
+${}\{{}$\1\6
+\&{if} ${}(\\{vbose}>\T{1}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ S[\%d]=(\%d,\%d)\\n"},\39\|m,\39\|a,\39%
+\|b);{}$\2\6
+${}\\{shift}[\|m]\K\\{place}(\|a,\39\|b),\39\\{bcovered}[\|m\PP]\K\|k;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\6
+\&{if} (\\{vbose})\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"There\ are\ \%d\ legal\ }\)\.{shifts.\\n"},\39%
+\|m){}$;\2\par
+\U6.\fi
+
+\M{9}\B\X9:If the shape isn't covered by $\{s_1,\ldots,s_d\}$, \PB{\&{goto} %
+\\{shapenot}}\X${}\E{}$\6
+\&{for} ${}(\\{slack}\K{-}\\{nn},\39\|k\K\T{1};{}$ ${}\|k\Z\|d;{}$ ${}\|k%
+\PP){}$\1\5
+${}\\{slack}\MRL{+{\K}}\\{bcovered}[\|s[\|k]];{}$\2\6
+\&{if} ${}(\\{slack}<\T{0}){}$\1\5
+\&{goto} \\{shapenot};\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\1\5
+${}\\{blen}[\\{site}[\|k]]\K\T{0};{}$\2\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|d;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{0},\39\|j\K\|s[\|k];{}$ ${}\|i<\\{bcovered}[\|j];{}$ ${}\|i%
+\PP){}$\5
+${}\{{}$\1\6
+${}\|l\K\\{bcover}[\|j][\|i];{}$\6
+\&{if} ${}(\R\\{blen}[\|l]){}$\1\5
+${}\\{blen}[\|l]\K\T{1};{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{slack}){}$\1\5
+\&{goto} \\{shapenot};\2\6
+${}\\{slack}\MM;{}$\6
+${}\\{blen}[\|l]\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U6.\fi
+
+\M{10}While we make the second check for coverage, we also build the table of
+edges.
+Each edge is represented by its color and the position of the neighbor.
+
+\Y\B\4\D$\\{pack}(\|c,\|p)$ \5
+$(((\|c)\LL\T{16})+(\|p){}$)\par
+\Y\B\4\X10:If the square isn't covered by $\{(s_1,t_1),\ldots,(s_d,t_d)\}$, %
+\PB{\&{goto} \\{squarenot}}\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{nn};{}$ ${}\|k\PP){}$\1\5
+${}\\{blen}[\\{site}[\|k]]\K\T{0};{}$\2\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|n;{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\1\5
+${}\\{alen}[\\{place}(\|i,\39\|j)]\K\T{0};{}$\2\2\6
+\&{for} ${}(\\{slack}\K{-}\\{nn},\39\|k\K\T{1};{}$ ${}\|k\Z\|d;{}$ ${}\|k%
+\PP){}$\1\5
+${}\\{slack}\MRL{+{\K}}\\{bcovered}[\|s[\|k]];{}$\2\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|d;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{0},\39\|j\K\|s[\|k];{}$ ${}\|i<\\{bcovered}[\|j];{}$ ${}\|i%
+\PP){}$\5
+${}\{{}$\1\6
+${}\|l\K\\{bcover}[\|j][\|i];{}$\6
+${}\\{ll}\K\|l-\\{shift}[\|j];{}$\6
+\&{if} ${}(\|t[\|k]\AND\T{1}){}$\5
+${}\{{}$\1\6
+\&{register} \&{int} \|q${}\K\\{ll}/\\{maxn},{}$ \|r${}\K\\{ll}\MOD\\{maxn};{}$%
+\7
+${}\\{ll}\K\\{place}(\|r,\39\|n-\T{1}-\|q){}$;\C{ rotate clockwise }\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|t[\|k]\AND\T{2}){}$\1\5
+${}\\{ll}\K\\{complement}-\\{ll};{}$\2\6
+\&{if} (\\{alen}[\\{ll}])\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{slack}){}$\1\5
+\&{goto} \\{squarenot};\2\6
+${}\\{slack}\MM;{}$\6
+\4${}\}{}$\2\6
+${}\\{aa}[\\{ll}][\\{alen}[\\{ll}]\PP]\K\\{pack}(\|k,\39\|l);{}$\6
+${}\\{bb}[\|l][\\{blen}[\|l]\PP]\K\\{pack}(\|k,\39\\{ll});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U7.\fi
+
+\M{11}\B\X11:Global variables\X${}\E{}$\6
+\&{char} ${}\\{alen}[\\{maxn}*\\{maxn}]{}$;\C{ how many moves remain at this
+cell in the square }\6
+\&{char} ${}\\{blen}[\\{maxn}*\\{maxn}]{}$;\C{ how many moves remain at this
+cell in the shape }\6
+\&{int} ${}\\{aa}[\\{maxn}*\\{maxn}][\\{maxd}]{}$;\C{ moves for the square }\6
+\&{int} ${}\\{bb}[\\{maxn}*\\{maxn}][\\{maxd}]{}$;\C{ moves for the shape }\6
+\&{int} ${}\\{shift}[\T{4}*\\{maxn}*\\{maxn}]{}$;\C{ offsets in the shifts }\6
+\&{int} \\{complement};\C{ offset used for 180-degree rotation }\6
+\&{int} ${}\\{bcover}[\T{4}*\\{maxn}*\\{maxn}][\\{maxn}*\\{maxn}]{}$;\C{ cells
+covered by the shifts }\6
+\&{int} ${}\\{bcovered}[\T{4}*\\{maxn}*\\{maxn}]{}$;\C{ how many cells are
+covered }\6
+\&{int} ${}\|s[\\{maxd}+\T{1}]{}$;\C{ the current sequence of shifts }\6
+\&{int} ${}\|t[\\{maxd}+\T{1}]{}$;\C{ the current sequence of rotations }\par
+\As22\ET28.
+\U1.\fi
+
+\N{1}{12}Prematching.
+When we've managed to jump through all those hoops, we're left with
+a perfect matching problem. And most of the time that matching problem
+is quite trivial; so we might as well throw out the easy cases before
+trying to do anything fancy.
+
+In most cases some of the moves turn out to be forced, because a
+cell of the square has only one possible shape-mate or vice versa.
+We start by making all of those no-brainer moves.
+
+\Y\B\4\X12:Check for a perfect matching\X${}\E{}$\6
+\&{if} ${}(\\{vbose}>\T{1}){}$\1\5
+\X13:Display the matching problem on \PB{\\{stderr}}\X;\2\6
+\X14:Make forced moves from the square, or \PB{\&{goto} \\{done}}\X;\6
+${}\\{countc}\PP;{}$\6
+\X16:Make forced moves from the shape, or \PB{\&{goto} \\{done}}\X;\6
+\X18:Make all remaining forced moves\X;\6
+${}\\{countd}\PP;{}$\6
+\X23:Find all perfect matchings in the remaining bigraph\X;\6
+\\{done}:\par
+\U7.\fi
+
+\M{13}\B\X13:Display the matching problem on \PB{\\{stderr}}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ Trying\ to\ match"});{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|d;{}$ ${}\|k\PP){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ \%d\^\%d"},\39\|s[\|k],\39\|t[\|k]);{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{":\\n"});{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|n;{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ \ \%s\ --"},\39\\{aname}[\\{place}(\|i,\39%
+\|j)]);{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{alen}[\\{place}(\|i,\39\|j)];{}$ ${}\|k%
+\PP){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ \%s.\%d"},\39\\{bname}[\\{aa}[\\{place}(\|i,%
+\39\|j)][\|k]\AND\T{\^ffff}],\39\\{aa}[\\{place}(\|i,\39\|j)][\|k]\GG%
+\T{16});{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{14}\B\X14:Make forced moves from the square, or \PB{\&{goto} \\{done}}\X${}%
+\E{}$\6
+\&{for} ${}(\\{acount}\K\|i\K\T{0};{}$ ${}\|i<\|n;{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{alen}[\\{place}(\|i,\39\|j)]>\T{1}){}$\1\5
+${}\\{apos}[\\{place}(\|i,\39\|j)]\K\\{acount},\39\\{alist}[\\{acount}\PP]\K%
+\\{place}(\|i,\39\|j);{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|l\K\\{aa}[\\{place}(\|i,\39\|j)][\T{0}]\AND\T{\^ffff};{}$\6
+\&{if} ${}(\R\\{blen}[\|l]){}$\1\5
+\&{goto} \\{done};\C{ that position of the shape is already taken }\2\6
+${}\\{acolor}[\\{place}(\|i,\39\|j)]\K\\{bcolor}[\|l]\K\\{aa}[\\{place}(\|i,\39%
+\|j)][\T{0}]\GG\T{16};{}$\6
+\&{if} ${}(\\{blen}[\|l]\E\T{1}){}$\1\5
+${}\\{blen}[\|l]\K\T{0};{}$\2\6
+\&{else}\1\5
+\X15:Remove all other edges that go to shape position \PB{\|l}\X;\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\par
+\U12.\fi
+
+\M{15}Premature optimization is the root of all evil in programming.
+Yet I couldn't resist trying to make this program efficient in special cases.
+
+The removal of edges might reduce \PB{\\{alen}} to 1 for square cells that are
+in the \PB{\\{alist}}, thus forcing further moves.
+I won't worry about that until later.
+
+\Y\B\4\X15:Remove all other edges that go to shape position \PB{\|l}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{blen}[\|l];{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{ll}\K\\{bb}[\|l][\|k]\AND\T{\^ffff};{}$\6
+\&{if} ${}(\\{ll}\I\\{place}(\|i,\39\|j)){}$\5
+${}\{{}$\1\6
+\&{register} \&{int} \\{opp}${}\K(\\{bb}[\|l][\|k]\AND\T{\^ffff0000})+\|l{}$;%
+\C{ the opposite version of this edge }\7
+${}\\{dd}\K\\{alen}[\\{ll}]-\T{1},\39\\{alen}[\\{ll}]\K\\{dd};{}$\6
+\&{if} ${}(\R\\{dd}){}$\1\5
+\&{goto} \\{done};\2\6
+\&{for} ${}(\|a\K\T{0};{}$ ${}\\{aa}[\\{ll}][\|a]\I\\{opp};{}$ ${}\|a\PP){}$\1\5
+;\2\6
+\&{if} ${}(\|a>\\{dd}){}$\1\5
+\\{debug}(\.{"ahi"});\2\6
+\&{if} ${}(\|a\I\\{dd}){}$\1\5
+${}\\{aa}[\\{ll}][\|a]\K\\{aa}[\\{ll}][\\{dd}];{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\\{blen}[\|l]\K\T{0};{}$\6
+\4${}\}{}$\2\par
+\U14.\fi
+
+\M{16}\B\X16:Make forced moves from the shape, or \PB{\&{goto} \\{done}}\X${}%
+\E{}$\6
+\&{if} (\\{acount})\5
+${}\{{}$\1\6
+\&{for} ${}(\\{bcount}\K\|i\K\T{0};{}$ ${}\|i<\\{nn};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+${}\|l\K\\{site}[\|i];{}$\6
+\&{if} ${}(\R\\{blen}[\|l]){}$\1\5
+\&{continue};\C{ we've been forced to match this cell already }\2\6
+\&{if} ${}(\\{blen}[\|l]>\T{1}){}$\1\5
+${}\\{bpos}[\|l]\K\\{bcount},\39\\{blist}[\\{bcount}\PP]\K\|l;{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{ll}\K\\{bb}[\|l][\T{0}]\AND\T{\^ffff};{}$\6
+\&{if} ${}(\R\\{alen}[\\{ll}]){}$\1\5
+\&{goto} \\{done};\C{ that position of the square is already taken }\2\6
+${}\\{acolor}[\\{ll}]\K\\{bcolor}[\|l]\K\\{bb}[\|l][\T{0}]\GG\T{16};{}$\6
+${}\\{acount}\MM;{}$\6
+\X17:Make square cell \PB{\\{ll}} inactive\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{acount}\I\\{bcount}){}$\1\5
+\\{debug}(\.{"count\ mismatch"});\2\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{17}\B\X17:Make square cell \PB{\\{ll}} inactive\X${}\E{}$\6
+$\|j\K\\{apos}[\\{ll}];{}$\6
+\&{if} ${}(\|j\I\\{acount}){}$\1\5
+${}\\{lll}\K\\{alist}[\\{acount}],\39\\{alist}[\|j]\K\\{lll},\39\\{apos}[%
+\\{lll}]\K\|j;{}$\2\6
+\&{if} ${}(\\{alen}[\\{ll}]\I\T{1}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{alen}[\\{ll}];{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{lll}\K\\{aa}[\\{ll}][\|k]\AND\T{\^ffff};{}$\6
+\&{if} ${}(\\{lll}\I\|l){}$\5
+${}\{{}$\1\6
+\&{register} \&{int} \\{opp}${}\K(\\{aa}[\\{ll}][\|k]\AND\T{\^ffff0000})+%
+\\{ll}{}$;\C{ the opposite version of this edge }\7
+${}\\{dd}\K\\{blen}[\\{lll}]-\T{1},\39\\{blen}[\\{lll}]\K\\{dd};{}$\6
+\&{if} ${}(\R\\{dd}){}$\1\5
+\&{goto} \\{done};\2\6
+\&{for} ${}(\|b\K\T{0};{}$ ${}\\{bb}[\\{lll}][\|b]\I\\{opp};{}$ ${}\|b\PP){}$\1%
+\5
+;\2\6
+\&{if} ${}(\|b>\\{dd}){}$\1\5
+\\{debug}(\.{"bhi"});\2\6
+\&{if} ${}(\|b\I\\{dd}){}$\1\5
+${}\\{bb}[\\{lll}][\|b]\K\\{bb}[\\{lll}][\\{dd}];{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\\{alen}[\\{ll}]\K\T{0};{}$\6
+\4${}\}{}$\2\par
+\Us16\ET21.\fi
+
+\M{18}Beware: I'm using \PB{\\{acount}} and \PB{\\{bcount}} in a somewhat
+tricky way here:
+The old \PB{\\{acount}} is kept in \PB{\\{bcount}} so that a change can be
+detected.
+(Again I apologize for weak resistance.)
+
+\Y\B\4\X18:Make all remaining forced moves\X${}\E{}$\6
+\&{while} (\\{acount})\5
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{acount};{}$ ${}\|i\PP){}$\1\6
+\&{if} ${}(\\{alen}[\\{ll}\K\\{alist}[\|i]]\E\T{1}){}$\1\5
+\X19:Force a move from \PB{\\{ll}}\X;\2\2\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{acount};{}$ ${}\|i\PP){}$\1\6
+\&{if} ${}(\\{blen}[\|l\K\\{blist}[\|i]]\E\T{1}){}$\1\5
+\X21:Force a move from \PB{\|l}\X;\2\2\6
+\&{if} ${}(\\{acount}\E\\{bcount}){}$\1\5
+\&{break};\2\6
+${}\\{bcount}\K\\{acount};{}$\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{19}\B\X19:Force a move from \PB{\\{ll}}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{acount}\MM;{}$\6
+\&{if} ${}(\|i<\\{acount}){}$\1\5
+${}\\{lll}\K\\{alist}[\\{acount}],\39\\{alist}[\|i]\K\\{lll},\39\\{apos}[%
+\\{lll}]\K\|i\MM;{}$\2\6
+${}\|l\K\\{aa}[\\{ll}][\T{0}]\AND\T{\^ffff};{}$\6
+${}\\{acolor}[\\{ll}]\K\\{bcolor}[\|l]\K\\{aa}[\\{ll}][\T{0}]\GG\T{16};{}$\6
+\X20:Make shape cell \PB{\|l} inactive\X;\6
+\4${}\}{}$\2\par
+\U18.\fi
+
+\M{20}\B\X20:Make shape cell \PB{\|l} inactive\X${}\E{}$\6
+$\|j\K\\{bpos}[\|l];{}$\6
+\&{if} ${}(\|j<\\{acount}){}$\1\5
+${}\\{lll}\K\\{blist}[\\{acount}],\39\\{blist}[\|j]\K\\{lll},\39\\{bpos}[%
+\\{lll}]\K\|j;{}$\2\6
+\&{if} ${}(\\{blen}[\|l]\I\T{1}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{blen}[\|l];{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{lll}\K\\{bb}[\|l][\|k]\AND\T{\^ffff};{}$\6
+\&{if} ${}(\\{lll}\I\\{ll}){}$\5
+${}\{{}$\1\6
+\&{register} \&{int} \\{opp}${}\K(\\{bb}[\|l][\|k]\AND\T{\^ffff0000})+\|l{}$;%
+\C{ the opposite version of this edge }\7
+${}\\{dd}\K\\{alen}[\\{lll}]-\T{1},\39\\{alen}[\\{lll}]\K\\{dd};{}$\6
+\&{if} ${}(\R\\{dd}){}$\1\5
+\&{goto} \\{done};\2\6
+\&{for} ${}(\|a\K\T{0};{}$ ${}\\{aa}[\\{lll}][\|a]\I\\{opp};{}$ ${}\|a\PP){}$\1%
+\5
+;\2\6
+\&{if} ${}(\|a>\\{dd}){}$\1\5
+\\{debug}(\.{"chi"});\2\6
+\&{if} ${}(\|a\I\\{dd}){}$\1\5
+${}\\{aa}[\\{lll}][\|a]\K\\{aa}[\\{lll}][\\{dd}];{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U19.\fi
+
+\M{21}\B\X21:Force a move from \PB{\|l}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{acount}\MM;{}$\6
+\&{if} ${}(\|i<\\{acount}){}$\1\5
+${}\\{lll}\K\\{blist}[\\{acount}],\39\\{blist}[\|i]\K\\{lll},\39\\{bpos}[%
+\\{lll}]\K\|i\MM;{}$\2\6
+${}\\{ll}\K\\{bb}[\|l][\T{0}]\AND\T{\^ffff};{}$\6
+${}\\{acolor}[\\{ll}]\K\\{bcolor}[\|l]\K\\{bb}[\|l][\T{0}]\GG\T{16};{}$\6
+\X17:Make square cell \PB{\\{ll}} inactive\X;\6
+\4${}\}{}$\2\par
+\U18.\fi
+
+\M{22}\B\X11:Global variables\X${}\mathrel+\E{}$\6
+\&{int} ${}\\{alist}[\\{maxn}*\\{maxn}],{}$ ${}\\{blist}[\\{maxn}*\\{maxn}]{}$;%
+\C{ list of cells not yet matched }\6
+\&{int} ${}\\{apos}[\\{maxn}*\\{maxn}],{}$ ${}\\{bpos}[\\{maxn}*\\{maxn}]{}$;%
+\C{ inverses of those lists }\6
+\&{int} \\{acount}${},{}$ \\{bcount};\C{ the lengths of those lists }\6
+\&{int} ${}\\{acolor}[\\{maxn}*\\{maxn}],{}$ ${}\\{bcolor}[\\{maxn}*%
+\\{maxn}]{}$;\C{ color patterns in a solution }\6
+\&{unsigned} \&{long} \&{long} \\{count};\C{ the number of solutions }\6
+\&{unsigned} \&{long} \&{long} \\{counta}${},{}$ \\{countb}${},{}$ %
+\\{countc}${},{}$ \\{countd}${},{}$ \\{counte};\C{ the number of times we
+reached key points }\par
+\fi
+
+\N{1}{23}Matching. Sometimes we actually have real work to do.
+
+At first I didn't think the problem would often be challenging.
+So I just used brute-force backtracking, \`a~la Algorithm 7.2.2B.
+
+But a surprising number of large subproblems arose. So I'm now implementing
+a version of the original dancing links algorithm,
+hacked from {\mc DANCE}.
+
+\Y\B\4\X23:Find all perfect matchings in the remaining bigraph\X${}\E{}$\6
+\&{if} ${}(\\{acount}\E\T{0}){}$\1\5
+\X40:Print a solution\X\2\6
+\&{else}\5
+${}\{{}$\1\6
+\X27:Local variables\X;\6
+${}\\{counte}\PP;{}$\6
+\&{if} ${}(\\{vbose}>\T{1}){}$\1\5
+\X24:Display the remaining matching problem on \PB{\\{stderr}}\X;\2\6
+\X29:Initialize for dancing\X;\6
+\X31:Dance\X;\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{24}\B\X24:Display the remaining matching problem on \PB{\\{stderr}}\X${}%
+\E{}$\6
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ which\ reduces\ to:\\}\)\.{n"});{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{acount};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ \ \%s\ --"},\39\\{aname}[\\{alist}[%
+\|i]]);{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{alen}[\\{alist}[\|i]];{}$ ${}\|k\PP){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ \%s.\%d"},\39\\{bname}[\\{aa}[\\{alist}[%
+\|i]][\|k]\AND\T{\^ffff}],\39\\{aa}[\\{alist}[\|i]][\|k]\GG\T{16});{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U23.\fi
+
+\M{25}The {\mc DANCE} program was developed to solve exact cover problems,
+and bipartite matching is a particularly easy case of that problem:
+Every column to be covered is a primary column, and every row specifies
+exactly two primary columns.
+
+Each column of the exact cover matrix is represented by a \&{column} struct,
+and each row is represented as a linked list of \&{node} structs. There's one
+node for each nonzero entry in the matrix.
+
+More precisely, the nodes are linked circularly within each row, in
+both directions. The nodes are also linked circularly within each column;
+the column lists each include a header node, but the row lists do not.
+Column header nodes are part of a \&{column} struct, which
+contains further info about the column.
+
+Each node contains six fields. Four are the pointers of doubly linked lists,
+already mentioned; the fifth points to the column containing the node;
+the sixth ties this node to the dissection problem we're solving.
+
+\Y\B\4\X25:Type definitions\X${}\E{}$\6
+\&{typedef} \&{struct} \&{node\_struct} ${}\{{}$\1\6
+\&{struct} \&{node\_struct} ${}{*}\\{left},{}$ ${}{*}\\{right}{}$;\C{
+predecessor and successor in row }\6
+\&{struct} \&{node\_struct} ${}{*}\\{up},{}$ ${}{*}\\{down}{}$;\C{ predecessor
+and successor in column }\6
+\&{struct} \&{col\_struct} ${}{*}\\{col}{}$;\C{ the column containing this node
+}\6
+\&{int} \\{info};\C{ square position, shape position, and color of this edge }%
+\2\6
+${}\}{}$ \&{node};\par
+\A26.
+\U1.\fi
+
+\M{26}Each \&{column} struct contains five fields:
+The \PB{\\{head}} is a node that stands at the head of its list of nodes;
+the \PB{\\{len}} tells the length of that list of nodes, not counting the
+header;
+the \PB{\\{name}} is a user-specified identifier;
+\PB{\\{next}} and \PB{\\{prev}} point to adjacent columns, when this
+column is part of a doubly linked list.
+
+As backtracking proceeds, nodes
+will be deleted from column lists when their row has been blocked by
+other rows in the partial solution.
+But when backtracking is complete, the data structures will be
+restored to their original state.
+
+\Y\B\4\X25:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} \&{col\_struct} ${}\{{}$\1\6
+\&{node} \\{head};\C{ the list header }\6
+\&{int} \\{len};\C{ the number of non-header items currently in this column's
+list }\6
+\&{char} ${}{*}\\{name}{}$;\C{ symbolic identification of the column, for
+printing }\6
+\&{struct} \&{col\_struct} ${}{*}\\{prev},{}$ ${}{*}\\{next}{}$;\C{ neighbors
+of this column }\2\6
+${}\}{}$ \&{column};\par
+\fi
+
+\M{27}One \PB{\&{column}} struct is called the root. It serves as the head of
+the
+list of columns that need to be covered, and is identifiable by the fact
+that its \PB{\\{name}} is empty.
+
+\Y\B\4\D$\\{root}$ \5
+\\{col\_array}[\T{0}]\C{ gateway to the unsettled columns }\par
+\Y\B\4\X27:Local variables\X${}\E{}$\6
+\&{register} \&{column} ${}{*}\\{cur\_col};{}$\6
+\&{register} \&{node} ${}{*}\\{cur\_node}{}$;\par
+\As32\ET38.
+\U23.\fi
+
+\M{28}\B\D$\\{max\_cols}$ \5
+$(\T{2}*\\{maxn}*\\{maxn}{}$)\par
+\B\4\D$\\{max\_nodes}$ \5
+$(\\{maxn}*\\{maxn}*\\{maxn}*\\{maxn}*\\{maxd}{}$)\par
+\Y\B\4\X11:Global variables\X${}\mathrel+\E{}$\6
+\&{column} ${}\\{col\_array}[\\{max\_cols}+\T{2}]{}$;\C{ place for column
+records }\6
+\&{node} \\{node\_array}[\\{max\_nodes}];\C{ place for nodes }\6
+\&{column} ${}{*}\\{acol}[\\{maxn}*\\{maxn}],{}$ ${}{*}\\{bcol}[\\{maxn}*%
+\\{maxn}];{}$\6
+\&{node} ${}{*}\\{choice}[\\{maxn}*\\{maxn}]{}$;\C{ the row and column chosen
+on each level }\par
+\fi
+
+\M{29}\B\X29:Initialize for dancing\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{acount};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+${}\\{ll}\K\\{alist}[\|i],\39\|l\K\\{blist}[\|i];{}$\6
+${}\\{acol}[\\{ll}]\K{\AND}\\{col\_array}[\|i+\|i+\T{1}],\39\\{col\_array}[\|i+%
+\|i+\T{1}].\\{name}\K\\{aname}[\\{ll}];{}$\6
+${}\\{bcol}[\|l]\K{\AND}\\{col\_array}[\|i+\|i+\T{2}],\39\\{col\_array}[\|i+%
+\|i+\T{2}].\\{name}\K\\{bname}[\|l];{}$\6
+\4${}\}{}$\2\6
+${}\\{root}.\\{prev}\K{\AND}\\{col\_array}[\\{acount}+\\{acount}];{}$\6
+${}\\{root}.\\{prev}\MG\\{next}\K{\AND}\\{root};{}$\6
+\&{for} ${}(\\{cur\_col}\K\\{col\_array}+\T{1};{}$ ${}\\{cur\_col}\Z\\{root}.%
+\\{prev};{}$ ${}\\{cur\_col}\PP){}$\5
+${}\{{}$\1\6
+${}\\{cur\_col}\MG\\{head}.\\{up}\K\\{cur\_col}\MG\\{head}.\\{down}\K{\AND}%
+\\{cur\_col}\MG\\{head};{}$\6
+${}\\{cur\_col}\MG\\{len}\K\T{0};{}$\6
+${}\\{cur\_col}\MG\\{prev}\K\\{cur\_col}-\T{1},\39(\\{cur\_col}-\T{1})\MG%
+\\{next}\K\\{cur\_col};{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\\{cur\_node}\K\\{node\_array},\39\|i\K\T{0};{}$ ${}\|i<%
+\\{acount};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+${}\\{ll}\K\\{alist}[\|i];{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{alen}[\\{ll}];{}$ ${}\|k\PP){}$\1\5
+\X30:Create the node for the \PB{\|k}th edge from \PB{\\{ll}}\X;\2\6
+\4${}\}{}$\2\par
+\U23.\fi
+
+\M{30}\B\X30:Create the node for the \PB{\|k}th edge from \PB{\\{ll}}\X${}\E{}$%
+\6
+${}\{{}$\1\6
+\&{register} \&{column} ${}{*}\\{ccol};{}$\7
+${}\|l\K\\{aa}[\\{ll}][\|k]\AND\T{\^ffff};{}$\6
+${}\|j\K((\\{aa}[\\{ll}][\|k]\GG\T{16})\LL\T{24})+(\|l\LL\T{12})+\\{ll};{}$\6
+${}\\{ccol}\K\\{acol}[\\{ll}];{}$\6
+${}\\{cur\_node}\MG\\{left}\K\\{cur\_node}\MG\\{right}\K\\{cur\_node}+\T{1};{}$%
+\6
+${}\\{cur\_node}\MG\\{col}\K\\{ccol},\39\\{cur\_node}\MG\\{info}\K\|j;{}$\6
+${}\\{cur\_node}\MG\\{up}\K\\{ccol}\MG\\{head}.\\{up},\39\\{ccol}\MG\\{head}.%
+\\{up}\MG\\{down}\K\\{cur\_node};{}$\6
+${}\\{ccol}\MG\\{head}.\\{up}\K\\{cur\_node},\39\\{cur\_node}\MG\\{down}\K{%
+\AND}\\{ccol}\MG\\{head};{}$\6
+${}\\{ccol}\MG\\{len}\PP;{}$\6
+${}\\{cur\_node}\PP;{}$\6
+${}\\{ccol}\K\\{bcol}[\|l];{}$\6
+${}\\{cur\_node}\MG\\{left}\K\\{cur\_node}\MG\\{right}\K\\{cur\_node}-\T{1};{}$%
+\6
+${}\\{cur\_node}\MG\\{col}\K\\{ccol},\39\\{cur\_node}\MG\\{info}\K\|j;{}$\6
+${}\\{cur\_node}\MG\\{up}\K\\{ccol}\MG\\{head}.\\{up},\39\\{ccol}\MG\\{head}.%
+\\{up}\MG\\{down}\K\\{cur\_node};{}$\6
+${}\\{ccol}\MG\\{head}.\\{up}\K\\{cur\_node},\39\\{cur\_node}\MG\\{down}\K{%
+\AND}\\{ccol}\MG\\{head};{}$\6
+${}\\{ccol}\MG\\{len}\PP;{}$\6
+${}\\{cur\_node}\PP;{}$\6
+\4${}\}{}$\2\par
+\U29.\fi
+
+\M{31}Our strategy for generating all exact covers will be to repeatedly
+choose always the column that appears to be hardest to cover, namely the
+column with shortest list, from all columns that still need to be covered.
+And we explore all possibilities via depth-first search.
+
+The neat part of this algorithm is the way the lists are maintained.
+Depth-first search means last-in-first-out maintenance of data structures;
+and it turns out that we need no auxiliary tables to undelete elements from
+lists when backing up. The nodes removed from doubly linked lists remember
+their former neighbors, because we do no garbage collection.
+
+The basic operation is ``covering a column.'' This means removing it
+from the list of columns needing to be covered, and ``blocking'' its
+rows: removing nodes from other lists whenever they belong to a row of
+a node in this column's list.
+
+\Y\B\4\X31:Dance\X${}\E{}$\6
+$\\{level}\K\T{0};{}$\6
+\4\\{forward}:\5
+\X37:Set \PB{\\{best\_col}} to the best column for branching\X;\6
+\\{cover}(\\{best\_col});\6
+${}\\{cur\_node}\K\\{choice}[\\{level}]\K\\{best\_col}\MG\\{head}.\\{down};{}$\6
+\4\\{advance}:\6
+\&{if} ${}(\\{cur\_node}\E{\AND}(\\{best\_col}\MG\\{head})){}$\1\5
+\&{goto} \\{backup};\2\6
+\&{if} ${}(\\{vbose}>\T{1}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"L\%d:\ \%s\ \%s\\n"},\39\\{level},\39\\{cur%
+\_node}\MG\\{col}\MG\\{name},\39\\{cur\_node}\MG\\{right}\MG\\{col}\MG%
+\\{name});{}$\2\6
+\X35:Cover all other columns of \PB{\\{cur\_node}}\X;\6
+\&{if} ${}(\\{root}.\\{next}\E{\AND}\\{root}){}$\1\5
+\X39:Record solution and \PB{\&{goto} \\{recover}}\X;\2\6
+${}\\{level}\PP;{}$\6
+\&{goto} \\{forward};\6
+\4\\{backup}:\5
+\\{uncover}(\\{best\_col});\6
+\&{if} ${}(\\{level}\E\T{0}){}$\1\5
+\&{goto} \\{done};\2\6
+${}\\{level}\MM;{}$\6
+${}\\{cur\_node}\K\\{choice}[\\{level}]{}$;\5
+${}\\{best\_col}\K\\{cur\_node}\MG\\{col};{}$\6
+\4\\{recover}:\5
+\X36:Uncover all other columns of \PB{\\{cur\_node}}\X;\6
+${}\\{cur\_node}\K\\{choice}[\\{level}]\K\\{cur\_node}\MG\\{down}{}$;\5
+\&{goto} \\{advance};\par
+\U23.\fi
+
+\M{32}\B\X27:Local variables\X${}\mathrel+\E{}$\6
+\&{register} \&{int} \\{level};\6
+\&{register} \&{column} ${}{*}\\{best\_col}{}$;\C{ column chosen for branching
+}\par
+\fi
+
+\M{33}When a row is blocked, it leaves all lists except the list of the
+column that is being covered. Thus a node is never removed from a list
+twice.
+
+\Y\B\4\X33:Subroutines\X${}\E{}$\6
+\\{cover}(\|c)\1\1\6
+\&{column} ${}{*}\|c;\2\2{}$\6
+${}\{{}$\5
+\1\&{register} \&{column} ${}{*}\|l,{}$ ${}{*}\|r;{}$\6
+\&{register} \&{node} ${}{*}\\{rr},{}$ ${}{*}\\{nn},{}$ ${}{*}\\{uu},{}$ ${}{*}%
+\\{dd};{}$\6
+\&{register} \|k${}\K\T{1}{}$;\C{ updates }\7
+${}\|l\K\|c\MG\\{prev}{}$;\5
+${}\|r\K\|c\MG\\{next};{}$\6
+${}\|l\MG\\{next}\K\|r{}$;\5
+${}\|r\MG\\{prev}\K\|l;{}$\6
+\&{for} ${}(\\{rr}\K\|c\MG\\{head}.\\{down};{}$ ${}\\{rr}\I{\AND}(\|c\MG%
+\\{head});{}$ ${}\\{rr}\K\\{rr}\MG\\{down}){}$\1\6
+\&{for} ${}(\\{nn}\K\\{rr}\MG\\{right};{}$ ${}\\{nn}\I\\{rr};{}$ ${}\\{nn}\K%
+\\{nn}\MG\\{right}){}$\5
+${}\{{}$\1\6
+${}\\{uu}\K\\{nn}\MG\\{up}{}$;\5
+${}\\{dd}\K\\{nn}\MG\\{down};{}$\6
+${}\\{uu}\MG\\{down}\K\\{dd}{}$;\5
+${}\\{dd}\MG\\{up}\K\\{uu};{}$\6
+${}\|k\PP;{}$\6
+${}\\{nn}\MG\\{col}\MG\\{len}\MM;{}$\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\par
+\As34\ET42.
+\U1.\fi
+
+\M{34}Uncovering is done in precisely the reverse order. The pointers thereby
+execute an exquisitely choreo\-graphed dance which returns them almost
+magically to their former state.
+
+\Y\B\4\X33:Subroutines\X${}\mathrel+\E{}$\6
+\\{uncover}(\|c)\1\1\6
+\&{column} ${}{*}\|c;\2\2{}$\6
+${}\{{}$\5
+\1\&{register} \&{column} ${}{*}\|l,{}$ ${}{*}\|r;{}$\6
+\&{register} \&{node} ${}{*}\\{rr},{}$ ${}{*}\\{nn},{}$ ${}{*}\\{uu},{}$ ${}{*}%
+\\{dd};{}$\7
+\&{for} ${}(\\{rr}\K\|c\MG\\{head}.\\{up};{}$ ${}\\{rr}\I{\AND}(\|c\MG%
+\\{head});{}$ ${}\\{rr}\K\\{rr}\MG\\{up}){}$\1\6
+\&{for} ${}(\\{nn}\K\\{rr}\MG\\{left};{}$ ${}\\{nn}\I\\{rr};{}$ ${}\\{nn}\K%
+\\{nn}\MG\\{left}){}$\5
+${}\{{}$\1\6
+${}\\{uu}\K\\{nn}\MG\\{up}{}$;\5
+${}\\{dd}\K\\{nn}\MG\\{down};{}$\6
+${}\\{uu}\MG\\{down}\K\\{dd}\MG\\{up}\K\\{nn};{}$\6
+${}\\{nn}\MG\\{col}\MG\\{len}\PP;{}$\6
+\4${}\}{}$\2\2\6
+${}\|l\K\|c\MG\\{prev}{}$;\5
+${}\|r\K\|c\MG\\{next};{}$\6
+${}\|l\MG\\{next}\K\|r\MG\\{prev}\K\|c;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{35}\B\X35:Cover all other columns of \PB{\\{cur\_node}}\X${}\E{}$\6
+$\\{cover}(\\{cur\_node}\MG\\{right}\MG\\{col}){}$;\par
+\U31.\fi
+
+\M{36}We included \PB{\\{left}} links, thereby making the rows doubly linked,
+so
+that columns would be uncovered in the correct LIFO order in this
+part of the program. (The \PB{\\{uncover}} routine itself could have done its
+job with \PB{\\{right}} links only.) (Think about it.)
+
+(Thus the present implementation is overkill, for the special
+case of bipartite matching.)
+
+\Y\B\4\X36:Uncover all other columns of \PB{\\{cur\_node}}\X${}\E{}$\6
+$\\{uncover}(\\{cur\_node}\MG\\{left}\MG\\{col}){}$;\par
+\U31.\fi
+
+\M{37}\B\X37:Set \PB{\\{best\_col}} to the best column for branching\X${}\E{}$\6
+$\\{minlen}\K\\{max\_nodes};{}$\6
+\&{if} ${}(\\{vbose}>\T{2}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Level\ \%d:"},\39\\{level});{}$\2\6
+\&{for} ${}(\\{cur\_col}\K\\{root}.\\{next};{}$ ${}\\{cur\_col}\I{\AND}%
+\\{root};{}$ ${}\\{cur\_col}\K\\{cur\_col}\MG\\{next}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{vbose}>\T{2}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ \%s(\%d)"},\39\\{cur\_col}\MG\\{name},\39%
+\\{cur\_col}\MG\\{len});{}$\2\6
+\&{if} ${}(\\{cur\_col}\MG\\{len}<\\{minlen}){}$\1\5
+${}\\{best\_col}\K\\{cur\_col},\39\\{minlen}\K\\{cur\_col}\MG\\{len};{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{vbose}>\T{2}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ branching\ on\ \%s(\%d}\)\.{)\\n"},\39%
+\\{best\_col}\MG\\{name},\39\\{minlen}){}$;\2\par
+\U31.\fi
+
+\M{38}\B\X27:Local variables\X${}\mathrel+\E{}$\6
+\&{register} \&{int} \\{minlen};\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|x;\par
+\fi
+
+\M{39}\B\X39:Record solution and \PB{\&{goto} \\{recover}}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{vbose}>\T{1}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"(a\ good\ dance)\\n"});{}$\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\\{level};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|j\K\\{choice}[\|k]\MG\\{info};{}$\6
+${}\\{acolor}[\|j\AND\T{\^fff}]\K\\{bcolor}[(\|j\GG\T{12})\AND\T{\^fff}]\K\|j%
+\GG\T{24};{}$\6
+\4${}\}{}$\2\6
+\X40:Print a solution\X;\6
+\&{goto} \\{recover};\6
+\4${}\}{}$\2\par
+\U31.\fi
+
+\M{40}\B\X40:Print a solution\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \.{OK}${}\K\T{1}{}$;\C{ this (declaration facilitates
+change files) }\7
+\&{if} (\.{OK})\5
+${}\{{}$\1\6
+${}\\{count}\PP;{}$\6
+${}\\{printf}(\.{"Solution\ \%lld,\ from}\)\.{"},\39\\{count});{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|d;{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\.{"\ \%d\^\%d"},\39\|s[\|k],\39\|t[\|k]);{}$\2\6
+\\{printf}(\.{":\\n"});\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|n\V\|i\Z\\{maxrow};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\%c"},\39\|i<\|n\?\\{acolor}[\\{place}(\|i,\39\|j)]+\.{'0'}:%
+\.{'\ '});{}$\2\6
+\&{if} ${}(\|i\Z\\{maxrow}){}$\5
+${}\{{}$\1\6
+\\{printf}(\.{"\ \ "});\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j\Z\\{maxcol};{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\%c"},\39\\{bname}[\\{place}(\|i,\39\|j)][\T{0}]\?\\{bcolor}[%
+\\{place}(\|i,\39\|j)]+\.{'0'}:\.{'.'});{}$\2\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\Us23\ET39.\fi
+
+\M{41}\B\X41:Print statistics about the run\X${}\E{}$\6
+$\\{fprintf}(\\{stderr},\39\.{"\%lld\ solutions;\ run}\)\.{\ stats\ \%d,\%lld,%
+\%lld,}\)\.{\%lld,\%lld,\%lld.\\n"},\39\\{count},\39\|m,\39\\{counta},\39%
+\\{countb},\39\\{countc},\39\\{countd},\39\\{counte}){}$;\par
+\U1.\fi
+
+\M{42}\B\X33:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{debug}(\&{char} ${}{*}\|s){}$\1\1\2\2\6
+${}\{{}$\1\6
+\\{fflush}(\\{stdout});\6
+${}\\{fprintf}(\\{stderr},\39\.{"***\%s!\\n"},\39\|s);{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{43}Index.
+\fi
+
+\inx
+\fin
+\con

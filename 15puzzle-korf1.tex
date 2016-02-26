@@ -1,0 +1,2117 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Introduction. This program finds a minimum-move solution to the famous
+``15 puzzle,'' using a method introduced by Richard E. Korf
+[{\sl Artificial Intelligence\/ \bf27} (1985), 97--109]. It's the
+first of a series of ever-more-efficient ways to do the job.
+(You might want to read the zeroth program in the series,
+{\mc 15PUZZLE-KORF0}, as background, although much of the
+documentation is repeated here.)
+My main reason for writing this group of routines was to experiment
+with a new (for me) style of programming, explained below.
+
+The initial position is specified on the command line as a permutation of the
+hexadecimal digits
+$\{\.0,\.1,\.2,\allowbreak\.3,\allowbreak\.4,\.5,\.6,\.7,\.8,\.9,\allowbreak
+\.a,\.b,\.c,\.d,\.e,\.f\}$;
+this permutation is used to fill the rows of a $4\times4$ matrix, from top to
+bottom and left to right. For example, `\.{159d26ae37bf48c0}' specifies the
+starting position
+$$\vcenter{\halign{&\enspace\tt#\cr
+1&5&9&d\cr
+2&6&a&e\cr
+3&7&b&f\cr
+4&8&c&0\cr
+}}$$
+The number \.0 stands for a blank cell. Each step in solving the puzzle
+consists of swapping \.0 with one of its neighbors. The goal position
+is always
+$$\vcenter{\halign{&\enspace\tt#\cr
+1&2&3&4\cr
+5&6&7&8\cr
+9&a&b&c\cr
+d&e&f&0\cr
+}}$$
+(Korf had a different goal position, namely \.{0123456789abcdef}. I agree
+that his convention is mathematically superior to mine; but it conflicts
+with a 125-year-old tradition. So I have retained the historic practice.
+One can of course interchange our conventions, if desired, by
+rotating the board by $180^\circ$ and by replacing each nonzero digit
+$x$ by $16-x$.)
+
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<time.h>}\6
+\&{char} \\{board}[\T{16}];\6
+\&{char} \\{start}[\T{16}];\6
+\&{int} \\{stack}[\T{100}];\6
+\&{int} \\{timer};\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|s${},{}$ \|t${},{}$ \\{del}${},{}$
+\\{piece}${},{}$ \\{moves};\7
+\X2:Input the initial position\X;\6
+\X5:Apply Korf's procedure\X;\6
+\X24:Output the results\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}Let's regard the 16 cell positions as two-digit numbers in quaternary
+(radix-4) notation:
+$$\vcenter{\halign{&\enspace#\cr
+00&01&02&03\cr
+10&11&12&13\cr
+20&21&22&23\cr
+30&31&32&33\cr
+}}$$
+Thus each cell is identified by its row number $r$ and its column number $c$,
+making a two-nyp code $(r,c)$, with $0\le r,c<4$.
+
+Furthermore, it's convenient to renumber the input digits \.1, \.2,
+\dots,~\.f, so that they match their final destination positions,
+00, 01, \dots,~32. This conversion simply subtracts~1; so \.0 gets
+mapped into $-1$. The example initial position given earlier
+will therefore appear as follows in the \PB{\\{start}} array:
+$$\vcenter{\halign{&\enspace$\hfil#\hfil$\cr
+00&10&20&30\cr
+01&11&21&31\cr
+02&12&22&32\cr
+03&13&23&-1\cr
+}}$$
+
+Half of the initial positions make the puzzle unsolvable, because the
+permutation must be odd if and only if the \.0 must move an odd number of
+times. This solvability condition is checked when we read the input.
+
+\Y\B\4\D$\\{row}(\|x)$ \5
+$((\|x)\GG\T{2}{}$)\par
+\B\4\D$\\{col}(\|x)$ \5
+$((\|x)\AND\T{\^3}{}$)\par
+\Y\B\4\X2:Input the initial position\X${}\E{}$\6
+\&{if} ${}(\\{argc}\I\T{2}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ startposi}\)\.{tion\\n"},\39%
+\\{argv}[\T{0}]){}$;\5
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|k\K\\{argv}[\T{1}][\|j];{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|k\G\.{'0'}\W\|k\Z\.{'9'}){}$\1\5
+${}\|k\MRL{-{\K}}\.{'0'};{}$\2\6
+\&{else} \&{if} ${}(\|k\G\.{'a'}\W\|k\Z\.{'f'}){}$\1\5
+${}\|k\MRL{-{\K}}\.{'a'}-\T{10};{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"The\ start\ position\ }\)\.{should\ use\ only\
+hex\ }\)\.{digits\ (0123456789ab}\)\.{cdef)!\\n"});{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+\&{if} (\\{start}[\|k])\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Your\ start\ position}\)\.{\ uses\ \%x\ twice!%
+\\n"},\39\|k){}$;\5
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+${}\\{start}[\|k]\K\T{1};{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{16};{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\\{start}[\|k]\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Your\ start\ position}\)\.{\ doesn't\ use\ %
+\%x!\\n"},\39\|k){}$;\5
+${}\\{exit}({-}\T{4});{}$\6
+\4${}\}{}$\2\2\6
+\&{for} ${}(\\{del}\K\|j\K\T{0};{}$ ${}\|k\K\\{argv}[\T{1}][\|j];{}$ ${}\|j%
+\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|k\G\.{'0'}\W\|k\Z\.{'9'}){}$\1\5
+${}\|k\MRL{-{\K}}\.{'0'}{}$;\5
+\2\&{else}\1\5
+${}\|k\MRL{-{\K}}\.{'a'}-\T{10};{}$\2\6
+${}\\{start}[\|j]\K\|k-\T{1};{}$\6
+\&{for} ${}(\|s\K\T{0};{}$ ${}\|s<\|j;{}$ ${}\|s\PP){}$\1\6
+\&{if} ${}(\\{start}[\|s]>\\{start}[\|j]){}$\1\5
+${}\\{del}\PP{}$;\C{ count inversions }\2\2\6
+\&{if} ${}(\|k\E\T{0}){}$\1\5
+${}\|t\K\|j;{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(((\\{row}(\|t)+\\{col}(\|t)+\\{del})\AND\T{\^1})\E\T{0}){}$\5
+${}\{{}$\1\6
+\\{printf}(\.{"Sorry\ ...\ the\ goal\ }\)\.{is\ unreachable\ from\ }\)\.{that\
+start\ position!}\)\.{\\n"});\6
+\\{exit}(\T{0});\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\N{1}{3}Korf's method.
+If piece $(r,c)$ is currently in board position $(r',c')$, it must make
+at least $\vert r-r'\vert+\vert c-c'\vert$ moves before it reaches home.
+The sum of these numbers, over all fifteen pieces, is called~$h$;
+this quantity is also known as the ``Manhattan metric lower bound.''
+
+We will say that a move is {\it happy\/} if it moves a piece closer
+to the goal; otherwise we'll call the move {\it sad}.
+Korf's key idea is to try first to find a solution that makes only happy
+moves. (For example, one can actually win from the starting position
+\.{bc9e80df3412a756} by making $h=56$ moves that are entirely happy.)
+If that fails, we start over, but this time we try to make $h+1$ happy moves
+and 1~sad move. And if that also fails, we try for $h+k$ happy moves
+and $k$ sad ones, for $k=2$, 3, \dots, until finally we succeed.
+
+That strategy may sound silly, because each new value of~$k$ repeats
+calculations already made. But it's actually brilliant, for two reasons:
+(1)~The search can be carried out with almost no memory, for any
+fixed value of~$k$ --- in fact, this program uses fewer than 500
+bytes for all its data. (2)~The total running time for $k=0$, 1, \dots,~$k_0$
+isn't much more than the time needed for a {\it single\/} run with
+$k=k_0$, because the running time increases exponentially with~$k$.
+
+Memory requirements are minimal because we can get away with memoryless
+depth-first search to explore all solutions. The fifteen puzzle is
+much nicer in this respect than many other problems; indeed, a blind
+depth-first search as used here is often a poor choice in other applications,
+because it might explore many subproblems repeatedly, having no inkling
+that it has already ``been there and done that.'' But the search tree
+of the fifteen puzzle has comparatively few overlapping branches.
+For example, the shortest cycle of moves that restores a previously examined
+position occurs only when we go thrice around a $2\times2$ subsquare,
+leading to a cycle of length 12; therefore the first five levels below any
+node of the tree consist entirely of distinct states of the board,
+and only a few duplicates occur at level six.
+
+Note: The Manhattan metric is somewhat weak, and substantially better
+lower bounds are known. Some day I plan to incorporate them into
+later programs in this series. The simple approach adopted here
+is sufficient to handle most random initial positions in a reasonable
+amount of time. But when it is applied to the example of transposition,
+in the introduction, it is too slow: That example has a Manhattan
+lower bound of 40, yet the shortest solutions have 72 moves. Thus
+the $k$ value for that problem is 16; and each new value of~$k$
+takes empirically about 5.7 times as long as the previous case.
+(So the running time was 40.4 hours on my Opteron computer, vintage 2004.)
+
+Moreover, I could improve the present scheme in various other ways.
+Even with the Manhattan metric, I find that there are 88,728,779 positions
+from which the goal is achievable without any sad moves. (A surprisingly
+large number --- at least, I was expecting less than a million. Incidentally,
+exactly 114 of those positions have the maximum distance to the goal,
+namely 56, as in the example stated above.) If we had a
+table of those positions in memory, we would know that our last-permitted
+sad move must be to something in the table; that might make a
+significant speedup. Korf and Taylor have described a series of
+other improvements that actually
+allowed them to solve random instances of the 24-puzzle in 1996
+[{\sl AAAI National Conference Proceedings\/} (1996), 1202--1207].
+
+Another note: Maybe my terminology ``happy'' versus ``sad'' is too
+poignant. Should I have called them ``downhill'' and ``uphill'' moves
+instead? Readers comments are invited.
+
+\fi
+
+\M{4}Saving memory means that the computation lives entirely within the
+computer's high-speed cache. Of course we do need to examine billions
+of positions, in tough cases; so we want the inner loop of depth-first
+search to be short.
+
+Let's take a look at the operations that are
+involved when, say, we've just moved the empty cell into position
+$(r,c)$, coming from the south. (In other words, we will
+imagine that the empty cell was
+previously at $(r+1,c)$. We'll think of the {\it empty\/} cell as moving north,
+although the board has actually changed by moving a {\it piece\/} to the
+south.)
+From $(r,c)$ we'll try to move the empty cell either west to $(r,c-1)$,
+or north to $(r-1,c)$, or east to $(r,c+1)$;
+up to three moves are possible, depending on whether $(r,c)$ is a middle cell,
+an edge cell, or a corner cell. After having tried all those possibilities,
+we'll backtrack and make the next move from the cell to the south
+that got us started.
+
+A straightforward implementation appears in the program {\mc 15PUZZLE-KORF0},
+where the inner loop contains many tests:
+(1)~Choosing a direction. (2)~Testing if this direction is feasible
+from the current $(r,c)$. (3)~If feasible, is the move happy or sad?
+(4)~If it's sad, have we exceeded our quota of sad moves?
+(5)~Have we reached the goal? (6)~Have we exhausted all possibilities?
+
+Such conditional branches play havoc with the pipeline organization of
+a modern computer. Therefore the present program avoids most of them
+by straight-line coding, using essentially a finite-state automaton
+to control the actions. The program consists conceptually of $4\times4\times
+4\times4=256$ small parts, one for each combination of $(r,c,d,p)$,
+where we're at empty cell position $(r,c)$ trying to move the empty
+cell in direction~$d$, having entered this cell from direction~$p$.
+
+(In fact, 256 is a generous upper estimate, because many combinations
+are impossible at the edges and corners. We won't, for example, try
+to move east when the empty cell is in column~3. The true number of
+cases is 152, of which 48 simply undo a move that was made.)
+
+I could have generated the individual pieces of code with the macro
+capability of \CEE/'s preprocessor. But my debugging tools don't know
+how to deal with macros satisfactorily. So I did the repetitive steps
+with macros at another level, namely with \.{emacs} as I typed this
+program into the computer. The \CEE/ preprocessor did, however, come in handy
+to make the code more readable than it would have been if I had
+fully expanded everything by text editing.
+
+Instead of writing this program as a collection of 152 little modules,
+I could have made it a collection of 152 little procedures. But that
+wouldn't have bought me anything; as a full professor with tenure,
+I don't have to worry about being fired when I use \PB{\&{goto}} statements.
+The overhead of subroutine calling, and the fact that ``tail recursion''
+is extremely useful in the situations met here, both convince me that
+no state-of-the-art compiler would come up with anything near as efficient
+if I wrote procedures instead of this code that purposely looks like
+spaghetti. Nor would a procedure-oriented version be easier for me to write.
+
+The only drawback to the style adopted here, as far as I can
+see, is that I had many chances to make mistakes; a program of this kind
+will seem to work even though it contains typographic errors.
+Therefore I had to do a lot of careful desk checking.
+
+Does all this replication help? The program now has shifted the
+computer's work from the instruction cache to the data cache.
+One natural benchmark is the case \.{ca6098dfb73254e1}, which
+proved to be the toughest of the 100 random examples in Korf's
+original paper. (He reported that his implementation
+searched more than 6 billion nodes in that case.)
+In my first tests, on an Athlon computer purchased in the year 2000,
+the running time for this toughie was 8 minutes and 58 seconds.
+By comparison, {\mc 15PUZZLE-KORF0} requires 24 minutes and 26 seconds
+on the same machine. Korf's original experiment, using a Pascal
+compiler on a {\mc DEC} 2060 in 1984, took about 4000 minutes;
+so the present program represents a more than 400-fold speedup,
+of which we can attribute a factor of roughly 160 to improvements
+in hardware, and another factor of about 2.7 to the implementation
+technique adopted here.
+
+\fi
+
+\M{5}Enough of this introduction. Let's get on with the program.
+
+\Y\B\4\X5:Apply Korf's procedure\X${}\E{}$\6
+\X6:Set \PB{\\{moves}} to the minimum number of happy moves\X;\6
+\&{if} ${}(\\{moves}\E\T{0}){}$\1\5
+\&{goto} \\{win};\C{ otherwise our solution will take $6+6$ moves! }\2\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+${}\\{timer}\K\\{time}(\T{0});{}$\6
+${}\|t\K\\{moves}{}$;\C{ desired number of \PB{$(\hbox{(sad moves)}\LL\T{8})+%
+\hbox{(happy moves)}$} }\6
+\X23:Try for a solution with \PB{\|t} more moves\X;\6
+${}\\{printf}(\.{"\ ...\ no\ solution\ wi}\)\.{th\ \%d+\%d\ moves\ (\%d\ s}\)%
+\.{ec)\\n"},\39\\{moves}\AND\T{\^ff},\39\\{moves}\GG\T{8},\39\\{time}(\T{0})-%
+\\{timer});{}$\6
+${}\\{moves}\MRL{+{\K}}\T{\^101}{}$;\C{ add a sad move and a happy move to the
+current quota }\6
+\4${}\}{}$\2\6
+\4\\{win}:\par
+\U1.\fi
+
+\M{6}\B\X6:Set \PB{\\{moves}} to the minimum number of happy moves\X${}\E{}$\6
+\&{for} ${}(\|j\K\\{moves}\K\T{0};{}$ ${}\|j<\T{16};{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\\{start}[\|j]\G\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{del}\K\\{row}(\\{start}[\|j])-\\{row}(\|j);{}$\6
+${}\\{moves}\MRL{+{\K}}(\\{del}<\T{0}\?{-}\\{del}:\\{del});{}$\6
+${}\\{del}\K\\{col}(\\{start}[\|j])-\\{col}(\|j);{}$\6
+${}\\{moves}\MRL{+{\K}}(\\{del}<\T{0}\?{-}\\{del}:\\{del});{}$\6
+\4${}\}{}$\2\2\par
+\U5.\fi
+
+\M{7}The main control routine is a stack, which records two things:
+In the left 16 bits is the number of $\rm(sad,happy)$ moves remaining,
+called~$t$; this number will be restored when backtracking.
+And in the right 16 bits is a code number of the routine to
+execute next, after finishing every task that's higher on the stack.
+
+\fi
+
+\M{8}\B\X8:Switch into action\X${}\E{}$\6
+\4\\{switcher}:\5
+${}\|t\K\\{stack}[\MM\|s]\GG\T{16};{}$\6
+\&{switch} ${}(\\{stack}[\|s]\AND\T{\^ffff}){}$\5
+${}\{{}$\1\6
+\X10:Cases that move east from column 0\X\6
+\X11:Cases that move east from column 1\X\6
+\X12:Cases that move east from column 2\X\6
+\X13:Cases that move west from column 1\X\6
+\X14:Cases that move west from column 2\X\6
+\X15:Cases that move west from column 3\X\6
+\X16:Cases that move north from row 1\X\6
+\X17:Cases that move north from row 2\X\6
+\X18:Cases that move north from row 3\X\6
+\X19:Cases that move south from row 0\X\6
+\X20:Cases that move south from row 1\X\6
+\X21:Cases that move south from row 2\X\6
+\X22:Cases that move back\X\6
+\4\&{case} \\{bottom}:\5
+\&{break};\6
+\4\&{default}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"Oops,\ I'm\ confused\ }\)\.{about\ case\ \%x!%
+\\n"},\39\\{stack}[\|s]);{}$\6
+\4${}\}{}$\2\par
+\U23.\fi
+
+\M{9}Directions are encoded as follows: $\rm east=0$, $\rm north=1$,
+$\rm west=2$, $\rm south=3$. (Think of powers of~$i$ in the complex
+plane.)
+
+Each feasible combination of $(r,c,d,p)$ is encoded as an 8-bit quantity
+called \PB{$\\{code}(\|r,\|c,\|d,\|p)$}, so that we can easily switch to it.
+There's also \PB{$\\{tailcode}(\|r,\|c,\|d)$}; this stands for a case that will
+try
+only a single direction \PB{\|d} at cell $(r,c)$ before returning.
+
+To avoid complicated testing for happiness and sadness, the arithmetical
+calculation of \PB{\\{del}} shown here will produce \PB{\T{\^100}} if a move in
+direction~\PB{\|d} is currently sad, \PB{\T{\^001}} if that move is currently
+happy.
+
+\Y\B\4\D$\\{code}(\|r,\|c,\|d,\|p)$ \5
+$(((((\|r\LL\T{2})+\|c)\LL\T{2})+\|d)\LL\T{2})+{}$\|p\par
+\B\4\D$\\{tailcode}(\|r,\|c,\|d)$ \5
+$\T{\^100}+(\\{code}(\T{0},\39\|r,\39\|c,\39\|d){}$)\par
+\B\4\D$\\{bottom}$ \5
+$\\{code}(\T{0},\39\T{0},\39\T{1},\39\T{1}{}$)\C{ an otherwise unused code }\par
+\B\4\D$\\{bord}(\|r,\|c)$ \5
+$\\{board}[((\|r)\LL\T{2})+(\|c){}$]\par
+\B\4\D$\\{east}(\|r,\|c)$ \5
+$\\{piece}\K\\{bord}(\|r,\39\|c+\T{1});$ $\\{del}\K(((\|c-\\{col}(\\{piece}))%
+\GG\T{2})\AND\T{\^ff})+{}$\T{1}\par
+\B\4\D$\\{west}(\|r,\|c)$ \5
+$\\{piece}\K\\{bord}(\|r,\39\|c-\T{1});$ $\\{del}\K(((\\{col}(\\{piece})-\|c)%
+\GG\T{2})\AND\T{\^ff})+{}$\T{1}\par
+\B\4\D$\\{north}(\|r,\|c)$ \5
+$\\{piece}\K\\{bord}(\|r-\T{1},\39\|c);$ $\\{del}\K(((\\{row}(\\{piece})-\|r)%
+\GG\T{2})\AND\T{\^ff})+{}$\T{1}\par
+\B\4\D$\\{south}(\|r,\|c)$ \5
+$\\{piece}\K\\{bord}(\|r+\T{1},\39\|c);$ $\\{del}\K(((\|r-\\{row}(\\{piece}))%
+\GG\T{2})\AND\T{\^ff})+{}$\T{1}\par
+\fi
+
+\M{10}\B\X10:Cases that move east from column 0\X${}\E{}$\6
+\4\&{case} \\{tailcode}${}(\T{0},\39\T{0},\39\T{0}){}$:\5
+\&{case} \\{code}${}(\T{0},\39\T{0},\39\T{0},\39\T{3}){}$:\5
+\\{r0c0d0p3}:\5
+${}\\{east}(\T{0},\39\T{0});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r0c0d3p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{0},\39\T{0})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{0},\39\T{0},\39\T{3},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r0c1d0p2};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{0},\39\T{0},\39\T{1}){}$:\5
+\\{r1c0d0p1}:\5
+${}\\{east}(\T{1},\39\T{0});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c0d3p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{0})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{0},\39\T{3},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c1d1p2};\6
+\4\&{case} \\{tailcode}${}(\T{1},\39\T{0},\39\T{0}){}$:\5
+\&{case} \\{code}${}(\T{1},\39\T{0},\39\T{0},\39\T{3}){}$:\5
+\\{r1c0d0p3}:\5
+${}\\{east}(\T{1},\39\T{0});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c0d3p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{0})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{0},\39\T{3},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c1d1p2};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{0},\39\T{0},\39\T{1}){}$:\5
+\\{r2c0d0p1}:\5
+${}\\{east}(\T{2},\39\T{0});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c0d3p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{0})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{0},\39\T{3},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c1d1p2};\6
+\4\&{case} \\{tailcode}${}(\T{2},\39\T{0},\39\T{0}){}$:\5
+\&{case} \\{code}${}(\T{2},\39\T{0},\39\T{0},\39\T{3}){}$:\5
+\\{r2c0d0p3}:\5
+${}\\{east}(\T{2},\39\T{0});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c0d3p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{0})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{0},\39\T{3},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c1d1p2};\6
+\4\&{case} \\{tailcode}${}(\T{3},\39\T{0},\39\T{0}){}$:\5
+\&{case} \\{code}${}(\T{3},\39\T{0},\39\T{0},\39\T{1}){}$:\5
+\\{r3c0d0p1}:\5
+${}\\{east}(\T{3},\39\T{0});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r3c0d1p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{3},\39\T{0})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{3},\39\T{0},\39\T{1},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r3c1d1p2};\par
+\U8.\fi
+
+\M{11}\B\X11:Cases that move east from column 1\X${}\E{}$\6
+\4\&{case} \\{code}${}(\T{0},\39\T{1},\39\T{0},\39\T{2}){}$:\5
+\\{r0c1d0p2}:\5
+${}\\{east}(\T{0},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r0c1d3p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{0},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{0},\39\T{1},\39\T{3},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r0c2d0p2};\6
+\4\&{case} \\{tailcode}${}(\T{0},\39\T{1},\39\T{0}){}$:\5
+\&{case} \\{code}${}(\T{0},\39\T{1},\39\T{0},\39\T{3}){}$:\5
+\\{r0c1d0p3}:\5
+${}\\{east}(\T{0},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r0c1d3p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{0},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{0},\39\T{1},\39\T{3},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r0c2d0p2};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{1},\39\T{0},\39\T{1}){}$:\5
+\\{r1c1d0p1}:\5
+${}\\{east}(\T{1},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c1d3p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{1},\39\T{3},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c2d1p2};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{1},\39\T{0},\39\T{2}){}$:\5
+\\{r1c1d0p2}:\5
+${}\\{east}(\T{1},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c1d3p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{1},\39\T{3},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c2d1p2};\6
+\4\&{case} \\{tailcode}${}(\T{1},\39\T{1},\39\T{0}){}$:\5
+\&{case} \\{code}${}(\T{1},\39\T{1},\39\T{0},\39\T{3}){}$:\5
+\\{r1c1d0p3}:\5
+${}\\{east}(\T{1},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c1d3p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{1},\39\T{3},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c2d1p2};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{1},\39\T{0},\39\T{1}){}$:\5
+\\{r2c1d0p1}:\5
+${}\\{east}(\T{2},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c1d3p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{1},\39\T{3},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c2d1p2};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{1},\39\T{0},\39\T{2}){}$:\5
+\\{r2c1d0p2}:\5
+${}\\{east}(\T{2},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c1d3p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{1},\39\T{3},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c2d1p2};\6
+\4\&{case} \\{tailcode}${}(\T{2},\39\T{1},\39\T{0}){}$:\5
+\&{case} \\{code}${}(\T{2},\39\T{1},\39\T{0},\39\T{3}){}$:\5
+\\{r2c1d0p3}:\5
+${}\\{east}(\T{2},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c1d3p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{1},\39\T{3},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c2d1p2};\6
+\4\&{case} \\{code}${}(\T{3},\39\T{1},\39\T{0},\39\T{1}){}$:\5
+\\{r3c1d0p1}:\5
+${}\\{east}(\T{3},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r3c1d2p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{3},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{3},\39\T{1},\39\T{2},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r3c2d1p2};\6
+\4\&{case} \\{tailcode}${}(\T{3},\39\T{1},\39\T{0}){}$:\5
+\&{case} \\{code}${}(\T{3},\39\T{1},\39\T{0},\39\T{2}){}$:\5
+\\{r3c1d0p2}:\5
+${}\\{east}(\T{3},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r3c1d2p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{3},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{3},\39\T{1},\39\T{2},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r3c2d1p2};\par
+\U8.\fi
+
+\M{12}\B\X12:Cases that move east from column 2\X${}\E{}$\6
+\4\&{case} \\{code}${}(\T{0},\39\T{2},\39\T{0},\39\T{2}){}$:\5
+\\{r0c2d0p2}:\5
+${}\\{east}(\T{0},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r0c2d3p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{0},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{0},\39\T{2},\39\T{3},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r0c3d3p2};\6
+\4\&{case} \\{tailcode}${}(\T{0},\39\T{2},\39\T{0}){}$:\5
+\&{case} \\{code}${}(\T{0},\39\T{2},\39\T{0},\39\T{3}){}$:\5
+\\{r0c2d0p3}:\5
+${}\\{east}(\T{0},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r0c2d3p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{0},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{0},\39\T{2},\39\T{3},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r0c3d3p2};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{2},\39\T{0},\39\T{1}){}$:\5
+\\{r1c2d0p1}:\5
+${}\\{east}(\T{1},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c2d3p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{2},\39\T{3},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c3d1p2};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{2},\39\T{0},\39\T{2}){}$:\5
+\\{r1c2d0p2}:\5
+${}\\{east}(\T{1},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c2d3p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{2},\39\T{3},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c3d1p2};\6
+\4\&{case} \\{tailcode}${}(\T{1},\39\T{2},\39\T{0}){}$:\5
+\&{case} \\{code}${}(\T{1},\39\T{2},\39\T{0},\39\T{3}){}$:\5
+\\{r1c2d0p3}:\5
+${}\\{east}(\T{1},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c2d3p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{2},\39\T{3},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c3d1p2};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{2},\39\T{0},\39\T{1}){}$:\5
+\\{r2c2d0p1}:\5
+${}\\{east}(\T{2},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c2d3p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{2},\39\T{3},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c3d1p2};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{2},\39\T{0},\39\T{2}){}$:\5
+\\{r2c2d0p2}:\5
+${}\\{east}(\T{2},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c2d3p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{2},\39\T{3},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c3d1p2};\6
+\4\&{case} \\{tailcode}${}(\T{2},\39\T{2},\39\T{0}){}$:\5
+\&{case} \\{code}${}(\T{2},\39\T{2},\39\T{0},\39\T{3}){}$:\5
+\\{r2c2d0p3}:\5
+${}\\{east}(\T{2},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c2d3p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{2},\39\T{3},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c3d1p2};\6
+\4\&{case} \\{code}${}(\T{3},\39\T{2},\39\T{0},\39\T{1}){}$:\5
+\\{r3c2d0p1}:\5
+${}\\{east}(\T{3},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r3c2d2p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{3},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{3},\39\T{2},\39\T{2},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r3c3d1p2};\6
+\4\&{case} \\{tailcode}${}(\T{3},\39\T{2},\39\T{0}){}$:\5
+\&{case} \\{code}${}(\T{3},\39\T{2},\39\T{0},\39\T{2}){}$:\5
+\\{r3c2d0p2}:\5
+${}\\{east}(\T{3},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r3c2d2p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{3},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{3},\39\T{2},\39\T{2},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r3c3d1p2};\par
+\U8.\fi
+
+\M{13}\B\X13:Cases that move west from column 1\X${}\E{}$\6
+\4\&{case} \\{tailcode}${}(\T{0},\39\T{1},\39\T{2}){}$:\5
+\&{case} \\{code}${}(\T{0},\39\T{1},\39\T{2},\39\T{0}){}$:\5
+\\{r0c1d2p0}:\5
+${}\\{west}(\T{0},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r0c1d0p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{0},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{0},\39\T{1},\39\T{0},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r0c0d3p0};\6
+\4\&{case} \\{code}${}(\T{0},\39\T{1},\39\T{2},\39\T{3}){}$:\5
+\\{r0c1d2p3}:\5
+${}\\{west}(\T{0},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r0c1d0p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{0},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{0},\39\T{1},\39\T{0},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r0c0d3p0};\6
+\4\&{case} \\{tailcode}${}(\T{1},\39\T{1},\39\T{2}){}$:\5
+\&{case} \\{code}${}(\T{1},\39\T{1},\39\T{2},\39\T{1}){}$:\5
+\\{r1c1d2p1}:\5
+${}\\{west}(\T{1},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c1d1p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{1},\39\T{1},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c0d3p0};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{1},\39\T{2},\39\T{0}){}$:\5
+\\{r1c1d2p0}:\5
+${}\\{west}(\T{1},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c1d1p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{1},\39\T{1},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c0d3p0};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{1},\39\T{2},\39\T{3}){}$:\5
+\\{r1c1d2p3}:\5
+${}\\{west}(\T{1},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c1d1p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{1},\39\T{1},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c0d3p0};\6
+\4\&{case} \\{tailcode}${}(\T{2},\39\T{1},\39\T{2}){}$:\5
+\&{case} \\{code}${}(\T{2},\39\T{1},\39\T{2},\39\T{1}){}$:\5
+\\{r2c1d2p1}:\5
+${}\\{west}(\T{2},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c1d1p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{1},\39\T{1},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c0d3p0};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{1},\39\T{2},\39\T{0}){}$:\5
+\\{r2c1d2p0}:\5
+${}\\{west}(\T{2},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c1d1p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{1},\39\T{1},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c0d3p0};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{1},\39\T{2},\39\T{3}){}$:\5
+\\{r2c1d2p3}:\5
+${}\\{west}(\T{2},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c1d1p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{1},\39\T{1},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c0d3p0};\6
+\4\&{case} \\{tailcode}${}(\T{3},\39\T{1},\39\T{2}){}$:\5
+\&{case} \\{code}${}(\T{3},\39\T{1},\39\T{2},\39\T{1}){}$:\5
+\\{r3c1d2p1}:\5
+${}\\{west}(\T{3},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r3c1d1p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{3},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{3},\39\T{1},\39\T{1},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r3c0d1p0};\6
+\4\&{case} \\{code}${}(\T{3},\39\T{1},\39\T{2},\39\T{0}){}$:\5
+\\{r3c1d2p0}:\5
+${}\\{west}(\T{3},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r3c1d1p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{3},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{3},\39\T{1},\39\T{1},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r3c0d1p0};\par
+\U8.\fi
+
+\M{14}\B\X14:Cases that move west from column 2\X${}\E{}$\6
+\4\&{case} \\{tailcode}${}(\T{0},\39\T{2},\39\T{2}){}$:\5
+\&{case} \\{code}${}(\T{0},\39\T{2},\39\T{2},\39\T{0}){}$:\5
+\\{r0c2d2p0}:\5
+${}\\{west}(\T{0},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r0c2d0p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{0},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{0},\39\T{2},\39\T{0},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r0c1d3p0};\6
+\4\&{case} \\{code}${}(\T{0},\39\T{2},\39\T{2},\39\T{3}){}$:\5
+\\{r0c2d2p3}:\5
+${}\\{west}(\T{0},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r0c2d0p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{0},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{0},\39\T{2},\39\T{0},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r0c1d3p0};\6
+\4\&{case} \\{tailcode}${}(\T{1},\39\T{2},\39\T{2}){}$:\5
+\&{case} \\{code}${}(\T{1},\39\T{2},\39\T{2},\39\T{1}){}$:\5
+\\{r1c2d2p1}:\5
+${}\\{west}(\T{1},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c2d1p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{2},\39\T{1},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c1d3p0};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{2},\39\T{2},\39\T{0}){}$:\5
+\\{r1c2d2p0}:\5
+${}\\{west}(\T{1},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c2d1p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{2},\39\T{1},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c1d3p0};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{2},\39\T{2},\39\T{3}){}$:\5
+\\{r1c2d2p3}:\5
+${}\\{west}(\T{1},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c2d1p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{2},\39\T{1},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c1d3p0};\6
+\4\&{case} \\{tailcode}${}(\T{2},\39\T{2},\39\T{2}){}$:\5
+\&{case} \\{code}${}(\T{2},\39\T{2},\39\T{2},\39\T{1}){}$:\5
+\\{r2c2d2p1}:\5
+${}\\{west}(\T{2},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c2d1p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{2},\39\T{1},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c1d3p0};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{2},\39\T{2},\39\T{0}){}$:\5
+\\{r2c2d2p0}:\5
+${}\\{west}(\T{2},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c2d1p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{2},\39\T{1},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c1d3p0};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{2},\39\T{2},\39\T{3}){}$:\5
+\\{r2c2d2p3}:\5
+${}\\{west}(\T{2},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c2d1p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{2},\39\T{1},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c1d3p0};\6
+\4\&{case} \\{tailcode}${}(\T{3},\39\T{2},\39\T{2}){}$:\5
+\&{case} \\{code}${}(\T{3},\39\T{2},\39\T{2},\39\T{1}){}$:\5
+\\{r3c2d2p1}:\5
+${}\\{west}(\T{3},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r3c2d1p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{3},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{3},\39\T{2},\39\T{1},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r3c1d2p0};\6
+\4\&{case} \\{code}${}(\T{3},\39\T{2},\39\T{2},\39\T{0}){}$:\5
+\\{r3c2d2p0}:\5
+${}\\{west}(\T{3},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r3c2d1p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{3},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{3},\39\T{2},\39\T{1},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r3c1d2p0};\par
+\U8.\fi
+
+\M{15}\B\X15:Cases that move west from column 3\X${}\E{}$\6
+\4\&{case} \\{tailcode}${}(\T{0},\39\T{3},\39\T{2}){}$:\5
+\&{case} \\{code}${}(\T{0},\39\T{3},\39\T{2},\39\T{3}){}$:\5
+\\{r0c3d2p3}:\5
+${}\\{west}(\T{0},\39\T{3});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r0c3d3p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{0},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{0},\39\T{3},\39\T{3},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r0c2d3p0};\6
+\4\&{case} \\{tailcode}${}(\T{1},\39\T{3},\39\T{2}){}$:\5
+\&{case} \\{code}${}(\T{1},\39\T{3},\39\T{2},\39\T{1}){}$:\5
+\\{r1c3d2p1}:\5
+${}\\{west}(\T{1},\39\T{3});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c3d1p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{3},\39\T{1},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c2d3p0};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{3},\39\T{2},\39\T{3}){}$:\5
+\\{r1c3d2p3}:\5
+${}\\{west}(\T{1},\39\T{3});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c3d1p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{3},\39\T{1},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c2d3p0};\6
+\4\&{case} \\{tailcode}${}(\T{2},\39\T{3},\39\T{2}){}$:\5
+\&{case} \\{code}${}(\T{2},\39\T{3},\39\T{2},\39\T{1}){}$:\5
+\\{r2c3d2p1}:\5
+${}\\{west}(\T{2},\39\T{3});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c3d1p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{3},\39\T{1},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c2d3p0};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{3},\39\T{2},\39\T{3}){}$:\5
+\\{r2c3d2p3}:\5
+${}\\{west}(\T{2},\39\T{3});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c3d1p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{3},\39\T{1},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c2d3p0};\6
+\4\&{case} \\{tailcode}${}(\T{3},\39\T{3},\39\T{2}){}$:\5
+\&{case} \\{code}${}(\T{3},\39\T{3},\39\T{2},\39\T{1}){}$:\5
+\\{r3c3d2p1}:\5
+${}\\{west}(\T{3},\39\T{3});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r3c3d1p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{3},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{3},\39\T{3},\39\T{1},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r3c2d2p0};\par
+\U8.\fi
+
+\M{16}\B\X16:Cases that move north from row 1\X${}\E{}$\6
+\4\&{case} \\{tailcode}${}(\T{1},\39\T{0},\39\T{1}){}$:\5
+\&{case} \\{code}${}(\T{1},\39\T{0},\39\T{1},\39\T{0}){}$:\5
+\\{r1c0d1p0}:\5
+${}\\{north}(\T{1},\39\T{0});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c0d0p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{0})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{0},\39\T{0},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r0c0d0p3};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{0},\39\T{1},\39\T{3}){}$:\5
+\\{r1c0d1p3}:\5
+${}\\{north}(\T{1},\39\T{0});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c0d0p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{0})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{0},\39\T{0},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r0c0d0p3};\6
+\4\&{case} \\{tailcode}${}(\T{1},\39\T{1},\39\T{1}){}$:\5
+\&{case} \\{code}${}(\T{1},\39\T{1},\39\T{1},\39\T{0}){}$:\5
+\\{r1c1d1p0}:\5
+${}\\{north}(\T{1},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c1d0p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{1},\39\T{0},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r0c1d2p3};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{1},\39\T{1},\39\T{2}){}$:\5
+\\{r1c1d1p2}:\5
+${}\\{north}(\T{1},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c1d0p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{1},\39\T{0},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r0c1d2p3};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{1},\39\T{1},\39\T{3}){}$:\5
+\\{r1c1d1p3}:\5
+${}\\{north}(\T{1},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c1d0p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{1},\39\T{0},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r0c1d2p3};\6
+\4\&{case} \\{tailcode}${}(\T{1},\39\T{2},\39\T{1}){}$:\5
+\&{case} \\{code}${}(\T{1},\39\T{2},\39\T{1},\39\T{0}){}$:\5
+\\{r1c2d1p0}:\5
+${}\\{north}(\T{1},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c2d0p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{2},\39\T{0},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r0c2d2p3};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{2},\39\T{1},\39\T{2}){}$:\5
+\\{r1c2d1p2}:\5
+${}\\{north}(\T{1},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c2d0p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{2},\39\T{0},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r0c2d2p3};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{2},\39\T{1},\39\T{3}){}$:\5
+\\{r1c2d1p3}:\5
+${}\\{north}(\T{1},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c2d0p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{2},\39\T{0},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r0c2d2p3};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{3},\39\T{1},\39\T{2}){}$:\5
+\\{r1c3d1p2}:\5
+${}\\{north}(\T{1},\39\T{3});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c3d3p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{3},\39\T{3},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r0c3d2p3};\6
+\4\&{case} \\{tailcode}${}(\T{1},\39\T{3},\39\T{1}){}$:\5
+\&{case} \\{code}${}(\T{1},\39\T{3},\39\T{1},\39\T{3}){}$:\5
+\\{r1c3d1p3}:\5
+${}\\{north}(\T{1},\39\T{3});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c3d3p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{3},\39\T{3},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r0c3d2p3};\par
+\U8.\fi
+
+\M{17}\B\X17:Cases that move north from row 2\X${}\E{}$\6
+\4\&{case} \\{tailcode}${}(\T{2},\39\T{0},\39\T{1}){}$:\5
+\&{case} \\{code}${}(\T{2},\39\T{0},\39\T{1},\39\T{0}){}$:\5
+\\{r2c0d1p0}:\5
+${}\\{north}(\T{2},\39\T{0});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c0d0p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{0})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{0},\39\T{0},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c0d1p3};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{0},\39\T{1},\39\T{3}){}$:\5
+\\{r2c0d1p3}:\5
+${}\\{north}(\T{2},\39\T{0});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c0d0p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{0})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{0},\39\T{0},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c0d1p3};\6
+\4\&{case} \\{tailcode}${}(\T{2},\39\T{1},\39\T{1}){}$:\5
+\&{case} \\{code}${}(\T{2},\39\T{1},\39\T{1},\39\T{0}){}$:\5
+\\{r2c1d1p0}:\5
+${}\\{north}(\T{2},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c1d0p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{1},\39\T{0},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c1d2p3};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{1},\39\T{1},\39\T{2}){}$:\5
+\\{r2c1d1p2}:\5
+${}\\{north}(\T{2},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c1d0p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{1},\39\T{0},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c1d2p3};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{1},\39\T{1},\39\T{3}){}$:\5
+\\{r2c1d1p3}:\5
+${}\\{north}(\T{2},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c1d0p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{1},\39\T{0},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c1d2p3};\6
+\4\&{case} \\{tailcode}${}(\T{2},\39\T{2},\39\T{1}){}$:\5
+\&{case} \\{code}${}(\T{2},\39\T{2},\39\T{1},\39\T{0}){}$:\5
+\\{r2c2d1p0}:\5
+${}\\{north}(\T{2},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c2d0p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{2},\39\T{0},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c2d2p3};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{2},\39\T{1},\39\T{2}){}$:\5
+\\{r2c2d1p2}:\5
+${}\\{north}(\T{2},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c2d0p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{2},\39\T{0},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c2d2p3};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{2},\39\T{1},\39\T{3}){}$:\5
+\\{r2c2d1p3}:\5
+${}\\{north}(\T{2},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c2d0p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{2},\39\T{0},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c2d2p3};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{3},\39\T{1},\39\T{2}){}$:\5
+\\{r2c3d1p2}:\5
+${}\\{north}(\T{2},\39\T{3});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c3d3p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{3},\39\T{3},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c3d2p3};\6
+\4\&{case} \\{tailcode}${}(\T{2},\39\T{3},\39\T{1}){}$:\5
+\&{case} \\{code}${}(\T{2},\39\T{3},\39\T{1},\39\T{3}){}$:\5
+\\{r2c3d1p3}:\5
+${}\\{north}(\T{2},\39\T{3});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c3d3p3};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{3},\39\T{3},\39\T{3}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c3d2p3};\par
+\U8.\fi
+
+\M{18}\B\X18:Cases that move north from row 3\X${}\E{}$\6
+\4\&{case} \\{tailcode}${}(\T{3},\39\T{0},\39\T{1}){}$:\5
+\&{case} \\{code}${}(\T{3},\39\T{0},\39\T{1},\39\T{0}){}$:\5
+\\{r3c0d1p0}:\5
+${}\\{north}(\T{3},\39\T{0});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r3c0d0p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{3},\39\T{0})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{3},\39\T{0},\39\T{0},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c0d1p3};\6
+\4\&{case} \\{tailcode}${}(\T{3},\39\T{1},\39\T{1}){}$:\5
+\&{case} \\{code}${}(\T{3},\39\T{1},\39\T{1},\39\T{0}){}$:\5
+\\{r3c1d1p0}:\5
+${}\\{north}(\T{3},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r3c1d0p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{3},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{3},\39\T{1},\39\T{0},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c1d2p3};\6
+\4\&{case} \\{code}${}(\T{3},\39\T{1},\39\T{1},\39\T{2}){}$:\5
+\\{r3c1d1p2}:\5
+${}\\{north}(\T{3},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r3c1d0p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{3},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{3},\39\T{1},\39\T{0},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c1d2p3};\6
+\4\&{case} \\{tailcode}${}(\T{3},\39\T{2},\39\T{1}){}$:\5
+\&{case} \\{code}${}(\T{3},\39\T{2},\39\T{1},\39\T{0}){}$:\5
+\\{r3c2d1p0}:\5
+${}\\{north}(\T{3},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r3c2d0p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{3},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{3},\39\T{2},\39\T{0},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c2d2p3};\6
+\4\&{case} \\{code}${}(\T{3},\39\T{2},\39\T{1},\39\T{2}){}$:\5
+\\{r3c2d1p2}:\5
+${}\\{north}(\T{3},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r3c2d0p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{3},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{3},\39\T{2},\39\T{0},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c2d2p3};\6
+\4\&{case} \\{tailcode}${}(\T{3},\39\T{3},\39\T{1}){}$:\5
+\&{case} \\{code}${}(\T{3},\39\T{3},\39\T{1},\39\T{2}){}$:\5
+\\{r3c3d1p2}:\5
+${}\\{north}(\T{3},\39\T{3});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r3c3d2p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{3},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{3},\39\T{3},\39\T{2},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c3d2p3};\par
+\U8.\fi
+
+\M{19}\B\X19:Cases that move south from row 0\X${}\E{}$\6
+\4\&{case} \\{tailcode}${}(\T{0},\39\T{0},\39\T{3}){}$:\5
+\&{case} \\{code}${}(\T{0},\39\T{0},\39\T{3},\39\T{0}){}$:\5
+\\{r0c0d3p0}:\5
+${}\\{south}(\T{0},\39\T{0});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r0c0d0p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{0},\39\T{0})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{0},\39\T{0},\39\T{0},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c0d0p1};\6
+\4\&{case} \\{code}${}(\T{0},\39\T{1},\39\T{3},\39\T{0}){}$:\5
+\\{r0c1d3p0}:\5
+${}\\{south}(\T{0},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r0c1d2p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{0},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{0},\39\T{1},\39\T{2},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c1d0p1};\6
+\4\&{case} \\{tailcode}${}(\T{0},\39\T{1},\39\T{3}){}$:\5
+\&{case} \\{code}${}(\T{0},\39\T{1},\39\T{3},\39\T{2}){}$:\5
+\\{r0c1d3p2}:\5
+${}\\{south}(\T{0},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r0c1d2p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{0},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{0},\39\T{1},\39\T{2},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c1d0p1};\6
+\4\&{case} \\{code}${}(\T{0},\39\T{2},\39\T{3},\39\T{0}){}$:\5
+\\{r0c2d3p0}:\5
+${}\\{south}(\T{0},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r0c2d2p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{0},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{0},\39\T{2},\39\T{2},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c2d0p1};\6
+\4\&{case} \\{tailcode}${}(\T{0},\39\T{2},\39\T{3}){}$:\5
+\&{case} \\{code}${}(\T{0},\39\T{2},\39\T{3},\39\T{2}){}$:\5
+\\{r0c2d3p2}:\5
+${}\\{south}(\T{0},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r0c2d2p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{0},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{0},\39\T{2},\39\T{2},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c2d0p1};\6
+\4\&{case} \\{tailcode}${}(\T{0},\39\T{3},\39\T{3}){}$:\5
+\&{case} \\{code}${}(\T{0},\39\T{3},\39\T{3},\39\T{2}){}$:\5
+\\{r0c3d3p2}:\5
+${}\\{south}(\T{0},\39\T{3});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r0c3d2p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{0},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{0},\39\T{3},\39\T{2},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r1c3d3p1};\par
+\U8.\fi
+
+\M{20}\B\X20:Cases that move south from row 1\X${}\E{}$\6
+\4\&{case} \\{code}${}(\T{1},\39\T{0},\39\T{3},\39\T{0}){}$:\5
+\\{r1c0d3p0}:\5
+${}\\{south}(\T{1},\39\T{0});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c0d1p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{0})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{0},\39\T{1},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c0d0p1};\6
+\4\&{case} \\{tailcode}${}(\T{1},\39\T{0},\39\T{3}){}$:\5
+\&{case} \\{code}${}(\T{1},\39\T{0},\39\T{3},\39\T{1}){}$:\5
+\\{r1c0d3p1}:\5
+${}\\{south}(\T{1},\39\T{0});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c0d1p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{0})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{0},\39\T{1},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c0d0p1};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{1},\39\T{3},\39\T{0}){}$:\5
+\\{r1c1d3p0}:\5
+${}\\{south}(\T{1},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c1d2p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{1},\39\T{2},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c1d0p1};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{1},\39\T{3},\39\T{1}){}$:\5
+\\{r1c1d3p1}:\5
+${}\\{south}(\T{1},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c1d2p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{1},\39\T{2},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c1d0p1};\6
+\4\&{case} \\{tailcode}${}(\T{1},\39\T{1},\39\T{3}){}$:\5
+\&{case} \\{code}${}(\T{1},\39\T{1},\39\T{3},\39\T{2}){}$:\5
+\\{r1c1d3p2}:\5
+${}\\{south}(\T{1},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c1d2p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{1},\39\T{2},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c1d0p1};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{2},\39\T{3},\39\T{0}){}$:\5
+\\{r1c2d3p0}:\5
+${}\\{south}(\T{1},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c2d2p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{2},\39\T{2},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c2d0p1};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{2},\39\T{3},\39\T{1}){}$:\5
+\\{r1c2d3p1}:\5
+${}\\{south}(\T{1},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c2d2p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{2},\39\T{2},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c2d0p1};\6
+\4\&{case} \\{tailcode}${}(\T{1},\39\T{2},\39\T{3}){}$:\5
+\&{case} \\{code}${}(\T{1},\39\T{2},\39\T{3},\39\T{2}){}$:\5
+\\{r1c2d3p2}:\5
+${}\\{south}(\T{1},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c2d2p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{2},\39\T{2},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c2d0p1};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{3},\39\T{3},\39\T{1}){}$:\5
+\\{r1c3d3p1}:\5
+${}\\{south}(\T{1},\39\T{3});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c3d2p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{3},\39\T{2},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c3d3p1};\6
+\4\&{case} \\{tailcode}${}(\T{1},\39\T{3},\39\T{3}){}$:\5
+\&{case} \\{code}${}(\T{1},\39\T{3},\39\T{3},\39\T{2}){}$:\5
+\\{r1c3d3p2}:\5
+${}\\{south}(\T{1},\39\T{3});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r1c3d2p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{1},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{1},\39\T{3},\39\T{2},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r2c3d3p1};\par
+\U8.\fi
+
+\M{21}Yes, this has been boring. But now we're in the last such section.
+
+\Y\B\4\X21:Cases that move south from row 2\X${}\E{}$\6
+\4\&{case} \\{code}${}(\T{2},\39\T{0},\39\T{3},\39\T{0}){}$:\5
+\\{r2c0d3p0}:\5
+${}\\{south}(\T{2},\39\T{0});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c0d1p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{0})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{0},\39\T{1},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r3c0d0p1};\6
+\4\&{case} \\{tailcode}${}(\T{2},\39\T{0},\39\T{3}){}$:\5
+\&{case} \\{code}${}(\T{2},\39\T{0},\39\T{3},\39\T{1}){}$:\5
+\\{r2c0d3p1}:\5
+${}\\{south}(\T{2},\39\T{0});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c0d1p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{0})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{0},\39\T{1},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r3c0d0p1};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{1},\39\T{3},\39\T{0}){}$:\5
+\\{r2c1d3p0}:\5
+${}\\{south}(\T{2},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c1d2p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{1},\39\T{2},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r3c1d0p1};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{1},\39\T{3},\39\T{1}){}$:\5
+\\{r2c1d3p1}:\5
+${}\\{south}(\T{2},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c1d2p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{1},\39\T{2},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r3c1d0p1};\6
+\4\&{case} \\{tailcode}${}(\T{2},\39\T{1},\39\T{3}){}$:\5
+\&{case} \\{code}${}(\T{2},\39\T{1},\39\T{3},\39\T{2}){}$:\5
+\\{r2c1d3p2}:\5
+${}\\{south}(\T{2},\39\T{1});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c1d2p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{1})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{1},\39\T{2},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r3c1d0p1};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{2},\39\T{3},\39\T{0}){}$:\5
+\\{r2c2d3p0}:\5
+${}\\{south}(\T{2},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c2d2p0};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{2},\39\T{2},\39\T{0}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r3c2d0p1};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{2},\39\T{3},\39\T{1}){}$:\5
+\\{r2c2d3p1}:\5
+${}\\{south}(\T{2},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c2d2p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{2},\39\T{2},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r3c2d0p1};\6
+\4\&{case} \\{tailcode}${}(\T{2},\39\T{2},\39\T{3}){}$:\5
+\&{case} \\{code}${}(\T{2},\39\T{2},\39\T{3},\39\T{2}){}$:\5
+\\{r2c2d3p2}:\5
+${}\\{south}(\T{2},\39\T{2});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c2d2p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{2})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{2},\39\T{2},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r3c2d0p1};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{3},\39\T{3},\39\T{1}){}$:\5
+\\{r2c3d3p1}:\5
+${}\\{south}(\T{2},\39\T{3});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c3d2p1};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{3},\39\T{2},\39\T{1}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r3c3d2p1};\6
+\4\&{case} \\{tailcode}${}(\T{2},\39\T{3},\39\T{3}){}$:\5
+\&{case} \\{code}${}(\T{2},\39\T{3},\39\T{3},\39\T{2}){}$:\5
+\\{r2c3d3p2}:\5
+${}\\{south}(\T{2},\39\T{3});{}$\6
+\&{if} ${}(\|t\Z\\{del}){}$\5
+${}\{{}$\5
+\1\&{if} ${}(\|t\E\\{del}){}$\1\5
+\&{goto} \\{win};\5
+\2\&{else}\1\5
+\&{goto} \\{r2c3d2p2};\5
+\2${}\}{}$\2\6
+${}\\{bord}(\T{2},\39\T{3})\K\\{piece},\39\\{stack}[\|s\PP]\K(\|t\LL\T{16})+%
+\\{code}(\T{2},\39\T{3},\39\T{2},\39\T{2}),\39\|t\MRL{-{\K}}\\{del};{}$\6
+\&{goto} \\{r3c3d2p1};\par
+\U8.\fi
+
+\M{22}The cases $(r,c,d,p)$ with $d=p$ represent the times when we
+are backtracking and must restore the previous board position.
+
+\Y\B\4\X22:Cases that move back\X${}\E{}$\6
+\4\&{case} \\{code}${}(\T{0},\39\T{0},\39\T{0},\39\T{0}){}$:\5
+\\{r0c0d0p0}:\5
+${}\\{bord}(\T{0},\39\T{0})\K\\{bord}(\T{0},\39\T{1}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{0},\39\T{0},\39\T{3},\39\T{3}){}$:\5
+\\{r0c0d3p3}:\5
+${}\\{bord}(\T{0},\39\T{0})\K\\{bord}(\T{1},\39\T{0}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{0},\39\T{1},\39\T{0},\39\T{0}){}$:\5
+\\{r0c1d0p0}:\5
+${}\\{bord}(\T{0},\39\T{1})\K\\{bord}(\T{0},\39\T{2}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{0},\39\T{1},\39\T{2},\39\T{2}){}$:\5
+\\{r0c1d2p2}:\5
+${}\\{bord}(\T{0},\39\T{1})\K\\{bord}(\T{0},\39\T{0}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{0},\39\T{1},\39\T{3},\39\T{3}){}$:\5
+\\{r0c1d3p3}:\5
+${}\\{bord}(\T{0},\39\T{1})\K\\{bord}(\T{1},\39\T{1}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{0},\39\T{2},\39\T{0},\39\T{0}){}$:\5
+\\{r0c2d0p0}:\5
+${}\\{bord}(\T{0},\39\T{2})\K\\{bord}(\T{0},\39\T{3}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{0},\39\T{2},\39\T{2},\39\T{2}){}$:\5
+\\{r0c2d2p2}:\5
+${}\\{bord}(\T{0},\39\T{2})\K\\{bord}(\T{0},\39\T{1}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{0},\39\T{2},\39\T{3},\39\T{3}){}$:\5
+\\{r0c2d3p3}:\5
+${}\\{bord}(\T{0},\39\T{2})\K\\{bord}(\T{1},\39\T{2}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{0},\39\T{3},\39\T{2},\39\T{2}){}$:\5
+\\{r0c3d2p2}:\5
+${}\\{bord}(\T{0},\39\T{3})\K\\{bord}(\T{0},\39\T{2}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{0},\39\T{3},\39\T{3},\39\T{3}){}$:\5
+\\{r0c3d3p3}:\5
+${}\\{bord}(\T{0},\39\T{3})\K\\{bord}(\T{1},\39\T{3}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{0},\39\T{0},\39\T{0}){}$:\5
+\\{r1c0d0p0}:\5
+${}\\{bord}(\T{1},\39\T{0})\K\\{bord}(\T{1},\39\T{1}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{0},\39\T{1},\39\T{1}){}$:\5
+\\{r1c0d1p1}:\5
+${}\\{bord}(\T{1},\39\T{0})\K\\{bord}(\T{0},\39\T{0}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{0},\39\T{3},\39\T{3}){}$:\5
+\\{r1c0d3p3}:\5
+${}\\{bord}(\T{1},\39\T{0})\K\\{bord}(\T{2},\39\T{0}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{1},\39\T{0},\39\T{0}){}$:\5
+\\{r1c1d0p0}:\5
+${}\\{bord}(\T{1},\39\T{1})\K\\{bord}(\T{1},\39\T{2}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{1},\39\T{1},\39\T{1}){}$:\5
+\\{r1c1d1p1}:\5
+${}\\{bord}(\T{1},\39\T{1})\K\\{bord}(\T{0},\39\T{1}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{1},\39\T{2},\39\T{2}){}$:\5
+\\{r1c1d2p2}:\5
+${}\\{bord}(\T{1},\39\T{1})\K\\{bord}(\T{1},\39\T{0}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{1},\39\T{3},\39\T{3}){}$:\5
+\\{r1c1d3p3}:\5
+${}\\{bord}(\T{1},\39\T{1})\K\\{bord}(\T{2},\39\T{1}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{2},\39\T{0},\39\T{0}){}$:\5
+\\{r1c2d0p0}:\5
+${}\\{bord}(\T{1},\39\T{2})\K\\{bord}(\T{1},\39\T{3}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{2},\39\T{1},\39\T{1}){}$:\5
+\\{r1c2d1p1}:\5
+${}\\{bord}(\T{1},\39\T{2})\K\\{bord}(\T{0},\39\T{2}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{2},\39\T{2},\39\T{2}){}$:\5
+\\{r1c2d2p2}:\5
+${}\\{bord}(\T{1},\39\T{2})\K\\{bord}(\T{1},\39\T{1}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{2},\39\T{3},\39\T{3}){}$:\5
+\\{r1c2d3p3}:\5
+${}\\{bord}(\T{1},\39\T{2})\K\\{bord}(\T{2},\39\T{2}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{3},\39\T{1},\39\T{1}){}$:\5
+\\{r1c3d1p1}:\5
+${}\\{bord}(\T{1},\39\T{3})\K\\{bord}(\T{0},\39\T{3}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{3},\39\T{2},\39\T{2}){}$:\5
+\\{r1c3d2p2}:\5
+${}\\{bord}(\T{1},\39\T{3})\K\\{bord}(\T{1},\39\T{2}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{1},\39\T{3},\39\T{3},\39\T{3}){}$:\5
+\\{r1c3d3p3}:\5
+${}\\{bord}(\T{1},\39\T{3})\K\\{bord}(\T{2},\39\T{3}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{0},\39\T{0},\39\T{0}){}$:\5
+\\{r2c0d0p0}:\5
+${}\\{bord}(\T{2},\39\T{0})\K\\{bord}(\T{2},\39\T{1}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{0},\39\T{1},\39\T{1}){}$:\5
+\\{r2c0d1p1}:\5
+${}\\{bord}(\T{2},\39\T{0})\K\\{bord}(\T{1},\39\T{0}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{0},\39\T{3},\39\T{3}){}$:\5
+\\{r2c0d3p3}:\5
+${}\\{bord}(\T{2},\39\T{0})\K\\{bord}(\T{3},\39\T{0}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{1},\39\T{0},\39\T{0}){}$:\5
+\\{r2c1d0p0}:\5
+${}\\{bord}(\T{2},\39\T{1})\K\\{bord}(\T{2},\39\T{2}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{1},\39\T{1},\39\T{1}){}$:\5
+\\{r2c1d1p1}:\5
+${}\\{bord}(\T{2},\39\T{1})\K\\{bord}(\T{1},\39\T{1}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{1},\39\T{2},\39\T{2}){}$:\5
+\\{r2c1d2p2}:\5
+${}\\{bord}(\T{2},\39\T{1})\K\\{bord}(\T{2},\39\T{0}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{1},\39\T{3},\39\T{3}){}$:\5
+\\{r2c1d3p3}:\5
+${}\\{bord}(\T{2},\39\T{1})\K\\{bord}(\T{3},\39\T{1}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{2},\39\T{0},\39\T{0}){}$:\5
+\\{r2c2d0p0}:\5
+${}\\{bord}(\T{2},\39\T{2})\K\\{bord}(\T{2},\39\T{3}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{2},\39\T{1},\39\T{1}){}$:\5
+\\{r2c2d1p1}:\5
+${}\\{bord}(\T{2},\39\T{2})\K\\{bord}(\T{1},\39\T{2}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{2},\39\T{2},\39\T{2}){}$:\5
+\\{r2c2d2p2}:\5
+${}\\{bord}(\T{2},\39\T{2})\K\\{bord}(\T{2},\39\T{1}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{2},\39\T{3},\39\T{3}){}$:\5
+\\{r2c2d3p3}:\5
+${}\\{bord}(\T{2},\39\T{2})\K\\{bord}(\T{3},\39\T{2}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{3},\39\T{1},\39\T{1}){}$:\5
+\\{r2c3d1p1}:\5
+${}\\{bord}(\T{2},\39\T{3})\K\\{bord}(\T{1},\39\T{3}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{3},\39\T{2},\39\T{2}){}$:\5
+\\{r2c3d2p2}:\5
+${}\\{bord}(\T{2},\39\T{3})\K\\{bord}(\T{2},\39\T{2}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{2},\39\T{3},\39\T{3},\39\T{3}){}$:\5
+\\{r2c3d3p3}:\5
+${}\\{bord}(\T{2},\39\T{3})\K\\{bord}(\T{3},\39\T{3}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{3},\39\T{0},\39\T{0},\39\T{0}){}$:\5
+\\{r3c0d0p0}:\5
+${}\\{bord}(\T{3},\39\T{0})\K\\{bord}(\T{3},\39\T{1}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{3},\39\T{0},\39\T{1},\39\T{1}){}$:\5
+\\{r3c0d1p1}:\5
+${}\\{bord}(\T{3},\39\T{0})\K\\{bord}(\T{2},\39\T{0}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{3},\39\T{1},\39\T{0},\39\T{0}){}$:\5
+\\{r3c1d0p0}:\5
+${}\\{bord}(\T{3},\39\T{1})\K\\{bord}(\T{3},\39\T{2}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{3},\39\T{1},\39\T{1},\39\T{1}){}$:\5
+\\{r3c1d1p1}:\5
+${}\\{bord}(\T{3},\39\T{1})\K\\{bord}(\T{2},\39\T{1}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{3},\39\T{1},\39\T{2},\39\T{2}){}$:\5
+\\{r3c1d2p2}:\5
+${}\\{bord}(\T{3},\39\T{1})\K\\{bord}(\T{3},\39\T{0}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{3},\39\T{2},\39\T{0},\39\T{0}){}$:\5
+\\{r3c2d0p0}:\5
+${}\\{bord}(\T{3},\39\T{2})\K\\{bord}(\T{3},\39\T{3}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{3},\39\T{2},\39\T{1},\39\T{1}){}$:\5
+\\{r3c2d1p1}:\5
+${}\\{bord}(\T{3},\39\T{2})\K\\{bord}(\T{2},\39\T{2}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{3},\39\T{2},\39\T{2},\39\T{2}){}$:\5
+\\{r3c2d2p2}:\5
+${}\\{bord}(\T{3},\39\T{2})\K\\{bord}(\T{3},\39\T{1}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{3},\39\T{3},\39\T{1},\39\T{1}){}$:\5
+\\{r3c3d1p1}:\5
+${}\\{bord}(\T{3},\39\T{3})\K\\{bord}(\T{2},\39\T{3}){}$;\5
+\&{goto} \\{switcher};\6
+\4\&{case} \\{code}${}(\T{3},\39\T{3},\39\T{2},\39\T{2}){}$:\5
+\\{r3c3d2p2}:\5
+${}\\{bord}(\T{3},\39\T{3})\K\\{bord}(\T{3},\39\T{2}){}$;\5
+\&{goto} \\{switcher};\par
+\U8.\fi
+
+\M{23}Great --- all the code has now been written for the inner loop.
+Only two things remain: (1)~Getting the whole process rolling, and
+(2)~eventually stopping the darn thing.
+
+To get started, we need 2, 3, or 4 top-level (or should~I say
+bottom-of-stack level) decisions about what direction to choose for the
+first move. The \PB{\\{tailcode}}s were invented for precisely that purpose.
+
+The process stops in one of two ways: Either there's no solution
+(and we have try again with a higher quota), or a winning path was
+found. It's easy to handle the first case without slowing anything
+down, by simply putting the special code `\PB{\\{bottom}}' at the bottom of the
+stack.
+
+And I'll save the other case (the best case) for last.
+
+\Y\B\4\X23:Try for a solution with \PB{\|t} more moves\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{16};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\\{board}[\|j]\K\\{start}[\|j];{}$\6
+\&{if} ${}(\\{board}[\|j]<\T{0}){}$\1\5
+${}\|k\K\|j;{}$\2\6
+\4${}\}{}$\2\6
+${}\\{stack}[\T{0}]\K(\|t\LL\T{16})+\\{bottom},\39\|s\K\T{1};{}$\6
+\&{if} ${}(\\{col}(\|k)\I\T{3}){}$\1\5
+${}\\{stack}[\|s\PP]\K(\|t\LL\T{16})+\\{tailcode}(\\{row}(\|k),\39\\{col}(\|k),%
+\39\T{0}){}$;\C{ first move east }\2\6
+\&{if} ${}(\\{row}(\|k)\I\T{0}){}$\1\5
+${}\\{stack}[\|s\PP]\K(\|t\LL\T{16})+\\{tailcode}(\\{row}(\|k),\39\\{col}(\|k),%
+\39\T{1}){}$;\C{ first move north }\2\6
+\&{if} ${}(\\{col}(\|k)\I\T{0}){}$\1\5
+${}\\{stack}[\|s\PP]\K(\|t\LL\T{16})+\\{tailcode}(\\{row}(\|k),\39\\{col}(\|k),%
+\39\T{2}){}$;\C{ first move west }\2\6
+\&{if} ${}(\\{row}(\|k)\I\T{3}){}$\1\5
+${}\\{stack}[\|s\PP]\K(\|t\LL\T{16})+\\{tailcode}(\\{row}(\|k),\39\\{col}(\|k),%
+\39\T{3}){}$;\C{ first move south }\2\6
+\X8:Switch into action\X;\par
+\U5.\fi
+
+\M{24}Hey, we have a winner! The stack entries tell us how we got here,
+so that we can easily give the user instructions about which piece
+should be pushed at each step --- except that the last two steps haven't
+been placed on the stack, because of my tricky optimizations.
+
+At first I was going to leave those two steps as an exercise
+for the user. Ha, ha, ha, a hilarious joke.
+But, well, it looked a little too silly.
+So I broke down and figured out how to deduce them from scratch.
+
+\Y\B\4\X24:Output the results\X${}\E{}$\6
+$\\{printf}(\.{"Solution\ in\ \%d+\%d\ m}\)\.{oves:\ "},\39\\{moves}\AND\T{%
+\^ff},\39\\{moves}\GG\T{8});{}$\6
+\&{if} ${}(\\{moves}>\T{1}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}(\\{stack}[\|k]\AND\T{\^ffff})\G\\{tailcode}(%
+\T{0},\39\T{0},\39\T{0});{}$ ${}\|k\PP){}$\1\5
+;\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{16};{}$ ${}\|j\PP){}$\1\5
+${}\\{board}[\|j]\K\\{start}[\|j];{}$\2\6
+${}\|j\K(\\{stack}[\|k]\AND\T{\^ffff})\GG\T{4};{}$\6
+\&{for} ${}(\|k\PP;{}$ ${}\|k<\|s;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{del}\K(\\{stack}[\|k]\AND\T{\^ffff})\GG\T{4};{}$\6
+${}\\{printf}(\.{"\%x"},\39\\{board}[\\{del}]+\T{1});{}$\6
+${}\\{board}[\|j]\K\\{board}[\\{del}],\39\|j\K\\{del};{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|j\E\T{\^d}){}$\1\5
+\\{printf}(\.{"ef\\n"});\2\6
+\&{else} \&{if} ${}(\|j\E\T{\^7}){}$\1\5
+\\{printf}(\.{"8c\\n"});\2\6
+\&{else}\1\5
+${}\\{printf}(\.{"b\%x\\n"},\39\\{bord}(\T{3},\39\T{3})+\T{1});{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\\{moves}\E\T{1}){}$\1\5
+${}\\{printf}(\.{"\%x"},\39\\{start}[\T{\^f}]+\T{1});{}$\2\6
+${}\\{printf}(\.{"\ (\%d\ sec)\\n"},\39\\{time}(\T{0})-\\{timer});{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\N{1}{25}Index.
+\fi
+
+\inx
+\fin
+\con

@@ -1,0 +1,43 @@
+\I\X13:Complete \PB{\\{aa}} to a nonsingular matrix\X
+\U12.
+\I\X39:Enumerate and print all solutions\X
+\U1.
+\I\X31:Find the index $k$ such that we've matched $\{x_1,\ldots,x_{k-1}\}$ and
+such that all other values exceed~$x_k$\X
+\U30.
+\I\X43:Forbid all \SET/s that include $\{x_k,x_l\}$ for $1\le k<l$\X
+\U39.
+\I\X32:Forbid values that will cause rejection if they propagate this far\X
+\U31.
+\I\X6, 7, 9, 11, 15, 16, 21, 23, 28, 41, 46:Global variables\X
+\U1.
+\I\X8, 10, 12, 17:Initialize\X
+\U1.
+\I\X26:Launch a new node that maps $v$ to $x_d$\X
+\U25.
+\I\X40:Local variables\X
+\U1.
+\I\X27:Make sure $w$ is forbidden\X
+\U26.
+\I\X35:Print the current transform matrix\X
+\U34.
+\I\X47:Print the totals\X
+\U1.
+\I\X45:Record the current canonical $l$-set as a solution\X
+\U39.
+\I\X42:Reject the current set $\{x_1,\ldots,x_l\}$\X
+\Us25, 29, 31\ETs33.
+\I\X22, 24, 25, 30, 34, 36, 37, 38, 44:Subroutines\X
+\U1.
+\I\X5, 20:Type definitions\X
+\U1.
+\I\X33:Use special strategy for \PB{\\{launch}} if \PB{\|d} is sufficiently
+deep\X
+\U26.
+\I\X29:Use special strategy for \PB{\\{new\_kid}} if \PB{\|d} is sufficiently
+deep\X
+\U24.
+\I\X14:Use \PB{\\{aa}} to define the mapping \PB{$\\{perm}[\T{4}-\|j][\\{pack}(%
+\|a,\|b,\|c,\|d)]$}\X
+\U12.
+

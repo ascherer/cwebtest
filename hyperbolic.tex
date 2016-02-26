@@ -1,0 +1,469 @@
+\input cwebmac
+\datethis
+\input epsf
+
+\N{1}{1}Introduction. This program computes numerical coordinates so that I can
+experiment with some of the fascinating patterns that arise when the
+hyperbolic plane is tiled with $36^\circ$-$45^\circ$-$90^\circ$ triangles.
+Such a tiling is unique, but it can be viewed in many different ways.
+
+Maurice Margenstern discovered a beautiful way to assign numbers to the
+vertices, based on Fibonacci representations; his method is discussed in
+\S6 of the paper ``A universal cellular automaton in the hyperbolic
+plane,'' by Francine Herrmann and Maurice Margenstern, {\sl Theoretical
+Computer Science\/ \bf296} (2003), 327--364. I~want to play with those
+ideas further, and for this purpose I need to make special kinds
+of graph paper.
+
+I'm writing this program for fun and experience. So I'm using basic brute
+force, together with data structures that ought to help me gain both a local
+and global understanding of the tiling.
+
+\Y\B\4\D$\\{maxn}$ \5
+\T{300}\C{ this many triangles will be computed }\C{ in this implementation I
+assume that \PB{$\T{3}*\\{maxn}<\T{1024}$} }\par
+\B\4\D$\\{hprime}$ \5
+\T{1009}\C{ a prime number, should be at least \PB{$\T{2}*\\{maxn}$} }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<math.h>}\6
+\X2:Type definitions\X\6
+\X6:Global variables\X\6
+\X3:Subroutines\X\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|a${},{}$ \|b${},{}$ \|c${},{}$ \|j${},{}$ \|k${},{}$ %
+\|t;\6
+\&{register} \&{double} \\{phi};\7
+\X11:Set up triangle 0\X;\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\\{tptr}<\\{maxn};{}$ ${}\|k\PP){}$\1\5
+\X13:Compute the neighbors of triangle \PB{\|k}\X;\2\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{2}Hyperbolic data structures. I think the most convenient way to
+deal with the hyperbolic plane is to consider its points to be those
+of the Euclidean upper half plane, namely the points $(x,y)$ with $y>0$.
+Its ``lines'' are half-circles centered on the $x$-axis, namely the
+sets of points $(c+r\cos\theta,r\sin\theta)$ for some center~$c$
+and some radius~$r>0$, as $\theta$ runs from 0 to~$\pi$. Given a
+point $(x,y)$ and an angle~$\theta$ between 0 and~$\pi$, we can therefore
+can construct a corresponding hyperbolic line with center and radius
+$$c=x-y\cot\theta,\qquad r=y\csc\theta.$$
+
+\Y\B\4\X2:Type definitions\X${}\E{}$\6
+\&{typedef} \&{struct} ${}\{{}$\5
+\1\&{double} \|x${},{}$ \|y;\5
+\2${}\}{}$\5
+\&{point};\6
+\&{typedef} \&{struct} ${}\{{}$\5
+\1\&{double} \|c${},{}$ \|r;\5
+\2${}\}{}$\5
+\&{circle};\par
+\A7.
+\U1.\fi
+
+\M{3}The unique hyperbolic line that passes through two given points
+$(x,y)$ and $(x',y')$ is centered at
+$$c={x^2+y^2-{x'}^2-{y'}^2\over 2(x-x')}
+={x+x'\over2}+{y^2-{y'}^2\over2(x-x')}.$$
+(If $x=x'$, we have $c=\infty$ and the ``circle'' is actually a
+straight vertical line. But I don't have to worry about that case,
+because it won't arise in this program.)
+
+\Y\B\4\X3:Subroutines\X${}\E{}$\6
+\&{circle} \\{common}(\&{point} \|z${},\39{}$\&{point} \\{zp})\1\1\2\2\6
+${}\{{}$\1\6
+\&{circle} \|t;\7
+${}\|t.\|c\K(\|z.\|x+\\{zp}.\|x)/\T{2.0}+((\|z.\|y+\\{zp}.\|y)/\T{2.0})*((\|z.%
+\|y-\\{zp}.\|y)/(\|z.\|x-\\{zp}.\|x));{}$\6
+\&{if} ${}(\\{fabs}(\|t.\|c)<\T{0.00001}){}$\1\5
+${}\|t.\|c\K\T{0.0};{}$\2\6
+${}\|t.\|r\K\\{sqrt}((\|z.\|x-\|t.\|c)*(\|z.\|x-\|t.\|c)+\|z.\|y*\|z.\|y);{}$\6
+\&{return} \|t;\6
+\4${}\}{}$\2\par
+\As4, 5\ETs8.
+\U1.\fi
+
+\M{4}The main technical operation in this program is to
+``reflect'' a point with respect to a given hyperbolic line.
+If the line has center~$c$ and radius~$r$, the reflection
+of $(c+s\cos\theta,s\sin\theta)$ is defined to be
+$(c+t\cos\theta,t\sin\theta)$, where $st=r^2$. One can show
+that this mapping is an automorphism of the hyperbolic plane.
+
+We're interested in reflection because every triangle in the
+tiling being computed has three neighbors, each of which is
+obtained by reflecting one of the vertices about the
+opposite edge. Consider, for example, the triangle $ABC$
+shown here:
+$$\vcenter{\epsfbox{hyperbolic.1}}$$
+Its neighbors $A'BC$, $AB'C$, and $ABC'$ are found by
+reflecting $A$ about~$BC$, $B$ about $C\!A$, and $C$ about $AB$.
+
+Repleated reflections will generate the whole tiling. Notice that,
+in this example, four triangles of the complete tiling will surround
+point~$A$, eight triangles will surround point~$B$, and
+ten triangles will surround point~$C$. (The angles around any vertex
+of a tiling must sum to $360^\circ$, even though the
+angles of a hyperbolic triangle always sum to {\it less\/} than
+$180^\circ$.)
+
+Incidentally, I could have stored $r^2$ instead of $r$ in the
+\PB{\&{circle}} nodes, because this program computes reflections from
+$r^2$. But what the heck, I prefer to work with~$r$ instead of
+$r^2$ when I'm looking at this stuff.
+
+\Y\B\4\X3:Subroutines\X${}\mathrel+\E{}$\6
+\&{point} \\{reflect}(\&{point} \|z${},\39{}$\&{circle} \|l)\1\1\2\2\6
+${}\{{}$\1\6
+\&{point} \|t;\6
+\&{register} \&{double} \\{alpha};\7
+${}\\{alpha}\K\|l.\|r*\|l.\|r/((\|z.\|x-\|l.\|c)*(\|z.\|x-\|l.\|c)+\|z.\|y*\|z.%
+\|y);{}$\6
+${}\|t.\|x\K\|l.\|c+\\{alpha}*(\|z.\|x-\|l.\|c);{}$\6
+${}\|t.\|y\K\\{alpha}*\|z.\|y;{}$\6
+\&{return} \|t;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{5}As our algorithm proceeds, it will repeatedly compute points
+and/or circles that have already been seen. Therefore we maintain
+a dictionary of what we know.
+
+At first I tried using a hash table. But that was unsatisfactory,
+because near-but-unequal values should be considered equivalent.
+Therefore binary search trees are used in the present code.
+
+In practice, I found that most of the equivalent values agreed to
+within $10^{-16}$ or so, although exact agreement was rather rare.
+Only two cases had an absolute error greater than $10^{-11}$, and
+in those cases the error was $\approx 1.1\times10^{-10}$.
+
+The following routines return an index to the saved copy of
+a given point or circle.
+
+\Y\B\4\D$\\{eps}$ \5
+\T{0.000001}\C{ fuzziness for comparisons }\par
+\Y\B\4\X3:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{savepoint}(\&{point} \|z)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|p${},{}$ ${}{*}\|q\K{\AND}\\{pleft}[\T{0}];{}$\7
+\&{for} ${}(\|p\K{*}\|q;{}$ \|p; ${}\|p\K{*}\|q){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{fabs}(\\{hpoint}[\|p].\|x-\|z.\|x)<\\{eps}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{fabs}(\\{hpoint}[\|p].\|y-\|z.\|y)<\\{eps}){}$\1\5
+\&{goto} \\{found};\2\6
+\&{if} ${}(\\{hpoint}[\|p].\|y<\|z.\|y){}$\1\5
+${}\|q\K{\AND}\\{pleft}[\|p];{}$\2\6
+\&{else}\1\5
+${}\|q\K{\AND}\\{pright}[\|p];{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\\{hpoint}[\|p].\|x<\|z.\|x){}$\1\5
+${}\|q\K{\AND}\\{pleft}[\|p];{}$\2\6
+\&{else}\1\5
+${}\|q\K{\AND}\\{pright}[\|p];{}$\2\6
+\4${}\}{}$\2\6
+${}\|p\K\PP\\{pptr};{}$\6
+${}{*}\|q\K\|p;{}$\6
+${}\\{printf}(\.{"z\%d=(\%.15g,\%.15g)\\n}\)\.{"},\39\|p,\39\|z.\|x,\39\|z.%
+\|y);{}$\6
+${}\\{hpoint}[\|p]\K\|z;{}$\6
+\4\\{found}:\5
+\&{return} \|p;\6
+\4${}\}{}$\2\7
+\&{int} \\{savecircle}(\&{circle} \|l)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|p${},{}$ ${}{*}\|q\K{\AND}\\{cleft}[\T{0}];{}$\7
+\&{for} ${}(\|p\K{*}\|q;{}$ \|p; ${}\|p\K{*}\|q){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{fabs}(\\{hcircle}[\|p].\|c-\|l.\|c)<\\{eps}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{fabs}(\\{hcircle}[\|p].\|r-\|l.\|r)<\\{eps}){}$\1\5
+\&{goto} \\{found};\2\6
+\&{if} ${}(\\{hcircle}[\|p].\|r<\|l.\|r){}$\1\5
+${}\|q\K{\AND}\\{cleft}[\|p];{}$\2\6
+\&{else}\1\5
+${}\|q\K{\AND}\\{cright}[\|p];{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\\{hcircle}[\|p].\|c<\|l.\|c){}$\1\5
+${}\|q\K{\AND}\\{cleft}[\|p];{}$\2\6
+\&{else}\1\5
+${}\|q\K{\AND}\\{cright}[\|p];{}$\2\6
+\4${}\}{}$\2\6
+${}\|p\K\PP\\{cptr};{}$\6
+${}{*}\|q\K\|p;{}$\6
+${}\\{printf}(\.{"l\%d=(\%.15g,\%.15g)\\n}\)\.{"},\39\|p,\39\|l.\|c,\39\|l.%
+\|r);{}$\6
+${}\\{hcircle}[\|p]\K\|l;{}$\6
+\4\\{found}:\5
+\&{return} \|p;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{6}\B\X6:Global variables\X${}\E{}$\6
+\&{point} ${}\\{hpoint}[\T{3}*\\{maxn}]{}$;\C{ dictionary of known points }\6
+\&{int} \\{pptr};\C{ the number of known points }\6
+\&{int} ${}\\{pleft}[\T{3}*\\{maxn}],{}$ ${}\\{pright}[\T{3}*\\{maxn}]{}$;\C{
+links for binary tree search }\6
+\&{circle} ${}\\{hcircle}[\T{3}*\\{maxn}]{}$;\C{ dictionary of known hyperbolic
+lines }\6
+\&{int} \\{cptr};\C{ the number of known lines }\6
+\&{int} ${}\\{cleft}[\T{3}*\\{maxn}],{}$ ${}\\{cright}[\T{3}*\\{maxn}]{}$;\C{
+links for binary tree search }\par
+\As9\ET10.
+\U1.\fi
+
+\M{7}The main component of our data structure is the table of all
+triangles that we have identified so far. Each triangle is
+represented by indices that point to its three vertices, its
+three edges, and its three neighbors.
+
+The vertex indices are called \PB{\\{v36}}, \PB{\\{v45}}, and \PB{\\{v90}},
+because each
+triangle has a vertex with each of the angles $(36^\circ,45^\circ,90^\circ)$.
+Edges \PB{\\{e36}}, \PB{\\{e45}}, and \PB{\\{e90}} are {\it opposite\/} those
+vertices;
+triangles \PB{\\{t36}}, \PB{\\{t45}}, and \PB{\\{t90}} are the neighbors on the
+other side
+of those edges.
+
+\Y\B\4\X2:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} ${}\{{}$\1\6
+\&{int} \\{v36}${},{}$ \\{v45}${},{}$ \\{v90};\C{ where the vertices occur in %
+\PB{\\{hpoint}} }\6
+\&{int} \\{e36}${},{}$ \\{e45}${},{}$ \\{e90};\C{ where the edges occur in \PB{%
+\\{hcircle}} }\6
+\&{int} \\{t36}${},{}$ \\{t45}${},{}$ \\{t90};\C{ where the neighbors occur in %
+\PB{\\{triang}} }\2\6
+${}\}{}$ \&{triangle};\par
+\fi
+
+\M{8}An auxiliary hash table keeps track of the triangles we've seen.
+
+(I've imposed the restriction \PB{$\T{3}*\\{maxn}<\T{1024}$} simply because I
+want to
+pack the values \PB{$(\\{v36},\\{v45},\\{v90})$} into a single word on my
+old 32-bit computer.)
+
+\Y\B\4\X3:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{savetriangle}(\&{int} \\{v36}${},\39{}$\&{int} \\{v45}${},\39{}$%
+\&{int} \\{v90})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{unsigned} \&{int} \|w${}\K(((\\{v36}\LL\T{10})+\\{v45})\LL%
+\T{10})+\\{v90};{}$\6
+\&{register} \&{int} \|h${}\K\|w\MOD\\{hprime};{}$\7
+\&{while} (\\{triple}[\|h])\5
+${}\{{}$\1\6
+\&{if} ${}(\\{triple}[\|h]\E\|w){}$\1\5
+\&{goto} \\{found};\2\6
+${}\|h\K(\|h\?\|h:\\{hprime})-\T{1};{}$\6
+\4${}\}{}$\2\6
+${}\\{triple}[\|h]\K\|w,\39\\{tripnum}[\|h]\K\\{tptr};{}$\6
+${}\\{triang}[\\{tptr}].\\{v36}\K\\{v36},\39\\{triang}[\\{tptr}].\\{v45}\K%
+\\{v45},\39\\{triang}[\\{tptr}].\\{v90}\K\\{v90};{}$\6
+${}\\{tptr}\PP;{}$\6
+\4\\{found}:\5
+\&{return} \\{tripnum}[\|h];\6
+\4${}\}{}$\2\par
+\fi
+
+\M{9}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{triple}[\\{hprime}];\C{ the vertex triples that we've seen }\6
+\&{int} \\{tripnum}[\\{hprime}];\C{ their serial numbers }\6
+\&{int} \\{tptr};\C{ the number of triangles we've seen }\6
+\&{triangle} ${}\\{triang}[\\{maxn}+\T{3}]{}$;\C{ their details }\par
+\fi
+
+\N{1}{10}Getting started. To prime the pump, I need one
+$36^\circ$-$45^\circ$-$90^\circ$ triangle to begin the process.
+The simplest one that I could think of
+has vertices $e^{i\theta}$, $i/r$, and $i$ in the complex plane,
+where
+$$r=\sqrt{\phi+\sqrt{\phi}},\qquad
+\cos\theta=1/\sqrt{\mskip1mu2\phi},$$
+and $\phi=(1+\sqrt5\,)/2$ is the golden ratio.
+
+\Y\B\4\D$\\{makepoint}(\|v,\\{xx},\\{yy})$ \5
+$\|z.\|x\K\\{xx},\39\|z.\|y\K\\{yy},\39\|v\K\\{savepoint}{}$(\|z)\par
+\B\4\D$\\{makecircle}(\|v,\\{cc},\\{rr})$ \5
+$\|l.\|c\K\\{cc},\39\|l.\|r\K\\{rr},\39\|v\K\\{savecircle}{}$(\|l)\par
+\Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{point} \|z;\C{ staging area for \PB{\\{makepoint}} }\6
+\&{circle} \|l;\C{ staging area for \PB{\\{makecircle}} }\par
+\fi
+
+\M{11}\B\X11:Set up triangle 0\X${}\E{}$\6
+$\\{phi}\K(\T{1.0}+\\{sqrt}(\T{5.0}))/\T{2.0};{}$\6
+${}\\{makepoint}(\|a,\39\\{sqrt}(\T{0.5}/\\{phi}),\39\\{sqrt}(\T{1.0}-\T{0.5}/%
+\\{phi}));{}$\6
+${}\\{makepoint}(\|b,\39\T{0.0},\39\T{1.0}/\\{sqrt}(\\{phi}+\\{sqrt}(%
+\\{phi})));{}$\6
+${}\\{makepoint}(\|c,\39\T{0.0},\39\T{1.0});{}$\6
+\X12:Compute the edges of triangle 0\X;\6
+${}\\{savetriangle}(\|a,\39\|b,\39\|c){}$;\C{ now \PB{\\{tptr}} will equal 1 }\6
+${}\\{printf}(\.{"triangle\ 0\ =\ (\%d,\%d}\)\.{,\%d),"},\39\|a,\39\|b,\39%
+\|c);{}$\6
+${}\\{printf}(\.{"\ edges\ (*,\%d,\%d)\\n"},\39\\{triang}[\T{0}].\\{e45},\39%
+\\{triang}[\T{0}].\\{e90}){}$;\par
+\U1.\fi
+
+\M{12}Edge \PB{\\{e36}} of the starting triangle is a vertical line from
+$i/r$ to $i$. This is the only vertical line that we will need in
+the present program. (In fact, I'll explain shortly that
+the computations will be limited to the subtiling that appears
+in an annulus. Then one can prove
+a strict upper bound on the size of the $c$ values that occur,
+even if the computation proceeds indefinitely.)
+
+It turns out easiest to handle the exceptional vertical case by
+setting \PB{$\\{e36}\K\\{e45}$}. I~do admit however that this is a sneaky
+trick,
+hard to justify on moral grounds.
+
+\Y\B\4\X12:Compute the edges of triangle 0\X${}\E{}$\6
+$\\{makecircle}(\\{triang}[\T{0}].\\{e45},\39\T{0.0},\39\T{1.0});{}$\6
+${}\\{triang}[\T{0}].\\{e36}\K\\{triang}[\T{0}].\\{e45};{}$\6
+${}\\{makecircle}(\\{triang}[\T{0}].\\{e90},\39\\{hpoint}[\|b].\|y,\39\\{sqrt}(%
+\T{2.0})*\\{hpoint}[\|b].\|y){}$;\par
+\U11.\fi
+
+\N{1}{13}The algorithm. One more important thing needs to be mentioned,
+before we put all the pieces together: I don't actually
+want to compute the entire tiling. I only want to compute it
+in the quarter-annulus that consists of the points
+between circles $\vert z\vert=1$ and $\vert z\vert=1/r$, in
+the upper right quadrant of the complex plane.
+
+The reason is that the tiling between this annulus and the
+next-smaller one, $\vert z\vert=1/r^2$, is just the reflection
+of the first tiling about the line $\vert z\vert=1/r$. Then in
+the next annulus, we shrink the outer-annulus tiling by a factor
+of $1/r^2$, and so on.
+
+Indeed, this restriction of the tiling accounts for my claims that
+triangle~0 is the only triangle with a vertical edge.
+
+To implement the restriction, we simply refrain from computing
+the neighbor at any edge whose center~$c$ is zero. (And
+that is why the sneaky trick mentioned on the previous page
+actually works.)
+
+\Y\B\4\X13:Compute the neighbors of triangle \PB{\|k}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{hcircle}[\\{triang}[\|k].\\{e36}].\|c){}$\1\5
+\X14:Compute \PB{\\{t36}}\X;\2\6
+\&{if} ${}(\\{hcircle}[\\{triang}[\|k].\\{e45}].\|c){}$\1\5
+\X15:Compute \PB{\\{t45}}\X;\2\6
+\&{if} ${}(\\{hcircle}[\\{triang}[\|k].\\{e90}].\|c){}$\1\5
+\X16:Compute \PB{\\{t90}}\X;\2\6
+${}\\{printf}(\.{"Triangle\ \%d\ neighbo}\)\.{rs:"},\39\|k);{}$\6
+\&{if} ${}(\\{hcircle}[\\{triang}[\|k].\\{e36}].\|c){}$\1\5
+${}\\{printf}(\.{"\ t36=\%d"},\39\\{triang}[\|k].\\{t36});{}$\2\6
+\&{if} ${}(\\{hcircle}[\\{triang}[\|k].\\{e45}].\|c){}$\1\5
+${}\\{printf}(\.{"\ t45=\%d"},\39\\{triang}[\|k].\\{t45});{}$\2\6
+\&{if} ${}(\\{hcircle}[\\{triang}[\|k].\\{e90}].\|c){}$\1\5
+${}\\{printf}(\.{"\ t90=\%d"},\39\\{triang}[\|k].\\{t90});{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{14}\B\X14:Compute \PB{\\{t36}}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|j\K\\{savepoint}(\\{reflect}(\\{hpoint}[\\{triang}[\|k].\\{v36}],\39%
+\\{hcircle}[\\{triang}[\|k].\\{e36}]));{}$\6
+${}\|t\K\\{tptr};{}$\6
+${}\\{triang}[\|k].\\{t36}\K\\{savetriangle}(\|j,\39\\{triang}[\|k].\\{v45},\39%
+\\{triang}[\|k].\\{v90});{}$\6
+\&{if} ${}(\\{tptr}>\|t){}$\5
+${}\{{}$\C{ that triangle is new }\1\6
+${}\\{triang}[\|t].\\{e36}\K\\{triang}[\|k].\\{e36};{}$\6
+${}\\{triang}[\|t].\\{e45}\K\\{savecircle}(\\{common}(\\{hpoint}[\\{triang}[%
+\|t].\\{v36}],\39\\{hpoint}[\\{triang}[\|t].\\{v90}]));{}$\6
+${}\\{triang}[\|t].\\{e90}\K\\{savecircle}(\\{common}(\\{hpoint}[\\{triang}[%
+\|t].\\{v36}],\39\\{hpoint}[\\{triang}[\|t].\\{v45}]));{}$\6
+${}\\{printf}(\.{"triangle\ \%d\ =\ (z\%d,}\)\.{z\%d,z\%d),"},\39\|t,\39%
+\\{triang}[\|t].\\{v36},\39\\{triang}[\|t].\\{v45},\39\\{triang}[\|t].%
+\\{v90});{}$\6
+${}\\{printf}(\.{"\ edges\ (\%d,\%d,\%d)\\n}\)\.{"},\39\\{triang}[\|t].\\{e36},%
+\39\\{triang}[\|t].\\{e45},\39\\{triang}[\|t].\\{e90});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U13.\fi
+
+\M{15}\B\X15:Compute \PB{\\{t45}}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|j\K\\{savepoint}(\\{reflect}(\\{hpoint}[\\{triang}[\|k].\\{v45}],\39%
+\\{hcircle}[\\{triang}[\|k].\\{e45}]));{}$\6
+${}\|t\K\\{tptr};{}$\6
+${}\\{triang}[\|k].\\{t45}\K\\{savetriangle}(\\{triang}[\|k].\\{v36},\39\|j,\39%
+\\{triang}[\|k].\\{v90});{}$\6
+\&{if} ${}(\\{tptr}>\|t){}$\5
+${}\{{}$\C{ that triangle is new }\1\6
+${}\\{triang}[\|t].\\{e45}\K\\{triang}[\|k].\\{e45};{}$\6
+${}\\{triang}[\|t].\\{e36}\K\\{savecircle}(\\{common}(\\{hpoint}[\\{triang}[%
+\|t].\\{v45}],\39\\{hpoint}[\\{triang}[\|t].\\{v90}]));{}$\6
+${}\\{triang}[\|t].\\{e90}\K\\{savecircle}(\\{common}(\\{hpoint}[\\{triang}[%
+\|t].\\{v36}],\39\\{hpoint}[\\{triang}[\|t].\\{v45}]));{}$\6
+${}\\{printf}(\.{"triangle\ \%d\ =\ (z\%d,}\)\.{z\%d,z\%d),"},\39\|t,\39%
+\\{triang}[\|t].\\{v36},\39\\{triang}[\|t].\\{v45},\39\\{triang}[\|t].%
+\\{v90});{}$\6
+${}\\{printf}(\.{"\ edges\ (\%d,\%d,\%d)\\n}\)\.{"},\39\\{triang}[\|t].\\{e36},%
+\39\\{triang}[\|t].\\{e45},\39\\{triang}[\|t].\\{e90});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U13.\fi
+
+\M{16}\B\X16:Compute \PB{\\{t90}}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|j\K\\{savepoint}(\\{reflect}(\\{hpoint}[\\{triang}[\|k].\\{v90}],\39%
+\\{hcircle}[\\{triang}[\|k].\\{e90}]));{}$\6
+${}\|t\K\\{tptr};{}$\6
+${}\\{triang}[\|k].\\{t90}\K\\{savetriangle}(\\{triang}[\|k].\\{v36},\39%
+\\{triang}[\|k].\\{v45},\39\|j);{}$\6
+\&{if} ${}(\\{tptr}>\|t){}$\5
+${}\{{}$\C{ that triangle is new }\1\6
+${}\\{triang}[\|t].\\{e90}\K\\{triang}[\|k].\\{e90};{}$\6
+${}\\{triang}[\|t].\\{e36}\K\\{savecircle}(\\{common}(\\{hpoint}[\\{triang}[%
+\|t].\\{v45}],\39\\{hpoint}[\\{triang}[\|t].\\{v90}]));{}$\6
+${}\\{triang}[\|t].\\{e45}\K\\{savecircle}(\\{common}(\\{hpoint}[\\{triang}[%
+\|t].\\{v36}],\39\\{hpoint}[\\{triang}[\|t].\\{v90}]));{}$\6
+${}\\{printf}(\.{"triangle\ \%d\ =\ (z\%d,}\)\.{z\%d,z\%d),"},\39\|t,\39%
+\\{triang}[\|t].\\{v36},\39\\{triang}[\|t].\\{v45},\39\\{triang}[\|t].%
+\\{v90});{}$\6
+${}\\{printf}(\.{"\ edges\ (\%d,\%d,\%d)\\n}\)\.{"},\39\\{triang}[\|t].\\{e36},%
+\39\\{triang}[\|t].\\{e45},\39\\{triang}[\|t].\\{e90});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U13.\fi
+
+\N{1}{17}Output. Here's what we get when the circles \.{l1}, \.{l2}, \dots~are
+plotted:
+\bigskip
+\centerline{\epsfbox{hyperbolic.2}}
+
+\fi
+
+\N{1}{18}Dual output. And here's what happens when those circles are reflected
+with
+respect to $\vert z\vert=1/r$:
+\bigskip
+\centerline{\epsfbox{hyperbolic.3}}
+
+\fi
+
+\N{1}{19}The overall tiling. Finally, the right half of the
+whole thing, omitting circles of radius $<0.007$:
+\bigskip
+\centerline{\epsfbox{hyperbolic.4}}
+
+\fi
+
+\N{1}{20}Index.
+
+\fi
+
+
+\inx
+\fin
+\con

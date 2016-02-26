@@ -1,0 +1,251 @@
+\I\X76:Add compensation resolvents from \PB{\\{bar}(\|u)}; but \PB{\&{goto} %
+\\{fix\_u}} if \PB{\|u} is forced true\X
+\U73.
+\I\X79:Add compensation resolvents from \PB{\\{bar}(\|v)}; but \PB{\&{goto} %
+\\{fix\_v}} if \PB{\|v} is forced true\X
+\U73.
+\I\X54:Allocate a block \PB{\|p} of size \PB{$\|s+\|s$}\X
+\U53.
+\I\X58, 90, 92, 108, 120, 132:Allocate special arrays\X
+\U37.
+\I\X38, 39:Allocate the main arrays\X
+\U37.
+\I\X59:Begin the processing of a new node\X
+\U150.
+\I\X45:Build \PB{\\{timp}} and \PB{\\{tmem}} from the stored ternary clauses\X
+\U40.
+\I\X66:Bump \PB{\\{bstamp}} to a unique value\X
+\Us73\ET105.
+\I\X65:Bump \PB{\\{istamp}} to a unique value\X
+\Us62\ET64.
+\I\X47:Check consistency\X
+\U37.
+\I\X137:Check for necessary assignments\X
+\U125.
+\I\X49:Check the sanity of \PB{\\{bimp}} and \PB{\\{mem}}\X
+\U31.
+\I\X32:Check the sanity of \PB{\\{timp}} and \PB{\\{tmem}}\X
+\U31.
+\I\X138:Choose \PB{\\{bestlit}}, which will be the next branch tried\X
+\U59.
+\I\X94:Compute \PB{\\{sum}}, the score of \PB{\|l}\X
+\U93.
+\I\X116:Construct a suitable forest\X
+\U87.
+\I\X121:Construct the \PB{\\{look}} table\X
+\U116.
+\I\X135:Convert the windfalls to binary implications from \PB{\\{looklit}}\X
+\Us130\ET141.
+\I\X109:Copy all the relevant arcs to \PB{\\{cand\_arc}}\X
+\U105.
+\I\X40:Copy all the temporary cells to the \PB{\\{bimp}}, \PB{\\{mem}}, \PB{%
+\\{timp}}, and \PB{\\{tmem}} arrays in proper format\X
+\U37.
+\I\X46:Copy all the temporary variable nodes to the \PB{\\{vmem}} array in
+proper format\X
+\U37.
+\I\X110:Copy the arcs from \PB{\|l} into the \PB{\\{cand\_arc}} array\X
+\U109.
+\I\X103:Determine the strong components; \PB{\&{goto} \\{look\_bad}} if there's
+a contradiction\X
+\U87.
+\I\X80:Discard binary implications at the current level\X
+\U84.
+\I\X140:Do a double lookahead from \PB{\\{looklit}}, if that seems advisable\X
+\U125.
+\I\X87:Do the prelookahead\X
+\U122.
+\I\X141:Double look ahead from \PB{\\{looklit}}; \PB{\&{goto} \\{contra}} if a
+contradiction arises\X
+\U140.
+\I\X144:Doublelook ahead at consequences of \PB{\|l}, and \PB{\&{goto} %
+\\{contra}} if a contradiction is found\X
+\U142.
+\I\X126:Exploit an autarky\X
+\U125.
+\I\X113:Explore one step from the current vertex \PB{\|v}, possibly moving to
+another current vertex and calling it~\PB{\|v}\X
+\U111.
+\I\X117:Find the heights and the child/sibling links\X
+\U116.
+\I\X17:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash table at \PB{\|p}\X
+\U12.
+\I\X145:Force \PB{\\{dlooklit}} to be (dl) false, and complement it\X
+\Us144\ET146.
+\I\X128:Force \PB{\\{looklit}} to be (proto) false, and complement it\X
+\Us125, 126, 129\ETs137.
+\I\X3, 7, 24, 36, 48, 60, 67, 89, 91, 107, 119, 123, 131, 139:Global variables\X
+\U2.
+\I\X18:Handle a duplicate literal\X
+\U12.
+\I\X98:If all clauses are satisfied, \PB{\&{goto} \\{satisfied}}\X
+\U97.
+\I\X99:If \PB{\|l} implies any unsatisfied clauses, \PB{\&{goto} \\{nogood}}\X
+\U98.
+\I\X75:Increase \PB{\\{iptr}}\X
+\Us74, 77, 78\ETs136.
+\I\X8, 15:Initialize everything\X
+\U2.
+\I\X57:Initialize \PB{\\{mem}} with empty \PB{\\{bimp}} lists\X
+\U38.
+\I\X11:Input the clause in \PB{\\{buf}}\X
+\Us9\ET10.
+\I\X9:Input the clauses\X
+\U2.
+\I\X10:Input the primary variables\X
+\U9.
+\I\X41:Insert the cells for the literals of clause \PB{\|c}\X
+\U40.
+\I\X14:Install a new \PB{\&{chunk}}\X
+\U12.
+\I\X13:Install a new \PB{\&{vchunk}}\X
+\U12.
+\I\X122:Look ahead and gather data about how to make the next branch; but \PB{%
+\&{goto} \\{look\_bad}} if a contradiction arises\X
+\U59.
+\I\X125:Look ahead at consequences of \PB{\|l}, and \PB{\&{goto} \\{look\_bad}}
+if a conflict is found\X
+\U122.
+\I\X105:Make all vertices unseen and all arcs untagged\X
+\U103.
+\I\X74:Make sure that \PB{\\{bar}(\|u)} has an \PB{\\{istack}} entry\X
+\Us73, 127\ETs135.
+\I\X77:Make sure that \PB{\\{bar}(\|v)} has an \PB{\\{istack}} entry\X
+\U73.
+\I\X78:Make sure that \PB{\\{bar}(\|w)} has an \PB{\\{istack}} entry\X
+\Us76\ET79.
+\I\X136:Make sure that \PB{\\{looklit}} has an \PB{\\{istack}} entry\X
+\U135.
+\I\X112:Make vertex \PB{\|v} active\X
+\Us111\ET113.
+\I\X56:Make \PB{\|a} a free block of size \PB{$\T{1}\LL\|k$}\X
+\U53.
+\I\X127:Make \PB{\\{ll}} equivalent to \PB{\\{looklit}}\X
+\U126.
+\I\X55:Make \PB{$\|p+(\T{1}\LL\\{kk})$} a free block of size \PB{$\T{1}\LL%
+\\{kk}$}\X
+\U54.
+\I\X85:Move to branch 1\X
+\U84.
+\I\X20:Move \PB{\\{cur\_cell}} backward to the previous cell\X
+\Us19\ET41.
+\I\X21:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary variable\X
+\U46.
+\I\X100:Pare down the candidates to at most \PB{\\{maxcand}}\X
+\U96.
+\I\X111:Perform a depth-first search with \PB{\|l} as root, finding the strong
+components of all vertices reachable from \PB{\|l}\X
+\U103.
+\I\X96:Preselect a set of candidate variables for lookahead\X
+\U87.
+\I\X151:Print the solution found\X
+\U84.
+\I\X104:Print the strong components\X
+\U103.
+\I\X4:Process the command line\X
+\U2.
+\I\X63:Promote near-truth to real-truth; but \PB{\&{goto} \\{conflict}} if a
+contradiction arises\X
+\U62.
+\I\X143:Propagate binary doublelookahead implications of \PB{\|l}; \PB{\&{goto}
+\\{dl\_contra}} if a contradiction arises\X
+\Us141, 147\ETs149.
+\I\X68:Propagate binary implications of \PB{\|l}; \PB{\&{goto} \\{conflict}} if
+a contradiction arises\X
+\Us62, 64, 72\ETs73.
+\I\X124:Propagate binary lookahead implications of \PB{\|l}; \PB{\&{goto} %
+\\{contra}} if a contradiction arises\X
+\Us130\ET134.
+\I\X97:Put all free participants into the initial list of candidates\X
+\U96.
+\I\X95:Put the scores in \PB{\\{heur}}\X
+\U96.
+\I\X16:Put the variable name beginning at \PB{\\{buf}[\|j]} in \PB{$\\{cur\_tmp%
+\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X
+\U12.
+\I\X83:Reactivate the inactive ternaries implied by \PB{\\{tll}}\X
+\U82.
+\I\X86:Record \PB{\\{thevar}(\|u)} and \PB{\\{thevar}(\|v)} as participants\X
+\U69.
+\I\X146:Recover from a double lookahead contradiction\X
+\U84.
+\I\X129:Recover from a lookahead contradiction\X
+\U84.
+\I\X84:Recover from conflicts\X
+\U150.
+\I\X19:Remove all variables of the current clause\X
+\Us10\ET11.
+\I\X52:Remove \PB{\|p} from its \PB{\\{avail}} list\X
+\Us51\ET54.
+\I\X70:Remove \PB{\\{thevar}(\\{ll})} from the \PB{\\{freevar}} list\X
+\U69.
+\I\X114:Remove \PB{\|v} and all its successors on the active stack from the
+tree, and mark them as a strong component of the digraph\X
+\U113.
+\I\X22:Report the successful completion of the input phase\X
+\U2.
+\I\X51:Resize when the buddy is free\X
+\U50.
+\I\X53:Resize when the buddy is reserved\X
+\U50.
+\I\X142:Run through iterations of doublelook analogous to the iterations of
+ordinary lookahead\X
+\U141.
+\I\X12:Scan and record a variable; negate it if \PB{$\|i\E\T{1}$}\X
+\U11.
+\I\X101:Select the \PB{\\{maxcand}} best-rated candidates\X
+\U100.
+\I\X37:Set up the main data structures\X
+\U2.
+\I\X102:Sift \PB{\\{cand}[\|j]} up\X
+\U101.
+\I\X150:Solve the problem\X
+\U2.
+\I\X43:Store a binary clause in \PB{\\{bimp}}\X
+\U41.
+\I\X44:Store a ternary clause in \PB{\\{tmem}}\X
+\U41.
+\I\X42:Store a unary clause in \PB{\\{forcedlit}}\X
+\U41.
+\I\X29, 30, 31, 33, 50, 61, 93, 152:Subroutines\X
+\U2.
+\I\X71:Swap out inactive ternaries implied by \PB{\\{tll}}\X
+\U69.
+\I\X5, 6, 26, 27, 28, 34, 35, 88, 106, 118:Type definitions\X
+\U2.
+\I\X81:Unset the nearly true literals\X
+\U84.
+\I\X82:Unset the really true literals\X
+\U84.
+\I\X64:Update data structures for all consequences of the forced literals
+discovered during the lookahead; but \PB{\&{goto} \\{conflict}} if a
+contradiction arises\X
+\U59.
+\I\X62:Update data structures for all consequences of \PB{\|l}; but \PB{%
+\&{goto} \\{conflict}} if a contradiction arises\X
+\U59.
+\I\X69:Update data structures for the real truth of \PB{\\{ll}}; but \PB{%
+\&{goto} \\{conflict}} if a contradiction arises\X
+\U63.
+\I\X147:Update dlookahead data structures for consequences of \PB{%
+\\{dlooklit}}; but \PB{\&{goto} \\{dl\_contra}} if a contradiction arises\X
+\Us144\ET145.
+\I\X148:Update dlookahead data structures for the truth of \PB{\\{ll}}; but %
+\PB{\&{goto} \\{dl\_contra}} if a contradiction arises\X
+\U147.
+\I\X149:Update dlookahead structures for a potentially new binary clause $u\lor
+v$\X
+\U148.
+\I\X73:Update for a new binary clause $u\lor v$\X
+\U72.
+\I\X72:Update for a potentially new binary clause $u\lor v$\X
+\U69.
+\I\X130:Update lookahead data structures for consequences of \PB{\\{looklit}};
+but \PB{\&{goto} \\{contra}} if a contradiction arises\X
+\Us125\ET128.
+\I\X133:Update lookahead data structures for the truth of \PB{\\{ll}}; but \PB{%
+\&{goto} \\{contra}} if a contradiction arises\X
+\U130.
+\I\X134:Update lookahead structures for a potentially new binary clause $u\lor
+v$\X
+\U133.

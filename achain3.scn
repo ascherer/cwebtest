@@ -1,0 +1,33 @@
+\I\X6:Backtrack until $l_k(n)$ is known\X
+\U1.
+\I\X5:Determine $\lfloor\lg n\rfloor$ and the binary upper bound\X
+\U1.
+\I\X10:Find bounds $(\PB{\\{lbp}},\PB{\\{ubq}})$ and $(\PB{\\{lbq}},\PB{%
+\\{ubq}})$ on where \PB{\|p} and \PB{\|q} can be inserted; but go to \PB{%
+\\{failpq}} if they can't both be accommodated\X
+\U7.
+\I\X13:Make forced moves if \PB{\|p} has a special form\X
+\U12.
+\I\X15:Make forced moves if \PB{\|q} has a special form\X
+\U14.
+\I\X3:Output the value of $l_k(n)$\X
+\U1.
+\I\X2:Process the command line\X
+\U1.
+\I\X8:Put local variables on the stack and update outdegrees\X
+\U7.
+\I\X12:Put \PB{\|p} into the chain at location \PB{\\{ubq}}; \PB{\&{goto} %
+\\{failp}} if there's a problem\X
+\U7.
+\I\X14:Put \PB{\|q} into the chain at location \PB{\\{ubq}}; \PB{\&{goto} %
+\\{failq}} if there's a problem\X
+\U7.
+\I\X9:Restore local variables from the stack and downdate outdegrees\X
+\U7.
+\I\X7:Try to fix the rest of the chain; \PB{\&{goto} \\{done}} if it's
+impossible\X
+\U6.
+\I\X4:Try to input $l_k(n)$; \PB{\&{goto} \\{done}} if successful\X
+\U1.
+\I\X11:Undo a change\X
+\U7.

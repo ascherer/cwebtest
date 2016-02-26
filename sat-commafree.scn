@@ -1,0 +1,16 @@
+\I\X9:Generate the clauses for \PB{\|x} followed by \PB{\|y}\X
+\U5.
+\I\X5:Generate the negative clauses\X
+\U1.
+\I\X3:Generate the positive clauses\X
+\U1.
+\I\X6:If \PB{\|x} is cyclic, \PB{\&{continue}}\X
+\U5.
+\I\X7:If \PB{\|y} is cyclic, \PB{\&{continue}}\X
+\U5.
+\I\X8:If \PB{\|z} is cyclic, \PB{\&{continue}}\X
+\U9.
+\I\X2:Process the command line\X
+\U1.
+\I\X4:Visit the prime string $a_1\ldots a_n$\X
+\U3.

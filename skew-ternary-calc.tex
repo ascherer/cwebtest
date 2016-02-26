@@ -1,0 +1,1907 @@
+\input cwebmac
+\datethis
+\input epsf
+
+\def\adj{\mathrel{\!\mathrel-\mkern-8mu\mathrel-\mkern-8mu\mathrel-\!}}
+   % adjacent vertices
+\def\dadj{\mathrel{\!\mathrel-\mkern-8mu\mathrel-\mkern-12mu\to\!}}
+
+\everypar{\looseness=-1}
+
+
+\N{1}{1}Introduction. This program does calculations with skew ternary trees,
+and exhibits the corresponding nonseparable planar graphs.
+It implements some simple algorithms that I discovered in November, 2013,
+based on ideas of Alberto Del Lungo, Francesco Del Ristoro, and
+Jean-Guy Penaud [{\sl Theoretical Computer Science\/ \bf233} (2000),
+201--215]. I wrote it in order to learn more about the seemingly magical
+properties of this amazing correspondence.
+
+I apologize for having no time to provide a better user interface, or to
+give more extensive commentary. Ideally an interactive system should
+be written, with excellent graphics to display and manipulate
+the trees and graphs in an intuitive fashion;
+color should be used to exhibit at least some of the
+fascinating patterns that are present, etc. I'm hoping that some
+reader will be motivated to write such an ``app,'' because it will
+certainly be a fabulously instructive toy.
+
+I will at least try to define and explain the basics in this document.
+A ternary tree is either
+empty, or it consists of a root node and three ternary trees
+called the left, middle, and right subtrees of the root. The
+roots of those subtrees are called the left, middle, and right children
+of the root node. (This definition is strictly analogous to the
+familiar definition of binary trees, in Section 2.3 of my book
+{\sl Fundamental Algorithms}.)
+
+Furthermore we extend the ternary tree by
+placing ``buds'' in the positions of empty subtrees. And we also
+introduce a bud at the top, attached to the root node. In this way every node,
+including the root, is attached to exactly four other nodes or buds;
+and every bud is attached to exactly one other node or bud.
+We will give labels to each node and to each bud, in order to exhibit
+fine details of the structure.
+
+An extended ternary tree with $n$ nodes always has $2n+2$ buds.
+(Notice that this result, which is easily proved by induction on~$n$,
+holds in particular when the ternary tree is empty.
+In that case, $n=0$ and there simply are two buds joined to each other.)
+
+The embedding of such a tree in the plane leads to
+a family of $2n+2$ extended ternary trees that are
+``cyclically equivalent,'' as illustrated below.
+There's one such tree for each bud,
+obtained by placing that bud at the top and letting everything else
+``hang down'' from it in.
+Each of these trees has a different
+root bud, but not necessarily a different root, because
+different buds can lead to distinct trees with the same root node.
+
+The $2n+2$ buds can always be paired up into $n+1$ groups of two. Indeed,
+we can find the mate of any bud by proceeding on a unique path away
+from that bud, always taking the middle branch whenever there are
+three choices for the next step, and continuing
+until another bud is encountered.
+
+Every node and every bud is assigned a {\it rank\/} in the following
+natural way: The root node and root bud have rank zero; and the
+left, middle, and right children of a rank~$r$ node
+have ranks $r-1$, $r$, and $r+1$, respectively.
+
+A {\it skew ternary tree\/} is a ternary tree for which all nodes
+have nonnegative rank.
+
+For example, the skew ternary tree shown here has 6 nodes and 7 pairs of
+buds. Ranks are shown in red.
+Notice that there's one bud of rank $-1$ for every node of rank~0.
+$$\vcenter{\epsfbox{skew-ternary-calc.1}}\qquad\qquad
+\vcenter{\epsfbox{skew-ternary-calc.3}}$$
+
+\fi
+
+\M{2}Fact: {\sl Every family of $2n+2$ cyclically equivalent ternary trees
+includes exactly four skew ternary trees.}
+
+Moreover, this theorem---which
+is the main reason for the existence of this program---has an
+astonishingly simple proof.
+The idea is to consider the $n-1$ edges that go between nodes of
+the ternary, and to treat each edge $\.U \adj \.V$ as a pair
+of arcs $\.U \dadj \.V$ and $\.V \dadj \.U$. That gives us
+$2n-2$ arcs. And there's a natural way to match those arcs to $2n-2$
+of the $2n+2$ buds,
+by means of $2n-2$ noncrossing filaments as illustrated here:
+$$\vcenter{\epsfbox{skew-ternary-calc.2}}$$
+More precisely, imagine an ant, named Alice, who crawls around the periphery of
+the tree. Alice starts in state $-2$, just to the right of bud number~0.
+She increases her state by~1 whenever she passes a bud; and
+she decreases her state by~1 whenever she passes an arc. Then she will
+be in state $-2+(2n+2)-(2n-2)=+2$ when she returns to its starting point:
+$$\vcenter{\epsfbox{skew-ternary-calc.4}}$$
+And if she keeps on crawling, she will repeat the same pattern, but
+with her state increased by~4.
+
+The key fact is that Alice is in state $k$ whenever she reaches a bud
+of rank~$k$---except for the starting bud, when she's in state $\pm2$.
+Thus the unmatched buds correspond to the skew ternary trees; in this
+example the trees whose roots hang down from buds 0, 4, 5, and 6
+will have no nodes of negative rank. Conversely, a ternary
+tree that begins at a matched bud will have at least one buds of rank $<-1$,
+so it will have at least one node of rank $<0$.
+
+{\mc QED}.
+
+\smallskip
+(A reader who understands this proof will also be able to show
+that {\sl every family of $4n+2$ cyclically equivalent {\it quinary trees\/}
+includes exactly six skew quinary trees.} And so on.)
+
+\fi
+
+\M{3}The four skew ternary trees of a cyclic family turn out to have
+remarkable properties. Let's look at the state transitions that Alice
+would encounter by starting at each of the four unmatched buds:
+$$\vcenter{\halign{#\hfil\cr
+\epsfxsize=.5\hsize \epsfbox{skew-ternary-calc.5}\cr\noalign{\smallskip}
+\epsfxsize=.5\hsize \epsfbox{skew-ternary-calc.6}\cr\noalign{\smallskip}
+\epsfxsize=.5\hsize \epsfbox{skew-ternary-calc.7}\cr\noalign{\smallskip}
+\epsfxsize=.5\hsize \epsfbox{skew-ternary-calc.8}\cr}}$$
+The corresponding skew ternary trees,
+which we might as well show without their buds, are
+$$T=\vcenter{\epsfbox{skew-ternary-calc.10}}\;;\qquad
+T^+=\vcenter{\epsfbox{skew-ternary-calc.11}}\;;\qquad
+T^{++}=\vcenter{\epsfbox{skew-ternary-calc.12}}\;;\qquad
+T^{+++}=\vcenter{\epsfbox{skew-ternary-calc.13}}\;.$$
+Notice the notation used here, based on a well-defined operator
+$T\mapsto T^+$ that takes one skew ternary tree to another.
+Since $T^{++++}=T$, we also abbreviate $T^{+++}$ as $T^-$;
+and $T^{++}$ can also be called $T^{--}$.
+
+\fi
+
+\M{4}One of the first goals of this program will be to compute the
+``conjugates'' $T^+$, $T^{++}$, and $T^{+++}=T^-$, given a
+skew ternary tree~$T$. That tree is specified on the command line,
+as a sequence of four-character arguments \.{abcd}: The first character,
+\.a, names a node; the next three characters name that node's children,
+using `\.-' for an empty child. For example, the tree $T$ above could
+be specified by the six command-line arguments
+$$\.{A-BD} \qquad
+\.{B--C} \qquad
+\.{C---} \qquad
+\.{DE-F} \qquad
+\.{E---} \qquad
+\.{F---}$$
+in some order. There should be one argument
+for each node. The program parses the arguments and
+checks to make sure that they actually do define a skew ternary tree.
+
+\fi
+
+\M{5}OK, we now know the definition of skew ternary trees, and it's time
+to begin coding. Here's the structure of the program as a whole:
+
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\8\#\&{include} \.{<string.h>}\6
+\X7:Type definitions\X\6
+\X8:Global variables\X\6
+\X66:Assertion failure subroutine\X\6
+\X11:Subroutines\X\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|c${},{}$ \|i${},{}$ \|j${},{}$ \|k${},{}$ \|p;\7
+\X6:Process the command line\X;\6
+\X16:Find and print the three conjugates of \PB{\|T}\X;\6
+\X49:Find and print the corresponding planar maps\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{6}We don't deal with the empty tree; there must be at least one node.
+
+\Y\B\4\X6:Process the command line\X${}\E{}$\6
+\&{if} ${}(\\{argc}\E\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ node\_1\ no}\)\.{de\_2\ ...\ node%
+\_n\\n"},\39\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\X9:Parse the arguments; report a problem and \PB{\\{exit}} if they don't
+define a skew tree\X;\par
+\U5.\fi
+
+\N{1}{7}Parsing. First things first: We gotta get the tree into memory
+in a convenient form. The basic data structure has \PB{\\{left}}, \PB{%
+\\{middle}},
+\PB{\\{right}}, and \PB{\\{parent}} fields in each node, and a few other things
+we'll need as we go along. Buds are represented by negative integers;
+other links are to a node's 8-bit character code.
+
+(At most 64 different visible character codes are used in this
+implementation, namely \PB{\.{'*'}} and the 63 from \PB{\.{'@'}} to \PB{\.{'%
+\~'}}.)
+
+\Y\B\4\D$\\{sentinel}$ \5
+\T{999}\par
+\B\4\D$\\{maxcodes}$ \5
+\T{64}\par
+\Y\B\4\X7:Type definitions\X${}\E{}$\6
+\&{typedef} \&{struct} \&{node\_struct} ${}\{{}$\1\6
+\&{int} \\{left};\C{ the left child }\6
+\&{int} \\{middle};\C{ the middle child }\6
+\&{int} \\{right};\C{ the right child }\6
+\&{int} \\{parent};\C{ the parent }\6
+\&{int} \\{rank};\C{ set to \PB{\\{sentinel}} at input time; later is the
+actual rank }\2\6
+${}\}{}$ \&{node};\7
+\&{typedef} \&{struct} \&{bud\_struct} ${}\{{}$\1\6
+\&{int} \\{parent};\C{ the parent }\6
+\&{int} \\{rank};\C{ the actual rank }\6
+\&{int} \\{stepno};\C{ step number in the state chart (see below) }\2\6
+${}\}{}$ \&{bud};\par
+\A14.
+\U5.\fi
+
+\M{8}\B\X8:Global variables\X${}\E{}$\6
+\&{node} \\{inputnode}[\T{256}];\C{ actually only nodes \PB{\.{'@'}} thru \PB{%
+\.{'\~'}} are used }\6
+\&{bud} \\{inputbud}[\T{512}];\C{ data for bud number \PB{\|k} is stored in %
+\PB{$\\{inputbud}[{-}\|k]$} }\6
+\&{int} \\{buds};\C{ this many buds have been created so far }\6
+\&{int} \|n;\C{ the number of nodes in the tree }\par
+\As15, 30\ETs41.
+\U5.\fi
+
+\M{9}The initial setup is straightforward, although a bit tedious.
+
+\Y\B\4\D$\\{abort0}(\\{message},\\{code})$ \6
+${}\{{}$\5
+\1${}\\{fprintf}(\\{stderr},\39\.{"\%s!\\n"},\39\\{message});{}$\6
+\\{exit}(\\{code});\5
+${}\}{}$\2\par
+\B\4\D$\\{abort1}(\\{message},\|j,\\{code})$ \6
+${}\{{}$\5
+\1${}\\{fprintf}(\\{stderr},\39\.{"Bad\ arg\ (\%s):\ \%s!\\n}\)\.{"},\39%
+\\{argv}[\|j],\39\\{message});{}$\6
+\\{exit}(\\{code});\5
+${}\}{}$\2\par
+\B\4\D$\\{abort2}(\\{message},\|j,\|c,\\{code})$ \6
+${}\{{}$\5
+\1${}\\{fprintf}(\\{stderr},\39\.{"Bad\ arg\ (\%s):\ Node\ }\)\.{'\%c'\ \%s!%
+\\n"},\39\\{argv}[\|j],\39\|c,\39\\{message});{}$\6
+\\{exit}(\\{code});\5
+${}\}{}$\2\par
+\Y\B\4\X9:Parse the arguments; report a problem and \PB{\\{exit}} if they don't
+define a skew tree\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\\{argc};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{strlen}(\\{argv}[\|j])\I\T{4}){}$\1\5
+${}\\{abort1}(\.{"Must\ be\ four\ charac}\)\.{ters\ long"},\39\|j,\39{-}%
+\T{10});{}$\2\6
+${}\|c\K\\{argv}[\|j][\T{0}];{}$\6
+\&{if} ${}(\|c<\.{'@'}\V\|c>\.{'\~'}){}$\1\5
+${}\\{abort2}(\.{"is\ not\ permitted"},\39\|j,\39\|c,\39{-}\T{15});{}$\2\6
+\&{if} ${}(\\{inputnode}[\|c].\\{rank}){}$\1\5
+${}\\{abort2}(\.{"has\ already\ been\ de}\)\.{fined"},\39\|j,\39\|c,\39{-}%
+\T{11});{}$\2\6
+${}\\{inputnode}[\|c].\\{rank}\K\\{sentinel};{}$\6
+${}\|p\K\\{argv}[\|j][\T{1}];{}$\6
+\&{if} ${}(\|p\I\.{'-'}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|p<\.{'@'}\V\|p>\.{'\~'}){}$\1\5
+${}\\{abort2}(\.{"is\ not\ permitted"},\39\|j,\39\|p,\39{-}\T{16});{}$\2\6
+\&{if} ${}(\\{inputnode}[\|p].\\{parent}){}$\1\5
+${}\\{abort2}(\.{"already\ has\ a\ paren}\)\.{t"},\39\|j,\39\|p,\39{-}%
+\T{12});{}$\2\6
+${}\\{inputnode}[\|c].\\{left}\K\|p,\39\\{inputnode}[\|p].\\{parent}\K\|c;{}$\6
+\4${}\}{}$\2\6
+${}\|p\K\\{argv}[\|j][\T{2}];{}$\6
+\&{if} ${}(\|p\I\.{'-'}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|p<\.{'@'}\V\|p>\.{'\~'}){}$\1\5
+${}\\{abort2}(\.{"is\ not\ permitted"},\39\|j,\39\|p,\39{-}\T{17});{}$\2\6
+\&{if} ${}(\\{inputnode}[\|p].\\{parent}){}$\1\5
+${}\\{abort2}(\.{"already\ has\ a\ paren}\)\.{t"},\39\|j,\39\|p,\39{-}%
+\T{13});{}$\2\6
+${}\\{inputnode}[\|c].\\{middle}\K\|p,\39\\{inputnode}[\|p].\\{parent}\K\|c;{}$%
+\6
+\4${}\}{}$\2\6
+${}\|p\K\\{argv}[\|j][\T{3}];{}$\6
+\&{if} ${}(\|p\I\.{'-'}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|p<\.{'@'}\V\|p>\.{'\~'}){}$\1\5
+${}\\{abort2}(\.{"is\ not\ permitted"},\39\|j,\39\|p,\39{-}\T{18});{}$\2\6
+\&{if} ${}(\\{inputnode}[\|p].\\{parent}){}$\1\5
+${}\\{abort2}(\.{"already\ has\ a\ paren}\)\.{t"},\39\|j,\39\|p,\39{-}%
+\T{14});{}$\2\6
+${}\\{inputnode}[\|c].\\{right}\K\|p,\39\\{inputnode}[\|p].\\{parent}\K\|c;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\|n\K\\{argc}-\T{1};{}$\6
+\X10:Introduce the buds and compute the ranks\X;\par
+\U6.\fi
+
+\M{10}We need to locate the root, which should be the unique input node
+that has no parent. Then we'll attach bud \PB{${-}\T{1}$} to it.
+
+Buds $-2k-1$ and $-2k-2$ are mates; hence the mate of bud \PB{\|x} is bud \PB{$%
+\|x\XOR\T{1}$}.
+
+\Y\B\4\D$\\{root}$ \5
+$\\{inputbud}[\T{1}].{}$\\{parent}\par
+\Y\B\4\X10:Introduce the buds and compute the ranks\X${}\E{}$\6
+\&{for} ${}(\|j\K\.{'@'};{}$ ${}\|j\Z\.{'\~'};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{inputnode}[\|j].\\{rank}\W\R\\{inputnode}[\|j].\\{parent}){}$\5
+${}\{{}$\1\6
+\&{if} (\\{root})\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Nodes\ '\%c'\ and\ '\%c'}\)\.{\ cannot\ both\
+be\ root}\)\.{s!\\n"},\39\\{root},\39\|j);{}$\6
+${}\\{exit}({-}\T{20});{}$\6
+\4${}\}{}$\2\6
+${}\\{root}\K\|j;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{inputnode}[\|j].\\{parent}\W\R\\{inputnode}[\|j].\\{rank}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"No\ data\ was\ supplie}\)\.{d\ for\ node\ `%
+\%c'!\\n"},\39\|j);{}$\6
+${}\\{exit}({-}\T{21});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\R\\{root}){}$\1\5
+${}\\{abort0}(\.{"There's\ no\ root"},\39{-}\T{21});{}$\2\6
+${}\\{inputbud}[\T{1}].\\{rank}\K{-}\T{2}{}$;\C{ bud number 1 is the ``root
+bud,'' above the root node }\6
+\\{setmate}(\\{root});\C{ locate and define its mate }\6
+${}\\{fillbuds}(\\{root},\39\T{0});{}$\6
+\X13:Check that we've filled out the whole tree\X;\par
+\U9.\fi
+
+\M{11}The \PB{\\{setmate}} subroutine allocates two new buds. Its parameter
+names
+the node where we discovered the existence of such buds.
+
+In most cases, the mate is reached by going upward through middle
+links, then crossing from left to right (or vice versa) and going downward
+through middle links.
+
+\Y\B\4\X11:Subroutines\X${}\E{}$\6
+\&{void} \\{setmate}(\&{int} \|p)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|q${},{}$ \|d;\7
+${}\\{buds}\MRL{+{\K}}\T{2},\39\|q\K\T{1}-\\{buds};{}$\6
+\&{if} ${}(\\{inputbud}[\\{buds}-\T{1}].\\{parent}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{buds}>\T{2}){}$\1\5
+\\{confusion}(\.{"bud\ parent\ already\ }\)\.{set"});\2\6
+\&{goto} \\{downward\_mid};\6
+\4${}\}{}$\2\6
+${}\\{inputbud}[\\{buds}-\T{1}].\\{parent}\K\|p;{}$\6
+\4\\{upward}:\5
+\&{if} ${}(\\{inputnode}[\|p].\\{middle}\E\|q){}$\5
+${}\{{}$\1\6
+${}\|q\K\|p,\39\|p\K\\{inputnode}[\|p].\\{parent};{}$\6
+\&{goto} \\{upward};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{inputnode}[\|p].\\{left}\E\|q){}$\5
+${}\{{}$\1\6
+${}\|q\K\|p,\39\|p\K\\{inputnode}[\|p].\\{right},\39\|d\K\T{1};{}$\6
+\&{goto} \\{downward};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{inputnode}[\|p].\\{right}\E\|q){}$\5
+${}\{{}$\1\6
+${}\|q\K\|p,\39\|p\K\\{inputnode}[\|p].\\{left},\39\|d\K{-}\T{1};{}$\6
+\&{goto} \\{downward};\6
+\4${}\}{}$\2\6
+\\{confusion}(\.{"supposed\ parent\ nod}\)\.{e\ not\ apparent"});\6
+\4\\{downward\_mid}:\5
+${}\|q\K\|p,\39\|p\K\\{inputnode}[\|p].\\{middle},\39\|d\K\T{0};{}$\6
+\4\\{downward}:\5
+\&{if} ${}(\|p<\T{0}){}$\1\5
+${}\\{abort0}(\.{"Mate\ mixup"},\39{-}\T{25});{}$\2\6
+\&{if} ${}(\|p>\T{0}){}$\1\5
+\&{goto} \\{downward\_mid};\2\6
+\&{if} ${}(\|d>\T{0}){}$\1\5
+${}\\{inputnode}[\|q].\\{right}\K{-}\\{buds};{}$\2\6
+\&{else} \&{if} ${}(\|d<\T{0}){}$\1\5
+${}\\{inputnode}[\|q].\\{left}\K{-}\\{buds};{}$\2\6
+\&{else}\1\5
+${}\\{inputnode}[\|q].\\{middle}\K{-}\\{buds};{}$\2\6
+${}\\{inputbud}[\\{buds}].\\{parent}\K\|q;{}$\6
+\4${}\}{}$\2\par
+\As12, 17, 18, 19, 21, 24, 32, 33, 42\ETs55.
+\U5.\fi
+
+\M{12}The main work of filling buds and setting ranks is done by a
+straightforward
+recursive procedure \PB{\\{fillbuds}}, which traverses the ternary tree in
+preorder.
+
+\Y\B\4\X11:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{fillbuds}(\&{int} \|p${},\39{}$\&{int} \|r)\1\1\2\2\6
+${}\{{}$\1\6
+\&{if} ${}(\|r<\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Not\ properly\ skewed}\)\.{:\ rank(\%c)=-1!%
+\\n"},\39\|p);{}$\6
+${}\\{exit}({-}\T{30});{}$\6
+\4${}\}{}$\2\6
+${}\\{inputnode}[\|p].\\{rank}\K\|r;{}$\6
+\&{if} ${}(\\{inputnode}[\|p].\\{left}>\T{0}){}$\1\5
+${}\\{fillbuds}(\\{inputnode}[\|p].\\{left},\39\|r-\T{1});{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\\{inputnode}[\|p].\\{left}\E\T{0}){}$\1\5
+${}\\{inputnode}[\|p].\\{left}\K{-}\\{buds}-\T{1},\39\\{setmate}(\|p);{}$\2\6
+${}\\{inputbud}[{-}\\{inputnode}[\|p].\\{left}].\\{rank}\K\|r-\T{1};{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{inputnode}[\|p].\\{middle}>\T{0}){}$\1\5
+${}\\{fillbuds}(\\{inputnode}[\|p].\\{middle},\39\|r);{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\\{inputnode}[\|p].\\{middle}\E\T{0}){}$\1\5
+${}\\{inputnode}[\|p].\\{middle}\K{-}\\{buds}-\T{1},\39\\{setmate}(\|p);{}$\2\6
+${}\\{inputbud}[{-}\\{inputnode}[\|p].\\{middle}].\\{rank}\K\|r;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{inputnode}[\|p].\\{right}>\T{0}){}$\1\5
+${}\\{fillbuds}(\\{inputnode}[\|p].\\{right},\39\|r+\T{1});{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\\{inputnode}[\|p].\\{right}\E\T{0}){}$\1\5
+${}\\{inputnode}[\|p].\\{right}\K{-}\\{buds}-\T{1},\39\\{setmate}(\|p);{}$\2\6
+${}\\{inputbud}[{-}\\{inputnode}[\|p].\\{right}].\\{rank}\K\|r+\T{1};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{13}We've prepared a skewed ternary tree by filling in all the missing
+fields. But if the input is, say, `\.{A---} \.{B-B-}', the tree we've prepared
+won't contain all of the given nodes, because of a cycle. Thus we must
+make sure that the number of buds found is $2n+2$.
+
+\Y\B\4\X13:Check that we've filled out the whole tree\X${}\E{}$\6
+\&{if} ${}(\\{buds}\I\|n+\|n+\T{2}){}$\1\5
+${}\\{abort0}(\.{"The\ input\ contains\ }\)\.{a\ cycle"},\39{-}\T{66}){}$;\2\par
+\U10.\fi
+
+\N{1}{14}The state chart.
+Now that we've got the tree in memory, we can emulate Alice's moves.
+This program gathers more information than is absolutely needed, just in case
+the extra data will help me psych out some structural properties.
+
+\Y\B\4\X7:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} \&{step\_struct} ${}\{{}$\1\6
+\&{int} \\{rank};\C{ rank on entry }\6
+\&{int} \\{first};\C{ bud being passed, or arc's initial node }\6
+\&{int} \\{second};\C{ arc's final node (in the second case) }\6
+\&{int} \\{match};\C{ bud being matched (in the second case) }\2\6
+${}\}{}$ \&{step};\par
+\fi
+
+\M{15}\B\X8:Global variables\X${}\mathrel+\E{}$\6
+\&{step} ${}\\{chart}[\T{4}*\\{maxcodes}]{}$;\C{ the state chart, of length
+$4n$ }\6
+\&{int} \\{steps};\C{ the current number of entries in \PB{\\{chart}} }\6
+\&{int} \\{stack}[\T{256}];\C{ buds currently unmatched }\6
+\&{int} \\{stacked};\C{ the number of such buds }\par
+\fi
+
+\M{16}\B\X16:Find and print the three conjugates of \PB{\|T}\X${}\E{}$\6
+\X20:Create the state chart\X;\6
+\X23:Print the tree with all buds shown\X;\6
+\X22:Print the conjugates from the state chart\X;\par
+\U5.\fi
+
+\M{17}The state chart is created from a recursive routine \PB{\\{createsteps}},
+analogous to \PB{\\{fillbuds}}.
+
+\Y\B\4\X11:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} ${}\\{branch}(\&{int},\39\&{int}){}$;\C{ see below }\6
+\&{void} \\{budstep}(\&{int});\C{ see below }\7
+\&{void} \\{createsteps}(\&{int} \|p)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|q;\7
+${}\|q\K\\{inputnode}[\|p].\\{left};{}$\6
+\&{if} ${}(\|q>\T{0}){}$\1\5
+${}\\{branch}(\|p,\39\|q);{}$\2\6
+\&{else}\1\5
+${}\\{budstep}({-}\|q);{}$\2\6
+${}\|q\K\\{inputnode}[\|p].\\{middle};{}$\6
+\&{if} ${}(\|q>\T{0}){}$\1\5
+${}\\{branch}(\|p,\39\|q);{}$\2\6
+\&{else}\1\5
+${}\\{budstep}({-}\|q);{}$\2\6
+${}\|q\K\\{inputnode}[\|p].\\{right};{}$\6
+\&{if} ${}(\|q>\T{0}){}$\1\5
+${}\\{branch}(\|p,\39\|q);{}$\2\6
+\&{else}\1\5
+${}\\{budstep}({-}\|q);{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{18}\B\D$\\{offset}$ \5
+\T{2}\C{ difference between \PB{\\{stacked}} and the current rank }\par
+\Y\B\4\X11:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{budstep}(\&{int} \|b)\1\1\2\2\6
+${}\{{}$\C{ chart gains a bud }\1\6
+${}\\{chart}[\\{steps}].\\{first}\K\|b,\39\\{chart}[\\{steps}].\\{rank}\K%
+\\{stacked}-\\{offset};{}$\6
+\&{if} ${}(\\{chart}[\\{steps}].\\{rank}\I\\{inputbud}[\|b].\\{rank}){}$\1\5
+\\{confusion}(\.{"rank\ offense\ b"});\2\6
+${}\\{inputbud}[\|b].\\{stepno}\K\\{steps};{}$\6
+${}\\{steps}\PP,\39\\{stack}[\\{stacked}\PP]\K\|b;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{19}\B\X11:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{branch}(\&{int} \|p${},\39{}$\&{int} \|q)\1\1\2\2\6
+${}\{{}$\C{ chart passes from one arc to its dual }\1\6
+${}\\{chart}[\\{steps}].\\{first}\K\|p,\39\\{chart}[\\{steps}].\\{second}\K\|q,%
+\39\\{chart}[\\{steps}].\\{rank}\K\\{stacked}-\\{offset};{}$\6
+\&{if} ${}(\\{chart}[\\{steps}].\\{rank}\I\\{inputnode}[\|q].\\{rank}){}$\1\5
+\\{confusion}(\.{"rank\ offense\ q"});\2\6
+${}\\{chart}[\\{steps}].\\{match}\K\\{stack}[\MM\\{stacked}];{}$\6
+${}\\{steps}\PP;{}$\6
+\\{createsteps}(\|q);\6
+${}\\{chart}[\\{steps}].\\{first}\K\|q,\39\\{chart}[\\{steps}].\\{second}\K\|p,%
+\39\\{chart}[\\{steps}].\\{rank}\K\\{stacked}-\\{offset};{}$\6
+\&{if} ${}(\\{chart}[\\{steps}].\\{rank}\I\\{inputnode}[\|q].\\{rank}+\T{2}){}$%
+\1\5
+\\{confusion}(\.{"rank\ offense\ p"});\2\6
+${}\\{chart}[\\{steps}].\\{match}\K\\{stack}[\MM\\{stacked}];{}$\6
+${}\\{steps}\PP;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{20}\B\X20:Create the state chart\X${}\E{}$\6
+$\\{chart}[\T{0}].\\{rank}\K{-}\T{2},\39\\{chart}[\T{0}].\\{first}\K\T{1},\39%
+\\{steps}\K\T{1};{}$\6
+${}\\{stack}[\T{0}]\K\T{1},\39\\{stacked}\K\\{offset}-\T{1};{}$\6
+\\{createsteps}(\\{root});\6
+\&{if} ${}(\\{stacked}\I\T{2}+\\{offset}){}$\1\5
+\\{confusion}(\.{"mismatched"});\2\6
+\&{if} ${}(\\{steps}\I\T{4}*\|n){}$\1\5
+\\{confusion}(\.{"total\ steps"});\2\par
+\U16.\fi
+
+\M{21}Conversely, given the state chart, there's a simple recursive routine
+that prints a tree beginning after an unmatched bud.
+
+Interestingly, the nodes of the tree are reported in postorder although
+they are encountered in preorder.
+
+\Y\B\4\X11:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{printfam}(\&{int} \|p)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|q;\6
+\&{int} \|l${},{}$ \|m${},{}$ \|r;\7
+\&{if} ${}(\\{steps}\E\T{4}*\|n){}$\1\5
+${}\\{steps}\K\T{0};{}$\2\6
+${}\|q\K\\{chart}[\\{steps}\PP].\\{second};{}$\6
+\&{if} ${}(\|q\E\T{0}){}$\1\5
+${}\|l\K\.{'-'};{}$\2\6
+\&{else}\1\5
+${}\|l\K\|q,\39\\{printfam}(\|q),\39\\{steps}\PP;{}$\2\6
+\&{if} ${}(\\{steps}\E\T{4}*\|n){}$\1\5
+${}\\{steps}\K\T{0};{}$\2\6
+${}\|q\K\\{chart}[\\{steps}\PP].\\{second};{}$\6
+\&{if} ${}(\|q\E\T{0}){}$\1\5
+${}\|m\K\.{'-'};{}$\2\6
+\&{else}\1\5
+${}\|m\K\|q,\39\\{printfam}(\|q),\39\\{steps}\PP;{}$\2\6
+\&{if} ${}(\\{steps}\E\T{4}*\|n){}$\1\5
+${}\\{steps}\K\T{0};{}$\2\6
+${}\|q\K\\{chart}[\\{steps}\PP].\\{second};{}$\6
+\&{if} ${}(\|q\E\T{0}){}$\1\5
+${}\|r\K\.{'-'};{}$\2\6
+\&{else}\1\5
+${}\|r\K\|q,\39\\{printfam}(\|q),\39\\{steps}\PP;{}$\2\6
+${}\\{printf}(\.{"\ \%c\%c\%c\%c"},\39\|p,\39\|l,\39\|m,\39\|r);{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{22}The algorithm here is very cute, so I let the reader have the
+fun of deciphering it.
+
+\Y\B\4\X22:Print the conjugates from the state chart\X${}\E{}$\6
+$\\{chart}[\T{4}*\|n].\\{second}\K\\{sentinel},\39\\{chart}[\T{4}*\|n].%
+\\{first}\K\\{root};{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\T{4};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|j;{}$ ${}\|i\PP){}$\1\5
+\\{printf}(\.{"+"});\2\6
+\\{printf}(\.{":"});\6
+\&{for} ${}(\|k\K\\{steps}\K\\{inputbud}[\\{stack}[\|j+\\{offset}-\T{2}]].%
+\\{stepno}+\T{1};{}$ ${}\\{chart}[\|k].\\{second}\E\T{0};{}$ ${}\|k\PP){}$\1\5
+;\2\6
+${}\\{printfam}(\\{chart}[\|k].\\{first});{}$\6
+\\{printf}(\.{"\\n"});\6
+\&{if} ${}(\\{chart}[\\{steps}].\\{first}\I\\{stack}[\|j+\\{offset}-\T{2}]){}$%
+\1\5
+\\{confusion}(\.{"bad\ end\ of\ cycle"});\2\6
+\4${}\}{}$\2\par
+\U16.\fi
+
+\M{23}\B\X23:Print the tree with all buds shown\X${}\E{}$\6
+\\{print\_tree}(\\{root});\6
+\\{printf}(\.{"\\n"});\par
+\U16.\fi
+
+\M{24}\B\X11:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_tree}(\&{int} \|p)\1\1\2\2\6
+${}\{{}$\C{ prints node \PB{\|p}'s subtree in preorder }\1\6
+\&{register} \&{int} \|i;\7
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{inputnode}[\|p].\\{rank}+\T{8};{}$ ${}\|i%
+\PP){}$\1\5
+\\{printf}(\.{"."});\2\6
+${}\\{printf}(\.{"\ \%c:"},\39\|p);{}$\6
+\&{if} ${}(\\{inputnode}[\|p].\\{left}<\T{0}){}$\1\5
+${}\\{printf}(\.{"\%3d"},\39{-}\\{inputnode}[\|p].\\{left});{}$\2\6
+\&{else}\1\5
+${}\\{printf}(\.{"\ \ \%c"},\39\\{inputnode}[\|p].\\{left});{}$\2\6
+\&{if} ${}(\\{inputnode}[\|p].\\{middle}<\T{0}){}$\1\5
+${}\\{printf}(\.{"\%3d"},\39{-}\\{inputnode}[\|p].\\{middle});{}$\2\6
+\&{else}\1\5
+${}\\{printf}(\.{"\ \%c\ "},\39\\{inputnode}[\|p].\\{middle});{}$\2\6
+\&{if} ${}(\\{inputnode}[\|p].\\{right}<\T{0}){}$\1\5
+${}\\{printf}(\.{"\%3d\\n"},\39{-}\\{inputnode}[\|p].\\{right});{}$\2\6
+\&{else}\1\5
+${}\\{printf}(\.{"\ \%c\\n"},\39\\{inputnode}[\|p].\\{right});{}$\2\6
+\&{if} ${}(\\{inputnode}[\|p].\\{left}>\T{0}){}$\1\5
+${}\\{print\_tree}(\\{inputnode}[\|p].\\{left});{}$\2\6
+\&{if} ${}(\\{inputnode}[\|p].\\{middle}>\T{0}){}$\1\5
+${}\\{print\_tree}(\\{inputnode}[\|p].\\{middle});{}$\2\6
+\&{if} ${}(\\{inputnode}[\|p].\\{right}>\T{0}){}$\1\5
+${}\\{print\_tree}(\\{inputnode}[\|p].\\{right});{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{25}The quad-edge data structure for planar maps.
+Turning from trees to more complex graphs drawn in the plane,
+we now implement some beautiful data structures that were introduced
+by Leo Guibas and Jorge Stolfi in {\sl ACM Transactions on Graphics\/
+\bf4} (1985), 74--123.
+
+The best way to understand their ``quad-edge structure'' is to consider
+a small example. The normal way to draw a planar graph with, say, vertices
+$\{1,2,3,4\}$ and edges $\{a,b,c,d,e,f\}$ and faces $\rm\{I,II,III,IV\}$
+is to connect the vertices by lines for the edges, and to name the
+faces in the enclosed regions:
+$$\vcenter{\epsfbox{skew-ternary-calc.21}}\eqno({*})$$
+Inside a computer, however, the best way to represent the topology of
+this diagram is to construct a more elaborate structure, which can be
+regarded as annotating the graph~$(*)$ and embedding it in a richer graph:
+$$\vcenter{\epsfbox{skew-ternary-calc.20}}\eqno({**})$$
+Vertices (red) and faces (green) have been replaced by oriented cycles,
+which all travel counterclockwise, except that the outermost cycle
+runs clockwise. (That cycle would run the other way if we drew it on the
+equator of a sphere and looked at it from the south pole, while viewing
+the rest of the map from the north pole.)
+
+The oriented cycles in $(**)$ have
+little connectors that we shall call ``pips.''
+The cycle for a vertex $v$ of degree~$d$ has $d$ pips,
+which indicate all of the edges adjacent to~$v$, in
+counterclockwise order. Similarly, the cycle for a face indicates all
+of the edges surrounding that face, as we march counterclockwise around it.
+
+One advantage of a representation like $(**)$ is the fact that it nicely
+represents also the {\it dual\/} graph, in which vertices become faces, faces
+become vertices, and edges ``rotate'' by $90^\circ$. For example, the dual
+of $(*)$ is the planar graph
+$$\vcenter{\epsfbox{skew-ternary-calc.22}}\,.\eqno({*{*}*})$$
+
+\fi
+
+\M{26}Notice that each of the edges $\{a,b,c,d,e,f\}$ in $(*)$ appears as
+a vertex in~$(**)$. Every such vertex has degree~4, and it connects
+to four pips via lines numbered 0, 1, 2, and~3 in clockwise order.
+The pips on lines 0 and 2 always
+belong to vertex cycles; the pips on lines 1 and 3
+always belong to face cycles. We could change the numbers $(0,1,2,3)$
+to $(2,3,0,1)$, respectively, at each edge-vertex, without changing
+the meaning of this diagram; the actual numbering of these lines isn't
+important. But their cyclic ordering is crucial, and so is
+their evenness or oddness.
+
+I should point out that two planar graphs are considered to be
+essentially the same if they are topologically equivalent
+when drawn on the surface of a sphere. They should represent the
+same decomposition of the sphere's surface into regions delimited
+by the given edges, in the sense that we could transform one drawing into
+the other, smoothly and without trickery. In particular, we could
+redraw $(*)$ in three equivalent ways by choosing any of the other
+faces to be exterior:
+$$\def\epsfsize#1#2{.8#1}
+\vcenter{\epsfbox{skew-ternary-calc.23}}\qquad
+\vcenter{\epsfbox{skew-ternary-calc.24}}\qquad
+\vcenter{\epsfbox{skew-ternary-calc.25}}$$
+Each of these graphs corresponds precisely
+to the vertices, edges, faces, and pips of~$(**)$;
+and so are three variants of~$(*{*})$! Butleft-right reflection
+would give a different graph in this case, because $(*)$ has no symmetry.
+
+\fi
+
+\M{27}Suppose there are $m$ edges. Diagram $(**)$ can also be regarded as a
+{\it permutation\/} of the $4m$ pips, expressed in cycle form, namely
+$$\alpha=(a_2d_2c_2b_2)(d_0e_2)(c_0e_0f_0)(a_0b_0f_2)
+(a_1f_1e_3d_3)(c_3d_1e_1)(b_3c_1f_3)(a_3b_1).$$
+These cycles correspond to
+vertices (1), (2), (3), (4) and faces (I), (II), (III), (IV);
+for instance, `$(a_0b_0f_2)$' describes the cycle
+$a_0\dadj b_0\dadj f_2\dadj a_0$ for vertex~4 in~$(**)$.
+
+Guibas and Stolfi noted that the
+permutations $\alpha$ obtained from planar maps in this way
+have a very important property called the backup axiom:
+{\sl If $\alpha$ takes $u_{i+1}\mapsto v_j$},
+where $u$ and~$v$ are edges of the planar graph being represented and
+where their subscripts are treated modulo~4, {\sl then $\alpha$ also
+takes $v_{j+1}\mapsto u_i$}. For example, $a_2\mapsto d_2$ and
+$d_3\mapsto a_1$ in $\alpha$. Notice that $a_2$ and $d_2$ are vertex pips,
+but $d_3$ and $a_1$ are face pips.
+
+The backup axiom can be formulated in terms of permutations, using the
+special ``rotation'' permutation
+$$\rho=(a_0a_1a_2a_3)(b_0b_1b_2b_3)(c_0c_1c_2c_3)(d_0d_1d_2d_3)
+(e_0e_1e_2e_3)(f_0f_1f_2f_3);$$
+namely, it is equivalent to saying that $\alpha\rho\alpha\rho$ is the
+identity permutation. After moving from any pip by
+applying $\alpha$ and then $\rho$, we can
+back up to our original state by applying $\alpha$ and~$\rho$ again.
+This principle underlies the efficiency of a quad-edge structure, because
+we can easily move in the clockwise or counterclockwise direction
+around any vertex or around any face; we needn't traverse the whole cycle
+to find our predecessor.
+
+Continuing our example, we have
+$$\alpha\rho=
+(a_0b_1)(a_1f_2)(a_2d_3)(a_3b_2)(b_0f_3)(b_3c_2)
+(c_0e_1)(c_1f_0)(c_3d_2)(d_0e_3)(d_1e_2)(e_0f_1).$$
+In general $\alpha\rho$ will always be
+a permutation of order~2, which takes every vertex pip into some face pip.
+Therefore $\alpha\rho$ consists entirely of two-cycles; it's a matching
+between the $2m$ vertex pips and the $2m$ face pips.
+
+Similarly, $\rho\alpha$ always consists of two-cycles; in our case it's
+$$\rho\alpha=
+(a_0f_1)(a_1d_2)(a_2b_1)(a_3b_0)(b_3f_2)(b_2c_1)
+(c_3e_0)(c_0f_3)(c_2d_1)(d_3e_2)(d_0e_1)(e_3f_0).$$
+We'll have $(u_iv_j)$ in $\rho\alpha$ if and only if $(u_{i+1}v_{j+1})$
+is in $\alpha\rho$, because of the backup axiom. For example,
+$\rho\alpha$ contains $(a_1d_2)$ which $\alpha\rho$ contains $(a_2d_3)$.
+
+The regions outside the cycles in $(**)$ all have four sides. For example,
+there's a region near the top right whose corner pips in counterclockwise
+order are $(d_3,d_2,a_2,a_1)$. The backup axiom explains this fact.
+Moreover, it tells us that the
+pips at opposite corners, such as $\{d_3,a_2\}$ and $\{d_2,a_1\}$, are the
+pips matched by $\alpha\rho$ and $\rho\alpha$.
+
+\fi
+
+\M{28}Thus the quad-edge data structure for a planar graph with $m$ edges
+essentially consists of $4m$ pointers, which tell us how to move
+from one pip to another. These pointers form a permutation of the
+pips, where the permutation takes vertex pips into vertex pips and
+face pips into face pips. It also satisfies the backup axiom.
+
+Guibas and Stolfi also observed that every planar graph without
+isolated vertices can be constructed
+by repeatedly performing a single primitive operation.
+This operation, called {\it splice},
+exchanges two vertex pips and two face pips. (Well, there's
+also a primitive operation that initializes the entire data structure.
+To get things rolling, we begin with
+a set of $m$ edges that define $m$ two-vertex components;
+thus we have $2m$ vertices initially, each of degree~1.
+After the initialization, we can proceed to splice until we've got the
+graph we want.)
+
+The best way to understand splicing is---guess what---to look at
+a small example. So let's construct the pip-permutation~$\alpha$
+above, and the planar graph above, by a sequence of splices.
+
+We begin with the initial permutation
+$$\alpha_0\beta_0\gamma_0\delta_0\varepsilon_0\varphi_0;$$
+here $\alpha_0=(a_0)(a_2)(a_1a_3)$,
+$\beta_0=(b_0)(b_2)(b_1b_3)$, \dots, and
+$\varphi_0=(f_0)(f_2)(f_1f_3)$
+each specify a two-vertex graphs~$K_2$ disjoint from the others.
+The sub-permutation $\alpha_0$ corresponds to the two-vertex
+graph whose edge is named~$a$, and the other sub-permutations are similar.
+
+Two edges $a$ and $b$ belong to the same component of a graph
+if and only if there's a sequence $(d_1,d_2,\ldots,d_r)$, for some~$r$,
+such that $\alpha\rho^{d_1}\alpha\rho^{d_2}\ldots\alpha\rho^{d_r}$
+takes $a_0\mapsto b_0$. If the graph has $c$ components, we can best
+think of it as a set of $c$ connected graphs, each of which is drawn on
+the surface of a separate sphere; thus each component has its own
+``exterior face.'' According to a famous theorem of Euler,
+the number of vertices plus the number of faces
+is always equal to the number of edges plus $2c$.
+
+A splice $\sigma$ consists of applying two swap operations;
+in other words, $\sigma$ has the form $(u_iv_j)(r_ks_l)$. Here $i$ and $j$ are
+even (hence $u_i$ and $v_j$ are vertex pips), while $k$ and $l$ are odd (hence
+$r_k$ and $s_l$ are face pips). If $u_i$ and $v_j$ lie in different
+cycles of~$\alpha$, then they lie in the same cycle of $\alpha\sigma$; in fact,
+they are obtained by pasting the cycles together in a straightforward way:
+$$(u_ix_1\ldots x_p)(v_jy_1\ldots y_q)(u_iv_j)
+=(u_ix_1\ldots x_pv_jy_1\ldots y_q).$$
+For example, if $u$ and $v$ are edges of different components,
+it's clear that $u_i$ and $v_j$ must lie in different cycles;
+and in that case the net effect is to paste two disconnected components
+of a graph together, with two vertices coalescing into one.
+
+If $u$ and $v$ are edges of the same component, but $u_i$ and $v_j$ aren't
+in the same cycle, then we're allowed to splice them together only if
+$u_{i+1}$ and $v_{j+1}$ are pips of the same face. Otherwise
+we couldn't merge the vertices of $u_i$ and $v_j$ without making lines
+cross. (That's a consequence of Euler's theorem, mentioned above;
+we'd be drawing the component on a torus, not a sphere.)
+
+Going the other way, suppose $u_i$ and $v_j$ do lie
+in the same cycle of~$\alpha$. Then
+the splice operation splits the graph into two parts, making two
+copies of the vertex whose pips included $u_i$ and $v_j$; one copy
+gets some of the adjacent edges, the other copy gets the rest.
+Actually, however, we won't need to do splices of this kind;
+it's possible to form any desired planar graph without isolated vertices
+merely by pasting
+vertices together, decreasing the number of vertices with each splice.
+
+Similar remarks apply to the cycles of face pips, depending on whether
+or not $r_k$ and $s_l$ belong to the same cycle of~$\alpha$. A swap
+operation between elements of different cycles always merges the
+cycles; a swap operation between elements of a single cycle always
+splits that cycle.
+
+The value of $(r_ks_l)$ is completely determined by the value of
+$(u_iv_j)$ by the following important {\it splice rule\/}:
+If~$\alpha$ takes $u_{i+1}\mapsto x_p$
+and $v_{j+1}\mapsto y_q$, then $r_k=x_p$ and $s_l=y_q$. This rule
+is necessary so that the backup axiom is preserved; we can't paste
+vertices together or split them apart unless we do an exactly
+consistent thing with respect to the faces. And fortunately, the splice
+rule is also sufficient for maintaining the backup condition.
+
+\fi
+
+\M{29}Armed with all this information, we're ready at last to construct
+the example map~$(*)$ from the initial permutation
+$\alpha_0\beta_0\gamma_0\delta_0\varepsilon_0\varphi_0$
+in a sensible way, without resorting to trial and error.
+
+That map has both $a$ and $b$ attached to vertex~4, with pips
+$a_0$ and $b_0$ in the vertex ring for~4 in $(**)$. So we can start
+by splicing $\alpha_0$ and $\beta_0$ together; that means
+$u_i=a_0$ and~$v_j=b_0$. The splice rule
+now tells us that $\sigma=(a_0b_0)(a_3b_3)$, because $\alpha_0\beta_0$ takes
+$a_1\mapsto a_3$ and $\beta_1\mapsto b_3$. Thus we obtain
+$$\alpha_1=\alpha_0\beta_0\sigma_1=\alpha_0\beta_0(a_0b_0)(a_3b_3)=
+(a_0b_0)(a_2)(b_2)(a_1b_3b_1a_3).$$
+This permutation represents a path of length 2, consisting of edges $a$ and $b$
+joined by a common vertex whose pips are $a_0$ and $b_0$.
+The other two vertices, which have degree~1 because they're endpoints of
+the path, have the respective pips $a_2$ and $b_2$.
+The reader is encouraged to draw the corresponding graph of vertices,
+edges, faces, and pips, so that these ideas become crystal clear.
+(This graph will be analogous to $(**)$, but it will be considerably
+simpler because there are only three vertices, two edges, and one face.)
+
+Next let's join {\it those\/} two vertices together; we're allowed to
+do that, even though they belong to the same component,
+because $a_3$ and $b_3$ belong to the same cycle. The result, with
+$\sigma_2=(a_2b_2)(a_1b_1)$, is
+$$\alpha_2=\alpha_1\sigma_2=(a_0b_0)(a_2b_2)(a_1b_3)(a_3b_1),$$
+representing a cycle of length 2 between the vertices $(a_0b_0)$ and
+$(a_2b_2)$. There are two faces, $(a_1b_3)$ and $(a_3b_1)$, either
+of which can be considered to be the exterior face.
+
+In a similar way we can build up a {\it three\/}-cycle from $c$, $d$, and $e$:
+Letting $\sigma_3=(c_2d_2)(c_1d_1)$,
+$\sigma_4=(d_0e_2)(d_3e_1)$, and $\sigma_5=(c_0e_0)(c_3e_3)$, we obtain
+$$\eqalign{
+\gamma_1&=\gamma_0\delta_0\sigma_3=
+(c_0)(c_2d_2)(d_0)(c_1c_3d_1d_3);\cr
+\gamma_2&=\gamma_1\varepsilon_0\sigma_4=
+(c_0)(c_2d_2)(d_0e_2)(e_0)(c_1c_3d_1e_1e_3d_3);\cr
+\gamma_3&=\gamma_2\varphi\sigma_5=
+(c_0e_0)(c_2d_2)(d_0e_2)(c_1e_3d_3)(c_3d_1e_1).\cr
+}$$
+
+Now we can hook $f$ to vertex $(c_0e_0)$, using $\sigma_6=(c_0f_0)(e_3f_3)$:
+$$\gamma_4=\gamma_3\sigma_6=(c_0e_0f_0)(c_2d_2)(d_0e_2)(f_2)
+(c_1f_3f_1e_3d_3)(c_3d_1e_1).$$
+
+The two remaining components can be joined together, merging
+vertices $(a_2b_2)$ and $(c_2d_2)$ appropriately with
+$\sigma_7=(b_2d_2)(a_1c_1)$:
+$$\alpha_3=\alpha_2\gamma_4\sigma_7=
+(a_2d_2c_2b_2)(a_0b_0)(c_0e_0f_0)(d_0e_2)(f_2)
+(a_1b_3c_1f_3f_1e_3d_3)(a_3b_1)(c_3d_1e_1).$$
+And the final coup de gr\^ace hooks $(f_2)$ to $(a_0b_0)$, with
+$\sigma_8=(f_2a_0)(f_1b_3)$:
+$$\alpha_4=\alpha_3\sigma_8=
+(a_0b_0f_2)(a_2d_2c_2b_2)(c_0e_0f_0)(d_0e_2)
+(a_1f_1e_3d_3)(a_3b_1)(b_3c_1f_3)(c_3d_1e_1).$$
+
+Yes, this is indeed the permutation of $(**)$. We have
+$$\alpha=\alpha_0\beta_0\gamma_0\delta_0\varepsilon_0\varphi_0\,
+\sigma_1\sigma_2\sigma_3\sigma_4\sigma_5\sigma_6\sigma_7\sigma_8.$$
+One of the
+main reasons I wrote this program was because I knew that a computer
+could do these calculations almost instantly, without making
+silly mistakes.
+
+\fi
+
+\M{30}So let's write that code. Each pip is conveniently represented
+by its subscript plus four times the ASCII code of the edge name.
+For example, $a_3$ would be \PB{$(\.{'a'}\LL\T{2})+\T{3}$}, which is 391
+because
+\PB{$\.{'a'}\K\T{97}$}.
+
+We maintain both $\alpha$ and its inverse $\alpha^-$ in memory,
+because both representations are useful. If \PB{\|p} is a pip with
+\PB{$\\{alpha}[\|p]\K\|q$}, then \PB{$\|q\K\\{alphainv}[\|p]$}.
+(There isn't really a need for both representations, however,
+because the backup axiom $\alpha^-=\rho\alpha\rho$ always holds.)
+
+\Y\B\4\D$\\{pip}(\|u,\|i)$ \5
+$((\|u)\LL\T{2})+{}$(\|i)\par
+\B\4\D$\\{pip\_edge}(\|p)$ \5
+$((\|p)\GG\T{2}{}$)\par
+\B\4\D$\\{pip\_sub}(\|p)$ \5
+$((\|p)\AND\T{\^3}{}$)\par
+\B\4\D$\\{rot}(\|p)$ \5
+$(((\|p)+\T{1})\XOR(((\|p)\XOR((\|p)+\T{1}))\AND{-}\T{4}){}$)\C{ $\rho$ }\par
+\B\4\D$\\{irot}(\|p)$ \5
+$(((\|p)-\T{1})\XOR(((\|p)\XOR((\|p)-\T{1}))\AND{-}\T{4}){}$)\C{ $\rho^-$ }\par
+\Y\B\4\X8:Global variables\X${}\mathrel+\E{}$\6
+\&{int} ${}\\{alpha}[\T{4}*\T{256}]{}$;\C{ the permutation of pips describing
+the current planar map }\6
+\&{int} ${}\\{alphainv}[\T{4}*\T{256}]{}$;\C{ its inverse }\6
+\&{int} \\{verts};\C{ the current number of vertices }\par
+\fi
+
+\M{31}We'll permute only the pips for a special {\it root edge\/}
+and for edges that correspond to nodes in the skew ternary tree that was
+input. The latter nodes are identifiable because they have left children.
+(They also have middle and root children. But we don't really care
+about the children's identities, only their existence.)
+The root edge is called \.*.
+
+\Y\B\4\X31:Create the initial permutation\X${}\E{}$\6
+\&{for} ${}(\|k\K\.{'*'},\39\\{verts}\K\T{0};{}$ ${}\|k\Z\.{'\~'};{}$ ${}\|k%
+\PP){}$\1\6
+\&{if} ${}(\|k\E\.{'*'}\V\\{inputnode}[\|k].\\{left}){}$\5
+${}\{{}$\1\6
+${}\\{alpha}[\\{pip}(\|k,\39\T{0})]\K\\{alphainv}[\\{pip}(\|k,\39\T{0})]\K%
+\\{pip}(\|k,\39\T{0});{}$\6
+${}\\{alpha}[\\{pip}(\|k,\39\T{1})]\K\\{alphainv}[\\{pip}(\|k,\39\T{1})]\K%
+\\{pip}(\|k,\39\T{3});{}$\6
+${}\\{alpha}[\\{pip}(\|k,\39\T{2})]\K\\{alphainv}[\\{pip}(\|k,\39\T{2})]\K%
+\\{pip}(\|k,\39\T{2});{}$\6
+${}\\{alpha}[\\{pip}(\|k,\39\T{3})]\K\\{alphainv}[\\{pip}(\|k,\39\T{3})]\K%
+\\{pip}(\|k,\39\T{1});{}$\6
+${}\\{verts}\MRL{+{\K}}\T{2};{}$\6
+\4${}\}{}$\2\2\6
+\&{if} ${}(\\{verts}\I\T{2}*(\|n+\T{1})){}$\1\5
+\\{confusion}(\.{"initial\ vertex\ coun}\)\.{t"});\2\par
+\Us49\ET62.\fi
+
+\M{32}The \PB{\\{splice}} subroutine is given the addresses of two vertex pips
+that are supposed to be interchanged. It figures out the two
+corresponding face pips, using the splice rule mentioned above.
+
+We do not worry about the ``legality'' of a splice, in the sense
+of preserving planarity, because we'll use \PB{\\{splice}} only to
+reduce the number of vertices. Any illegal usage would cause the
+final number of faces to be incompatible with Euler's criterion.
+
+(Well, there's an exception: In one place below I will splice two
+pips apart that are adjacent in their vertex cycle. To compensate,
+I'll increase \PB{\\{verts}} by~2.)
+
+\Y\B\4\X11:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{splice}(\&{int} \|p${},\39{}$\&{int} \|q)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|r${},{}$ \|s;\7
+\&{if} ${}((\|p\AND\T{1})+(\|q\AND\T{1})){}$\1\5
+\\{confusion}(\.{"attempt\ to\ splice\ f}\)\.{ace\ pips"});\2\6
+${}\|r\K\\{alphainv}[\|p],\39\|s\K\\{alphainv}[\|q];{}$\6
+${}\\{alphainv}[\|p]\K\|s,\39\\{alphainv}[\|q]\K\|r;{}$\6
+${}\\{alpha}[\|s]\K\|p,\39\\{alpha}[\|r]\K\|q;{}$\6
+${}\|p\K\\{alpha}[\\{rot}(\|p)],\39\|q\K\\{alpha}[\\{rot}(\|q)]{}$;\C{ now swap
+the appropriate faces }\6
+${}\|r\K\\{alphainv}[\|p],\39\|s\K\\{alphainv}[\|q];{}$\6
+${}\\{alphainv}[\|p]\K\|s,\39\\{alphainv}[\|q]\K\|r;{}$\6
+${}\\{alpha}[\|s]\K\|p,\39\\{alpha}[\|r]\K\|q;{}$\6
+${}\\{verts}\MM;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{33}Here's a cute subroutine that displays all relevant information about
+the planar graph by printing $\alpha$'s cycles. First come the pips
+of the vertex cycles, then the pips of the face cycles, one line at a time.
+
+The program also counts the number of vertices and faces, so that
+it can use Euler's formula to report the number of components (assuming
+planarity).
+
+\Y\B\4\X11:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_alpha}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|c${},{}$ \|f${},{}$ \|p${},{}$ \|q${},{}$ \|r${},{}$ %
+\|t${},{}$ \|v;\7
+\X34:Print and count the vertex cycles\X;\6
+\&{if} ${}(\|v\I\\{verts}){}$\1\5
+\\{confusion}(\.{"vertex\ count"});\2\6
+\X35:Print and count the face cycles\X;\6
+${}\|c\K(\|v-(\|n+\T{1})+\|f)\GG\T{1};{}$\6
+${}\\{printf}(\.{"(Altogether\ \%d\ vert}\)\.{ices,\ \%d\ edges,\ \%d\ f}\)%
+\.{aces,\ \%d\ component\%s}\)\.{.)\\n"},\39\|v,\39\|n+\T{1},\39\|f,\39\|c,\39%
+\|c\E\T{1}\?\.{""}:\.{"s"});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{34}The idea is to find a cycle leader (the least \PB{\|p} whose cycle hasn't
+already been printed), and to print its cycle, until all cycles for
+even-numbered pips have been found.
+
+\Y\B\4\X34:Print and count the vertex cycles\X${}\E{}$\6
+\\{printf}(\.{"Vertices:\\n"});\6
+${}\|v\K\T{0},\39\|p\K\\{pip}(\.{'*'},\39\T{0}),\39\|t\K\T{2}*(\|n+\T{1});{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{for} ( ; ${}\\{alpha}[\|p]\Z\T{0}\W\|t;{}$ ${}\|p\MRL{+{\K}}\T{2}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{alpha}[\|p]<\T{0}){}$\5
+${}\{{}$\C{ we've temporarily negated it, see Algorithm 1.3.3I }\1\6
+${}\\{alpha}[\|p]\K{-}\\{alpha}[\|p],\39\|t\MM;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|t\E\T{0}){}$\1\5
+\&{break};\C{ \PB{\|t} unprocessed pips remain }\2\6
+\&{for} ${}(\|q\K\|p,\39\|r\K\\{alpha}[\|q];{}$ ${}\|r>\T{0};{}$ ${}\|q\K\|r,%
+\39\|r\K\\{alpha}[\|q]){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\ \%c\%d"},\39\\{pip\_edge}(\|r),\39\\{pip\_sub}(\|r));{}$\6
+${}\\{alpha}[\|q]\K{-}\|r;{}$\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n"});\6
+${}\|v\PP;{}$\6
+\4${}\}{}$\2\par
+\U33.\fi
+
+\M{35}Exactly the same idea works for odd-numbered pips, of course.
+
+\Y\B\4\X35:Print and count the face cycles\X${}\E{}$\6
+\\{printf}(\.{"Faces:\\n"});\6
+${}\|f\K\T{0},\39\|p\K\\{pip}(\.{'*'},\39\T{1}),\39\|t\K\T{2}*(\|n+\T{1});{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{for} ( ; ${}\\{alpha}[\|p]\Z\T{0}\W\|t;{}$ ${}\|p\MRL{+{\K}}\T{2}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{alpha}[\|p]<\T{0}){}$\5
+${}\{{}$\C{ we've temporarily negated it, see Algorithm 1.3.3I }\1\6
+${}\\{alpha}[\|p]\K{-}\\{alpha}[\|p],\39\|t\MM;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|t\E\T{0}){}$\1\5
+\&{break};\C{ \PB{\|t} unprocessed pips remain }\2\6
+\&{for} ${}(\|q\K\|p,\39\|r\K\\{alpha}[\|q];{}$ ${}\|r>\T{0};{}$ ${}\|q\K\|r,%
+\39\|r\K\\{alpha}[\|q]){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\ \%c\%d"},\39\\{pip\_edge}(\|r),\39\\{pip\_sub}(\|r));{}$\6
+${}\\{alpha}[\|q]\K{-}\|r;{}$\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n"});\6
+${}\|f\PP;{}$\6
+\4${}\}{}$\2\par
+\U33.\fi
+
+\N{1}{36}The building blocks of planar graphs.
+Any connected multigraph is built up in a straightforward treelike way from
+so-called blocks (aka biconnected components or nonseparable graphs),
+attached together via so-called
+articulation points (aka cut vertices).
+We exclude the trivial cases where a block has fewer than two vertices;
+in other words, we exclude the empty graph, the one-vertex graph~$K_1$,
+and the multigraph that consists of a single self-loop.
+
+A nontrivial biconnected planar graph is said to be {\it rooted\/}
+when we place an arrow on one of its edges, converting that edge
+to a directed arc from $u$ to~$v$ called the root edge.
+Vertex~$u$ is called the root; and we draw the graph so that
+the root edge lies on the path that travels counterclockwise
+around the exterior face. (In other words, the exterior face lies
+on your right, if you move from $u$ to $v$.)
+
+\def\RNBPM/{{\mc RNBPM}}
+A rooted, nontrivial biconnected planar map (henceforth ``\RNBPM/'')
+is an equivalence class of rooted, nontrivial biconnected planar graphs,
+where two such graphs are said to be equivalent if they're topo\-logically
+the same when drawn on a sphere as discussed earlier. Thus, each
+\RNBPM/ can be characterized by its $\alpha$~permutation, except for
+renaming of the edges and except for adding 2~(mod~4) to the subscripts of
+any selected subset of the edges.
+
+Suppose $r$ is the root edge, and suppose the other edges of
+the exterior cycle are $e^1$, $e^2$, \dots,~$e^p$. We will define
+things so that the root vertex cycle contains the pip~$r_0$, hence the
+exterior face cycle contains the pip~$r_3$. We will also
+define pip numbers so that $\alpha$ takes $r_0\mapsto e^1_2$,
+$e^1_0\mapsto e^2_2$, \dots, $e^p_0\mapsto r_2$, so that
+the exterior face cycle is $(e^p_3\ldots e^2_3e^1_3r_3)$.
+Exception: If $p=0$, that cycle is of course $(r_1r_3)$.
+
+\fi
+
+\M{37}The simplest \RNBPM/ consists of just the root edge. Otherwise
+we can build up any \RNBPM/ recursively in a simple way:
+Removal of the root edge leaves a graph with $m\ge1$ blocks
+(hence $m-1$ articulation points); consequently each of those blocks
+becomes an \RNBPM/ once we identify its root edge.
+We choose to take the root as the first edge encountered
+on the exterior face of the full graph, in counterclockwise order.
+We also take note of the first edge that is {\it not\/} exterior in
+the full graph, thereby
+making the block ``doubly rooted.'' Then the original \RNBPM/ is
+easily reconstructed from its doubly rooted blocks.
+
+Once again we crave an example. Our previous graph $(*)$ will be
+an \RNBPM/ if we choose any edge~$u$ as a designated root edge,
+and if we consider the pip $u_3$ to be
+on its exterior face. But that example is too simple to reveal
+the general situation; so let's consider something a bit more complex:
+$$\vcenter{\epsfbox{skew-ternary-calc.40}}\eqno(\dag)$$
+Here $m=4$ and the exterior face has $p=7$ other edges; its cycle is therefore
+$(r_3d^2_3d^1_3c^3_3c^2_3c^1_3b^1_3a^1_3)$. Furthermore the
+interior face touching~$r$ is
+$(r_1a^3_3a^2_3b^1_1c^7_3c^6_3c^5_3c^4_3d^3_3)$.
+If we remove edge~$r$,
+three articulation points spring up that subdivide the remaining graph into
+four blocks, having exterior edges identified by the letters
+$\{a,b,c,d\}$. Block $b$ is just an isthmus, but the other blocks have
+been built up in turn from smaller constituents. Those larger blocks
+have been shaded in this diagram, because they may contain complicated
+interior structure that is invisible from the outside.
+
+The four blocks can be regarded as \RNBPM/s, having the respective
+root edge pips $a^1_3$, $b^1_3$, $c^1_3$, and $d^1_3$.
+And they're also doubly rooted, because we specify nonroot exterior
+vertex pips $a^2_2$, $b^1_0$, $c^4_2$, $d^3_2$ that tell us how to
+hook them together. If $\alpha$, $\beta$, $\gamma$, and~$\delta$ are
+the permutations corresponding to those blocks, and if
+$\omega=(r_0)(r_2)(r_1r_3)$ is the permutation for edge~$r$,
+the permutation for the
+whole \RNBPM/ is
+$\alpha\beta\gamma\delta\omega\,\sigma_1\sigma_2\sigma_3\sigma_4\sigma_5$,
+where
+$$\sigma_1=(d^3_2r_2)(d^2_3r_1),\quad
+\sigma_2=(c^4_2d^1_2)(c^3_3d^3_3),\quad
+\sigma_3=(b^1_0c^1_2)(b^1_3c^7_3),\quad
+\sigma_4=(a^2_2b^1_2)(a^1_3b^1_1),\quad
+\sigma_5=(a^1_2r_0)(r_3a^3_3)
+$$
+are the appropriate splicings.
+
+\fi
+
+\M{38}Here, for handy reference, are the smallest \RNBPM/s and their
+canonical permutations:
+$$\def\\#1{$\vcenter{\medskip\epsfbox{skew-ternary-calc.3#1}\medskip}$}
+\vcenter{\halign{\hfil\\#\hfil&\qquad$#$\hfil\cr
+0&(r_0)(r_2)(r_3r_1)\cr
+1&(r_0a_2)(a_0r_2)(r_3a_3)(a_1r_1)\cr
+2&(r_0a_2b_0)(a_0r_2b_2)(r_3a_3)(a_1b_1)(b_3r_1)\cr
+3&(r_0a_2)(a_0b_2)(b_0r_2)(r_3b_3a_3)(a_1b_1r_1)\cr
+4&(r_0a_2c_2b_0)(a_0r_2b_2c_0)(r_3a_3)(a_1c_3)(c_1b_1)(b_3r_1)\cr
+5&(r_0a_2c_0)(a_0b_2)(b_0r_2c_2)(r_3b_3a_3)(a_1b_1c_1)(c_3r_1)\cr
+6&(r_0a_2c_0)(a_0r_2b_2)(b_0c_2)(r_3a_3)(a_1b_1c_1)(c_3b_3r_1)\cr
+7&(r_0a_2c_0)(a_0b_2c_2)(b_0r_2)(r_3b_3a_3)(a_1c_1)(c_3b_1r_1)\cr
+8&(r_0a_2)(a_0b_2c_0)(b_0r_2c_2)(r_3b_3a_3)(b_1c_1)(a_1c_3r_1)\cr
+9&(r_0a_2)(a_0b_2)(b_0c_2)(c_0r_2)(r_3c_3b_3a_3)(r_1a_1b_1c_1)\cr
+}}$$
+
+\fi
+
+\N{1}{39}Planar maps, conform\`emente \`a Jacquard et Schaeffer.
+We return now to our main theme of skew ternary trees.
+
+At the very beginning I mentioned that Del Lungo et al found an
+intriguing correspondence between skew ternary trees and \RNBPM/s.
+They found it after first having invented the idea of skew ternary
+trees, and conjecturing that the number of such trees with $n$ nodes
+is precisely the number of \RNBPM/s with $n$ nonroot edges.
+
+Benjamin Jacquard and Gilles Schaeffer responded to that conjecture
+by finding an ingenious correspondence that is quite different
+from the one discovered almost simultaneously by Del Lungo et al.
+[See {\sl Journal of Combinatorial Theory\/ \bf A83}
+(1998), 1--20.] Naturally I wondered if the two correspondences are
+somehow related, so I decided to implement both of them in this program.
+
+According to their construction, an \RNBPM/ such as $(\dag)$ is
+represented by a skew ternary tree of the form
+$$\vcenter{\epsfbox{skew-ternary-calc.41}}\quad\lower15pt\hbox{,}$$
+where $A'$, $B'$, $C'$, and $D'$ represent the doubly rooted \RNBPM/s
+of the $m=4$ blocks that arise when edge~$r$ is removed.
+Thus the chart corresponding to their representation will have the form
+$$\vcenter{\epsfbox{skew-ternary-calc.42}}\quad\raise10pt\hbox{,}$$
+where $A^*$, $B^*$, $C^*$, and $D^*$ represent the subtrees $A'$, $B'$,
+$C'$, and $D'$ in some fashion.
+
+In this particular example $B'$ is empty, because component $b$ has
+only a single edge in~$(\dag)$; thus $B^*$ is simply a ``$+1$ step''
+for the bud $\overline2$. But the subtrees $A'$, $C'$, and $D'$ are
+nonempty (and they might in fact be extremely complicated).
+
+The Jacquard--Schaeffer construction also has the property that the total
+number of rank~0 nodes is always exactly~$p$, the number of nonroot edges on
+the exterior face of the given \RNBPM/. Consequently the subtrees
+$D'$ and $C'$ will contain nodes $d^2$, $c^3$, and $c^2$ of rank~0;
+but $A'$ won't contain any such nodes.
+
+\fi
+
+\M{40}To complete the construction, we need to explain how to represent
+a doubly rooted \RNBPM/. Consider, for example, the skew ternary
+tree $T$ that appeared in the introductory sections
+at the very beginning of this program: The \RNBPM/ corresponding to
+$T$ can be used to build larger \RNBPM/s in three different
+ways, because $T$ has three nodes \.A, \.B, and \.E of rank~0.
+
+It turns out that the ``buds and charts'' method
+discussed above provides a nice way to encode the second root.
+The idea is to use one of the three cyclic variants that begin at
+a bud of rank~$-1$ (namely at bud 1, 2, or~4). Those trees
+have respectively 2, 1, and 0 nodes of rank~$-1$, and no nodes of
+rank~$-2$; so they can safely be used as the right subtree $T'$
+of a node that has rank~0.
+
+For example, the three possibilities for $T^*$ in this example
+have the following respective charts:
+$$\vcenter{\halign{#\hfil\cr
+\epsfxsize=.5\hsize \epsfbox{skew-ternary-calc.81}\cr\noalign{\smallskip}
+\epsfxsize=.5\hsize \epsfbox{skew-ternary-calc.82}\cr\noalign{\smallskip}
+\epsfxsize=.5\hsize \epsfbox{skew-ternary-calc.84}\cr}}$$
+One way to form this is to start at the bud in question and continue
+creating the chart cyclically until that bud occurs again. The
+we delete both appearances, and replace it by matching arcs
+from an assumed parent node \.T to the new subtree root and back.
+(It follows that a subtree $T'$ of $n$ nodes has a chart $T^*$ of length
+$4n+1$,
+even when $n=0$.)
+
+Conversely, it's easy to reconstruct $T$ from any of these
+shifted variants~$T^*$, by undoing the process: First we delete the
+matching arcs that enclose the whole; then we replace the bud that
+was deleted. Finally we wind back the cycle until creating a
+bud with rank $-2$ for the first time. (That bud
+will be cloned from the rightmost bud of rank~$+2$.)
+
+Incidentally, one can show by induction that the number of nodes of odd rank
+in the skew ternary tree is equal to the number of faces in the corresponding
+\RNBPM/, minus~2, according to this construction.
+And the number of nodes of even rank is the number of
+nonroot vertices.
+
+\fi
+
+\M{41}Our principal goal is to take a given skew ternary tree and to
+construct the corresponding \RNBPM/, but computing the quad-tree
+permutation of that planar map. The tree will be given in
+chart form. I won't be stingy with memory, so I'll keep a stack
+of the various charts that arise during the recursion.
+
+A tree with \PB{\|n} nodes will produce an \RNBPM/ with $n$ edges
+in addition to the root edge.
+
+\Y\B\4\X8:Global variables\X${}\mathrel+\E{}$\6
+\&{step} ${}\\{chartstack}[\\{maxcodes}][\T{4}*\\{maxcodes}]{}$;\C{ (only the %
+\PB{\\{first}} and \PB{\\{second}} fields of these entries are used) }\6
+\&{step} ${}\\{tmpchart}[\T{4}*\\{maxcodes}];{}$\6
+\&{int} ${}\\{stk}[\\{maxcodes}*\\{maxcodes}]{}$;\C{ stack of subtrees waiting
+to be processed }\6
+\&{int} \\{curbud};\C{ the bud whose tree is being mapped (see below) }\par
+\fi
+
+\M{42} The \PB{\\{rnbpm\_js}} routine constructs the Jacquard--Schaeffer
+\RNBPM/ for \PB{\\{chartstack}[\|s]}
+with root edge~\PB{\|r}. A third parameter, \PB{\|h}, tells the current height
+of the
+auxiliary stack \PB{\\{stk}}.
+
+The value of \PB{\\{stk}[\|h]} is also supposed to identify
+the root of the skew ternary tree whose chart is in \PB{\\{chartstack}[\|s]}.
+(The name of the root doesn't appear in the chart when the tree has
+only one node, hence we need this extra contextual information.)
+
+\Y\B\4\X11:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{rnbpm\_js}(\&{int} \|s${},\39{}$\&{int} \|r${},\39{}$\&{int} \|h)\1%
+\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|l${},{}$ \|m${},{}$ %
+\|p${},{}$ \|q${},{}$ \|t${},{}$ \\{tt}${},{}$ \\{apip}${},{}$ \\{steps};\7
+\X43:Determine the number \PB{\|m} of initial rank~0 nodes, and stack them\X;\6
+${}\\{apip}\K\\{pip}(\|r,\39\T{2}){}$;\C{ pip for attaching blocks }\6
+\&{while} (\|m)\5
+${}\{{}$\1\6
+${}\|m\MM,\39\|t\K\\{stk}[\|h+\|m];{}$\6
+\X44:Copy the tree $T$ underlying the next $T^*$ to \PB{$\\{chartstack}[\|s+%
+\T{1}]$}\X;\6
+\&{if} ${}(\|m\W\|l\G\T{0}\W(\\{chartstack}[\|s][\\{steps}].\\{first}\I\|t\V%
+\\{chartstack}[\|s][\\{steps}].\\{second}\I\\{stk}[\|h+\|m-\T{1}])){}$\1\5
+\\{confusion}(\.{"arc\ bracketing"});\2\6
+${}\\{steps}\PP;{}$\6
+\&{if} ${}(\|l<\T{0}){}$\1\5
+\X45:Handle the case of an empty tree\X\2\6
+\&{else}\1\5
+\X46:Build the \RNBPM/ for \PB{$\\{chartstack}[\|s+\T{1}]$}\X;\2\6
+\X47:Splice the new \RNBPM/ to the previous fragment\X;\6
+\4${}\}{}$\2\6
+\X48:Splice everything into a cycle\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{43}\B\X43:Determine the number \PB{\|m} of initial rank~0 nodes, and stack
+them\X${}\E{}$\6
+\&{if} ${}(\\{chartstack}[\|s][\T{0}].\\{second}){}$\1\5
+\\{confusion}(\.{"no\ root\ bud"});\2\6
+\&{for} ${}(\|m\K\T{1},\39\\{steps}\K\T{1};{}$  ; ${}\|m\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{chartstack}[\|s][\\{steps}\PP].\\{second}){}$\1\5
+\\{confusion}(\.{"non\ skew"});\2\6
+${}\\{stk}[\|h+\|m]\K\\{chartstack}[\|s][\\{steps}\PP].\\{second};{}$\6
+\&{if} ${}(\\{stk}[\|h+\|m]\E\T{0}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\par
+\U42.\fi
+
+\M{44}At this point we're poised to look at the steps of $T^*$, where
+$T$ is the subtree that corresponds to edge \PB{$\|t\K\\{stk}[\|h+\|m]$}. If
+$T^*$ is the
+trivial one-edge \RNBPM/, we set \PB{$\|l\K{-}\T{1}$}; otherwise we set \PB{%
+\|l} to the
+number of nodes in $T^*$ that have rank~0 (which is also the number of buds
+that have rank~$-1$).
+
+In the second case, the subchart
+$T^*$ is easily identified because it
+begins with a downward step from \PB{\|t} to \PB{\\{tt}}
+and ends with a downward step from \PB{\\{tt}} to \PB{\|t}. (These downward
+steps occur first from rank~1 down to rank~0, then from rank~3 down
+to rank~2; so they are reminiscent of the German text for quoted text,
+which begins with \lower1ex\hbox{''} and ends with ``$\,$!)
+We delete those steps and shift the others cyclically backward,
+in order to deduce $T$ from $T^*$ as explained above.
+
+\Y\B\4\X44:Copy the tree $T$ underlying the next $T^*$ to \PB{$\\{chartstack}[%
+\|s+\T{1}]$}\X${}\E{}$\6
+\&{if} ${}(\\{chartstack}[\|s][\\{steps}].\\{second}\E\T{0}){}$\1\5
+${}\|l\K{-}\T{1};{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{tt}\K\\{chartstack}[\|s][\\{steps}].\\{second};{}$\6
+\&{if} ${}(\\{chartstack}[\|s][\\{steps}\PP].\\{first}\I\|t){}$\1\5
+\\{confusion}(\.{"wrong\ parent"});\2\6
+${}\\{tmpchart}[\T{0}].\\{first}\K\\{tmpchart}[\T{0}].\\{second}\K\T{0}{}$;\C{
+dummy bud }\6
+\&{for} ${}(\|j\K\T{1},\39\|q\K\|l\K\T{0};{}$ ${}\\{chartstack}[\|s][%
+\\{steps}].\\{second}\I\|t;{}$ ${}\\{steps}\PP,\39\|j\PP){}$\5
+${}\{{}$\1\6
+${}\\{tmpchart}[\|j]\K\\{chartstack}[\|s][\\{steps}];{}$\6
+\&{if} ${}(\|q\E\T{2}){}$\1\5
+${}\|k\K\|j{}$;\C{ remember the location of the last bud with rank 2 }\2\6
+\&{else} \&{if} ${}(\|q\E{-}\T{1}){}$\1\5
+${}\|l\PP{}$;\C{ count the buds of rank $-1$ }\2\6
+\&{if} ${}(\\{tmpchart}[\|j].\\{second}){}$\1\5
+${}\|q\MM{}$;\5
+\2\&{else}\1\5
+${}\|q\PP{}$;\C{ \PB{\|q} is the rank }\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{chartstack}[\|s][\\{steps}].\\{first}\I\\{tt}){}$\1\5
+\\{confusion}(\.{"right\ bracket"});\2\6
+\&{for} ${}(\|i\K\|k;{}$ ${}\|i<\|j;{}$ ${}\|i\PP){}$\1\5
+${}\\{chartstack}[\|s+\T{1}][\|i-\|k]\K\\{tmpchart}[\|i];{}$\2\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|k;{}$ ${}\|i\PP){}$\1\5
+${}\\{chartstack}[\|s+\T{1}][\|i+\|j-\|k]\K\\{tmpchart}[\|i];{}$\2\6
+\4${}\}{}$\2\6
+${}\\{steps}\PP{}$;\par
+\U42.\fi
+
+\M{45}The \RNBPM/ for an empty tree is simply the unadorned root edge \PB{\|r}.
+We've initialized that edge already (although I could have
+initialized it here, instead).
+
+\Y\B\4\X45:Handle the case of an empty tree\X${}\E{}$\6
+$\|p\K\\{pip}(\|t,\39\T{1}){}$;\par
+\U42.\fi
+
+\M{46}There's a better way to do this step, because we can identify the pip %
+\PB{\|p}
+directly while copying the chart. But I didn't have time to
+stop and figure it out.
+
+\Y\B\4\X46:Build the \RNBPM/ for \PB{$\\{chartstack}[\|s+\T{1}]$}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{stk}[\|h+\|m]\K(\\{chartstack}[\|s+\T{1}][\T{2}].\\{second}\?%
+\\{chartstack}[\|s+\T{1}][\T{2}].\\{first}:\\{chartstack}[\|s+\T{1}][\T{3}].%
+\\{second}\?\\{chartstack}[\|s+\T{1}][\T{3}].\\{first}:\\{tt});{}$\6
+${}\\{rnbpm\_js}(\|s+\T{1},\39\|t,\39\|h+\|m);{}$\6
+\&{for} ${}(\|p\K\\{alphainv}[\\{pip}(\|t,\39\T{3})];{}$ \|l; ${}\|l\MM){}$\1\5
+${}\|p\K\\{alphainv}[\|p];{}$\2\6
+\4${}\}{}$\2\par
+\U42.\fi
+
+\M{47}\B\X47:Splice the new \RNBPM/ to the previous fragment\X${}\E{}$\6
+$\\{splice}(\\{irot}(\|p),\39\\{apip});{}$\6
+${}\\{apip}\K\\{pip}(\|t,\39\T{2}){}$;\par
+\U42.\fi
+
+\M{48}\B\X48:Splice everything into a cycle\X${}\E{}$\6
+$\\{splice}(\\{pip}(\|r,\39\T{0}),\39\\{apip}){}$;\par
+\U42.\fi
+
+\M{49}Okay, \PB{\\{rnbpm\_js}} is finished.
+Here's how we apply it to each of the four skew ternary
+trees of interest.
+
+\Y\B\4\X49:Find and print the corresponding planar maps\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{4};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\\{printf}(\.{"---\ JS\ map\ for\ T"});\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|j;{}$ ${}\|i\PP){}$\1\5
+\\{printf}(\.{"+"});\2\6
+\\{printf}(\.{"\ ---\\n"});\6
+\X31:Create the initial permutation\X;\6
+\&{for} ${}(\|i\K\\{inputbud}[\\{stack}[\|j+\\{offset}-\T{2}]].\\{stepno},\39%
+\|k\K\T{0};{}$ ${}\|i<\T{4}*\|n;{}$ ${}\|i\PP,\39\|k\PP){}$\1\5
+${}\\{chartstack}[\T{0}][\|k]\K\\{chart}[\|i];{}$\2\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{inputbud}[\\{stack}[\|j+\\{offset}-%
+\T{2}]].\\{stepno};{}$ ${}\|i\PP,\39\|k\PP){}$\1\5
+${}\\{chartstack}[\T{0}][\|k]\K\\{chart}[\|i];{}$\2\6
+${}\\{stk}[\T{0}]\K\\{inputbud}[\\{stack}[\|j+\\{offset}-\T{2}]].\\{parent};{}$%
+\6
+${}\\{rnbpm\_js}(\T{0},\39\.{'*'},\39\T{0});{}$\6
+\\{print\_alpha}(\,);\6
+\4${}\}{}$\2\par
+\A62.
+\U5.\fi
+
+\M{50}Unfortunately, I must report serious disappointment with this
+correspondence
+between \RNBPM/s and skew ternary trees, because its ``$T^*$ method'' of
+keeping \PB{\|l} exterior nonroot edges of a sub-\RNBPM/ in the larger
+\RNBPM/ actually keeps the {\it last\/} $l$ such edges, not the
+edges that follow the root! Therefore the correspondence between
+nodes and edges is extremely weird, and it doesn't have any apparent
+significance for understanding the graph structure.
+
+For example, the tree that corresponds to $(\dag)$ turns out to be
+quite crazy:
+$$\vcenter{\epsfbox{skew-ternary-calc.14}}$$
+The nodes of rank zero are $a^1$, $b^1$, $c^1$, $d^1$, $d^3$, $c^5$,
+$c^6$, $c^7$! They're equinumerous with the nonroot edges of $(\dag)$,
+but that's almost the only good thing we can say about them.
+
+The problem appears to be unfixable, because the rank~0 nodes in
+$A^*$ are widely separated from node $a^1$.
+
+\fi
+
+\N{1}{51}Planar maps, conformemente Del Lungo et al.
+The paper by Del Lungo, Del Ristoro, and Penaud presented a
+completely different way to associate \RNBPM/s with skew ternary
+trees, based on a completely different recursive decomposition.
+We shall call it the DDP correspondence.
+
+\def\join#1{\buildrel #1 \over\bowtie}
+Instead of building an \RNBPM/ from $m$ other doubly labeled \RNBPM/s,
+as in~$(\dag)$, the DDP correspondence relies on an interesting
+{\it binary\/} operation `$\join c$', which forms an \RNBPM/ from
+just two others, $S$ and $T$, where $S$ is doubly rooted but
+$T$ is just singly rooted. The following picture illustrates
+this operation:
+$$\vcenter{\epsfbox{skew-ternary-calc.50}}\eqno(\ddag)$$
+Here $S$ has three edges $a^1$, $a^2$, $a^3$ on its exterior
+face, besides its root edge; and edge $a^2$ is the second root
+(distinguishable by the fact that the first root edge has no name).
+Similarly, $T$ has four exterior edges $b^1$, $b^2$, $b^3$, $b^4$,
+and it is singly rooted. If the root edge of~$T$ runs from
+vertex~$u$ to vertex~$v$, and if $S$'s main root points to
+vertex~$s$ while its second root points to vertex~$w$,
+the operation attaches the two \RNBPM/s by (i)~making $u$ and~$w$ coincide;
+(ii)~erasing $T$'s root edge, and (iii)~introducing a new edge $c$ from
+$s$ to~$v$.
+
+The smallest cases of $\join c$ need special care: If $T$ consists simply
+of its root edge, we simply add a new edge~$c$ from $s$ to~$w$.
+If $S$ consists simply of its root edge, we consider that it is
+doubly rooted with the second root the reverse of the first.
+In the latter case the net effect is to take $T$ and split its
+root into two pieces, the second of which is~$c$.
+
+The green shading in $(\ddag)$, as in $(\dag)$, indicates that complicated
+structure might exist within the interiors of $S$ and $T$.
+Such structure is, however, irrelevant
+as we continue to build larger structures. Notice that when $S$ isn't
+simply a root edge, one face of~$T$ gains one or more edges
+when $T$'s root edge is removed; but $T$'s interior structure
+doesn't ``leak out.''
+
+\fi
+
+\M{52}This construction is equivalent to making three splices in the
+the quad-edge permutations that correspond to $S$ and $T$.
+Let's assume that $S$'s root edge is called $r$,
+so that its exterior face in this example is the cycle $(r_3a^3_3a^2_3a^1_3)$.
+The auxiliary root edge is $a^2$; hence $w$ is the vertex cycle
+that contains $a^2_0$. (If $S$ were simply the root edge~$r$,
+its exterior face would be $(r_3r_1)$, and $w$ would be $(r_2)$.)
+We may also assume that $T$'s root edge is called $c$; hence
+its exterior face cycle is $(c_3b^4_3b^3_3b^2_3b^1_3)$,
+$u=(c_2\ldots{})$, and $v=(c_0\ldots{})$.
+
+\smallskip
+Step (i) of the operation corresponds to splicing with $(c_2a^3_2)$;
+this attaches $S$ to~$T$.
+Step (ii) then corresponds to splicing with $(c_2x)$, where
+$x=c_2\alpha$ is the first pip counterclockwise from $c$ in
+the cycle for $u=w$. This leaves edge $c$ ``dangling'':
+$$\hbox{\rm(i)}\quad\vcenter{\epsfbox{skew-ternary-calc.51}}\;;\qquad
+\hbox{\rm(ii)}\quad\vcenter{\epsfbox{skew-ternary-calc.52}}$$
+Finally, a splice with $(c_2a^1_2)$ produces $S\join c T$.
+
+\fi
+
+\M{53}The canonical permutation representations are now different, because
+edge labels are assigned in a different order.
+Here, again for handy reference, is the new list for all cases
+with at most three nonroot edges---showing also the skew ternary
+trees that we are about to construct for them:
+$$\def\\#1{$\vcenter{\medskip\epsfbox{skew-ternary-calc.9#1}\medskip}$}
+\def\tree#1{\vcenter{\def\epsfsize##1##2{.8##1}%
+\epsfbox{skew-ternary-calc.10#1}}}
+\def\btree#1{\vcenter{\def\epsfsize##1##2{.8##1}%
+\epsfbox{skew-ternary-calc.20#1}}}
+\vcenter{\halign{\hfil\\#\hfil&\qquad$#$\hfil&\qquad$#$\cr
+0&(r_0)(r_2)(r_3r_1)&\tree0\cr
+1&(r_0a_2)(a_0r_2)(r_3a_3)(a_1r_1)&\tree1=\tree0\join A\tree0\cr
+2&(r_0b_2a_2)(b_0r_2a_0)(r_3b_3)(b_1a_3)(a_1r_1)&
+\tree2=\btree1\join B\tree0\cr
+3&(r_0a_2)(a_0b_2)(b_0r_2)(r_3b_3a_3)(a_1b_1r_1)&
+\tree3=\tree0\join A\btree0\cr
+4&(r_0c_2b_2a_2)(r_2a_0b_0c_0)(r_3c_3)(c_1b_3)(b_1a_3)(a_1r_1)&
+\tree4=\btree2\join C\tree0\cr
+5&(r_0b_2a_2)(r_2a_0c_0)(b_0c_2)(r_3c_3b_3)(r_1a_1)(b_1c_1a_3)&
+\tree5=\btree1\join B\btree5\cr
+6&(r_0c_2a_2)(r_2b_0c_0)(a_0b_2)(r_3c_3)(r_1a_1b_1)(c_1b_3a_3)&
+\tree6=\btree4\join C\tree0\cr
+7&(r_0c_2a_2)(c_0b_2a_0)(b_0r_2)(r_3b_3c_3)(c_1a_3)(a_1b_1r_1)&
+\tree7=\btree3\join C\tree0\cr
+8&(r_0a_2)(a_0b_2c_2)(r_2c_0b_0)(r_3b_3a_3)(b_1c_3)(a_1c_1r_1)&
+\tree8=\tree0\join A\btree6\cr
+9&(r_0a_2)(a_0b_2)(b_0c_2)(c_0r_2)(r_3c_3b_3a_3)(r_1a_1b_1c_1)&
+\tree9=\tree0\join A\btree7\cr
+}}$$
+
+\fi
+
+\M{54}The DDP correspondence between an \RNBPM/ $T$ and its
+skew ternary tree $\widehat T$ is designed to have
+two key properties, both of which can be observed in
+the examples just shown: (1)~The nodes of rank~0, from top to bottom,
+correspond to the nonroot edges that touch the root vertex, in
+counterclockwise order. (2)~The buds of
+rank~0 that follow the last node of rank~0, in preorder,
+correspond to the nonroot edges of the exterior cycle, in counterclockwise
+order.
+
+And the recursive rule to define the correspondence is amazingly simple:
+The simplest \RNBPM/ (which has nothing but a root edge) corresponds to the
+empty tree (which has two buds, both of rank~0, only one of which is actually
+considered to be meaningful in property (2)).
+Otherwise the tree corresponding to $S\join c T$ is obtained by
+(i)~finding $\widehat S$ and $\widehat T$;
+(ii)~computing $\widehat T^+$ using the cyclic rotation operation
+on skew ternary trees at the beginning of this program;
+(iii)~replacing the rank~0 bud of $\widehat S$ that
+corresponds to $S$'s second root by a new node $c$ whose right
+child is $\widehat T^+$.
+
+To invert this rule, notice that we can recover $S$, $T$, and~c
+from the resulting skew ternary tree, because $c$ is the last
+node of rank~0 (in preorder); then if $c$'s right subtree is
+$R$, we have $R=\widehat T^+$, hence $\widehat T=R^-$; and $\widehat S$ is
+obtained by removing $c$ and~$R$. From $\widehat S$ and $\widehat T$
+we know $S$ and~$T$, recursively. And the second root
+in~$S$ corresponds to the parent node of~$c$.
+
+\fi
+
+\M{55}Here then is a subroutine that implements what was just said.
+The \PB{\\{rnbpm\_ddp}} routine constructs the
+\RNBPM/ for \PB{\\{chartstack}[\|s]}
+with root edge~\PB{\|r}. The chart is followed by a special step
+for which the \PB{\\{second}} field is \PB{\\{sentinel}} and the \PB{\\{first}}
+field
+is the name of the root.
+
+\Y\B\4\X11:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{rnbpm\_ddp}(\&{int} \|s${},\39{}$\&{int} \|r)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|c${},{}$ \|i${},{}$ \|j${},{}$ \\{jj}${},{}$ \|k${},{}$ %
+\|p${},{}$ \|q${},{}$ \\{rr}${},{}$ \|t${},{}$ \\{steps}${},{}$ \\{parent};\7
+\X56:Find the last node, \PB{\|c}, in preorder that has rank~0, and its parent~%
+\PB{\|p}\X;\6
+\X57:Copy $R^-$ into \PB{$\\{chartstack}[\|s+\T{1}]$}, where $R$ is the right
+subtree of~$c$\X;\6
+\X58:Recursively build the \RNBPM/ for $T$\X;\6
+\X59:Copy the rest of the tree into \PB{$\\{chartstack}[\|s+\T{1}]$}\X;\6
+\X60:Recursively build the \RNBPM/ for $S$\X;\6
+\X61:Hook everything together with three magic splices\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{56}The steps of the chart follow preorder.
+
+\Y\B\4\X56:Find the last node, \PB{\|c}, in preorder that has rank~0, and its
+parent~\PB{\|p}\X${}\E{}$\6
+\&{if} ${}(\\{chartstack}[\|s][\T{0}].\\{second}){}$\1\5
+\\{confusion}(\.{"no\ root\ bud"});\2\6
+\&{for} ${}(\\{steps}\K\T{1},\39\|q\K{-}\T{1};{}$ ${}\\{chartstack}[\|s][%
+\\{steps}].\\{second}\I\\{sentinel};{}$ ${}\\{steps}\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|q\E{-}\T{1}){}$\1\5
+${}\|j\K\\{steps};{}$\2\6
+\&{if} ${}(\\{chartstack}[\|s][\\{steps}].\\{second}\E\T{0}){}$\1\5
+${}\|q\PP{}$;\5
+\2\&{else}\1\5
+${}\|q\MM;{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|q\I\T{2}){}$\1\5
+\\{confusion}(\.{"bad\ rank\ at\ end"});\2\6
+${}\|c\K\\{chartstack}[\|s][\|j-\T{1}].\\{second};{}$\6
+\&{if} ${}(\|c\E\T{0}){}$\5
+${}\{{}$\C{ \PB{\|c} is the root of the charted tree }\1\6
+\&{if} ${}(\|j\I\T{1}){}$\1\5
+\\{confusion}(\.{"parentless\ rank\ -1\ }\)\.{bud\ not\ at\ beginning}\)\.{"});%
+\2\6
+${}\|c\K\\{chartstack}[\|s][\\{steps}].\\{first},\39\|p\K\T{0};{}$\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\|p\K\\{chartstack}[\|s][\|j-\T{1}].\\{first};{}$\2\6
+\&{if} ${}(\\{chartstack}[\|s][\|j+\T{1}].\\{second}){}$\1\5
+\\{confusion}(\.{"not\ the\ last\ zero"});\2\par
+\U55.\fi
+
+\M{57}If $c$'s right child is just a bud, the subtree $R$ is empty and
+it corresponds to the empty tree. Otherwise $R$ is bracketed in
+the chart by arcs from $c$ to its root node and back again,
+just as the subtree $T^*$ was bracketed in the procedure \PB{\\{rnbpm\_js}}.
+In this case the copying task is simpler than it was before, because
+we needn't count zeros.
+
+\Y\B\4\X57:Copy $R^-$ into \PB{$\\{chartstack}[\|s+\T{1}]$}, where $R$ is the
+right subtree of~$c$\X${}\E{}$\6
+$\\{jj}\K\|j-\T{1},\39\\{steps}\K\|j+\T{2};{}$\6
+${}\\{rr}\K\\{chartstack}[\|s][\\{steps}].\\{second};{}$\6
+\&{if} (\\{rr})\5
+${}\{{}$\C{ \PB{\\{rr}} is the root of a nonempty subtree $R$ }\1\6
+\&{if} ${}(\\{chartstack}[\|s][\\{steps}\PP].\\{first}\I\|c){}$\1\5
+\\{confusion}(\.{"wrong\ parent"});\2\6
+${}\\{tmpchart}[\T{0}].\\{first}\K\\{tmpchart}[\T{0}].\\{second}\K\T{0}{}$;\C{
+dummy bud }\6
+\&{for} ${}(\|j\K\T{1},\39\|q\K\T{0};{}$ ${}\\{chartstack}[\|s][\\{steps}].%
+\\{second}\I\|c;{}$ ${}\\{steps}\PP,\39\|j\PP){}$\5
+${}\{{}$\1\6
+${}\\{tmpchart}[\|j]\K\\{chartstack}[\|s][\\{steps}];{}$\6
+\&{if} ${}(\|q\E\T{2}){}$\1\5
+${}\|k\K\|j{}$;\C{ remember the location of the last bud with rank 2 }\2\6
+\&{if} ${}(\\{tmpchart}[\|j].\\{second}){}$\1\5
+${}\|q\MM{}$;\5
+\2\&{else}\1\5
+${}\|q\PP{}$;\C{ \PB{\|q} is the rank }\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{chartstack}[\|s][\\{steps}].\\{first}\I\\{rr}){}$\1\5
+\\{confusion}(\.{"right\ bracket"});\2\6
+\&{for} ${}(\|i\K\|k;{}$ ${}\|i<\|j;{}$ ${}\|i\PP){}$\1\5
+${}\\{chartstack}[\|s+\T{1}][\|i-\|k]\K\\{tmpchart}[\|i]{}$;\C{ shift to $R^-$
+}\2\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|k;{}$ ${}\|i\PP){}$\1\5
+${}\\{chartstack}[\|s+\T{1}][\|i+\|j-\|k]\K\\{tmpchart}[\|i];{}$\2\6
+${}\\{chartstack}[\|s+\T{1}][\|j].\\{second}\K\\{sentinel};{}$\6
+${}\\{chartstack}[\|s+\T{1}][\|j].\\{first}\K(\\{chartstack}[\|s+\T{1}][\T{2}].%
+\\{second}\?\\{chartstack}[\|s+\T{1}][\T{2}].\\{first}:\\{chartstack}[\|s+%
+\T{1}][\T{3}].\\{second}\?\\{chartstack}[\|s+\T{1}][\T{3}].\\{first}:%
+\\{rr});{}$\6
+\4${}\}{}$\2\6
+${}\\{steps}\PP{}$;\par
+\U55.\fi
+
+\M{58}\B\X58:Recursively build the \RNBPM/ for $T$\X${}\E{}$\6
+\&{if} (\\{rr})\1\5
+${}\\{rnbpm\_ddp}(\|s+\T{1},\39\|c){}$;\2\par
+\U55.\fi
+
+\M{59}If \PB{\|c} is the root of the tree, then \PB{\|p} is zero, subtree $%
+\widehat S$
+is empty, and nothing needs to be done. Otherwise the tree that
+corresponds to $\widehat S$ is obtained by simply leaving out \PB{\|c} and $R$.
+In the latter case, \PB{\\{jj}} points to the arc from \PB{\|p} to~\PB{\|c},
+and \PB{\\{steps}}
+points to the arc from \PB{\|c} back to~\PB{\|p}.
+
+\Y\B\4\X59:Copy the rest of the tree into \PB{$\\{chartstack}[\|s+\T{1}]$}\X${}%
+\E{}$\6
+\&{if} (\|p)\5
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{jj};{}$ ${}\|i\PP){}$\1\5
+${}\\{chartstack}[\|s+\T{1}][\|i]\K\\{chartstack}[\|s][\|i];{}$\2\6
+${}\\{chartstack}[\|s+\T{1}][\|i].\\{first}\K\\{chartstack}[\|s+\T{1}][\|i].%
+\\{second}\K\T{0},\39\|i\PP{}$;\C{ bud for \PB{\|c} }\6
+\&{for} ${}(\\{steps}\PP;{}$  ; ${}\\{steps}\PP,\39\|i\PP){}$\5
+${}\{{}$\1\6
+${}\\{chartstack}[\|s+\T{1}][\|i]\K\\{chartstack}[\|s][\\{steps}];{}$\6
+\&{if} ${}(\\{chartstack}[\|s+\T{1}][\|i].\\{second}\E\\{sentinel}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U55.\fi
+
+\M{60}\B\X60:Recursively build the \RNBPM/ for $S$\X${}\E{}$\6
+\&{if} (\|p)\1\5
+${}\\{rnbpm\_ddp}(\|s+\T{1},\39\|r){}$;\2\par
+\U55.\fi
+
+\M{61}Finally we obey the three-step splicing protocol for $\join c$ that was
+described above. Some tricky maneuvering is necessary in the degenerate
+cases.
+
+\Y\B\4\X61:Hook everything together with three magic splices\X${}\E{}$\6
+\&{if} ${}(\\{rr}\E\T{0}){}$\5
+${}\{{}$\C{ $\widehat T$ is empty }\1\6
+\&{if} (\|p)\1\5
+${}\\{splice}(\\{pip}(\|c,\39\T{0}),\39\\{alpha}[\\{pip}(\|p,\39\T{0})]);{}$\2\6
+\&{else}\1\5
+${}\\{splice}(\\{pip}(\|c,\39\T{0}),\39\\{pip}(\|r,\39\T{2}));{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} (\|p)\1\5
+${}\\{splice}(\\{pip}(\|c,\39\T{2}),\39\\{alpha}[\\{pip}(\|p,\39\T{0})]);{}$\2\6
+\&{else}\1\5
+${}\\{splice}(\\{pip}(\|c,\39\T{2}),\39\\{pip}(\|r,\39\T{2}));{}$\2\6
+${}\\{splice}(\\{pip}(\|c,\39\T{2}),\39\\{alpha}[\\{pip}(\|c,\39\T{2})]);{}$\6
+${}\\{verts}\MRL{+{\K}}\T{2}{}$;\C{ because we spliced two pips from the same
+vertex }\6
+\4${}\}{}$\2\6
+${}\\{splice}(\\{pip}(\|c,\39\T{2}),\39\\{irot}(\\{alphainv}[\\{pip}(\|r,\39%
+\T{3})])){}$;\par
+\U55.\fi
+
+\M{62}Okay, \PB{\\{rnbpm\_ddp}} is finished.
+Here's how we apply it to each of the four skew ternary
+trees of interest.
+
+\Y\B\4\X49:Find and print the corresponding planar maps\X${}\mathrel+\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{4};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\\{printf}(\.{"---\ DDP\ map\ for\ T"});\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|j;{}$ ${}\|i\PP){}$\1\5
+\\{printf}(\.{"+"});\2\6
+\\{printf}(\.{"\ ---\\n"});\6
+\X31:Create the initial permutation\X;\6
+\&{for} ${}(\|i\K\\{inputbud}[\\{stack}[\|j+\\{offset}-\T{2}]].\\{stepno},\39%
+\|k\K\T{0};{}$ ${}\|i<\T{4}*\|n;{}$ ${}\|i\PP,\39\|k\PP){}$\1\5
+${}\\{chartstack}[\T{0}][\|k]\K\\{chart}[\|i];{}$\2\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{inputbud}[\\{stack}[\|j+\\{offset}-%
+\T{2}]].\\{stepno};{}$ ${}\|i\PP,\39\|k\PP){}$\1\5
+${}\\{chartstack}[\T{0}][\|k]\K\\{chart}[\|i];{}$\2\6
+${}\\{chartstack}[\T{0}][\|k].\\{first}\K\\{inputbud}[\\{stack}[\|j+\\{offset}-%
+\T{2}]].\\{parent};{}$\6
+${}\\{chartstack}[\T{0}][\|k].\\{second}\K\\{sentinel};{}$\6
+${}\\{rnbpm\_ddp}(\T{0},\39\.{'*'});{}$\6
+\\{print\_alpha}(\,);\6
+\4${}\}{}$\2\par
+\fi
+
+\M{63}Here, for instance, is the \RNBPM/ that corresponds to the example
+skew ternary tree~$T$ at the very beginning of this program,
+according to the DDP correspondence:
+$$\vcenter{\epsfbox{skew-ternary-calc.110}}$$
+The $\alpha$ permutation is
+$$(e_2b_2a_2r_0)(f_0d_0e_0r_2)(c_0d_2f_2a_0)(c_2b_0)
+(a_1f_1r_1)(e_3r_3)(b_1c_1a_3)(e_1d_3c_3b_3)(f_3d_1).$$
+
+\fi
+
+\M{64}One can show that the number of nodes of even rank is the number
+of interior faces in the DDP correspondence;
+the number of nodes of odd rank is the number of vertices, minus~2.
+
+(The actual rank of each vertex node and each face node
+can in fact be ``read off'' from the \RNBPM/, if it is examined in an
+appropriate depth-first search order, because of results
+mentioned below.)
+
+\fi
+
+\M{65}Indeed, this program led to a huge surprise, because much, much more
+is true. In every case that I had examined by hand, in my first explorations
+of the DDP correspondence, I noticed that {\sl the four
+\RNBPM/s obtained from $T$, $T^+$, $T^{++}$, and $T^{+++}$ are
+dual graphs!} I wrote this program in order to check that conjecture
+on examples that were too large to study reliably by hand; and I
+found that the conjecture was always verified, even when I looked
+at large random instances.
+
+More precisely, if we call the four pip permutations
+$\alpha_0$, $\alpha_1$, $\alpha_2$, and $\alpha_3$, when the DDP
+correspondence has been applied to four conjugate skew ternary trees,
+I found that $\alpha_k$ was equal to $\alpha_0\hat\rho^k$ in every
+case that I computed. Here $\hat\rho$ is the permutation
+$(r_1r_3)\rho(r_1r_3)$; it's like $\rho$ except that it {\it decreases\/}
+subscripts of $r$ while increasing the subscripts of all the other
+edges (modulo~4). For example, the alpha permutations for $T^+$, $T^{++}$, and
+$T^{+++}$ are the following ``clones'' of the alpha permutation for
+$T$ given above:
+$$\displaylines{
+(e_1b_1a_1r_1)(f_3d_3e_3r_3)(c_3d_1f_1a_3)(c_1b_3)
+(a_0f_0r_2)(e_2r_0)(b_0c_0a_2)(e_0d_2c_2b_2)(f_2d_0)\cr
+(e_0b_0a_0r_2)(f_2d_2e_2r_0)(c_2d_0f_0a_2)(c_0b_2)
+(a_3f_3r_3)(e_1r_1)(b_3c_3a_1)(e_3d_1c_1b_1)(f_1d_3)\cr
+(e_3b_3a_3r_3)(f_1d_1e_1r_1)(c_1d_3f_3a_1)(c_3b_1)
+(a_2f_2r_0)(e_0r_2)(b_2c_2a_0)(e_2d_0c_0b_0)(f_0d_2)\cr
+}$$
+
+Evidence for that conjecture was overwhelming, so I asked several
+experts for help. And it turned out, by extraordinary luck, that I had
+chosen exactly the right person to ask, namely Gilles Schaeffer.
+He told me that, after writing the paper with Jacquard that was
+cited above, he continued to do research about
+connections between trees and planar maps. The result was his
+Ph.D. dissertation, {\sl Conjugation d'arbres et cartes combinatoires
+al\'eatores\/} (l'Universit\'e Bordeaux~I, 1998); and when I downloaded
+that thesis I found it to be an amazingly rich
+compendium of deep new results, covering many topics in addition
+to \RNBPM/s (most of which he chose not to publish elsewhere).
+In particular, on pages 65--67 he sketched a $(2n+2)$-to-4 correspondence
+between ternary trees and \RNBPM/s, which amounts to an independent
+discovery of the DDP correspondence, although he did not explicitly
+mention any connection with skew ternary trees.
+
+Schaeffer's remarkable construction on those three pages explains everything:
+It can be used to show
+that {\sl Alice can actually construct the corresponding planar
+graph ``online'' as she is walking around the tree!}
+
+Namely, we can add four downward steps to the state chart, and
+assign new labels to the steps, as follows (illustrated for the
+skew ternary tree in the introduction):
+$$\vcenter{\epsfbox{skew-ternary-calc.9}}$$
+An upward step is labeled $x_i$, where $i$ is the rank (modulo~4)
+at the beginning of the step
+and $x$ is the name of the node attached to this bud. A downward step
+is labeled $y_j$, where $j$ is the rank plus two (modulo~4) at the
+beginning of the step and $y$ is the name of the node to which we
+are descending. The final four steps are labeled $r_2$, $r_3$,
+$r_0$, and $r_1$. Thus we've assigned $4n+4$ labels, one for each pip
+in the permutation; and the pips have been matched up in pairs
+$\{x_i,y_j\}$. Every such pair has the meaning that
+$\alpha$ maps $x_i\mapsto y_{j-1}$ and $y_j\mapsto x_{i-1}$, where
+the subscripts are treated modulo~4.
+
+The validity of this rule is readily proved by induction, because
+it is an {\it extremely\/} strong induction hypothesis. And
+my conjecture about the way duality affects the permutations
+$\alpha_k$ is an immediate consequence.
+
+\fi
+
+\M{66}Hey, we're finished---except for a final routine, which we fondly hope
+will never be invoked.
+
+\Y\B\4\X66:Assertion failure subroutine\X${}\E{}$\6
+\&{void} \\{confusion}(\&{char} ${}{*}\\{id}){}$\1\1\2\2\6
+${}\{{}$\C{ an assertion has failed }\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"This\ can't\ happen\ (}\)\.{\%s)!\\n"},\39%
+\\{id});{}$\6
+${}\\{exit}({-}\T{666});{}$\6
+\4${}\}{}$\2\par
+\U5.\fi
+
+\N{1}{67}Index.
+\fi
+
+\inx
+\fin
+\con

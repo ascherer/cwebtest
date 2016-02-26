@@ -1,0 +1,54 @@
+\I\X12:Backtrack through all solutions\X
+\U1.
+\I\X23:Connect existing vertex \PB{$\|p\E\\{pp}$} directly to the path
+following \PB{\\{pp}}\X
+\U22.
+\I\X24:Connect vertex \PB{\|p} to \PB{\\{pp}}, removing node \PB{\\{rr}}\X
+\U22.
+\I\X19:Connect \PB{\\{pp}} directly to existing vertex \PB{$\|p\E\\{qq}$}\X
+\U18.
+\I\X16:Copy the current polygon and save the old version\X
+\U15.
+\I\X17:Create new vertices \PB{\\{pp}}, \PB{\\{qq}}, and the line \PB{\|r}
+between them\X
+\U15.
+\I\X27:Examine the current choice and its ramifications\X
+\U12.
+\I\X14:Find corner to branch on\X
+\U12.
+\I\X4, 5, 6, 8, 11, 13, 33, 36:Global variables\X
+\U1.
+\I\X7, 9, 10, 37:Initialize the tables\X
+\U1.
+\I\X22:Insert \PB{\\{pp}} at the choice point; split into two polygons if
+necessary\X
+\U15.
+\I\X18:Insert \PB{\\{qq}} at the choice point; split into two polygons if
+necessary\X
+\U15.
+\I\X15:Install triangle \PB{\|j} at position \PB{\\{choice}[\|l]}\X
+\U12.
+\I\X32:Open \PB{\\{eps\_file}} for output, and define a triangle subroutine\X
+\U31.
+\I\X31:Output a PostScript version\X
+\U30.
+\I\X34:Output the triangle for level \PB{\|j}\X
+\U31.
+\I\X30:Record a solution\X
+\U12.
+\I\X26:Remove angle 0 or 5 at \PB{\|p}, if present after the \PB{\\{pp}}
+insertion stage\X
+\U22.
+\I\X21:Remove angle 0 or 5 at \PB{\|p}, if present after the \PB{\\{qq}}
+insertion stage\X
+\U18.
+\I\X25:Split off a polygon at position \PB{$\\{pp}\E\|p$}\X
+\U22.
+\I\X20:Split off a polygon at position \PB{$\\{qq}\E\|p$}\X
+\U18.
+\I\X3, 35, 38:Subroutines\X
+\U1.
+\I\X2:Type definitions\X
+\U1.
+\I\X28:Undo the changes made in level \PB{\|l}\X
+\U12.

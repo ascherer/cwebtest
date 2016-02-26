@@ -1,0 +1,38 @@
+\I\X13, 22, 25:Additional fields of a \&{node}\X
+\U6.
+\I\X31:Change \PB{$\|p\MG\\{des}$} and visit a new spanning tree\X
+\U29.
+\I\X5:Create a new branch\X
+\U2.
+\I\X4:Create a new leaf\X
+\U2.
+\I\X8:Create the main tree\X
+\U2.
+\I\X29:Do the algorithm\X
+\U1.
+\I\X27:Further initialization of a branch node\X
+\U15.
+\I\X26:Further initialization of a leaf node\X
+\U15.
+\I\X3, 7:Global variables\X
+\U1.
+\I\X12:Incorporate both children into node \PB{\|p}\X
+\U11.
+\I\X11:Incorporate left child into node \PB{\|p}\X
+\U9.
+\I\X10:Incorporate right child into node \PB{\|p}\X
+\U9.
+\I\X2:Parse the formula \PB{\\{argv}[\T{1}]} and set up the tree structure\X
+\U1.
+\I\X30:Passivate \PB{\|p}\X
+\U29.
+\I\X14:Prepare the first spanning tree\X
+\U1.
+\I\X28:Print additional fields of a branch node\X
+\U17.
+\I\X20:Print the first tree\X
+\U14.
+\I\X9, 15, 16, 17, 18, 19:Subroutines\X
+\U1.
+\I\X6:Type definitions\X
+\U1.

@@ -1,0 +1,998 @@
+\input cwebmac
+\datethis
+
+
+\N{1}{1}Intro. This program is designed to compose multiplication-skeleton
+puzzles
+of a type pioneered by Junya Take. For example, consider his puzzle for
+the lettter \.O, in {\sl Journal of Recreational Mathematics\/ \bf38} (2014),
+132:
+$$\vcenter{\halign{\hfil\tt#\cr
+.......\cr
+$\times$\hfil......\cr
+\noalign{\medskip\hrule\medskip}
+........\cr
+OO.....\ \cr
+..O..O..\ \ \ \cr
+...O..O.\ \ \ \ \cr
+...O..O\ \ \ \ \ \cr
+\noalign{\medskip\hrule\medskip}
+....OO......\cr}}$$
+Each occurrence of `\.O' should be replaced by some digit~$d$, and
+each `\..' should be replaced by a digit $\ne d$. (And no zero should be
+in a most significant position.) The solution is unique:
+$$\vcenter{\halign{\hfil\tt#\cr
+2208068\cr
+$\times$\hfil357029\cr
+\noalign{\medskip\hrule\medskip}
+19872612\cr
+4416136\ \cr
+15456476\ \ \ \cr
+11040340\ \ \ \ \cr
+6624204\ \ \ \ \ \cr
+\noalign{\medskip\hrule\medskip}
+788344309972\cr}}$$
+But the purpose of this program is not to {\it solve\/} such a puzzle!
+The purpose of this program is to {\it invent\/} such a puzzle, namely to
+find integers $x$ and $y$ whose partial
+products and final product have digits that match a given binary pattern.
+
+The pattern is given in \PB{\\{stdin}} as a set of lines, with asterisks
+marking
+the position of the special digit. For example, the `\.O' shape in the
+puzzle above would be specified thus:
+$$\vcenter{\halign{\hfill\tt#\cr
+.**.\cr
+*..*\cr
+*..*\cr
+*..*\cr
+.**.\cr}}$$
+
+\fi
+
+\M{2}The examples above show that zeros in the multiplier will ``offset''
+the shape in different ways. We try all possible offsets, for a
+given number $m$ of nonzero multiplier digits.
+
+A second parameter, $z$, specifies the maximum number of zeros
+in the multiplier. Both $m$ and $z$ are specified on the command line.
+
+\Y\B\4\D$\\{maxdigs}$ \5
+\T{22}\C{ size of the longest numbers considered, plus 2 }\par
+\B\4\D$\\{maxdim}$ \5
+\T{8}\C{ maximum size of pattern }\par
+\B\4\D$\\{bufsize}$ \5
+$\\{maxdim}+{}$\T{5}\par
+\B\4\D$\\{maxm}$ \5
+\T{8}\C{ \PB{\|m} must be less than this }\par
+\B\4\D$\|o$ \5
+$\\{mems}\PP{}$\par
+\B\4\D$\\{oo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{2}\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\X6:Typedefs\X;\7
+\&{int} \|m;\C{ the number of nonzero digits in the multiplier }\6
+\&{int} \|z;\C{ the maximum number of zero digits in the multiplier }\6
+\&{int} \\{vbose};\C{ level of verbosity }\6
+\&{char} \\{buf}[\\{bufsize}];\C{ buffer used when inputting the shape }\6
+\&{char} \\{rawpat}[\\{maxdim}][\\{maxdim}];\C{ pixels of the raw pattern }\6
+\&{char} \\{last}[\\{maxdim}];\C{ positions of the rightmost asterisks }\6
+\&{int} \\{count};\C{ this many solutions found }\6
+\&{unsigned} \&{long} \&{long} \\{nodes};\C{ size of the backtrack trees, times
+10 }\6
+\&{int} \\{unresolved};\C{ this many cases left unresolved }\6
+\&{unsigned} \&{long} \&{long} \\{mems};\C{ memory accesses }\7
+\X11:Global variables\X;\6
+\X7:Subroutines\X;\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|d${},{}$ \|i${},{}$ \\{ii}${},{}$ \\{imax}${},{}$ %
+\|j${},{}$ \\{jj}${},{}$ \|k${},{}$ \\{kk}${},{}$ \|l${},{}$ \\{lc}${},{}$ %
+\\{lj}${},{}$ \|n${},{}$ \|t${},{}$ \\{tt}${},{}$ \|x${},{}$ \\{pos}${},{}$ %
+\\{maxl}${},{}$ \\{printed};\7
+\X3:Process the command line\X;\6
+\X4:Input the pattern\X;\6
+\X10:Build the table of constants\X;\6
+\X13:Establish the minimum offsets\X;\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\X18:Create detailed specifications from the pattern\X;\6
+\&{for} ${}(\|d\K\T{0};{}$ ${}\|d<\T{10};{}$ ${}\|d\PP){}$\5
+${}\{{}$\1\6
+\&{if} (\\{vbose})\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ *=\%d:\\n"},\39\|d);{}$\2\6
+\X20:Find all solutions for the current offsets and special digit $d$\X;\6
+\4${}\}{}$\2\6
+\X14:Advance to the next offset, or \PB{\&{break}} if it needs too many zeros%
+\X;\6
+\4${}\}{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"Altogether\ \%d\ solut}\)\.{ions,\ \%lld\
+nodes,\ \%l}\)\.{ld\ mems.\\n"},\39\\{count},\39\\{nodes}/\T{10},\39%
+\\{mems});{}$\6
+\&{if} (\\{unresolved})\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"...\ \%d\ cases\ were\ u}\)\.{nresolved!\\n"},%
+\39\\{unresolved});{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{3}\B\X3:Process the command line\X${}\E{}$\6
+\&{if} ${}(\\{argc}<\T{3}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
+\|m)\I\T{1}\V\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}\|z)\I\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ m\ z\ [verb}\)\.{ose]\
+[extraverbose]\ }\)\.{<\ foo.dots\\n"},\39\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|m<\T{2}\V\|m\G\\{maxm}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"m\ should\ be\ between}\)\.{\ 2\ and\ \%d,\
+not\ \%d!\\n}\)\.{"},\39\\{maxm}-\T{1},\39\|m);{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|m+\|z>\\{maxdigs}-\T{2}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"m+z\ should\ be\ at\ mo}\)\.{st\ \%d,\ not\ %
+\%d!\\n"},\39\\{maxdigs}-\T{2},\39\|m+\|z);{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+${}\\{vbose}\K\\{argc}-\T{3}{}$;\par
+\U2.\fi
+
+\M{4}\B\X4:Input the pattern\X${}\E{}$\6
+\&{for} ${}(\|n\K\|k\K\T{0};{}$  ; ${}\|n\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{fgets}(\\{buf},\39\\{bufsize},\39\\{stdin})){}$\1\5
+\&{break};\2\6
+\&{if} ${}(\|n\G\\{maxdim}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Recompile\ me:\ I\ all}\)\.{ow\ at\ most\ \%d\
+lines\ }\)\.{of\ input!\\n"},\39\\{maxdim});{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+\X5:Input row \PB{\|n} of the shape\X;\6
+\4${}\}{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"OK,\ I've\ got\ a\ patt}\)\.{ern\ with\ \%d\
+rows\ and}\)\.{\ \%d\ asterisks.\\n"},\39\|n,\39\|k);{}$\6
+\&{if} ${}(\|m<\|n-\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"So\ there\ must\ be\ at}\)\.{\ least\ \%d\
+multiplier}\)\.{\ digits,\ not\ \%d!\\n"},\39\|n-\T{1},\39\|m);{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{5}\B\X5:Input row \PB{\|n} of the shape\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\\{buf}[\|j]\W\\{buf}[\|j]\I\.{'\\n'};{}$ ${}\|j%
+\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{buf}[\|j]\E\.{'*'}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|j\G\\{maxdim}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Recompile\ me:\ I\ all}\)\.{ow\ at\ most\ \%d\
+column}\)\.{s\ per\ row!\\n"},\39\\{maxdim});{}$\6
+${}\\{exit}({-}\T{5});{}$\6
+\4${}\}{}$\2\6
+${}\\{oo},\39\\{rawpat}[\|n][\|j]\K\T{1},\39\|k\PP,\39\\{last}[\|n]\K\|j+%
+\T{1};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U4.\fi
+
+\N{1}{6}Bignums. We implement elementary decimal addition on nonnegative
+integers.
+Each integer is represented by an array of bytes, in which the first
+byte specifies the number of significant digits, and the remaining bytes
+specify the digits themselves (right to left).
+
+\Y\B\4\X6:Typedefs\X${}\E{}$\6
+\&{typedef} \&{char} \&{bignum}[\\{maxdigs}];\par
+\U2.\fi
+
+\M{7}For example, it's easy to test equality of two such bignums,
+or to copy one to another.
+
+\Y\B\4\X7:Subroutines\X${}\E{}$\6
+\&{int} \\{isequal}(\&{bignum} \|a${},\39{}$\&{bignum} \|b)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \\{la}${}\K\|a[\T{0}],{}$ \|i;\7
+\&{if} ${}(\\{oo},\39\\{la}\I\|b[\T{0}]){}$\1\5
+\&{return} \T{0};\2\6
+\&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\\{la};{}$ ${}\|i\PP){}$\1\6
+\&{if} ${}(\\{oo},\39\|a[\|i]\I\|b[\|i]){}$\1\5
+\&{return} \T{0};\2\2\6
+\&{return} \T{1};\6
+\4${}\}{}$\2\7
+\&{void} \\{copy}(\&{bignum} \|a${},\39{}$\&{bignum} \|b)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \\{lb}${}\K\|b[\T{0}],{}$ \|i;\7
+\&{for} ${}(\|o,\39\|i\K\T{0};{}$ ${}\|i\Z\\{lb};{}$ ${}\|i\PP){}$\1\5
+${}\\{oo},\39\|a[\|i]\K\|b[\|i];{}$\2\6
+\4${}\}{}$\2\par
+\As8\ET9.
+\U2.\fi
+
+\M{8}Here's the basic routine. It's OK to have \PB{$\|a\K\|b$} or \PB{$\|b\K%
+\|c$}.
+(But beware of \PB{$\|a\K\|c$}.)
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{add}(\&{bignum} \|a${},\39{}$\&{bignum} \|b${},\39{}$\&{bignum} %
+\|c${},\39{}$\&{int} \|p)\1\1\2\2\6
+${}\{{}$\C{ set $a=b+10^p c$ }\1\6
+\&{register} \&{int} \\{lb}${}\K\|b[\T{0}],{}$ \\{lc}${}\K\|c[\T{0}],{}$ %
+\|i${},{}$ \|k${},{}$ \|d;\7
+\&{if} ${}(\\{oo},\39\\{lc}\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{copy}(\|a,\39\|b);{}$\6
+\&{return};\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\|p\W\|i\Z\\{lb};{}$ ${}\|i\PP){}$\1\5
+${}\\{oo},\39\|a[\|i]\K\|b[\|i];{}$\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|i\Z\\{lb}\V\|i\Z\\{lc}+\|p\V\|k;{}$ ${}\|i%
+\PP){}$\5
+${}\{{}$\1\6
+${}\|d\K\|k+(\|i\Z\\{lb}\?\|o,\39\|b[\|i]:\T{0})+(\|i\Z\\{lc}+\|p\W\|i>\|p\?%
+\|o,\39\|c[\|i-\|p]:\T{0});{}$\6
+\&{if} ${}(\|d\G\T{10}){}$\1\5
+${}\|k\K\T{1},\39\|d\MRL{-{\K}}\T{10}{}$;\5
+\2\&{else}\1\5
+${}\|k\K\T{0};{}$\2\6
+${}\|o,\39\|a[\|i]\K\|d;{}$\6
+\4${}\}{}$\2\6
+${}\|o,\39\|a[\T{0}]\K\|i-\T{1};{}$\6
+\&{if} ${}(\|i\G\\{maxdigs}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Integer\ overflow,\ m}\)\.{ore\ than\ \%d\
+digits!\\}\)\.{n"},\39\\{maxdigs}-\T{1});{}$\6
+${}\\{exit}({-}\T{666});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|a[\|a[\T{0}]]\E\T{0}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"why?\\n"});{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{9}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_bignum}(\&{bignum} \|a)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \\{la}${}\K\|a[\T{0}];{}$\7
+\&{if} ${}(\R\\{la}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"0"});{}$\2\6
+\&{else}\1\6
+\&{for} ${}(\|i\K\\{la};{}$ \|i; ${}\|i\MM){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\%d"},\39\|a[\|i]);{}$\2\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{10}We might as well have a primitive multiplication table.
+
+\Y\B\4\X10:Build the table of constants\X${}\E{}$\6
+$\|o,\39\\{cnst}[\T{0}][\T{0}]\K\T{0};{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\T{10};{}$ ${}\|k\PP){}$\1\5
+${}\\{oo},\39\\{cnst}[\|k][\T{0}]\K\T{1},\39\\{cnst}[\|k][\T{1}]\K\|k;{}$\2\6
+\&{for} ( ; ${}\|k\Z\T{81};{}$ ${}\|k\PP){}$\1\5
+${}\\{oo},\39\|o,\39\\{cnst}[\|k][\T{0}]\K\T{2},\39\\{cnst}[\|k][\T{2}]\K\|k/%
+\T{10},\39\\{cnst}[\|k][\T{1}]\K\|k\MOD\T{10}{}$;\2\par
+\U2.\fi
+
+\M{11}\B\X11:Global variables\X${}\E{}$\6
+\&{bignum} \\{cnst}[\T{82}];\par
+\As17, 21\ETs40.
+\U2.\fi
+
+\N{1}{12}Offsets and constraints.
+The $k$th partial product, for $0\le k\le m$, will be shifted left
+by \PB{\\{off}[\|k]}. (When $k=m$ this is the entire product, the sum of the
+shifted partials.) It inherits the constraints of row $k-(m+1-n)$ of
+the $n$-row pattern in \PB{\\{rawpat}}.
+
+The data in \PB{\\{rawpat}} appears ``left to right,'' but the constraints
+on digits are ``right to left.'' I mean, column~0 in \PB{\\{rawpat}} refers
+to the most significant digit that is constrained.
+
+The constraints on a partial product $({}\ldots p_2p_1p_0)_{10}$ say that
+$p_i=d$ for certain~$i$, while $p_i\ne d$ for the others. We represent
+them as a bignum, with 1 in the ``\PB{\|d}'' positions and 0~elsewhere.
+
+For example, the opening problem in the introduction has $m=5$, $z=1$,
+offsets (0, 1, 3, 4, 5), and constraints
+(0, 1100000, 100100, 10010, 1001, 11000000).
+
+We do not constrain the length of the multiplicand or the partial products;
+we simply require that any digits to the left of explicitly
+constrained positions must differ from~\PB{\|d}. This produces multiple
+potential puzzles, some of which won't have unique solutions.
+
+\fi
+
+\M{13}\B\X13:Establish the minimum offsets\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|m;{}$ ${}\|i\PP){}$\1\5
+${}\|o,\39\\{off}[\|i]\K\|i{}$;\2\par
+\U2.\fi
+
+\M{14}The offset table runs through all combinations $s_0<s_1<\cdots<s_{m-1}$
+with $s_0=0$ and $s_{m-1}<m+z$, in lexicographic order.
+
+\Y\B\4\X14:Advance to the next offset, or \PB{\&{break}} if it needs too many
+zeros\X${}\E{}$\6
+\&{for} ${}(\|i\K\|m-\T{1};{}$ ${}\|i>\T{0};{}$ ${}\|i\MM){}$\1\6
+\&{if} ${}(\|o,\39\\{off}[\|i]<\|i+\|z){}$\1\5
+\&{break};\2\2\6
+\&{if} ${}(\|i\E\T{0}){}$\1\5
+\&{break};\2\6
+${}\|o,\39\\{off}[\|i]\PP;{}$\6
+\&{for} ${}(\|i\PP;{}$ ${}\|i<\|m;{}$ ${}\|i\PP){}$\1\5
+${}\\{oo},\39\\{off}[\|i]\K\\{off}[\|i-\T{1}]+\T{1}{}$;\2\par
+\U2.\fi
+
+\M{15}We must choose the position \PB{\\{pos}} where column 0 of the raw
+pattern
+will appear in the final product. Then column~\PB{\|j} of the \PB{\|k}th
+partial
+product will be in position \PB{$\\{pos}-\\{off}[\|k]-\|j$}.
+
+In the rightmost (smallest) setting of \PB{\\{pos}}, at least one of the
+constraints will end with~1. A~harder puzzle is obtained if \PB{\\{pos}}
+exceeds this minimum. This program sets \PB{\\{pos}} to the minimum possible,
+plus a compile-time parameter called \PB{\\{slack}}. Junja Take has published
+several examples with \PB{$\\{slack}\K\T{1}$}, and I~want to explore such
+cases;
+however, the default version of this program sets \PB{$\\{slack}\K\T{0}$}.
+
+\Y\B\4\D$\\{slack}$ \5
+\T{0}\C{ amount to shift the pattern left in harder problems }\par
+\Y\B\4\X15:Choose \PB{\\{pos}}\X${}\E{}$\6
+\&{for} ${}(\|i\K\\{pos}\K\T{0};{}$ ${}\|i\Z\|m;{}$ ${}\|i\PP){}$\1\6
+\&{if} ${}(\\{oo},\39\\{off}[\|m+\T{1}-\|n+\|i]+\\{last}[\|i]>\\{pos}){}$\1\5
+${}\\{pos}\K\\{off}[\|m+\T{1}-\|n+\|i]+\\{last}[\|i];{}$\2\2\6
+${}\\{pos}\MRL{+{\K}}\\{slack}-\T{1}{}$;\par
+\U18.\fi
+
+\M{16}Sometimes two constraints are identical, and we'll want to know that
+fact.
+So we set up a table called \PB{\\{id}}, where \PB{$\\{id}[\|j]\K\\{id}[\|k]$}
+if and only if
+$c_j=c_k$.
+
+\Y\B\4\X16:Set up the constraints\X${}\E{}$\6
+\&{for} ${}(\|k\K\\{ids}\K\T{0};{}$ ${}\|k\Z\|m;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|i\K\|k-(\|m+\T{1}-\|n),\39\\{constr}[\|k][\T{0}]\K\T{0};{}$\6
+\&{if} ${}(\|i\G\T{0}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\\{oo},\39\|j\K\\{pos}-\\{off}[\|k]-\\{last}[\|i]+\T{1};{}$ ${}\|j%
+\G\T{0};{}$ ${}\|j\MM){}$\1\5
+${}\|o,\39\\{constr}[\|k][\|j]\K\T{0};{}$\2\6
+\&{for} ${}(\|o,\39\|j\K\\{last}[\|i]-\T{1};{}$ ${}\|j\G\T{0};{}$ ${}\|j\MM){}$%
+\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\\{rawpat}[\|i][\|j]){}$\1\5
+${}\\{oo},\39\|o,\39\\{constr}[\|k][\\{pos}-\\{off}[\|k]-\|j+\T{1}]\K\T{1},\39%
+\\{constr}[\|k][\T{0}]\K\\{pos}-\\{off}[\|k]-\|j+\T{1};{}$\2\6
+\&{else}\1\5
+${}\\{oo},\39\\{constr}[\|k][\\{pos}-\\{off}[\|k]-\|j+\T{1}]\K\T{0};{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\|k-\T{1};{}$ ${}\|j\G\T{0};{}$ ${}\|j\MM){}$\1\6
+\&{if} ${}(\\{oo},\39\\{isequal}(\\{constr}[\|j],\39\\{constr}[\|k])){}$\1\5
+\&{break};\2\2\6
+\&{if} ${}(\|j\G\T{0}){}$\1\5
+${}\\{oo},\39\\{id}[\|k]\K\\{id}[\|j]{}$;\5
+\2\&{else}\1\5
+${}\|o,\39\\{id}[\|k]\K\\{ids}\PP;{}$\2\6
+\4${}\}{}$\2\par
+\U18.\fi
+
+\M{17}\B\X11:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \\{off}[\\{maxm}];\C{ blanks at right of partial products }\6
+\&{bignum} \\{constr}[\\{maxm}];\C{ the constraint patterns, decimalized }\6
+\&{char} \\{id}[\\{maxm}];\C{ equivalence class number for a given constraint }%
+\6
+\&{char} \\{ids};\C{ how many classes are there? }\par
+\fi
+
+\M{18}\B\X18:Create detailed specifications from the pattern\X${}\E{}$\6
+${}\{{}$\1\6
+\X15:Choose \PB{\\{pos}}\X;\6
+\X16:Set up the constraints\X;\6
+\&{if} (\\{vbose})\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Constraints\ for\ off}\)\.{sets"});{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\|m;{}$ ${}\|k\PP){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ \%d"},\39\\{off}[\|k]);{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{":"});{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\|m;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ "});{}$\6
+\\{print\_bignum}(\\{constr}[\|k]);\6
+\4${}\}{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{".\\n"});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\N{1}{19}Backtracking.
+Let the multiplicand be $(a_l\ldots a_2a_1a_0)_{10}$. We proceed by
+trying all possibilities $\ne d$ for $a_0$, then all possibilities
+consistent with $a_0$ for $a_1$, and so on. The upper limit on~$l$
+is $\PB{\\{maxdigs}}-2-s_{m-1}$, because of our limit on the size of bignums;
+but I~doubt if we'll often get really big solutions.
+
+(If \PB{$\\{slack}>\T{0}$}, we forbid $a_0=0$, because those solutions would
+have
+been obtained with lesser \PB{\\{slack}}.)
+
+The basic ideas will become clear if we look more closely at
+the constraints and offsets of our running example, supposing for convenience
+that $d=1$. The multiplier is $(b_5b_4b_30b_1b_0)_{10}$, because of
+the given offsets. The partial products $(p_0,p_1,p_2,p_3,p_4,p_5)$
+apply respectively to $b_0$, $b_1$, $b_3$, $b_4$, $b_5$, and the
+grand total. They are supposed to satisfy the constraints (0, 1100000, 100100,
+10010, 1001, 11000000), as stated earlier.
+
+Suppose $a_0=3$. Then we must have $b_5=7$; that's the only way to
+have $p_4$ end with~1.
+
+And $b_5=7$ implies that $b_0$, $b_1$, $b_3$, $b_4$ can't be 7: All five
+constraints are different in this problem, hence no two $b$'s can be equal.
+
+Moving on, if $a_0=3$ we cannot have $a_1=3$. The reason is that
+the candidates for multiplier digits are 2 thru~9, and the
+values of $33k\bmod100$ for $2\le k\le 9$ are respectively
+(66, 99, 32, 65, 98, 31, 64, 97); none of those is suitable for
+the constraint 10010.
+
+If $a_0=3$ and $a_1=4$, we must have $b_5=7$ and $b_4=5$.
+Furthermore, $a_2=4$ will mess up the constraint 1001, because
+$443\times7=3101$. The values $a_2\in\{3,8,9\}$
+are also impossible, because they yield no multiplier digits for the
+constraint 100100. Thus $a_2$ must be 0, 2, or~6.
+
+Proceeding in this way, we're able to rule out most of the potential trailing
+digits of the multiplicand before exploring very far. When we're choosing
+suitable values of $a_l$, we check the least significant $l$
+digits of each constraint $c_k$ for $0\le k<m$; at least one of the eight
+possible nonzero multiplier digits $\ne d$ must satisfy it.
+Furthermore, if {\it exactly\/} one multiplier digit is valid, we've
+forced one of the multiplier digits $b_i$ to a particular value.
+
+When sufficiently many multiplier digits are forced, we can begin to enforce
+the final constraint~$c_m$ (i.e., the constraint on the total product).
+This program does that only if the current number of ways to satisfy
+the other $m$ constraints individually is less than a certain threshold.
+Suppose, for example, that $m=5$ and the current ``status'' is 33121,
+meaning that constraints $(c_0,c_1,c_2,c_3,c_4)$ can be individually satisfied
+in $(3,3,1,2,1)$ ways. Then we test $c_m$ only if the threshold is 18 or more.
+
+A constraint that is satisfied to infinite precision, not just
+with respect to the $l$ trailing digits, is said to be {\it totally\/}
+satisfied. Whenever all constraints are totally satisfied, we have a
+solution.
+
+After a solution is found, we can sometimes extend it by prepending
+nonzero digits to the multiplicand.
+For example, we know that $a=2208068$, $b=357029$,
+$d=4$ leads to a valid puzzle for the \.O~pattern; so does
+$a=302208068$, $b=357029$, $d=4$. The extra prefix `30' doesn't
+introduce any unwanted 4's into the partial products or the total product.
+This version of the program does {\it not\/} look for such extensions.
+
+\fi
+
+\M{20}Such considerations lead us to a standard backtracking scheme
+that takes the following overall form, if we follow the recipe of
+Algorithm 7.2.2B:
+
+\Y\B\4\X20:Find all solutions for the current offsets and special digit $d$%
+\X${}\E{}$\6
+\4\\{b1}:\5
+${}\|o,\39\\{maxl}\K\\{maxdigs}-\T{2}-\\{off}[\|m-\T{1}];{}$\6
+${}\|l\K\T{0};{}$\6
+\X22:Initialize the data structures\X;\6
+\4\\{b2}:\5
+${}\\{nodes}\MRL{+{\K}}\T{10};{}$\6
+\&{if} ${}(\\{vbose}>\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Level\ \%d,"},\39\|l);{}$\6
+\X23:Print the \PB{\\{csize}} status information\X;\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|l\G\\{maxl}){}$\1\5
+\X34:Check for unusual solutions and \PB{\&{goto} \\{b5}}\X;\2\6
+\X30:If all constraints are totally satisfied, print a solution\X;\6
+${}\|x\K\T{0};{}$\6
+\4\\{b3}:\5
+\&{if} ${}(\\{slack}\W\|l\E\T{0}\W\|x\E\T{0}){}$\1\5
+\&{goto} \\{b4};\2\6
+\&{if} ${}(\|x\E\|d){}$\1\5
+\&{goto} \\{b4};\2\6
+\&{if} ${}(\\{vbose}>\T{2}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ testing\ \%d\\n"},\39\|x);{}$\2\6
+\X24:If some constraint can't be satisfied when $a_l=x$, \PB{\&{goto} \\{b4}}%
+\X;\6
+${}\|o,\39\|a[\|l]\K\|x;{}$\6
+\&{if} ${}(\\{vbose}>\T{1}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Trying\ a[\%d]=\%d\\n"},\39\|l,\39\|x);{}$\2\6
+\X28:Update the data structures\X;\6
+${}\|l\K\|l+\T{1}{}$;\5
+\&{goto} \\{b2};\6
+\4\\{b4}:\5
+\&{if} ${}(\|x\E\T{9}){}$\1\5
+\&{goto} \\{b5};\2\6
+${}\|x\K\|x+\T{1}{}$;\5
+\&{goto} \\{b3};\6
+\4\\{b5}:\5
+${}\|l\K\|l-\T{1};{}$\6
+\&{if} ${}(\|l\G\T{0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{vbose}>\T{1}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Back\ to\ level\ \%d\\n"},\39\|l);{}$\2\6
+${}\|o,\39\|x\K\|a[\|l];{}$\6
+\X29:Downdate the data structures\X;\6
+\&{goto} \\{b4};\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{21}What data structures will support this computation nicely?
+First, there's an array
+of bignums: \PB{\\{ja}[\|l][\|j]} contains $j$ times the partial multiplier
+$(a_l\ldots a_0)_{10}$ at a given level. Clearly
+\PB{\\{ja}[\|l][\|j]} is \PB{$\\{ja}[\|l-\T{1}][\|j]$} plus $j\cdot10^{%
+\mkern1mul}a_l$. These entries
+are computed only for values of~\PB{\|j} that are necessary;
+\PB{\\{stamp}[\|l][\|j]} contains the node number at which they were
+most recently computed (actually it contains \PB{$\\{nodes}+\|x$}).
+
+We also maintain arrays called \PB{\\{choice}[\|k]}, which list the all nonzero
+multiplier digits that haven't been ruled out for constraint~\PB{\|k}.
+Their sizes at level~\PB{\|l} are \PB{\\{csize}[\|l][\|k]}.
+Actually \PB{\\{choice}[\|k]} is a permutation of $\{0,1,\ldots,9\}$, and
+\PB{\\{where}[\|k]} is the inverse permutation; the viable elements at
+level~\PB{\|l} are those $j$ with \PB{$\\{where}[\|k][\|j]<\\{csize}[\|l][%
+\|k]$}.
+This setup permits easy deletion from the lists while backtracking.
+
+\Y\B\4\X11:Global variables\X${}\mathrel+\E{}$\6
+\&{bignum} \\{ja}[\\{maxdigs}][\T{10}];\C{ multiples of the multiplicand }\6
+\&{unsigned} \&{long} \&{long} \\{stamp}[\\{maxdigs}][\T{10}];\C{ when they
+were computed }\6
+\&{char} \\{choice}[\\{maxm}][\T{10}]${},{}$ \\{where}[\\{maxm}][\T{10}];\C{
+available multipliers, ranked }\6
+\&{char} \\{csize}[\\{maxdigs}][\\{maxm}];\C{ current degree of viability }\6
+\&{char} \\{stack}[\\{maxm}];\C{ constraints that have become uniquely
+satisfied }\6
+\&{char} \\{stackptr};\C{ current size of \PB{\\{stack}} }\6
+\&{char} \|a[\\{maxdigs}];\C{ the multiplicand }\6
+\&{bignum} \\{total};\C{ grand total when checking for a solution }\par
+\fi
+
+\M{22}\B\X22:Initialize the data structures\X${}\E{}$\6
+\&{if} ${}(\|d\E\T{0}\W\\{off}[\|m-\T{1}]\G\|m){}$\1\5
+\&{goto} \\{b5};\C{ forbid zeros in multiplier if \PB{$\|d\K\T{0}$} }\2\6
+\&{for} ${}(\|i\K\T{0},\39\|j\K\T{1};{}$ ${}\|j<\T{10};{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\|j\I\|d){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|m;{}$ ${}\|k\PP){}$\1\5
+${}\\{oo},\39\\{choice}[\|k][\|i]\K\|j,\39\\{where}[\|k][\|j]\K\|i;{}$\2\6
+${}\|i\PP;{}$\6
+\4${}\}{}$\2\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|m;{}$ ${}\|k\PP){}$\1\5
+${}\\{oo},\39\\{oo},\39\\{csize}[\T{0}][\|k]\K\|i,\39\\{choice}[\|k][\|i]\K\|d,%
+\39\\{where}[\|k][\|d]\K\|i,\39\\{where}[\|k][\T{0}]\K\T{9}{}$;\C{ note that %
+\PB{$\|i\K\T{9}$} if \PB{$\|d\K\T{0}$}, otherwise 8 }\2\par
+\U20.\fi
+
+\M{23}\B\X23:Print the \PB{\\{csize}} status information\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|m;{}$ ${}\|k\PP){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\%d"},\39\\{csize}[\|l][\|k]);{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"\\n"}){}$;\par
+\U20.\fi
+
+\M{24}\B\D$\\{thresh}$ \5
+\T{25}\par
+\Y\B\4\X24:If some constraint can't be satisfied when $a_l=x$, \PB{\&{goto} %
+\\{b4}}\X${}\E{}$\6
+\&{for} ${}(\\{stackptr}\K\T{0},\39\|k\K\|m-\T{1};{}$ ${}\|k\G\T{0};{}$ ${}\|k%
+\MM){}$\1\5
+\X25:If constraint \PB{\|k} can't be satisfied when $a_l=x$, \PB{\&{goto} %
+\\{b4}}\X;\2\6
+\&{while} (\\{stackptr})\5
+${}\{{}$\1\6
+${}\|o,\39\|k\K\\{stack}[\MM\\{stackptr}];{}$\6
+\&{if} ${}(\\{vbose}>\T{2}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ b\%d\ must\ be\ \%d\\n"},\39\\{off}[\|k],\39%
+\\{choice}[\|k][\T{0}]);{}$\2\6
+\X27:Delete \PB{\\{choice}[\|k][\T{0}]} from all constraints $\ne c_k$\X;\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|o,\39\|t\K\\{csize}[\|l+\T{1}][\T{0}],\39\|k\K\T{1};{}$ ${}\|k<%
+\|m\W\|t\Z\\{thresh};{}$ ${}\|k\PP){}$\1\5
+${}\|o,\39\|t\MRL{*{\K}}\\{csize}[\|l+\T{1}][\|k];{}$\2\6
+\&{if} ${}(\|t\Z\\{thresh}){}$\5
+${}\{{}$\1\6
+\X35:Test the overall product constraint $c_m$\X;\6
+\&{while} (\\{stackptr})\5
+${}\{{}$\1\6
+${}\|o,\39\|k\K\\{stack}[\MM\\{stackptr}];{}$\6
+\&{if} ${}(\\{vbose}>\T{2}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ b\%d\ has\ to\ be\ \%d\\n}\)\.{"},\39%
+\\{off}[\|k],\39\\{choice}[\|k][\T{0}]);{}$\2\6
+\X27:Delete \PB{\\{choice}[\|k][\T{0}]} from all constraints $\ne c_k$\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U20.\fi
+
+\M{25}Now we've come to the heart and soul of the program. As we test
+each constraint, we also store some data that will be needed on
+level~\PB{$\|l+\T{1}$} if we get there.
+
+\Y\B\4\X25:If constraint \PB{\|k} can't be satisfied when $a_l=x$, \PB{\&{goto}
+\\{b4}}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|o,\39\\{imax}\K\\{csize}[\|l][\|k]{}$;\C{ how many multipliers worked in
+the previous level? }\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{imax};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|j\K\\{choice}[\|k][\|i];{}$\6
+\X26:If \PB{\|j} remains satisfactory when $a_l=x$, \PB{\&{goto} \\{jok}}\X;\6
+\&{if} ${}(\\{vbose}>\T{2}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ c\%d\ loses\ option\ \%}\)\.{d\\n"},\39\|k,%
+\39\|j);{}$\2\6
+\&{if} ${}(\MM\\{imax}\E\T{0}){}$\1\5
+\&{goto} \\{b4};\C{ we've lost the last option }\2\6
+\&{if} ${}(\|i\I\\{imax}){}$\1\5
+${}\\{oo},\39\\{oo},\39\\{oo},\39\\{choice}[\|k][\|i]\K\\{choice}[\|k][%
+\\{imax}],\39\\{where}[\|k][\\{choice}[\|k][\\{imax}]]\K\|i\MM,\39\\{choice}[%
+\|k][\\{imax}]\K\|j,\39\\{where}[\|k][\|j]\K\\{imax}{}$;\C{ swap \PB{\|j} into
+last position (for easy backtracking) }\2\6
+\4\\{jok}:\5
+\&{continue};\6
+\4${}\}{}$\2\6
+${}\|o,\39\\{csize}[\|l+\T{1}][\|k]\K\\{imax};{}$\6
+\&{if} ${}(\\{imax}\E\T{1}\W(\|o,\39\\{csize}[\|l][\|k]\I\T{1})){}$\1\5
+${}\|o,\39\\{stack}[\\{stackptr}\PP]\K\|k;{}$\2\6
+\4${}\}{}$\2\par
+\U24.\fi
+
+\M{26}We've previously verified constraint \PB{\|k} in the least significant
+\PB{\|l} digits, and those digits don't depend on $a_l$. Thus it suffices
+to do an ``incremental'' test, looking only at digit~\PB{\|l} of the
+constraint.
+
+\Y\B\4\X26:If \PB{\|j} remains satisfactory when $a_l=x$, \PB{\&{goto} \\{jok}}%
+\X${}\E{}$\6
+\&{if} ${}(\|o,\39\\{stamp}[\|l][\|j]\I\\{nodes}+\|x){}$\5
+${}\{{}$\C{ have we already updated \PB{\\{ja}[\|l]}? }\1\6
+${}\|o,\39\\{stamp}[\|l][\|j]\K\\{nodes}+\|x;{}$\6
+\&{if} ${}(\|l\E\T{0}){}$\1\5
+${}\\{oo},\39\\{copy}(\\{ja}[\T{0}][\|j],\39\\{cnst}[\|x*\|j]);{}$\2\6
+\&{else}\1\5
+${}\\{oo},\39\\{add}(\\{ja}[\|l][\|j],\39\\{ja}[\|l-\T{1}][\|j],\39\\{cnst}[%
+\|x*\|j],\39\|l);{}$\2\6
+\4${}\}{}$\2\6
+${}\\{oo},\39\|t\K(\\{ja}[\|l][\|j][\T{0}]\Z\|l\?\T{0}:\\{ja}[\|l][\|j][\|l+%
+\T{1}]);{}$\6
+${}\|o,\39\\{tt}\K(\\{constr}[\|k][\T{0}]\Z\|l\?\T{0}:\|o,\39\\{constr}[\|k][%
+\|l+\T{1}]);{}$\6
+\&{if} ${}((\\{tt}\E\T{1}\W\|t\E\|d)\V(\\{tt}\I\T{1}\W\|t\I\|d)){}$\1\5
+\&{goto} \\{jok};\2\par
+\U25.\fi
+
+\M{27}\B\X27:Delete \PB{\\{choice}[\|k][\T{0}]} from all constraints $\ne c_k$%
+\X${}\E{}$\6
+\&{for} ${}(\|o,\39\\{kk}\K\T{0},\39\|j\K\\{choice}[\|k][\T{0}];{}$ ${}\\{kk}<%
+\|m;{}$ ${}\\{kk}\PP){}$\1\6
+\&{if} ${}(\\{oo},\39\\{id}[\\{kk}]\I\\{id}[\|k]){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39\|i\K\\{csize}[\|l+\T{1}][\\{kk}]-\T{1},\39\\{ii}\K\\{where}[%
+\\{kk}][\|j];{}$\6
+\&{if} ${}(\\{ii}\Z\|i){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|i\E\T{0}){}$\1\5
+\&{goto} \\{b4};\2\6
+${}\|o,\39\\{csize}[\|l+\T{1}][\\{kk}]\K\|i;{}$\6
+\&{if} ${}(\|i\E\T{1}){}$\1\5
+${}\|o,\39\\{stack}[\\{stackptr}\PP]\K\\{kk};{}$\2\6
+\&{if} ${}(\\{ii}\I\|i){}$\1\5
+${}\\{oo},\39\\{oo},\39\\{oo},\39\\{choice}[\\{kk}][\\{ii}]\K\\{choice}[%
+\\{kk}][\|i],\39\\{where}[\\{kk}][\\{choice}[\\{kk}][\|i]]\K\\{ii},\39%
+\\{choice}[\\{kk}][\|i]\K\|j,\39\\{where}[\\{kk}][\|j]\K\|i;{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\par
+\U24.\fi
+
+\M{28}The data structures that I've got don't seem to need any updating
+(other than what has already been done during the tests),
+except in one respect: When a zero digit is prepended to the multiplicand,
+we may have already printed the current solution. Otherwise we haven't.
+
+\Y\B\4\X28:Update the data structures\X${}\E{}$\6
+\&{if} (\|x)\1\5
+${}\\{printed}\K\T{0}{}$;\2\par
+\U20.\fi
+
+\M{29}Downdating seems to be completely unnecessary, thanks largely to
+the \PB{\\{choice}} and \PB{\\{csize}} mechanism, and the fact that other data
+is recomputed at each level.
+
+\Y\B\4\X29:Downdate the data structures\X${}\E{}$\par
+\U20.\fi
+
+\M{30}\B\X30:If all constraints are totally satisfied, print a solution\X${}%
+\E{}$\6
+\&{if} (\\{printed})\1\5
+\&{goto} \\{nope};\C{ we've already printed this guy }\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|m;{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\|o,\39\\{csize}[\|l][\|k]>\T{1}){}$\1\5
+\&{goto} \\{nope};\2\2\6
+\&{for} ${}(\|k\K\|m-\T{1};{}$ ${}\|k\G\T{0};{}$ ${}\|k\MM){}$\1\5
+\X31:If constraint $c_k$ isn't totally satisfied, \PB{\&{goto} \\{nope}}\X;\2\6
+\X32:If constraint $c_m$ isn't totally satisfied, \PB{\&{goto} \\{nope}}\X;\6
+\X33:Print a solution\X;\6
+\&{while} ${}(\|o,\39\|a[\|l-\T{1}]\E\T{0}){}$\1\5
+${}\|l\MM;{}$\2\6
+\&{goto} \\{b5}; \\{nope}:\par
+\U20.\fi
+
+\M{31}\B\X31:If constraint $c_k$ isn't totally satisfied, \PB{\&{goto} %
+\\{nope}}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{oo},\39\|o,\39\|j\K\\{choice}[\|k][\T{0}],\39\\{lj}\K\\{ja}[\|l-\T{1}][%
+\|j][\T{0}],\39\\{lc}\K\\{constr}[\|k][\T{0}];{}$\6
+\&{if} ${}(\\{lc}>\\{lj}){}$\1\5
+\&{goto} \\{nope};\C{ this is correct even if \PB{$\|d\K\T{0}$} }\2\6
+\&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\\{lj};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|t\K\\{ja}[\|l-\T{1}][\|j][\|i],\39\\{tt}\K(\|i\Z\\{lc}\?\|o,\39%
+\\{constr}[\|k][\|i]:\T{0});{}$\6
+\&{if} ${}((\|t\E\|d\W\\{tt}\E\T{0})\V(\|t\I\|d\W\\{tt}\I\T{0})){}$\1\5
+\&{goto} \\{nope};\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U30.\fi
+
+\M{32}\B\X32:If constraint $c_m$ isn't totally satisfied, \PB{\&{goto} %
+\\{nope}}\X${}\E{}$\6
+$\\{oo},\39\\{oo},\39\\{add}(\\{total},\39\\{ja}[\|l-\T{1}][\\{choice}[\T{0}][%
+\T{0}]],\39\\{ja}[\|l-\T{1}][\\{choice}[\T{1}][\T{0}]],\39\\{off}[\T{1}]);{}$\6
+\&{for} ${}(\|k\K\T{2};{}$ ${}\|k<\|m;{}$ ${}\|k\PP){}$\1\5
+${}\\{oo},\39\|o,\39\\{add}(\\{total},\39\\{total},\39\\{ja}[\|l-\T{1}][%
+\\{choice}[\|k][\T{0}]],\39\\{off}[\|k]);{}$\2\6
+${}\|o,\39\\{lj}\K\\{total}[\T{0}],\39\\{lc}\K\\{constr}[\|m][\T{0}];{}$\6
+\&{if} ${}(\\{lc}>\\{lj}){}$\1\5
+\&{goto} \\{nope};\C{ this is correct even if \PB{$\|d\K\T{0}$} }\2\6
+\&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\\{lj};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|t\K\\{total}[\|i],\39\\{tt}\K(\|i\Z\\{lc}\?\|o,\39\\{constr}[\|m][%
+\|i]:\T{0});{}$\6
+\&{if} ${}((\|t\E\|d\W\\{tt}\E\T{0})\V(\|t\I\|d\W\\{tt}\I\T{0})){}$\1\5
+\&{goto} \\{nope};\2\6
+\4${}\}{}$\2\par
+\U30.\fi
+
+\M{33}When a solution is found, I first print out the lengths of
+the multiplicand, multiplier, partial products, and total product.
+(By sorting these lines later, I can distinguish unique solutions.)
+Then I print the multiplicand, multiplier, \PB{\|d}, and the solution number.
+
+\Y\B\4\X33:Print a solution\X${}\E{}$\6
+$\\{count}\PP;{}$\6
+\&{for} ${}(\|i\K\|l-\T{1};{}$ ${}\|a[\|i]\E\T{0};{}$ ${}\|i\MM){}$\1\5
+;\C{ bypass leading zeros of multiplicand }\2\6
+${}\\{printf}(\.{"\%d,\%d;"},\39\|i+\T{1},\39\\{off}[\|m-\T{1}]+\T{1});{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|m;{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\.{"\%d|\%d,"},\39\\{ja}[\|l-\T{1}][\\{choice}[\|k][\T{0}]][%
+\T{0}],\39\\{off}[\|k]);{}$\2\6
+${}\\{printf}(\.{"\%d,\ "},\39\\{total}[\T{0}]);{}$\6
+\&{for} ( ; ${}\|i\G\T{0};{}$ ${}\|i\MM){}$\1\5
+${}\\{printf}(\.{"\%d"},\39\|a[\|i]);{}$\2\6
+\\{printf}(\.{"\ x\ "});\6
+\&{for} ${}(\|k\K\|m-\T{1},\39\|i\K\\{off}[\|k];{}$ ${}\|k\G\T{0};{}$ ${}\|k%
+\MM,\39\|i\MM){}$\5
+${}\{{}$\1\6
+\&{while} ${}(\|i>\\{off}[\|k]){}$\1\5
+${}\\{printf}(\.{"0"}),\39\|i\MM;{}$\2\6
+${}\\{printf}(\.{"\%d"},\39\\{choice}[\|k][\T{0}]);{}$\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{",d=\%d\ (\#\%d)\\n"},\39\|d,\39\\{count});{}$\6
+${}\\{printed}\K\T{1}{}$;\par
+\U30.\fi
+
+\M{34}It's conceivable that we've constructed a max-length multiplicand
+without finding enough obstructions to force all digits of the
+multiplier. In such cases constraint~\PB{\|m} (the constraint on the
+entire product) has probably not yet been fully tested. We should
+therefore backtrack over all choices of multipliers, in order to
+be sure that no solutions have been overlooked.
+
+Pathological patterns can make this happen, but I don't think it
+will occur in the cases that interest me. So I am simply
+reporting the unusual case here. Then I can follow up later if additional
+investigations are called for.
+
+(If $a_{l-1}!=0$, there might exist very long solutions that cannot
+be tested without exceeding our \PB{\\{maxdigits}} precision.)
+
+\Y\B\4\D$\\{show\_unresolved}$ \5
+\T{0}\par
+\Y\B\4\X34:Check for unusual solutions and \PB{\&{goto} \\{b5}}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|m;{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\|o,\39\\{csize}[\|l][\|k]>\T{1}){}$\1\5
+\&{break};\2\2\6
+\&{if} ${}(\|k<\|m){}$\5
+${}\{{}$\1\6
+${}\\{unresolved}\PP;{}$\6
+\&{if} ${}(\|o,\39\|a[\|l-\T{1}]\E\T{0}\V\\{show\_unresolved}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Unresolved\ case\ wit}\)\.{h\ d=\%d\ and\
+offsets"},\39\|d);{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|m;{}$ ${}\|k\PP){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ \%d"},\39\\{off}[\|k]);{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{":\\n\ a=..."});{}$\6
+\&{for} ${}(\|k\K\|l-\T{1};{}$ ${}\|k\G\T{0};{}$ ${}\|k\MM){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\%d"},\39\|a[\|k]);{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{",\ status\ "});{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|m;{}$ ${}\|k\PP){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\%d"},\39\\{csize}[\|l][\|k]);{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"!\\n"});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{goto} \\{b5};\6
+\4${}\}{}$\2\par
+\U20.\fi
+
+\N{1}{35}An inner loop. When we're testing the ``bottom line''
+constraint~$c_m$,
+we might need to vary several of the multiplier digits independently.
+The process is a bit tedious, but straightforward: It's just
+a loop over all $m$-tuples that haven't yet been filtered out,
+and we know that the total number of such $m$-tuples is \PB{\\{thresh}} or
+less.
+
+The multiplier digit that is subject to constraint $c_k$ is one of the
+\PB{$\\{csize}[\|l+\T{1}][\|k]$} possibilities that appear at the beginning of
+the
+list \PB{\\{choice}[\|k]}.
+So we represent it by an index \PB{\|g[\|k]}, meaning that the digit we're
+trying is \PB{\\{choice}[\|k][\|g[\|k]]}.
+
+For every such $m$-tuple $g_0g_1\ldots g_{m-1}$, we check if
+constraint~$c_m$ holds in its rightmost $l+1$ digits. If so,
+we set bit $g_k$ to~1 in \PB{\\{shadow}[\|k]}, for $0\le k<m$, thereby
+indicating that $g_k$ is valid in at least one solution.
+
+After running through all the $m$-tuples, we can backtrack if
+no solutions were found. Otherwise the shadows will tell us
+whether any of the \PB{\\{csize}} entries can be lowered.
+
+I could do this step in a fancier way, by working only
+``incrementally'' after having gotten $l$-digit compliance
+instead of always working to higher and higher precision.
+(In such a case I'd have to save the sum of carries from
+the lower \PB{\|l} digits, for use in testing the (\PB{$\|l+\T{1}$})st digit
+incrementally.)
+
+I could also avoid many of the $m$-tuples by backtracking
+during this process, because $c_m$ can be tested digit-by-digit
+as those digits become known.
+
+But I don't think this step will be a bottleneck, so I've
+opted for simplicity.
+
+\Y\B\4\X35:Test the overall product constraint $c_m$\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|m;{}$ ${}\|k\PP){}$\1\5
+${}\|o,\39\\{shadow}[\|k]\K\T{0};{}$\2\6
+\X36:Run through all $m$-tuples $g_0\ldots g_{m-1}$\X;\6
+\&{if} ${}(\|o,\39\\{shadow}[\T{0}]\E\T{0}){}$\1\5
+\&{goto} \\{b4};\C{ there were no solutions }\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|m;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{oo},\39\\{shadow}[\|k]+\T{1}\I\T{1}\LL\\{csize}[\|l+\T{1}][%
+\|k]){}$\1\5
+\X39:Remove items from \PB{\\{choice}[\|k]}\X;\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U24.\fi
+
+\M{36}\B\X36:Run through all $m$-tuples $g_0\ldots g_{m-1}$\X${}\E{}$\6
+\4\\{bb1}:\5
+${}\|k\K\T{0};{}$\6
+\4\\{bb2}:\5
+\&{if} ${}(\|k\E\|m){}$\1\5
+\X38:Test compliance with $c_m$ and \PB{\&{goto} \\{bb5}}\X;\2\6
+${}\|g[\|k]\K\T{0};{}$\6
+\4\\{bb3}:\5
+\X37:Set \PB{\\{acc}[\|k]} to the least significant digits of the $k$th partial
+sum\X;\6
+${}\|k\PP;{}$\6
+\&{goto} \\{bb2};\6
+\4\\{bb4}:\5
+${}\\{oo},\39\|g[\|k]\PP;{}$\6
+\&{if} ${}(\|o,\39\|g[\|k]<\\{csize}[\|l+\T{1}][\|k]){}$\1\5
+\&{goto} \\{bb3};\2\6
+\4\\{bb5}:\5
+${}\|k\MM;{}$\6
+\&{if} ${}(\|k\G\T{0}){}$\1\5
+\&{goto} \\{bb4};\2\par
+\U35.\fi
+
+\M{37}\B\X37:Set \PB{\\{acc}[\|k]} to the least significant digits of the $k$th
+partial sum\X${}\E{}$\6
+$\\{oo},\39\|o,\39\|j\K\\{choice}[\|k][\|g[\|k]],\39\\{lj}\K\\{ja}[\|l][\|j][%
+\T{0}];{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ \|o${},\39\|i<\\{off}[\|k];{}$ ${}\|i\PP){}$\1\5
+${}\\{oo},\39\\{acc}[\|k][\|i]\K\\{acc}[\|k-\T{1}][\|i];{}$\2\6
+\&{for} ${}(\\{ii}\K\T{1},\39\\{kk}\K\T{0};{}$ ${}\|i\Z\|l;{}$ ${}\|i\PP,\39%
+\\{ii}\PP){}$\5
+${}\{{}$\1\6
+${}\|t\K(\|k>\T{0}\?\|o,\39\\{acc}[\|k-\T{1}][\|i]+\\{kk}:\\{kk});{}$\6
+\&{if} ${}(\\{ii}\Z\\{lj}){}$\1\5
+${}\|o,\39\|t\MRL{+{\K}}\\{ja}[\|l][\|j][\\{ii}];{}$\2\6
+\&{if} ${}(\|t\G\T{10}){}$\1\5
+${}\|o,\39\\{acc}[\|k][\|i]\K\|t-\T{10},\39\\{kk}\K\T{1}{}$;\5
+\2\&{else}\1\5
+${}\|o,\39\\{acc}[\|k][\|i]\K\|t,\39\\{kk}\K\T{0};{}$\2\6
+\4${}\}{}$\2\par
+\U36.\fi
+
+\M{38}\B\X38:Test compliance with $c_m$ and \PB{\&{goto} \\{bb5}}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|o,\39\|i\K\T{0},\39\\{lc}\K\\{constr}[\|m][\T{0}];{}$ ${}\|i\Z%
+\|l;{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|t\K\\{acc}[\|m-\T{1}][\|i];{}$\6
+\&{if} ${}(\|i<\\{lc}){}$\1\5
+${}\|o,\39\\{tt}\K\\{constr}[\|m][\|i+\T{1}]{}$;\5
+\2\&{else}\1\5
+${}\\{tt}\K\T{0};{}$\2\6
+\&{if} ${}((\|t\E\|d\W\\{tt}\E\T{0})\V(\|t\I\|d\W\\{tt}\I\T{0})){}$\1\5
+\&{goto} \\{noncomp};\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{vbose}>\T{2}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ ok\ "});{}$\6
+\&{for} ${}(\|k\K\|m-\T{1};{}$ ${}\|k\G\T{0};{}$ ${}\|k\MM){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\%d"},\39\\{choice}[\|k][\|g[\|k]]);{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|m;{}$ ${}\|k\PP){}$\1\5
+${}\\{oo},\39\\{shadow}[\|k]\MRL{{\OR}{\K}}\T{1}\LL\|g[\|k];{}$\2\6
+\4\\{noncomp}:\5
+\&{goto} \\{bb5};\6
+\4${}\}{}$\2\par
+\U36.\fi
+
+\M{39}\B\X39:Remove items from \PB{\\{choice}[\|k]}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|o,\39\\{imax}\K\\{csize}[\|l+\T{1}][\|k];{}$\6
+\&{for} ${}(\|i\K\\{imax}-\T{1};{}$ ${}\|i\G\T{0};{}$ ${}\|i\MM){}$\1\6
+\&{if} ${}(\|o,\39(\\{shadow}[\|k]\AND(\T{1}\LL\|i))\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|j\K\\{choice}[\|k][\|i];{}$\6
+\&{if} ${}(\\{vbose}>\T{2}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ b\%d\ ain't\ \%d\\n"},\39\|k,\39\|j);{}$\2\6
+${}\\{imax}\MM;{}$\6
+\&{if} ${}(\|i\I\\{imax}){}$\1\5
+${}\\{oo},\39\\{oo},\39\\{oo},\39\\{choice}[\|k][\|i]\K\\{choice}[\|k][%
+\\{imax}],\39\\{where}[\|k][\\{choice}[\|k][\\{imax}]]\K\|i,\39\\{choice}[\|k][%
+\\{imax}]\K\|j,\39\\{where}[\|k][\|j]\K\\{imax};{}$\2\6
+\4${}\}{}$\2\2\6
+${}\|o,\39\\{csize}[\|l+\T{1}][\|k]\K\\{imax};{}$\6
+\&{if} ${}(\\{imax}\E\T{1}){}$\1\5
+${}\|o,\39\\{stack}[\\{stackptr}\PP]\K\|k;{}$\2\6
+\4${}\}{}$\2\par
+\U35.\fi
+
+\M{40}\B\X11:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \\{acc}[\\{maxm}][\\{maxdigs}];\C{ partial sums }\6
+\&{char} \|g[\\{maxm}];\C{ indices for inner loop }\6
+\&{int} \\{shadow}[\\{maxm}];\C{ bits where solutions were found }\par
+\fi
+
+\N{1}{41}Index.
+\fi
+
+\inx
+\fin
+\con

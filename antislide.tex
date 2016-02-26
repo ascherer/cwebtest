@@ -1,0 +1,722 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Introduction. This program finds all ways to pack $2\times2\times1$
+bricks
+into a $4\times4\times4$ box in such a way that each face of each brick
+touches the boundary of the box or the face of another brick. The program
+is also designed to be readily modified so that it applies to other sorts
+of pieces in other sorts of boxes.
+
+I'm writing it primarily to gain further experience of the technique
+of ``dancing links,'' which worked so nicely in the {\sc XCOVER}
+routine. Also I'm having fun today; I just finished a long, boring
+task and I'm rewarding myself by taking time off from other duties.
+
+\Y\B\4\D$\\{n1}$ \5
+\T{4}\C{ one box dimension }\par
+\B\4\D$\\{n2}$ \5
+\T{4}\C{ another }\par
+\B\4\D$\\{n3}$ \5
+\T{4}\C{ the last }\par
+\B\4\D$\\{verbose}$ \5
+$(\\{argc}>\T{1}{}$)\par
+\B\4\D$\\{very\_verbose}$ \5
+$(\\{argc}>\T{2}{}$)\par
+\B\4\D$\\{very\_very\_verbose}$ \5
+$(\\{argc}>\T{3}{}$)\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\7
+\X2:Type definitions\X\6
+\X3:Global variables\X\7
+\\{tmp}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\\{printf}(\.{"tmp"});\6
+\4${}\}{}$\2\7
+${}\\{main}(\\{argc},\39\\{argv}){}$\1\1\6
+\&{int} \\{argc};\6
+\&{char} ${}{*}\\{argv}[\,]{}$;\C{ the usual command-line parameters }\2\2\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|p,{}$ ${}{*}\|q,{}$ ${}{*}\|r;{}$\6
+\&{register} \&{int} \\{stamp}${}\K\T{0};{}$\7
+\X4:Initialize the data structures\X;\6
+\X11:Backtrack thru all possibilities\X;\6
+\X26:Report the answers\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{2}Data structures. This program deals chiefly with three kinds of lists,
+representing cells, moves, and constraints.
+
+A move list is a circular list of nodes, one for each cell occupied by
+a particular placement of a piece. The nodes are doubly linked by
+\PB{\\{left}} and \PB{\\{right}} pointers, which stay fixed throughout the
+algorithm.
+
+A cell list is a circular list consisting of a header node and one additional
+node for each move that occupies this cell. These nodes are doubly linked
+by \PB{\\{up}} and \PB{\\{down}} pointers; thus each node in a move list is
+also a potential
+member of a cell list. Nodes leave a cell list when they belong to a move
+that conflicts with other moves already made. A header node is recognizable
+by the fact that its \PB{\\{left}} pointer is null.
+
+A constraint is a sequence of pointers to cell headers, followed
+by a null pointer. It represents a set of cells that should not all be
+empty, based on moves made so far. A constraint list is a sequence of pointers
+to constraints, followed by a null pointer.
+
+Nodes have a \PB{\\{tag}} field that is used in a special ``stamping'' trick
+explained later. This field points to an integer; its basic property is
+that two nodes have the same \PB{\\{tag}} if and only if they are part
+of the same move.
+
+\Y\B\4\X2:Type definitions\X${}\E{}$\6
+\&{typedef} \&{struct} \&{node\_struct} ${}\{{}$\1\6
+\&{struct} \&{node\_struct} ${}{*}\\{left},{}$ ${}{*}\\{right}{}$;\C{ adjacent
+nodes of a move }\6
+\&{struct} \&{node\_struct} ${}{*}\\{up},{}$ ${}{*}\\{down}{}$;\C{ adjacent
+nodes of a cell }\6
+\&{char} ${}{*}\\{name}{}$;\C{ identification of this node for diagnostic
+printouts }\6
+\&{struct} \&{node\_struct} ${}{*}{*}{*}\\{clist}{}$;\C{ list of constraint
+lists for this move }\6
+\&{int} ${}{*}\\{tag}{}$;\C{ unique identification of a move }\2\6
+${}\}{}$ \&{node};\par
+\U1.\fi
+
+\M{3}The sizes of the basic arrays were determined experimentally; originally
+I just set them to a large number and ran the program.
+
+\Y\B\4\X3:Global variables\X${}\E{}$\6
+\&{node} \\{headers}[\\{n1}][\\{n2}][\\{n3}];\C{ cell header nodes }\6
+\&{node} \\{nodes}[\T{432}];\C{ nodes in the move lists }\6
+\&{node} ${}{*}\\{constraints}[\T{1674}]{}$;\C{ elements of constraints }\6
+\&{node} ${}{*}{*}\\{clists}[\T{558}]{}$;\C{ elements of constraint lists }\6
+\&{char} ${}\\{names}[\\{n1}*\\{n2}*\\{n3}*\T{4}]{}$;\C{ cell names }\6
+\&{int} \\{tags}[\T{108}];\C{ the \PB{\\{tag}} fields point into this array }%
+\par
+\A10.
+\U1.\fi
+
+\M{4}Here's how we get everything started, when packing bricks as mentioned
+above.
+
+\Y\B\4\X4:Initialize the data structures\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\\{cur\_node}\K{\AND}\\{nodes}[\T{0}],{}$ ${}{*}{*}%
+\\{cur\_con}\K{\AND}\\{constraints}[\T{0}],{}$ ${}{*}{*}{*}\\{cur\_clist}\K{%
+\AND}\\{clists}[\T{0}];{}$\6
+\&{register} \&{char} ${}{*}\\{cur\_name}\K{\AND}\\{names}[\T{0}];{}$\6
+\&{register} \&{int} ${}{*}\\{cur\_tag}\K{\AND}\\{tags}[\T{0}];{}$\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k;\7
+\X5:Make all cell lists empty\X;\6
+\X6:Initialize all moves that have constant first coordinate\X;\6
+\X7:Initialize all moves that have constant second coordinate\X;\6
+\X8:Initialize all moves that have constant third coordinate\X;\6
+${}\\{printf}(\.{"This\ problem\ involv}\)\.{es\ \%d\ namechars,\ \%d\ }\)%
+\.{moves,\ \%d\ nodes,\\n"},\39(\\{cur\_name}-{\AND}\\{names}[\T{0}])/\T{4},\39%
+\\{cur\_tag}-{\AND}\\{tags}[\T{0}],\39\\{cur\_node}-{\AND}\\{nodes}[\T{0}]);{}$%
+\6
+${}\\{printf}(\.{"\ \%d\ constraint\ elem}\)\.{ents,\ \%d\ clist\ eleme}\)%
+\.{nts.\\n"},\39\\{cur\_con}-{\AND}\\{constraints}[\T{0}],\39\\{cur\_clist}-{%
+\AND}\\{clists}[\T{0}]);{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{5}\B\X5:Make all cell lists empty\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{n1};{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{n2};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{n3};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}{*}\\{cur\_name}\K\|i+\.{'0'};{}$\6
+${}{*}(\\{cur\_name}+\T{1})\K\|j+\.{'0'};{}$\6
+${}{*}(\\{cur\_name}+\T{2})\K\|k+\.{'0'};{}$\6
+${}\\{headers}[\|i][\|j][\|k].\\{name}\K\\{cur\_name};{}$\6
+${}\\{cur\_name}\MRL{+{\K}}\T{4};{}$\6
+${}\\{headers}[\|i][\|j][\|k].\\{up}\K\\{headers}[\|i][\|j][\|k].\\{down}\K{%
+\AND}\\{headers}[\|i][\|j][\|k];{}$\6
+\4${}\}{}$\2\2\2\par
+\U4.\fi
+
+\M{6}\B\D$\\{new\_node}(\\{ii},\\{jj},\\{kk})$ \6
+${}\{{}$\1\6
+${}\\{cur\_node}\MG\\{right}\K\\{cur\_node}+\T{1}{}$;\5
+${}\\{cur\_node}\MG\\{left}\K\\{cur\_node}-\T{1};{}$\6
+${}\|p\K{\AND}\\{headers}[\\{ii}][\\{jj}][\\{kk}]{}$;\5
+${}\|q\K\|p\MG\\{down};{}$\6
+${}\\{cur\_node}\MG\\{name}\K\|p\MG\\{name};{}$\6
+${}\\{cur\_node}\MG\\{up}\K\|p{}$;\5
+${}\\{cur\_node}\MG\\{down}\K\|q{}$;\5
+${}\|p\MG\\{down}\K\\{cur\_node}{}$;\5
+${}\|q\MG\\{up}\K\\{cur\_node};{}$\6
+${}\\{cur\_node}\MG\\{tag}\K\\{cur\_tag};{}$\6
+${}\\{cur\_node}\MG\\{clist}\K\\{cur\_clist};{}$\6
+${}\\{cur\_node}\PP;{}$\6
+\4${}\}{}$\2\par
+\B\4\D$\\{start\_con}$ \5
+${*}\\{cur\_clist}\K{}$\\{cur\_con}\C{ begin making a constraint list }\par
+\B\4\D$\\{new\_con}(\\{ii},\\{jj},\\{kk})$ \5
+${*}\\{cur\_con}\PP\K{\AND}\\{headers}[\\{ii}][\\{jj}]{}$[\\{kk}]\C{ add a cell
+to it }\par
+\B\4\D$\\{wrap\_con}$ \5
+$\\{cur\_con}\PP,\39\\{cur\_clist}\PP{}$\C{ finish making a constraint list }%
+\par
+\Y\B\4\X6:Initialize all moves that have constant first coordinate\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{n1};{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j+\T{1}<\\{n2};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k+\T{1}<\\{n3};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\\{first\_node}\K\\{cur\_node};{}$\7
+${}\\{new\_node}(\|i,\39\|j,\39\|k);{}$\6
+${}\\{new\_node}(\|i,\39\|j,\39\|k+\T{1});{}$\6
+${}\\{new\_node}(\|i,\39\|j+\T{1},\39\|k);{}$\6
+${}\\{new\_node}(\|i,\39\|j+\T{1},\39\|k+\T{1});{}$\6
+${}\\{first\_node}\MG\\{left}\K\\{cur\_node}-\T{1};{}$\6
+${}(\\{cur\_node}-\T{1})\MG\\{right}\K\\{first\_node};{}$\6
+\&{if} ${}(\|i>\T{0}){}$\5
+${}\{{}$\1\6
+\\{start\_con};\6
+${}\\{new\_con}(\|i-\T{1},\39\|j,\39\|k);{}$\6
+${}\\{new\_con}(\|i-\T{1},\39\|j,\39\|k+\T{1});{}$\6
+${}\\{new\_con}(\|i-\T{1},\39\|j+\T{1},\39\|k);{}$\6
+${}\\{new\_con}(\|i-\T{1},\39\|j+\T{1},\39\|k+\T{1});{}$\6
+\\{wrap\_con};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|i+\T{1}<\\{n1}){}$\5
+${}\{{}$\1\6
+\\{start\_con};\6
+${}\\{new\_con}(\|i+\T{1},\39\|j,\39\|k);{}$\6
+${}\\{new\_con}(\|i+\T{1},\39\|j,\39\|k+\T{1});{}$\6
+${}\\{new\_con}(\|i+\T{1},\39\|j+\T{1},\39\|k);{}$\6
+${}\\{new\_con}(\|i+\T{1},\39\|j+\T{1},\39\|k+\T{1});{}$\6
+\\{wrap\_con};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|j>\T{0}){}$\5
+${}\{{}$\1\6
+\\{start\_con};\6
+${}\\{new\_con}(\|i,\39\|j-\T{1},\39\|k);{}$\6
+${}\\{new\_con}(\|i,\39\|j-\T{1},\39\|k+\T{1});{}$\6
+\\{wrap\_con};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|j+\T{2}<\\{n2}){}$\5
+${}\{{}$\1\6
+\\{start\_con};\6
+${}\\{new\_con}(\|i,\39\|j+\T{2},\39\|k);{}$\6
+${}\\{new\_con}(\|i,\39\|j+\T{2},\39\|k+\T{1});{}$\6
+\\{wrap\_con};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|k>\T{0}){}$\5
+${}\{{}$\1\6
+\\{start\_con};\6
+${}\\{new\_con}(\|i,\39\|j,\39\|k-\T{1});{}$\6
+${}\\{new\_con}(\|i,\39\|j+\T{1},\39\|k-\T{1});{}$\6
+\\{wrap\_con};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|k+\T{2}<\\{n3}){}$\5
+${}\{{}$\1\6
+\\{start\_con};\6
+${}\\{new\_con}(\|i,\39\|j,\39\|k+\T{2});{}$\6
+${}\\{new\_con}(\|i,\39\|j+\T{1},\39\|k+\T{2});{}$\6
+\\{wrap\_con};\6
+\4${}\}{}$\2\6
+${}\\{cur\_clist}\PP;{}$\6
+${}\\{cur\_tag}\PP;{}$\6
+\&{if} (\\{very\_very\_verbose})\1\5
+\X9:Print the move that starts with \PB{\\{first\_node}}\X;\2\6
+\4${}\}{}$\2\2\2\par
+\U4.\fi
+
+\M{7}\B\X7:Initialize all moves that have constant second coordinate\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i+\T{1}<\\{n1};{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{n2};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k+\T{1}<\\{n3};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\\{first\_node}\K\\{cur\_node};{}$\7
+${}\\{new\_node}(\|i,\39\|j,\39\|k);{}$\6
+${}\\{new\_node}(\|i,\39\|j,\39\|k+\T{1});{}$\6
+${}\\{new\_node}(\|i+\T{1},\39\|j,\39\|k);{}$\6
+${}\\{new\_node}(\|i+\T{1},\39\|j,\39\|k+\T{1});{}$\6
+${}\\{first\_node}\MG\\{left}\K\\{cur\_node}-\T{1};{}$\6
+${}(\\{cur\_node}-\T{1})\MG\\{right}\K\\{first\_node};{}$\6
+\&{if} ${}(\|j>\T{0}){}$\5
+${}\{{}$\1\6
+\\{start\_con};\6
+${}\\{new\_con}(\|i,\39\|j-\T{1},\39\|k);{}$\6
+${}\\{new\_con}(\|i,\39\|j-\T{1},\39\|k+\T{1});{}$\6
+${}\\{new\_con}(\|i+\T{1},\39\|j-\T{1},\39\|k);{}$\6
+${}\\{new\_con}(\|i+\T{1},\39\|j-\T{1},\39\|k+\T{1});{}$\6
+\\{wrap\_con};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|j+\T{1}<\\{n2}){}$\5
+${}\{{}$\1\6
+\\{start\_con};\6
+${}\\{new\_con}(\|i,\39\|j+\T{1},\39\|k);{}$\6
+${}\\{new\_con}(\|i,\39\|j+\T{1},\39\|k+\T{1});{}$\6
+${}\\{new\_con}(\|i+\T{1},\39\|j+\T{1},\39\|k);{}$\6
+${}\\{new\_con}(\|i+\T{1},\39\|j+\T{1},\39\|k+\T{1});{}$\6
+\\{wrap\_con};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|i>\T{0}){}$\5
+${}\{{}$\1\6
+\\{start\_con};\6
+${}\\{new\_con}(\|i-\T{1},\39\|j,\39\|k);{}$\6
+${}\\{new\_con}(\|i-\T{1},\39\|j,\39\|k+\T{1});{}$\6
+\\{wrap\_con};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|i+\T{2}<\\{n1}){}$\5
+${}\{{}$\1\6
+\\{start\_con};\6
+${}\\{new\_con}(\|i+\T{2},\39\|j,\39\|k);{}$\6
+${}\\{new\_con}(\|i+\T{2},\39\|j,\39\|k+\T{1});{}$\6
+\\{wrap\_con};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|k>\T{0}){}$\5
+${}\{{}$\1\6
+\\{start\_con};\6
+${}\\{new\_con}(\|i,\39\|j,\39\|k-\T{1});{}$\6
+${}\\{new\_con}(\|i+\T{1},\39\|j,\39\|k-\T{1});{}$\6
+\\{wrap\_con};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|k+\T{2}<\\{n3}){}$\5
+${}\{{}$\1\6
+\\{start\_con};\6
+${}\\{new\_con}(\|i,\39\|j,\39\|k+\T{2});{}$\6
+${}\\{new\_con}(\|i+\T{1},\39\|j,\39\|k+\T{2});{}$\6
+\\{wrap\_con};\6
+\4${}\}{}$\2\6
+${}\\{cur\_clist}\PP;{}$\6
+${}\\{cur\_tag}\PP;{}$\6
+\&{if} (\\{very\_very\_verbose})\1\5
+\X9:Print the move that starts with \PB{\\{first\_node}}\X;\2\6
+\4${}\}{}$\2\2\2\par
+\U4.\fi
+
+\M{8}\B\X8:Initialize all moves that have constant third coordinate\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i+\T{1}<\\{n1};{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j+\T{1}<\\{n2};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{n3};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\\{first\_node}\K\\{cur\_node};{}$\7
+${}\\{new\_node}(\|i,\39\|j,\39\|k);{}$\6
+${}\\{new\_node}(\|i+\T{1},\39\|j,\39\|k);{}$\6
+${}\\{new\_node}(\|i,\39\|j+\T{1},\39\|k);{}$\6
+${}\\{new\_node}(\|i+\T{1},\39\|j+\T{1},\39\|k);{}$\6
+${}\\{first\_node}\MG\\{left}\K\\{cur\_node}-\T{1};{}$\6
+${}(\\{cur\_node}-\T{1})\MG\\{right}\K\\{first\_node};{}$\6
+\&{if} ${}(\|k>\T{0}){}$\5
+${}\{{}$\1\6
+\\{start\_con};\6
+${}\\{new\_con}(\|i,\39\|j,\39\|k-\T{1});{}$\6
+${}\\{new\_con}(\|i+\T{1},\39\|j,\39\|k-\T{1});{}$\6
+${}\\{new\_con}(\|i,\39\|j+\T{1},\39\|k-\T{1});{}$\6
+${}\\{new\_con}(\|i+\T{1},\39\|j+\T{1},\39\|k-\T{1});{}$\6
+\\{wrap\_con};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|k+\T{1}<\\{n3}){}$\5
+${}\{{}$\1\6
+\\{start\_con};\6
+${}\\{new\_con}(\|i,\39\|j,\39\|k+\T{1});{}$\6
+${}\\{new\_con}(\|i+\T{1},\39\|j,\39\|k+\T{1});{}$\6
+${}\\{new\_con}(\|i,\39\|j+\T{1},\39\|k+\T{1});{}$\6
+${}\\{new\_con}(\|i+\T{1},\39\|j+\T{1},\39\|k+\T{1});{}$\6
+\\{wrap\_con};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|j>\T{0}){}$\5
+${}\{{}$\1\6
+\\{start\_con};\6
+${}\\{new\_con}(\|i,\39\|j-\T{1},\39\|k);{}$\6
+${}\\{new\_con}(\|i+\T{1},\39\|j-\T{1},\39\|k);{}$\6
+\\{wrap\_con};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|j+\T{2}<\\{n2}){}$\5
+${}\{{}$\1\6
+\\{start\_con};\6
+${}\\{new\_con}(\|i,\39\|j+\T{2},\39\|k);{}$\6
+${}\\{new\_con}(\|i+\T{1},\39\|j+\T{2},\39\|k);{}$\6
+\\{wrap\_con};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|i>\T{0}){}$\5
+${}\{{}$\1\6
+\\{start\_con};\6
+${}\\{new\_con}(\|i-\T{1},\39\|j,\39\|k);{}$\6
+${}\\{new\_con}(\|i-\T{1},\39\|j+\T{1},\39\|k);{}$\6
+\\{wrap\_con};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|i+\T{2}<\\{n1}){}$\5
+${}\{{}$\1\6
+\\{start\_con};\6
+${}\\{new\_con}(\|i+\T{2},\39\|j,\39\|k);{}$\6
+${}\\{new\_con}(\|i+\T{2},\39\|j+\T{1},\39\|k);{}$\6
+\\{wrap\_con};\6
+\4${}\}{}$\2\6
+${}\\{cur\_clist}\PP;{}$\6
+${}\\{cur\_tag}\PP;{}$\6
+\&{if} (\\{very\_very\_verbose})\1\5
+\X9:Print the move that starts with \PB{\\{first\_node}}\X;\2\6
+\4${}\}{}$\2\2\2\par
+\U4.\fi
+
+\M{9}\B\X9:Print the move that starts with \PB{\\{first\_node}}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{node} ${}{*}{*}\\{p1},{}$ ${}{*}{*}{*}\\{c1};{}$\7
+\&{for} ${}(\|p\K\\{first\_node};{}$  ; ${}\|p\K\|p\MG\\{right}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\%s\ "},\39\|p\MG\\{name});{}$\6
+\&{if} ${}(\|p\MG\\{right}\E\\{first\_node}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"=>"});\6
+\&{for} ${}(\\{c1}\K\|p\MG\\{clist};{}$ ${}{*}\\{c1};{}$ ${}\\{c1}\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\\{p1}\K{*}\\{c1};{}$ ${}{*}\\{p1};{}$ ${}\\{p1}\PP){}$\1\5
+${}\\{printf}(\.{"\%s,"},\39({*}\\{p1})\MG\\{name});{}$\2\6
+\\{printf}(\.{"\ "});\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\Us6, 7\ETs8.\fi
+
+\N{1}{10}Backtracking. At level \PB{\|l}, we've made \PB{\|l} moves, and we
+assume that
+we've got to satisfy constraints \PB{\|c} for \PB{$\\{constr}[\|l]\Z\|c<%
+\\{ctop}$}. We decide which
+of those constraints is strongest, in the sense that it a minimal number
+of moves will satisfy it; we record those moves in an array of pointers
+\PB{\|m} to move nodes, for \PB{$\\{first}[\|l]\Z\|m<\\{mtop}$}, and we try
+each of them in turn.
+
+\Y\B\4\D$\\{move\_stack\_size}$ \5
+\T{1000}\par
+\B\4\D$\\{constr\_stack\_size}$ \5
+\T{1000}\par
+\B\4\D$\\{max\_level}$ \5
+$(((\\{n1}*\\{n2}*\\{n3})\GG\T{2})-\T{2}{}$)\par
+\Y\B\4\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}\\{move\_stack}[\\{move\_stack\_size}];{}$\6
+\&{node} ${}{*}{*}\\{constr\_stack}[\\{constr\_stack\_size}];{}$\6
+\&{node} ${}{*}{*}\\{first}[\\{max\_level}]{}$;\C{ beginning move on a given
+level }\6
+\&{node} ${}{*}{*}\\{move}[\\{max\_level}]{}$;\C{ current move being explored }%
+\6
+\&{node} ${}{*}{*}{*}\\{constr}[\\{max\_level}]{}$;\C{ first constraint on a
+given level }\6
+\&{int} \\{totsols}[\\{max\_level}];\C{ the number of solutions we found }\par
+\fi
+
+\M{11}I'm using \PB{\&{goto}} statements, as usual when I backtrack.
+
+\Y\B\4\X11:Backtrack thru all possibilities\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}{*}\\{mtop}\K{\AND}\\{move\_stack}[\T{0}];{}$\6
+\&{register} \&{node} ${}{*}{*}{*}\\{ctop}\K{\AND}\\{constr\_stack}[\T{0}];{}$\6
+\&{register} \&{node} ${}{*}{*}\\{pp},{}$ ${}{*}{*}{*}\\{cc};{}$\6
+\&{register} \&{int} \|l${}\K\T{0};{}$\7
+${}\\{constr}[\T{0}]\K\\{ctop};{}$\6
+\X15:Put the initial constraints onto the constraint stack\X;\6
+\4\\{newlevel}:\5
+${}\\{first}[\|l]\K\\{mtop};{}$\6
+\&{if} ${}(\\{constr}[\|l]\E\\{ctop}){}$\5
+${}\{{}$\1\6
+\X25:Record a solution\X;\6
+\&{if} ${}(\|l\E\\{max\_level}-\T{1}){}$\1\5
+\&{goto} \\{backtrack};\2\6
+\X23:Put all remaining moves on the move stack\X;\6
+\4${}\}{}$\2\6
+\&{else} \&{if} ${}(\|l\E\\{max\_level}-\T{1}){}$\1\5
+\&{goto} \\{backtrack};\2\6
+\&{else}\1\5
+\X12:Find a constraint to branch on, and put its moves on the move stack\X;\2\6
+${}\\{pp}\K\\{first}[\|l];{}$\6
+\&{goto} \\{advance};\6
+\4\\{backtrack}:\5
+\X22:Reinstate all moves from this level\X;\6
+${}\\{mtop}\K\\{first}[\|l];{}$\6
+\&{if} ${}(\|l\E\T{0}){}$\1\5
+\&{goto} \\{done};\2\6
+${}\|l\MM;{}$\6
+${}\\{pp}\K\\{move}[\|l];{}$\6
+\X19:Unmake move \PB{${*}\\{pp}$}\X;\6
+\X21:Disallow move \PB{${*}\\{pp}$}\X;\6
+${}\\{pp}\PP;{}$\6
+\4\\{advance}:\6
+\&{if} ${}(\\{pp}\E\\{mtop}){}$\1\5
+\&{goto} \\{backtrack};\2\6
+${}\\{move}[\|l]\K\\{pp};{}$\6
+\X16:Make move \PB{${*}\\{pp}$}\X;\6
+\&{if} (\\{very\_verbose})\1\5
+\X24:Print a progress report\X;\2\6
+${}\|l\PP;{}$\6
+\&{goto} \\{newlevel};\6
+\4\\{done}:\5
+;\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{12}\B\X12:Find a constraint to branch on, and put its moves on the move
+stack\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \\{count};\6
+\&{node} ${}{*}{*}\\{cbest};{}$\6
+\&{int} \\{best\_count}${}\K\T{100000};{}$\7
+\&{for} ${}(\\{cc}\K\\{constr}[\|l];{}$ ${}\\{cc}<\\{ctop};{}$ ${}\\{cc}\PP){}$%
+\5
+${}\{{}$\1\6
+\X13:If constraint \PB{${*}\\{cc}$} has smaller count than \PB{\\{best%
+\_count}}, set \PB{$\\{cbest}\K{*}\\{cc}$}\X;\6
+\4${}\}{}$\2\6
+\X14:Put the moves for \PB{\\{cbest}} on the move stack\X;\6
+\4${}\}{}$\2\par
+\U11.\fi
+
+\M{13}Here's where the tag fields become important. Pay attention now.
+
+A constraint is a list of cells, at least one of which must be occupied
+by a future move. We find all ways to satisfy the constraint by going through
+all moves on those cell lists. But we don't want to count a move twice
+when it covers more than one cell on the list. So we put a time stamp in the
+\PB{\\{tag}} field of each move, telling us whether we've already seen that
+move
+while processing the current constraint.
+
+\Y\B\4\X13:If constraint \PB{${*}\\{cc}$} has smaller count than \PB{\\{best%
+\_count}}, set \PB{$\\{cbest}\K{*}\\{cc}$}\X${}\E{}$\6
+$\\{count}\K\T{0};{}$\6
+${}\\{stamp}\PP;{}$\6
+\&{for} ${}(\\{pp}\K{*}\\{cc};{}$ ${}{*}\\{pp};{}$ ${}\\{pp}\PP){}$\1\6
+\&{for} ${}(\|p\K({*}\\{pp})\MG\\{down};{}$ ${}\|p\MG\\{left};{}$ ${}\|p\K\|p%
+\MG\\{down}){}$\1\6
+\&{if} ${}({*}(\|p\MG\\{tag})\I\\{stamp}){}$\1\5
+${}\\{count}\PP,\39{*}(\|p\MG\\{tag})\K\\{stamp};{}$\2\2\2\6
+\&{if} (\\{very\_verbose})\5
+${}\{{}$\1\6
+\\{printf}(\.{"Constraint\ "});\6
+\&{for} ${}(\\{pp}\K{*}\\{cc};{}$ ${}{*}\\{pp};{}$ ${}\\{pp}\PP){}$\1\5
+${}\\{printf}(\.{"\%s,"},\39({*}\\{pp})\MG\\{name});{}$\2\6
+${}\\{printf}(\.{"\ \%d\\n"},\39\\{count});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{count}<\\{best\_count}){}$\1\5
+${}\\{best\_count}\K\\{count},\39\\{cbest}\K{*}\\{cc}{}$;\2\par
+\U12.\fi
+
+\M{14}\B\D$\\{panic}(\|s)$ \6
+${}\{{}$\1\6
+\\{printf}(\.{"s\ stack\ overflow!\\n}\)\.{"});\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\par
+\Y\B\4\X14:Put the moves for \PB{\\{cbest}} on the move stack\X${}\E{}$\6
+$\\{stamp}\PP;{}$\6
+\&{for} ${}(\\{pp}\K\\{cbest};{}$ ${}{*}\\{pp};{}$ ${}\\{pp}\PP){}$\1\6
+\&{for} ${}(\|p\K({*}\\{pp})\MG\\{down};{}$ ${}\|p\MG\\{left};{}$ ${}\|p\K\|p%
+\MG\\{down}){}$\1\6
+\&{if} ${}({*}(\|p\MG\\{tag})\I\\{stamp}){}$\1\5
+${}{*}\\{mtop}\PP\K\|p,\39{*}(\|p\MG\\{tag})\K\\{stamp};{}$\2\2\2\6
+\&{if} ${}(\\{mtop}\G{\AND}\\{move\_stack}[\\{move\_stack\_size}]){}$\1\5
+\\{panic}(\\{move});\2\par
+\U12.\fi
+
+\M{15}Here I'm sorta cheating. Strictly speaking, this problem has no
+constraints, so the empty solution is one valid answer; then we have
+to try every possible move. But to take advantage of symmetry, I'm
+forcing the first move to be in the corner. This will miss solutions
+that don't occupy any corner, put I'm taking care of them with
+the change file \.{antislide-nocorner.ch}.
+
+\Y\B\4\X15:Put the initial constraints onto the constraint stack\X${}\E{}$\6
+$\\{pp}\K\\{first}[\T{0}]\K\\{mtop};{}$\6
+${}{*}\\{mtop}\PP\K{\AND}\\{nodes}[\T{0}];{}$\6
+\&{goto} \\{advance};\C{ yes, I'm jumping right into the thick of things }\par
+\U11.\fi
+
+\M{16}This step changes \PB{\\{pp}}, inside of section \PB{$\X18:If constraint %
+\PB{$\\{pp}\K{*}\\{cc}$} is not satisfied, put it on the constraint stack\X$}.
+(I could have used another variable, but I'm from an older generation
+that tries to conserve the number of registers used. Silly of me.)
+
+\Y\B\4\X16:Make move \PB{${*}\\{pp}$}\X${}\E{}$\6
+\&{if} ${}(\\{stamp}\E\T{1620}){}$\1\5
+\\{tmp}(\,);\2\6
+\&{for} ${}(\|p\K{*}\\{pp};{}$  ; ${}\|p\K\|p\MG\\{right}){}$\5
+${}\{{}$\1\6
+\X17:Remove all other moves in the cell list containing \PB{\|p} from their
+other cell lists\X;\6
+\&{if} ${}(\|p\MG\\{right}\E{*}\\{pp}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+${}\\{constr}[\|l+\T{1}]\K\\{ctop};{}$\6
+\&{for} ${}(\\{cc}\K\\{constr}[\|l];{}$ ${}\\{cc}<\\{constr}[\|l+\T{1}];{}$ ${}%
+\\{cc}\PP){}$\1\5
+\X18:If constraint \PB{$\\{pp}\K{*}\\{cc}$} is not satisfied, put it on the
+constraint stack\X;\2\6
+\&{for} ${}(\\{cc}\K\|p\MG\\{clist};{}$ ${}{*}\\{cc};{}$ ${}\\{cc}\PP){}$\1\5
+\X18:If constraint \PB{$\\{pp}\K{*}\\{cc}$} is not satisfied, put it on the
+constraint stack\X;\2\6
+\&{if} ${}(\\{ctop}\G{\AND}\\{constr\_stack}[\\{constr\_stack\_size}]){}$\1\5
+\\{panic}(\\{constraint});\2\par
+\U11.\fi
+
+\M{17}When a cell is occupied by the move at level \PB{\|l}, we put \PB{$\|l+%
+\T{1}$} into
+the \PB{\\{right}} field of its header node. That way we can tell if the
+cell is occupied.
+
+The ``dancing links'' trick is used here: When node \PB{\|r} is removed from
+its list, we don't change \PB{$\|r\MG\\{up}$} and \PB{$\|r\MG\\{down}$}, and we
+don't lose the
+links that led us to \PB{\|r}. That means it will be easy to restore the
+list when backtracking.
+
+\Y\B\4\X17:Remove all other moves in the cell list containing \PB{\|p} from
+their other cell lists\X${}\E{}$\6
+\&{for} ${}(\|q\K\|p\MG\\{down};{}$ ${}\|q\I\|p;{}$ ${}\|q\K\|q\MG\\{down}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|q\MG\\{left}\E\NULL){}$\1\5
+${}\|q\MG\\{right}\K{}$(\&{node} ${}{*})(\|l+\T{1});{}$\2\6
+\&{else}\1\6
+\&{for} ${}(\|r\K\|q\MG\\{left};{}$ ${}\|r\I\|q;{}$ ${}\|r\K\|r\MG\\{left}){}$\5
+${}\{{}$\1\6
+${}\|r\MG\\{up}\MG\\{down}\K\|r\MG\\{down};{}$\6
+${}\|r\MG\\{down}\MG\\{up}\K\|r\MG\\{up};{}$\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\par
+\U16.\fi
+
+\M{18}\B\X18:If constraint \PB{$\\{pp}\K{*}\\{cc}$} is not satisfied, put it on
+the constraint stack\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\\{pp}\K{*}\\{cc};{}$ ${}{*}\\{pp};{}$ ${}\\{pp}\PP){}$\1\6
+\&{if} ${}(({*}\\{pp})\MG\\{right}){}$\1\5
+\&{break};\2\2\6
+\&{if} ${}(\R{*}\\{pp}){}$\1\5
+${}{*}\\{ctop}\PP\K{*}\\{cc};{}$\2\6
+\4${}\}{}$\2\par
+\Q16.
+\U16.\fi
+
+\M{19}The links do their dance in this step. We have to reconstruct the lists
+in exact reverse order of the way we constructed them. (That's why I provided
+both \PB{\\{left}} and \PB{\\{right}} links in the move lists. Otherwise the
+program
+would try to insert a node into its list twice.)
+
+The significant aspect to note about dancing links in this algorithm is the
+order in which moves are disallowed and reinstated, as well as the order
+in which they are make and unmade.
+
+\Y\B\4\X19:Unmake move \PB{${*}\\{pp}$}\X${}\E{}$\6
+\&{for} ${}(\|p\K({*}\\{pp})\MG\\{left};{}$  ; ${}\|p\K\|p\MG\\{left}){}$\5
+${}\{{}$\1\6
+\X20:Unremove all other moves in the cell list containing \PB{\|p} from their
+other cell lists\X;\6
+\&{if} ${}(\|p\E{*}\\{pp}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+${}\\{ctop}\K\\{constr}[\|l+\T{1}]{}$;\par
+\U11.\fi
+
+\M{20}\B\X20:Unremove all other moves in the cell list containing \PB{\|p} from
+their other cell lists\X${}\E{}$\6
+\&{for} ${}(\|q\K\|p\MG\\{up};{}$ ${}\|q\I\|p;{}$ ${}\|q\K\|q\MG\\{up}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|q\MG\\{left}\E\NULL){}$\1\5
+${}\|q\MG\\{right}\K\NULL;{}$\2\6
+\&{else}\1\6
+\&{for} ${}(\|r\K\|q\MG\\{right};{}$ ${}\|r\I\|q;{}$ ${}\|r\K\|r\MG%
+\\{right}){}$\5
+${}\{{}$\1\6
+${}\|r\MG\\{up}\MG\\{down}\K\|r;{}$\6
+${}\|r\MG\\{down}\MG\\{up}\K\|r;{}$\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\par
+\U19.\fi
+
+\M{21}\B\X21:Disallow move \PB{${*}\\{pp}$}\X${}\E{}$\6
+\&{for} ${}(\|p\K({*}\\{pp})\MG\\{right};{}$  ; ${}\|p\K\|p\MG\\{right}){}$\5
+${}\{{}$\1\6
+${}\|q\K\|p\MG\\{down};{}$\6
+${}\|r\K\|p\MG\\{up};{}$\6
+${}\|q\MG\\{up}\K\|r;{}$\6
+${}\|r\MG\\{down}\K\|q;{}$\6
+\&{if} ${}(\|p\E{*}\\{pp}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\par
+\U11.\fi
+
+\M{22}\B\X22:Reinstate all moves from this level\X${}\E{}$\6
+\&{for} ${}(\\{pp}\K\\{mtop}-\T{1};{}$ ${}\\{pp}\G\\{first}[\|l];{}$ ${}\\{pp}%
+\MM){}$\1\6
+\&{for} ${}(\|p\K({*}\\{pp})\MG\\{right};{}$  ; ${}\|p\K\|p\MG\\{right}){}$\5
+${}\{{}$\1\6
+${}\|q\K\|p\MG\\{down};{}$\6
+${}\|r\K\|p\MG\\{up};{}$\6
+${}\|q\MG\\{up}\K\|r\MG\\{down}\K\|p;{}$\6
+\&{if} ${}(\|p\E{*}\\{pp}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\2\par
+\U11.\fi
+
+\M{23}\B\X23:Put all remaining moves on the move stack\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{stamp}\PP;{}$\6
+\&{for} ${}(\|p\K{\AND}\\{headers}[\T{0}][\T{0}][\T{0}];{}$ ${}\|p<{\AND}%
+\\{headers}[\\{n1}][\T{0}][\T{0}];{}$ ${}\|p\PP){}$\1\6
+\&{if} ${}(\R\|p\MG\\{right}){}$\1\6
+\&{for} ${}(\|q\K\|p\MG\\{down};{}$ ${}\|q\I\|p;{}$ ${}\|q\K\|q\MG\\{down}){}$%
+\1\6
+\&{if} ${}({*}(\|q\MG\\{tag})\I\\{stamp}){}$\1\5
+${}{*}\\{mtop}\PP\K\|q,\39{*}(\|q\MG\\{tag})\K\\{stamp};{}$\2\2\2\2\6
+\4${}\}{}$\2\par
+\U11.\fi
+
+\M{24}\B\X24:Print a progress report\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{printf}(\.{"Move\ \%d:"},\39\|l+\T{1});{}$\6
+\&{for} ${}(\|p\K({*}\\{move}[\|l])\MG\\{right};{}$  ; ${}\|p\K\|p\MG%
+\\{right}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\ \%s"},\39\|p\MG\\{name});{}$\6
+\&{if} ${}(\|p\E{*}\\{move}[\|l]){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"\ (\%d)\\n"},\39\\{stamp});{}$\6
+\4${}\}{}$\2\par
+\U11.\fi
+
+\M{25}\B\X25:Record a solution\X${}\E{}$\6
+$\\{totsols}[\|l]\PP;{}$\6
+\&{if} (\\{verbose})\5
+${}\{{}$\1\6
+\&{int} \\{ii}${},{}$ \\{jj}${},{}$ \\{kk};\7
+${}\\{printf}(\.{"\%d.\%d:"},\39\|l,\39\\{totsols}[\|l]);{}$\6
+\&{for} ${}(\\{ii}\K\T{0};{}$ ${}\\{ii}<\\{n1};{}$ ${}\\{ii}\PP){}$\5
+${}\{{}$\1\6
+\\{printf}(\.{"\ "});\6
+\&{for} ${}(\\{jj}\K\T{0};{}$ ${}\\{jj}<\\{n2};{}$ ${}\\{jj}\PP){}$\1\6
+\&{for} ${}(\\{kk}\K\T{0};{}$ ${}\\{kk}<\\{n3};{}$ ${}\\{kk}\PP){}$\5
+${}\{{}$\1\6
+\&{register} \&{int} \|c${}\K{}$(\&{int}) \\{headers}[\\{ii}][\\{jj}][%
+\\{kk}]${}.\\{right};{}$\7
+${}\\{printf}(\.{"\%c"},\39\|c>\T{9}\?\|c-\T{10}+\.{'a'}:\|c+\.{'0'});{}$\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\U11.\fi
+
+\M{26}\B\X26:Report the answers\X${}\E{}$\6
+\\{printf}(\.{"Total\ solutions\ fou}\)\.{nd:\\n"});\6
+${}\{{}$\1\6
+\&{register} \&{int} \\{lev};\7
+\&{for} ${}(\\{lev}\K\T{0};{}$ ${}\\{lev}<\\{max\_level};{}$ ${}\\{lev}\PP){}$%
+\1\6
+\&{if} (\\{totsols}[\\{lev}])\1\5
+${}\\{printf}(\.{"\ \ level\ \%d,\ \%d\\n"},\39\\{lev},\39\\{totsols}[%
+\\{lev}]);{}$\2\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\N{1}{27}Index.
+\fi
+
+\inx
+\fin
+\con

@@ -1,0 +1,60 @@
+\I\X9, 14, 17, 20, 25, 30, 34, 37:Cases for nontrivial commands\X
+\U7.
+\I\X4:Clear the current auxiliary tables\X
+\Us3\ET9.
+\I\X21:Compute $u=v*w$\X
+\Us20\ET25.
+\I\X28:Compute \PB{\|U} and \PB{\|V}\X
+\U27.
+\I\X13:Convert the directions to folds\X
+\U9.
+\I\X16:Convert the folds to directions\X
+\Us14\ET19.
+\I\X7:Do the command in \PB{\\{buf}}\X
+\U2.
+\I\X35:Factor \PB{\|u}\X
+\U34.
+\I\X36:If we're in a cycle, \PB{\&{break}}\X
+\U34.
+\I\X39:Make sure that \PB{\\{outfile}} is closed\X
+\U2.
+\I\X38:Make sure that \PB{\\{outfile}} is open\X
+\U37.
+\I\X27:Make sure \PB{\\{congclass}} is uptodate\X
+\Us30\ET33.
+\I\X33:Make sure \PB{\\{fill}} is uptodate\X
+\U34.
+\I\X26:Make sure \PB{\\{poly}} is uptodate\X
+\Us25, 32\ETs33.
+\I\X19:Multiply by a direction sequence\X
+\U17.
+\I\X18:Multiply by a folding sequence\X
+\U17.
+\I\X12:Print the complex number \PB{\|z}\X
+\U9.
+\I\X15:Print the current directions\X
+\Us14\ET19.
+\I\X10:Print the current folds\X
+\Us9\ET18.
+\I\X5:Prompt the user for a new command\X
+\U2.
+\I\X6:Read a new command from \PB{\\{infile}}\X
+\U2.
+\I\X29:Reduce \PB{\|w} mod $Z$\X
+\Us27, 31, 33\ETs35.
+\I\X3:Reset the current path to the unit path\X
+\Us2\ET9.
+\I\X8:Scan an integer to \PB{\|k}\X
+\Us7, 20, 25, 30\ETs34.
+\I\X11:Set \PB{\\{dir}[\|s]} and update \PB{\|z}\X
+\U9.
+\I\X22:Set \PB{\|d} to the type of \PB{\|w} and \PB{\|e} to the triply even
+neighbor\X
+\U21.
+\I\X32:Show congruence classes for all of \PB{\\{poly}}\X
+\U30.
+\I\X31:Show the congruence class and type of \PB{\|w}\X
+\Us30\ET32.
+\I\X23, 24:Subroutines\X
+\U2.
+

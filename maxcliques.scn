@@ -1,0 +1,17 @@
+\I\X8:Convert the $v$-containing entries $u$ into $u\AND\rho_v$, $u\AND%
+\delta_v$\X
+\U6.
+\I\X6:Find the maximal cliques\X
+\U1.
+\I\X9:Handle the cases where $w$ may absorb previous first entries\X
+\U8.
+\I\X2:Input the graph\X
+\U1.
+\I\X4:Output the maximal cliques\X
+\U1.
+\I\X7:Partition the \PB{\\{work}} area, putting entries that contain~$v$ last\X
+\U6.
+\I\X5:Set up the de Bruijn table\X
+\U4.
+\I\X3:Set up the \PB{\\{rho}} table\X
+\U2.

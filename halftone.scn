@@ -1,0 +1,20 @@
+\I\X2:Check for nonstandard \PB{\\{dampening}} and \PB{\\{brightness}} factors\X
+\U1.
+\I\X3:Determine the type of input by looking at the bounding box\X
+\U1.
+\I\X9:Find $l$ so that $d[l]$ is as close as possible to $a[i][j]$\X
+\Us10\ET11.
+\I\X4, 8:Global variables\X
+\U1.
+\I\X6:Input rectangular pixel data\X
+\U5.
+\I\X7:Input rotated pixel data\X
+\U5.
+\I\X5:Input the graphic data\X
+\U1.
+\I\X10:Process \PB{\|a[\|i][\|j]} in the rectangular case\X
+\U12.
+\I\X11:Process \PB{\|a[\|i][\|j]} in the rotated case\X
+\U12.
+\I\X12:Translate input to output\X
+\U1.

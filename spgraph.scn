@@ -1,0 +1,12 @@
+\I\X6:Convert the binary tree to a graph\X
+\U1.
+\I\X5:Create a new branch\X
+\U2.
+\I\X4:Create a new leaf\X
+\U2.
+\I\X3:Global variables\X
+\U1.
+\I\X2:Parse the formula \PB{\\{argv}[\T{1}]} into a binary tree\X
+\U1.
+\I\X7:Subroutines\X
+\U1.

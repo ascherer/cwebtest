@@ -1,0 +1,58 @@
+\I\X38:Append \PB{\|x}'s innards to the poison list\X
+\U36.
+\I\X27:Append \PB{\|y} and \PB{\|z} to the poison list\X
+\U38.
+\I\X32:Backtrack through all solutions\X
+\U1.
+\I\X7:Bump \PB{\\{curstamp}}\X
+\U32.
+\I\X23:Check that all blue words appear in all relevant lists\X
+\U21.
+\I\X22:Check that the relevant lists contain only blue words\X
+\U21.
+\I\X34:Choose a potential move \PB{\|x}\X
+\U32.
+\I\X15:Compute the classes and initialize their lists\X
+\U17.
+\I\X12:Create empty prefix and suffix lists\X
+\U17.
+\I\X26:Delete entry \PB{\|p} from the poison list\X
+\Us39\ET40.
+\I\X45:Downdate the free list\X
+\U32.
+\I\X35:Find a class \PB{\\{cls}} with fewest blue words~\PB{\|r}\X
+\U34.
+\I\X40:Find \PB{\|x} that maximizes the ``kill'' potential~\PB{\|s}\X
+\Q1.
+\U34.
+\I\X6, 9, 14, 24, 29:Global variables\X
+\U1.
+\I\X10, 17, 25, 30:Initialize the tables\X
+\U1.
+\I\X37:Make \PB{\|x} green and close the lists it's in\X
+\U36.
+\I\X2:Print the profile\X
+\U1.
+\I\X3:Process the command line\X
+\U1.
+\I\X13:Put \PB{\\{alpha}} into all of its prefix and suffix lists\X
+\U16.
+\I\X41:Reject \PB{\|x} if it violates the restricted growth condition\X
+\I\X46:Report a solution and \PB{\&{goto} \\{backup}}\X
+\U32.
+\I\X33:Report the current profile, if \PB{$\\{mems}\G\\{thresh}$}\X
+\U32.
+\I\X4, 5, 18, 19, 20, 21, 31, 42:Subroutines\X
+\U1.
+\I\X28:Type definitions\X
+\U1.
+\I\X36:Update the data structures for new codeword \PB{\|x}\X
+\U32.
+\I\X43:Update the data structures to forbid \PB{\|x}\X
+\U32.
+\I\X44:Update the free list\X
+\U32.
+\I\X39:Update the poison list, or \PB{\&{goto} \\{try\_again}}\X
+\U36.
+\I\X16:Visit the prime string $a_1\ldots a_4$\X
+\U15.

@@ -1,0 +1,875 @@
+\input cwebmac
+\datethis
+\font\logo=logo10
+
+
+\N{1}{1}Intro. This is an interactive program to do calculations
+associated with Dekking's generalized dragon curves and the associated
+calculus of tiles, as described in my notes on ``diamonds and dragons.''
+
+When prompted, the user can do the following things:
+
+\def\thing#1#2\par{\smallskip\item{$\bullet$}#1\hfil\break#2\par}
+\def\<#1>{\hbox{$\langle\,$#1$\,\rangle$}}
+
+\thing{\.p\<path>}
+Set the current zigzag path to the sequence
+of directions specifed by \<path>. (Directions are the digits
+\.0, \.1, \.2, \.3, meaning ``right,'' ``up,'' ``left,'' and ``down,''
+respectively; they must begin with \.0 and alternate in parity.)
+The computer responds with the value of $z$, which is the point reached
+at the end of the path in the complex plane that starts at 0 and
+moves by $i^k$ when taking direction~$k$. For example, \.{p01012}
+yields $z=1+2i$. At the beginning of computation the current path
+is simply \.0, and $z=1$.
+
+\thing{\<folding sequence>}
+Set the current zigzag path to the specified
+\<folding sequence>, which is a sequence of \.D's and \.U's.
+A folding sequence of length $s-1$ corresponds to the path of
+length~$s$ that starts in direction~0 and then changes the
+direction by $+1$ (mod~4) for each \.D and $-1$ (mod~4) for each \.U.
+For example, the command \.{DUDD} is equivalent to the
+command \.{p01012}. (I~apologize for the historical baggage of this
+notation, according to which the {\it down\/}-fold \.D corresponds
+to making the actual direction go {\it up}.)
+
+\thing{\.*\<path> or \.*\<folding sequence>}
+Multiply the current path by the specified path or folding sequence,
+using Dekking's folding product. For example, if the current path
+is \.{01012}, the command \.{*03} or \.{*U} will change it to
+\.{0101210303} and set $z\gets3+i$.
+
+\thing{\<tile>\.*\<tile>}
+Compute the folding product of two tiles with respect to the
+current value of~$z$. Here \<tile> is a list of two integers
+separated by a comma. For example, \.{3,2*-2,3} will yield
+the result \.{-8,1} when $z=1+2i$, because $(3+2i)*(-2+3i)=
+i(3+2i)+z(-2+2i)=-8+i$.
+
+\thing{\.{a*}\<tile>}
+Compute the folding product $v*w$ of all tiles $v$ in the polyomino of the
+current path with the specified tile~$w$. In particular, if the specified
+tile is the unit tile \.{1,0},
+the effect is simply to list all of the current polyomino tiles~$v$.
+
+\thing{\.c\<tile> or \.c}
+Show the congruence class and type of the specified tile.
+Or, if no tile is specified, show the congruence classes and types
+of all tiles in the current polynomino.
+
+\thing{\.f\<tile> or \.F\<tile>}
+``Factor'' the given tile $u$ to obtain $v$ and $w$ such that $u=v*w$
+with respect to the current path, where $v$ is a tile in the current
+polyomino. With \.F instead of \.f, proceed to factor $w$ in the same
+way, until cycling. These commands are allowed only when the current path is
+plane-filling.
+
+\thing{\.m}
+Output {\logo METAPOST} commands to draw the current path.
+
+\thing{\.v\<integer>}
+Specify the level of verbosity,
+where \.{v0} gives the minimum amount of output
+and \.{v-1} gives the maximum.
+
+\thing{\.q}
+Quit the program.
+
+\thing{\.{\char`\%}\<comment>}
+Do nothing, but politely think about whatever comment has been given.
+
+\thing{\.i\<filename>}
+Take commands from the specified file, then come back for more
+(unless the file included a ``quit'' command). The file may
+contain any command except another \.i command, because I don't
+want to bother maintaining a stack of included files.
+
+\smallskip\noindent
+Please realize that I had to write this program in an awful hurry,
+because of many other commitments.
+
+\fi
+
+\M{2}Here we go.
+
+\Y\B\4\D$\\{maxm}$ \5
+$(\T{1}\LL\T{15}{}$)\C{ length of longest path allowed }\par
+\B\4\D$\\{maxd}$ \5
+$(\T{1}\LL\T{8}{}$)\C{ anything $\ge\sqrt{2\PB{\\{maxm}}}$ is safe here }\par
+\B\4\D$\\{maxp}$ \5
+\T{100}\C{ how much memory is allowed for cycle detection? }\par
+\B\4\D$\\{bufsize}$ \5
+\T{1024}\C{ maximum length of commands }\par
+\B\4\D$\\{verbose\_echo}$ \5
+$(\T{1}\LL\T{0}{}$)\C{ should commands of included files be echoed? }\par
+\B\4\D$\\{verbose\_folds}$ \5
+$(\T{1}\LL\T{1}{}$)\C{ should folds be printed when directions given? }\par
+\B\4\D$\\{verbose\_dirs}$ \5
+$(\T{1}\LL\T{2}{}$)\C{ should directions be printed when folds given? }\par
+\B\4\D$\\{metapost\_name}$ \5
+\.{"/tmp/dragon-calc.mp}\)\.{"}\C{ file name for {\logo METAPOST} output }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\8\#\&{include} \.{<string.h>}\6
+\&{int} \\{vbose};\6
+\&{FILE} ${}{*}\\{infile},{}$ ${}{*}\\{outfile};{}$\6
+\&{char} \\{buf}[\\{bufsize}];\6
+\&{char} \\{dir}[\\{maxm}]${},{}$ \\{fold}[\\{maxm}];\C{ directions and folds
+of current path }\6
+\&{int} \|s;\C{ length of current path }\6
+\&{typedef} \&{struct} \&{pair\_struct} ${}\{{}$\1\6
+\&{long} \|x${},{}$ \|y;\2\6
+${}\}{}$ \&{pair};\6
+\&{pair} \|e${},{}$ \|u${},{}$ \|v${},{}$ \|w${},{}$ \|z${},{}$ \\{uu}${},{}$ %
+\\{vv};\6
+\&{pair} \\{ipower}[\T{4}]${}\K\{\{\T{1},\39\T{0}\},\39\{\T{0},\39\T{1}\},\39%
+\{{-}\T{1},\39\T{0}\},\39\{\T{0},\39{-}\T{1}\}\};{}$\6
+\&{pair} \\{sqrt8i}${}\K\{\T{2},\39\T{2}\};{}$\6
+\&{pair} \\{poly}[\\{maxm}];\C{ polyomino of current path (i.e., its tiles) }\6
+\&{int} ${}\\{congclass}[\\{maxd}][\T{4}*\\{maxm}]{}$;\C{ congruence class
+table }\6
+\&{int} \\{fill}[\\{maxm}];\C{ mapping from classes to tiles of a plane-filling
+path }\6
+\&{pair} \\{cyc}[\\{maxp}];\C{ elements to check for cycling in \.F commands }\6
+\&{int} \\{cycptr};\C{ number of relevant elements in \PB{\\{cyc}} }\6
+\&{int} \\{count};\C{ this many paths have been output }\7
+\X23:Subroutines\X;\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|c${},{}$ \|d${},{}$ \|j${},{}$ \|k${},{}$ \\{neg};\6
+\&{register} \&{char} ${}{*}\|p,{}$ ${}{*}\|q;{}$\6
+\&{long} \\{qq};\6
+\&{int} \\{including}${}\K\T{0};{}$\7
+\X3:Reset the current path to the unit path\X;\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{if} (\\{including})\1\5
+\X6:Read a new command from \PB{\\{infile}}\X\2\6
+\&{else}\1\5
+\X5:Prompt the user for a new command\X;\2\6
+\X7:Do the command in \PB{\\{buf}}\X;\6
+\&{while} ${}({*}\|p\E\.{'\ '}){}$\1\5
+${}\|p\PP;{}$\2\6
+\&{if} ${}({*}\|p\I\.{'\\n'}){}$\1\5
+${}\\{printf}(\.{"Junk\ at\ end\ of\ comm}\)\.{and\ has\ been\ ignored}\)\.{:\ %
+\%s"},\39\|p);{}$\2\6
+\4${}\}{}$\2\6
+\4\\{done}:\5
+\X39:Make sure that \PB{\\{outfile}} is closed\X\6
+\4${}\}{}$\2\par
+\fi
+
+\M{3}\B\X3:Reset the current path to the unit path\X${}\E{}$\6
+$\|s\K\T{1},\39\|z.\|x\K\T{1},\39\|z.\|y\K\T{0};{}$\6
+\X4:Clear the current auxiliary tables\X;\par
+\Us2\ET9.\fi
+
+\M{4}We compute the \PB{\\{poly}} table only when it's needed. After it has
+been computed, \PB{\\{poly}[\T{0}]} will be \PB{$\{\T{1},\T{0}\}$}. Similarly,
+we compute
+the \PB{\\{congclass}} and \PB{\\{fill}} tables only when necessary.
+
+\Y\B\4\X4:Clear the current auxiliary tables\X${}\E{}$\6
+$\\{poly}[\T{0}].\|x\K\T{0},\39\\{congclass}[\T{0}][\T{0}]\K{-}\T{1};{}$\6
+${}\\{fill}[\T{0}]\K{-}\T{1}{}$;\par
+\Us3\ET9.\fi
+
+\M{5}\B\X5:Prompt the user for a new command\X${}\E{}$\6
+${}\{{}$\1\6
+\\{printf}(\.{">\ "});\5
+\\{fflush}(\\{stdout});\6
+${}\\{fgets}(\\{buf},\39\\{bufsize},\39\\{stdin});{}$\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{6}\B\X6:Read a new command from \PB{\\{infile}}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\R\\{fgets}(\\{buf},\39\\{bufsize},\39\\{infile})){}$\5
+${}\{{}$\1\6
+${}\\{including}\K\T{0};{}$\6
+\&{continue};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{7}\B\X7:Do the command in \PB{\\{buf}}\X${}\E{}$\6
+\&{for} ${}(\|p\K\\{buf};{}$ ${}{*}\|p\E\.{'\ '};{}$ ${}\|p\PP){}$\1\5
+;\2\6
+\&{if} ${}({*}\|p\E\.{'\\n'}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{including}){}$\1\5
+\\{printf}(\.{"Please\ type\ a\ comma}\)\.{nd,\ or\ say\ q\ to\ quit}\)\.{.%
+\\n"});\2\6
+\&{continue};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{including}\W(\\{vbose}\AND\\{verbose\_echo})){}$\1\5
+${}\\{printf}(\.{"\%s"},\39\\{buf});{}$\2\6
+\&{switch} ${}({*}\|p){}$\5
+${}\{{}$\1\6
+\4\&{case} \.{'q'}:\5
+\&{goto} \\{done};\6
+\4\&{case} \.{'i'}:\6
+\&{if} ${}(\R\\{including}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|p\K\\{buf}+\T{1};{}$ ${}{*}\|p\E\.{'\ '};{}$ ${}\|p\PP){}$\1\5
+;\2\6
+\&{for} ${}(\|q\K\|p+\T{1};{}$ ${}{*}\|q\I\.{'\\n'};{}$ ${}\|q\PP){}$\1\5
+;\2\6
+${}{*}\|q\K\.{'\\0'};{}$\6
+\&{if} ${}(\\{infile}\K\\{fopen}(\|p,\39\.{"r"})){}$\1\5
+${}\\{including}\K\T{1};{}$\2\6
+\&{else}\1\5
+${}\\{printf}(\.{"Sorry\ ---\ I\ couldn'}\)\.{t\ open\ file\ `\%s'\ for}\)\.{\
+reading!\\n"},\39\|p);{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+\\{printf}(\.{"Sorry;\ you\ can't\ in}\)\.{clude\ one\ file\ in\ an}\)\.{other.%
+\\n"});\2\6
+\4\&{case} \.{'\%'}:\5
+\&{continue};\6
+\4\&{case} \.{'v'}:\5
+${}\|p\PP;{}$\6
+\X8:Scan an integer to \PB{\|k}\X;\6
+${}\\{vbose}\K\|k{}$;\5
+\&{break};\7
+\X9:Cases for nontrivial commands\X;\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{8}\B\X8:Scan an integer to \PB{\|k}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{while} ${}({*}\|p\E\.{'\ '}){}$\1\5
+${}\|p\PP;{}$\2\6
+\&{if} ${}({*}\|p\E\.{'-'}){}$\1\5
+${}\\{neg}\K\T{1},\39\|p\PP;{}$\2\6
+\&{else}\1\5
+${}\\{neg}\K\T{0};{}$\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}{*}\|p\G\.{'0'}\W{*}\|p\Z\.{'9'};{}$ ${}\|p%
+\PP){}$\1\5
+${}\|k\K\T{10}*\|k+{*}\|p-\.{'0'};{}$\2\6
+\&{if} (\\{neg})\1\5
+${}\|k\K{-}\|k;{}$\2\6
+\4${}\}{}$\2\par
+\Us7, 20, 25, 30\ETs34.\fi
+
+\M{9}\B\X9:Cases for nontrivial commands\X${}\E{}$\6
+\4\&{case} \.{'p'}:\5
+\&{for} ${}(\|s\K\T{0},\39\|z.\|x\K\|z.\|y\K\T{0},\39\|p\PP;{}$ ${}{*}\|p\G%
+\.{'0'}\W{*}\|p\Z\.{'3'};{}$ ${}\|s\PP,\39\|p\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|s\E\T{0}\W{*}\|p\I\.{'0'}){}$\5
+${}\{{}$\1\6
+\\{printf}(\.{"A\ path\ must\ start\ i}\)\.{n\ direction\ 0!\\n"});\6
+\&{goto} \\{bad\_path};\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(({*}\|p\XOR\|s)\AND\T{\^1}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"Direction\ \%c\ in\ thi}\)\.{s\ path\ has\ bad\ parit}\)\.{y!%
+\\n"},\39{*}\|p);{}$\6
+\4\\{bad\_path}:\5
+\X3:Reset the current path to the unit path\X;\5
+\&{break};\6
+\4${}\}{}$\2\6
+\X11:Set \PB{\\{dir}[\|s]} and update \PB{\|z}\X;\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|s>\\{maxm}){}$\5
+${}\{{}$\1\6
+\4\\{too\_long}:\5
+${}\\{printf}(\.{"Sorry,\ I\ can't\ deal}\)\.{\ with\ paths\ longer\ t}\)\.{han%
+\ \%d;\ recompile\ me}\)\.{!\\n"},\39\\{maxm});{}$\6
+\&{goto} \\{bad\_path};\6
+\4${}\}{}$\2\6
+\X13:Convert the directions to folds\X;\6
+\4\\{finish\_dirs}:\5
+\X10:Print the current folds\X;\6
+\4\\{print\_path\_params}:\5
+${}\\{printf}(\.{"\ s=\%d,\ z="},\39\|s);{}$\6
+\X12:Print the complex number \PB{\|z}\X;\6
+\\{printf}(\.{"\\n"});\6
+\X4:Clear the current auxiliary tables\X;\6
+\&{break};\par
+\As14, 17, 20, 25, 30, 34\ETs37.
+\U7.\fi
+
+\M{10}\B\X10:Print the current folds\X${}\E{}$\6
+\&{if} ${}(\\{vbose}\AND\\{verbose\_folds}){}$\1\5
+${}\\{printf}(\.{"\ \%s,"},\39\\{fold}){}$;\2\par
+\Us9\ET18.\fi
+
+\M{11}\B\X11:Set \PB{\\{dir}[\|s]} and update \PB{\|z}\X${}\E{}$\6
+\&{if} ${}(\|s<\\{maxm}){}$\1\5
+${}\\{dir}[\|s]\K{*}\|p-\.{'0'};{}$\2\6
+\&{switch} ${}({*}\|p){}$\5
+${}\{{}$\1\6
+\4\&{case} \.{'0'}:\5
+${}\|z.\|x\PP{}$;\5
+\&{break};\6
+\4\&{case} \.{'1'}:\5
+${}\|z.\|y\PP{}$;\5
+\&{break};\6
+\4\&{case} \.{'2'}:\5
+${}\|z.\|x\MM{}$;\5
+\&{break};\6
+\4\&{case} \.{'3'}:\5
+${}\|z.\|y\MM{}$;\5
+\&{break};\6
+\4${}\}{}$\2\par
+\U9.\fi
+
+\M{12}\B\X12:Print the complex number \PB{\|z}\X${}\E{}$\6
+\&{if} ${}(\|z.\|x){}$\1\5
+${}\\{printf}(\.{"\%ld"},\39\|z.\|x);{}$\2\6
+\&{else} \&{if} ${}(\R\|z.\|y){}$\1\5
+\\{printf}(\.{"0"});\2\6
+\&{if} ${}(\|z.\|y){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|z.\|y\E\T{1}){}$\1\5
+\\{printf}(\.{"+i"});\2\6
+\&{else} \&{if} ${}(\|z.\|y>\T{0}){}$\1\5
+${}\\{printf}(\.{"+\%ldi"},\39\|z.\|y);{}$\2\6
+\&{else} \&{if} ${}(\|z.\|y\E{-}\T{1}){}$\1\5
+\\{printf}(\.{"-i"});\2\6
+\&{else}\1\5
+${}\\{printf}(\.{"-\%ldi"},\39{-}\|z.\|y);{}$\2\6
+\4${}\}{}$\2\par
+\U9.\fi
+
+\M{13}\B\X13:Convert the directions to folds\X${}\E{}$\6
+\&{for} ${}(\|j\K\|k\K\T{0};{}$ ${}\|j<\|s-\T{1};{}$ ${}\|j\PP){}$\1\5
+${}\\{fold}[\|j]\K((\\{dir}[\|j+\T{1}]-\\{dir}[\|j])\AND\T{\^2}\?\.{'U'}:%
+\.{'D'});{}$\2\6
+${}\\{fold}[\|j]\K\.{'\\0'}{}$;\par
+\U9.\fi
+
+\M{14}\B\X9:Cases for nontrivial commands\X${}\mathrel+\E{}$\6
+\4\&{case} \.{'D'}:\5
+\&{case} \.{'U'}:\5
+\&{for} ${}(\|s\K\T{0};{}$ ${}{*}\|p\E\.{'D'}\V{*}\|p\E\.{'U'};{}$ ${}\|s\PP,%
+\39\|p\PP){}$\1\6
+\&{if} ${}(\|s<\\{maxm}){}$\1\5
+${}\\{fold}[\|s]\K{*}\|p;{}$\2\2\6
+\&{if} ${}(\PP\|s>\\{maxm}){}$\1\5
+\&{goto} \\{too\_long};\2\6
+\4\\{finish\_folds}:\5
+\X16:Convert the folds to directions\X;\6
+\X15:Print the current directions\X;\6
+\&{goto} \\{print\_path\_params};\par
+\fi
+
+\M{15}\B\X15:Print the current directions\X${}\E{}$\6
+\&{if} ${}(\\{vbose}\AND\\{verbose\_dirs}){}$\5
+${}\{{}$\1\6
+\\{printf}(\.{"\ "});\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|s;{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\.{"\%d"},\39\\{dir}[\|k]);{}$\2\6
+\4${}\}{}$\2\par
+\Us14\ET19.\fi
+
+\M{16}\B\X16:Convert the folds to directions\X${}\E{}$\6
+\&{for} ${}(\|j\K\|k\K\T{0},\39\|z.\|x\K\|z.\|y\K\T{0};{}$ ${}\|k<\|s;{}$ ${}%
+\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{dir}[\|k]\K\|j;{}$\6
+\&{switch} (\|j)\5
+${}\{{}$\1\6
+\4\&{case} \T{0}:\5
+${}\|z.\|x\PP{}$;\5
+\&{break};\6
+\4\&{case} \T{1}:\5
+${}\|z.\|y\PP{}$;\5
+\&{break};\6
+\4\&{case} \T{2}:\5
+${}\|z.\|x\MM{}$;\5
+\&{break};\6
+\4\&{case} \T{3}:\5
+${}\|z.\|y\MM{}$;\5
+\&{break};\6
+\4${}\}{}$\2\6
+${}\|j\K(\|j+(\\{fold}[\|k]\E\.{'D'}\?\T{1}:{-}\T{1}))\AND\T{\^3};{}$\6
+\4${}\}{}$\2\par
+\Us14\ET19.\fi
+
+\M{17}\B\X9:Cases for nontrivial commands\X${}\mathrel+\E{}$\6
+\4\&{case} \.{'*'}:\5
+${}\|p\PP;{}$\6
+\&{if} ${}({*}\|p\E\.{'D'}\V{*}\|p\E\.{'U'}){}$\1\5
+\X18:Multiply by a folding sequence\X\2\6
+\&{else} \&{if} ${}({*}\|p\E\.{'0'}){}$\1\5
+\X19:Multiply by a direction sequence\X\2\6
+\&{else}\5
+${}\{{}$\1\6
+\\{printf}(\.{"Improper\ multiplica}\)\.{tion!\\n"});\6
+\&{break};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{18}\B\X18:Multiply by a folding sequence\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\|j\K\|s-\T{1};{}$ ${}{*}\|p\E\.{'D'}\V{*}\|p\E\.{'U'};{}$ ${}%
+\|p\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|k+\|s\G\\{maxm}){}$\1\5
+\&{goto} \\{too\_long};\2\6
+${}\\{fold}[\|k\PP]\K{*}\|p;{}$\6
+\&{if} (\|j)\1\6
+\&{for} ( ; \|j; ${}\|j\MM){}$\1\5
+${}\\{fold}[\|k\PP]\K\.{'U'}+\.{'D'}-\\{fold}[\|j-\T{1}];{}$\2\2\6
+\&{else}\1\6
+\&{for} ( ; ${}\|j<\|s-\T{1};{}$ ${}\|j\PP){}$\1\5
+${}\\{fold}[\|k\PP]\K\\{fold}[\|j];{}$\2\2\6
+\4${}\}{}$\2\6
+${}\\{fold}[\|k]\K\.{'\\0'},\39\|s\K\|k+\T{1};{}$\6
+\X10:Print the current folds\X;\6
+\&{goto} \\{finish\_folds};\6
+\4${}\}{}$\2\par
+\U17.\fi
+
+\M{19}\B\X19:Multiply by a direction sequence\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\|j\K\|s-\T{1},\39\|p\PP;{}$ ${}{*}\|p\G\.{'0'}\W{*}\|p\Z%
+\.{'3'}\W(({*}\|p\XOR{*}(\|p-\T{1}))\AND\T{\^1});{}$ ${}\|p\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|k+\|s\G\\{maxm}){}$\1\5
+\&{goto} \\{too\_long};\2\6
+${}\\{fold}[\|k\PP]\K({*}\|p-{*}(\|p-\T{1}))\AND\T{\^2}\?\.{'U'}:\.{'D'};{}$\6
+\&{if} (\|j)\1\6
+\&{for} ( ; \|j; ${}\|j\MM){}$\1\5
+${}\\{fold}[\|k\PP]\K\.{'U'}+\.{'D'}-\\{fold}[\|j-\T{1}];{}$\2\2\6
+\&{else}\1\6
+\&{for} ( ; ${}\|j<\|s-\T{1};{}$ ${}\|j\PP){}$\1\5
+${}\\{fold}[\|k\PP]\K\\{fold}[\|j];{}$\2\2\6
+\4${}\}{}$\2\6
+${}\\{fold}[\|k]\K\.{'\\0'},\39\|s\K\|k+\T{1};{}$\6
+\X16:Convert the folds to directions\X;\6
+\X15:Print the current directions\X;\6
+\&{goto} \\{finish\_dirs};\6
+\4${}\}{}$\2\par
+\U17.\fi
+
+\M{20}\B\D$\\{must\_see}(\|c)$ \6
+\&{while} ${}({*}\|p\E\.{'\ '}){}$\1\5
+${}\|p\PP{}$;\5
+\2\&{if} ${}({*}\|p\PP\I\|c)$ \&{goto} \\{bad\_command}\par
+\B\4\D$\\{check\_tile}(\|v)$ \6
+\&{if} ${}(((\|v.\|x+\|v.\|y)\AND\T{\^1})\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"Bad\ tile\ (\%ld,\%ld)!}\)\.{\\n"},\39\|v.\|x,\39\|v.\|y){}$;%
+\5
+\&{break};\5
+${}\}{}$\2\par
+\Y\B\4\X9:Cases for nontrivial commands\X${}\mathrel+\E{}$\6
+\4\&{default}:\5
+\X8:Scan an integer to \PB{\|k}\X;\6
+${}\|v.\|x\K\|k;{}$\6
+\&{while} ${}({*}\|p\E\.{'\ '}){}$\1\5
+${}\|p\PP;{}$\2\6
+\&{if} ${}({*}\|p\PP\I\.{','}){}$\5
+${}\{{}$\1\6
+\4\\{bad\_command}:\5
+${}\|p\MM;{}$\6
+\&{if} ${}(\\{including}\W\R(\\{vbose}\AND\\{verbose\_echo})){}$\1\5
+${}\\{printf}(\.{"Sorry,\ I\ don't\ unde}\)\.{rstand\ the\ command\ \%}\)%
+\.{s"},\39\\{buf});{}$\2\6
+\&{else}\1\5
+\\{printf}(\.{"Sorry,\ I\ don't\ unde}\)\.{rstand\ that\ command!}\)\.{\\n"});%
+\2\6
+\&{break};\6
+\4${}\}{}$\2\6
+\X8:Scan an integer to \PB{\|k}\X;\6
+${}\|v.\|y\K\|k;{}$\6
+\\{check\_tile}(\|v);\6
+\\{must\_see}(\.{'*'});\6
+\X8:Scan an integer to \PB{\|k}\X;\6
+${}\|w.\|x\K\|k;{}$\6
+\\{must\_see}(\.{','});\6
+\X8:Scan an integer to \PB{\|k}\X;\6
+${}\|w.\|y\K\|k;{}$\6
+\\{check\_tile}(\|w);\6
+\X21:Compute $u=v*w$\X;\6
+${}\\{printf}(\.{"\ \%ld,\%ld\\n"},\39\|u.\|x,\39\|u.\|y);{}$\6
+\&{break};\par
+\fi
+
+\M{21}\B\X21:Compute $u=v*w$\X${}\E{}$\6
+\X22:Set \PB{\|d} to the type of \PB{\|w} and \PB{\|e} to the triply even
+neighbor\X;\6
+${}\|u\K\\{sum}(\\{prod}(\\{ipower}[({-}\|d)\AND\T{\^3}],\39\|v),\39\\{prod}(%
+\|z,\39\|e)){}$;\par
+\Us20\ET25.\fi
+
+\M{22}\B\D$\\{typ}(\|w)$ \5
+$(((\|w.\|x\AND\T{\^1})+((\|w.\|x+\|w.\|y)\AND\T{\^2})+\T{3})\AND\T{\^3}{}$)\C{
+yes it works! }\par
+\Y\B\4\X22:Set \PB{\|d} to the type of \PB{\|w} and \PB{\|e} to the triply even
+neighbor\X${}\E{}$\6
+$\|d\K\\{typ}(\|w);{}$\6
+${}\|e\K\\{sum}(\|w,\39\\{ipower}[(\T{2}-\|d)\AND\T{\^3}]){}$;\par
+\U21.\fi
+
+\M{23}Complex addition, subtraction, and multiplication are easy.
+
+\Y\B\4\X23:Subroutines\X${}\E{}$\6
+\&{pair} \\{sum}(\&{pair} \|a${},\39{}$\&{pair} \|b)\1\1\2\2\6
+${}\{{}$\1\6
+\&{pair} \\{res};\7
+${}\\{res}.\|x\K\|a.\|x+\|b.\|x;{}$\6
+${}\\{res}.\|y\K\|a.\|y+\|b.\|y;{}$\6
+\&{return} \\{res};\6
+\4${}\}{}$\2\7
+\&{pair} \\{diff}(\&{pair} \|a${},\39{}$\&{pair} \|b)\1\1\2\2\6
+${}\{{}$\1\6
+\&{pair} \\{res};\7
+${}\\{res}.\|x\K\|a.\|x-\|b.\|x;{}$\6
+${}\\{res}.\|y\K\|a.\|y-\|b.\|y;{}$\6
+\&{return} \\{res};\6
+\4${}\}{}$\2\7
+\&{pair} \\{prod}(\&{pair} \|a${},\39{}$\&{pair} \|b)\1\1\2\2\6
+${}\{{}$\1\6
+\&{pair} \\{res};\7
+${}\\{res}.\|x\K\|a.\|x*\|b.\|x-\|a.\|y*\|b.\|y;{}$\6
+${}\\{res}.\|y\K\|a.\|x*\|b.\|y+\|a.\|y*\|b.\|x;{}$\6
+\&{return} \\{res};\6
+\4${}\}{}$\2\par
+\A24.
+\U2.\fi
+
+\M{24}We also need complex division, but only when it is known to be exact.
+
+\Y\B\4\D$\\{norm}(\|z)$ \5
+$(\|z.\|x*\|z.\|x+\|z.\|y*\|z.\|y{}$)\par
+\Y\B\4\X23:Subroutines\X${}\mathrel+\E{}$\6
+\&{pair} \\{quot}(\&{pair} \|a${},\39{}$\&{pair} \|b)\1\1\2\2\6
+${}\{{}$\1\6
+\&{pair} \\{res};\6
+\&{long} \|n${}\K\\{norm}(\|b);{}$\7
+${}\\{res}.\|x\K(\|a.\|x*\|b.\|x+\|a.\|y*\|b.\|y)/\|n;{}$\6
+${}\\{res}.\|y\K({-}\|a.\|x*\|b.\|y+\|a.\|y*\|b.\|x)/\|n;{}$\6
+\&{return} \\{res};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{25}\B\X9:Cases for nontrivial commands\X${}\mathrel+\E{}$\6
+\4\&{case} \.{'a'}:\5
+\X26:Make sure \PB{\\{poly}} is uptodate\X;\6
+${}\|p\PP;{}$\6
+\\{must\_see}(\.{'*'});\6
+\X8:Scan an integer to \PB{\|k}\X;\6
+${}\|w.\|x\K\|k;{}$\6
+\\{must\_see}(\.{','});\6
+\X8:Scan an integer to \PB{\|k}\X;\6
+${}\|w.\|y\K\|k;{}$\6
+\\{check\_tile}(\|w);\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|s;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|v\K\\{poly}[\|k];{}$\6
+\X21:Compute $u=v*w$\X;\6
+${}\\{printf}(\.{"\ \%ld,\%ld"},\39\|u.\|x,\39\|u.\|y);{}$\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\&{break};\par
+\fi
+
+\M{26}\B\X26:Make sure \PB{\\{poly}} is uptodate\X${}\E{}$\6
+\&{if} ${}(\R\\{poly}[\T{0}].\|x){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0},\39\|u.\|x\K\|u.\|y\K\T{0};{}$ ${}\|k<\|s;{}$ ${}\|k%
+\PP){}$\5
+${}\{{}$\1\6
+${}\|v\K\|u;{}$\6
+\&{switch} (\\{dir}[\|k])\5
+${}\{{}$\1\6
+\4\&{case} \T{0}:\5
+${}\|u.\|x\PP{}$;\5
+\&{break};\6
+\4\&{case} \T{1}:\5
+${}\|u.\|y\PP{}$;\5
+\&{break};\6
+\4\&{case} \T{2}:\5
+${}\|u.\|x\MM{}$;\5
+\&{break};\6
+\4\&{case} \T{3}:\5
+${}\|u.\|y\MM{}$;\5
+\&{break};\6
+\4${}\}{}$\2\6
+${}\\{poly}[\|k]\K\\{sum}(\|u,\39\|v);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\Us25, 32\ETs33.\fi
+
+\N{1}{27}Congruence classes. Finally we get to the most interesting part of the
+program, which determines whether tiles are congruent.
+
+Let $Z=(2+2i)z=A+Bi$, and let $D=\gcd(A,B)$. The first task, when we
+want to find the congruence class of a given tile $w$, is to
+reduce $w$ modulo $Z$. To do this, we set up the \PB{\\{congclass}} table as
+follows:
+We essentially find $p$ and $q$ such that
+$pA+qB=D$. Then we let $U=(A-Bi)Z/D=(A^2+B^2)/D$ and
+$V=(pi+q)Z=(qA-pB)+Di$. By subtracting an appropriate multiple of~$V$
+from $w$, we reduce its imaginary part, mod~$D$. Then we can reduce the
+real part, mod~$u$. If the result is $w'=x+yi$, the class of~$w$
+is stored in \PB{$\\{congclass}[\|y\GG\T{1}][\|x]$}. It's OK to shift \PB{\|y}
+right in this
+formula (saving a factor of 2 in space) because $x+y$ is always odd.
+
+\Y\B\4\D$\\{classof}(\|w)$ \5
+$\\{congclass}[\|w.\|y\GG\T{1}][\|w.\|x{}$]\par
+\Y\B\4\X27:Make sure \PB{\\{congclass}} is uptodate\X${}\E{}$\6
+\&{if} ${}(\\{congclass}[\T{0}][\T{0}]<\T{0}){}$\5
+${}\{{}$\1\6
+\X28:Compute \PB{\|U} and \PB{\|V}\X;\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{vv}.\|y\GG\T{1};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{uu}.\|x;{}$ ${}\|k\PP){}$\1\5
+${}\\{congclass}[\|j][\|k]\K{-}\T{1};{}$\2\2\6
+\&{for} ${}(\|c\K\|j\K\T{0};{}$ ${}\|j<\\{vv}.\|y\GG\T{1};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{uu}.\|x;{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\\{congclass}[\|j][\|k]<\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{congclass}[\|j][\|k]\K\|c;{}$\6
+${}\|v.\|x\K\|k,\39\|v.\|y\K\T{2}*\|j+\T{1}-(\|k\AND\T{\^1});{}$\6
+\&{for} ${}(\|d\K\T{1};{}$ ${}\|d<\T{4};{}$ ${}\|d\PP){}$\5
+${}\{{}$\1\6
+${}\|w\K\\{prod}(\|v,\39\\{ipower}[\|d]);{}$\6
+\X29:Reduce \PB{\|w} mod $Z$\X;\6
+${}\\{classof}(\|w)\K\|c;{}$\6
+\4${}\}{}$\2\6
+${}\|c\PP;{}$\6
+\4${}\}{}$\2\2\2\6
+\4${}\}{}$\2\par
+\Us30\ET33.\fi
+
+\M{28}We essentially do Euclid's algorithm on the imaginary parts here.
+The roles of $D$ and $(A^2+B^2)/D$ in the formulas above are played by
+\PB{$\\{vv}.\|y$} and \PB{$\\{uu}.\|x$}, respectively.
+
+\Y\B\4\X28:Compute \PB{\|U} and \PB{\|V}\X${}\E{}$\6
+$\\{uu}\K\\{prod}(\|z,\39\\{sqrt8i}),\39\\{vv}.\|x\K{-}\\{uu}.\|y,\39\\{vv}.\|y%
+\K\\{uu}.\|x;{}$\6
+\&{if} ${}(\\{uu}.\|y<\T{0}){}$\1\5
+${}\\{uu}.\|x\K{-}\\{uu}.\|x,\39\\{uu}.\|y\K{-}\\{uu}.\|y;{}$\2\6
+\&{if} ${}(\\{vv}.\|y<\T{0}){}$\1\5
+${}\\{vv}.\|x\K{-}\\{vv}.\|x,\39\\{vv}.\|y\K{-}\\{vv}.\|y;{}$\2\6
+\&{while} ${}(\\{uu}.\|y){}$\5
+${}\{{}$\1\6
+\&{while} ${}(\\{vv}.\|y\G\\{uu}.\|y){}$\1\5
+${}\\{vv}\K\\{diff}(\\{vv},\39\\{uu});{}$\2\6
+${}\|w\K\\{vv},\39\\{vv}\K\\{uu},\39\\{uu}\K\|w;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{uu}.\|x<\T{0}){}$\1\5
+${}\\{uu}.\|x\K{-}\\{uu}.\|x{}$;\2\par
+\U27.\fi
+
+\M{29}\B\X29:Reduce \PB{\|w} mod $Z$\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\|w.\|y<\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{qq}\K(\\{vv}.\|y-\T{1}-\|w.\|y)/\\{vv}.\|y;{}$\6
+${}\|w.\|x\MRL{+{\K}}\\{qq}*\\{vv}.\|x,\39\|w.\|y\MRL{+{\K}}\\{qq}*\\{vv}.%
+\|y;{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\\{qq}\K\|w.\|y/\\{vv}.\|y;{}$\6
+${}\|w.\|x\MRL{-{\K}}\\{qq}*\\{vv}.\|x,\39\|w.\|y\MRL{-{\K}}\\{qq}*\\{vv}.%
+\|y;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|w.\|x<\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{qq}\K(\\{uu}.\|x-\T{1}-\|w.\|x)/\\{uu}.\|x;{}$\6
+${}\|w.\|x\MRL{+{\K}}\\{qq}*\\{uu}.\|x;{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\\{qq}\K\|w.\|x/\\{uu}.\|x;{}$\6
+${}\|w.\|x\MRL{-{\K}}\\{qq}*\\{uu}.\|x;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\Us27, 31, 33\ETs35.\fi
+
+\M{30}\B\X9:Cases for nontrivial commands\X${}\mathrel+\E{}$\6
+\4\&{case} \.{'c'}:\5
+\X27:Make sure \PB{\\{congclass}} is uptodate\X;\6
+${}\|p\PP;{}$\6
+\&{while} ${}({*}\|p\E\.{'\ '}){}$\1\5
+${}\|p\PP;{}$\2\6
+\&{if} ${}({*}\|p\E\.{'\\n'}){}$\1\5
+\X32:Show congruence classes for all of \PB{\\{poly}}\X\2\6
+\&{else}\5
+${}\{{}$\1\6
+\X8:Scan an integer to \PB{\|k}\X;\6
+${}\|w.\|x\K\|k;{}$\6
+\\{must\_see}(\.{','});\6
+\X8:Scan an integer to \PB{\|k}\X;\6
+${}\|w.\|y\K\|k;{}$\6
+\X31:Show the congruence class and type of \PB{\|w}\X;\6
+\4${}\}{}$\2\6
+\&{break};\par
+\fi
+
+\M{31}\B\X31:Show the congruence class and type of \PB{\|w}\X${}\E{}$\6
+$\|v\K\|w;{}$\6
+\X29:Reduce \PB{\|w} mod $Z$\X;\6
+${}\\{printf}(\.{"\ \%ld,\%ld\ is\ \%d\_\%d\\n}\)\.{"},\39\|v.\|x,\39\|v.\|y,%
+\39\\{classof}(\|w),\39\\{typ}(\|v)){}$;\par
+\Us30\ET32.\fi
+
+\M{32}\B\X32:Show congruence classes for all of \PB{\\{poly}}\X${}\E{}$\6
+${}\{{}$\1\6
+\X26:Make sure \PB{\\{poly}} is uptodate\X;\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|s;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|w\K\\{poly}[\|k];{}$\6
+\X31:Show the congruence class and type of \PB{\|w}\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U30.\fi
+
+\M{33}A plane-filling path has the property that $s=\vert z\vert^2$
+and all of its tiles are incongruent. In such cases
+we set \PB{$\\{fill}[\|j]\K\|k$} when \PB{\\{poly}[\|k]} has class \PB{\|j}.
+
+\Y\B\4\X33:Make sure \PB{\\{fill}} is uptodate\X${}\E{}$\6
+\&{if} ${}(\\{fill}[\T{0}]<\T{0}\W(\\{norm}(\|z)\E\|s)){}$\5
+${}\{{}$\1\6
+\X26:Make sure \PB{\\{poly}} is uptodate\X;\6
+\X27:Make sure \PB{\\{congclass}} is uptodate\X;\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|s;{}$ ${}\|j\PP){}$\1\5
+${}\\{fill}[\|j]\K{-}\T{1};{}$\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|s;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|w\K\\{poly}[\|k];{}$\6
+\X29:Reduce \PB{\|w} mod $Z$\X;\6
+\&{if} ${}(\\{fill}[\\{classof}(\|w)]\G\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fill}[\T{0}]\K{-}\T{1};{}$\6
+\&{break};\C{ abort, since it's not plane-filling }\6
+\4${}\}{}$\2\6
+${}\\{fill}[\\{classof}(\|w)]\K\|k;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U34.\fi
+
+\M{34}\B\X9:Cases for nontrivial commands\X${}\mathrel+\E{}$\6
+\4\&{case} \.{'f'}:\5
+\&{case} \.{'F'}:\5
+${}\|q\K\|p\PP;{}$\6
+\X33:Make sure \PB{\\{fill}} is uptodate\X;\6
+\&{if} ${}(\\{fill}[\T{0}]<\T{0}){}$\5
+${}\{{}$\1\6
+\\{printf}(\.{"Sorry,\ the\ current\ }\)\.{path\ isn't\ plane-fil}\)\.{ling!%
+\\n"});\6
+\&{break};\6
+\4${}\}{}$\2\6
+\X8:Scan an integer to \PB{\|k}\X;\6
+${}\|u.\|x\K\|k;{}$\6
+\\{must\_see}(\.{','});\6
+\X8:Scan an integer to \PB{\|k}\X;\6
+${}\|u.\|y\K\|k;{}$\6
+\\{check\_tile}(\|u);\6
+${}\\{cyc}[\T{0}]\K\|u,\39\\{cycptr}\K\T{1};{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\X35:Factor \PB{\|u}\X;\6
+\&{if} ${}({*}\|q\E\.{'f'}){}$\1\5
+\&{break};\2\6
+\X36:If we're in a cycle, \PB{\&{break}}\X;\6
+${}\|u\K\|w;{}$\6
+\4${}\}{}$\2\6
+\&{break};\par
+\fi
+
+\M{35}See my diamonds-and-dragons notes for the theory used here.
+
+\Y\B\4\X35:Factor \PB{\|u}\X${}\E{}$\6
+$\|w\K\|u;{}$\6
+\X29:Reduce \PB{\|w} mod $Z$\X;\6
+${}\|v\K\\{poly}[\\{fill}[\\{classof}(\|w)]];{}$\6
+${}\|k\K(\\{typ}(\|u)-\\{typ}(\|v))\AND\T{\^3};{}$\6
+${}\|e\K\\{quot}(\\{diff}(\|u,\39\\{prod}(\|v,\39\\{ipower}[({-}\|k)\AND\T{%
+\^3}])),\39\|z);{}$\6
+${}\|w\K\\{sum}(\|e,\39\\{ipower}[({-}\|k)\AND\T{\^3}]);{}$\6
+${}\\{printf}(\.{"\ \%ld,\%ld\ =\ \%ld,\%ld\ }\)\.{*\ \%ld,\%ld\\n"},\39\|u.%
+\|x,\39\|u.\|y,\39\|v.\|x,\39\|v.\|y,\39\|w.\|x,\39\|w.\|y){}$;\par
+\U34.\fi
+
+\M{36}The element in \PB{\\{cyc}[\T{0}]} always has the smallest magnitude
+we've seen so far.
+If $\vert w\vert=1$, we're done, because $1*w=w$ in that case.
+
+\Y\B\4\X36:If we're in a cycle, \PB{\&{break}}\X${}\E{}$\6
+\&{if} ${}(\\{norm}(\|w)\E\T{1}){}$\1\5
+\&{break};\2\6
+\&{if} ${}(\\{norm}(\|w)<\\{norm}(\\{cyc}[\T{0}])){}$\1\5
+${}\\{cyc}[\T{0}]\K\|w,\39\\{cycptr}\K\T{1};{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0},\39\\{cyc}[\\{cycptr}]\K\|w;{}$ ${}\|w.\|x\I\\{cyc}[%
+\|k].\|x\V\|w.\|y\I\\{cyc}[\|k].\|y;{}$ ${}\|k\PP){}$\1\5
+;\2\6
+\&{if} ${}(\|k<\\{cycptr}){}$\1\5
+\&{break};\2\6
+${}\\{cycptr}\PP;{}$\6
+\4${}\}{}$\2\par
+\U34.\fi
+
+\N{1}{37}Graphic output. Finally, we have a rudimentary way to visualize
+general dragon curves, via {\logo METAPOST}.
+
+\Y\B\4\X9:Cases for nontrivial commands\X${}\mathrel+\E{}$\6
+\4\&{case} \.{'m'}:\5
+\X38:Make sure that \PB{\\{outfile}} is open\X;\6
+${}\\{count}\PP,\39\|p\PP;{}$\6
+${}\\{fprintf}(\\{outfile},\39\.{"\\nbeginfig(\%d)\\n\ O"},\39\\{count});{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|s-\T{1};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|k\MOD\T{32}\E\T{31}){}$\1\5
+${}\\{fprintf}(\\{outfile},\39\.{"\\n"});{}$\2\6
+${}\\{fprintf}(\\{outfile},\39\.{"\ \%c"},\39\\{fold}[\|k]);{}$\6
+\4${}\}{}$\2\6
+${}\\{fprintf}(\\{outfile},\39\.{";\\nendfig;\\n"});{}$\6
+\&{break};\par
+\fi
+
+\M{38}\B\X38:Make sure that \PB{\\{outfile}} is open\X${}\E{}$\6
+\&{if} ${}(\R\\{outfile}){}$\5
+${}\{{}$\1\6
+${}\\{outfile}\K\\{fopen}(\\{metapost\_name},\39\.{"w"});{}$\6
+\&{if} ${}(\R\\{outfile}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Oops,\ I\ can't\ open\ }\)\.{\%s\ for\ output!%
+\ Have\ }\)\.{to\ quit...\\n"},\39\\{metapost\_name});{}$\6
+${}\\{exit}({-}\T{99});{}$\6
+\4${}\}{}$\2\6
+${}\\{fprintf}(\\{outfile},\39\.{"\%\%\ Output\ from\ DRAG}\)\.{ON-CALC%
+\\n"});{}$\6
+${}\\{fprintf}(\\{outfile},\39\.{"numeric\ dd;\ pair\ rr}\)\.{,ww,zz;\
+rr=(10bp,0);}\)\.{\ \%\%\ adjust\ rr\ if\ des}\)\.{ired!\\n"});{}$\6
+${}\\{fprintf}(\\{outfile},\39\.{"def\ D\ =\ dd:=dd+90;\ }\)\.{ww:=zz;\
+zz:=ww+rr\ ro}\)\.{tated\ dd;\ draw\ ww--z}\)\.{z;\ enddef;\\n"});{}$\6
+${}\\{fprintf}(\\{outfile},\39\.{"def\ U\ =\ dd:=dd-90;\ }\)\.{ww:=zz;\
+zz:=ww+rr\ ro}\)\.{tated\ dd;\ draw\ ww--z}\)\.{z;\ enddef;\\n"});{}$\6
+${}\\{fprintf}(\\{outfile},\39\.{"def\ O\ =\ zz:=origin;}\)\.{\ dd:=-90;\ D;\
+enddef;}\)\.{\\n"});{}$\6
+\4${}\}{}$\2\par
+\U37.\fi
+
+\M{39}\B\X39:Make sure that \PB{\\{outfile}} is closed\X${}\E{}$\6
+\&{if} (\\{outfile})\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{outfile},\39\.{"\\nbye.\\n"});{}$\6
+\\{fclose}(\\{outfile});\6
+${}\\{fprintf}(\\{stderr},\39\.{"METAPOST\ output\ for}\)\.{\ \%d\ paths\
+written\ on}\)\.{\ \%s.\\n"},\39\\{count},\39\\{metapost\_name});{}$\6
+${}\\{outfile}\K\NULL;{}$\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\N{1}{40}Index.
+
+\fi
+
+
+\inx
+\fin
+\con

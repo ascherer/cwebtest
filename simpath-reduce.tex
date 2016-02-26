@@ -1,0 +1,201 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. This program takes the output of {\mc SIMPATH} (on \PB{%
+\\{stdin}})
+and converts it to a ZDD (on \PB{\\{stdout}}).
+
+The output is in the same format as might be output by {\mc BDD15},
+except that the branches are in bottom-up order rather than top-down.
+
+The input begins with lines that specify the names of the vertices
+and arcs. A copy of those lines is written to the file
+\.{/tmp/simpath-names}.
+
+Then come the lines we want to reduce, which might begin like this:
+$$\chardef\\=`\#
+\vcenter{\halign{\tt#\hfil\cr
+\\1:\cr
+2:3,4\cr
+\\2:\cr
+3:5,6\cr
+4:7,0\cr}}$$
+meaning that node 2 of the unreduced dag has branches to nodes 3 and 4, etc.
+Nodes 0 and 1 are the sinks.
+
+\Y\B\4\D$\\{memsize}$ \5
+$(\T{1}\LL\T{25}{}$)\par
+\B\4\D$\\{varsize}$ \5
+\T{1000}\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\&{int} \\{lo}[\\{memsize}]${},{}$ \\{hi}[\\{memsize}];\6
+\&{int} \\{firstnode}[\\{varsize}];\6
+\&{int} \\{head};\6
+\&{int} \\{nodesout};\6
+\&{char} \\{buf}[\T{100}];\6
+\&{int} \\{nbuf}${},{}$ \\{lbuf}${},{}$ \\{hbuf};\6
+\&{FILE} ${}{*}\\{tempfile};{}$\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|p${},{}$ \|q${},{}$ \|r${},{}$ %
+\|s${},{}$ \|t;\7
+\X2:Store all the input in \PB{\\{lo}} and \PB{\\{hi}}\X;\6
+\X3:Reduce and output\X;\6
+${}\\{fprintf}(\\{stderr},\39\.{"\%d\ branch\ nodes\ out}\)\.{put.\\n"},\39%
+\\{nodesout});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Store all the input in \PB{\\{lo}} and \PB{\\{hi}}\X${}\E{}$\6
+$\\{tempfile}\K\\{fopen}(\.{"/tmp/simpath-names"},\39\.{"w"});{}$\6
+\&{if} ${}(\R\\{tempfile}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ can't\ open\ /tmp/s}\)\.{impath-names\ for\
+wri}\)\.{ting!\\n"});{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{fgets}(\\{buf},\39\T{100},\39\\{stdin})){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"The\ input\ line\ ende}\)\.{d\ unexpectedly!%
+\\n"});{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{buf}[\T{0}]\E\.{'\#'}){}$\1\5
+\&{break};\2\6
+${}\\{fprintf}(\\{tempfile},\39\\{buf});{}$\6
+\4${}\}{}$\2\6
+\\{fclose}(\\{tempfile});\6
+\&{for} ${}(\|t\K\T{1},\39\|s\K\T{2};{}$  ; ${}\|t\PP){}$\5
+${}\{{}$\C{ \PB{\|t} is arc number, \PB{\|s} is node number }\1\6
+\&{if} ${}(\|t+\T{1}\G\\{varsize}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Memory\ overflow\ (va}\)\.{rsize=\%d)!\\n"},%
+\39\\{varsize});{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+${}\\{firstnode}[\|t]\K\|s;{}$\6
+\&{if} ${}(\\{sscanf}(\\{buf}+\T{1},\39\.{"\%d"},\39{\AND}\\{nbuf})\I\T{1}\V%
+\\{nbuf}\I\|t){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Bad\ input\ line\ for\ }\)\.{arc\ \%d:\ \%s"},%
+\39\|t,\39\\{buf});{}$\6
+${}\\{exit}({-}\T{4});{}$\6
+\4${}\}{}$\2\6
+\&{for} ( ;  ; ${}\|s\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|s\G\\{memsize}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Memory\ overflow\ (me}\)\.{msize=\%d)!\\n"},%
+\39\\{memsize});{}$\6
+${}\\{exit}({-}\T{5});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\R\\{fgets}(\\{buf},\39\T{100},\39\\{stdin})){}$\1\5
+\&{goto} \\{done\_reading};\2\6
+\&{if} ${}(\\{buf}[\T{0}]\E\.{'\#'}){}$\1\5
+\&{break};\2\6
+\&{if} ${}(\\{sscanf}(\\{buf},\39\.{"\%x:\%x,\%x"},\39{\AND}\\{nbuf},\39{\AND}%
+\\{lbuf},\39{\AND}\\{hbuf})\I\T{3}\V\\{nbuf}\I\|s){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Bad\ input\ line\ for\ }\)\.{node\ \%x:\ %
+\%s"},\39\|s,\39\\{buf});{}$\6
+${}\\{exit}({-}\T{6});{}$\6
+\4${}\}{}$\2\6
+${}\\{lo}[\|s]\K\\{lbuf},\39\\{hi}[\|s]\K\\{hbuf};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4\\{done\_reading}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"\%d\ arcs\ and\ \%d\ bran}\)\.{ch\ nodes\
+successfull}\)\.{y\ read.\\n"},\39\|t,\39\|s-\T{2});{}$\6
+${}\\{firstnode}[\|t+\T{1}]\K\|s{}$;\par
+\U1.\fi
+
+\M{3}Here I use an algorithm something like that of Sieling and Wegener,
+and something like the ones I used in {\mc BDD9} and {\mc CONNECTED}
+and other programs. But I've changed it again, for fun and variety.
+
+All nodes below the current level have already been output.
+If node \PB{\|p} on such a level has been reduced away in favor of node \PB{%
+\|q},
+we've set \PB{$\\{lo}[\|p]\K\|q$}. But if that node has been output, we set
+\PB{$\\{lo}[\|p]<\T{0}$}. We also keep \PB{$\\{hi}[\|p]\G\T{0}$} in such nodes,
+except temporarily
+when using \PB{\\{hi}[\|p]} as a pointer to a stack.
+
+We go through all nodes on the current level and link together the
+ones with a common \PB{\\{hi}} field~\PB{\|p}. The most recent such node
+is \PB{$\|q\K{-}\\{hi}[\|p]$}; the next most recent is \PB{\\{hi}[\|q]}, if
+that is positive;
+then \PB{\\{hi}[\\{hi}[\|q]]} and so on.
+But if \PB{$\\{hi}[\|q]\Z\T{0}$}, it specifies another \PB{\|p} value, in
+a list of lists.
+
+\Y\B\4\X3:Reduce and output\X${}\E{}$\6
+$\\{lo}[\T{0}]\K\\{lo}[\T{1}]\K{-}\T{1}{}$;\C{ sinks are implicitly present }\6
+\&{for} ( ; \|t; ${}\|t\MM){}$\5
+${}\{{}$\1\6
+${}\\{head}\K\T{0};{}$\6
+\&{for} ${}(\|k\K\\{firstnode}[\|t];{}$ ${}\|k<\\{firstnode}[\|t+\T{1}];{}$ ${}%
+\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|q\K\\{lo}[\|k];{}$\6
+\&{if} ${}(\\{lo}[\|q]\G\T{0}){}$\1\5
+${}\\{lo}[\|k]\K\\{lo}[\|q]{}$;\C{ replace \PB{\\{lo}[\|k]} by its clone }\2\6
+${}\|q\K\\{hi}[\|k];{}$\6
+\&{if} ${}(\\{lo}[\|q]\G\T{0}){}$\1\5
+${}\\{hi}[\|k]\K\|q\K\\{lo}[\|q]{}$;\C{ likewise \PB{\\{hi}[\|k]} }\2\6
+\&{if} (\|q)\1\5
+\X4:Put \PB{\|k} onto the list for \PB{\|q}\X;\2\6
+\4${}\}{}$\2\6
+\X5:Go through the list of lists\X;\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{4}\B\X4:Put \PB{\|k} onto the list for \PB{\|q}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{hi}[\|q]\G\T{0}){}$\1\5
+${}\\{hi}[\|k]\K{-}\\{head},\39\\{head}\K\|q{}$;\C{ start a new list }\2\6
+\&{else}\1\5
+${}\\{hi}[\|k]\K{-}\\{hi}[\|q]{}$;\C{ point to previous in list }\2\6
+${}\\{hi}[\|q]\K{-}\|k;{}$\6
+\4${}\}{}$\2\par
+\U3.\fi
+
+\M{5}We go through each list twice, once to output instructions
+and once to clean up our tracks.
+
+\Y\B\4\X5:Go through the list of lists\X${}\E{}$\6
+\&{for} ${}(\|p\K\\{head};{}$ \|p; ${}\|p\K{-}\|q){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|q\K{-}\\{hi}[\|p];{}$ ${}\|q>\T{0};{}$ ${}\|q\K\\{hi}[\|q]){}$\5
+${}\{{}$\1\6
+${}\|r\K\\{lo}[\|q];{}$\6
+\&{if} ${}(\\{lo}[\|r]\Z\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\%x:\ (\~\%d?\%x:\%x)\\n"},\39\|q,\39\|t,\39\|r,\39\|p);{}$\6
+${}\\{nodesout}\PP;{}$\6
+${}\\{lo}[\|r]\K\|q,\39\\{lo}[\|q]\K{-}\|r-\T{1};{}$\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\\{lo}[\|q]\K\\{lo}[\|r]{}$;\C{ make \PB{\|q} point to its previously output
+clone }\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|q\K{-}\\{hi}[\|p],\39\\{hi}[\|p]\K\T{0};{}$ ${}\|q>\T{0};{}$ ${}%
+\|r\K\|q,\39\|q\K\\{hi}[\|r]){}$\5
+${}\{{}$\1\6
+${}\|r\K\\{lo}[\|q];{}$\6
+\&{if} ${}(\|r<\T{0}){}$\1\5
+${}\\{lo}[{-}\|r-\T{1}]\K{-}\T{1};{}$\2\6
+\4${}\}{}$\2\6
+${}\\{hi}[\|r]\K\T{0};{}$\6
+\4${}\}{}$\2\par
+\U3.\fi
+
+\N{1}{6}Index.
+\fi
+
+\inx
+\fin
+\con

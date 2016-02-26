@@ -1,0 +1,12 @@
+\I\X4:Advance $k$ to $U_{n+1}$ and advance $n$\X
+\U1.
+\I\X6:Print gap stats\X
+\U1.
+\I\X5:Set up the \PB{\\{table}}\X
+\U1.
+\I\X3:Set \PB{$(\\{ubit}[\\{jj}],\\{vbit}[\\{jj}])$} to \PB{$(\\{ubit}[\\{jj}],%
+\\{vbit}[\\{jj}])$}${}\circ\PB{\\{del}}$\X
+\U2.
+\I\X2:Update $w_k\ldots w_{2k-1}$ from $u_0\ldots u_{k-1}$\X
+\U1.
+

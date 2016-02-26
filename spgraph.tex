@@ -1,0 +1,146 @@
+\input cwebmac
+\datethis
+
+
+\input epsf
+
+\N{1}{1}Introduction. This program takes an algebraic specification of
+a series-parallel graph and converts it to Stanford GraphBase format.
+
+The given graph is specified using a simple right-Polish syntax
+$$
+G\,\to\,\.-\,\mid\,G\,G\,\,\.s\,\mid\,G\,G\,\,\.p
+$$
+so that, for example, the specifications
+\.{----ps-sp--sp} and \.{----p-ss--spp} both denote the graph
+$$
+\epsfbox{spspan.1}
+$$
+(The conventions are identical to those of {\mc SPSPAN}, so that I
+can compare that program with {\mc GRAYSPAN}.)
+
+\Y\B\8\#\&{include} \.{"gb\_graph.h"}\6
+\8\#\&{include} \.{"gb\_save.h"}\6
+\X3:Global variables\X\6
+\X7:Subroutines\X\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k;\7
+\&{if} ${}(\\{argc}\I\T{3}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ SPformula}\)\.{\ foo.gb\\n"},\39%
+\\{argv}[\T{0}]){}$;\5
+\\{exit}(\T{0});\6
+\4${}\}{}$\2\6
+\X2:Parse the formula \PB{\\{argv}[\T{1}]} into a binary tree\X;\6
+\X6:Convert the binary tree to a graph\X;\6
+${}\|k\K\\{save\_graph}(\|g,\39\\{argv}[\T{2}]);{}$\6
+\&{if} (\|k)\1\5
+${}\\{printf}(\.{"I\ had\ trouble\ savin}\)\.{g\ in\ \%s\ (anomalies\ \%}\)%
+\.{x)!\\n"},\39\\{argv}[\T{2}],\39\|k);{}$\2\6
+\&{else}\1\5
+${}\\{printf}(\.{"Graph\ \%s\ saved\ succ}\)\.{essfully\ in\ \%s.\\n"},\39\|g%
+\MG\\{id},\39\\{argv}[\T{2}]);{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}In the following code, we have scanned $j$ binary operators (including
+\PB{\\{jj}} of type \.s) and there are $k$~items on the stack.
+
+\Y\B\4\D$\\{abort}(\\{mess})$ \6
+${}\{{}$\5
+\1${}\\{fprintf}(\\{stderr},\39\.{"Parsing\ error:\ \%.*s}\)\.{|\%s,\ \%s!%
+\\n"},\39\|p-\\{argv}[\T{1}],\39\\{argv}[\T{1}],\39\|p,\39\\{mess}){}$;\5
+${}\\{exit}({-}\T{1}){}$;\5
+${}\}{}$\2\par
+\Y\B\4\X2:Parse the formula \PB{\\{argv}[\T{1}]} into a binary tree\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{char} ${}{*}\|p\K\\{argv}[\T{1}];{}$\7
+\&{for} ${}(\|j\K\|k\K\T{0};{}$ ${}{*}\|p;{}$ ${}\|p\PP){}$\1\6
+\&{if} ${}({*}\|p\E\.{'-'}){}$\1\5
+\X4:Create a new leaf\X\2\6
+\&{else} \&{if} ${}({*}\|p\E\.{'s'}\V{*}\|p\E\.{'p'}){}$\1\5
+\X5:Create a new branch\X\2\6
+\&{else}\1\5
+\\{abort}(\.{"bad\ symbol"});\2\2\6
+\&{if} ${}(\|k\I\T{1}){}$\1\5
+\\{abort}(\.{"disconnected\ graph"});\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}\B\D$\\{maxn}$ \5
+\T{1000}\C{ the maximum number of leaves; {\it not checked\/} }\par
+\Y\B\4\X3:Global variables\X${}\E{}$\6
+\&{int} \\{stack}[\\{maxn}];\C{ stack for parsing }\6
+\&{int} \\{llink}[\\{maxn}]${},{}$ \\{rlink}[\\{maxn}];\C{ binary subtrees }\6
+\&{char} \\{buffer}[\T{8}];\C{ for sprinting }\6
+\&{int} \\{jj};\6
+\&{Graph} ${}{*}\|g{}$;\par
+\U1.\fi
+
+\M{4}\B\X4:Create a new leaf\X${}\E{}$\6
+$\\{stack}[\|k\PP]\K\T{0}{}$;\par
+\U2.\fi
+
+\M{5}\B\X5:Create a new branch\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\|k<\T{2}){}$\1\5
+\\{abort}(\.{"missing\ operand"});\2\6
+${}\\{rlink}[\PP\|j]\K\\{stack}[\MM\|k];{}$\6
+${}\\{llink}[\|j]\K\\{stack}[\|k-\T{1}];{}$\6
+\&{if} ${}({*}\|p\E\.{'s'}){}$\1\5
+${}\\{jj}\PP;{}$\2\6
+${}\\{stack}[\|k-\T{1}]\K({*}\|p\E\.{'s'}\?\T{\^100}:\T{0})+\|j;{}$\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{6}Now we convert the binary tree to the desired graph, working top down.
+
+\Y\B\4\D$\\{vert}(\|k)$ \5
+$(\|g\MG\\{vertices}+(\|k){}$)\par
+\Y\B\4\X6:Convert the binary tree to a graph\X${}\E{}$\6
+$\|g\K\\{gb\_new\_graph}(\\{jj}+\T{2});{}$\6
+\&{if} ${}(\R\|g){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Can't\ create\ the\ gr}\)\.{aph!\\n"});{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+${}\\{sprintf}(\|g\MG\\{id},\39\.{"SP\%.152s"},\39\\{argv}[\T{1}]);{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|g\MG\|n;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{sprintf}(\\{buffer},\39\.{"v\%d"},\39\|k);{}$\6
+${}\\{vert}(\|k)\MG\\{name}\K\\{gb\_save\_string}(\\{buffer});{}$\6
+\4${}\}{}$\2\6
+${}\\{build}(\\{stack}[\T{0}],\39\T{0},\39\T{1}){}$;\par
+\U1.\fi
+
+\M{7}A recursive subroutine called \PB{\\{build}} governs the construction
+process.
+
+\Y\B\4\X7:Subroutines\X${}\E{}$\6
+\&{void} \\{build}(\&{int} \\{stackitem}${},\39{}$\&{int} \\{lft}${},\39{}$%
+\&{int} \\{rt})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|t${},{}$ \|j;\7
+\&{if} ${}(\\{stackitem}\E\T{0}){}$\1\5
+${}\\{gb\_new\_edge}(\\{vert}(\\{lft}),\39\\{vert}(\\{rt}),\39\T{0});{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|t\K\\{stackitem}\GG\T{8},\39\|j\K\\{stackitem}\AND\T{\^ff}{}$;\C{ type and
+location of a binary op }\6
+\&{if} (\|t)\1\5
+${}\|t\K\MM\\{jj}+\T{2},\39\\{build}(\\{llink}[\|j],\39\\{lft},\39\|t),\39%
+\\{build}(\\{rlink}[\|j],\39\|t,\39\\{rt});{}$\2\6
+\&{else}\1\5
+${}\\{build}(\\{llink}[\|j],\39\\{lft},\39\\{rt}),\39\\{build}(\\{rlink}[\|j],%
+\39\\{lft},\39\\{rt});{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\N{1}{8}Index.
+\fi
+
+\inx
+\fin
+\con

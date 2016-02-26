@@ -1,0 +1,1576 @@
+\input cwebmac
+\def\dts{\mathinner{\ldotp\ldotp}}
+
+
+\N{1}{1}Intro. This program finds all solutions to Don Woods's Twenty
+Questions,
+having a given pattern of true/false grades, assuming that at least
+18 answers will be correct. The command line lists two answers that
+must be incorrect, if nonzero.
+
+I've tried to write this in a straightforward way that will avoid errors
+in my logic,
+yet leave it flexible enough to experiment with slight tweaks to the problem.
+
+\Y\B\4\D$\|A$ \5
+\T{0}\par
+\B\4\D$\|B$ \5
+\T{1}\par
+\B\4\D$\|C$ \5
+\T{2}\par
+\B\4\D$\|D$ \5
+\T{3}\par
+\B\4\D$\|E$ \5
+\T{4}\par
+\B\4\D$\.{AA}$ \5
+$(\T{1}\LL\|A{}$)\par
+\B\4\D$\.{BB}$ \5
+$(\T{1}\LL\|B{}$)\par
+\B\4\D$\.{CC}$ \5
+$(\T{1}\LL\|C{}$)\par
+\B\4\D$\.{DD}$ \5
+$(\T{1}\LL\|D{}$)\par
+\B\4\D$\.{EE}$ \5
+$(\T{1}\LL\|E{}$)\par
+\B\4\D$\|o$ \5
+$\\{mems}\PP{}$\par
+\B\4\D$\\{oo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{2}\par
+\B\4\D$\\{stacksize}$ \5
+\T{1000000}\C{ I think $20\times20\times6$ is actually an upper bound }\par
+\B\4\D$\\{delta}$ \5
+\T{10000000000}\C{ print status every this many mems }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\&{typedef} \&{unsigned} \&{long} \&{long} \&{ull};\6
+\&{ull} \\{mems};\C{ memory references }\6
+\&{ull} \\{nodes};\C{ size of search tree }\6
+\&{ull} \\{count};\C{ solutions found }\6
+\&{ull} \\{thresh}${}\K\\{delta}{}$;\C{ time to print next report }\6
+\&{ull} \\{profile}[\T{22}];\6
+\&{int} \\{false1}${},{}$ \\{false2};\C{ command-line parameters }\6
+\&{int} \\{score};\C{ the score of each solution that is found }\6
+\&{char} \\{falsity}[\T{21}];\C{ is this answer to be false or not? }\6
+\&{char} \\{believe3};\C{ is \PB{\\{falsity}[\T{3}]} zero? }\6
+\&{char} \\{mem}[\T{41}];\C{ status subject to backtracking }\6
+\&{char} \\{vbose};\C{ print lots of debugging info? }\7
+\X6:Other global variables\X;\6
+\X7:Subroutines\X;\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|l${},{}$ \|p${},{}$ %
+\|q${},{}$ \|t${},{}$ \|u${},{}$ \|x${},{}$ \|y${},{}$ \\{really\_bad};\7
+\X3:Process the command line\X;\6
+\X5:Set the initial constraints\X;\6
+\X12:Backtrack through all possibilities\X;\6
+\4\\{done}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"Altogether\ \%llu\ sol}\)\.{utions\ (\%llu\
+mems,\ \%}\)\.{llu\ nodes).\\n"},\39\\{count},\39\\{mems},\39\\{nodes});{}$\6
+\&{if} (\\{vbose})\1\5
+\X2:Print the profile\X;\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Print the profile\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Profile:\ \ \ \ \ \ \ \ \ \ 1}\)\.{\\n"});{}$\6
+\&{for} ${}(\|k\K\T{2};{}$ ${}\|k\Z\T{21};{}$ ${}\|k\PP){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\%19lld\\n"},\39\\{profile}[\|k]);{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}\B\X3:Process the command line\X${}\E{}$\6
+\&{if} ${}(\\{argc}<\T{3}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
+\\{false1})\I\T{1}\V\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}%
+\\{false2})\I\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ false1\ fa}\)\.{lse2\ [verbose]%
+\\n"},\39\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+${}\\{score}\K\T{20};{}$\6
+\&{if} ${}(\\{false1}>\T{0}\W\\{false1}\Z\T{20}){}$\1\5
+${}\\{falsity}[\\{false1}]\K\T{1},\39\\{score}\MM;{}$\2\6
+\&{if} ${}(\\{false2}>\T{0}\W\\{false2}\Z\T{20}\W\\{false2}\I\\{false1}){}$\1\5
+${}\\{falsity}[\\{false2}]\K\T{1},\39\\{score}\MM;{}$\2\6
+${}\\{believe3}\K\R\\{falsity}[\T{3}];{}$\6
+${}\\{vbose}\K\\{argc}-\T{3}{}$;\C{ extra arguments are ignored but they
+increase verbosity }\6
+\&{if} (\\{falsity}[\T{6}])\5
+${}\{{}$\1\6
+\&{if} (\\{vbose})\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Question\ 6\ can't\ be}\)\.{\ wrong.\\n"});{}$%
+\2\6
+\&{goto} \\{done};\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\N{1}{4}The strategy. All the critical data about partial information is
+kept in a small array called \PB{\\{mem}}, consisting of 8-bit quantities.
+Locations \PB{\\{mem}[\T{1}]} thru \PB{\\{mem}[\T{20}]} are bitmaps that show
+the nonexcluded
+possibilities for each of the 20 answers. (For example, the bitmap
+\PB{$\.{AA}+\.{DD}$} means that A and D are still possible.) The next 20
+locations
+hold tag information, which is nonzero if the answer for
+that question should be doublechecked at level~21. (We catch easy
+inconsistencies early if it's convenient, but defer the complicated tests.)
+
+When the entry in \PB{\\{mem}[\|p]} changes from $a$ to $b$, we put
+\PB{$(\|p\LL\T{8})+\|a$} on the stack so that the old value can be restored
+later.
+The number of items on the stack upon entry to level~\PB{\|l} is
+stored in \PB{\\{frame}[\|l]}.
+
+I thought about maintaining upper and lower bounds for the number of
+A's, B's, C's, D's, E's. But that seemed prone to error, and experiments
+by hand indicated that reasonable cutoffs were possible without such
+fancy footwork.
+
+\Y\B\4\D$\\{tag}$ \5
+\T{20}\C{ offset for tag data }\par
+\fi
+
+\M{5}Initially all of the answers are unrestricted.
+
+\Y\B\4\X5:Set the initial constraints\X${}\E{}$\6
+\&{for} ${}(\|q\K\T{1};{}$ ${}\|q\Z\T{20};{}$ ${}\|q\PP){}$\1\5
+${}\|o,\39\\{mem}[\|q]\K\.{AA}+\.{BB}+\.{CC}+\.{DD}+\.{EE}{}$;\2\par
+\U1.\fi
+
+\M{6}Some of the questions are easy to deal with near the root of the
+search tree, so I've chosen a heuristic order in which to build the partial
+solutions. This ordering remains fixed; thus, for example, I'll know that
+when I'm working on question~1, I've already given answers to
+several others including questions 2 and~3.
+It's nice to put question~3 first, because it
+usually rules out many possibilities immediately: If that answer
+is supposed to be correct, no two consecutive answers can match, with the
+exception of \PB{\\{loguy}} and \PB{\\{higuy}}, which are defined at root
+level.
+
+\Y\B\4\X6:Other global variables\X${}\E{}$\6
+\&{int} \\{order}[\T{21}]${}\K\{\T{0},\39\T{3},\39\T{15},\39\T{20},\39\T{19},%
+\39\T{2},\39\T{1},\39\T{17},\39\T{10},\39\T{5},\39\T{4},\39\T{16},\39\T{11},\39%
+\T{13},\39\T{14},\39\T{7},\39\T{18},\39\T{6},\39\T{8},\39\T{12},\39\T{9}\};{}$\6
+\&{int} \\{loguy}${},{}$ \\{higuy};\6
+\&{int} \\{rho}[\T{32}]${}\K\{{-}\T{1},\39\T{0},\39\T{1},\39\T{0},\39\T{2},\39%
+\T{0},\39\T{1},\39\T{0},\39\T{3},\39\T{0},\39\T{1},\39\T{0},\39\T{2},\39\T{0},%
+\39\T{1},\39\T{0},\3{-1}\39\T{4},\39\T{0},\39\T{1},\39\T{0},\39\T{2},\39\T{0},%
+\39\T{1},\39\T{0},\39\T{3},\39\T{0},\39\T{1},\39\T{0},\39\T{2},\39\T{0},\39%
+\T{1},\39\T{0}\}{}$;\C{ the ruler function for 5-bit numbers }\6
+\&{int} \\{stack}[\\{stacksize}]${},{}$ \\{frame}[\T{21}];\C{ for undoing
+changes to \PB{\\{mem}} }\6
+\&{int} \\{stackptr};\C{ the current number of elements in \PB{\\{stack}} }\6
+\&{int} \\{pstack}[\T{21}];\C{ for propagating forced changes }\6
+\&{int} \\{pstackptr};\C{ the current number of elements in \PB{\\{pstack}} }%
+\par
+\As31\ET52.
+\U1.\fi
+
+\M{7}Here's a subroutine that illustrates the conventions. If option \PB{\|x}
+is presently available for question~\PB{\|q}, it is removed and the
+residual bitmap is returned.
+
+Furthermore, if question 3 is not falsified, the question number is
+placed on \PB{\\{pstack}} whenever the bitmap has been reduced to exactly one
+bit.
+
+\Y\B\4\X7:Subroutines\X${}\E{}$\6
+\&{int} \\{remov}(\&{int} \|q${},\39{}$\&{int} \|x)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|t${},{}$ \|b${},{}$ \\{bb};\7
+${}\|t\K\T{1}\LL\|x;{}$\6
+${}\|o,\39\|b\K\\{mem}[\|q];{}$\6
+\&{if} ${}(\|b\AND\|t){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{vbose}>\T{2}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"(\%d:\ not\ \%d\%c)\\n"},\39\\{stackptr},\39%
+\|q,\39\|x+(\\{falsity}[\|q]\?\.{'a'}:\.{'A'}));{}$\2\6
+${}\|o,\39\\{mem}[\|q]\K\\{bb}\K\|b-\|t;{}$\6
+${}\|o,\39\\{stack}[\\{stackptr}\PP]\K(\|q\LL\T{8})+\|b;{}$\6
+\&{if} ${}(\\{believe3}\W\\{bb}\W\R(\\{bb}\AND(\\{bb}-\T{1}))){}$\1\5
+${}\|o,\39\\{pstack}[\\{pstackptr}\PP]\K\|q;{}$\2\6
+\&{return} \\{bb};\6
+\4${}\}{}$\2\6
+\&{return} \|b;\6
+\4${}\}{}$\2\par
+\As8, 9, 10\ETs11.
+\U1.\fi
+
+\M{8}The \PB{\\{innerforce}} routine throws out all options {\it but\/} \PB{%
+\|x}.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{innerforce}(\&{int} \|q${},\39{}$\&{int} \|x)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|t${},{}$ \|b;\7
+${}\|t\K\T{1}\LL\|x;{}$\6
+${}\|o,\39\|b\K\\{mem}[\|q];{}$\6
+\&{if} ${}((\|b\AND\|t)\E\T{0}){}$\1\5
+\&{return} \T{0};\2\6
+\&{if} ${}(\|b\I\|t){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{vbose}>\T{2}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"(\%d:\ \%d\%c)\\n"},\39\\{stackptr},\39\|q,\39%
+\|x+(\\{falsity}[\|q]\?\.{'a'}:\.{'A'}));{}$\2\6
+${}\|o,\39\\{mem}[\|q]\K\|t;{}$\6
+${}\|o,\39\\{stack}[\\{stackptr}\PP]\K(\|q\LL\T{8})+\|b;{}$\6
+\&{if} (\\{believe3})\1\5
+${}\|o,\39\\{pstack}[\\{pstackptr}\PP]\K\|q;{}$\2\6
+\4${}\}{}$\2\6
+\&{return} \|t;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{9}I'll need some help when debugging.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_state}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|b${},{}$ \|c${},{}$ \|q${},{}$ \|z;\7
+\&{for} ${}(\|q\K\T{1};{}$ ${}\|q\Z\T{20};{}$ ${}\|q\PP){}$\1\6
+\&{if} ${}(\|q<\T{10}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\%d\ \ \ \ "},\39\|q);{}$\2\6
+\&{else}\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\%d\ \ \ "},\39\|q);{}$\2\2\6
+\\{printf}(\.{"\\n"});\6
+\&{for} ${}(\|q\K\T{1};{}$ ${}\|q\Z\T{20};{}$ ${}\|q\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|b\K\\{mem}[\|q],\39\|c\K\|z\K\T{0};{}$ ${}\|c<\T{5};{}$ ${}\|c%
+\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|b\AND(\T{1}\LL\|c)){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\%c"},\39\|c+(\\{falsity}[\|q]\?\.{'a'}:%
+\.{'A'}));{}$\2\6
+\&{else}\1\5
+${}\|z\PP;{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{mem}[\|q+\\{tag}]){}$\1\5
+${}\|z\MM,\39\\{fprintf}(\\{stderr},\39\.{"*"});{}$\2\6
+\&{for} ${}(\|c\K\T{0};{}$ ${}\|c<\|z;{}$ ${}\|c\PP){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ "});{}$\2\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\fi
+
+\M{10}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_cols}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|c${},{}$ \|q;\7
+\&{for} ${}(\|c\K\T{0};{}$ ${}\|c<\T{5};{}$ ${}\|c\PP){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"\%c:"},\39\.{'A'}+\|c);{}$\6
+\&{for} ${}(\|q\K\T{1};{}$ ${}\|q\Z\T{20};{}$ ${}\|q\PP){}$\1\6
+\&{if} ${}(\\{mem}[\|q]\AND(\T{1}\LL\|c)){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ \%d"},\39\|q);{}$\2\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{11}\B\X7:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_stack}(\&{int} \|p)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|l${},{}$ \|b${},{}$ \\{ii};\7
+\&{for} ${}(\|i\K\T{0},\39\|l\K\T{1};{}$ ${}\|i<\|p;{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+${}\\{ii}\K\\{stack}[\|i]\GG\T{8};{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"mem[\%d\%s]:"},\39\\{ii}>\T{20}\?\\{ii}-%
+\\{tag}:\\{ii},\39\\{ii}>\T{20}\?\.{"*"}:\.{""});{}$\6
+\&{for} ${}(\|b\K\T{0};{}$ ${}\|b<\T{5};{}$ ${}\|b\PP){}$\1\6
+\&{if} ${}(\\{stack}[\|i]\AND(\T{1}\LL\|b)){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\%c"},\39\|b+\.{'A'});{}$\2\2\6
+\&{while} ${}(\|i\E\\{frame}[\|l]){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ l\%dq\%d\%s"},\39\|l,\39\\{order}[\|l],\39%
+\\{falsity}[\|l]\?\.{"-"}:\.{""});{}$\6
+${}\|l\PP;{}$\6
+\4${}\}{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{12}Backtracking. Here's the environment/context in which I'll embed the
+logic
+for individual questions.
+
+\Y\B\4\D$\\{pack}(\|u,\|q,\|x)$ \5
+$(((\|u)\LL\T{8})+((\|q)\LL\T{3})+(\|x){}$)\par
+\Y\B\4\X12:Backtrack through all possibilities\X${}\E{}$\6
+\4\\{b1}:\5
+${}\|l\K\T{1},\39\\{stackptr}\K\T{0};{}$\6
+\4\\{b2}:\5
+${}\\{nodes}\PP,\39\\{profile}[\|l]\PP;{}$\6
+\&{if} ${}(\\{mems}\G\\{thresh}){}$\1\5
+\X14:Print a status report and reset \PB{\\{thresh}}\X;\2\6
+\&{if} ${}(\|l>\T{20}){}$\1\5
+\X16:Check for solution and \PB{\&{goto} \\{b5}}\X;\2\6
+${}\\{oo},\39\|q\K\\{order}[\|l],\39\|u\K\\{falsity}[\|q];{}$\6
+${}\|o,\39\|y\K\\{mem}[\|q];{}$\6
+\4\\{b3}:\5
+\&{if} ${}(\|y\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I'm\ confused!\\n"}){}$;\5
+${}\\{exit}({-}\T{69});{}$\6
+\4${}\}{}$\2\6
+${}\|p\K\\{stackptr};{}$\6
+${}\|o,\39\|x\K\\{rho}[\|y];{}$\6
+${}\\{pstackptr}\K\T{0};{}$\6
+\&{if} ${}(\\{vbose}>\T{1}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Level\ \%d(\%d),\ tryin}\)\.{g\ \%d\%c\\n"},%
+\39\|l,\39\|p,\39\|q,\39\|x+(\|u\?\.{'a'}:\.{'A'}));{}$\2\6
+\&{switch} ${}(\\{pack}(\|u,\39\|q,\39\|x)){}$\5
+${}\{{}$\1\6
+\X19:Cases for the big switch\X\6
+\4\&{default}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"Impossible\ case\ \%d\%}\)\.{c!\\n"},\39\|q,%
+\39\|x+(\|u\?\.{'a'}:\.{'A'}));{}$\6
+${}\\{exit}({-}\T{30});{}$\6
+\4${}\}{}$\2\6
+\4\\{defer}:\5
+${}\\{oo},\39\\{mem}[\\{tag}+\|q]\K\T{1},\39\\{stack}[\\{stackptr}\PP]\K(\|q+%
+\\{tag})\LL\T{8}{}$;\C{ must check condition later }\6
+\&{if} ${}(\\{vbose}>\T{1}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"(\%d:\ deferring\ \%d\%c}\)\.{)\\n"},\39%
+\\{stackptr}-\T{1},\39\|q,\39\|x+(\|u\?\.{'a'}:\.{'A'}));{}$\2\6
+\4\\{okay}:\5
+${}\\{force}(\|q,\39\|x);{}$\6
+\X15:Propagate forced consequences, possibly going to \PB{\\{bad}}\X;\6
+${}\|o,\39\\{frame}[\|l]\K\|p;{}$\6
+${}\|l\PP{}$;\5
+\&{goto} \\{b2};\6
+\4\\{bad}:\5
+\&{if} (\\{really\_bad})\5
+${}\{{}$\1\6
+${}\\{really\_bad}\K\T{0}{}$;\C{ we can't choose \PB{\|x} nor can we not choose
+it }\6
+\&{goto} \\{b5};\6
+\4${}\}{}$\2\6
+\&{while} ${}(\\{stackptr}>\|p){}$\1\5
+\X13:Restore saved state\X;\2\6
+\4\\{b4}:\5
+${}\\{really\_bad}\K\T{1}{}$;\C{ we've found that \PB{\|x} isn't a good answer
+for question \PB{\|q} }\6
+${}\\{pstackptr}\K\T{0};{}$\6
+${}\\{deny}(\|q,\39\|x){}$;\C{ this will backtrack if \PB{\|x} was our last
+choice for \PB{\|q} }\6
+\X15:Propagate forced consequences, possibly going to \PB{\\{bad}}\X;\6
+${}\\{really\_bad}\K\T{0};{}$\6
+${}\|y\MRL{-{\K}}\T{1}\LL\|x{}$;\C{ now (it says here) \PB{\|y} should equal %
+\PB{\\{mem}[\|q]} }\6
+\&{if} ${}(\|y\E\\{mem}[\|q]){}$\1\5
+\&{goto} \\{b3};\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ screwed\ up!\\n"}){}$;\5
+${}\\{exit}({-}\T{666});{}$\6
+\4\\{b5}:\5
+\&{if} ${}(\MM\|l){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39\|q\K\\{order}[\|l],\39\|u\K\\{falsity}[\|q];{}$\6
+${}\|o,\39\|p\K\\{frame}[\|l];{}$\6
+\&{while} ${}(\\{stackptr}>\|p){}$\1\5
+\X13:Restore saved state\X;\2\6
+${}\\{oo},\39\|y\K\\{mem}[\|q],\39\|x\K\\{rho}[\|y];{}$\6
+\&{goto} \\{b4};\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{13}\B\X13:Restore saved state\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|o,\39\|t\K\\{stack}[\MM\\{stackptr}];{}$\6
+${}\|o,\39\\{mem}[\|t\GG\T{8}]\K\|t\AND\T{\^1f};{}$\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{14}\B\X14:Print a status report and reset \PB{\\{thresh}}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"After\ \%llu\ mems,\ l=}\)\.{\%d,\ stackptr=%
+\%d\\n"},\39\\{mems},\39\|l,\39\\{stackptr});{}$\6
+\\{print\_state}(\,);\6
+${}\\{thresh}\MRL{+{\K}}\\{delta};{}$\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{15}All changes to \PB{\\{mem}[\T{1}]} thru \PB{\\{mem}[\T{20}]} are made by
+the \PB{\\{remov}} and
+\PB{\\{innerforce}} routines. Macros \PB{\\{deny}} and \PB{\\{force}} are used
+to ensure that
+those routines don't remove an answer's final option.
+
+If question 3 hasn't been falsified on the command line, we can't have
+consecutive equal answers except in certain cases. This means that one
+change to \PB{\\{mem}} can propagate to its neighbors. For example, suppose
+the remaining choices for answers 5, 6, 7, 8, 9 are respectively
+CD, AC, BD, ABE, BCD. Then if answer~8 is forced to be~B, answer~7 can only
+be~D; hence answer 6 is also forced to be~A. Also answer~9 can no longer
+be~B. Such propagations are handled by the simple \PB{\\{pstack}} mechanism
+implemented here.
+
+\Y\B\4\D$\\{deny}(\|q,\|x)$ \6
+${}\{{}$\5
+\1\&{if} ${}(\R\\{remov}(\|q,\39\|x)){}$\1\5
+\&{goto} \\{bad};\2\6
+\&{if} ${}(\|q\E\\{loguy}\W\R\\{remov}(\\{higuy},\39\|x)){}$\1\5
+\&{goto} \\{bad};\2\6
+\&{if} ${}(\|q\E\\{higuy}\W\R\\{remov}(\\{loguy},\39\|x)){}$\1\5
+\&{goto} \\{bad};\5
+\2${}\}{}$\2\par
+\B\4\D$\\{force}(\|q,\|x)$ \6
+${}\{{}$\5
+\1\&{if} ${}(\R\\{innerforce}(\|q,\39\|x)){}$\1\5
+\&{goto} \\{bad};\5
+\2${}\}{}$\2\par
+\Y\B\4\X15:Propagate forced consequences, possibly going to \PB{\\{bad}}\X${}%
+\E{}$\6
+\&{while} (\\{pstackptr})\5
+${}\{{}$\1\6
+${}\|o,\39\|t\K\\{pstack}[\MM\\{pstackptr}];{}$\6
+${}\\{oo},\39\|j\K\\{rho}[\\{mem}[\|t]];{}$\6
+\&{if} ${}(\\{vbose}>\T{3}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"(propagating\ from\ \%}\)\.{d\%c)\\n"},\39\|t,%
+\39\|j+\.{'A'});{}$\2\6
+\&{if} ${}(\|t\E\\{loguy}){}$\1\5
+${}\\{force}(\|t+\T{1},\39\|j){}$\2\6
+\&{else} \&{if} ${}(\|t<\T{20}){}$\1\5
+${}\\{deny}(\|t+\T{1},\39\|j);{}$\2\6
+\&{if} ${}(\|t\E\\{higuy}){}$\1\5
+${}\\{force}(\|t-\T{1},\39\|j){}$\2\6
+\&{else} \&{if} ${}(\|t>\T{1}){}$\1\5
+${}\\{deny}(\|t-\T{1},\39\|j);{}$\2\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{16}Finally all the deferred tests must be made.
+
+\Y\B\4\X16:Check for solution and \PB{\&{goto} \\{b5}}\X${}\E{}$\6
+${}\{{}$\1\6
+\X30:Compute the distribution of answers\X;\6
+\&{for} ${}(\|q\K\T{1};{}$ ${}\|q\Z\T{20};{}$ ${}\|q\PP){}$\1\6
+\&{if} ${}(\|o,\39\\{mem}[\\{tag}+\|q]){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39\|x\K\\{rho}[\\{mem}[\|q]];{}$\6
+${}\|o,\39\|u\K\\{falsity}[\|q];{}$\6
+\&{if} ${}(\\{vbose}>\T{1}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Checking\ \%d\%c\\n"},\39\|q,\39\|x+(\|u\?%
+\.{'a'}:\.{'A'}));{}$\2\6
+\&{switch} ${}(\\{pack}(\|u,\39\|q,\39\|x)){}$\5
+${}\{{}$\1\6
+\X20:Cases for the deferred switch\X\6
+\4\&{default}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"Impossible\ deferred}\)\.{\ case\ \%d\%c!%
+\\n"},\39\|q,\39\|x+(\|u\?\.{'a'}:\.{'A'}));{}$\6
+${}\\{exit}({-}\T{31});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\6
+\X17:Print a solution\X;\6
+\&{goto} \\{b5};\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{17}\B\X17:Print a solution\X${}\E{}$\6
+$\\{count}\PP;{}$\6
+${}\\{printf}(\.{"\%lld:\ "},\39\\{count});{}$\6
+\&{for} ${}(\|q\K\T{1};{}$ ${}\|q\Z\T{20};{}$ ${}\|q\PP){}$\1\5
+${}\\{printf}(\.{"\%c"},\39(\\{falsity}[\|q]\?\.{'a'}:\.{'A'})+\\{rho}[\\{mem}[%
+\|q]]);{}$\2\6
+\\{printf}(\.{"\\n"});\par
+\U16.\fi
+
+\N{1}{18}The twenty questions. I'll quote each of the questions here, verbatim,
+because they're a bit
+of a moving target. (Don Woods learned in 2001 that his original questions,
+proposed in 2000, could be ``cooked'' by dozens of unintended answer lists.
+So he changed them at that time---only to discover, alas, that the new set
+could
+also be ``cooked''! Evidently problems such as this are by no means easy
+to solve correctly. Further tweaking by the author in 2015, with the
+help of this \.{CWEB} program and in consultation with Don himself,
+has led to the present version of the questionnaire, which retains
+the original flavor and---it says here---is uncookable.)
+
+Logical reasoning can be tricky. Hopefully the code below is transparent
+enough to reveal bugs? In each case I'll try to state what ordering
+assumptions I'm making, when they are relevant.
+
+Each case in the big switch exits either to \PB{\\{okay}} or \PB{\\{bad}} or %
+\PB{\\{defer}}.
+
+\fi
+
+\M{19}``1. The first question whose answer is A is: (A)~1 (B)~2 (C)~3 (D)~4
+(E)~5''
+
+We can use the fact that questions 3 and 2 have preceded question~1 in the
+ordering, hence \PB{\\{mem}[\T{2}]} and \PB{\\{mem}[\T{3}]} already contain
+definite values.
+
+\Y\B\4\X19:Cases for the big switch\X${}\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{1},\39\|A){}$:\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{1},\39\|B){}$:\5
+${}\\{deny}(\T{1},\39\|A){}$;\5
+${}\\{force}(\T{2},\39\|A){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{1},\39\|C){}$:\5
+${}\\{deny}(\T{1},\39\|A){}$;\5
+${}\\{deny}(\T{2},\39\|A){}$;\5
+${}\\{force}(\T{3},\39\|A){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{1},\39\|D){}$:\5
+${}\\{deny}(\T{1},\39\|A){}$;\5
+${}\\{deny}(\T{2},\39\|A){}$;\5
+${}\\{deny}(\T{3},\39\|A){}$;\5
+${}\\{force}(\T{4},\39\|A){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{1},\39\|E){}$:\5
+${}\\{deny}(\T{1},\39\|A){}$;\5
+${}\\{deny}(\T{2},\39\|A){}$;\5
+${}\\{deny}(\T{3},\39\|A){}$;\5
+${}\\{deny}(\T{4},\39\|A){}$;\5
+${}\\{force}(\T{5},\39\|A);{}$\6
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{1},\39\|A){}$:\5
+\&{goto} \\{bad};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{1},\39\|B){}$:\5
+${}\\{deny}(\T{2},\39\|A){}$;\5
+\&{goto} \\{okay};\C{ $2<1$ in the ordering }\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{1},\39\|C){}$:\5
+\&{if} ${}(\|o,\39\\{mem}[\T{2}]\I\.{AA}){}$\1\5
+${}\\{deny}(\T{3},\39\|A){}$;\5
+\2\&{goto} \\{okay};\C{ $3<1$ }\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{1},\39\|D){}$:\5
+\&{if} ${}((\|o,\39\\{mem}[\T{2}]\I\.{AA})\W(\|o,\39\\{mem}[\T{3}]\I\.{AA})){}$%
+\1\5
+${}\\{deny}(\T{4},\39\|A){}$;\5
+\2\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{1},\39\|E){}$:\5
+\&{if} ${}((\|o,\39\\{mem}[\T{2}]\E\.{AA})\V(\|o,\39\\{mem}[\T{3}]\E\.{AA})){}$%
+\1\5
+\&{goto} \\{okay};\2\6
+\&{goto} \\{defer};\par
+\As21, 23, 25, 27, 28, 29, 33, 35, 37, 38, 40, 42, 44, 46, 48, 50, 51, 53\ETs55.
+\U12.\fi
+
+\M{20}Deferred cases exit to \PB{\\{b5}} if the postponed test fails.
+
+\Y\B\4\X20:Cases for the deferred switch\X${}\E{}$\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{1},\39\|E){}$:\5
+\&{if} ${}((\|o,\39\\{mem}[\T{4}]\I\.{AA})\W(\|o,\39\\{mem}[\T{5}]\E\.{AA})){}$%
+\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\par
+\As22, 24, 26, 32, 34, 36, 39, 41, 43, 45, 47, 49\ETs54.
+\U16.\fi
+
+\M{21}``2. The next question with the same answer as this one is:
+(A)~4 (B)~6 (C)~8 (D)~10 (E)~12''
+
+\Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{2},\39\|A){}$:\5
+${}\\{deny}(\T{3},\39\|A){}$;\5
+${}\\{force}(\T{4},\39\|A){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{2},\39\|B){}$:\5
+${}\\{deny}(\T{3},\39\|B){}$;\5
+${}\\{deny}(\T{4},\39\|B){}$;\5
+${}\\{deny}(\T{5},\39\|B){}$;\5
+${}\\{force}(\T{6},\39\|B){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{2},\39\|C){}$:\5
+${}\\{deny}(\T{3},\39\|C){}$;\5
+${}\\{deny}(\T{4},\39\|C){}$;\5
+${}\\{deny}(\T{5},\39\|C){}$;\5
+${}\\{deny}(\T{6},\39\|C){}$;\5
+${}\\{deny}(\T{7},\39\|C);{}$\6
+${}\\{force}(\T{8},\39\|C){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{2},\39\|D){}$:\5
+${}\\{deny}(\T{3},\39\|D){}$;\5
+${}\\{deny}(\T{4},\39\|D){}$;\5
+${}\\{deny}(\T{5},\39\|D){}$;\5
+${}\\{deny}(\T{6},\39\|D){}$;\5
+${}\\{deny}(\T{7},\39\|D);{}$\6
+${}\\{deny}(\T{8},\39\|D){}$;\5
+${}\\{deny}(\T{9},\39\|D){}$;\5
+${}\\{force}(\T{10},\39\|D);{}$\6
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{2},\39\|E){}$:\5
+${}\\{deny}(\T{3},\39\|E){}$;\5
+${}\\{deny}(\T{4},\39\|E){}$;\5
+${}\\{deny}(\T{5},\39\|E){}$;\5
+${}\\{deny}(\T{6},\39\|E){}$;\5
+${}\\{deny}(\T{7},\39\|E);{}$\6
+${}\\{deny}(\T{8},\39\|E){}$;\5
+${}\\{deny}(\T{9},\39\|E){}$;\5
+${}\\{deny}(\T{10},\39\|E){}$;\5
+${}\\{deny}(\T{11},\39\|E){}$;\5
+${}\\{force}(\T{12},\39\|E);{}$\6
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{2},\39\|A){}$:\5
+\&{if} ${}(\|o,\39\\{mem}[\T{3}]\I\.{AA}){}$\1\5
+${}\\{deny}(\T{4},\39\|A){}$;\5
+\2\&{goto} \\{okay};\C{ $3<2$ }\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{2},\39\|B){}$:\5
+\&{if} ${}(\|o,\39\\{mem}[\T{3}]\E\.{BB}){}$\1\5
+\&{goto} \\{okay};\5
+\2\&{goto} \\{defer};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{2},\39\|C){}$:\5
+\&{if} ${}(\|o,\39\\{mem}[\T{3}]\E\.{CC}){}$\1\5
+\&{goto} \\{okay};\5
+\2\&{goto} \\{defer};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{2},\39\|D){}$:\5
+\&{if} ${}(\|o,\39\\{mem}[\T{3}]\E\.{DD}){}$\1\5
+\&{goto} \\{okay};\5
+\2\&{goto} \\{defer};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{2},\39\|E){}$:\5
+\&{if} ${}(\|o,\39\\{mem}[\T{3}]\E\.{EE}){}$\1\5
+\&{goto} \\{okay};\5
+\2\&{goto} \\{defer};\par
+\fi
+
+\M{22}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{2},\39\|B){}$:\5
+\&{if} ${}((\|o,\39\\{mem}[\T{4}]\I\.{BB})\W(\|o,\39\\{mem}[\T{5}]\I\.{BB})\W(%
+\|o,\39\\{mem}[\T{6}]\E\.{BB})){}$\1\5
+\&{goto} \\{b5};\2\6
+\&{break};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{2},\39\|C){}$:\5
+\&{if} ${}((\|o,\39\\{mem}[\T{4}]\I\.{CC})\W(\|o,\39\\{mem}[\T{5}]\I\.{CC})\W(%
+\|o,\39\\{mem}[\T{6}]\I\.{CC})\W\3{-1}(\|o,\39\\{mem}[\T{7}]\I\.{CC})\W(\|o,\39%
+\\{mem}[\T{8}]\E\.{CC})){}$\1\5
+\&{goto} \\{b5};\2\6
+\&{break};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{2},\39\|D){}$:\5
+\&{if} ${}((\|o,\39\\{mem}[\T{4}]\I\.{DD})\W(\|o,\39\\{mem}[\T{5}]\I\.{DD})\W(%
+\|o,\39\\{mem}[\T{6}]\I\.{DD})\W\3{-1}(\|o,\39\\{mem}[\T{7}]\I\.{DD})\W(\|o,\39%
+\\{mem}[\T{8}]\I\.{DD})\W(\|o,\39\\{mem}[\T{9}]\I\.{DD})\W(\|o,\39\\{mem}[%
+\T{10}]\E\.{DD})){}$\1\5
+\&{goto} \\{b5};\2\6
+\&{break};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{2},\39\|E){}$:\5
+\&{if} ${}((\|o,\39\\{mem}[\T{4}]\I\.{EE})\W(\|o,\39\\{mem}[\T{5}]\I\.{EE})\W(%
+\|o,\39\\{mem}[\T{6}]\I\.{EE})\W\3{-1}(\|o,\39\\{mem}[\T{7}]\I\.{EE})\W(\|o,\39%
+\\{mem}[\T{8}]\I\.{EE})\W(\|o,\39\\{mem}[\T{9}]\I\.{EE})\W(\|o,\39\\{mem}[%
+\T{10}]\I\.{EE})\W\3{-1}(\|o,\39\\{mem}[\T{11}]\I\.{EE})\W(\|o,\39\\{mem}[%
+\T{12}]\E\.{EE})){}$\1\5
+\&{goto} \\{b5};\2\6
+\&{break};\par
+\fi
+
+\M{23}``3. The only two consecutive questions with identical answers are
+questions:
+(A)~15 and 16 (B)~16 and 17 (C)~17 and 18 (D)~18 and 19 (E)~19 and 20''
+
+\Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{3},\39\|A){}$:\5
+${}\\{loguy}\K\T{15},\39\\{higuy}\K\T{16}{}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{3},\39\|B){}$:\5
+${}\\{loguy}\K\T{16},\39\\{higuy}\K\T{17}{}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{3},\39\|C){}$:\5
+${}\\{loguy}\K\T{17},\39\\{higuy}\K\T{18}{}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{3},\39\|D){}$:\5
+${}\\{loguy}\K\T{18},\39\\{higuy}\K\T{19}{}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{3},\39\|E){}$:\5
+${}\\{loguy}\K\T{19},\39\\{higuy}\K\T{20}{}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{3},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{3},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{3},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{3},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{3},\39\|E){}$:\5
+\&{goto} \\{defer};\par
+\fi
+
+\M{24}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{3},\39\|A){}$:\5
+\&{if} ${}((\\{oo},\39\\{mem}[\T{15}]\E\\{mem}[\T{16}])\W(\|o,\39\\{mem}[%
+\T{16}]\I\\{mem}[\T{17}])\W\3{-1}(\|o,\39\\{mem}[\T{17}]\I\\{mem}[\T{18}])\W(%
+\|o,\39\\{mem}[\T{18}]\I\\{mem}[\T{19}])\W(\|o,\39\\{mem}[\T{19}]\I\\{mem}[%
+\T{20}])){}$\1\5
+\&{goto} \\{test3};\2\6
+\&{break};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{3},\39\|B){}$:\5
+\&{if} ${}((\\{oo},\39\\{mem}[\T{15}]\I\\{mem}[\T{16}])\W(\|o,\39\\{mem}[%
+\T{16}]\E\\{mem}[\T{17}])\W\3{-1}(\|o,\39\\{mem}[\T{17}]\I\\{mem}[\T{18}])\W(%
+\|o,\39\\{mem}[\T{18}]\I\\{mem}[\T{19}])\W(\|o,\39\\{mem}[\T{19}]\I\\{mem}[%
+\T{20}])){}$\1\5
+\&{goto} \\{test3};\2\6
+\&{break};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{3},\39\|C){}$:\5
+\&{if} ${}((\\{oo},\39\\{mem}[\T{15}]\I\\{mem}[\T{16}])\W(\|o,\39\\{mem}[%
+\T{16}]\I\\{mem}[\T{17}])\W\3{-1}(\|o,\39\\{mem}[\T{17}]\E\\{mem}[\T{18}])\W(%
+\|o,\39\\{mem}[\T{18}]\I\\{mem}[\T{19}])\W(\|o,\39\\{mem}[\T{19}]\I\\{mem}[%
+\T{20}])){}$\1\5
+\&{goto} \\{test3};\2\6
+\&{break};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{3},\39\|D){}$:\5
+\&{if} ${}((\\{oo},\39\\{mem}[\T{15}]\I\\{mem}[\T{16}])\W(\|o,\39\\{mem}[%
+\T{16}]\I\\{mem}[\T{17}])\W\3{-1}(\|o,\39\\{mem}[\T{17}]\I\\{mem}[\T{18}])\W(%
+\|o,\39\\{mem}[\T{18}]\E\\{mem}[\T{19}])\W(\|o,\39\\{mem}[\T{19}]\I\\{mem}[%
+\T{20}])){}$\1\5
+\&{goto} \\{test3};\2\6
+\&{break};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{3},\39\|E){}$:\5
+\&{if} ${}((\\{oo},\39\\{mem}[\T{15}]\I\\{mem}[\T{16}])\W(\|o,\39\\{mem}[%
+\T{16}]\I\\{mem}[\T{17}])\W\3{-1}(\|o,\39\\{mem}[\T{17}]\I\\{mem}[\T{18}])\W(%
+\|o,\39\\{mem}[\T{18}]\I\\{mem}[\T{19}])\W(\|o,\39\\{mem}[\T{19}]\E\\{mem}[%
+\T{20}])){}$\1\5
+\&{goto} \\{test3};\2\6
+\&{break};\6
+\4\\{test3}:\5
+\&{if} ${}((\\{oo},\39\\{mem}[\T{1}]\I\\{mem}[\T{2}])\W(\|o,\39\\{mem}[\T{2}]\I%
+\\{mem}[\T{3}])\W(\|o,\39\\{mem}[\T{3}]\I\\{mem}[\T{4}])\W\3{-1}(\|o,\39%
+\\{mem}[\T{4}]\I\\{mem}[\T{5}])\W(\|o,\39\\{mem}[\T{5}]\I\\{mem}[\T{6}])\W(\|o,%
+\39\\{mem}[\T{6}]\I\\{mem}[\T{7}])\W\3{-1}(\|o,\39\\{mem}[\T{7}]\I\\{mem}[%
+\T{8}])\W(\|o,\39\\{mem}[\T{8}]\I\\{mem}[\T{9}])\W(\|o,\39\\{mem}[\T{9}]\I%
+\\{mem}[\T{10}])\W\3{-1}(\|o,\39\\{mem}[\T{10}]\I\\{mem}[\T{11}])\W(\|o,\39%
+\\{mem}[\T{11}]\I\\{mem}[\T{12}])\W(\|o,\39\\{mem}[\T{12}]\I\\{mem}[\T{13}])\W%
+\3{-1}(\|o,\39\\{mem}[\T{13}]\I\\{mem}[\T{14}])\W(\|o,\39\\{mem}[\T{14}]\I%
+\\{mem}[\T{15}])){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\par
+\fi
+
+\M{25}``4. The answer to this question is the same as the answers to questions:
+(A)~10 and 13 (B)~14 and 16 (C)~7 and 20 (D)~1 and 15 (E)~8 and 12''
+
+Questions 1, 10, 15, and 20 precede this one in the ordering.
+
+\Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{4},\39\|A){}$:\5
+${}\\{force}(\T{10},\39\|A){}$;\5
+${}\\{force}(\T{13},\39\|A){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{4},\39\|B){}$:\5
+${}\\{force}(\T{14},\39\|B){}$;\5
+${}\\{force}(\T{16},\39\|B){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{4},\39\|C){}$:\5
+${}\\{force}(\T{7},\39\|C){}$;\5
+${}\\{force}(\T{20},\39\|C){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{4},\39\|D){}$:\5
+${}\\{force}(\T{1},\39\|D){}$;\5
+${}\\{force}(\T{15},\39\|D){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{4},\39\|E){}$:\5
+${}\\{force}(\T{8},\39\|E){}$;\5
+${}\\{force}(\T{12},\39\|E){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{4},\39\|A){}$:\5
+\&{if} ${}(\|o,\39\\{mem}[\T{10}]\I\.{AA}){}$\1\5
+\&{goto} \\{okay};\5
+\2\&{goto} \\{defer};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{4},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{4},\39\|E){}$:\5
+\&{goto} \\{defer};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{4},\39\|C){}$:\5
+\&{if} ${}(\|o,\39\\{mem}[\T{20}]\I\.{CC}){}$\1\5
+\&{goto} \\{okay};\5
+\2\&{goto} \\{defer};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{4},\39\|D){}$:\5
+\&{if} ${}((\|o,\39\\{mem}[\T{1}]\I\.{DD})\V(\|o,\39\\{mem}[\T{15}]\I%
+\.{DD})){}$\1\5
+\&{goto} \\{okay};\5
+\2\&{goto} \\{bad};\par
+\fi
+
+\M{26}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{4},\39\|A){}$:\5
+\&{if} ${}((\|o,\39\\{mem}[\T{13}]\E\.{AA})){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{4},\39\|B){}$:\5
+\&{if} ${}((\|o,\39\\{mem}[\T{14}]\E\.{BB})\W(\|o,\39\\{mem}[\T{16}]\E%
+\.{BB})){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{4},\39\|C){}$:\5
+\&{if} ${}(\|o,\39\\{mem}[\T{7}]\E\.{CC}){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{4},\39\|E){}$:\5
+\&{if} ${}((\|o,\39\\{mem}[\T{8}]\E\.{EE})\W(\|o,\39\\{mem}[\T{12}]\E%
+\.{EE})){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\par
+\fi
+
+\M{27}``5. The answer to question 14 is:
+(A)~B (B)~E (C)~C (D)~A (E)~D''
+
+\Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{5},\39\|A){}$:\5
+${}\\{force}(\T{14},\39\|B){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{5},\39\|B){}$:\5
+${}\\{force}(\T{14},\39\|E){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{5},\39\|C){}$:\5
+${}\\{force}(\T{14},\39\|C){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{5},\39\|D){}$:\5
+${}\\{force}(\T{14},\39\|A){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{5},\39\|E){}$:\5
+${}\\{force}(\T{14},\39\|D){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{5},\39\|A){}$:\5
+${}\\{deny}(\T{14},\39\|B){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{5},\39\|B){}$:\5
+${}\\{deny}(\T{14},\39\|E){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{5},\39\|C){}$:\5
+${}\\{deny}(\T{14},\39\|C){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{5},\39\|D){}$:\5
+${}\\{deny}(\T{14},\39\|A){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{5},\39\|E){}$:\5
+${}\\{deny}(\T{14},\39\|D){}$;\5
+\&{goto} \\{okay};\par
+\fi
+
+\M{28}``6. The answer to this question is:
+(A)~A (B)~B (C)~C (D)~D (E)~none of those''
+
+\Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{6},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{6},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{6},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{6},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{6},\39\|E){}$:\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{6},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{6},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{6},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{6},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{6},\39\|E){}$:\5
+\&{goto} \\{bad};\par
+\fi
+
+\M{29}``7. An answer that appears most often is:
+(A)~A (B)~B (C)~C (D)~D (E)~E''
+
+\Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{7},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{7},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{7},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{7},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{7},\39\|E){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{7},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{7},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{7},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{7},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{7},\39\|E){}$:\5
+\&{goto} \\{defer};\par
+\fi
+
+\M{30}\B\X30:Compute the distribution of answers\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \\{dA}${}\K\T{0},{}$ \\{dB}${}\K\T{0},{}$ \\{dC}${}\K%
+\T{0},{}$ \\{dD}${}\K\T{0},{}$ \\{dE}${}\K\T{0};{}$\7
+\&{for} ${}(\|q\K\T{1};{}$ ${}\|q\Z\T{20};{}$ ${}\|q\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|y\K\\{mem}[\|q];{}$\6
+\&{if} ${}(\|y\E\.{AA}){}$\1\5
+${}\\{dA}\PP;{}$\2\6
+\&{else} \&{if} ${}(\|y\E\.{BB}){}$\1\5
+${}\\{dB}\PP;{}$\2\6
+\&{else} \&{if} ${}(\|y\E\.{CC}){}$\1\5
+${}\\{dC}\PP;{}$\2\6
+\&{else} \&{if} ${}(\|y\E\.{DD}){}$\1\5
+${}\\{dD}\PP;{}$\2\6
+\&{else}\1\5
+${}\\{dE}\PP;{}$\2\6
+\4${}\}{}$\2\6
+${}\|o,\39\\{dist}[\|A]\K\\{dA};{}$\6
+${}\|o,\39\\{dist}[\|B]\K\\{dB};{}$\6
+${}\|o,\39\\{dist}[\|C]\K\\{dC};{}$\6
+${}\|o,\39\\{dist}[\|D]\K\\{dD};{}$\6
+${}\|o,\39\\{dist}[\|E]\K\\{dE};{}$\6
+${}\\{trick}\K(\T{1}\LL\\{dA})+(\T{1}\LL\\{dB})+(\T{1}\LL\\{dC})+(\T{1}\LL%
+\\{dD})+(\T{1}\LL\\{dE}){}$;\C{ see 14 below }\6
+\4${}\}{}$\2\par
+\U16.\fi
+
+\M{31}\B\X6:Other global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{dist}[\T{5}];\C{ the number of A's, B's, C's, D's, E's }\6
+\&{int} \\{tie}[\T{5}];\C{ cases that are tied with at least one other }\6
+\&{int} \\{trick};\par
+\fi
+
+\M{32}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{7},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{7},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{7},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{7},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{7},\39\|E){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{7},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{7},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{7},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{7},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{7},\39\|E){}$:\5
+\&{for} ${}(\|o,\39\|i\K\T{0},\39\|j\K\\{dist}[\|x];{}$ ${}\|i<\T{5};{}$ ${}\|i%
+\PP){}$\1\6
+\&{if} ${}(\|o,\39\\{dist}[\|i]>\|j){}$\1\5
+\&{break};\2\2\6
+\&{if} ${}(\R\|u\W\|i<\T{5}){}$\1\5
+\&{goto} \\{b5};\2\6
+\&{if} ${}(\|u\W\|i\E\T{5}){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\par
+\fi
+
+\M{33}``8. Ignoring answers that appear equally often, the least common answer
+is:
+(A)~A (B)~B (C)~C (D)~D (E)~E''
+
+\Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{8},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{8},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{8},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{8},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{8},\39\|E){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{8},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{8},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{8},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{8},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{8},\39\|E){}$:\5
+\&{goto} \\{defer};\par
+\fi
+
+\M{34}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{8},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{8},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{8},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{8},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{8},\39\|E){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{8},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{8},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{8},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{8},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{8},\39\|E){}$:\5
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{5};{}$ ${}\|i\PP){}$\1\5
+${}\|o,\39\\{tie}[\|i]\K\T{0};{}$\2\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{5};{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\|i+\T{1};{}$ ${}\|j<\T{5};{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\\{oo},\39\\{dist}[\|i]\E\\{dist}[\|j]){}$\1\5
+${}\\{oo},\39\\{tie}[\|i]\K\\{tie}[\|j]\K\T{1};{}$\2\2\2\6
+\&{for} ${}(\|i\K\T{0},\39\|j\K\T{100};{}$ ${}\|i<\T{5};{}$ ${}\|i\PP){}$\1\6
+\&{if} ${}((\|o,\39\\{tie}[\|i]\E\T{0})\W(\|o,\39\\{dist}[\|i]<\|j)){}$\1\5
+${}\|j\K\\{dist}[\|i]{}$;\C{ possibly \PB{$\|j\E\T{100}$} }\2\2\6
+\&{if} ${}(\R\|u\W\|j\I\\{dist}[\|x]){}$\1\5
+\&{goto} \\{b5};\2\6
+\&{if} ${}(\|u\W\|j\E\\{dist}[\|x]){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\par
+\fi
+
+\M{35}``9. The sum of all question numbers whose answers are correct and the
+same as
+this one is:
+(A)~$\in[59\dts62]$ (B)~$\in[52\dts55]$ (C)~$\in[44\dts49]$
+(D)~$\in[61\dts67]$ (E)~$\in[44\dts53]$''
+
+\Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{9},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{9},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{9},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{9},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{9},\39\|E){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{9},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{9},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{9},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{9},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{9},\39\|E){}$:\5
+\&{goto} \\{defer};\par
+\fi
+
+\M{36}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{9},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{9},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{9},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{9},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{9},\39\|E){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{9},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{9},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{9},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{9},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{9},\39\|E){}$:\6
+\&{for} ${}(\|j\K\T{0},\39\|i\K\T{1};{}$ ${}\|i\Z\T{20};{}$ ${}\|i\PP){}$\1\6
+\&{if} ${}((\|o,\39\\{falsity}[\|i]\E\T{0})\W(\|o,\39\\{mem}[\|i]\E(\T{1}\LL%
+\|x))){}$\1\5
+${}\|j\MRL{+{\K}}\|i;{}$\2\2\6
+\&{switch} (\|x)\5
+${}\{{}$\1\6
+\4\&{case} \|A:\5
+${}\|i\K(\|j\G\T{59}\W\|j\Z\T{62}){}$;\5
+\&{break};\6
+\4\&{case} \|B:\5
+${}\|i\K(\|j\G\T{52}\W\|j\Z\T{55}){}$;\5
+\&{break};\6
+\4\&{case} \|C:\5
+${}\|i\K(\|j\G\T{44}\W\|j\Z\T{49}){}$;\5
+\&{break};\6
+\4\&{case} \|D:\5
+${}\|i\K(\|j\G\T{59}\W\|j\Z\T{67}){}$;\5
+\&{break};\6
+\4\&{case} \|E:\5
+${}\|i\K(\|j\G\T{44}\W\|j\Z\T{53}){}$;\5
+\&{break};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\R\|u\W\R\|i){}$\1\5
+\&{goto} \\{b5};\2\6
+\&{if} ${}(\|u\W\|i){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\par
+\fi
+
+\M{37}``10. The answer to question 17 is:
+(A)~D (B)~B (C)~A (D)~E (E)~wrong''
+
+\Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{10},\39\|A){}$:\5
+${}\\{force}(\T{17},\39\|D){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{10},\39\|B){}$:\5
+${}\\{force}(\T{17},\39\|B){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{10},\39\|C){}$:\5
+${}\\{force}(\T{17},\39\|A){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{10},\39\|D){}$:\5
+${}\\{force}(\T{17},\39\|E){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{10},\39\|E){}$:\5
+\&{if} ${}(\|o,\39\\{falsity}[\T{17}]\E\T{1}){}$\1\5
+\&{goto} \\{okay};\5
+\2\&{goto} \\{bad};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{10},\39\|A){}$:\5
+${}\\{deny}(\T{17},\39\|D){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{10},\39\|B){}$:\5
+${}\\{deny}(\T{17},\39\|B){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{10},\39\|C){}$:\5
+${}\\{deny}(\T{17},\39\|A){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{10},\39\|D){}$:\5
+${}\\{deny}(\T{17},\39\|E){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{10},\39\|E){}$:\5
+\&{if} ${}(\|o,\39\\{falsity}[\T{17}]\E\T{1}){}$\1\5
+\&{goto} \\{bad};\5
+\2\&{goto} \\{okay};\par
+\fi
+
+\M{38}``11. The number of questions whose answer is D is:
+(A)~2 (B)~3 (C)~4 (D)~5 (E)~6''
+
+\Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{11},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{11},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{11},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{11},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{11},\39\|E){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{11},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{11},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{11},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{11},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{11},\39\|E){}$:\5
+\&{goto} \\{defer};\par
+\fi
+
+\M{39}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{11},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{11},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{11},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{11},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{11},\39\|E){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{11},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{11},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{11},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{11},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{11},\39\|E){}$:\6
+\&{if} ${}(\R\|u\W(\|o,\39\\{dist}[\|D]\I\|x+\T{2})){}$\1\5
+\&{goto} \\{b5};\2\6
+\&{if} ${}(\|u\W(\|o,\39\\{dist}[\|D]\E\|x+\T{2})){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\par
+\fi
+
+\M{40}``12. The number of {\it other\/} questions with the same answer as this
+one
+is the same as the number of questions with answer:
+(A)~B (B)~C (C)~D (D)~E (E)~none of those''
+
+Here we see that (E) is quite different from `A'. ``None of those'' means
+that options A, B, C, and D are all false.
+
+And there's more subtlety too, because the \PB{\\{dist}} table would be
+different if
+we had really chosen A instead of~E\null. Suppose 12E has been selected.
+Then 12A does {\it not\/} mean ``the number of other questions
+with answer~A is the same as the number questions with answer~B''; it means
+``the number of other questions
+with answer~E is the same as the number questions with answer~B.''
+Thus 12E is true if and only if \PB{\\{dist}[\|B]}, \PB{\\{dist}[\|C]}, \PB{%
+\\{dist}[\|D]},
+and \PB{\\{dist}[\|E]} all differ from \PB{$\\{dist}[\|E]-\T{1}$}. But 12A is
+true if and only if
+\PB{$\\{dist}[\|A]-\T{1}\K\\{dist}[\|B]$}. Got that?
+
+\Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{12},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{12},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{12},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{12},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{12},\39\|E){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{12},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{12},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{12},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{12},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{12},\39\|E){}$:\5
+\&{goto} \\{defer};\par
+\fi
+
+\M{41}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{12},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{12},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{12},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{12},\39\|D){}$:\6
+\&{if} ${}(\\{oo},\39\\{dist}[\|x]-\T{1}\I\\{dist}[\|x+\T{1}]){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{12},\39\|E){}$:\5
+\&{if} ${}((\\{oo},\39\\{dist}[\|E]-\T{1}\E\\{dist}[\|B])\V(\|o,\39\\{dist}[%
+\|E]-\T{1}\E\\{dist}[\|C])\V\3{-1}(\|o,\39\\{dist}[\|E]-\T{1}\E\\{dist}[%
+\|D])){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{12},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{12},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{12},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{12},\39\|D){}$:\6
+\&{if} ${}(\\{oo},\39\\{dist}[\|x]-\T{1}\E\\{dist}[\|x+\T{1}]){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{12},\39\|E){}$:\5
+\&{if} ${}((\\{oo},\39\\{dist}[\|E]-\T{1}\I\\{dist}[\|B])\W(\|o,\39\\{dist}[%
+\|E]-\T{1}\I\\{dist}[\|C])\W\3{-1}(\|o,\39\\{dist}[\|E]-\T{1}\I\\{dist}[%
+\|D])){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\par
+\fi
+
+\M{42}``13. The number of questions whose answer is E is:
+(A)~5 (B)~4 (C)~3 (D)~2 (E)~1''
+
+\Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{13},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{13},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{13},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{13},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{13},\39\|E){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{13},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{13},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{13},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{13},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{13},\39\|E){}$:\5
+\&{goto} \\{defer};\par
+\fi
+
+\M{43}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{13},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{13},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{13},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{13},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{13},\39\|E){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{13},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{13},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{13},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{13},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{13},\39\|E){}$:\6
+\&{if} ${}(\R\|u\W(\|o,\39\\{dist}[\|E]\I\T{5}-\|x)){}$\1\5
+\&{goto} \\{b5};\2\6
+\&{if} ${}(\|u\W(\|o,\39\\{dist}[\|E]\E\T{5}-\|x)){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\par
+\fi
+
+\M{44}``14. No answer appears exactly this many times:
+(A)~2 (B)~3 (C)~4 (D)~5 (E)~none of those''
+
+Here I can't help using a dirty trick. Case (E) means that the digits
+2, 3, 4, 5 all appear in the \PB{\\{dist}} table. But the \PB{\\{dist}} table
+sums
+to~20, so it must also contain~6! This condition happens if and only if
+the \PB{\\{trick}} computed above is \PB{$(\T{1}\LL\T{2})+(\T{1}\LL\T{3})+(%
+\T{1}\LL\T{4})+(\T{1}\LL\T{5})+(\T{1}\LL\T{6})$},
+which is \PB{\T{\^7c}}.
+
+\Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{14},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{14},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{14},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{14},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{14},\39\|E){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{14},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{14},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{14},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{14},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{14},\39\|E){}$:\5
+\&{goto} \\{defer};\par
+\fi
+
+\M{45}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{14},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{14},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{14},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{14},\39\|D){}$:\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{5};{}$ ${}\|i\PP{}$)\5
+\1\&{if} ${}(\|o,\39\\{dist}[\|i]\E\|x+\T{2}){}$\1\5
+\&{goto} \\{b5};\2\2\6
+\&{break};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{14},\39\|E){}$:\5
+\&{if} ${}(\\{trick}\I\T{\^7c}){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{14},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{14},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{14},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{14},\39\|D){}$:\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{5};{}$ ${}\|i\PP{}$)\5
+\1\&{if} ${}(\|o,\39\\{dist}[\|i]\E\|x+\T{2}){}$\1\5
+\&{break};\2\2\6
+\&{if} ${}(\|i\E\T{5}){}$\1\5
+\&{goto} \\{b5};\2\6
+\&{break};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{14},\39\|E){}$:\5
+\&{if} ${}(\\{trick}\E\T{\^7c}){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\par
+\fi
+
+\M{46}``15. The set of odd-numbered questions with answer A is:
+(A)~$\{7\}$ (B)~$\{9\}$ (C)~not $\{11\}$ (D)~$\{13\}$ (E)~$\{15\}$''
+
+In the falsifying case,
+I note that question~3 has been treated earlier in the ordering.
+
+\Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{15},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{15},\39\|E){}$:\5
+\&{goto} \\{bad};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{15},\39\|B){}$:\5
+${}\\{force}(\T{9},\39\|A){}$;\5
+${}\\{deny}(\T{11},\39\|A){}$;\5
+${}\\{deny}(\T{13},\39\|A){}$;\5
+\&{goto} \\{odd\_denials};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{15},\39\|D){}$:\5
+${}\\{deny}(\T{9},\39\|A){}$;\5
+${}\\{deny}(\T{11},\39\|A){}$;\5
+${}\\{force}(\T{13},\39\|A){}$;\5
+\&{goto} \\{odd\_denials};\6
+\4\\{odd\_denials}:\5
+${}\\{deny}(\T{1},\39\|A){}$;\5
+${}\\{deny}(\T{3},\39\|A){}$;\5
+${}\\{deny}(\T{5},\39\|A){}$;\5
+${}\\{deny}(\T{7},\39\|A);{}$\6
+${}\\{deny}(\T{17},\39\|A){}$;\5
+${}\\{deny}(\T{19},\39\|A){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{15},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{15},\39\|E){}$:\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{15},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{15},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{15},\39\|D){}$:\6
+\&{if} ${}(\|o,\39\\{mem}[\T{3}]\E\.{AA}){}$\1\5
+\&{goto} \\{okay};\5
+\2\&{goto} \\{defer};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{15},\39\|C){}$:\5
+\&{goto} \\{defer};\par
+\fi
+
+\M{47}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{15},\39\|B){}$:\5
+\&{if} ${}((\|o,\39\\{mem}[\T{9}]\E\.{AA})\W(\|o,\39\\{mem}[\T{11}]\I\.{AA})\W(%
+\|o,\39\\{mem}[\T{13}]\I\.{AA})){}$\1\5
+\&{goto} \\{test\_odd};\2\6
+\&{break};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{15},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{15},\39\|C){}$:\5
+\&{if} ${}((\|o,\39\\{mem}[\T{1}]\I\.{AA})\W(\|o,\39\\{mem}[\T{3}]\I\.{AA})\W%
+\3{-1}(\|o,\39\\{mem}[\T{5}]\I\.{AA})\W(\|o,\39\\{mem}[\T{7}]\I\.{AA})\W(\|o,%
+\39\\{mem}[\T{9}]\I\.{AA})\W(\|o,\39\\{mem}[\T{11}]\E\.{AA})\W\3{-1}(\|o,\39%
+\\{mem}[\T{13}]\I\.{AA})\W(\|o,\39\\{mem}[\T{17}]\I\.{AA})\W(\|o,\39\\{mem}[%
+\T{19}]\I\.{AA}){}$)\5
+\1\&{goto} \\{b5};\5
+\2\&{break};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{15},\39\|D){}$:\5
+\&{if} ${}((\|o,\39\\{mem}[\T{9}]\I\.{AA})\W(\|o,\39\\{mem}[\T{11}]\I\.{AA})\W(%
+\|o,\39\\{mem}[\T{13}]\E\.{AA})){}$\1\5
+\&{goto} \\{test\_odd};\2\6
+\&{break};\6
+\4\\{test\_odd}:\5
+\&{if} ${}((\|o,\39\\{mem}[\T{1}]\I\.{AA})\W(\|o,\39\\{mem}[\T{5}]\I\.{AA})\W(%
+\|o,\39\\{mem}[\T{7}]\I\.{AA})\W\3{-1}(\|o,\39\\{mem}[\T{17}]\I\.{AA})\W(\|o,%
+\39\\{mem}[\T{19}]\I\.{AA})){}$\1\5
+\&{goto} \\{b5};\2\6
+\&{break};\par
+\fi
+
+\M{48}``16. The answer to question 8 is the same as the answer to question:
+(A)~3 (B)~2 (C)~13 (D)~18 (E)~20''
+
+This question is considered later in the ordering than questions 2, 3, and 20.
+
+\Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{16},\39\|A){}$:\5
+\\{oo};\5
+${}\\{force}(\T{8},\39\\{rho}[\\{mem}[\T{3}]]){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{16},\39\|B){}$:\5
+\\{oo};\5
+${}\\{force}(\T{8},\39\\{rho}[\\{mem}[\T{2}]]){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{16},\39\|E){}$:\5
+\\{oo};\5
+${}\\{force}(\T{8},\39\\{rho}[\\{mem}[\T{20}]]){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{16},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{16},\39\|D){}$:\5
+\&{goto} \\{defer};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{16},\39\|A){}$:\5
+\\{oo};\5
+${}\\{deny}(\T{8},\39\\{rho}[\\{mem}[\T{3}]]){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{16},\39\|B){}$:\5
+\\{oo};\5
+${}\\{deny}(\T{8},\39\\{rho}[\\{mem}[\T{2}]]){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{16},\39\|E){}$:\5
+\\{oo};\5
+${}\\{deny}(\T{8},\39\\{rho}[\\{mem}[\T{20}]]){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{16},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{16},\39\|D){}$:\5
+\&{goto} \\{defer};\par
+\fi
+
+\M{49}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{16},\39\|C){}$:\5
+\&{if} ${}(\|o,\39\\{mem}[\T{8}]\I\\{mem}[\T{13}]){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{16},\39\|D){}$:\5
+\&{if} ${}(\|o,\39\\{mem}[\T{8}]\I\\{mem}[\T{18}]){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{16},\39\|C){}$:\5
+\&{if} ${}(\|o,\39\\{mem}[\T{8}]\E\\{mem}[\T{13}]){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{16},\39\|D){}$:\5
+\&{if} ${}(\|o,\39\\{mem}[\T{8}]\E\\{mem}[\T{18}]){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\par
+\fi
+
+\M{50}``17. The answer to question 10 is:
+(A)~C (B)~D (C)~B (D)~A (E)~correct''
+
+An answer list is invalid if it contains both 10E and 17E, whether
+or not those answers are supposed to be correct or not. (This is
+subtle but clarified in my book.) Question 17 precedes 10 in the ordering,
+so it makes sure question 10 won't mess up.
+
+\Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{17},\39\|A){}$:\5
+${}\\{force}(\T{10},\39\|C){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{17},\39\|B){}$:\5
+${}\\{force}(\T{10},\39\|D){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{17},\39\|C){}$:\5
+${}\\{force}(\T{10},\39\|B){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{17},\39\|D){}$:\5
+${}\\{force}(\T{10},\39\|A){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{17},\39\|E){}$:\5
+${}\\{deny}(\T{10},\39\|E){}$;\5
+\&{if} ${}(\|o,\39\\{falsity}[\T{10}]\E\T{0}){}$\1\5
+\&{goto} \\{okay};\5
+\2\&{goto} \\{bad};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{17},\39\|A){}$:\5
+${}\\{deny}(\T{10},\39\|C){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{17},\39\|B){}$:\5
+${}\\{deny}(\T{10},\39\|D){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{17},\39\|C){}$:\5
+${}\\{deny}(\T{10},\39\|B){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{17},\39\|D){}$:\5
+${}\\{deny}(\T{10},\39\|A){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{17},\39\|E){}$:\5
+${}\\{deny}(\T{10},\39\|E){}$;\5
+\&{if} ${}(\|o,\39\\{falsity}[\T{10}]\E\T{0}){}$\1\5
+\&{goto} \\{bad};\5
+\2\&{goto} \\{okay};\par
+\fi
+
+\M{51}``18. The number of prime-numbered questions whose answers are vowels is:
+(A)~prime (B)~square (C)~odd (D)~even (E)~zero''
+
+All of the prime-numbered questions appear before this one in the ordering.
+
+\Y\B\4\D$\\{isvowel}(\|q)$ \5
+$(\|o,\39(\\{mem}[\|q]\AND\T{\^11})\?\T{1}:\T{0}{}$)\par
+\Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{18},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{18},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{18},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{18},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{18},\39\|E){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{18},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{18},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{18},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{18},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{18},\39\|E){}$:\5
+${}\|j\K\\{isvowel}(\T{2})+\\{isvowel}(\T{3})+\\{isvowel}(\T{5})+\\{isvowel}(%
+\T{7})+\3{-1}\\{isvowel}(\T{11})+\\{isvowel}(\T{13})+\\{isvowel}(\T{17})+%
+\\{isvowel}(\T{19});{}$\6
+${}\|j\K(\T{1}\LL\|j)\AND\\{magic}[\|x];{}$\6
+\&{if} ${}(\R\|u\W\|j){}$\1\5
+\&{goto} \\{okay};\5
+\2\&{goto} \\{bad};\6
+\&{if} ${}(\|u\W\R\|j){}$\1\5
+\&{goto} \\{okay};\5
+\2\&{goto} \\{bad};\par
+\fi
+
+\M{52}\B\X6:Other global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{magic}[\,] $\K$ $\{(\T{1}\LL\T{2})+(\T{1}\LL\T{3})+(\T{1}\LL\T{5})+(%
+\T{1}\LL\T{7}),\3{-1}\39(\T{1}\LL\T{0})+(\T{1}\LL\T{1})+(\T{1}\LL\T{4}),\3{-1}%
+\39(\T{1}\LL\T{1})+(\T{1}\LL\T{3})+(\T{1}\LL\T{5})+(\T{1}\LL\T{7}),\3{-1}\39(%
+\T{1}\LL\T{0})+(\T{1}\LL\T{2})+(\T{1}\LL\T{4})+(\T{1}\LL\T{6})+(\T{1}\LL\T{8}),%
+\3{-1}\39(\T{1}\LL\T{0})\}{}$\par
+\fi
+
+\M{53}``19. The last question whose answer is B is:
+(A)~14 (B)~15 (C)~16 (D)~17 (E)~18''
+
+Question 20 has been considered before this one in the ordering.
+
+\Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{19},\39\|A){}$:\5
+${}\\{force}(\T{14},\39\|B){}$;\5
+${}\\{deny}(\T{15},\39\|B){}$;\5
+${}\\{deny}(\T{16},\39\|B){}$;\5
+${}\\{deny}(\T{17},\39\|B);{}$\6
+${}\\{deny}(\T{18},\39\|B){}$;\5
+${}\\{deny}(\T{20},\39\|B){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{19},\39\|B){}$:\5
+\&{goto} \\{bad};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{19},\39\|C){}$:\5
+${}\\{force}(\T{16},\39\|B){}$;\5
+${}\\{deny}(\T{17},\39\|B){}$;\5
+${}\\{deny}(\T{18},\39\|B){}$;\5
+${}\\{deny}(\T{20},\39\|B){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{19},\39\|D){}$:\5
+${}\\{force}(\T{17},\39\|B){}$;\5
+${}\\{deny}(\T{18},\39\|B){}$;\5
+${}\\{deny}(\T{20},\39\|B){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{19},\39\|E){}$:\5
+${}\\{force}(\T{18},\39\|B){}$;\5
+${}\\{deny}(\T{20},\39\|B){}$;\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{19},\39\|B){}$:\5
+\&{goto} \\{okay};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{19},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{19},\39\|C){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{19},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{19},\39\|E){}$:\6
+\&{if} ${}(\|o,\39\\{mem}[\T{20}]\E\.{BB}){}$\1\5
+\&{goto} \\{okay};\5
+\2\&{goto} \\{defer};\par
+\fi
+
+\M{54}\B\X20:Cases for the deferred switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{19},\39\|A){}$:\5
+\&{if} ${}((\|o,\39\\{mem}[\T{14}]\E\.{BB})\W(\|o,\39\\{mem}[\T{15}]\I\.{BB})%
+\W(\|o,\39\\{mem}[\T{16}]\I\.{BB})\W\3{-1}(\|o,\39\\{mem}[\T{17}]\I\.{BB})\W(%
+\|o,\39\\{mem}[\T{18}]\I\.{BB})){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{19},\39\|C){}$:\5
+\&{if} ${}((\|o,\39\\{mem}[\T{16}]\E\.{BB})\W(\|o,\39\\{mem}[\T{17}]\I\.{BB})%
+\W(\|o,\39\\{mem}[\T{18}]\I\.{BB})){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{19},\39\|D){}$:\5
+\&{if} ${}((\|o,\39\\{mem}[\T{17}]\E\.{BB})\AND(\|o,\39\\{mem}[\T{18}]\I%
+\.{BB})){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{19},\39\|E){}$:\5
+\&{if} ${}(\|o,\39\\{mem}[\T{18}]\E\.{BB}){}$\1\5
+\&{goto} \\{b5};\5
+\2\&{break};\par
+\fi
+
+\M{55}``20. The maximum score that can be achieved on this test is:
+(A)~18 (B)~19 (C)~20 (D)~indeterminate (E)~achievable only by getting this
+question wrong''
+
+This climactic
+final question, which Don Woods admits was expressly ``designed to create
+difficulties,'' obviously needs some special consideration. Discussion in
+my book shows that option (D) is always false. I assume here that (E) is also
+false, although that hypothesis must be confirmed by examining outputs
+of this program. As to (A), (B), (C), I essentially reword the problem to say
+not ``the maximum score'' but ``the score achieved by all outputs of this
+run.''
+
+\Y\B\4\X19:Cases for the big switch\X${}\mathrel+\E{}$\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{20},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{20},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{20},\39\|C){}$:\6
+\&{if} ${}(\\{score}\E\T{18}+\|x){}$\1\5
+\&{goto} \\{okay};\5
+\2\&{goto} \\{bad};\6
+\4\&{case} \\{pack}${}(\T{0},\39\T{20},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{0},\39\T{20},\39\|E){}$:\5
+\&{goto} \\{bad};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{20},\39\|A){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{20},\39\|B){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{20},\39\|C){}$:\6
+\&{if} ${}(\\{score}\I\T{18}+\|x){}$\1\5
+\&{goto} \\{okay};\5
+\2\&{goto} \\{bad};\6
+\4\&{case} \\{pack}${}(\T{1},\39\T{20},\39\|D){}$:\5
+\&{case} \\{pack}${}(\T{1},\39\T{20},\39\|E){}$:\5
+\&{goto} \\{okay};\par
+\fi
+
+\N{1}{56}Index.
+\fi
+
+\inx
+\fin
+\con

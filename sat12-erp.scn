@@ -1,0 +1,50 @@
+\I\X26:Absorb and echo the literals of the given solution\X
+\U22.
+\I\X23:Allocate the main arrays\X
+\U22.
+\I\X28:Check consistency\X
+\U22.
+\I\X10:Check input anomalies\X
+\U1.
+\I\X25:Copy all the temporary variable nodes to the \PB{\\{vmem}} array in
+proper format\X
+\U22.
+\I\X17:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash table at \PB{\|p}\X
+\U12.
+\I\X2, 6, 24:Global variables\X
+\U1.
+\I\X7, 15:Initialize everything\X
+\U1.
+\I\X20:Input one literal\X
+\Us8\ET21.
+\I\X8:Input the \.{erp} file\X
+\U1.
+\I\X11:Input the clause in \PB{\\{buf}}\X
+\U9.
+\I\X21:Input the solution\X
+\U1.
+\I\X9:Input \PB{\\{kkk}} clauses\X
+\U8.
+\I\X14:Install a new \PB{\&{chunk}}\X
+\U12.
+\I\X13:Install a new \PB{\&{vchunk}}\X
+\U12.
+\I\X18:Move \PB{\\{cur\_cell}} backward to the previous cell\X
+\Us26\ET27.
+\I\X19:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary variable\X
+\U25.
+\I\X22:Output the new solution\X
+\U1.
+\I\X3:Process the command line\X
+\U1.
+\I\X16:Put the variable name beginning at \PB{\\{buf}[\|j]} in \PB{$\\{cur\_tmp%
+\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X
+\U12.
+\I\X12:Scan and record a variable; negate it if \PB{$\|i\E\T{1}$}\X
+\Us11\ET20.
+\I\X29:Subroutines\X
+\U1.
+\I\X4, 5:Type definitions\X
+\U1.
+\I\X27:Use the erp data to compute the rest of the solution\X
+\U22.
