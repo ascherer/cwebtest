@@ -1,0 +1,142 @@
+\input cwebmac
+\datethis
+
+
+\N{1}{1}One-dimensional particle physics. This program is a quick-and-dirty
+implementation of the random process analyzed by Hermann Rost in 1981
+(see exercise 5.1.4--40). Start with infinitely many 1s followed by
+infinitely many 0s; then randomly interchange adjacent elements that
+are out of order.
+
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<math.h>}\6
+\8\#\&{include} \.{"gb\_flip.h"}\6
+\&{char} ${}{*}\\{bit};{}$\6
+\&{int} ${}{*}\\{list};{}$\6
+\&{int} \\{seed};\C{ random number seed }\6
+\&{int} \|n;\C{ this many interchanges }\7
+${}\\{main}(\\{argc},\39\\{argv}){}$\1\1\6
+\&{int} \\{argc};\6
+\&{char} ${}{*}\\{argv}[\,];\2\2{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|l${},{}$ \|t${},{}$ %
+\|u${},{}$ \|r;\7
+\X2:Scan the command line\X;\6
+\X3:Initialize everything\X;\6
+\&{for} ${}(\|r\K\T{0};{}$ ${}\|r<\|n;{}$ ${}\|r\PP){}$\1\5
+\X4:Move\X;\2\6
+\X5:Print the results\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Scan the command line\X${}\E{}$\6
+\&{if} ${}(\\{argc}\I\T{3}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
+\|n)\I\T{1}\V\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}\\{seed})\I%
+\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ n\ seed\ >!}\)\.{\ output.ps%
+\\n"},\39\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}We maintain the following invariants: \PB{$\\{bit}[\|k]\K\T{1}$} for \PB{$%
+\|k\Z\|l$};
+\PB{$\\{bit}[\|k]\K\T{0}$} for \PB{$\|k\K\|u$}; the indices \PB{\|i} where %
+\PB{$\\{bit}[\|i]>\\{bit}[\|i+\T{1}]$}
+are \PB{\\{list}[\|j]} for $0\le j<t$.
+
+\Y\B\4\X3:Initialize everything\X${}\E{}$\6
+\\{gb\_init\_rand}(\\{seed});\6
+${}\\{bit}\K{}$(\&{char} ${}{*}){}$ \\{malloc}${}(\T{2}*\|n+\T{2});{}$\6
+${}\\{list}\K{}$(\&{int} ${}{*}){}$ \\{malloc}${}(\T{4}*\|n+\T{4});{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\1\5
+${}\\{bit}[\|k]\K\T{1};{}$\2\6
+\&{for} ( ; ${}\|k\Z\|n+\|n+\T{1};{}$ ${}\|k\PP){}$\1\5
+${}\\{bit}[\|k]\K\T{0};{}$\2\6
+${}\|l\K\|u\K\|n;{}$\6
+${}\\{list}[\T{0}]\K\|n;{}$\6
+${}\|t\K\T{1}{}$;\par
+\U1.\fi
+
+\M{4}\B\X4:Move\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|j\K\\{gb\_unif\_rand}(\|t);{}$\6
+${}\|i\K\\{list}[\|j];{}$\6
+${}\|t\MM;{}$\6
+${}\\{list}[\|j]\K\\{list}[\|t];{}$\6
+${}\\{bit}[\|i]\K\T{0}{}$;\5
+${}\\{bit}[\|i+\T{1}]\K\T{1};{}$\6
+\&{if} ${}(\|i\E\|l){}$\1\5
+${}\|l\MM;{}$\2\6
+\&{if} ${}(\|i\E\|u){}$\1\5
+${}\|u\PP;{}$\2\6
+\&{if} ${}(\\{bit}[\|i-\T{1}]){}$\1\5
+${}\\{list}[\|t\PP]\K\|i-\T{1};{}$\2\6
+\&{if} ${}(\R\\{bit}[\|i+\T{2}]){}$\1\5
+${}\\{list}[\|t\PP]\K\|i+\T{1};{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{5}\B\X5:Print the results\X${}\E{}$\6
+\X6:Print the PostScript header info\X;\6
+\X8:Print the empirical curve\X;\6
+\X9:Print the theoretical curve\X;\6
+\X7:Print the PostScript trailer info\X;\par
+\U1.\fi
+
+\M{6}\B\X6:Print the PostScript header info\X${}\E{}$\6
+\\{printf}(\.{"\%\%!PS\\n"});\6
+\\{printf}(\.{"\%\%\%\%BoundingBox:\ -1}\)\.{\ -1\ 361\ 361\\n"});\6
+${}\\{printf}(\.{"\%\%\%\%Creator:\ \%s\ \%s\ }\)\.{\%s\\n"},\39\\{argv}[%
+\T{0}],\39\\{argv}[\T{1}],\39\\{argv}[\T{2}]);{}$\6
+\\{printf}(\.{"/d\ \{0\ s\ neg\ rlineto}\)\.{\}\ bind\ def\\n"});\C{ move down
+}\6
+\\{printf}(\.{"/r\ \{s\ 0\ rlineto\}\ bi}\)\.{nd\ def\\n"});\C{ move right }\par
+\U5.\fi
+
+\M{7}\B\X7:Print the PostScript trailer info\X${}\E{}$\6
+\\{printf}(\.{"showpage\\n"});\par
+\U5.\fi
+
+\M{8}The empirical curve is scaled so that $\sqrt{6n}$ units is 5 inches.
+
+\Y\B\4\X8:Print the empirical curve\X${}\E{}$\6
+$\\{printf}(\.{"/s\ \%g\ def\\n"},\39\T{360.0}/\\{sqrt}(\T{6.0}*\|n));{}$\6
+${}\\{printf}(\.{"newpath\ \%d\ \%d\ s\ mul}\)\.{\ moveto\\n"},\39\T{0},\39\|n-%
+\|l);{}$\6
+\&{for} ${}(\|k\K\|l+\T{1};{}$ ${}\|k\Z\|u;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{if} (\\{bit}[\|k])\1\5
+\\{printf}(\.{"\ d"});\5
+\2\&{else}\1\5
+\\{printf}(\.{"\ r"});\2\6
+\&{if} ${}((\|k-\|l)\MOD\T{40}\E\T{0}){}$\1\5
+\\{printf}(\.{"\\n"});\2\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n0\ 0\ lineto\ closep}\)\.{ath\\n"});\6
+\\{printf}(\.{"1\ setlinewidth\ stro}\)\.{ke\\n"});\par
+\U5.\fi
+
+\M{9}The theoretical curve $\sqrt{\mathstrut x}+\sqrt{\mathstrut y}=1$ is
+scaled so that 1 unit is 5 inches. We use the fact that this curve
+is {\it exactly\/} drawn by PostScript's Bezier curve routines,
+from the control points $(0,1)$, $(0,1/3)$, $(1/3,0)$, $(1,0)$.
+
+\Y\B\4\X9:Print the theoretical curve\X${}\E{}$\6
+\\{printf}(\.{"newpath\ 0\ 360\ movet}\)\.{o\ 0\ 120\ 120\ 0\ 360\ 0\ }\)%
+\.{curveto\\n"});\6
+\\{printf}(\.{"\ 0\ 0\ lineto\ closepa}\)\.{th\\n"});\6
+\\{printf}(\.{".3\ setlinewidth\ str}\)\.{oke\\n"});\par
+\U5.\fi
+
+\N{1}{10}Index.
+
+
+
+\fi
+
+
+\inx
+\fin
+\con

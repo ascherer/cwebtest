@@ -1,0 +1,32 @@
+\I\X5:Do the algorithm\X
+\U1.
+\I\X15:Find the first match, \PB{\\{hh}}, for the current state after \PB{%
+\\{boundary}}\X
+\U13.
+\I\X7:Initialize the queue\X
+\U5.
+\I\X6:Initialize the \PB{\\{mate}} table\X
+\U5.
+\I\X2:Input the graph\X
+\U1.
+\I\X16:Insert new entry and \PB{\&{goto} \\{found}}\X
+\U15.
+\I\X14:Move the current state into position after \PB{\\{head}}, and compute %
+\PB{\\{hash}}\X
+\U13.
+\I\X12:Print 1 or 0, depending on whether this arc wins or loses\X
+\U10.
+\I\X10:Print the successor if arc \PB{\|i} is chosen\X
+\U8.
+\I\X11:Print the successor if arc \PB{\|i} is not chosen\X
+\U8.
+\I\X8:Process arc \PB{\|i}\X
+\U5.
+\I\X4:Reformat the edges\X
+\U1.
+\I\X3:Renumber the vertices\X
+\U1.
+\I\X13:Subroutines\X
+\U1.
+\I\X9:Unpack a state, and move \PB{\\{tail}} up\X
+\U8.

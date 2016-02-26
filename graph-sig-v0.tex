@@ -1,0 +1,208 @@
+\input cwebmac
+\def\adj{\mathrel{\!\mathrel-\mkern-8mu\mathrel-\mkern-8mu\mathrel-\!}}
+
+
+
+
+\N{1}{1}Intro. OK, you've heard about {\mc SIGGRAPH}; what's this?
+
+{\mc GRAPH-SIG} is an experimental program to find potential equivalence
+classes in automorphism testing. Given a graph $G$ and a vertex $v_0$,
+we compute ``signatures'' of all vertices such that, if there's an
+automorphism that fixes $v_0$ and takes $v$ to $v'$, then $v$ and $v'$
+will have the same signature.
+
+I plan to generalize the idea, but in this test case I just proceed
+as follows: First I compute level~0 signatures, which are just the
+distances from $v_0$. Then, given level~$k$ signatures~$\sigma_k$,
+I compute signatures $\sigma_{k+1}(v)=\prod_{u\adj v}(x-\sigma_k(u))$,
+where $x$ is a random integer and the multiplication is done mod~$2^{64}$.
+We keep going until reaching a round where no class is further refined.
+
+My tentative name for these signatures is ``lookahead invariants.''
+
+(Notes for the future: If there's an automorphism that takes $v_0$
+into $v_0'$, then the multiset of signatures computed with respect
+to $v_0$ will be the same as the multiset computed with respect to
+$v_0'$, after each round. Also we can generalize to automorphisms
+that fix $k$ vertices, by defining level~0 signatures as the ordered
+sequence of distances from $v_0$, \dots,~$v_{k-1}$. Universal hashing
+schemes conveniently map such an ordered sequence into a single number.)
+
+\Y\B\4\D$\\{maxn}$ \5
+\T{100}\C{ upper bound on vertices in the graph }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\8\#\&{include} \.{<string.h>}\6
+\8\#\&{include} \.{"gb\_graph.h"}\6
+\8\#\&{include} \.{"gb\_save.h"}\6
+\8\#\&{include} \.{"gb\_flip.h"}\6
+\&{long} \\{sg}[\\{maxn}];\C{ new signatures found in current class }\6
+\&{Vertex} ${}{*}\\{hd}[\\{maxn}],{}$ ${}{*}\\{tl}[\\{maxn}]{}$;\C{
+subdivisions of current class }\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|r${},{}$ \\{change};\6
+\&{register} \&{Graph} ${}{*}\|g;{}$\6
+\&{register} \&{Vertex} ${}{*}\|u,{}$ ${}{*}\|v;{}$\6
+\&{register} \&{Arc} ${}{*}\|a,{}$ ${}{*}\|b;{}$\6
+\&{register} \&{long} \|x${},{}$ \|s;\6
+\&{Vertex} ${}{*}\\{v0},{}$ ${}{*}\\{prev},{}$ ${}{*}\\{head};{}$\7
+\X2:Process the command line\X;\6
+\X3:Make the initial signatures\X;\6
+\&{for} ${}(\\{change}\K\T{1},\39\|r\K\T{1};{}$ \\{change}; ${}\|r\PP){}$\5
+${}\{{}$\1\6
+${}\\{change}\K\T{0};{}$\6
+\X5:Do round \PB{\|r}\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Process the command line\X${}\E{}$\6
+\&{if} ${}(\\{argc}\I\T{3}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ foo.gb\ v0}\)\.{\\n"},\39%
+\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+${}\|g\K\\{restore\_graph}(\\{argv}[\T{1}]);{}$\6
+\&{if} ${}(\R\|g){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ couldn't\ reconstr}\)\.{uct\ graph\ \%s!%
+\\n"},\39\\{argv}[\T{1}]);{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|g\MG\|n>\\{maxn}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Recompile\ me:\ g->n=}\)\.{\%ld,\ maxn=\%d!%
+\\n"},\39\|g\MG\|n,\39\\{maxn});{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+\\{gb\_init\_rand}(\T{0});\C{ the seed doesn't matter much }\6
+\&{for} ${}(\|v\K\|g\MG\\{vertices};{}$ ${}\|v<\|g\MG\\{vertices}+\|g\MG\|n;{}$
+${}\|v\PP){}$\1\6
+\&{if} ${}(\\{strcmp}(\|v\MG\\{name},\39\\{argv}[\T{2}])\E\T{0}){}$\1\5
+\&{break};\2\2\6
+\&{if} ${}(\|v\E\|g\MG\\{vertices}+\|g\MG\|n){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ can't\ find\ a\ vert}\)\.{ex\ named\ `\%s'!%
+\\n"},\39\\{argv}[\T{2}]);{}$\6
+${}\\{exit}({-}\T{9});{}$\6
+\4${}\}{}$\2\6
+${}\\{v0}\K\|v{}$;\par
+\U1.\fi
+
+\M{3}Vertices with the same signature are linked cyclically.
+As mentioned above, we start by simply computing distances from~$v_0$.
+
+\Y\B\4\D$\\{sig}$ \5
+$\|w.{}$\|I\C{ signature of a vertex }\par
+\B\4\D$\\{link}$ \5
+$\|u.{}$\|V\C{ link field in a circular list }\par
+\B\4\D$\\{tag}$ \5
+$\|v.{}$\|I\C{ to what extent have we processed the vertex? }\par
+\Y\B\4\X3:Make the initial signatures\X${}\E{}$\6
+\\{printf}(\.{"Initial\ round:\\n"});\6
+\&{for} ${}(\|v\K\|g\MG\\{vertices};{}$ ${}\|v<\|g\MG\\{vertices}+\|g\MG\|n;{}$
+${}\|v\PP){}$\1\5
+${}\|v\MG\\{sig}\K{-}\T{1},\39\|v\MG\\{tag}\K\T{0};{}$\2\6
+${}\\{v0}\MG\\{sig}\K\T{0},\39\\{v0}\MG\\{link}\K\\{v0},\39\|k\K\T{1},\39\|v\K%
+\\{v0};{}$\6
+\&{while} (\|v)\5
+${}\{{}$\1\6
+${}\\{prev}\K\\{head}\K\NULL;{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\ \%s\ dist\ \%ld\\n"},\39\|v\MG\\{name},\39\|v\MG%
+\\{sig});{}$\6
+\X4:Set signature of all \PB{\|v}'s unseen neighbors to \PB{\|k}\X;\6
+${}\|v\MG\\{tag}\K\|k;{}$\6
+${}\|v\K\|v\MG\\{link};{}$\6
+\&{if} ${}(\|v\MG\\{tag}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{prev}\E\NULL){}$\1\5
+\&{break};\C{ all vertices reachable from $v_0$ have been seen }\2\6
+${}\\{head}\MG\\{link}\K\\{prev}{}$;\C{ close the cycle }\6
+${}\|v\K\\{prev},\39\|k\PP;{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{4}\B\X4:Set signature of all \PB{\|v}'s unseen neighbors to \PB{\|k}\X${}%
+\E{}$\6
+\&{for} ${}(\|a\K\|v\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|u\K\|a\MG\\{tip};{}$\6
+\&{if} ${}(\|u\MG\\{sig}<\T{0}){}$\5
+${}\{{}$\1\6
+${}\|u\MG\\{sig}\K\|k;{}$\6
+\&{if} ${}(\\{prev}\E\NULL){}$\1\5
+${}\\{head}\K\|u;{}$\2\6
+\&{else}\1\5
+${}\|u\MG\\{link}\K\\{prev};{}$\2\6
+${}\\{prev}\K\|u;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U3.\fi
+
+\M{5}Now comes the fun part. As we pass from $\sigma_{r-1}$ to $\sigma_r$,
+each equivalence class becomes one or more classes.
+
+\Y\B\4\D$\\{oldsig}$ \5
+$\|z.{}$\|I\par
+\Y\B\4\X5:Do round \PB{\|r}\X${}\E{}$\6
+$\\{printf}(\.{"Round\ \%d:\\n"},\39\|r);{}$\6
+\&{for} ${}(\|v\K\|g\MG\\{vertices};{}$ ${}\|v<\|g\MG\\{vertices}+\|g\MG\|n;{}$
+${}\|v\PP){}$\1\5
+${}\|v\MG\\{oldsig}\K\|v\MG\\{sig};{}$\2\6
+${}\|k\PP{}$;\C{ \PB{\|k} is a unique stamp to identify this round }\6
+${}\|x\K(\\{gb\_next\_rand}(\,)\LL\T{1})+\T{1}{}$;\C{ pseudorandom number used
+for new signatures }\6
+\&{for} ${}(\|v\K\|g\MG\\{vertices};{}$ ${}\|v<\|g\MG\\{vertices}+\|g\MG\|n;{}$
+${}\|v\PP){}$\1\6
+\&{if} ${}(\|v\MG\\{tag}>\T{0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|v\MG\\{tag}\E\|k){}$\1\5
+\&{continue};\2\6
+\&{if} ${}(\|v\MG\\{link}\E\|v){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\ \%s\ is\ fixed\\n"},\39\|v\MG\\{name}){}$;\C{ class of size
+1 }\6
+${}\|v\MG\\{tag}\K{-}\|k{}$;\C{ we needn't pursue it further }\6
+\&{continue};\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|v\MG\\{tag}\I\|k;{}$ ${}\|v\K\|u){}$\5
+${}\{{}$\1\6
+${}\|u\K\|v\MG\\{link};{}$\6
+\X6:Compute $s=\sigma_r(v)$\X;\6
+${}\\{printf}(\.{"\ \%s\ \%lx\\n"},\39\|v\MG\\{name},\39\|s);{}$\6
+${}\|v\MG\\{sig}\K\|s;{}$\6
+\&{for} ${}(\|i\K\T{0},\39\\{sg}[\|j]\K\|s;{}$ ${}\\{sg}[\|i]\I\|s;{}$ ${}\|i%
+\PP){}$\1\5
+;\2\6
+\&{if} ${}(\|i\E\|j){}$\1\5
+${}\\{hd}[\|j]\K\\{tl}[\|j]\K\|v,\39\|j\PP{}$;\C{ a new cyclic list begins }\2\6
+\&{else}\1\5
+${}\|v\MG\\{link}\K\\{tl}[\|i],\39\\{tl}[\|i]\K\|v{}$;\C{ continue building an
+existing list }\2\6
+${}\|v\MG\\{tag}\K\|k;{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|j;{}$ ${}\|i\PP){}$\1\5
+${}\\{hd}[\|i]\MG\\{link}\K\\{tl}[\|i]{}$;\C{ complete the cycles }\2\6
+\&{if} ${}(\|j>\T{1}){}$\1\5
+${}\\{change}\K\T{1};{}$\2\6
+\4${}\}{}$\2\2\par
+\U1.\fi
+
+\M{6}\B\X6:Compute $s=\sigma_r(v)$\X${}\E{}$\6
+\&{for} ${}(\|s\K\T{1},\39\|a\K\|v\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG%
+\\{next}){}$\1\5
+${}\|s\MRL{*{\K}}\|x-\|a\MG\\{tip}\MG\\{oldsig}{}$;\2\par
+\U5.\fi
+
+\N{1}{7}Index.
+\fi
+
+\inx
+\fin
+\con

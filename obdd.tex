@@ -1,0 +1,784 @@
+\input cwebmac
+
+
+\datethis
+
+
+\N{1}{1}Introduction. This program counts the number of knight's tours of an
+$m\times n$ board that are symmetric under $180^\circ$ rotation, assuming that
+$m$ and $n$ are even. I wrote it partly to verify the results of another
+program, using an independent method; but mostly, I wrote it to get experience
+using ``ordered binary decision diagrams,'' popularly known as OBDDs. I'm
+implementing a basic form of OBDDs as described by Bryant in {\sl Computing
+Surveys\/ \bf24} (1992), 293--318.
+
+The idea of the program is that each tour is obtained by combining two perfect
+matchings of the bipartite graph of knight's moves. So I generate an OBDD to
+represent perfect matchings. Then I traverse it, reporting all the pairs of
+matchings that yield a single cycle.
+
+\Y\B\4\D$\\{mm}$ \5
+\T{8}\C{ the number of rows }\par
+\B\4\D$\\{nn}$ \5
+\T{8}\C{ the number of columns }\par
+\B\4\D$\\{interval}$ \5
+\T{100000}\C{ show \PB{$\T{1}/\\{interval}$} of the solutions }\par
+\Y\B\8\#\&{include} \.{"gb\_graph.h"}\C{ the GraphBase data structures }\6
+\8\#\&{include} \.{"gb\_basic.h"}\C{ chessboard graph generator }\6
+\ATH\7
+\X3:Global variables\X\6
+\X7:Subroutines\X\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\X4:Local variables\X;\7
+\X2:Generate the list of edges\X;\6
+\X8:Construct the OBDD for all perfect matchings\X;\6
+\X21:Count and report the number of such matchings\X;\6
+\X24:Traverse and count Hamiltonian cycles\X;\6
+${}\\{printf}(\.{"Total\ \%d\ solutions\ }\)\.{and\ \%d\ pseudo-soluti}\)%
+\.{ons.\\n"},\39\\{sols},\39\\{pseudo\_sols});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}To account for $180^\circ$ symmetry, we identify each vertex with its
+``mate'' under rotation. Each edge \PB{\|k} is represented by three quantities:
+\PB{\\{black}[\|k]} and \PB{\\{red}[\|k]} are the endpoints (which are vertices
+of different
+colors on the chessboard; black vertices are those with an even sum of
+coordinates); \PB{\\{parity}[\|k]} is 1 if the edge actually goes from \PB{%
+\\{black}[\|k]} to
+the mate of \PB{\\{red}[\|k]} instead of to \PB{\\{red}[\|k]} itself.
+
+\Y\B\4\D$\\{mate}$ \5
+$\|u.{}$\|V\C{ the antipodal vertex to a given one }\par
+\Y\B\4\X2:Generate the list of edges\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{gg}\K\\{board}(\\{mm},\39\\{nn},\39\T{0},\39\T{0},\39\T{5},\39\T{0},\39%
+\T{0}){}$;\C{ knight moves on chessboard }\6
+\&{for} ${}(\|v\K\\{gg}\MG\\{vertices},\39\|u\K\\{gg}\MG\\{vertices}+\\{gg}\MG%
+\|n-\T{1};{}$ ${}\|v<\|u;{}$ ${}\|v\PP,\39\|u\MM){}$\5
+${}\{{}$\1\6
+${}\|v\MG\\{mate}\K\|u;{}$\6
+${}\|u\MG\\{mate}\K\|v;{}$\6
+\4${}\}{}$\2\6
+${}\|k\K\T{0};{}$\6
+\&{for} ${}(\|v\K\\{gg}\MG\\{vertices};{}$ ${}\|v<\|v\MG\\{mate};{}$ ${}\|v%
+\PP){}$\1\6
+\&{if} ${}(((\|v\MG\|x.\|I+\|v\MG\|y.\|I)\AND\T{1})\E\T{0}){}$\5
+${}\{{}$\1\6
+\&{register} \&{Arc} ${}{*}\|a;{}$\7
+\&{for} ${}(\|a\K\|v\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|u\K\|a\MG\\{tip};{}$\6
+${}\\{black}[\|k]\K\|v;{}$\6
+\&{if} ${}(\|u<\|u\MG\\{mate}){}$\1\5
+${}\\{red}[\|k]\K\|u,\39\\{parity}[\|k]\K\T{0};{}$\2\6
+\&{else}\1\5
+${}\\{red}[\|k]\K\|u\MG\\{mate},\39\\{parity}[\|k]\K\T{1};{}$\2\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"\%d:\ \%s--\%s\%s\\n"},\39\|k,\39\\{black}[\|k]\MG\\{name},%
+\39\\{red}[\|k]\MG\\{name},\39\\{parity}[\|k]\?\.{"*"}:\.{""});{}$\2\6
+${}\|k\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\6
+${}\\{edges}\K\|k;{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}\B\X3:Global variables\X${}\E{}$\6
+\&{Vertex} ${}{*}\\{black}[\\{mm}*\\{nn}*\T{2}],{}$ ${}{*}\\{red}[\\{mm}*%
+\\{nn}*\T{2}];{}$\6
+\&{int} ${}\\{parity}[\\{mm}*\\{nn}*\T{2}];{}$\6
+\&{int} \\{edges};\C{ total number of edges }\6
+\&{int} \\{verbose};\C{ set nonzero when debugging }\6
+\&{int} \\{sols}${},{}$ \\{pseudo\_sols};\C{ counts the solutions and cases of
+two half-cycles }\par
+\As5, 12, 14, 20\ETs26.
+\U1.\fi
+
+\M{4}\B\X4:Local variables\X${}\E{}$\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|t;\6
+\&{register} \&{Vertex} ${}{*}\|u,{}$ ${}{*}\|v;{}$\6
+\&{Graph} ${}{*}\\{gg}{}$;\par
+\As10\ET25.
+\U1.\fi
+
+\N{1}{5}OBDDs. An OBDD canonically represents a boolean function
+$f(x_1,x_2,\ldots,x_n)$ as a binary tree with shared subtrees (a special kind
+of~dag). If $n=0$, the representation is the node `0' or `1'. If $n>0$ and the
+function doesn't depend on $x_1$,
+\def\rep{\hbox{rep}}%
+$\rep f(x_1,x_2,\ldots,x_n)=\rep f(x_2,\ldots,x_n)$. Otherwise
+$\rep f(x_1,x_2,\ldots,x_n)$ is a node labeled $x_1$ with left and right
+subnodes labeled $\rep f(0,x_2,\ldots,x_n)$ and $\rep f(1,x_2,\ldots,x_n)$
+respectively. Common subtrees are represented by the same node.
+
+In the present application there is one boolean variable for each edge.
+The variable is 1 if the edge is present in a certain subset of edges,
+0~otherwise. The function $f(e_1,e_2,\ldots,e_n)$ is 1 iff that subset
+of edges is a perfect matching.
+
+I don't expect the number of nodes to be enormous. So I'm preallocating an
+array for each node field: \PB{\\{var}[\|k]} is the label of node~k; \PB{%
+\\{left}[\|k]} and
+\PB{\\{right}[\|k]} are the indices of its subnodes. Usually \PB{$\T{0}\Z%
+\\{var}[\|k]<\\{edges}$};
+however, the two ``sink'' nodes 0 and~1 are special. They are the nodes in
+positions 0 and 1, and we have \PB{$\\{var}[\|k]\K\\{edges}$}, \PB{$\\{left}[%
+\|k]\K\\{right}[\|k]\K\|k$} for
+these two values of~\PB{\|k}.
+
+\Y\B\4\D$\\{max\_nodes}$ \5
+$(\T{1}\LL\T{18}{}$)\C{ must be a power of 2                         because of
+my hash function below }\par
+\Y\B\4\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{var}[\\{max\_nodes}]${},{}$ \\{left}[\\{max\_nodes}]${},{}$ %
+\\{right}[\\{max\_nodes}];\C{ OBDD storage }\6
+\&{int} \\{curnode};\C{ size of the current OBDD }\par
+\fi
+
+\M{6}To get started, I set up a simple OBDD for the function $f$ that says
+every black vertex is matched exactly once.
+
+If $e_1$, \dots, $e_n$ are the edges that touch some vertex, we want exactly
+one of them to be present. The OBDD for this has $2n$ nodes
+$$\alpha_j=(e_j,\alpha_{j+1},\beta_{j+1}),\qquad
+\beta_j =(e_j,\beta_{j+1},0),\qquad\hbox{for $1\le j\le n$}$$
+where $\alpha_{n+1}=0$ and $\beta_{n+1}=1$. Actually only $2n-1$ of these
+nodes are present, since $\beta_1$ is not used.
+
+We string together these simple OBDDs by substituting node $\alpha_1$ of the
+$k+1$st vertex for node $\beta_{n+1}$ of the $k$th. This works because of the
+way we have numbered the edges: the \PB{\\{black}} array values are
+nondecreasing.
+
+\Y\B\4\X6:Create the OBDD for matching black vertices\X${}\E{}$\6
+$\\{var}[\T{0}]\K\\{var}[\T{1}]\K\\{edges};{}$\6
+${}\\{left}[\T{0}]\K\\{right}[\T{0}]\K\T{0};{}$\6
+${}\\{left}[\T{1}]\K\\{right}[\T{1}]\K\T{1};{}$\6
+${}\\{curnode}\K\T{2};{}$\6
+\&{for} ${}(\|v\K\\{gg}\MG\\{vertices},\39\|k\K\T{0};{}$ ${}\|v<\|v\MG%
+\\{mate};{}$ ${}\|v\PP){}$\1\6
+\&{if} ${}(((\|v\MG\|x.\|I+\|v\MG\|y.\|I)\AND\T{1})\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\|j\K\T{0};{}$\6
+\&{while} ${}(\\{black}[\|k]\E\|v){}$\5
+${}\{{}$\1\6
+\&{if} (\|j)\5
+${}\{{}$\C{ put out a $\beta$ node }\1\6
+${}\\{var}[\\{curnode}]\K\|k;{}$\6
+${}\\{left}[\\{curnode}]\K\\{curnode}+\T{2};{}$\6
+${}\\{right}[\\{curnode}]\K\T{0};{}$\6
+${}\\{curnode}\PP;{}$\6
+\4${}\}{}$\2\6
+${}\\{var}[\\{curnode}]\K\|k;{}$\6
+${}\\{left}[\\{curnode}]\K\\{curnode}+\T{2};{}$\6
+${}\\{right}[\\{curnode}]\K\\{curnode}+\T{1};{}$\6
+${}\\{curnode}\PP{}$;\C{ that was an $\alpha$ node }\6
+${}\|k\PP;{}$\6
+${}\|j\K\T{1};{}$\6
+\4${}\}{}$\2\6
+${}\\{left}[\\{curnode}-\T{1}]\K\T{0}{}$;\C{ $\alpha_{n+1}=0$; $\beta_{n+1}=%
+\PB{\\{curnode}}$ }\6
+\4${}\}{}$\2\2\6
+${}\\{left}[\\{curnode}-\T{2}]\K\\{right}[\\{curnode}-\T{1}]\K\T{1}{}$;\C{ $%
+\beta_{n+1}=1$, the last time }\par
+\U8.\fi
+
+\M{7}Here's a subroutine for use when debugging: It prints the current OBDD.
+
+\Y\B\4\X7:Subroutines\X${}\E{}$\6
+\&{void} \\{print\_obdd}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k;\7
+\&{for} ${}(\|k\K\T{2};{}$ ${}\|k<\\{curnode};{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\.{"\%d:\ if\ \%s-\%s\%s\ then}\)\.{\ \%d\ else\ \%d\\n"},\39\|k,%
+\39\\{black}[\\{var}[\|k]]\MG\\{name},\39\\{red}[\\{var}[\|k]]\MG\\{name},\39%
+\\{parity}[\\{var}[\|k]]\?\.{"*"}:\.{""},\39\\{right}[\|k],\39\\{left}[%
+\|k]);{}$\2\6
+\4${}\}{}$\2\par
+\A11.
+\U1.\fi
+
+\M{8}To complete the construction of the OBDD for matching, we need to specify
+the fact that every red vertex is matched exactly once. This is done by
+repeatedly ANDing an appropriate boolean function to the current OBDD,
+once for each red vertex.
+
+\Y\B\4\X8:Construct the OBDD for all perfect matchings\X${}\E{}$\6
+\X6:Create the OBDD for matching black vertices\X;\6
+${}\|f\K\T{2}{}$;\C{ root of the current OBDD }\6
+\&{for} ${}(\|v\K\\{gg}\MG\\{vertices};{}$ ${}\|v<\|v\MG\\{mate};{}$ ${}\|v%
+\PP){}$\1\6
+\&{if} ${}((\|v\MG\|x.\|I+\|v\MG\|y.\|I)\AND\T{1}){}$\1\5
+\X9:Modify the OBDD so that red vertex \PB{\|v} is matched exactly once\X;\2\2%
+\par
+\U1.\fi
+
+\M{9}The reader may have noticed that I forgot to test whether \PB{\\{curnode}}
+has
+exceeded \PB{\\{max\_nodes}}. Peccavi; I am silently assuming that \PB{\\{max%
+\_nodes}} isn't
+way too low. In the \PB{\\{intersect}} routine below this condition is
+rigorously
+checked.
+
+\Y\B\4\X9:Modify the OBDD so that red vertex \PB{\|v} is matched exactly once%
+\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|g\K\\{curnode}{}$;\C{ root of an OBDD to be ANDed to \PB{\|f} }\6
+\&{for} ${}(\|j\K\|k\K\T{0};{}$ ${}\|k<\\{edges};{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\\{red}[\|k]\E\|v){}$\5
+${}\{{}$\1\6
+\&{if} (\|j)\5
+${}\{{}$\C{ put out a $\beta$ node }\1\6
+${}\\{var}[\\{curnode}]\K\|k;{}$\6
+${}\\{left}[\\{curnode}]\K\\{curnode}+\T{2};{}$\6
+${}\\{right}[\\{curnode}]\K\T{0};{}$\6
+${}\\{curnode}\PP;{}$\6
+\4${}\}{}$\2\6
+${}\\{var}[\\{curnode}]\K\|k;{}$\6
+${}\\{left}[\\{curnode}]\K\\{curnode}+\T{2};{}$\6
+${}\\{right}[\\{curnode}]\K\\{curnode}+\T{1};{}$\6
+${}\\{curnode}\PP{}$;\C{ that was an $\alpha$ node }\6
+${}\|j\K\T{1};{}$\6
+\4${}\}{}$\2\2\6
+${}\\{left}[\\{curnode}-\T{1}]\K\T{0}{}$;\C{ $\alpha_{n+1}=0$ }\6
+${}\\{left}[\\{curnode}-\T{2}]\K\\{right}[\\{curnode}-\T{1}]\K\T{1}{}$;\C{ $%
+\beta_{n+1}=1$ }\6
+${}\|f\K\\{intersect}(\|f,\39\|g);{}$\6
+\4${}\}{}$\2\par
+\U8.\fi
+
+\M{10}\B\X4:Local variables\X${}\mathrel+\E{}$\6
+\&{int} \|f${},{}$ \|g;\C{ roots of OBDDs }\par
+\fi
+
+\N{1}{11}Intersection of OBDDs. Now comes the funnest part. Given the roots
+$f,g$ of
+two OBDDs, the following subroutine computes the OBDD for $f\land g$.
+
+We assume that $f$ and $g$ occupy the low end of memory, up to but not
+including \PB{\\{curnode}}. The subroutine operates in two phases: First an
+unreduced
+template for the result is formed in the upper part of memory. Then the
+reduced OBDD is placed in the lower part, on top of the original \PB{\|f} and~%
+\PB{\|g}.
+This method allows us to avoid messy issues of reference counting and garbage
+collection. It does, however, require us to copy the whole OBDD if, for
+example, \PB{\|g} is the constant~1. Such copying is, fortunately, only a small
+part of the work, in the OBDDs we will encounter.
+
+The output $f\land g$ is constructed in a useful form that can be processed
+``bottom up,'' because \PB{$\\{left}[\|k]<\|k$} and \PB{$\\{right}[\|k]<\|k$}
+will hold in all nodes.
+The inputs need not be in this form.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+\X16:Basic subroutines needed by \PB{\\{intersect}}\X\7
+\&{int} ${}\\{intersect}(\|f,\39\|g){}$\1\1\6
+\&{register} \&{int} \|f${},{}$ \|g;\C{ roots of OBDDs whose intersection is
+desired }\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k;\7
+${}\\{hinode}\K\\{max\_nodes}-\T{1};{}$\6
+\X13:Construct the template in upper memory\X;\6
+\X18:Construct the reduced OBDD in lower memory, using the template\X;\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"\ ...\ unreduced\ size}\)\.{\ \%d,\ reduced\ \%d\\n"},\39%
+\\{max\_nodes}-\\{hinode},\39\\{curnode});{}$\2\6
+\&{return} \\{curnode}${}-\T{1};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{12}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{hinode};\C{ the first free node in upper memory }\par
+\fi
+
+\M{13}What's a template? Well, it's sort of like an OBDD except that it hasn't
+been reduced to canonical form. Also, it represents the variables in a
+different way. The \PB{\\{var}} field of a node contains a pointer to the
+previous
+node for the same variable; there's a separate array called \PB{\\{head}} that
+points
+to the first node for each variable. This arrangement makes it easy to look at
+nodes level by level from the bottom up.
+
+While the template is being formed, some of its nodes are not yet finished.
+An unfinished node \PB{\|k} represents a function $f'\land g'$, where \PB{%
+\\{left}[\|k]}
+points to~$f'$ and \PB{\\{right}[\|k]} points to~$g'$; its \PB{\\{var}} part is
+undefined.
+All unfinished template nodes belong to a queue of consecutive nodes in upper
+memory; they will be finished in FIFO order.
+
+The subroutine \PB{\\{new\_template}} creates a new (unfinished) template node
+for $f'\land g'$, if no (finished or unfinished) node for this pair of
+functions already exists. Otherwise it returns the value of the existing node.
+
+\Y\B\4\X13:Construct the template in upper memory\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \\{source};\C{ front of the queue of unfinished template
+nodes }\7
+\X15:Initialize the tables for template construction\X;\6
+${}\|k\K\\{new\_template}(\|f,\39\|g){}$;\C{ create the first unfinished node }%
+\6
+${}\\{source}\K\\{max\_nodes}-\T{1};{}$\6
+\&{while} ${}(\\{source}>\\{hinode}){}$\5
+${}\{{}$\C{ we want to finish node \PB{\\{source}} }\1\6
+${}\|f\K\\{left}[\\{source}]{}$;\5
+${}\|g\K\\{right}[\\{source}]{}$;\C{ by intersecting nonzero functions $f,g$ }\6
+${}\|j\K\\{var}[\|f]{}$;\5
+${}\|k\K\\{var}[\|g];{}$\6
+${}\\{left}[\\{source}]\K\\{new\_template}(\|j>\|k\?\|f:\\{left}[\|f],\39\|k>%
+\|j\?\|g:\\{left}[\|g]);{}$\6
+${}\\{right}[\\{source}]\K\\{new\_template}(\|j>\|k\?\|f:\\{right}[\|f],\39\|k>%
+\|j\?\|g:\\{right}[\|g]);{}$\6
+\&{if} ${}(\|j>\|k){}$\1\5
+${}\|j\K\|k{}$;\C{ this template node refers to variable \PB{\|j} }\2\6
+${}\\{var}[\\{source}]\K\\{head}[\|j];{}$\6
+${}\\{head}[\|j]\K\\{source}{}$;\C{ so link it into list \PB{\|j} }\6
+${}\\{source}\MM;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U11.\fi
+
+\M{14}The \PB{\\{new\_template}} routine recognizes previous entries by
+maintaining
+a hash table of all node pairs it has seen. The hash table consists of
+two arrays, \PB{\\{hash\_f}} and \PB{\\{hash\_g}}, for the two function nodes;
+these point
+into lower memory, and they serve as retrieval keys.
+A third array, \PB{\\{hash\_l}}, is the location of the template node for
+$\PB{\\{hash\_f}}\land\PB{\\{hash\_g}}$.
+There's also a fourth array, \PB{\\{hash\_t}}, which contains a
+``time stamp.'' Any slot whose time stamp differs from the global variable
+\PB{\\{time}} is considered empty. Linear probing works well, since the hash
+table rarely if ever gets more than half full.
+
+\Y\B\4\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{time};\C{ the master clock for timestamps }\6
+\&{int} \\{hash\_f}[\\{max\_nodes}]${},{}$ \\{hash\_g}[\\{max\_nodes}]${},{}$ %
+\\{hash\_l}[\\{max\_nodes}]${},{}$ \\{hash\_t}[\\{max\_nodes}];\6
+\&{int} ${}\\{head}[\\{mm}*\\{nn}*\T{2}]{}$;\C{ head of lists for template
+variables }\par
+\fi
+
+\M{15}\B\X15:Initialize the tables for template construction\X${}\E{}$\6
+$\\{time}\PP{}$;\C{ clear the memory of the \PB{\\{new\_template}} routine }\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\\{edges};{}$ ${}\|k\PP){}$\1\5
+${}\\{head}[\|k]\K\T{0}{}$;\2\par
+\U13.\fi
+
+\M{16}I forgot to mention that
+the \PB{\\{new\_template}} routine returns 0 if either input function is the
+constant~0. This feature, in fact, is what makes the \PB{\\{intersect}} routine
+compute intersections(!).
+
+\Y\B\4\D$\\{hash\_rand}$ \5
+\T{314159}\C{ $(1001100101100101111)_2$;               this ``random''
+multiplier seems OK }\par
+\Y\B\4\X16:Basic subroutines needed by \PB{\\{intersect}}\X${}\E{}$\6
+\&{int} ${}\\{new\_template}(\|f,\39\|g){}$\1\1\6
+\&{register} \&{int} \|f${},{}$ \|g;\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|h;\7
+\&{if} ${}(\|f\E\T{0}\V\|g\E\T{0}){}$\1\5
+\&{return} \T{0};\2\6
+${}\|h\K(\\{hash\_rand}*\|f+\|g)\AND(\\{max\_nodes}-\T{1}){}$;\C{ hash function
+}\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{if} ${}(\\{hash\_t}[\|h]\I\\{time}){}$\1\5
+\&{break};\2\6
+\&{if} ${}(\\{hash\_f}[\|h]\E\|f\W\\{hash\_g}[\|h]\E\|g){}$\1\5
+\&{return} \\{hash\_l}[\|h];\2\6
+${}\|h\K(\|h-\T{1})\AND(\\{max\_nodes}-\T{1});{}$\6
+\4${}\}{}$\2\6
+${}\\{hash\_t}[\|h]\K\\{time};{}$\6
+${}\\{hash\_f}[\|h]\K\|f;{}$\6
+${}\\{hash\_g}[\|h]\K\|g;{}$\6
+${}\\{hash\_l}[\|h]\K\\{hinode};{}$\6
+${}\\{left}[\\{hinode}]\K\|f;{}$\6
+${}\\{right}[\\{hinode}]\K\|g;{}$\6
+\&{if} ${}(\\{hinode}\Z\\{curnode}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Out\ of\ memory!\\n"});{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\&{return} \\{hinode}${}\MM;{}$\6
+\4${}\}{}$\2\par
+\A17.
+\U11.\fi
+
+\M{17}The second phase of \PB{\\{intersect}} uses a routine \PB{\\{new\_node}}
+that is
+very much like \PB{\\{new\_template}}.
+The main difference is that \PB{\\{new\_node}} creates (or finds existing
+copies)
+of node pairs in the {\it lower\/} memory.
+
+\Y\B\4\X16:Basic subroutines needed by \PB{\\{intersect}}\X${}\mathrel+\E{}$\6
+\&{int} ${}\\{new\_node}(\|f,\39\|g){}$\1\1\6
+\&{register} \&{int} \|f${},{}$ \|g;\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|h;\7
+${}\|h\K(\\{hash\_rand}*\|f+\|g)\AND(\\{max\_nodes}-\T{1}){}$;\C{ hash function
+}\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{if} ${}(\\{hash\_t}[\|h]\I\\{time}){}$\1\5
+\&{break};\2\6
+\&{if} ${}(\\{hash\_f}[\|h]\E\|f\W\\{hash\_g}[\|h]\E\|g){}$\1\5
+\&{return} \\{hash\_l}[\|h];\2\6
+${}\|h\K(\|h-\T{1})\AND(\\{max\_nodes}-\T{1});{}$\6
+\4${}\}{}$\2\6
+${}\\{hash\_t}[\|h]\K\\{time};{}$\6
+${}\\{hash\_f}[\|h]\K\|f;{}$\6
+${}\\{hash\_g}[\|h]\K\|g;{}$\6
+${}\\{hash\_l}[\|h]\K\\{curnode};{}$\6
+${}\\{left}[\\{curnode}]\K\|f;{}$\6
+${}\\{right}[\\{curnode}]\K\|g;{}$\6
+\&{if} ${}(\\{hinode}\Z\\{curnode}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Out\ of\ memory!\\n"});{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+\&{return} \\{curnode}${}\PP;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{18}OK, we're ready to finish off the intersection process. The idea is to go
+through the template from the bottom up, collapsing identical nodes when they
+don't belong in an OBDD.
+
+After we've visited a template node, we store a pointer to its low-memory
+clone in the \PB{\\{right}} array. Neither the \PB{\\{left}} nor \PB{\\{right}}
+fields of that
+node will ever be needed again as inter-template pointers.
+
+One subtle point needs to be mentioned (although it doesn't arise in the
+application to knight's tours, so I haven't really tested it): The resulting
+function $f\land g$ is identically zero if and only there is no template
+node for the dummy variable \PB{\\{edges}}. Such a template node would arise
+from the sink node~`1', if it were present.
+
+\Y\B\4\D$\\{clone}$ \5
+\\{right}\par
+\Y\B\4\X18:Construct the reduced OBDD in lower memory, using the template\X${}%
+\E{}$\6
+$\\{curnode}\K\T{2};{}$\6
+\&{if} ${}(\\{head}[\\{edges}]\E\T{0}){}$\1\5
+\&{return} \T{0};\C{ special case, see above }\2\6
+${}\\{clone}[\\{head}[\\{edges}]]\K\T{1}{}$;\C{ $1\land1=1$ }\6
+\&{for} ${}(\|k\K\\{edges}-\T{1};{}$ ${}\|k\G\T{0};{}$ ${}\|k\MM){}$\5
+${}\{{}$\1\6
+${}\\{time}\PP{}$;\C{ clear the hash table when a new level begins }\6
+\&{for} ${}(\|j\K\\{head}[\|k];{}$ \|j; ${}\|j\K\\{var}[\|j]){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{clone}[\\{left}[\|j]]\E\\{clone}[\\{right}[\|j]]){}$\1\5
+${}\\{clone}[\|j]\K\\{clone}[\\{left}[\|j]];{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{clone}[\|j]\K\\{new\_node}(\\{clone}[\\{left}[\|j]],\39\\{clone}[%
+\\{right}[\|j]]);{}$\6
+${}\\{var}[\\{clone}[\|j]]\K\|k;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U11.\fi
+
+\M{19}The \PB{\\{intersect}} routine is now complete. I just want to point out
+here that
+\PB{$\\{intersect}(\|f,\|g)$} is called in this program only when \PB{\|g} is
+an OBDD of
+width~2; therefore the template (and the resulting OBDD)
+will never be more than twice the size of the original~\PB{\|f}.
+I haven't used that fact in the program, but it does tell
+us that \PB{\\{max\_nodes}} will be large enough if it is more than about three
+times
+the size of the OBDDs generated.
+
+\fi
+
+\N{1}{20}Counting the matchings. One of the neatest properties of the OBDD is
+that
+it's easy to count exactly how many combinations $(x_1,x_2,\ldots,x_n)$ will
+make $f(x_1,x_2,\ldots,x_n)=1$. This is just the number of paths to node~1 in
+the dag.
+
+To compute this number, I'll add a \PB{\\{count}} array to the existing OBDD
+arrays. This one doesn't have to be as long as the others, since the final
+OBDD is in the lower part of the memory.
+
+\Y\B\4\D$\\{max\_final\_nodes}$ \5
+$(\\{max\_nodes}/\T{2}{}$)\par
+\Y\B\4\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{count}[\\{max\_final\_nodes}];\par
+\fi
+
+\M{21}\B\X21:Count and report the number of such matchings\X${}\E{}$\6
+\&{if} ${}(\|f\G\\{max\_final\_nodes}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\\{stderr},\39\.{"Oops,\ out\ of\ memory}\)\.{\ for\ counting!%
+\\n"});{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+${}\\{count}[\T{0}]\K\T{0};{}$\6
+${}\\{count}[\T{1}]\K\T{1};{}$\6
+\&{for} ${}(\|k\K\T{2};{}$ ${}\|k\Z\|f;{}$ ${}\|k\PP){}$\1\5
+${}\\{count}[\|k]\K\\{count}[\\{left}[\|k]]+\\{count}[\\{right}[\|k]];{}$\2\6
+${}\\{printf}(\.{"Total\ solutions\ \%d\ }\)\.{in\ OBDD\ of\ size\ \%d.\\}\)%
+\.{n"},\39\\{count}[\|f],\39\|f+\T{1}){}$;\par
+\U1.\fi
+
+\N{1}{22}Hamiltonicity. The first two edges in our list are the two knight
+moves
+from the upper left corner of the board. Some of the matchings use the first
+edge, some use the second. We want to look at all pairs of matchings
+$(\mu,\mu')$ where $\mu$ uses the first edge and $\mu'$ uses the second,
+such that $\mu\cup\mu'$ is a single cycle.
+
+To do this, we run through each $\mu$ in an outer loop, by traversing the OBDD
+as if it were a binary tree with shared subtrees. (Which it is.) Then for
+each~$\mu$, we traverse the OBDD again, in an inner loop, to find each $\mu'$
+that's compatible with~$\mu$. The inner traversal is interrupted whenever we
+detect a cycle before a complete $\mu'$ is generated; so we don't really have
+to investigate at all the $\mu'$.
+
+How many $\mu'$ will acquire $k$ edges before a cycle is detected? Consider a
+random model in which we start with a fixed matching of $n$ black points with
+$n$ red points. If we now choose a black node and a red node at random, the
+probability is $1/n$ that they will already be matched. Otherwise, we get
+essentially the same setup but with $n$ decreased by~1. The generating
+function for the number of steps before a loop occurs therefore satisfies
+$g_n(z)=z\bigl(1+(n-1)g_{n-1}(z)\bigr)/n$. And the solution is simply
+$g_n(z)=(z+z^2+\cdots+z^n)/n$, a uniform distribution. According to this
+model, we can expect to interrupt the calculation of $\mu'$ before half of its
+edges are generated, about half the time. Still, the model predicts that we
+get all the way to the end in $1/n$ of all cases. This is exactly right if we
+start with a complete bipartite graph: Such a graph has $n!$ matchings, and
+$n!\,(n-1)!=n!^2/n$ oriented Hamiltonian cycles. But for knight graphs, the
+model is evidently too pessimistic (and that's good news for us): On an
+$8\times8$ board, the reported ratio of pairs of matchings to Hamiltonian
+paths is roughly $10^5$, so cutoffs come along much more often than in a
+uniform distribution.
+
+\fi
+
+\M{23}When I got to the point of writing this part of the program, it became
+clear
+why Minato invented a variant of OBDDs called ZBDDs [{\sl ACM/IEEE Design
+Automation Conf.\ \bf30} (1993), 272--277]. In this variant, we have
+$\rep f(x_1,x_2,\ldots,x_n)=\rep f(x_2,\ldots,x_n)$ if $f(1,x_2,\ldots,x_n)$
+is identically zero, rather than if $f(0,x_2,\ldots,x_n)=f(1,x_2,\ldots,x_n)$.
+For certain functions, the ZBDD representation is larger than the OBDD,
+but only in cases where a node has two identical subtrees; such cases never
+arise in connection with matching, since all solutions to the matching problem
+have the same sum $x_1+x_2+\cdots+x_n$. Conversely, the OBDDs for matching
+have lots of nodes with right subtree equal to~0, and such nodes waste time
+and memory because they contribute nothing to the traversal process that lists
+matchings.
+
+The reasoning sketched in the previous paragraph can be understood from the
+following more detailed argument. A recursive traversal process \PB{%
+\\{traverse}(\|t)}
+might look like this:
+$$\vbox{\halign{#\hfil\cr
+\PB{\&{if}} \PB{(\\{right}[\|t])} \PB{$\{$}\cr
+\quad use edge \PB{\\{var}[\|t]};\cr
+\quad \PB{\&{if}} (matching needs to be extended) \PB{\\{traverse}(\\{right}[%
+\|t])};\cr
+\quad \PB{\&{else}} do the endgame for the current matching;\cr
+\quad unuse edge \PB{\\{var}[\|t]};\cr
+\PB{$\}$}\cr
+\PB{\&{if}} \PB{(\\{left}[\|t])} \PB{\\{traverse}(\\{left}[\|t])};\cr}}$$
+The procedure here goes first to the right subtree, then to the left, in order
+to use tail recursion when implemented with a homegrown stack; but that's not
+the main point. My main point is that if \PB{$\\{right}[\|t]\K\T{0}$}, \PB{%
+\\{traverse}(\|t)} is
+absolutely equivalent to \PB{\\{traverse}(\\{left}[\|t])} except for running
+time, since
+such nodes have \PB{$\\{left}[\|t]\I\T{0}$}. Therefore we might as well
+eliminate such nodes.
+
+I don't have time today (tonight) to modify this program so that it builds a
+ZBDD directly. That would probably be fairly easy, but \dots\ maybe next year.
+Today I'll simply optimize my tree by reducing it so that right links are
+always nonnull.
+
+Notice that after this is done, \PB{$\\{right}[\|k]\K\T{1}$} if and only if %
+\PB{\\{black}[\\{var}[\|k]]} is
+the final black vertex, i.e., if and only if a perfect matching has been
+completed.
+
+\Y\B\4\D$\\{reduced}$ \5
+\\{count}\C{ at this point we no longer need the \PB{\\{count}} array }\par
+\Y\B\4\X23:Remove null right branches\X${}\E{}$\6
+$\\{reduced}[\T{0}]\K\T{0};{}$\6
+\&{for} ${}(\|k\K\T{2},\39\|j\K\T{0};{}$ ${}\|k\Z\|f;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{left}[\|k]\K\\{reduced}[\\{left}[\|k]];{}$\6
+\&{if} (\\{right}[\|k])\1\5
+${}\\{reduced}[\|k]\K\|k,\39\\{right}[\|k]\K\\{reduced}[\\{right}[\|k]];{}$\2\6
+\&{else}\1\5
+${}\|j\PP,\39\\{reduced}[\|k]\K\\{left}[\|k]{}$;\C{ this node will not be
+accessed }\2\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"(I\ removed\ \%d\ null\ }\)\.{right\ branches.)\\n"},\39%
+\|j){}$;\par
+\U24.\fi
+
+\M{24}In this part of the program I'm implementing recursive traversal with my
+own
+stack instead of using \CEE/'s built-in recursion. The main reason is that we
+save overhead because of tail recursion. Of course, that may not be a big
+deal, but in a program like this I feel more confident about its speed if I
+don't have implicit computations going on. And I have no qualms about \PB{%
+\&{goto}}
+statements when they arise in a structured manner like this.
+
+Notice that this code represents the current matching in graph \PB{\\{gg}},
+with
+\PB{\|v}'s partner stored in \PB{$\|v\MG\\{opp}$}.
+
+\Y\B\4\D$\\{opp}$ \5
+$\|v.{}$\|V\par
+\Y\B\4\X24:Traverse and count Hamiltonian cycles\X${}\E{}$\6
+\X23:Remove null right branches\X;\6
+${}\\{outerptr}\K\T{0};{}$\6
+${}\\{total\_parity}\K\\{parity}[\T{0}];{}$\6
+${}\\{tt}\K\\{right}[\|f]{}$;\C{ the outer loop uses edge 0 }\6
+${}\\{black}[\T{0}]\MG\\{opp}\K\\{red}[\T{0}];{}$\6
+${}\\{red}[\T{0}]\MG\\{opp}\K\\{black}[\T{0}];{}$\6
+\4\\{traverse}:\5
+${}\|k\K\\{var}[\\{tt}];{}$\6
+${}\\{black}[\|k]\MG\\{opp}\K\\{red}[\|k];{}$\6
+${}\\{red}[\|k]\MG\\{opp}\K\\{black}[\|k];{}$\6
+${}\\{total\_parity}\MRL{+{\K}}\\{parity}[\|k];{}$\6
+\&{if} ${}(\\{right}[\\{tt}]>\T{1}){}$\5
+${}\{{}$\C{ not done yet }\1\6
+${}\\{outerstack}[\\{outerptr}\PP]\K\\{tt};{}$\6
+${}\\{tt}\K\\{right}[\\{tt}];{}$\6
+\&{goto} \\{traverse};\6
+\4${}\}{}$\2\6
+\X27:Do the inner traversal\X;\C{ We've got $\mu$, now look for $\mu'$ }\6
+\4\\{back}:\5
+${}\\{total\_parity}\MRL{-{\K}}\\{parity}[\\{var}[\\{tt}]];{}$\6
+\&{if} (\\{left}[\\{tt}])\5
+${}\{{}$\1\6
+${}\\{tt}\K\\{left}[\\{tt}];{}$\6
+\&{goto} \\{traverse};\6
+\4${}\}{}$\2\6
+\&{if} (\\{outerptr})\5
+${}\{{}$\1\6
+${}\\{tt}\K\\{outerstack}[\MM\\{outerptr}];{}$\6
+\&{goto} \\{back};\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{25}\B\X4:Local variables\X${}\mathrel+\E{}$\6
+\&{int} \\{tt};\C{ node being traversed in the outer loop }\par
+\fi
+
+\M{26}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{int} ${}\\{outerstack}[\\{mm}*\\{nn}*\T{2}],{}$ ${}\\{innerstack}[\\{mm}*%
+\\{nn}*\T{2}]{}$;\C{ stacks for traversal }\6
+\&{int} \\{outerptr}${},{}$ \\{innerptr};\C{ stack pointers }\6
+\&{int} \\{total\_parity};\C{ sum of edge parities in the current matchings }%
+\par
+\fi
+
+\M{27}The inner traversal is very similar, except that we generalize the
+meaning
+of \PB{\\{opp}}. Now, if there's a chain of links with $u$ at one end and $v$
+at the
+other, \PB{\|u} and~\PB{\|v} are considered ``opposites.'' Inside the chain,
+the \PB{\\{opp}}
+pointers contain information needed to restore the original matching when the
+chain is undone again later. This data structure gives immediate loop
+detection and requires only very simple updating.
+
+\Y\B\4\X27:Do the inner traversal\X${}\E{}$\6
+$\|t\K\\{right}[\\{left}[\|f]]{}$;\C{ the inner loop uses edge 1 }\6
+${}\|u\K\\{black}[\T{1}]\MG\\{opp};{}$\6
+${}\|v\K\\{red}[\T{1}]\MG\\{opp};{}$\6
+${}\|u\MG\\{opp}\K\|v;{}$\6
+${}\|v\MG\\{opp}\K\|u;{}$\6
+\4\\{in\_traverse}:\5
+${}\|k\K\\{var}[\|t];{}$\6
+${}\|u\K\\{black}[\|k]\MG\\{opp};{}$\6
+\&{if} ${}(\|u\E\\{red}[\|k]\W\\{right}[\|t]>\T{1}){}$\1\5
+\&{goto} \\{bypass};\C{ non-Hamiltonian cycle }\2\6
+${}\|u\K\\{black}[\|k]\MG\\{opp};{}$\6
+${}\|v\K\\{red}[\|k]\MG\\{opp};{}$\6
+${}\|u\MG\\{opp}\K\|v;{}$\6
+${}\|v\MG\\{opp}\K\|u;{}$\6
+${}\\{total\_parity}\MRL{+{\K}}\\{parity}[\|k];{}$\6
+\&{if} ${}(\\{right}[\|t]>\T{1}){}$\5
+${}\{{}$\C{ not done yet }\1\6
+${}\\{innerstack}[\\{innerptr}\PP]\K\|t;{}$\6
+${}\|t\K\\{right}[\|t];{}$\6
+\&{goto} \\{in\_traverse};\6
+\4${}\}{}$\2\6
+\X28:Record a solution\X;\C{ We've got $\mu\cup\mu'$, a single cycle }\6
+\4\\{in\_back}:\5
+${}\|k\K\\{var}[\|t];{}$\6
+${}\\{total\_parity}\MRL{-{\K}}\\{parity}[\|k];{}$\6
+${}\|u\K\\{black}[\|k]\MG\\{opp};{}$\6
+${}\|v\K\\{red}[\|k]\MG\\{opp};{}$\6
+${}\|u\MG\\{opp}\K\\{black}[\|k];{}$\6
+${}\|v\MG\\{opp}\K\\{red}[\|k];{}$\6
+\4\\{bypass}:\6
+\&{if} (\\{left}[\|t])\5
+${}\{{}$\1\6
+${}\|t\K\\{left}[\|t];{}$\6
+\&{goto} \\{in\_traverse};\6
+\4${}\}{}$\2\6
+\&{if} (\\{innerptr})\5
+${}\{{}$\1\6
+${}\|t\K\\{innerstack}[\MM\\{innerptr}];{}$\6
+\&{goto} \\{in\_back};\6
+\4${}\}{}$\2\par
+\U24.\fi
+
+\M{28}\B\X28:Record a solution\X${}\E{}$\6
+\&{if} ${}((\\{total\_parity}\AND\T{1})\E\T{0}){}$\1\5
+${}\\{pseudo\_sols}\PP;{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{sols}\PP;{}$\6
+\&{if} ${}(\\{sols}\MOD\\{interval}\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\%d:"},\39\\{sols});{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{outerptr};{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\.{"\ \%s-\%s\%s"},\39\\{black}[\\{var}[\\{outerstack}[\|k]]]\MG%
+\\{name},\39\\{red}[\\{var}[\\{outerstack}[\|k]]]\MG\\{name},\39\\{parity}[%
+\\{var}[\\{outerstack}[\|k]]]\?\.{"*"}:\.{""});{}$\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{innerptr};{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\.{"\ \%s-\%s\%s"},\39\\{black}[\\{var}[\\{innerstack}[\|k]]]\MG%
+\\{name},\39\\{red}[\\{var}[\\{innerstack}[\|k]]]\MG\\{name},\39\\{parity}[%
+\\{var}[\\{innerstack}[\|k]]]\?\.{"*"}:\.{""});{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U27.\fi
+
+\N{1}{29}Experiences. When I ran this program in May, 1996, I was able to
+confirm the results I had obtained previously with my backtrack code for
+Hamiltonian paths. The running time for the $8\times8$ case (on my "old"
+SPARC2) was 1310 seconds. For $6\times8$ the OBDD had 6708 nodes, of which
+4585 were removed by zero-suppression; for $8\times6$ the corresponding
+numbers were 7298 and 5156 (and I had to double the memory space).
+There were 2669 matchings (an odd number, so there are more with one of the
+corner moves than with the other). In the $8\times8$ case there were 106256
+matchings and 112740 nodes in the OBDD, of which 80572 were removed.
+
+\fi
+
+\N{1}{30}Index.
+\fi
+
+\inx
+\fin
+\con

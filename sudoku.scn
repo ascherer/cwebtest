@@ -1,0 +1,6 @@
+\I\X2:Input row \PB{\|k}\X
+\U1.
+\I\X3:Output the column names needed by {\mc DANCE}\X
+\U1.
+\I\X4:Output the possibilities for filling column \PB{\|j} of row \PB{\|k}\X
+\U1.

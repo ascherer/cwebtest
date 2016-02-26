@@ -1,0 +1,789 @@
+\input cwebmac
+\datethis
+\input epsf
+\def\adj{\mathrel{\!\mathrel-\mkern-8mu\mathrel-\mkern-8mu\mathrel-\!}}
+   % adjacent vertices
+
+\N{1}{1}Introduction. This program generates all spanning trees of a given
+series-parallel graph, changing only one edge at a time, using an
+interesting algorithm.
+
+The given graph is specified using a simple right-Polish syntax
+$$
+G\,\to\,\.-\,\mid\,G\,G\,\,\.s\,\mid\,G\,G\,\,\.p
+$$
+so that, for example, the specifications
+\.{----ps-sp--sp} and \.{----p-ss--spp} both denote the graph
+$$
+\epsfbox{spspan.1}
+$$
+which can also be represented as a tree:
+$$
+\epsfbox{spspan.2}
+$$
+Branch nodes of the tree are either $S$ nodes or $P$ nodes, alternating
+from level to level.
+
+As we do the computation, we count the total number of spanning trees that
+were generated and the total number of memory references that were needed.
+
+\Y\B\4\D$\|o$ \5
+$\\{mems}\PP{}$\par
+\B\4\D$\\{oo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{2}\par
+\B\4\D$\\{ooo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{3}\par
+\B\4\D$\\{oooo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{4}\par
+\B\4\D$\\{call}$ \5
+\\{oo}\C{ let's say that a subroutine call costs two mems }\Y\par
+\B\4\D$\\{verbose}$ \5
+$(\\{argc}>\T{2}{}$)\C{ show the edges of each spanning tree }\par
+\B\4\D$\\{extraverbose}$ \5
+$(\\{argc}>\T{3}{}$)\C{ show inner workings of the program }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\X6:Type definitions\X\6
+\X3:Global variables\X\7
+\&{unsigned} \&{int} \\{trees}${},{}$ \\{mems};\7
+\X9:Subroutines\X\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k;\7
+\&{if} ${}(\\{argc}\E\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ SPformula}\)\.{\ [[gory]\
+details]\\n"},\39\\{argv}[\T{0}]){}$;\5
+\\{exit}(\T{0});\6
+\4${}\}{}$\2\6
+\X2:Parse the formula \PB{\\{argv}[\T{1}]} and set up the tree structure\X;\6
+\X14:Prepare the first spanning tree\X;\6
+${}\\{printf}(\.{"\ (\%u\ mems\ to\ get\ st}\)\.{arted)\\n"},\39\\{mems}){}$;\5
+${}\\{mems}\K\T{0};{}$\6
+\X29:Do the algorithm\X;\6
+${}\\{printf}(\.{"Altogether\ \%u\ spann}\)\.{ing\ trees,\ \%u\ additi}\)%
+\.{onal\ mems.\\n"},\39\\{trees},\39\\{mems});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{2}Parsing and preparation. We begin by converting the Polish notation
+into a binary tree.
+
+In the following code, we have scanned $j$ binary operators and there are
+$k$~items on the stack.
+
+\Y\B\4\D$\\{abort}(\\{mess})$ \6
+${}\{{}$\5
+\1${}\\{fprintf}(\\{stderr},\39\.{"Parsing\ error:\ \%.*s}\)\.{|\%s,\ \%s!%
+\\n"},\39\|p-\\{argv}[\T{1}],\39\\{argv}[\T{1}],\39\|p,\39\\{mess}){}$;\5
+${}\\{exit}({-}\T{1}){}$;\5
+${}\}{}$\2\par
+\Y\B\4\X2:Parse the formula \PB{\\{argv}[\T{1}]} and set up the tree structure%
+\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{char} ${}{*}\|p\K\\{argv}[\T{1}];{}$\7
+\&{for} ${}(\|j\K\|k\K\T{0};{}$ ${}{*}\|p;{}$ ${}\|p\PP){}$\1\6
+\&{if} ${}({*}\|p\E\.{'-'}){}$\1\5
+\X4:Create a new leaf\X\2\6
+\&{else} \&{if} ${}({*}\|p\E\.{'s'}\V{*}\|p\E\.{'p'}){}$\1\5
+\X5:Create a new branch\X\2\6
+\&{else}\1\5
+\\{abort}(\.{"bad\ symbol"});\2\2\6
+\&{if} ${}(\|k\I\T{1}){}$\1\5
+\\{abort}(\.{"disconnected\ graph"});\2\6
+\X8:Create the main tree\X;\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}\B\D$\\{maxn}$ \5
+\T{1000}\C{ the maximum number of leaves; {\it not checked\/} }\par
+\Y\B\4\X3:Global variables\X${}\E{}$\6
+\&{int} \\{stack}[\\{maxn}];\C{ stack for parsing }\6
+\&{int} \\{llink}[\\{maxn}]${},{}$ \\{rlink}[\\{maxn}];\C{ binary subtrees }\par
+\A7.
+\U1.\fi
+
+\M{4}Mems are not counted in this phase of the operation, because the
+program is essentially assumed to begin with the graph represented as
+a tree.
+
+\Y\B\4\X4:Create a new leaf\X${}\E{}$\6
+$\\{stack}[\|k\PP]\K\T{0}{}$;\par
+\U2.\fi
+
+\M{5}\B\X5:Create a new branch\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\|k<\T{2}){}$\1\5
+\\{abort}(\.{"missing\ operand"});\2\6
+${}\\{rlink}[\PP\|j]\K\\{stack}[\MM\|k];{}$\6
+${}\\{llink}[\|j]\K\\{stack}[\|k-\T{1}];{}$\6
+${}\\{stack}[\|k-\T{1}]\K({*}\|p\E\.{'s'}\?\T{\^100}:\T{0})+\|j;{}$\6
+\4${}\}{}$\2\par
+\U2.\fi
+
+\M{6}Now we convert the binary tree to the desired working tree, whose branch
+nodes appear in preorder.
+
+\Y\B\4\X6:Type definitions\X${}\E{}$\6
+\&{typedef} \&{struct} \&{node\_struct} ${}\{{}$\1\6
+\&{int} \\{typ};\C{ 1 for series nodes, otherwise 0 }\6
+\&{struct} \&{node\_struct} ${}{*}\\{lchild}{}$;\C{ leftmost child; \PB{$%
+\NULL$} for a leaf }\6
+\&{struct} \&{node\_struct} ${}{*}\\{rchild}{}$;\C{ rightmost child; \PB{$%
+\NULL$} for a leaf }\6
+\&{struct} \&{node\_struct} ${}{*}\\{rsib}{}$;\C{ right sibling; wraps around
+cyclically }\7
+\X13:Additional fields of a \&{node}\X\2\6
+${}\}{}$ \&{node};\par
+\U1.\fi
+
+\M{7}The first half of \PB{\\{nodelist}} contains up to \PB{\\{maxn}} leaves;
+the other half contains up to \PB{\\{maxn}} branches.
+
+\Y\B\4\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{node} ${}\\{nodelist}[\\{maxn}+\\{maxn}]{}$;\C{ nodes of the tree }\6
+\&{node} ${}{*}\\{curleaf}{}$;\C{ the leftmost not-yet-allocated leaf node }\6
+\&{node} ${}{*}\\{curnode}{}$;\C{ the rightmost allocated branch node }\6
+\&{node} ${}{*}\\{root},{}$ ${}{*}\\{topnode}{}$;\C{ root of the tree and its
+parent }\par
+\fi
+
+\M{8}A recursive subroutine called \PB{\\{build}} will govern the construction
+process.
+
+\Y\B\4\D$\\{isleaf}(\|p)$ \5
+$((\|p)<\\{nodelist}+\\{maxn}{}$)\par
+\Y\B\4\X8:Create the main tree\X${}\E{}$\6
+$\\{curleaf}\K\\{nodelist};{}$\6
+${}\\{topnode}\K\\{curnode}\K\\{nodelist}+\\{maxn};{}$\6
+${}\\{curnode}\MG\\{typ}\K\T{2}{}$;\C{ special \PB{\\{typ}} code for the outer
+level }\6
+${}\\{root}\K\\{build}(\\{stack}[\T{0}],\39\\{curnode});{}$\6
+${}\\{root}\MG\\{rsib}\K\\{root}{}$;\C{ unnecessary but tidy }\par
+\U2.\fi
+
+\M{9}When we \PB{\\{build}} a leaf node, we simply allocate it. When we
+\PB{\\{build}} a branch node, we link its children together via their
+sibling links.
+
+Only one complication arises: We must prevent serial nodes
+from having serial children and parallel nodes from having parallel
+children. In such cases the child's family is merged with that of
+the parent, and the child goes away.
+
+\Y\B\4\X9:Subroutines\X${}\E{}$\6
+\&{node} ${}{*}{}$\\{build}(\&{int} \\{stackitem}${},\39{}$\&{node} ${}{*}%
+\\{par}){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|p,{}$ ${}{*}\|l,{}$ ${}{*}\|r,{}$ ${}{*}%
+\\{lc},{}$ ${}{*}\\{rc};{}$\6
+\&{register} \&{int} \|t${},{}$ \|j;\7
+\&{if} ${}(\\{stackitem}\E\T{0}){}$\1\5
+\&{return} \\{curleaf}${}\PP;{}$\2\6
+${}\|t\K\\{stackitem}\GG\T{8},\39\|j\K\\{stackitem}\AND\T{\^ff}{}$;\C{ type and
+location of a binary op }\6
+\&{if} ${}(\|t\I\\{par}\MG\\{typ}){}$\1\5
+${}\|p\K\PP\\{curnode},\39\|p\MG\\{typ}\K\|t;{}$\2\6
+\&{else}\1\5
+${}\|p\K\\{par};{}$\2\6
+${}\|l\K\\{build}(\\{llink}[\|j],\39\|p),\39\\{lc}\K\|l\MG\\{lchild},\39\\{rc}%
+\K\|l\MG\\{rchild},\39\|r\K\\{build}(\\{rlink}[\|j],\39\|p);{}$\6
+\&{if} ${}(\|l\E\|p){}$\1\5
+\X11:Incorporate left child into node \PB{\|p}\X\2\6
+\&{else} \&{if} ${}(\|r\E\|p){}$\1\5
+\X10:Incorporate right child into node \PB{\|p}\X\2\6
+\&{else}\1\5
+${}\|p\MG\\{lchild}\K\|l,\39\|p\MG\\{rchild}\K\|r,\39\|l\MG\\{rsib}\K\|r,\39\|r%
+\MG\\{rsib}\K\|l;{}$\2\6
+\&{return} \|p;\6
+\4${}\}{}$\2\par
+\As15, 16, 17, 18\ETs19.
+\U1.\fi
+
+\M{10}\B\X10:Incorporate right child into node \PB{\|p}\X${}\E{}$\6
+$\|r\K\|p\MG\\{lchild},\39\|p\MG\\{lchild}\K\|l,\39\|l\MG\\{rsib}\K\|r,\39\|p%
+\MG\\{rchild}\MG\\{rsib}\K\|l{}$;\par
+\U9.\fi
+
+\M{11}\B\X11:Incorporate left child into node \PB{\|p}\X${}\E{}$\6
+\&{if} ${}(\|r\E\|p){}$\1\5
+\X12:Incorporate both children into node \PB{\|p}\X\2\6
+\&{else}\1\5
+${}\|p\MG\\{rchild}\K\|r,\39\\{rc}\MG\\{rsib}\K\|r,\39\|r\MG\\{rsib}\K%
+\\{lc}{}$;\2\par
+\U9.\fi
+
+\M{12}\B\X12:Incorporate both children into node \PB{\|p}\X${}\E{}$\6
+$\\{rc}\MG\\{rsib}\K\|p\MG\\{lchild},\39\|p\MG\\{lchild}\K\\{lc},\39\|p\MG%
+\\{rchild}\MG\\{rsib}\K\\{lc}{}$;\par
+\U11.\fi
+
+\M{13}OK, the tree has been set up; our next goal is to decorate it.
+First let's take a closer look at the problem we're trying to solve.
+
+Each node of the tree corresponds to a series-parallel graph between
+two vertices $u$ and~$v$, in a straightforward way: A leaf is a
+single edge $u\adj v$. A nonleaf node~\PB{\|p} corresponds to a ``superedge''
+formed from the edges or superedges $u_1\adj v_1$, \dots, $u_k\adj v_k$
+of its $k\ge2$ children. If \PB{\|p} is a series node, its children are
+joined so that $v_j=u_{j+1}$ for $1\le j<k$; if \PB{\|p} is a parallel
+node, its children are joined together so that $u_1=\cdots=u_k$ and
+$v_1=\cdots=v_k$. In both cases \PB{\|p} is then considered to be a
+superedge between $u_1$ and $v_k$.
+
+Let us say that a {\it near-spanning tree\/} of a series-parallel graph
+between $u$ and~$v$ is a spanning forest that has exactly two components,
+where $u$ and $v$ lie in different components.
+
+If \PB{\|p} is a series superedge, its spanning trees are spanning trees of all
+its children; its near-spanning trees are obtained by designating some child,
+then constructing a near-spanning tree for that child and a spanning tree
+for each of the other children.
+
+If \PB{\|p} is a parallel superedge, the roles are reversed: Its near-spanning
+trees are near-spanning trees of all its children; its spanning trees are
+obtained by designating some child, then constructing a spanning tree for
+that child and a near-spanning tree for each of the other children.
+
+We shall assign a Boolean value \PB{$\|p\MG\\{val}$} to each leaf node~\PB{%
+\|p},
+specifying whether the corresponding edge is present or absent in
+the current spanning tree being considered.
+The \PB{$\|p\MG\\{val}$} field of a branch node, similarly, will specify
+whether
+the corresponding superedge currently has
+a spanning tree or a near-spanning tree.
+
+In the following algorithm every branch node \PB{\|p} has a designated child,
+\PB{$\|p\MG\\{des}$}, with the property that \PB{$\|p\MG\\{val}\K\|p\MG\\{des}%
+\MG\\{val}$}.
+
+Only certain combinations of values are legal; the legal ones, according
+to the discussion above, are characterized by two rules:
+
+\indent\indent All non-designated children of a series node have value 1;
+
+\indent\indent All non-designated children of a parallel node have value 0.
+
+\noindent In other words, if \PB{\|q} is the parent of node \PB{\|p},
+$$\hbox{\PB{$\|p\MG\\{val}$}}=\cases{\hbox{\PB{$\|q\MG\\{val}$}},&if \PB{$\|p\K%
+\|q\MG\\{des}$};\cr
+\noalign{\smallskip}
+\hbox{\PB{$\|q\MG\\{typ}$}},&if \PB{$\|p\I\|q\MG\\{des}$}.\cr}
+$$
+For any choice of the designated children, we obtain a unique
+spanning tree or near-spanning tree for node~\PB{\|p} by setting \PB{$\|p\MG%
+\\{val}$}
+to 1 or~0, respectively, and using this equation to propagate values down
+to the leaves.
+
+Thus we can generate all the spanning trees of the graph (namely the
+spanning trees corresponding to the \PB{\\{root}} node) by setting \PB{$%
+\\{root}\MG\\{val}\K\T{1}$}
+and considering all possible settings of designated children \PB{$\|p\MG%
+\\{des}$}
+throughout the tree.
+
+However, many settings of the \PB{$\|p\MG\\{des}$} pointers will produce the
+same
+result: The value of \PB{$\|p\MG\\{des}$} is irrelevant for serial nodes of
+value~1
+and for parallel nodes of value~0. We will return to this problem later;
+meanwhile let's put the necessary information into our data structure.
+
+\Y\B\4\X13:Additional fields of a \&{node}\X${}\E{}$\6
+\&{int} \\{val};\C{ 0 = off, open, near-spanning; 1 = on, closed, spanning }\6
+\&{struct} \&{node\_struct} ${}{*}\\{des}{}$;\C{ the designated child }\par
+\As22\ET25.
+\U6.\fi
+
+\M{14}To start things off, we might as well designate each node's leftmost
+child.
+
+Mems are computed under the assumption that a node's \PB{\\{typ}} and \PB{%
+\\{val}} can
+be fetched and stored in a single operation.
+
+\Y\B\4\X14:Prepare the first spanning tree\X${}\E{}$\6
+$\|o,\39\\{topnode}\MG\\{typ}\K\T{1};{}$\6
+${}\\{call},\39\\{init\_tree}(\\{root},\39\\{topnode});{}$\6
+${}\\{trees}\K\T{1};{}$\6
+\&{if} (\\{verbose})\1\5
+\X20:Print the first tree\X;\2\par
+\U1.\fi
+
+\M{15}A few amendments to the data structure will be desirable later, but we're
+ready now to write most of the tree-initializing routine.
+
+\Y\B\4\X9:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{init\_tree}(\&{node} ${}{*}\|p,\39{}$\&{node} ${}{*}\\{par}{}$)\C{ %
+\PB{\\{par}} is the parent of \PB{\|p} }\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|q;{}$\7
+${}\\{ooo},\39\|p\MG\\{val}\K(\\{par}\MG\\{des}\E\|p\?\\{par}\MG\\{val}:\\{par}%
+\MG\\{typ});{}$\6
+\&{if} (\\{isleaf}(\|p))\1\5
+\X26:Further initialization of a leaf node\X\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{oo},\39\|p\MG\\{des}\K\|p\MG\\{lchild};{}$\6
+\&{for} ${}(\|q\K\|p\MG\\{lchild};{}$  ; ${}\|q\K\|q\MG\\{rsib}){}$\5
+${}\{{}$\1\6
+${}\\{call},\39\\{init\_tree}(\|q,\39\|p);{}$\6
+\&{if} ${}(\|o,\39\|q\MG\\{rsib}\E\|p\MG\\{lchild}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\X27:Further initialization of a branch node\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{16}Diagnostic routines. Several simple subroutines are used to
+print all or part of our data structure, as aids to debugging and/or
+when the user wants to examine all the spanning trees.
+
+We name the leaves \.a, \.b, \.c, etc., and the branches \.A, \.B, \.C,
+etc., as in the example at the beginning of this program.
+
+When I'm debugging this program I plan to save keystrokes and mental energy
+by typing, say, \PB{\\{xx}(\.{'A'})} when I want a pointer to node \.A.
+
+\Y\B\4\D$\\{leafname}(\|p)$ \5
+$(\.{'a'}+((\|p)-\\{nodelist}){}$)\par
+\B\4\D$\\{branchname}(\|p)$ \5
+$(\.{'A'}+((\|p)-\\{root}){}$)\par
+\B\4\D$\\{nodename}(\|p)$ \5
+$(\\{isleaf}(\|p)\?\\{leafname}(\|p):\\{branchname}(\|p){}$)\par
+\Y\B\4\X9:Subroutines\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}{}$\\{xx}(\&{char} \|c)\1\1\2\2\6
+${}\{{}$\1\6
+\&{if} ${}(\|c\G\.{'a'}){}$\1\5
+\&{return} \\{nodelist}${}+(\|c-\.{'a'});{}$\2\6
+\&{return} \\{nodelist}${}+\\{maxn}+(\|c-\.{'@'});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{17}\B\X9:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{printleaf}(\&{node} ${}{*}\|p){}$\1\1\2\2\6
+${}\{{}$\1\6
+${}\\{printf}(\.{"\%c:\%c\ rsib=\%c\\n"},\39\\{leafname}(\|p),\39\|p\MG\\{val}+%
+\.{'0'},\39\\{nodename}(\|p\MG\\{rsib}));{}$\6
+\4${}\}{}$\2\7
+\&{void} \\{printbranch}(\&{node} ${}{*}\|p){}$\1\1\2\2\6
+${}\{{}$\1\6
+${}\\{printf}(\.{"\%c:\%c\ rsib=\%c\ lchil}\)\.{d=\%c\ des=\%c\ rchild=\%}\)%
+\.{c"},\39\\{branchname}(\|p),\39\|p\MG\\{val}+\.{'0'},\39\\{nodename}(\|p\MG%
+\\{rsib}),\39\\{nodename}(\|p\MG\\{lchild}),\39\\{nodename}(\|p\MG\\{des}),\39%
+\\{nodename}(\|p\MG\\{rchild}));{}$\6
+\X28:Print additional fields of a branch node\X;\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\7
+\&{void} \\{printnode}(\&{node} ${}{*}\|p){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{if} (\\{isleaf}(\|p))\1\5
+\\{printleaf}(\|p);\2\6
+\&{else}\1\5
+\\{printbranch}(\|p);\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{18}\B\X9:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{printtree}(\&{node} ${}{*}\|p,\39{}$\&{int} \\{indent})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|q;{}$\6
+\&{register} \&{int} \|k;\7
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{indent};{}$ ${}\|k\PP){}$\1\5
+\\{printf}(\.{"\ "});\2\6
+\\{printnode}(\|p);\6
+\&{if} ${}(\R\\{isleaf}(\|p)){}$\1\6
+\&{for} ${}(\|q\K\|p\MG\\{lchild};{}$  ; ${}\|q\K\|q\MG\\{rsib}){}$\5
+${}\{{}$\1\6
+${}\\{printtree}(\|q,\39\\{indent}+\T{1});{}$\6
+\&{if} ${}(\|q\MG\\{rsib}\E\|p\MG\\{lchild}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{19}\B\X9:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{printedges}(\&{node} ${}{*}\|p{}$)\C{ print the leaves whose value
+is 1 }\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|q;{}$\7
+\&{if} (\\{isleaf}(\|p))\5
+${}\{{}$\1\6
+\&{if} ${}(\|p\MG\\{val}){}$\1\5
+${}\\{printf}(\.{"\%c"},\39\\{leafname}(\|p));{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+\1\&{for} ${}(\|q\K\|p\MG\\{lchild};{}$  ; ${}\|q\K\|q\MG\\{rsib}){}$\5
+${}\{{}$\1\6
+\\{printedges}(\|q);\6
+\&{if} ${}(\|q\MG\\{rsib}\E\|p\MG\\{lchild}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{20}\B\X20:Print the first tree\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} (\\{extraverbose})\1\5
+${}\\{printtree}(\\{root},\39\T{0});{}$\2\6
+\\{printf}(\.{"The\ first\ spanning\ }\)\.{tree\ is\ "});\6
+\\{printedges}(\\{root});\6
+\\{printf}(\.{".\\n"});\6
+\4${}\}{}$\2\par
+\U14.\fi
+
+\N{1}{21}Overview of the algorithm. A branch node \PB{\|p} will be called {\it
+easy\/}
+if \PB{$\|p\MG\\{val}\K\|p\MG\\{typ}$}. In such cases the designated child %
+\PB{$\|p\MG\\{des}$} has
+no effect on the spanning tree or near-spanning tree, because all
+children have the same value.
+
+Let's say for convenience that the {\it configs\/} of \PB{\|p} are its
+spanning trees if \PB{$\|p\MG\\{val}\K\T{1}$}, its near-spanning trees if \PB{$%
+\|p\MG\\{val}\K\T{0}$}.
+Our problem is to generate all configs of the root.
+
+If \PB{\|p} is easy, its configs are the Cartesian product of the configs
+of its children. But if \PB{\|p} is uneasy, its configs are the union of
+such Cartesian products, taken over all possible choices of \PB{$\|p\MG%
+\\{des}$}.
+
+Easy nodes are relatively rare: At most one child of an uneasy node
+(namely the designated child) can be easy, and all children of easy nodes
+are uneasy unless they are leaves.
+
+\Y\B\4\D$\\{easy}(\|p)$ \5
+$\|o,\39\|p\MG\\{typ}\E\|p\MG{}$\\{val}\par
+\fi
+
+\M{22}Cartesian products of configurations are easily generated in Gray-code
+order, using essentially a mixed-radix Gray code for $n$-tuples.
+(See Section 7.2.1.1 of {\sl The Art of Computer Programming}.) In this
+program I'm using a ``modular'' code instead of a ``reflected'' one, because
+the modular code requires only \PB{\\{rsib}} links to cycle through the
+possible choices of \PB{$\|p\MG\\{des}$}.
+
+Let's include a new field \PB{$\|p\MG\\{leaf}$} in each node, pointing to the
+leaf
+that lies at the end of the path from \PB{\|p} to its designated
+descendants \PB{$\|p\MG\\{des}$}, \PB{$\|p\MG\\{des}\MG\\{des}$}, etc. All the %
+\PB{\\{val}} fields
+on this path are the same as \PB{$\|p\MG\\{val}$}.
+
+When \PB{$\|p\MG\\{des}$} is changed from one child to another, say from \PB{%
+\|q} to \PB{\|r},
+only two edge values of the overall spanning tree are affected.
+Namely, we have \PB{$\|q\MG\\{typ}\I\|p\MG\\{typ}$} and \PB{$\|r\MG\\{typ}\K\|p%
+\MG\\{typ}$}, so
+\PB{$\|q\MG\\{leaf}\MG\\{val}$} becomes \PB{$\|r\MG\\{typ}$} and \PB{$\|r\MG%
+\\{leaf}\MG\\{val}$}
+becomes \PB{$\|q\MG\\{typ}$}. Therefore such a change is pleasantly ``Gray.''
+
+\Y\B\4\X13:Additional fields of a \&{node}\X${}\mathrel+\E{}$\6
+\&{struct} \&{node\_struct} ${}{*}\\{leaf}{}$;\C{ the end of the designated
+path }\6
+\&{struct} \&{node\_struct} ${}{*}\\{parent}{}$;\C{ parent of this node }\par
+\fi
+
+\M{23}These considerations lead us to the following algorithm to generate
+all spanning trees: Begin with all uneasy branch nodes active. Then
+repeatedly
+\smallskip\itemitem{1)} Select the rightmost active node, \PB{\|p}, in
+preorder.
+\smallskip\itemitem{2)} Change \PB{$\|p\MG\\{des}$} to \PB{$\|p\MG\\{des}\MG%
+\\{rsib}$}, update all values
+of the tree, and visit the new spanning tree.
+\smallskip\itemitem{3)} Activate all uneasy nodes to the right of \PB{\|p}.
+\smallskip\itemitem{4)} If \PB{$\|p\MG\\{des}$} has run through all children of
+\PB{\|p}
+since \PB{\|p} last became active, make node~\PB{\|p} passive.
+\smallskip\noindent
+A field \PB{$\|p\MG\\{done}$} is introduced in order to implement step (4):
+Node~\PB{\|p}
+becomes passive when \PB{$\|p\MG\\{des}\K\|p\MG\\{done}$}, and at such a time
+we reset
+\PB{$\|p\MG\\{done}$} to the previous value of \PB{$\|p\MG\\{des}$}.
+
+Actually \PB{$\|p\MG\\{done}$} is initially equal to \PB{$\|p\MG\\{rchild}$},
+and the \PB{\\{rchild}}
+pointers are not needed by the main algorithm. So we can equate
+\PB{$\|p\MG\\{done}$} with \PB{$\|p\MG\\{rchild}$}.
+
+\Y\B\4\D$\\{done}$ \5
+\\{rchild}\C{ the new meaning of the \PB{\\{rchild}} field }\par
+\fi
+
+\M{24}For example, let's apply the algorithm to the series-parallel graph
+illustrated in the introduction. Since \PB{\|A} is a parallel node and since
+each leftmost child is initially designated, \PB{\\{init\_tree}} sets
+\PB{$\|A\MG\\{val}\K\T{1}$}, \PB{$\|B\MG\\{val}\K\T{0}$}, \PB{$\|C\MG\\{val}\K%
+\T{1}$}, \PB{$\|D\MG\\{val}\K\T{0}$}, and the first spanning
+tree consists of edges $\it aceg$. All four branch nodes are initiallly
+uneasy. (That's just a coincidence, not a general rule.)
+
+The current state of the algorithm can be indicated by writing each
+designated child as a subscript, by enclosing easy nodes in parentheses,
+and by placing a hat over passive nodes. With these conventions,
+the algorithm proceeds as follows:
+$$\vcenter{\halign{\hbox to2.1em{\hfil$#$\hfil}&
+\hbox to2.1em{\hfil$#$\hfil}&
+\hbox to2.1em{\hfil$#$\hfil}&
+\hbox to2.1em{\hfil$#$\hfil}&
+\hskip5em          \hbox to.6em{\hfil$#$\hfil}&
+\hbox to.6em{\hfil$#$\hfil}&
+\hbox to.6em{\hfil$#$\hfil}&
+\hbox to.6em{\hfil$#$\hfil}\cr
+\multispan4\hidewidth branch node states\hidewidth&
+\multispan4\qquad\qquad spanning tree\cr
+\noalign{\smallskip}
+A_a&B_b&C_c&D_f&a&c&e&g\cr
+A_a&B_b&C_c&\widehat D_g&a&c&e&f\cr
+A_a&B_b&\widehat C_d&D_g&a&d&e&f\cr
+A_a&B_b&\widehat C_d&\widehat D_f&a&d&e&g\cr
+A_a&B_C&(C_d)&D_f&a&b&e&g\cr
+A_a&B_C&(C_d)&\widehat D_g&a&b&e&f\cr
+A_a&\widehat B_e&C_d&D_g&a&b&d&f\cr
+A_a&\widehat B_e&C_d&\widehat D_f&a&b&d&g\cr
+A_a&\widehat B_e&\widehat C_c&D_f&a&b&c&g\cr
+A_a&\widehat B_e&\widehat C_c&\widehat D_g&a&b&c&f\cr
+A_B&(B_e)&C_c&D_g&b&c&e&f\cr
+A_B&(B_e)&C_c&\widehat D_f&b&c&e&g\cr
+A_B&(B_e)&\widehat C_d&D_f&b&d&e&g\cr
+A_B&(B_e)&\widehat C_d&\widehat D_g&b&d&e&f\cr
+\widehat A_D&B_e&C_d&(D_g)&b&d&f&g\cr
+\widehat A_D&B_e&\widehat C_c&(D_g)&b&c&f&g\cr
+\widehat A_D&B_b&C_c&(D_g)&c&e&f&g\cr
+\widehat A_D&B_b&\widehat C_d&(D_g)&d&e&f&g\cr
+\widehat A_D&\widehat B_C&(C_d)&(D_g)&b&e&f&g\cr
+}}$$
+Thus, we first change \PB{$\|D\MG\\{des}$} from \PB{\|f} to \PB{\|g} and
+passivate~\PB{\|D}; then we
+change \PB{$\|C\MG\\{des}$} from \PB{\|c} to \PB{\|d} and passivate~\PB{\|C}.
+After four steps we
+change \PB{$\|B\MG\\{des}$} from \PB{\|b} to \PB{\|C}, making \PB{\|C} easy;
+and so on.
+
+\fi
+
+\M{25}So-called ``focus pointers'' can be used to implement steps (1) and (3)
+very efficiently, as discussed in Algorithm 7.2.1.1L. We set \PB{$\|p\MG%
+\\{focus}\K\|p$}
+except when \PB{\|p} is an uneasy node such that the nearest uneasy node to
+its right is active. We also imagine that an artificial uneasy active
+node appears to the right of \PB{\\{curnode}}, which is the rightmost
+branch node of the entire tree in preorder. Then the simple operations
+$$\hbox{\PB{$\|p\K\|r\MG\\{focus}$}, \  \PB{$\|r\MG\\{focus}\K\|r$}}$$
+implement (1) and (3), when \PB{\|r} is the rightmost uneasy node---in spite
+of the fact that step (2) changes some nodes from easy to uneasy
+and vice versa(!).
+
+Furthermore, we can passivate node \PB{\|p} in step (4) by the simple
+operations
+$$\hbox{\PB{$\|p\MG\\{focus}\K\|l\MG\\{focus}$}, \ \PB{$\|l\MG\\{focus}\K%
+\|l$}}$$
+when \PB{\|l} is the rightmost uneasy node to the left of \PB{\|p}. We imagine
+that \PB{\\{topnode}}, which lies to the left of everything in preorder,
+is always uneasy and active; therefore \PB{\|l} always exists. Step~(1)
+stops if \PB{$\|p\K\\{topnode}$}, since we have then generated all the spanning
+trees.
+
+\Y\B\4\X13:Additional fields of a \&{node}\X${}\mathrel+\E{}$\6
+\&{struct} \&{node\_struct} ${}{*}\\{focus}{}$;\C{ the magical Gray-oriented
+focus pointer }\par
+\fi
+
+\M{26}We can easily incorporate the new fields into our initialization
+routine. It will turn out that the algorithm doesn't really have to
+look at \PB{\\{leaf}} or \PB{\\{parent}} pointers, so no mems are charged for
+the cost of
+computing them.
+
+\Y\B\4\X26:Further initialization of a leaf node\X${}\E{}$\6
+$\|p\MG\\{leaf}\K\|p,\39\|p\MG\\{parent}\K\\{par}{}$;\par
+\U15.\fi
+
+\M{27}\B\X27:Further initialization of a branch node\X${}\E{}$\6
+$\|p\MG\\{leaf}\K\|p\MG\\{des}\MG\\{leaf},\39\|p\MG\\{parent}\K\\{par};{}$\6
+${}\|o,\39\|p\MG\\{focus}\K\|p{}$;\par
+\U15.\fi
+
+\M{28}\B\X28:Print additional fields of a branch node\X${}\E{}$\6
+$\\{printf}(\.{"\ leaf=\%c"},\39\\{leafname}(\|p\MG\\{leaf}));{}$\6
+\&{if} ${}(\|p\MG\\{focus}\I\|p){}$\1\5
+${}\\{printf}(\.{"\ focus=\%c"},\39\\{branchname}(\|p\MG\\{focus})){}$;\2\par
+\U17.\fi
+
+\N{1}{29}Doing it. Let's go ahead now and implement the algorithm just
+sketched.
+
+\Y\B\4\X29:Do the algorithm\X${}\E{}$\6
+$\\{topnode}\MG\\{focus}\K\\{topnode};{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|p,{}$ ${}{*}\|q,{}$ ${}{*}\|l,{}$ ${}{*}\|r;{}$\7
+\&{for} ${}(\|r\K\\{curnode};{}$ \\{easy}(\|r); ${}\|r\MM){}$\1\5
+;\C{ find the rightmost uneasy node }\2\6
+${}\\{oo},\39\|p\K\|r\MG\\{focus},\39\|r\MG\\{focus}\K\|r{}$;\C{ steps (1) and
+(3) }\6
+\&{if} ${}(\|p\E\\{topnode}){}$\1\5
+\&{break};\2\6
+\X31:Change \PB{$\|p\MG\\{des}$} and visit a new spanning tree\X;\6
+\&{if} ${}(\|o,\39\|p\MG\\{des}\E\|p\MG\\{done}){}$\1\5
+\X30:Passivate \PB{\|p}\X;\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{30}All uneasy nodes to the right of \PB{\|p} are now active, and \PB{\|l} is
+the
+former \PB{$\|p\MG\\{des}$}.
+
+\Y\B\4\X30:Passivate \PB{\|p}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|o,\39\|p\MG\\{done}\K\|l;{}$\6
+\&{for} ${}(\|l\K\|p-\T{1};{}$ \\{easy}(\|l); ${}\|l\MM){}$\1\5
+;\C{ find the first uneasy node to the left }\2\6
+${}\\{ooo},\39\|p\MG\\{focus}\K\|l\MG\\{focus},\39\|l\MG\\{focus}\K\|l;{}$\6
+\4${}\}{}$\2\par
+\U29.\fi
+
+\M{31}If the user has asked for \PB{\\{verbose}} output, we print only the
+edge that has entered the spanning tree and the edge that has left.
+
+\Y\B\4\X31:Change \PB{$\|p\MG\\{des}$} and visit a new spanning tree\X${}\E{}$\6
+$\\{oo},\39\|l\K\|p\MG\\{des},\39\|r\K\|l\MG\\{rsib};{}$\6
+${}\|o,\39\|k\K\|p\MG\\{val}{}$;\C{ \PB{$\|k\K\|l\MG\\{val}\I\|r\MG\\{val}$} }\6
+\&{for} ${}(\|q\K\|l;{}$  ; \|o${},\39\|q\K\|q\MG\\{des}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|q\MG\\{val}\K\|k\XOR\T{1};{}$\6
+\&{if} (\\{isleaf}(\|q))\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"\ \%c\%c"},\39\|k\?\.{'-'}:\.{'+'},\39\\{leafname}(\|q));{}$%
+\2\6
+\&{for} ${}(\|q\K\|r;{}$  ; \|o${},\39\|q\K\|q\MG\\{des}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|q\MG\\{val}\K\|k;{}$\6
+\&{if} (\\{isleaf}(\|q))\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"\%c\%c\\n"},\39\|k\?\.{'+'}:\.{'-'},\39\\{leafname}(\|q));{}$%
+\2\6
+${}\|o,\39\|p\MG\\{des}\K\|r,\39\\{trees}\PP{}$;\C{ ``visiting'' }\6
+\&{for} ${}(\|q\K\|p;{}$ ${}\|q\MG\\{des}\E\|r;{}$ ${}\|r\K\|q,\39\|q\K\|q\MG%
+\\{parent}){}$\1\5
+${}\|q\MG\\{leaf}\K\|r\MG\\{leaf}{}$;\C{ that loop was optional, so it costs no
+mems }\2\6
+\&{if} (\\{extraverbose})\5
+${}\{{}$\1\6
+\\{printedges}(\\{root});\6
+${}\\{printf}(\.{";\ now\ \%c->leaf=\%c\\n}\)\.{"},\39\\{branchname}(\|r),\39%
+\\{leafname}(\|r\MG\\{leaf}));{}$\6
+\4${}\}{}$\2\par
+\U29.\fi
+
+\N{1}{32}A loopless version. The algorithm implemented here contains four
+loops. Two of them skip over easy nodes when finding \PB{\|r} and \PB{\|l}
+in the list of branches; two of them go down from branches to leaves
+when changing the \PB{\\{val}} fields.
+
+The amortized cost of those loops is constant per new spanning tree.
+But it can be instructive to search for an algorithm that is entirely
+loopfree, in the sense that the number of operations per new tree
+is bounded (once the algorithm has initialized itself in linear time).
+
+Loopless algorithms tend to run slower than their loopy counterparts,
+especially in cases like the present where the additional overhead
+needed to avoid looping appears to be substantial. So the search
+for a loopless implementation is strictly academic. Yet it still
+was fascinating enough to keep me working on it for three days
+during my recent vacation.
+
+I believe I see how to do it. But I don't have time to carry through
+the details, so I've decided just to sketch them here. Maybe somebody
+else will be inspired to work them out and to compare the
+loopless mem-counts with those of the present implementation.
+
+The first two loops can be avoided by changing the tree dynamically,
+so that the designated child is always the leftmost. In such cases
+it's easy to see that no two easy nodes can be consecutive in preorder.
+My planned implementation swaps the rightmost child into the leftmost
+position when \PB{$\|p\MG\\{des}$} is supposed to change. This swapping causes
+two
+adjacent substrings of the preordered node list to change places.
+The node list should be doubly linked;
+to do the swap, we need a new field \PB{$\|p\MG\\{scope}$} that points to the
+rightmost branch that is descended from \PB{\|p} in the current list.
+
+The other two loops can be avoided if we update the \PB{\\{val}} fields lazily,
+starting at the bottom.  But then the pointer \PB{$\|p\MG\\{leaf}$} becomes
+crucial, not optional, because the leaf nodes are encountered first,
+and because we need to know both \PB{$\|p\MG\\{leaf}$} and \PB{$\|p\MG%
+\\{rchild}\MG\\{leaf}$} when
+reporting the edges that enter and leave the spanning tree.
+
+Of course the introduction of two required fields \PB{$\|p\MG\\{scope}$} and
+\PB{$\|p\MG\\{leaf}$} means that we must maintain them, and that seems to
+require
+additional loops that were not needed in the present implementation.
+Fortunately we don't have to update them instantly; they only have
+to be valid when \PB{\|p} is the critical node in step~(2) of the
+algorithm.
+
+My solution is to introduce two additional fields for ``registration.''
+Consider a sequence of nodes $p_1$, $p_2$, \dots, $p_k$ where
+$p_{j+1}$ is the rightmost child of $p_j$ for $1\le j<k$, and where
+$p_1$ and $p_k$ are active but the others are either easy or passive.
+The easy ones among $p_2$, \dots, $p_{k-1}$ are not consecutive;
+the uneasy ones most recently went passive in order, from left to right.
+When $p=p_k$
+is the critical node, we're going to rearrange the tree below $p$;
+and if \PB{\|p} is then going to become passive, we have reached
+our last chance to update the scope link of $p_1$.
+
+Node $p$ can find $p_1$ using focus pointers,
+because $p_1$ is the rightmost active node to its left.
+But we need to verify that there really is a path from $p_1$ to $p_k$
+as described, because we mustn't screw up the \PB{\\{scope}} links of random
+nodes.
+Let \PB{\|p} be the critical node, and let \PB{\|q} be the first active node to
+its left.
+Go up one or two levels from \PB{\|p} via \PB{\\{parent}} pointers until
+reaching
+an uneasy node, say \PB{\|u}; but stop if this upward motion is
+not from the rightmost branch-child to a parent. Otherwise,
+if \PB{$\|q\K\|u$}, great; we update \PB{$\|q\MG\\{scope}$} and
+we're done. Or if \PB{$\|q\K\|u\MG\\{registry}$}, where \PB{\\{registry}} is a
+new field
+to be discussed further, again we update \PB{$\|q\MG\\{scope}$}. Otherwise we
+conclude that \PB{\|q} is not the top of the food chain to \PB{\|p}.
+
+When the critical node \PB{\|p} becomes passive, after a case where \PB{$\|q\MG%
+\\{scope}$}
+has been updated, we set \PB{$\|p\MG\\{registry}\K\|q$}, and \PB{$\|u\MG%
+\\{registry}\K\NULL$} in the
+case that \PB{$\|q\K\|u\MG\\{registry}$}. This handshaking passes the required
+information
+down the tree, and doesn't leave spurious non-null \PB{\\{registry}} values
+that could lead to false diagnoses.
+
+A similar method works to maintain the \PB{\\{leaf}} pointers, which are
+similar but based on leftmost instead of rightmost children. Instead
+of \PB{$\|p\MG\\{registry}$}, I should have spoken of \PB{$\|p\MG\\{scope%
+\_registry}$} and
+\PB{$\|p\MG\\{leaf\_registry}$}.
+
+(Whew.)
+
+\fi
+
+\N{1}{33}Index.
+\fi
+
+\inx
+\fin
+\con

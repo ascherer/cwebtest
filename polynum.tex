@@ -1,0 +1,2860 @@
+\input cwebmac
+\datethis
+\ifpdftex \input supp-pdf \else \input epsf \fi
+
+\def\caret/{\smash{\lower4pt\hbox to0pt{\hss$\scriptscriptstyle\land$\hss}}}
+\def\qcaret/{`\thinspace\caret/\thinspace'} % quoted caret
+
+
+\N{1}{1}Introduction. The purpose of this program is to enumerate fixed
+polyominoes
+of up to 55 cells (although I won't really be able to get that far until
+Moore's law carries on for a few more years). The method is essentially
+that of Iwan Jensen [{\tt arXiv:cond-mat/0007239}, to appear in {\sl Journal of
+Statistical Physics}, spring 2001], who discovered that the important
+techniques of Andrew Conway [{\sl Journal of Physics\/ \bf A28} (1995),
+335--349] can be vastly improved in the special case of polyomino
+enumeration.
+
+The basic idea is quite simple: We will count the number of fixed polyominoes
+that span a rectangle that is $h$ cells high and $w$ cells wide, where
+$h$ and $w$ are as small as possible; then we will add the totals for
+all relevant $h$ and $w$. We can assume that $h\ge w$. For each $h$ and $w$
+that we need, we enumerate the spanning polyominoes by considering
+one cell at a time of an $h\times w$ array, working from left to right
+and top to bottom, deciding whether or not that cell is occupied, and
+combining results for all boundary configurations that are equivalent
+as far as future decisions are concerned. For example, we might have a
+polyomino that starts out like this:
+$$\ifpdftex\convertMPtoPDF{polyomino.2}{1}{1}\else\epsfbox{polyomino.2}\fi$$
+(This partial polyomino obviously has more than 54 cells already, but large
+examples will help clarify the concepts that are needed in the program below.)
+
+Most of the details of the upper part of this pattern have no effect on
+whether the yet-undetermined cells will form a suitable polyomino or not.
+All we really need to know in order to answer that question is
+whether the bottom cells of each column-so-far are occupied or
+unoccupied, and which of the occupied ones are already connected to
+each other. We also need to know whether the left column and right
+column are still blank.
+
+In this case the 26 columns have occupancy pattern
+\.{01001001001010110011010110} at the bottom,
+and the occupied cells belong to six connected components, namely
+$$\vbox{\halign{\.{#}\cr
+01000000000000000000010000\cr
+00001000001000110000000000\cr
+00000001000000000000000000\cr
+00000000000010000000000000\cr
+00000000000000000011000000\cr
+00000000000000000000000110\cr}}$$
+Fortunately the fact that polyominoes lie in a plane forces the components
+to be nested within each other; we can't have ``crossings'' like
+\.{1000100} with \.{0010001}. Therefore we can encode the component and
+occupancy information conveniently as
+$$\.{0(00(00100-010-)00()0)0()0}$$
+using a five-character alphabet:
+$$\vbox{\halign{\.#\enspace&#\hfil\cr
+0&means the cell is unoccupied;\cr
+1&means the cell is a single-cell component;\cr
+(&means the cell is the leftmost of a multi-cell component;\cr
+)&means the cell is the rightmost of a multi-cell component;\cr
+-&means the cell is in the midst of a multi-cell component.\cr}}$$
+Furthermore we can treat the cases where the entire leftmost column is
+nonblank by considering that the left edge of the array belongs to the leftmost
+cell component; and the rightmost column can be treated similarly.
+With these conventions, we encode the boundary condition at the
+lower fringe of the partially filled array above by the 26-character string
+$$\.{0(00(00100-010-\caret/)00()0)0(-0}\,,\eqno(*)$$
+using \qcaret/ to show where the last partial row ends.
+
+\vskip1pt
+A string like $(*)$ represents a so-called {\it configuration}. If no
+\qcaret/ appears, the partial row is assumed to be a
+complete row. The number of rows above a given occupancy pattern is implicitly
+part of the configuration but not explicitly shown in the notation,
+because this program never has to deal simultaneously with configurations
+that have different numbers of rows above the current partial row.
+
+\fi
+
+\M{2}A bit of theory may help the reader internalize these rules: It turns out
+that the set of all connectivity/occupancy configuration codes at the end of a
+row has the interesting unambiguous context-free grammar
+$$\eqalign{
+S&\to L\,\.0J_0R \mid Z\.-I\.-Z\mid Z\.-Z\cr
+Z&\to\epsilon\mid\.0Z\cr
+L&\to\epsilon\mid Z\,\.)\mid Z\.-I\.)\cr
+R&\to\epsilon\mid \.(Z\mid \.(I\.-Z\cr
+I_0&\to\epsilon\mid\.0J_0\cr
+J_0&\to I_0\mid A\,\.0J_0\cr
+I&\to\epsilon\mid\.-I\mid\.0J\cr
+J&\to I\mid A\,\.0J\cr
+A&\to 1\mid \.(I\.)\cr
+}$$
+[Translation: $I$ is any sequence of \.0's and \.-'s and $A$'s with each
+$A$ preceded and followed by~\.0; $I_0$ is similar, but with no \.- at
+top level.] The number $s_n$ of strings of length $n$
+in $S$ has the generating function
+$$\sum s_nz^n={1-4z^2-4z^3+z^4-(1+z)(1-z^2)\sqrt{\mkern1mu1+z}
+\sqrt{\mkern1mu1-3z}\over2z^3(1-z)}=2z+6z^2+16z^3+\cdots{};$$
+hence $s_n$ is asymptotically proportional to $3^n\!/n^{3/2}$.
+
+\fi
+
+\M{3}Any polyomino with the configuration $(*)$ in the midst of row 10 must
+have
+occupied at least $28+18+1+1+2+4=54$ cells so far, and 16 more will be
+needed to connect it up and make it touch the left edge of the array.
+Moreover, the array has only 10 rows so far, but it has 26 columns, and we
+will only be interested in arrays for which $h\ge w$. Therefore at least 15
+additional cells must be occupied if we are going to complete a polyomino in
+an $h\times26$ array.
+
+In other words, we would need to consider the boundary configuration
+$(*)$ only if we were enumerating polyominoes of
+at least $54+16+15=85$ cells. Such considerations greatly limit the number of
+configurations that can arise; Jensen's experiments show that the total number
+of cases we must deal with grows approximately as $c^n$ where $c$ is
+slightly larger than~1.4. This is exponentially large, but it is considerably
+smaller than the $3^{n/2}$ configurations that arise in Conway's original
+method; and it's vastly smaller than the total number of polyominoes,
+which turns out to be approximately $4.06^n$ times $0.3/n$.
+
+\fi
+
+\M{4}This program doesn't actually do the whole job of enumeration;
+it only outputs a set of instructions that tell how to do it.
+Another program reads those instructions and completes the computation.
+
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\X12:Type definitions\X\6
+\X7:Global variables\X\6
+\X5:Subroutines\X\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\X67:Local variables\X;\6
+\X6:Scan the command line\X;\6
+\X15:Initialize\X;\6
+\X78:Output instructions for the postprocessor\X;\6
+\X72:Print statistics about this run\X;\6
+\X16:Empty the buffer and close the output file\X;\6
+\\{exit}(\T{0});\6
+\4${}\}{}$\2\par
+\fi
+
+\M{5}\B\X5:Subroutines\X${}\E{}$\6
+\&{void} \\{panic}(\&{char} ${}{*}\\{mess}){}$\1\1\2\2\6
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"\%s!\\n"},\39\\{mess});{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\par
+\As9, 10, 11, 13, 14, 17, 30, 31, 32, 35, 55, 56, 59, 63, 64, 69, 73, 75\ETs76.
+\U4.\fi
+
+\M{6}The user specifies the maximum size of polyominoes to be counted, $n$,
+and the desired width, $w$, on the command line. All $h\times w$ rectangles
+spanned by polyominoes of $n$ cells or less will be counted, for
+$w\le h\le n+1-w$. (No solutions are possible for $h>n+1-w$.)
+
+The present version of this program restricts \PB{\|w} to be at most
+23, for simplicity. But the packing and unpacking routines below could be
+adapted via \.{CWEB} change files in order to deal with
+values of \PB{\|w} as large as 27, when we're pushing the envelope.
+
+The command line should also specify the amount of memory allocated for
+configurations in this program and for individual counters in the output.
+Statistics will be printed for guidance in the choice of those parameters.
+
+The base name of the output file should be given as the final command-line
+argument. This name will actually be extended by \.{.0}, \.{.1}, \dots,
+as explained below, because there might be an enormous amount of output.
+
+\Y\B\4\D$\\{wmax}$ \5
+\T{23}\C{ for quinary/octal packing into two tetrabytes }\par
+\B\4\D$\\{nmax}$ \5
+$(\\{wmax}+\\{wmax}+\T{126}{}$)\par
+\B\4\D$\\{bad}(\|k,\|v)$ \5
+$\\{sscanf}(\\{argv}[\|k],\39\.{"\%d"},\39{\AND}\|v)\I{}$\T{1}\par
+\Y\B\4\X6:Scan the command line\X${}\E{}$\6
+\&{if} ${}(\\{argc}\I\T{6}\V\\{bad}(\T{1},\39\|n)\V\\{bad}(\T{2},\39\|w)\V%
+\\{bad}(\T{3},\39\\{conf\_size})\V\\{bad}(\T{4},\39\\{slave\_size})){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ n\ w\ confs}\)\.{ize\ slavesize\
+outfil}\)\.{ename\\n"},\39\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|w>\\{wmax}){}$\1\5
+\\{panic}(\.{"Sorry,\ that\ w\ is\ to}\)\.{o\ big\ for\ this\ imple}\)%
+\.{mentation"});\2\6
+\&{if} ${}(\|w<\T{2}){}$\1\5
+\\{panic}(\.{"No,\ w\ must\ be\ at\ le}\)\.{ast\ 2"});\2\6
+\&{if} ${}(\|n<\|w+\|w-\T{1}){}$\1\5
+\\{panic}(\.{"There\ are\ no\ soluti}\)\.{ons\ for\ such\ a\ small}\)\.{\ n"});%
+\2\6
+\&{if} ${}(\|n>\|w+\|w+\T{126}){}$\1\5
+\\{panic}(\.{"Eh?\ That\ n\ is\ incre}\)\.{dible"});\2\6
+${}\\{base\_name}\K\\{argv}[\T{5}]{}$;\par
+\U4.\fi
+
+\M{7}\B\X7:Global variables\X${}\E{}$\6
+\&{int} \|n;\C{ we will count polyominoes of $n$ or fewer cells }\6
+\&{int} \|w;\C{ provided that they span a rectangle of width $w$          and
+height $\ge w$ }\6
+\&{int} \\{conf\_size};\C{ the number of \&{config} structures in our memory }\6
+\&{int} \\{slave\_size};\C{ the number of counter positions          in the
+slave program memory }\par
+\As8, 18, 27, 34, 39, 57, 65, 68, 71, 85, 98, 108\ETs110.
+\U4.\fi
+
+\N{1}{8}Output. Let's get the basics of output out of the way first, so that
+we know where we're heading. The postprocessing program {\mc POLYSLAVE}
+will interpret instructions according to a compact binary format,
+with either one or four bytes per instruction.
+
+Several gigabytes might well be generated,
+and my Linux system is not real happy with files of length greater than
+$2^{31}-1=2147483647$. Therefore this program breaks the output up
+into a sequence of files called \.{foo.0}, \.{foo.1}, \dots, each
+at most one large gigabyte in size. (That's one GGbyte${}=2^{30}$~bytes.)
+
+Some unfortunate hardware failures led me to add a \PB{\\{checksum}} feature.
+
+\Y\B\4\D$\\{filelength\_threshold}$ \5
+$(\T{1}\LL\T{30}{}$)\C{ maximum file size in bytes }\par
+\B\4\D$\\{buf\_size}$ \5
+$(\T{1}\LL\T{16}{}$)\C{ buffer size, should be a divisor of \PB{\\{filelength%
+\_threshold}} }\par
+\Y\B\4\X7:Global variables\X${}\mathrel+\E{}$\6
+\&{FILE} ${}{*}\\{out\_file}{}$;\C{ the output file }\6
+\&{union} ${}\{{}$\1\6
+\&{unsigned} \&{char} ${}\\{buf}[\\{buf\_size}+\T{4}]{}$;\C{ place for binary
+output }\6
+\&{int} \\{foo};\C{ force \PB{$\\{out}.\\{buf}$} to be aligned somewhat
+sensibly }\2\6
+${}\}{}$ \\{out};\6
+\&{unsigned} \&{char} ${}{*}\\{buf\_ptr}{}$;\C{ our current place in the buffer
+}\6
+\&{int} \\{bytes\_out};\C{ the number of bytes so far in the current output
+file }\6
+\&{unsigned} \&{int} \\{checksum};\C{ a way to help identify bad I/O }\6
+\&{FILE} ${}{*}\\{ck\_file}{}$;\C{ the checksum file }\6
+\&{int} \\{file\_extension};\C{ the number of GGbytes output }\6
+\&{char} ${}{*}\\{base\_name},{}$ \\{filename}[\T{100}];\par
+\fi
+
+\M{9}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{open\_it}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+${}\\{sprintf}(\\{filename},\39\.{"\%.90s.\%d"},\39\\{base\_name},\39\\{file%
+\_extension});{}$\6
+${}\\{out\_file}\K\\{fopen}(\\{filename},\39\.{"wb"});{}$\6
+\&{if} ${}(\R\\{out\_file}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ can't\ open\ file\ \%}\)\.{s"},\39%
+\\{filename});{}$\6
+\\{panic}(\.{"\ for\ output"});\6
+\4${}\}{}$\2\6
+${}\\{bytes\_out}\K\\{checksum}\K\T{0};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{10}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{close\_it}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{if} ${}(\\{fwrite}({\AND}\\{checksum},\39{}$\&{sizeof}(\&{unsigned} %
+\&{int})${},\39\T{1},\39\\{ck\_file})\I\T{1}){}$\1\5
+\\{panic}(\.{"I\ couldn't\ write\ th}\)\.{e\ check\ sum"});\2\6
+\&{if} ${}(\\{fclose}(\\{out\_file})\I\T{0}){}$\1\5
+\\{panic}(\.{"I\ couldn't\ close\ th}\)\.{e\ output\ file"});\2\6
+${}\\{printf}(\.{"[\%d\ bytes\ written\ o}\)\.{n\ file\ \%s,\ checksum\ }\)\.{%
+\%u.]\\n"},\39\\{bytes\_out},\39\\{filename},\39\\{checksum});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{11}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{write\_it}(\&{int} \\{bytes})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k;\6
+\&{register} \&{unsigned} \&{int} \|s;\7
+\&{if} ${}(\\{bytes\_out}\G\\{filelength\_threshold}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{bytes\_out}\I\\{filelength\_threshold}){}$\1\5
+\\{panic}(\.{"Improper\ buffer\ siz}\)\.{e"});\2\6
+\\{close\_it}(\,);\6
+${}\\{file\_extension}\PP;{}$\6
+\\{open\_it}(\,);\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{fwrite}({\AND}\\{out}.\\{buf},\39{}$\&{sizeof}(\&{unsigned} %
+\&{char})${},\39\\{bytes},\39\\{out\_file})\I\\{bytes}){}$\1\5
+\\{panic}(\.{"Bad\ write"});\2\6
+${}\\{bytes\_out}\MRL{+{\K}}\\{bytes};{}$\6
+\&{for} ${}(\|k\K\|s\K\T{0};{}$ ${}\|k<\\{bytes};{}$ ${}\|k\PP){}$\1\5
+${}\|s\K(\|s\LL\T{1})+\\{out}.\\{buf}[\|k];{}$\2\6
+${}\\{checksum}\MRL{+{\K}}\|s;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{12}A four-byte instruction has the binary form $(0xaaaaaa)_2$,
+$(bbbbbbbb)_2$,
+$(cccccccc)_2$, $(dddddddd)_2$, where
+$(aaaaaabbbbbbbbccccccccdddddddd)_2$ is a 30-bit address specified
+in big-endian fashion.
+If $x=0$ it means, ``This is the new source address $s$.''
+If $x=1$ it means, ``This is the new target address $t$.''
+
+A one-byte instruction has the binary form $(1ooopppp)_2$, with a 3-bit
+opcode $(ooo)_2$ and a 4-bit parameter $(pppp)_2$. If the parameter is zero,
+the following byte is regarded as an 8-bit parameter $(pppppppp)_2$, and
+it should not be zero. (In that case the ``one-byte instruction'' actually
+occupies two bytes.)
+
+In the instruction definitions below, $p$ stands for the parameter,
+$s$ stands for the current source address, and $t$ stands for the
+current target address. The slave processor operates on a large
+array called \PB{\\{count}}.
+
+Opcode 0 (\PB{\\{sync}}) means, ``We have just finished row \PB{\|p}.'' A
+report
+is given to the user.
+
+Opcode 1 (\PB{\\{clear}}) means, ``Set \PB{$\\{count}[\|t+\|j]\K\T{0}$} for $0%
+\le j< p$.''
+
+Opcode 2 (\PB{\\{copy}}) means, ``Set \PB{$\\{count}[\|t+\|j]\K\\{count}[\|s+%
+\|j]$} for $0\le j<p$.''
+
+Opcode 3 (\PB{\\{add}}) means, ``Set \PB{$\\{count}[\|t+\|j]\MRL{+{\K}}%
+\\{count}[\|s+\|j]$} for $0\le j<p$.''
+
+Opcode 4 (\PB{\\{inc\_src}}) means, ``Set \PB{$\|s\MRL{+{\K}}\|p$}.''
+
+Opcode 5 (\PB{\\{dec\_src}}) means, ``Set \PB{$\|s\MRL{-{\K}}\|p$}.''
+
+Opcode 6 (\PB{\\{inc\_trg}}) means, ``Set \PB{$\|t\MRL{+{\K}}\|p$}.''
+
+Opcode 7 (\PB{\\{dec\_trg}}) means, ``Set \PB{$\|t\MRL{-{\K}}\|p$}.''
+
+\Y\B\4\D$\\{targ\_bit}$ \5
+\T{\^40000000}\C{ specifies \PB{\|t} in a four-byte instruction }\par
+\Y\B\4\X12:Type definitions\X${}\E{}$\6
+\&{typedef} \&{enum} ${}\{{}$\1\6
+${}\\{sync},\39\\{clear},\39\\{copy},\39\\{add},\39\\{inc\_src},\39\\{dec%
+\_src},\39\\{inc\_trg},\39\\{dec\_trg}{}$\2\6
+${}\}{}$ \&{opcode};\par
+\As26, 28, 29, 33, 54, 60\ETs61.
+\U4.\fi
+
+\M{13}\B\D$\\{end\_of\_buffer}$ \5
+${\AND}\\{out}.\\{buf}{}$[\\{buf\_size}]\par
+\Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{put\_inst}(\&{unsigned} \&{char} \|o${},\39{}$\&{unsigned} \&{char}
+\|p)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{unsigned} \&{char} ${}{*}\|b\K\\{buf\_ptr};{}$\7
+${}{*}\|b\PP\K\T{\^80}+(\|o\LL\T{4})+(\|p<\T{16}\?\|p:\T{0});{}$\6
+\&{if} ${}(\|p\G\T{16}){}$\1\5
+${}{*}\|b\PP\K\|p;{}$\2\6
+\&{if} ${}(\|b\G\\{end\_of\_buffer}){}$\5
+${}\{{}$\1\6
+\\{write\_it}(\\{buf\_size});\6
+${}\\{out}.\\{buf}[\T{0}]\K\\{out}.\\{buf}[\\{buf\_size}];{}$\6
+${}\|b\MRL{-{\K}}\\{buf\_size};{}$\6
+\4${}\}{}$\2\6
+${}\\{buf\_ptr}\K\|b;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{14}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{put\_four}(\&{register} \&{unsigned} \&{int} \|x)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{unsigned} \&{char} ${}{*}\|b\K\\{buf\_ptr};{}$\7
+${}{*}\|b\K\|x\GG\T{24};{}$\6
+${}{*}(\|b+\T{1})\K(\|x\GG\T{16})\AND\T{\^ff};{}$\6
+${}{*}(\|b+\T{2})\K(\|x\GG\T{8})\AND\T{\^ff};{}$\6
+${}{*}(\|b+\T{3})\K\|x\AND\T{\^ff};{}$\6
+${}\|b\MRL{+{\K}}\T{4};{}$\6
+\&{if} ${}(\|b\G\\{end\_of\_buffer}){}$\5
+${}\{{}$\1\6
+\\{write\_it}(\\{buf\_size});\6
+${}\\{out}.\\{buf}[\T{0}]\K\\{out}.\\{buf}[\\{buf\_size}];{}$\6
+${}\\{out}.\\{buf}[\T{1}]\K\\{out}.\\{buf}[\\{buf\_size}+\T{1}];{}$\6
+${}\\{out}.\\{buf}[\T{2}]\K\\{out}.\\{buf}[\\{buf\_size}+\T{2}];{}$\6
+${}\|b\MRL{-{\K}}\\{buf\_size};{}$\6
+\4${}\}{}$\2\6
+${}\\{buf\_ptr}\K\|b;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{15}The first six bytes of the instruction file are, however, special.
+Byte~0 is the number $n$ of cells in the largest polyominoes being
+enumerated. When a \PB{\\{sync}} is interpreted, {\mc POLYSLAVE}
+outputs the current values of \PB{\\{count}[\|j]} for $1\le j\le n$.
+
+Byte 1 is the number of the final row. If this number is $r$, {\mc
+POLYSLAVE} will terminate after interpreting the instruction \PB{\\{sync}}~$r$.
+
+Bytes 2--5 specify the (big-endian) number of elements in the \PB{\\{count}}
+array.
+
+Initially \PB{$\|s\K\|t\K\T{0}$}, \PB{$\\{count}[\T{0}]\K\T{1}$}, and \PB{%
+\\{count}[\|j]} is assumed to be zero
+for $1\le j\le n$.
+
+\Y\B\4\X15:Initialize\X${}\E{}$\6
+$\\{sprintf}(\\{filename},\39\.{"\%.90s.ck"},\39\\{base\_name});{}$\6
+${}\\{ck\_file}\K\\{fopen}(\\{filename},\39\.{"wb"});{}$\6
+\&{if} ${}(\R\\{ck\_file}){}$\1\5
+\\{panic}(\.{"I\ can't\ open\ the\ ch}\)\.{ecksum\ file"});\2\6
+\\{open\_it}(\,);\6
+${}\\{out}.\\{buf}[\T{0}]\K\|n;{}$\6
+${}\\{out}.\\{buf}[\T{1}]\K\|n+\T{2}-\|w;{}$\6
+${}\\{buf\_ptr}\K{\AND}\\{out}.\\{buf}[\T{2}];{}$\6
+\\{put\_four}(\\{slave\_size});\par
+\As58, 62, 66\ETs77.
+\U4.\fi
+
+\M{16}Here's what we'll do when it's all over.
+
+\Y\B\4\X16:Empty the buffer and close the output file\X${}\E{}$\6
+\&{if} ${}(\\{buf\_ptr}\I{\AND}\\{out}.\\{buf}[\T{0}]){}$\1\5
+${}\\{write\_it}(\\{buf\_ptr}-{\AND}\\{out}.\\{buf}[\T{0}]);{}$\2\6
+\\{close\_it}(\,);\par
+\Us4\ET106.\fi
+
+\M{17}Most of the output is generated by the \PB{\\{basic\_inst}} routine.
+
+\Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{basic\_inst}(\&{int} \\{op}${},\39{}$\&{int} \\{src\_addr}${},%
+\39{}$\&{int} \\{trg\_addr}${},\39{}$\&{unsigned} \&{char} \\{count})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \\{del};\7
+\&{if} ${}(\\{verbose}>\T{1}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{op}\E\\{clear}){}$\1\5
+${}\\{printf}(\.{"\{clear\ \%d\ ->\%d\}\\n"},\39\\{count},\39\\{trg\_addr});{}$%
+\2\6
+\&{else}\1\5
+${}\\{printf}(\.{"\{\%s\ \%d\ \%d->\%d\}\\n"},\39\\{sym}[\\{op}],\39\\{count},%
+\39\\{src\_addr},\39\\{trg\_addr});{}$\2\6
+\4${}\}{}$\2\6
+${}\\{del}\K\\{src\_addr}-\\{cur\_src};{}$\6
+\&{if} ${}(\\{del}>\T{0}\W\\{del}<\T{256}){}$\1\5
+${}\\{put\_inst}(\\{inc\_src},\39\\{del});{}$\2\6
+\&{else} \&{if} ${}(\\{del}<\T{0}\W\\{del}>{-}\T{256}){}$\1\5
+${}\\{put\_inst}(\\{dec\_src},\39{-}\\{del});{}$\2\6
+\&{else} \&{if} (\\{del})\1\5
+\\{put\_four}(\\{src\_addr});\2\6
+${}\\{cur\_src}\K\\{src\_addr};{}$\6
+${}\\{del}\K\\{trg\_addr}-\\{cur\_trg};{}$\6
+\&{if} ${}(\\{del}>\T{0}\W\\{del}<\T{256}){}$\1\5
+${}\\{put\_inst}(\\{inc\_trg},\39\\{del});{}$\2\6
+\&{else} \&{if} ${}(\\{del}<\T{0}\W\\{del}>{-}\T{256}){}$\1\5
+${}\\{put\_inst}(\\{dec\_trg},\39{-}\\{del});{}$\2\6
+\&{else} \&{if} (\\{del})\1\5
+${}\\{put\_four}(\\{trg\_addr}+\\{targ\_bit});{}$\2\6
+${}\\{cur\_trg}\K\\{trg\_addr};{}$\6
+${}\\{put\_inst}(\\{op},\39\\{count});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{18}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\&{char} ${}{*}\\{sym}[\T{4}]\K\{\.{"sync"},\39\.{"clear"},\39\.{"copy"},\39%
+\.{"add"}\};{}$\6
+\&{int} \\{cur\_src}${},{}$ \\{cur\_trg};\C{ current source and target
+addresses in the slave }\6
+\&{int} \\{verbose}${}\K\T{0}{}$;\C{ set nonzero when debugging }\par
+\fi
+
+\N{1}{19}Connectivity. The hardest task that confronts us is to figure out
+how to determine the cutoff threshold:
+Given a configuration like \.{0(00(00100-010-\caret/)00()0)0(-0},
+what is the minimum number of additional cells that are needed to connect
+it up and to make it stretch out to at least a given number of further rows?
+We claimed above, without proof, that this particular configuration
+needs at least 16 more cells before it will be connected and touch
+the left boundary. Now we want to prove that claim, and solve the general
+problem as~well.
+
+Some cases of this problem are easy. For example, let's consider first
+the case when we are at the beginning or end of a complete row. Then
+it is clear that a configuration like \.{00-)0(0--)00(--0} needs
+at least $3+4$ more cells to become occupied. [Well, if this {\it isn't\/}
+clear, please stop now and think about it until it {\it is}. Remember
+that it stands for a pattern with three connected components of
+occupied cells; the left component is connected to the left edge,
+the right component is connected to the right edge, and
+the middle component is standing alone.]
+
+Suppose we have a pattern like $\.0^{g_0}\alpha_1\.0^{g_1}\alpha_2\ldots
+\.0^{g_{k-1}}\alpha_k\.0^{g_k}$, where each $\alpha_j$ is a separate
+component beginning with \.( and ending with \.). For example,
+a typical $\alpha$ might be \.{()} or \.{(-)} or \.{(-00--00-0-0)}, etc.
+Again the problem we face is easily solved: We need to occupy $g_0+1$ cells
+in order to connect
+$\alpha_1$ to the left edge, $g_j+2$ cells to connect $\alpha_j$ to
+$\alpha_{j+1}$ for $1\le j<k$, and $g_k+1$ cells to connect $\alpha_k$ to the
+right edge. The same formula holds if any $\alpha_j$ is simply \.1, denoting a
+singleton component, except that we can subtract~1 for every such $\alpha_j$.
+For example, the cost of connecting up \.{0100(0-)00010(0)0} is
+$2+4+5+3+2-2$.
+
+If $\alpha_1$ is already connected to the left edge, we save $g_0+1$,
+but we cannot take the bonus if $\alpha_1$ is~\.1; a similar consideration
+applies at the right.
+
+\fi
+
+\M{20}The situation gets more interesting when components are nested. Suppose,
+for
+example, that $\alpha_1$, $\alpha_2$, \dots, $\alpha_{k-1}$ are distinct,
+but $\alpha_k$ is part of the same component as $\alpha_1$. Then we still
+must pay $g_0+1$ to connect $\alpha_1$ at the left and $g_k+1$ to
+connect $\alpha_k\equiv\alpha_1$ at the right; but in this new case we are
+allowed to keep $\alpha_j$ disconnected from $\alpha_{j+1}$ for any single
+choice of $j$ we like, in the range $1\le j<k$. That will save $g_j+2$
+from the formula stated above, except that it will cost one or two bonus
+points if $\alpha_j$ and/or $\alpha_{j+1}$ had length~1.
+For example, to connect the configuration \.{0(00010(0)00-0)00}, which
+has the form $\.0^1\alpha_1\.0^3\alpha_2\.0^1\alpha_3\.0^2\alpha_4\.0^2$
+with $\alpha_1\equiv\alpha_4$ and potential bonuses at $\alpha_1$ and
+$\alpha_2$, we have three options. Disconnecting $\alpha_1$ from $\alpha_2$
+costs $2+0+3+4+3-0$; disconnecting $\alpha_2$ from $\alpha_3$ costs
+$2+5+0+4+3-1$; disconnecting $\alpha_3$ from $\alpha_4$ costs
+$2+5+3+0+3-2$. The third alternative is best, even though it doesn't
+disconnect the largest gap~$\.0^3$, because it retains the 2 bonus points.
+
+\fi
+
+\M{21}Now look at the configuration \.{-00(010-010)00()00()00-}, which is
+connected to left and right edges and which also contains the subcomponent
+\.{(010-010)}. The best way to handle the subcomponent is to occupy 5 cells
+below it, spanning the middle region \.{10-01}. But then we need
+$4+4+4$ additional cells to connect up the whole diagram. If instead we
+use 6~cells within the subcomponent, spanning \.{(01} at the left and \.{10)}
+at the right, we need only $3+3+4$ additional cells to finish. Thus the
+environment can affect the optimal behavior within a subcomponent.
+
+These examples give us one way to think about the minimum connection cost for
+the general pattern
+$\.0^{g_0}\alpha_1\.0^{g_1}\alpha_2\ldots\.0^{g_{k-1}}\alpha_k\.0^{g_k}$,
+when $\alpha_i$ is already connected to $\alpha_j$ for certain pairs $(i,j)$,
+namely to start by charging $(g_0+1)+(g_1+2)+\cdots+(g_{k-1}+2)+(g_k+1)$
+and then to deduct some of the terms for gaps $g_j$ that are legitimately
+left unconnected: The term $(g_0+1)$ can be deducted if $\alpha_1$ is connected
+to the left edge, and $(g_k+1)$ can be deducted if $\alpha_k$ is connected to
+the
+right edge. If $\alpha_i\equiv\alpha_j$ for some $j>i$ and if the
+components $\alpha_{i+1}$, \dots, $\alpha_j$ are mutually disconnected, then
+we are allowed to deduct any one of the terms $(g_i+2)$, \dots, $(g_{j-1}+2)$,
+after which we can treat $\alpha_i\ldots\alpha_j$ as a {\it single\/} component
+with respect to further deductions. Finally after choosing a subset of terms
+to deduct, we get a bonus for each $\alpha_j$ of length~1 such that neither
+$g_{j-1}$ nor $g_j$ were left disconnected. (Length~1 means that the code for
+$\alpha_j$ is a single character, either \.1 or \.( or \.) or \.-.)
+
+\fi
+
+\M{22}A recursive strategy can be used to solve the minimum connectivity
+problem
+in linear time, but we must design it carefully because of the examples
+considered earlier. The key idea will be to associate four costs $c_{ij}$ with
+each subcomponent, where $0\le i,j\le1$. Cost $c_{ij}$ is the minimum number
+of future occupied cells needed to connect everything up within the component,
+with the further proviso that there is a cell below the leftmost cell if
+$i=1$, and a cell below the rightmost cell if $j=1$. The $2\times2$ matrix
+$(c_{ij})$ will then represent all we need to know about connecting this
+component at a higher level.
+
+\vskip1pt
+\def\mx#1#2#3#4{{#1\,#2\choose#3\,#4}}
+For example, the cost matrix for a single-character component is
+$\mx0111$, and the cost matrix for a multi-character component
+with no internal subcomponents is $\mx0112$. (The 0 in the upper
+left corner signifies that we don't need any cells to connect it up,
+since it's already connected. But we may have to occupy one or two cells
+as ``hooks'' at the left and/or the right if the environment wants them.)
+
+\vskip1pt
+\def\gmp#1#2{\mathbin{^#1_#2}}
+The theory that underlies the algorithm below is best understood in
+terms of {\it min-plus matrix multiplication\/} $C=AB$, where $c_{ij}=
+\min_k(a_{ik}+b_{kj})$. (I should probably use a special symbol to denote this
+multiplication, like $A\gmp\land+B$ instead of $AB$; see, for example,
+exercise 1.3.1$'$--32 in {\sl The Art of Computer Programming}, Fascicle~1.
+But that would clutter up a huge number of the formulas below. And I have
+no use for ordinary matrix multiplication in the present program.
+Therefore min-plus multiplication will be assumed to need no special marking
+in the following discussion.)
+
+\vskip1pt
+\def\mtx#1#2#3#4{\hbox{$\bigl({#1\atop#2}\ {#3\atop#4}\bigr)$}}
+Let $X_g$ be the matrix \mtx\infty\infty\infty g. Then if $\alpha_1$, \dots,
+$\alpha_k$ are distinct subcomponents with cost matrices $A_1$, \dots,~$A_k$,
+respectively, the cost of connecting up
+$\.0^{g_0}\alpha_1\.0^{g_1}\alpha_2\ldots\.0^{g_{k-1}}\alpha_k\.0^{g_k}$
+and touching the left and right edges is the upper left corner entry of
+$$OX_{g_0}A_1X_{g_1}\ldots X_{g_{k-1}}A_kX_{g_k}O,\qquad \qquad
+\hbox{where $O=\mtx0000$},$$
+because matrix $X_g$ essentially means ``occupy $g$ cells below and
+require the cells to the left and right of these cells to be occupied as
+well.'' Notice that this rule yields
+$(g_0+1)+(g_1+2)+\cdots+(g_{k-1}+2)+(g_k+1)$
+in the special case when each matrix $A_j$ is $\mx0112$, and there's a
+bonus of~1 whenever we replace $A_j$ by $\mx0111$. Notice also
+that $X_gX_h=X_{g+h}$; thus we can essentially think of each \.0 in
+the configuration as a multiplication by~$X_1$.
+
+\fi
+
+\M{23}If $\alpha$ and $\beta$ are subcomponents that are already connected to
+each
+other, having cost matrices $A$ and~$B$ respectively, the cost matrix for
+$\alpha\,\.0^g\beta$ as a single component is $ANB$, where
+$N=\mtx0\infty\infty\infty$ is the matrix meaning ``don't occupy anything
+below the $\.0^g$ and don't insist that the cells to the left and right of that
+gap must be occupied.'' For example, this rule gives
+$\mx0111N\mx0111=\mx0112$ as it should.
+
+And in general, suppose $\alpha_0$, $\alpha_1$, \dots, $\alpha_k$ are
+subcomponents that are distinct except that $\alpha_0$ is already connected to
+$\alpha_k$. Then the cost matrix for
+$\alpha_0\.0^{g_1}\alpha_1\ldots\alpha_{k-1}\.0^{g_k}\alpha_k$
+as a single subcomponent
+can be expressed in terms of the individual cost matrices $A_0$, $A_1$, \dots,
+$A_k$ by using the formula
+$$\min_{1\le j\le k}\bigl(A_0X_{g_1}\ldots X_{g_{j-1}}A_{j-1}NA_j
+X_{g_{j+1}}\ldots X_{g_k}A_k\bigr),   \eqno(**)$$
+because we are allowed to leave any one of the gaps $\.0^{g_j}$
+disconnected. Rule $(**)$ is the basic principle that makes a
+recursive algorithm work.
+
+\fi
+
+\M{24}Our discussion so far has assumed for simplicity that we're at the end
+of a row. But we also need to consider the case that a gap $\.0^g$ might be
+$\.0^a\caret/\.0^b$ in the vicinity of the place where a partial row is being
+filled. Fortunately the same theory applies with only a slight variation:
+Instead of $X_g=X_{a+b}$, we use $X_{a+b+1}$ if $a>0$, or
+we use $Y_b=\mtx\infty\infty b\infty$ if $a=0$; either $a$ or $b$ or both
+might be zero. Matrix $Y_b$ means, ``Occupy the cells below $\.0^b$
+and require the next cell on the right (but not necessarily the left)
+to be occupied as well.'' The extra~1 in $X_{a+b+1}$ is needed when $a>0$
+because one of the newly occupied cells must pass through the current
+row~$r$ in order to reach row~$r+1$.
+
+\fi
+
+\M{25}After calculating the minimum cost of connection, we might also need to
+add the cost of extension to span a $w\times w$ square. Thus, if row~$r$
+is partially filled and row $r-1$ is completely filled, and if $r<w$,
+we must add $w-r-1$ cells if the minimum connection can be achieved with at
+least one cell in row~$r+1$; otherwise we must add $w-r$ cells.
+
+Consider, for example, the configuration \.{-0\caret/010)00}. The best way
+to connect this up is to occupy the five cells in row~$r$ that occur below the
+\.{10)00}. But then we need $w-r$ more for extension. On the other hand,
+in a configuration like \.{-0\caret/010000)00}, there are two essentially
+different ways to do the connection with eight more cells, and we must choose
+the one that uses cells of row~$r+1$. (A configuration like
+\.{-0\caret/01000)00} can be connected in seven cells without using
+row $r+1$, or in eight with the use of that row, so it's a tossup.)
+
+The configurations \.{-01\caret/00-} and \.{-01\caret/00)0(} also
+present interesting tradeoffs that our algorithm must handle properly.
+
+The solution adopted here is to add $\epsilon$ to the cell costs after
+the \qcaret/, so that newly occupied cells in row~$r$
+are slightly more expensive than cells in row~$r+1$. This makes the
+latter cells more attractive, in cases when they need to~be.
+
+\fi
+
+\M{26}OK, we've got a reasonably clean theory; now it's time to put it into
+practice. The first step is to define the encoding of our alphabet
+\.0, \.1, \.(, \.), and \.-, to which we'll add an ``edge of line''
+character. The following encoding is designed to make it easy to test
+whether a character is either \.- or \.):
+
+\Y\B\4\D$\\{mid\_or\_rt}(\|x)$ \5
+$(((\|x)\AND\T{2})\E\T{2}{}$)\par
+\Y\B\4\X12:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{enum} ${}\{{}$\1\6
+${}\\{zero},\39\\{one},\39\\{rt},\39\\{mid},\39\\{lft},\39\\{eol}{}$\2\6
+${}\}{}$ \&{code};\C{ \.0, \.1, \.), \.-, \.(, or edge delimiter in a
+configuration string }\par
+\fi
+
+\M{27}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \\{decode}[\T{5}]${}\K\{\.{'0'},\39\.{'1'},\39\.{')'},\39\.{'-'},\39%
+\.{'('}\};{}$\6
+\&{code} \\{reflect}[\T{5}]${}\K\{\\{zero},\39\\{one},\39\\{lft},\39\\{mid},\39%
+\\{rt}\}{}$;\par
+\fi
+
+\M{28}Then in the cost matrices and in our answer describing the minimum
+connection cost of a given configuration, we will represent numbers
+$a+b\epsilon$ as short integers, knowing that $a$ and $b$ will never exceed 27.
+
+\Y\B\4\D$\\{unity}$ \5
+$(\T{1}\LL\T{8}{}$)\par
+\B\4\D$\\{epsilon}$ \5
+\T{1}\par
+\B\4\D$\\{uunity}$ \5
+$(\\{unity}+\\{epsilon}{}$)\par
+\B\4\D$\\{int\_part}(\|x)$ \5
+$((\|x)\GG\T{8}{}$)\par
+\B\4\D$\\{eps\_part}(\|x)$ \5
+$((\|x)\AND\T{\^ff}{}$)\par
+\Y\B\4\X12:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{unsigned} \&{short} \&{cost};\C{ $a+b\epsilon$ represented as %
+\PB{$(\|a\LL\T{8})+\|b$} }\7
+\&{typedef} \&{struct} ${}\{{}$\1\6
+\&{cost} \|c[\T{2}][\T{2}];\2\6
+${}\}{}$ \&{cost\_matrix};\par
+\fi
+
+\M{29}We will need to distinguish between the cost matrices
+$X_g=\mtx\infty\infty\infty {g_{\mathstrut}}$
+and $Y_g=\mtx\infty\infty g\infty$,
+as well as a third case that arises when a configuration is already
+connected to the left edge.
+
+\Y\B\4\X12:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{enum} ${}\{{}$\1\6
+${}\\{ytyp},\39\\{xtyp},\39\\{otyp}{}$\2\6
+${}\}{}$ \&{gap\_type};\par
+\fi
+
+\M{30}A few easy subroutines do the basic operations on cost matrices that we
+will
+need.
+
+\Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{cost\_matrix} \\{a\_n\_b}(\&{cost\_matrix} \|a${},\39{}$\&{cost\_matrix} %
+\|b)\C{ computes $A N B$ }\6
+${}\{{}$\1\6
+\&{cost\_matrix} \|c;\7
+${}\|c.\|c[\T{0}][\T{0}]\K\|a.\|c[\T{0}][\T{0}]+\|b.\|c[\T{0}][\T{0}];{}$\6
+${}\|c.\|c[\T{0}][\T{1}]\K\|a.\|c[\T{0}][\T{0}]+\|b.\|c[\T{0}][\T{1}];{}$\6
+${}\|c.\|c[\T{1}][\T{0}]\K\|a.\|c[\T{1}][\T{0}]+\|b.\|c[\T{0}][\T{0}];{}$\6
+${}\|c.\|c[\T{1}][\T{1}]\K\|a.\|c[\T{1}][\T{0}]+\|b.\|c[\T{0}][\T{1}];{}$\6
+\&{return} \|c;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{31}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{cost\_matrix} \\{a\_x\_b}(\&{cost\_matrix} \|a${},\39{}$\&{cost\_matrix} %
+\|b${},\39{}$\&{gap\_type} \\{typ}${},\39{}$\&{cost} \|g)\C{ computes $A X_{g%
+\,}B$, $A Y_{g\,} B$,  or $B$, depending on \PB{\\{typ}} }\6
+${}\{{}$\1\6
+\&{cost\_matrix} \|c;\7
+\&{if} ${}(\\{typ}\E\\{otyp}){}$\1\5
+\&{return} \|b;\2\6
+${}\|c.\|c[\T{0}][\T{0}]\K\|a.\|c[\T{0}][\\{typ}]+\|g+\|b.\|c[\T{1}][\T{0}];{}$%
+\6
+${}\|c.\|c[\T{0}][\T{1}]\K\|a.\|c[\T{0}][\\{typ}]+\|g+\|b.\|c[\T{1}][\T{1}];{}$%
+\6
+${}\|c.\|c[\T{1}][\T{0}]\K\|a.\|c[\T{1}][\\{typ}]+\|g+\|b.\|c[\T{1}][\T{0}];{}$%
+\6
+${}\|c.\|c[\T{1}][\T{1}]\K\|a.\|c[\T{1}][\\{typ}]+\|g+\|b.\|c[\T{1}][\T{1}];{}$%
+\6
+\&{return} \|c;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{32}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{min\_mat}(\&{cost\_matrix} ${}{*}\|a,\39{}$\&{cost\_matrix} \|b)\C{
+sets $A=\min(A,B)$ }\6
+${}\{{}$\1\6
+\&{if} ${}(({*}\|a).\|c[\T{0}][\T{0}]>\|b.\|c[\T{0}][\T{0}]){}$\1\5
+${}({*}\|a).\|c[\T{0}][\T{0}]\K\|b.\|c[\T{0}][\T{0}];{}$\2\6
+\&{if} ${}(({*}\|a).\|c[\T{0}][\T{1}]>\|b.\|c[\T{0}][\T{1}]){}$\1\5
+${}({*}\|a).\|c[\T{0}][\T{1}]\K\|b.\|c[\T{0}][\T{1}];{}$\2\6
+\&{if} ${}(({*}\|a).\|c[\T{1}][\T{0}]>\|b.\|c[\T{1}][\T{0}]){}$\1\5
+${}({*}\|a).\|c[\T{1}][\T{0}]\K\|b.\|c[\T{1}][\T{0}];{}$\2\6
+\&{if} ${}(({*}\|a).\|c[\T{1}][\T{1}]>\|b.\|c[\T{1}][\T{1}]){}$\1\5
+${}({*}\|a).\|c[\T{1}][\T{1}]\K\|b.\|c[\T{1}][\T{1}];{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{33}The algorithm we use is inherently recursive, but we implement it
+iteratively using a stack because it involves only simple algebraic
+operations. Each stack entry typically represents a string of \.0's
+and a subcomponent that has not been completely scanned as yet;
+the string of \.0's is represented by a cost matrix $X_g$ or $Y_g$,
+and the incomplete subcomponent is represented by a partial evaluation
+of formula $(**)$.
+
+At stack level~0, however, there is no incomplete subcomponent and
+only the \PB{\\{closed\_cost}} field is relevant. This field corresponds to
+the cost matrix of all components scanned so far.
+
+\Y\B\4\X12:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} ${}\{{}$\1\6
+\&{cost} \\{gap};\C{ zeros to cover in the previous gap }\6
+\&{gap\_type} \\{gap\_typ};\C{ type of previous gap (\PB{\\{xtyp}} or \PB{%
+\\{ytyp}} or \PB{\\{otyp}}) }\6
+\&{cost\_matrix} \\{closed\_cost};\C{ cost matrix with no gaps }\6
+\&{cost\_matrix} \\{open\_cost};\C{ cost matrix with optional gap }\2\6
+${}\}{}$ \&{stack\_entry};\par
+\fi
+
+\M{34}The given configuration string will appear in \PB{\|c[\T{1}]} through %
+\PB{\|c[\|w]};
+also \PB{\|c[\T{0}]} and \PB{$\|c[\|w+\T{1}]$} will be set to \PB{\\{eol}}.
+
+\Y\B\4\X7:Global variables\X${}\mathrel+\E{}$\6
+\&{code} \|c[\T{64}];\C{ codes of the current configuration string }\6
+\&{stack\_entry} \\{stk}[\T{64}];\C{ partially evaluated costs }\par
+\fi
+
+\M{35}This program operates in two phases that are almost identical:
+Before \PB{\\{row\_end}} has been sensed, the cost of a connection cell is
+\PB{\\{unity}}, but afterwards it is \PB{$\\{unity}+\\{epsilon}$}. In order to
+streamline
+the code I'm using a little trick explained in Example~7 of my paper
+``Structured programming with \PB{\&{goto}} statements'': I make two almost
+identical copies of the code, one for the actions to be taken before
+\PB{$\|k\E\\{row\_end}$} and one for the actions to be taken subsequently.
+The first copy jumps to the second as soon as the condition \PB{$\|k\E\\{row%
+\_end}$} is
+sensed. This avoids all kinds of conditional coding and makes ``variables''
+into ``constants,'' although it does have the somewhat disconcerting feature
+of jumping from one loop into the body of another.
+
+The program could be made faster if I would look at high speed for
+special cases like subcomponents of the form \.{(0--00-)}, since
+that subcomponent is equivalent to \.{()} with respect to the
+connectivity measure we are computing. But I~intentially avoided tricky
+optimizations in order to keep this program simpler and easier to verify.
+
+On the other hand, I do
+reduce \.0-less forms like \.{(---)} to \.{()},
+and \.{(-\caret/--)} to \.{(\caret/)}, etc.
+Such optimizations aren't strictly necessary but I found them irresistible,
+because they arise so frequently.
+
+Variable \PB{\\{row\_end}} in the following routine points to the character
+just
+following the \qcaret/.
+
+\Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{cost} \\{connectivity}(\&{register} \&{int} \\{row\_end})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k;\C{ our place in the string }\6
+\&{register} \&{int} \|s;\C{ the number of open items on the stack }\6
+\&{int} \|g;\C{ the current gap size }\6
+\&{gap\_type} \\{typ};\C{ its type }\6
+\&{int} \\{open};\C{ set nonzero if previous token was \.( or \.- }\7
+\X36:Get ready to compute connectivity\X;\6
+\4\\{scan\_zeros0}:\5
+\X37:Scan for zeros in Phase 0\X;\6
+\4\\{scan\_tokens0}:\5
+\X38:Scan a nonzero token cluster in Phase 0\X;\6
+\4\\{scan\_zeros1}:\5
+\X48:Scan for zeros in Phase 1\X;\6
+\4\\{scan\_tokens1}:\5
+\X49:Scan a nonzero token cluster in Phase 1\X;\6
+\X52:Finish the connectivity bound calculation and return the answer\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{36}In practice \PB{\\{row\_end}} will not be zero. But I decided to make the
+algorithm
+general enough to work correctly also in that case, because only one more
+line of code was needed.
+
+\Y\B\4\X36:Get ready to compute connectivity\X${}\E{}$\6
+$\|s\K\\{open}\K\T{0};{}$\6
+${}\\{stk}[\T{0}].\\{closed\_cost}\K\\{zero\_cost};{}$\6
+${}\|k\K\T{1};{}$\6
+\&{if} (\\{mid\_or\_rt}(\|c[\T{1}]))\5
+${}\{{}$\1\6
+${}\|g\K\T{0},\39\\{typ}\K\\{xtyp}{}$;\C{ \PB{\\{xtyp}} and \PB{\\{ytyp}} are
+equivalent at the left edge }\6
+\&{if} ${}(\\{row\_end}\E\T{1}){}$\1\5
+\&{goto} \\{scan\_tokens1};\2\6
+\&{else}\1\5
+\&{goto} \\{scan\_tokens0};\2\6
+\4${}\}{}$\2\par
+\U35.\fi
+
+\M{37}\B\X37:Scan for zeros in Phase 0\X${}\E{}$\6
+\&{if} ${}(\|k\E\\{row\_end}){}$\5
+${}\{{}$\1\6
+${}\|g\K\T{0},\39\\{typ}\K\\{ytyp};{}$\6
+\&{goto} \\{scan\_zeros1x};\6
+\4${}\}{}$\2\6
+\&{if} (\|c[\|k])\1\5
+\\{panic}(\.{"Syntax\ error,\ 0\ exp}\)\.{ected"});\2\6
+${}\\{typ}\K\\{xtyp},\39\|g\K\\{unity},\39\|k\PP;{}$\6
+\&{while} ${}(\|c[\|k]\E\T{0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|k\E\\{row\_end}){}$\5
+${}\{{}$\1\6
+${}\|g\MRL{+{\K}}\\{unity}+\\{uunity},\39\|k\PP{}$;\C{ correction for
+straddling rows }\6
+\&{goto} \\{scan\_zeros1x};\6
+\4${}\}{}$\2\6
+${}\|g\MRL{+{\K}}\\{unity},\39\|k\PP;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|k\E\\{row\_end}){}$\5
+${}\{{}$\1\6
+${}\|g\MRL{+{\K}}\\{unity};{}$\6
+\&{goto} \\{scan\_tokens1};\6
+\4${}\}{}$\2\par
+\U35.\fi
+
+\M{38}\B\X38:Scan a nonzero token cluster in Phase 0\X${}\E{}$\6
+$\\{cm}\K\\{base\_cost0};{}$\6
+${}\|k\PP;$ \&{switch} ${}(\|c[\|k-\T{1}])$ $\{$ \6
+\4\&{case} \\{lft}:\5
+\&{if} ${}(\R\\{mid\_or\_rt}(\|c[\|k])){}$\1\5
+\&{goto} \\{scan\_open0};\2\6
+\X40:Compress $\.-^*\.)$ following \.( into a single token in Phase 0\X \6
+\&{if} ${}(\|c[\|k-\T{1}]\I\\{rt}){}$\1\5
+\&{goto} \\{scan\_open0};\2\6
+\4\&{case} \\{one}:\5
+\X42:Append \PB{\\{cm}} to the current partial component\X;\6
+${}\\{open}\K\T{0}{}$;\5
+\&{goto} \\{scan\_zeros0};\6
+\4\&{case} \\{mid}:\5
+\&{if} ${}(\R(\\{mid\_or\_rt}(\|c[\|k]))){}$\1\5
+\&{goto} \\{scan\_mid0};\2\6
+\X41:Compress $\.-^*\.)$ following \.- into a single token in Phase 0\X \6
+\&{if} ${}(\|c[\|k-\T{1}]\I\\{rt}){}$\1\5
+\&{goto} \\{scan\_mid0};\2\6
+\4\&{case} \\{rt}:\5
+\&{if} ${}(\R\|s){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{stk}[\T{0}].\\{closed\_cost}.\|c[\T{1}][\T{1}]){}$\1\5
+\\{panic}(\.{"Unmatched\ )"});\2\6
+${}\\{stk}[\T{0}].\\{closed\_cost}\K\\{cm}{}$;\C{ already connected to left
+edge }\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\X43:Append \PB{\\{cm}} to \PB{$\\{stk}[\|s].\\{open\_cost}$}\X;\6
+\X44:Combine the top two items on the stack\X;\6
+\4${}\}{}$\2\6
+${}\\{open}\K\T{0}{}$;\5
+\&{goto} \\{scan\_zeros0};\6
+\4\&{case} \\{eol}:\5
+\&{goto} \\{scan\_eol0};\6
+\4\&{default}:\5
+\\{panic}(\.{"Illegal\ code"}); $\}$ \6
+\4\\{scan\_open0}:\5
+\X46:Finish processing \PB{\\{lft}}\X;\5
+\&{goto} \\{check\_eol0};\6
+\4\\{scan\_mid0}:\5
+\X47:Finish processing \PB{\\{mid}}\X;\6
+\4\\{check\_eol0}:\5
+${}\\{open}\K\T{1};{}$\6
+\&{if} ${}(\|c[\|k]\I\\{eol}){}$\1\5
+\&{goto} \\{scan\_zeros0};\2\6
+\&{if} ${}(\|k\E\\{row\_end}){}$\1\5
+\&{goto} \\{scan\_eol1};\2\6
+\4\\{scan\_eol0}:\5
+\\{panic}(\.{"Row\ end\ missed"});\par
+\U35.\fi
+
+\M{39}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\&{gap\_type} \\{typ};\C{ the current type of gap \PB{\|g} }\6
+\&{cost\_matrix} \\{cm};\C{ the current cost matrix }\6
+\&{cost\_matrix} \\{acm};\C{ another cost matrix }\7
+\&{const} \&{cost\_matrix} \\{zero\_cost}${}\K\{\T{0},\39\T{0},\39\T{0},\39%
+\T{0}\}{}$;\C{ $0\,0\choose0\,0$ }\6
+\&{const} \&{cost\_matrix} \\{base\_cost0}${}\K\{\T{0},\39\\{unity},\39%
+\\{unity},\39\\{unity}\}{}$;\C{ $0\,1\choose1\,1$ }\6
+\&{const} \&{cost\_matrix} \\{base\_cost1}${}\K\{\T{0},\39\\{uunity},\39%
+\\{uunity},\39\\{uunity}\}{}$;\C{ $\bigl({0\atop1+\epsilon}\ {1+\epsilon\atop1+%
+\epsilon}\bigr)$ }\par
+\fi
+
+\M{40}\B\X40:Compress $\.-^*\.)$ following \.( into a single token in Phase 0%
+\X${}\E{}$\6
+${}\{{}$\1\6
+\&{do}\5
+${}\{{}$\1\6
+\&{if} ${}(\|k\E\\{row\_end}){}$\1\5
+\&{goto} \\{scan\_tokens1a};\2\6
+${}\|k\PP;{}$\6
+\&{if} ${}(\|c[\|k-\T{1}]\E\\{rt}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\5
+\2\5
+\&{while} (\\{mid\_or\_rt}(\|c[\|k]));\6
+${}\\{cm}.\|c[\T{1}][\T{1}]\K\\{unity}+\\{unity}{}$;\C{ now \PB{\\{cm}} is $0%
+\,1\choose1\,2$ }\6
+\4${}\}{}$\2\par
+\U38.\fi
+
+\M{41}\B\X41:Compress $\.-^*\.)$ following \.- into a single token in Phase 0%
+\X${}\E{}$\6
+${}\{{}$\1\6
+\&{do}\5
+${}\{{}$\1\6
+\&{if} ${}(\|k\E\\{row\_end}){}$\1\5
+\&{goto} \\{scan\_tokens1b};\2\6
+${}\|k\PP;{}$\6
+\&{if} ${}(\|c[\|k-\T{1}]\E\\{rt}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\5
+\2\5
+\&{while} (\\{mid\_or\_rt}(\|c[\|k]));\6
+${}\\{cm}.\|c[\T{1}][\T{1}]\K\\{unity}+\\{unity}{}$;\C{ now \PB{\\{cm}} is $0%
+\,1\choose1\,2$ }\6
+\4${}\}{}$\2\par
+\U38.\fi
+
+\M{42}\B\X42:Append \PB{\\{cm}} to the current partial component\X${}\E{}$\6
+\&{if} (\|s)\1\5
+\X43:Append \PB{\\{cm}} to \PB{$\\{stk}[\|s].\\{open\_cost}$}\X;\2\6
+${}\\{stk}[\|s].\\{closed\_cost}\K\\{a\_x\_b}(\\{stk}[\|s].\\{closed\_cost},\39%
+\\{cm},\39\\{typ},\39\|g){}$;\par
+\Us38\ET49.\fi
+
+\M{43}\B\X43:Append \PB{\\{cm}} to \PB{$\\{stk}[\|s].\\{open\_cost}$}\X${}\E{}$%
+\6
+${}\{{}$\1\6
+${}\\{acm}\K\\{a\_n\_b}(\\{stk}[\|s].\\{closed\_cost},\39\\{cm});{}$\6
+${}\\{stk}[\|s].\\{open\_cost}\K\\{a\_x\_b}(\\{stk}[\|s].\\{open\_cost},\39%
+\\{cm},\39\\{typ},\39\|g);{}$\6
+${}\\{min\_mat}({\AND}\\{stk}[\|s].\\{open\_cost},\39\\{acm});{}$\6
+\4${}\}{}$\2\par
+\Us38, 42, 47\ETs49.\fi
+
+\M{44}\B\X44:Combine the top two items on the stack\X${}\E{}$\6
+$\|s\MM;{}$\6
+\&{if} (\|s)\1\5
+\X45:Append \PB{$\\{stk}[\|s+\T{1}].\\{open\_cost}$} to \PB{$\\{stk}[\|s].%
+\\{open\_cost}$}\X;\2\6
+${}\\{stk}[\|s].\\{closed\_cost}\K\\{a\_x\_b}(\\{stk}[\|s].\\{closed\_cost},\39%
+\\{stk}[\|s+\T{1}].\\{open\_cost},\39\\{stk}[\|s+\T{1}].\\{gap\_typ},\39%
+\\{stk}[\|s+\T{1}].\\{gap}){}$;\par
+\Us38, 49\ETs52.\fi
+
+\M{45}\B\X45:Append \PB{$\\{stk}[\|s+\T{1}].\\{open\_cost}$} to \PB{$\\{stk}[%
+\|s].\\{open\_cost}$}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{acm}\K\\{a\_n\_b}(\\{stk}[\|s].\\{closed\_cost},\39\\{stk}[\|s+\T{1}].%
+\\{open\_cost});{}$\6
+${}\\{stk}[\|s].\\{open\_cost}\K\\{a\_x\_b}(\\{stk}[\|s].\\{open\_cost},\39%
+\\{stk}[\|s+\T{1}].\\{open\_cost},\39\\{stk}[\|s+\T{1}].\\{gap\_typ},\39%
+\\{stk}[\|s+\T{1}].\\{gap});{}$\6
+${}\\{min\_mat}({\AND}\\{stk}[\|s].\\{open\_cost},\39\\{acm});{}$\6
+\4${}\}{}$\2\par
+\U44.\fi
+
+\M{46}\B\X46:Finish processing \PB{\\{lft}}\X${}\E{}$\6
+$\\{stk}[\PP\|s].\\{gap\_typ}\K\\{typ};{}$\6
+${}\\{stk}[\|s].\\{gap}\K\|g;{}$\6
+${}\\{stk}[\|s].\\{closed\_cost}\K\\{stk}[\|s].\\{open\_cost}\K\\{cm}{}$;\par
+\Us38\ET49.\fi
+
+\M{47}\B\X47:Finish processing \PB{\\{mid}}\X${}\E{}$\6
+\&{if} ${}(\R\|s){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{stk}[\T{0}].\\{closed\_cost}.\|c[\T{1}][\T{1}]){}$\1\5
+\\{panic}(\.{"Unmatched\ -"});\2\6
+${}\|s\K\T{1},\39\\{stk}[\T{1}].\\{gap\_typ}\K\\{otyp},\39\\{stk}[\T{1}].%
+\\{closed\_cost}\K\\{stk}[\T{1}].\\{open\_cost}\K\\{cm};{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\X43:Append \PB{\\{cm}} to \PB{$\\{stk}[\|s].\\{open\_cost}$}\X;\6
+${}\\{stk}[\|s].\\{closed\_cost}\K\\{stk}[\|s].\\{open\_cost};{}$\6
+\4${}\}{}$\2\par
+\Us38\ET49.\fi
+
+\M{48}\B\X48:Scan for zeros in Phase 1\X${}\E{}$\6
+\&{if} (\|c[\|k])\1\5
+\\{panic}(\.{"Syntax\ error,\ 0\ exp}\)\.{ected"});\2\6
+${}\\{typ}\K\\{xtyp},\39\|g\K\\{uunity},\39\|k\PP;{}$\6
+\4\\{scan\_zeros1x}:\5
+\&{while} ${}(\|c[\|k]\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\|g\MRL{+{\K}}\\{uunity},\39\|k\PP;{}$\6
+\4${}\}{}$\2\par
+\U35.\fi
+
+\M{49}\B\X49:Scan a nonzero token cluster in Phase 1\X${}\E{}$\6
+$\\{cm}\K\\{base\_cost1};{}$\6
+${}\|k\PP;$ \&{switch} ${}(\|c[\|k-\T{1}])$ $\{$ \6
+\4\&{case} \\{lft}:\5
+\&{if} ${}(\R\\{mid\_or\_rt}(\|c[\|k])){}$\1\5
+\&{goto} \\{scan\_open1};\2\6
+\X50:Compress $\.-^*\.)$ following \.( into a single token in Phase 1\X \6
+\&{if} ${}(\|c[\|k-\T{1}]\I\\{rt}){}$\1\5
+\&{goto} \\{scan\_open1};\2\6
+\4\&{case} \\{one}:\5
+\X42:Append \PB{\\{cm}} to the current partial component\X;\6
+${}\\{open}\K\T{0}{}$;\5
+\&{goto} \\{scan\_zeros1};\6
+\4\&{case} \\{mid}:\5
+\&{if} ${}(\R(\\{mid\_or\_rt}(\|c[\|k]))){}$\1\5
+\&{goto} \\{scan\_mid1};\2\6
+\X51:Compress $\.-^*\.)$ following \.- into a single token in Phase 1\X \6
+\&{if} ${}(\|c[\|k-\T{1}]\I\\{rt}){}$\1\5
+\&{goto} \\{scan\_mid1};\2\6
+\4\&{case} \\{rt}:\5
+\&{if} ${}(\R\|s){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{stk}[\T{0}].\\{closed\_cost}.\|c[\T{1}][\T{1}]){}$\1\5
+\\{panic}(\.{"Unmatched\ )"});\2\6
+${}\\{stk}[\T{0}].\\{closed\_cost}\K\\{cm}{}$;\C{ already connected to left
+edge }\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\X43:Append \PB{\\{cm}} to \PB{$\\{stk}[\|s].\\{open\_cost}$}\X;\6
+\X44:Combine the top two items on the stack\X;\6
+\4${}\}{}$\2\6
+${}\\{open}\K\T{0}{}$;\5
+\&{goto} \\{scan\_zeros1};\6
+\4\&{case} \\{eol}:\5
+\&{goto} \\{scan\_eol1};\6
+\4\&{default}:\5
+\\{panic}(\.{"Illegal\ code"}); $\}$ \6
+\4\\{scan\_open1}:\5
+\X46:Finish processing \PB{\\{lft}}\X;\5
+\&{goto} \\{check\_eol1};\6
+\4\\{scan\_mid1}:\5
+\X47:Finish processing \PB{\\{mid}}\X;\6
+\4\\{check\_eol1}:\5
+${}\\{open}\K\T{1};{}$\6
+\&{if} ${}(\|c[\|k]\I\\{eol}){}$\1\5
+\&{goto} \\{scan\_zeros1};\2\6
+\4\\{scan\_eol1}:\C{ fall through to return the answer }\par
+\U35.\fi
+
+\M{50}\B\X50:Compress $\.-^*\.)$ following \.( into a single token in Phase 1%
+\X${}\E{}$\6
+${}\{{}$\1\6
+\4\\{scan\_tokens1a}:\5
+\&{do}\5
+${}\{{}$\1\6
+${}\|k\PP;{}$\6
+\&{if} ${}(\|c[\|k-\T{1}]\E\\{rt}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\5
+\2\5
+\&{while} (\\{mid\_or\_rt}(\|c[\|k]));\6
+${}\\{cm}.\|c[\T{0}][\T{1}]\K\\{uunity};{}$\6
+${}\\{cm}.\|c[\T{1}][\T{1}]\MRL{+{\K}}\\{uunity}{}$;\C{ now \PB{\\{cm}} is
+ $\bigl({0\atop1}\ {1+\epsilon\atop2+\epsilon}\bigr)$ or       $\bigl({0\atop1+%
+\epsilon}\ {1+\epsilon\atop2+2\epsilon}\bigr)$ }\6
+\4${}\}{}$\2\par
+\U49.\fi
+
+\M{51}\B\X51:Compress $\.-^*\.)$ following \.- into a single token in Phase 1%
+\X${}\E{}$\6
+${}\{{}$\1\6
+\4\\{scan\_tokens1b}:\5
+\&{do}\5
+${}\{{}$\1\6
+${}\|k\PP;{}$\6
+\&{if} ${}(\|c[\|k-\T{1}]\E\\{rt}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\5
+\2\5
+\&{while} (\\{mid\_or\_rt}(\|c[\|k]));\6
+${}\\{cm}.\|c[\T{0}][\T{1}]\K\\{uunity};{}$\6
+${}\\{cm}.\|c[\T{1}][\T{1}]\MRL{+{\K}}\\{uunity}{}$;\C{ now \PB{\\{cm}} is
+ $\bigl({0\atop1}\ {1+\epsilon\atop2+\epsilon}\bigr)$ or       $\bigl({0\atop1+%
+\epsilon}\ {1+\epsilon\atop2+2\epsilon}\bigr)$ }\6
+\4${}\}{}$\2\par
+\U49.\fi
+
+\M{52}The cost of reaching the right edge is \PB{\|g} if \PB{\|g} has the form
+$b+b\epsilon$, but it is $a+b$ if \PB{\|g} has the exceptional form
+$a+1+b+b\epsilon$ that arises when filling an unfilled row.
+
+\Y\B\4\X52:Finish the connectivity bound calculation and return the answer\X${}%
+\E{}$\6
+\&{if} (\\{open})\5
+${}\{{}$\1\6
+\X44:Combine the top two items on the stack\X;\6
+\&{if} (\|s)\1\5
+\\{panic}(\.{"Missing\ )"});\2\6
+\&{return} \\{stk}[\T{0}]${}.\\{closed\_cost}.\|c[\T{0}][\T{0}];{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\C{ we need to reach the right edge }\1\6
+\&{if} (\|s)\1\5
+\\{panic}(\.{"Missing\ )"});\2\6
+\&{if} ${}(\\{int\_part}(\|g)\E\\{eps\_part}(\|g)){}$\1\5
+\&{return} \\{stk}[\T{0}]${}.\\{closed\_cost}.\|c[\T{0}][\\{typ}]+\|g;{}$\2\6
+\&{return} \\{stk}[\T{0}]${}.\\{closed\_cost}.\|c[\T{0}][\T{1}]+((\\{int%
+\_part}(\|g)-\T{1})\LL\T{8});{}$\6
+\4${}\}{}$\2\par
+\U35.\fi
+
+\N{1}{53}Data structures. If we want to count $n$-ominoes efficiently for
+large~$n$,
+our most precious resource turns out to be the random-access memory that
+is available. I think at least 20 bytes of memory are needed per active
+configuration, and that limits us to about 50 million active configurations per
+gigabyte of memory. Under such circumstances I don't mind recomputing results
+several times in order to save space. For example, many configurations will
+occur on several different rows, and this program recomputes their
+connectivity cost each time they appear.
+
+The main loop of our computation will consist of taking a viable configuration
+$\alpha$ and looking at its two successors $\alpha_0$ and $\alpha_1$. The
+value of \PB{\\{row\_end}} in $\alpha_0$ and $\alpha_1$ (the position of
+\qcaret/) will be one greater than its value in~$\alpha$;
+$\alpha_0$ will leave the new cell empty, but $\alpha_1$ will occupy it.
+
+We gain time when $\alpha_0$ and/or $\alpha_1$ have been seen before;
+a hash table helps us determine whether or not they are d\'ej\`a vu.
+Newly seen configurations are subjected to the \PB{\\{connectivity}} bound, and
+accepted into the computation only if they are found to be viable.
+
+Each configuration $\alpha$ has an associated {\it generating function\/}
+$g(\alpha)$. For example, the generating function $5z^8+2z^9$ would mean that
+there are 5 ways to reach $\alpha$ with 8 cells occupied and 2 ways to reach
+it with 9 cells occupied (so far). We will add $g(\alpha)$ to $g(\alpha_0)$ if
+$\alpha_0$ is viable, and $zg(\alpha)$ to $g(\alpha_1)$ if $\alpha_1$ is
+viable. After that we are able to forget $\alpha$ and $g(\alpha)$,
+reclaiming precious memory space.
+
+Indeed, we don't actually have enough space to deal with the generating
+functions $g(\alpha)$. Therefore this program compiles and outputs a sequence
+of instructions that will be interpreted by another program, {\mc POLYSLAVE};
+that program will subsequently do the actual additions, without needing a hash
+table or other space-hungry data.
+
+The algorithm proceeds row by row, starting in row $r=1$, and continues until
+no viable configurations remain. In each row it makes $w$ complete passes
+over the existing configurations, with \PB{\\{row\_end}} running from 0 to
+$w-1$.
+Every such pass processes and discards all configurations that were generated
+on the previous pass, and we are free to process them in any convenient
+order. Therefore we adopt a ``rolling'' strategy that uses memory with
+near-maximum efficiency: Suppose one pass has produced $M$ configurations
+in the first $M$ slots $\alpha^{(1)}$, \dots, $\alpha^{(M)}$ of a memory pool
+consisting of $N=\PB{\\{conf\_size}}$ total slots. We start by finding the
+successors $\alpha^{(M)}_0$ and $\alpha^{(M)}_1$ of $\alpha^{(M)}$, putting
+them into slots $N$ and $N-1$. Then slot~$M$ is free and we turn to
+$\alpha^{(M-1)}$, etc., thereby running out of memory only if $N$
+configurations are fully in use. On the following pass we reverse direction,
+filling slots from 1~upwards instead of from $N$ downwards.
+
+The same strategy makes it easy to allocate the memory space needed for
+generating functions in the {\mc POLYSLAVE} program. Indeed, this rolling
+allocation scheme fills memory almost perfectly, even though each generating
+function occupies a variable number of bytes. (Sometimes holes do appear,
+if a generating function turns out to need more bytes than we thought it
+would. But the behavior in general is quite satisfactory.)
+
+\fi
+
+\M{54}Eight bytes suffice to encode any configuration $c_0\ldots c_{w-1}$ in a
+5-letter alphabet, since $5^{27}<2^{64}<5^{28}$ and we are assuming that $w$ is
+at most~27. We define \&{cstring} to a union type, so that the hash function
+can readily access its individual bytes, yet packing and unpacking can be done
+with radix 5 or 8. (The hash function will evaluate differently on a
+big-endian machine versus a little-endian machine, but that doesn't matter.)
+
+\Y\B\4\X12:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} ${}\{{}$\1\6
+\&{unsigned} \&{int} \|h${},{}$ \|l;\C{ high-order and low-order halves }\2\6
+${}\}{}$ \&{octa};\C{ two tetrabytes make one octabyte }\6
+\&{typedef} \&{union} ${}\{{}$\1\6
+\&{octa} \|o;\6
+\&{unsigned} \&{char} \\{byte}[\T{8}];\2\6
+${}\}{}$ \&{cstring};\C{ packed version of a configuration string }\par
+\fi
+
+\M{55}The \PB{\\{pack}} subroutine produces a \PB{\&{cstring}} from the codes
+in array \PB{\|c}.
+Since we are assuming provisionally that \PB{\|w} is at most 23, we can use
+octal notation to put 10 codes in one tetrabyte and quinary notation
+to put 13 in the other.
+But quinary notation could obviously be used in both tetrabytes, or we
+could use pure quinary on octabytes, in variants of
+this program designed for larger values of~\PB{\|w}.
+
+\Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{cstring} \\{packit}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k;\6
+\&{cstring} \\{packed};\7
+${}\|k\K\|w-\T{1},\39\|j\K\|c[\|w];{}$\6
+\&{if} ${}(\|w\Z\T{10}){}$\1\5
+${}\\{packed}.\|o.\|h\K\T{0};{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{for} ( ; ${}\|k>\T{10};{}$ ${}\|k\MM){}$\1\5
+${}\|j\K(\|j\LL\T{2})+\|j+\|c[\|k];{}$\2\6
+${}\\{packed}.\|o.\|h\K\|j;{}$\6
+${}\|k\K\T{9},\39\|j\K\|c[\T{10}];{}$\6
+\4${}\}{}$\2\6
+\&{for} ( ; ${}\|k>\T{0};{}$ ${}\|k\MM){}$\1\5
+${}\|j\K(\|j\LL\T{3})+\|c[\|k];{}$\2\6
+${}\\{packed}.\|o.\|l\K\|j;{}$\6
+\&{return} \\{packed};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{56}That which can be packed can be unpacked. This routine puts the
+results into two arrays, \PB{\\{sc}} and \PB{\|c}, because it is used only when
+unpacking a new source configuration $\alpha$.
+
+There's an all-binary way to divide by 5 that is faster than division
+on some machines (see {\sl TAOCP\/} exercise 4.4--9).
+But the simple `/5' works best on my computer, winning also
+over floating point division.
+
+Curiously, I also found that `\PB{$\|x*\T{5}$}' is slower than `$(x<<2)+x$',
+but
+`\PB{$\|y-\T{5}*\|x$}' is faster than `\PB{$\|y-((\|x\LL\T{2})+\|x)$}'. Some
+quirk of pipelining
+probably underlies these phenomena. I am content to leave
+such mysteries unexplained for now, because the present speed is acceptable.
+
+\Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{unpackit}(\&{cstring} \|s)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|q;\7
+\&{if} ${}(\|w>\T{10}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{1},\39\|j\K\|s.\|o.\|l;{}$ ${}\|k<\T{10};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{sc}[\|k]\K\|c[\|k]\K\|j\AND\T{7};{}$\6
+${}\|j\MRL{{\GG}{\K}}\T{3};{}$\6
+\4${}\}{}$\2\6
+${}\\{sc}[\T{10}]\K\|c[\T{10}]\K\|j;{}$\6
+\&{for} ${}(\|k\K\T{11},\39\|j\K\|s.\|o.\|h;{}$ ${}\|k<\|w;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|q\K\|j/\T{5};{}$\6
+${}\\{sc}[\|k]\K\|c[\|k]\K\|j-\T{5}*\|q;{}$\6
+${}\|j\K\|q;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\1\6
+\&{for} ${}(\|k\K\T{1},\39\|j\K\|s.\|o.\|l;{}$ ${}\|k<\|w;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{sc}[\|k]\K\|c[\|k]\K\|j\AND\T{7};{}$\6
+${}\|j\MRL{{\GG}{\K}}\T{3};{}$\6
+\4${}\}{}$\2\2\6
+${}\\{sc}[\|k]\K\|c[\|k]\K\|j;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{57}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\&{code} \\{sc}[\T{64}];\C{ codes of the current source configuration }\par
+\fi
+
+\M{58}\B\X15:Initialize\X${}\mathrel+\E{}$\6
+$\|c[\T{0}]\K\\{sc}[\T{0}]\K\|c[\|w+\T{1}]\K\\{sc}[\|w+\T{1}]\K\\{eol}{}$;\par
+\fi
+
+\M{59}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_config}(\&{int} \\{row\_end})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k;\7
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|w;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{row\_end}\E\|k){}$\1\5
+\\{printf}(\.{"\^"});\2\6
+\&{if} ${}(\|c[\|k]<\\{eol}){}$\1\5
+${}\\{printf}(\.{"\%c"},\39\\{decode}[\|c[\|k]]);{}$\2\6
+\&{else}\1\5
+\\{printf}(\.{"?"});\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{60}A configuration can be in three states: Normally it is \PB{\\{active}},
+with a generating function represented as a sequence of counters;
+first, however, it is \PB{\\{raw}}, meaning that the space for counters has
+been
+allocated but not yet cleared to zero. An inactive target node is
+marked \PB{\\{deleted}} when its memory space has been recycled and made
+available for reuse.
+
+\Y\B\4\X12:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{enum} ${}\{{}$\1\6
+${}\\{active},\39\\{raw},\39\\{deleted}{}$\2\6
+${}\}{}$ \&{status};\par
+\fi
+
+\M{61}Here then are the 20 precious bytes that represent a configuration.
+The rolling strategy allows us to get by with only one link field.
+
+\Y\B\4\X12:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} \&{conf\_struct} ${}\{{}$\1\6
+\&{cstring} \|s;\C{ the configuration name }\6
+\&{unsigned} \&{int} \\{addr};\C{ where the slave keeps the generating function
+}\6
+\&{struct} \&{conf\_struct} ${}{*}\\{link}{}$;\C{ the next item in a hash chain
+or hole list }\6
+\&{char} \\{lo};\C{ smallest exponent of $z$ in the current generating function
+}\6
+\&{char} \\{hi};\C{ largest exponent of $z$ in the current generating function
+}\6
+\&{char} \\{lim};\C{ largest viable exponent of $z$, if this is a target }\6
+\&{status} \\{state};\C{ \PB{\\{active}}, \PB{\\{raw}}, or \PB{\\{deleted}} }\2%
+\6
+${}\}{}$ \&{config};\par
+\fi
+
+\M{62}\B\X15:Initialize\X${}\mathrel+\E{}$\6
+$\\{conf}\K{}$(\&{config} ${}{*}){}$ \\{calloc}${}(\\{conf\_size},\39%
+\&{sizeof}(\&{config}));{}$\6
+\&{if} ${}(\R\\{conf}){}$\1\5
+\\{panic}(\.{"I\ can't\ allocate\ th}\)\.{e\ config\ table"});\2\6
+${}\\{conf\_end}\K\\{conf}+\\{conf\_size}{}$;\par
+\fi
+
+\M{63}The main high-level routine, called \PB{\\{update}}, is used to add terms
+\PB{$\|p\MG\\{lo}$} through \PB{\\{hi}} of the generating function for
+configuration~\PB{\|p}
+to the generating function for configuration~\PB{\|q}. The special case
+\PB{$\|q\K\NULL$} is used to update the counters for polyominoes that have been
+completed.
+
+\Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{update}(\&{config} ${}{*}\|p,\39{}$\&{config} ${}{*}\|q,\39{}$%
+\&{char} \\{hi})\1\1\2\2\6
+${}\{{}$\1\6
+\&{if} ${}(\R\|q){}$\1\5
+${}\\{basic\_inst}(\\{add},\39\|p\MG\\{addr},\39\|p\MG\\{lo},\39\\{hi}+\T{1}-%
+\|p\MG\\{lo});{}$\2\6
+\&{else} \&{if} ${}(\|q\MG\\{state}\E\\{raw}){}$\5
+${}\{{}$\1\6
+${}\|q\MG\\{state}\K\\{active};{}$\6
+\&{if} ${}(\|q\MG\\{lo}\I\|p\MG\\{lo}\V\|q\MG\\{hi}\I\\{hi}){}$\1\5
+${}\\{basic\_inst}(\\{clear},\39\\{cur\_src},\39\|q\MG\\{addr},\39\|q\MG\\{hi}+%
+\T{1}-\|q\MG\\{lo});{}$\2\6
+${}\\{basic\_inst}(\\{copy},\39\|p\MG\\{addr},\39\|q\MG\\{addr}+\|p\MG\\{lo}-%
+\|q\MG\\{lo},\39\\{hi}+\T{1}-\|p\MG\\{lo});{}$\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\\{basic\_inst}(\\{add},\39\|p\MG\\{addr},\39\|q\MG\\{addr}+\|p\MG\\{lo}-\|q%
+\MG\\{lo},\39\\{hi}+\T{1}-\|p\MG\\{lo});{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{64}``Universal hashing'' ({\sl TAOCP\/} exercise 6.4--72) is used to get a
+good hash function, because most of the key bits tend to be zero.
+
+\Y\B\4\D$\\{hash\_width}$ \5
+\T{20}\C{ lg of hash table size }\par
+\B\4\D$\\{hash\_mask}$ \5
+$((\T{1}\LL\\{hash\_width})-\T{1}{}$)\par
+\Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{mangle}(\&{cstring} \|s)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{unsigned} \&{int} \|h${},{}$ \|l;\7
+\&{for} ${}(\|l\K\T{1},\39\|h\K\\{hash\_bits}[\T{0}][\|s.\\{byte}[\T{0}]];{}$
+${}\|l<\T{8};{}$ ${}\|l\PP){}$\1\5
+${}\|h\MRL{+{\K}}\\{hash\_bits}[\|l][\|s.\\{byte}[\|l]];{}$\2\6
+\&{return} \|h${}\AND\\{hash\_mask};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{65}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\&{unsigned} \&{int} \\{hash\_bits}[\T{8}][\T{256}];\C{ random bits for
+universal hashing }\6
+\&{config} ${}{*}\\{hash\_table}[\\{hash\_mask}+\T{1}]{}$;\C{ heads of the hash
+chains }\par
+\fi
+
+\M{66}The random number generator used here doesn't have to be of sensational
+quality. We can keep \PB{$\\{hash\_bits}[\|j][\T{0}]\K\T{0}$} without loss of
+universality.
+
+\Y\B\4\X15:Initialize\X${}\mathrel+\E{}$\6
+$\\{row\_end}\K\T{314159265}{}$;\C{ borrow a register temporarily (bad style,
+sorry) }\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{8};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\T{256};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{row\_end}\K\T{69069}*\\{row\_end}+\T{1};{}$\6
+${}\\{hash\_bits}[\|j][\|k]\K\\{row\_end}\GG(\T{32}-\\{hash\_width});{}$\6
+\4${}\}{}$\2\2\par
+\fi
+
+\M{67}\B\X67:Local variables\X${}\E{}$\6
+\&{register} \&{int} \|j${},{}$ \|k;\C{ all-purpose indices }\6
+\&{register} \&{int} \\{row\_end};\C{ size of the current partial row \PB{\|r}
+}\par
+\A99.
+\U4.\fi
+
+\M{68}On odd-numbered passes, \PB{\\{src}} runs down towards \PB{\\{conf}},
+while \PB{\\{trg}}
+starts at \PB{$\\{conf\_end}-\T{1}$} and proceeds downward. On even-numbered
+passes,
+\PB{\\{src}} runs up towards \PB{$\\{conf\_end}-\T{1}$} and \PB{\\{trg}} starts
+up from \PB{\\{conf}}.
+The variables \PB{\\{ssrc}} and \PB{\\{strg}} have a similar significance but
+they refer to addresses in the slave memory.
+
+\Y\B\4\X7:Global variables\X${}\mathrel+\E{}$\6
+\&{config} ${}{*}\\{conf}{}$;\C{ first item in the pool of configuration nodes
+}\6
+\&{config} ${}{*}\\{conf\_end}{}$;\C{ last item (plus 1) in the pool of
+configuration nodes }\6
+\&{config} ${}{*}\\{src}{}$;\C{ the current configuration $\alpha$ about to be
+recycled }\6
+\&{config} ${}{*}\\{trg}{}$;\C{ the first unused configuration slot }\6
+\&{int} \\{ssrc}${},{}$ \\{strg};\C{ allocation pointers for slave counts }\par
+\fi
+
+\M{69}When a new configuration is created, we allocate space for its
+generating function in the slave module. Later on, we might discover
+that more space is needed because another generating function (with
+more terms) must be combined with it. At such times, we copy the data to
+another slot, leaving a hole in the configuration array and in the slave's
+array of counters. All holes of a given size are linked together,
+so that they can hopefully be plugged again soon.
+
+Here is the basic subroutine that allocates space for a configuration with
+\PB{$\|s+\T{1}$} terms in its generating function. The subroutine has two
+versions,
+one for passes in which allocation goes upward and the other for
+passes in which allocation goes downward. It maintains statistics so
+that we can judge how fragmented the memory has become at
+the most stressful times.
+
+\Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{config} ${}{*}{}$\\{get\_slot\_up}(\&{register} \&{int} \|s)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{config} ${}{*}\|p\K\\{slot}[\|s];{}$\7
+\&{if} (\|p)\5
+${}\{{}$\1\6
+${}\\{slot}[\|s]\K\|p\MG\\{link};{}$\6
+${}\\{holes}\MM,\39\\{sholes}\MRL{-{\K}}\|s+\T{1};{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\|p\K\\{trg}\PP;{}$\6
+\X70:Allocate \PB{$\|p\MG\\{addr}$} (upward) and check that memory hasn't
+overflowed\X;\6
+\4${}\}{}$\2\6
+${}\|p\MG\\{state}\K\\{raw};{}$\6
+\&{return} \|p;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{70}\B\X70:Allocate \PB{$\|p\MG\\{addr}$} (upward) and check that memory
+hasn't overflowed\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{src}-\\{trg}<\\{min\_space}){}$\5
+${}\{{}$\1\6
+${}\\{min\_space}\K\\{src}-\\{trg};{}$\6
+\&{if} ${}(\\{min\_space}<\T{0}){}$\1\5
+\\{panic}(\.{"Memory\ overflow"});\2\6
+${}\\{min\_holes}\K\\{holes},\39\\{space\_row}\K\|r,\39\\{space\_col}\K%
+\\{re};{}$\6
+\4${}\}{}$\2\6
+${}\|p\MG\\{addr}\K\\{strg};{}$\6
+${}\\{strg}\MRL{+{\K}}\|s+\T{1};{}$\6
+\&{if} ${}(\\{ssrc}-\\{strg}<\\{min\_sspace}){}$\5
+${}\{{}$\1\6
+${}\\{min\_sspace}\K\\{ssrc}-\\{strg};{}$\6
+\&{if} ${}(\\{min\_sspace}<\T{0}){}$\1\5
+\\{panic}(\.{"Slave\ memory\ overfl}\)\.{ow"});\2\6
+${}\\{min\_sholes}\K\\{sholes},\39\\{slave\_row}\K\|r,\39\\{slave\_col}\K%
+\\{re};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U69.\fi
+
+\M{71}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{holes};\C{ current number of holes in the target area }\6
+\&{int} \\{sholes};\C{ current number of vacated counters in slave target area
+}\6
+\&{int} \\{min\_space}${}\K\T{1000000000}{}$;\C{ how close did \PB{\\{src}} and
+\PB{\\{trg}} get? }\6
+\&{int} \\{min\_holes};\C{ and how many holes were present at that time? }\6
+\&{int} \\{space\_row}${},{}$ \\{space\_col};\C{ and where were we then? }\6
+\&{int} \\{min\_sspace}${}\K\T{1000000000}{}$;\C{ how close did \PB{\\{ssrc}}
+and \PB{\\{strg}} get? }\6
+\&{int} \\{min\_sholes};\C{ and how many wasted counters were present then? }\6
+\&{int} \\{slave\_row}${},{}$ \\{slave\_col};\C{ and where were we then? }\6
+\&{int} \\{moves};\C{ the number of times a hole was created }\6
+\&{int} \\{configs};\C{ total configurations recorded so far, mod $10^9$ }\6
+\&{int} \\{hconfigs};\C{ billions of configurations so far }\6
+\&{int} \|r;\C{ number of the partially filled row }\6
+\&{int} \\{re};\C{ non-register copy of \PB{\\{row\_end}} }\6
+\&{config} ${}{*}\\{slot}[\\{nmax}+\T{1}]{}$;\C{ heads of the available-slot
+chains }\par
+\fi
+
+\M{72}\B\X72:Print statistics about this run\X${}\E{}$\6
+\\{printf}(\.{"Altogether\ "});\6
+\&{if} (\\{hconfigs})\1\5
+${}\\{printf}(\.{"\%d\%09d"},\39\\{hconfigs},\39\\{configs});{}$\2\6
+\&{else}\1\5
+${}\\{printf}(\.{"\%d"},\39\\{configs});{}$\2\6
+\\{printf}(\.{"\ viable\ configurati}\)\.{ons\ examined;\\n"});\6
+${}\\{printf}(\.{"\ \%d\ slots\ needed\ (w}\)\.{ith\ \%d\ holes)\ in\ pos}\)%
+\.{ition\ (\%d,\%d);\\n"},\39\\{conf\_size}-\\{min\_space},\39\\{min\_holes},%
+\39\\{space\_row},\39\\{space\_col});{}$\6
+${}\\{printf}(\.{"\ \%d\ counters\ needed}\)\.{\ (with\ \%d\ wasted)\ in}\)\.{\
+position\ (\%d,\%d);\\n}\)\.{"},\39\\{slave\_size}-\\{min\_sspace},\39\\{min%
+\_sholes},\39\\{slave\_row},\39\\{slave\_col});{}$\6
+${}\\{printf}(\.{"\ \%d\ moves.\\n"},\39\\{moves}){}$;\par
+\Us4\ET105.\fi
+
+\M{73}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{config} ${}{*}{}$\\{get\_slot\_down}(\&{register} \&{int} \|s)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{config} ${}{*}\|p\K\\{slot}[\|s];{}$\7
+\&{if} (\|p)\5
+${}\{{}$\1\6
+${}\\{slot}[\|s]\K\|p\MG\\{link};{}$\6
+${}\\{holes}\MM,\39\\{sholes}\MRL{-{\K}}\|s+\T{1};{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\|p\K\\{trg}\MM;{}$\6
+\X74:Allocate \PB{$\|p\MG\\{addr}$} (downward) and check that memory hasn't
+overflowed\X;\6
+\4${}\}{}$\2\6
+${}\|p\MG\\{state}\K\\{raw};{}$\6
+\&{return} \|p;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{74}\B\X74:Allocate \PB{$\|p\MG\\{addr}$} (downward) and check that memory
+hasn't overflowed\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{trg}-\\{src}<\\{min\_space}){}$\5
+${}\{{}$\1\6
+${}\\{min\_space}\K\\{trg}-\\{src};{}$\6
+\&{if} ${}(\\{min\_space}<\T{0}){}$\1\5
+\\{panic}(\.{"Memory\ overflow"});\2\6
+${}\\{min\_holes}\K\\{holes},\39\\{space\_row}\K\|r,\39\\{space\_col}\K%
+\\{re};{}$\6
+\4${}\}{}$\2\6
+${}\\{strg}\MRL{-{\K}}\|s+\T{1};{}$\6
+\&{if} ${}(\\{strg}-\\{ssrc}<\\{min\_sspace}){}$\5
+${}\{{}$\1\6
+${}\\{min\_sspace}\K\\{strg}-\\{ssrc};{}$\6
+\&{if} ${}(\\{min\_sspace}<\T{0}){}$\1\5
+\\{panic}(\.{"Slave\ memory\ overfl}\)\.{ow"});\2\6
+${}\\{min\_sholes}\K\\{sholes},\39\\{slave\_row}\K\|r,\39\\{slave\_col}\K%
+\\{re};{}$\6
+\4${}\}{}$\2\6
+${}\|p\MG\\{addr}\K\\{strg}+\T{1};{}$\6
+\4${}\}{}$\2\par
+\U73.\fi
+
+\M{75}The \PB{\\{move\_down}} and \PB{\\{move\_up}} subroutines are invoked
+when an
+active target configuration \PB{\|p} needs more space for its generating
+function. The global variable \PB{\\{hash}} will have been set so that
+\PB{$\\{hash\_table}[\\{hash}]\K\|p$}; we effectively move that configuration
+to another
+place in the sequential list of targets,
+and return a pointer to the new place.
+The former node \PB{\|p} is now marked \PB{\\{deleted}}, but its \PB{\\{addr}}
+field remains valid (in case \\{get\_slot} is able to reuse it).
+
+\Y\B\4\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{config} ${}{*}{}$\\{move\_down}(\&{config} ${}{*}\|p,\39{}$\&{int} %
+\\{lo}${},\39{}$\&{int} \\{hi})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{config} ${}{*}\|q,{}$ ${}{*}\|r;{}$\6
+\&{register} \&{int} \|s${}\K\|p\MG\\{lo},{}$ \|t${}\K\|p\MG\\{hi};{}$\7
+${}\|r\K\|p\MG\\{link};{}$\6
+${}\|p\MG\\{link}\K\\{slot}[\|t-\|s],\39\\{slot}[\|t-\|s]\K\|p;{}$\6
+${}\|p\MG\\{state}\K\\{deleted};{}$\6
+${}\\{holes}\PP,\39\\{sholes}\MRL{+{\K}}\|t-\|s+\T{1};{}$\6
+\&{if} ${}(\|s>\\{lo}){}$\1\5
+${}\|s\K\\{lo};{}$\2\6
+\&{if} ${}(\|t<\\{hi}){}$\1\5
+${}\|t\K\\{hi};{}$\2\6
+${}\|q\K\\{get\_slot\_down}(\|t-\|s);{}$\6
+${}\|q\MG\\{lo}\K\|s,\39\|q\MG\\{hi}\K\|t;{}$\6
+${}\|q\MG\|s\K\|p\MG\|s,\39\|q\MG\\{lim}\K\|p\MG\\{lim};{}$\6
+${}\\{hash\_table}[\\{hash}]\K\|q,\39\|q\MG\\{link}\K\|r;{}$\6
+${}\\{update}(\|p,\39\|q,\39\|p\MG\\{hi});{}$\6
+${}\\{moves}\PP;{}$\6
+\&{return} \|q;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{76}\B\X5:Subroutines\X${}\mathrel+\E{}$\6
+\&{config} ${}{*}{}$\\{move\_up}(\&{config} ${}{*}\|p,\39{}$\&{int} \\{lo}${},%
+\39{}$\&{int} \\{hi})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{config} ${}{*}\|q,{}$ ${}{*}\|r;{}$\6
+\&{register} \&{int} \|s${}\K\|p\MG\\{lo},{}$ \|t${}\K\|p\MG\\{hi};{}$\7
+${}\|r\K\|p\MG\\{link};{}$\6
+${}\|p\MG\\{link}\K\\{slot}[\|t-\|s],\39\\{slot}[\|t-\|s]\K\|p;{}$\6
+${}\|p\MG\\{state}\K\\{deleted};{}$\6
+${}\\{holes}\PP,\39\\{sholes}\MRL{+{\K}}\|t-\|s+\T{1};{}$\6
+\&{if} ${}(\|s>\\{lo}){}$\1\5
+${}\|s\K\\{lo};{}$\2\6
+\&{if} ${}(\|t<\\{hi}){}$\1\5
+${}\|t\K\\{hi};{}$\2\6
+${}\|q\K\\{get\_slot\_up}(\|t-\|s);{}$\6
+${}\|q\MG\\{lo}\K\|s,\39\|q\MG\\{hi}\K\|t;{}$\6
+${}\|q\MG\|s\K\|p\MG\|s,\39\|q\MG\\{lim}\K\|p\MG\\{lim};{}$\6
+${}\\{hash\_table}[\\{hash}]\K\|q,\39\|q\MG\\{link}\K\|r;{}$\6
+${}\\{update}(\|p,\39\|q,\39\|p\MG\\{hi});{}$\6
+${}\\{moves}\PP;{}$\6
+\&{return} \|q;\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{77}The main loop. Now that we have some infrastructure in place,
+we can map out the top levels of this program's main processing cycle.
+
+We start with an all-\PB{\\{zero}} configuration, at the very top of the
+width-$w$ array of cells that we will conceptually traverse; this configuration
+serves as the great-$\,\ldots\,$-great grandparent of all other
+configurations that will arise later. The slave module will begin
+by giving this configuration the trivial generating function `1' (namely
+$z^0$) in its counter cell number~0, meaning that there's just one way to
+reach the initial configuration, and that no cells are occupied so far.
+
+There is no need to initialize \PB{$\\{conf}[\T{0}].\\{lim}$} or \PB{$\\{conf}[%
+\T{0}].\\{link}$}, because
+those fields are used only when a configuration is a target.
+The other fields---namely \PB{$\\{conf}[\T{0}].\|s$}, \PB{$\\{conf}[\T{0}].%
+\\{addr}$}, \PB{$\\{conf}[\T{0}].\\{lo}$},
+\PB{$\\{conf}[\T{0}].\\{hi}$}, and \PB{$\\{conf}[\T{0}].\\{state}$}--- are
+initially zero by the
+conventions of \CEE/, and luckily those zeros happen to be just what we want.
+
+\Y\B\4\X15:Initialize\X${}\mathrel+\E{}$\6
+$\|r\K\T{0},\39\\{row\_end}\K\|w;{}$\6
+${}\\{trg}\K\\{conf}+\T{1}{}$;\C{ pretend that the previous pass produced a
+single result }\6
+${}\\{strg}\K\T{1}{}$;\par
+\fi
+
+\M{78}Once again it seems best to write two nearly identical pieces of
+code, depending on whether the allocation is actually moving upward or
+downward. (We're supposed to be hoarding memory, but the space required
+for this program is small potatoes.)
+
+\Y\B\4\X78:Output instructions for the postprocessor\X${}\E{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\X79:Get ready for a downward pass, or \PB{\&{break}} when done\X;\6
+\X80:Pass downward over all configurations created on the previous pass\X;\6
+\X82:Get ready for an upward pass, or \PB{\&{break}} when done\X;\6
+\X83:Pass upward over all configurations created on the previous pass\X;\6
+\4${}\}{}$\2\par
+\U4.\fi
+
+\M{79}\B\X79:Get ready for a downward pass, or \PB{\&{break}} when done\X${}%
+\E{}$\6
+\&{if} ${}(\\{row\_end}<\|w){}$\5
+${}\{{}$\1\6
+${}\\{row\_end}\PP;{}$\6
+${}\\{printf}(\.{"Beginning\ column\ \%d}\)\.{"},\39\\{row\_end});{}$\6
+\X81:Print current stats and clear the hash/slot tables\X;\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} (\|r)\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"Finished\ row\ \%d"},\39\|r);{}$\6
+\X81:Print current stats and clear the hash/slot tables\X;\6
+\&{if} ${}(\|r>\|w){}$\1\5
+${}\\{put\_inst}(\\{sync},\39\|r);{}$\2\6
+\4${}\}{}$\2\6
+\X105:Check if this run has gone on too long\X;\6
+${}\|r\PP,\39\\{row\_end}\K\T{1};{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{trg}\E\\{conf}){}$\1\5
+\&{break};\C{ the previous pass was sterile }\2\6
+${}\\{src}\K\\{trg}-\T{1}{}$;\C{ start the source pointer at the highest
+occupied node }\6
+${}\\{ssrc}\K\\{strg}-\T{1}{}$;\C{ and the highest occupied counter position }\6
+${}\\{trg}\K\\{conf\_end}-\T{1}{}$;\C{ start the target pointer at the highest
+unoccupied node }\6
+${}\\{strg}\K\\{slave\_size}-\T{1}{}$;\C{ and the highest unoccupied counter
+position }\6
+${}\\{re}\K\\{row\_end}{}$;\par
+\U78.\fi
+
+\M{80}\B\X80:Pass downward over all configurations created on the previous pass%
+\X${}\E{}$\6
+\&{while} ${}(\\{src}\G\\{conf}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{src}\MG\\{state}\E\\{active}){}$\5
+${}\{{}$\1\6
+${}\\{unpackit}(\\{src}\MG\|s){}$;\C{ Put the source configuration $\alpha$
+into \PB{\\{sc}} and \PB{\|c} }\6
+\&{if} (\\{verbose})\5
+${}\{{}$\1\6
+\\{print\_config}(\\{row\_end});\5
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\6
+\X84:Change array \PB{\|c} for target $\alpha_0$\X;\6
+\&{if} (\\{viable})\1\5
+\X97:Process target configuration \PB{\|c} (downward)\X;\2\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|w;{}$ ${}\|k\PP){}$\1\5
+${}\|c[\|k]\K\\{sc}[\|k];{}$\2\6
+\X90:Change array \PB{\|c} for target $\alpha_1$\X;\6
+\&{if} (\\{viable})\1\5
+\X97:Process target configuration \PB{\|c} (downward)\X;\2\6
+\4${}\}{}$\2\6
+${}\\{ssrc}\K\\{src}\MG\\{addr}-\T{1};{}$\6
+${}\\{src}\MM{}$;\C{ the old \PB{\\{src}} node is now outta here }\6
+\4${}\}{}$\2\par
+\U78.\fi
+
+\M{81}Timely progress reports let the user know that we are still chugging
+along.
+We are about to start an upward pass if and only if \PB{$\\{src}\E\\{conf}-%
+\T{1}$}.
+
+\Y\B\4\X81:Print current stats and clear the hash/slot tables\X${}\E{}$\6
+\&{if} ${}(\\{src}\E\\{conf}-\T{1}){}$\1\5
+${}\\{printf}(\.{"\ (\%d,\%d,"},\39\\{conf\_end}-\T{1}-\\{trg},\39\\{slave%
+\_size}-\T{1}-\\{strg});{}$\2\6
+\&{else}\1\5
+${}\\{printf}(\.{"\ (\%d,\%d,"},\39\\{trg}-\\{conf},\39\\{strg}-\|n-\T{1});{}$%
+\2\6
+${}\\{printf}(\.{"\%d,\%d,\%d,\%d,\%d)\\n"},\39\\{conf\_size}-\\{min\_space},%
+\39\\{min\_holes},\39\\{slave\_size}-\\{min\_sspace},\39\\{min\_sholes},\39%
+\\{bytes\_out});{}$\6
+\X109:Print and clear the hash/slot tables\X;\6
+\\{fflush}(\\{stdout});\par
+\Us79\ET82.\fi
+
+\M{82}Counter positions 1 through $n$ in the slave memory are reserved for
+the final polyomino counts.
+
+\Y\B\4\X82:Get ready for an upward pass, or \PB{\&{break}} when done\X${}\E{}$\6
+\&{if} ${}(\\{row\_end}<\|w){}$\5
+${}\{{}$\1\6
+${}\\{row\_end}\PP;{}$\6
+${}\\{printf}(\.{"Beginning\ column\ \%d}\)\.{"},\39\\{row\_end});{}$\6
+\X81:Print current stats and clear the hash/slot tables\X;\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} (\|r)\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"Finished\ row\ \%d"},\39\|r);{}$\6
+\X81:Print current stats and clear the hash/slot tables\X;\6
+\&{if} ${}(\|r>\|w){}$\1\5
+${}\\{put\_inst}(\\{sync},\39\|r);{}$\2\6
+\4${}\}{}$\2\6
+${}\|r\PP,\39\\{row\_end}\K\T{1};{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{trg}\E\\{conf\_end}-\T{1}){}$\1\5
+\&{break};\C{ the previous pass was sterile }\2\6
+${}\\{src}\K\\{trg}+\T{1}{}$;\C{ start the source pointer at the lowest
+occupied node }\C{ and we'll soon set \PB{\\{ssrc}} to \PB{$\\{src}\MG%
+\\{addr}$},     which equals \PB{$\\{strg}+\T{1}$}, the lowest occupied counter
+}\6
+${}\\{trg}\K\\{conf}{}$;\C{ start the target pointer at the lowest unoccupied
+node }\6
+${}\\{strg}\K\|n+\T{1}{}$;\C{ and the lowest unoccupied counter position }\6
+${}\\{re}\K\\{row\_end}{}$;\par
+\U78.\fi
+
+\M{83}\B\X83:Pass upward over all configurations created on the previous pass%
+\X${}\E{}$\6
+\&{while} ${}(\\{src}<\\{conf\_end}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{src}\MG\\{state}\E\\{active}){}$\5
+${}\{{}$\1\6
+${}\\{ssrc}\K\\{src}\MG\\{addr};{}$\6
+${}\\{unpackit}(\\{src}\MG\|s){}$;\C{ Put the source configuration $\alpha$
+into \PB{\\{sc}} and \PB{\|c} }\6
+\&{if} (\\{verbose})\5
+${}\{{}$\1\6
+\\{print\_config}(\\{row\_end});\5
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\6
+\X84:Change array \PB{\|c} for target $\alpha_0$\X;\6
+\&{if} (\\{viable})\1\5
+\X103:Process target configuration \PB{\|c} (upward)\X;\2\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|w;{}$ ${}\|k\PP){}$\1\5
+${}\|c[\|k]\K\\{sc}[\|k];{}$\2\6
+\X90:Change array \PB{\|c} for target $\alpha_1$\X;\6
+\&{if} (\\{viable})\1\5
+\X103:Process target configuration \PB{\|c} (upward)\X;\2\6
+\4${}\}{}$\2\6
+${}\\{src}\PP{}$;\C{ the old \PB{\\{src}} node is now outta here }\6
+\4${}\}{}$\2\par
+\U78.\fi
+
+\N{1}{84}Nitty-gritty. The basic logic of a so-called ``transfer-matrix''
+approach
+is embedded in the following program steps, which change a configuration string
+when a new cell in row~$r$ is or is not to be occupied. Here, for example,
+we observe that when the previous configuration has `\.{1\caret/(}' at
+the end of a partial row, and if we occupy the new cell, the new configuration
+has `\.{(-}\caret/\thinspace' instead. But if we don't occupy that cell,
+the new configuration has `\.{10}\caret/\thinspace' and a further change
+must also be made because of the \.( that has disappeared.
+
+\def\sp(#1){\rlap{$^{\rm\,#1}$}}
+\def\key(#1) {&\omit&\multispan5\quad\sp(#1)\quad}
+Most of the cases that arise are completely straightforward. But each
+of the thirty combinations of two adjacent codes must of course be handled
+perfectly. The following chart summarizes what the program is supposed to do
+when the new cell is being left vacant.
+$$\vbox{\offinterlineskip
+\halign{\strut\hfil\tt#\quad&\vrule#&
+\hbox to4em{\hfil\tt#\hfil}&
+\hbox to4em{\hfil\tt#\hfil}&
+\hbox to4em{\hfil\tt#\hfil}&
+\hbox to4em{\hfil\tt#\hfil}&
+\hbox to4em{\hfil\tt#\hfil}&
+\vrule#\cr
+&\omit&0&1&(&-&)\cr
+\noalign{\vskip2pt}
+\omit&&\multispan5\hrulefill&\cr
+\omit&height3pt&&&&&&\cr
+0&&00&\sp(a)&00\sp(b)&00\sp(c)&00\sp(d)&\cr
+1&&10&\sp(a)&10\sp(b)&10\relax&10\sp(d)&\cr
+(&&(0&\sp(e)&  \sp(e)&(0\relax&(0\sp(d)&\cr
+-&&-0&\sp(a)&-0\sp(b)&-0\relax&-0\sp(d)&\cr
+)&&)0&\sp(a)&-0\sp(b)&)0\relax&-0\sp(d)&\cr
+\rm left edge&&0&\sp(e)&\sp(e)&0\sp(c)&\sp(a)&\cr
+\omit&height1pt&&&&&&\cr
+\omit&&\multispan5\hrulefill&\cr
+\noalign{\smallskip}
+\key(a) Not viable\hfil\cr
+\key(b) Downgrade the successor of \.(\hfil\cr
+\key(c) A polyomino may have been completed\hfil\cr
+\key(d) Downgrade the predecessor of \.)\hfil\cr
+\key(e) Impossible case\hfil\cr}}$$
+
+Special handling is necessary when a \.- is eliminated, if it is preceded or
+followed by nothing but zeros; for example, \.{0(010-} must become
+\.{010(00}, and \.{-010()0-0} must become either \.{00)0()0(0} or
+\.{)010(-000}. These somewhat unusual cases are approached cautiously
+in the program below.
+
+\Y\B\4\D$\|f(\|x,\|y)$ \5
+$((\|x\LL\T{3})+\|y{}$)\par
+\Y\B\4\X84:Change array \PB{\|c} for target $\alpha_0$\X${}\E{}$\6
+$\\{pair}\K\|f(\\{sc}[\\{row\_end}-\T{1}],\39\\{sc}[\\{row\_end}]);{}$\6
+${}\|c[\\{row\_end}]\K\\{zero};{}$\6
+${}\\{viable}\K\T{1};{}$\6
+\&{switch} (\\{pair})\5
+${}\{{}$\1\6
+\4\&{case} \|f${}(\\{zero},\39\\{one}){}$:\5
+\&{case} \|f${}(\\{one},\39\\{one}){}$:\5
+\&{case} \|f${}(\\{mid},\39\\{one}){}$:\5
+\&{case} \|f${}(\\{rt},\39\\{one}){}$:\5
+\&{case} \|f${}(\\{eol},\39\\{rt}){}$:\5
+${}\\{viable}\K\T{0}{}$;\C{ component would be isolated }\6
+\4\&{case} \|f${}(\\{zero},\39\\{zero}){}$:\5
+\&{case} \|f${}(\\{one},\39\\{zero}){}$:\5
+\&{case} \|f${}(\\{lft},\39\\{zero}){}$:\5
+\&{case} \|f${}(\\{mid},\39\\{zero}){}$:\5
+\&{case} \|f${}(\\{rt},\39\\{zero}){}$:\5
+\&{case} \|f${}(\\{eol},\39\\{zero}){}$:\5
+\&{case} \|f${}(\\{lft},\39\\{mid}){}$:\5
+\&{case} \|f${}(\\{mid},\39\\{mid}){}$:\5
+\&{break};\6
+\4\&{case} \|f${}(\\{zero},\39\\{lft}){}$:\5
+\&{case} \|f${}(\\{one},\39\\{lft}){}$:\5
+\&{case} \|f${}(\\{mid},\39\\{lft}){}$:\5
+\&{case} \|f${}(\\{rt},\39\\{lft}){}$:\5
+\X86:Downgrade the successor of the \PB{\\{lft}}\X;\5
+\&{break};\6
+\4\&{case} \|f${}(\\{zero},\39\\{rt}){}$:\5
+\&{case} \|f${}(\\{one},\39\\{rt}){}$:\5
+\&{case} \|f${}(\\{lft},\39\\{rt}){}$:\5
+\&{case} \|f${}(\\{mid},\39\\{rt}){}$:\5
+\&{case} \|f${}(\\{rt},\39\\{rt}){}$:\5
+\X87:Downgrade the predecessor of the \PB{\\{rt}}\X;\5
+\&{break};\6
+\4\&{case} \|f${}(\\{zero},\39\\{mid}){}$:\5
+\&{case} \|f${}(\\{eol},\39\\{mid}){}$:\5
+\X88:Cautiously delete a \PB{\\{mid}} that may be leftmost\X;\6
+\4\&{case} \|f${}(\\{one},\39\\{mid}){}$:\5
+\&{case} \|f${}(\\{rt},\39\\{mid}){}$:\5
+\X89:Cautiously delete a \PB{\\{mid}} that may be rightmost\X;\6
+\&{break};\6
+\4\&{case} \|f${}(\\{lft},\39\\{one}){}$:\5
+\&{case} \|f${}(\\{lft},\39\\{lft}){}$:\5
+\&{case} \|f${}(\\{eol},\39\\{one}){}$:\5
+\&{case} \|f${}(\\{eol},\39\\{lft}){}$:\5
+\\{panic}(\.{"Impossible\ configur}\)\.{ation"});\6
+\4\&{default}:\5
+\\{panic}(\.{"Impossible\ pair"});\6
+\4${}\}{}$\2\par
+\Us80\ET83.\fi
+
+\M{85}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{pair};\C{ the two codes surrounding the \qcaret/ in \PB{\\{sc}} }\6
+\&{int} \\{viable};\C{ might the target configuration lead to a relevant
+polyomino? }\par
+\fi
+
+\M{86}In this step, we have just zeroed out a left parenthesis.
+If that \.( is followed by a \.-, we change the \.- to \.(;
+if it is followed by a \.), we change the \.) to \.1.
+
+Here ``followed by'' really means ``followed on the same level by,'' because
+nested subcomponents may intervene. We therefore need a level counter, \PB{%
+\|j},
+as we scan to the right.
+
+If the \.( had no successor because it simply marked a connection to the
+right edge, we shouldn't have deleted it; its component is now disconnected,
+so we set \PB{\\{viable}} to zero.
+
+\Y\B\4\X86:Downgrade the successor of the \PB{\\{lft}}\X${}\E{}$\6
+\&{for} ${}(\|k\K\\{row\_end}+\T{1},\39\|j\K\T{0};{}$  ; ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{switch} (\|c[\|k])\5
+${}\{{}$\1\6
+\4\&{case} \\{lft}:\5
+${}\|j\PP;{}$\6
+\4\&{case} \\{zero}:\5
+\&{case} \\{one}:\5
+\&{continue};\6
+\4\&{case} \\{mid}:\5
+\&{if} (\|j)\1\5
+\&{continue};\2\6
+${}\|c[\|k]\K\\{lft}{}$;\5
+\&{break};\6
+\4\&{case} \\{rt}:\5
+\&{if} (\|j)\5
+${}\{{}$\5
+\1${}\|j\MM{}$;\5
+\&{continue};\5
+${}\}{}$\2\6
+${}\|c[\|k]\K\\{one}{}$;\5
+\&{break};\6
+\4\&{case} \\{eol}:\5
+\&{if} (\|j)\1\5
+\\{panic}(\.{"Unexpected\ eol"});\2\6
+${}\\{viable}\K\T{0};{}$\6
+\4${}\}{}$\2\6
+\&{break};\6
+\4${}\}{}$\2\par
+\U84.\fi
+
+\M{87}Contrariwise, an erased \.) is like an erased \.( but vice versa.
+
+\Y\B\4\X87:Downgrade the predecessor of the \PB{\\{rt}}\X${}\E{}$\6
+\&{for} ${}(\|k\K\\{row\_end}-\T{1},\39\|j\K\T{0};{}$  ; ${}\|k\MM){}$\5
+${}\{{}$\1\6
+\&{switch} (\|c[\|k])\5
+${}\{{}$\1\6
+\4\&{case} \\{rt}:\5
+${}\|j\PP;{}$\6
+\4\&{case} \\{zero}:\5
+\&{case} \\{one}:\5
+\&{continue};\6
+\4\&{case} \\{mid}:\5
+\&{if} (\|j)\1\5
+\&{continue};\2\6
+${}\|c[\|k]\K\\{rt}{}$;\5
+\&{break};\6
+\4\&{case} \\{lft}:\5
+\&{if} (\|j)\5
+${}\{{}$\5
+\1${}\|j\MM{}$;\5
+\&{continue};\5
+${}\}{}$\2\6
+${}\|c[\|k]\K\\{one}{}$;\5
+\&{break};\6
+\4\&{case} \\{eol}:\5
+\&{if} (\|j)\1\5
+\\{panic}(\.{"Unexpected\ eol"});\2\6
+${}\\{viable}\K\T{0};{}$\6
+\4${}\}{}$\2\6
+\&{break};\6
+\4${}\}{}$\2\par
+\U84.\fi
+
+\M{88}\B\X88:Cautiously delete a \PB{\\{mid}} that may be leftmost\X${}\E{}$\6
+\&{for} ${}(\|k\K\\{row\_end}-\T{1};{}$ ${}\|c[\|k]\E\\{zero};{}$ ${}\|k\MM){}$%
+\1\5
+;\2\6
+\&{if} ${}(\|c[\|k]\E\\{eol}){}$\5
+${}\{{}$\C{ yes, the \PB{\\{mid}} was leftmost }\1\6
+\&{for} ${}(\|k\K\\{row\_end}+\T{1};{}$ ${}\|c[\|k]\E\\{zero};{}$ ${}\|k\PP){}$%
+\1\5
+;\2\6
+\&{switch} (\|c[\|k])\5
+${}\{{}$\1\6
+\4\&{case} \\{mid}:\5
+\&{case} \\{rt}:\5
+\&{case} \\{eol}:\5
+\&{break};\C{ no problem }\6
+\4\&{default}:\5
+\&{if} ${}(\|c[\|k]\E\\{one}){}$\1\5
+${}\|c[\|k]\K\\{rt},\39\|j\K\T{0};{}$\2\6
+\&{else}\1\5
+${}\|c[\|k]\K\\{mid},\39\|j\K\T{1}{}$;\C{ \PB{\|c[\|k]} was \PB{\\{lft}} }\2\6
+\&{for} ${}(\|k\PP;{}$  ; ${}\|k\PP){}$\5
+${}\{{}$\C{ we must downgrade the successor of the \PB{\\{mid}} }\1\6
+\&{switch} (\|c[\|k])\5
+${}\{{}$\1\6
+\4\&{case} \\{lft}:\5
+${}\|j\PP;{}$\6
+\4\&{case} \\{zero}:\5
+\&{case} \\{one}:\5
+\&{continue};\6
+\4\&{case} \\{mid}:\5
+\&{if} (\|j)\1\5
+\&{continue};\2\6
+${}\|c[\|k]\K\\{lft}{}$;\5
+\&{break};\6
+\4\&{case} \\{rt}:\5
+\&{if} (\|j)\5
+${}\{{}$\5
+\1${}\|j\MM{}$;\5
+\&{continue};\5
+${}\}{}$\2\6
+${}\|c[\|k]\K\\{one}{}$;\5
+\&{break};\6
+\4\&{case} \\{eol}:\5
+\\{panic}(\.{"This\ can't\ happen"});\6
+\4${}\}{}$\2\6
+\&{break};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U84.\fi
+
+\M{89}\B\X89:Cautiously delete a \PB{\\{mid}} that may be rightmost\X${}\E{}$\6
+\&{for} ${}(\|k\K\\{row\_end}+\T{1};{}$ ${}\|c[\|k]\E\\{zero};{}$ ${}\|k\PP){}$%
+\1\5
+;\2\6
+\&{if} ${}(\|c[\|k]\E\\{eol}){}$\5
+${}\{{}$\C{ yes, the \PB{\\{mid}} was rightmost }\1\6
+\&{for} ${}(\|k\K\\{row\_end}-\T{1};{}$ ${}\|c[\|k]\E\\{zero};{}$ ${}\|k\MM){}$%
+\1\5
+;\2\6
+\&{switch} (\|c[\|k])\5
+${}\{{}$\1\6
+\4\&{case} \\{mid}:\5
+\&{case} \\{lft}:\5
+\&{case} \\{eol}:\5
+\&{break};\C{ no problem }\6
+\4\&{default}:\5
+\&{if} ${}(\|c[\|k]\E\\{one}){}$\1\5
+${}\|c[\|k]\K\\{lft},\39\|j\K\T{0};{}$\2\6
+\&{else}\1\5
+${}\|c[\|k]\K\\{mid},\39\|j\K\T{1}{}$;\C{ \PB{\|c[\|k]} was \PB{\\{rt}} }\2\6
+\&{for} ${}(\|k\MM;{}$  ; ${}\|k\MM){}$\5
+${}\{{}$\C{ we must downgrade the predecessor of the \PB{\\{mid}} }\1\6
+\&{switch} (\|c[\|k])\5
+${}\{{}$\1\6
+\4\&{case} \\{rt}:\5
+${}\|j\PP;{}$\6
+\4\&{case} \\{zero}:\5
+\&{case} \\{one}:\5
+\&{continue};\6
+\4\&{case} \\{mid}:\5
+\&{if} (\|j)\1\5
+\&{continue};\2\6
+${}\|c[\|k]\K\\{rt}{}$;\5
+\&{break};\6
+\4\&{case} \\{lft}:\5
+\&{if} (\|j)\5
+${}\{{}$\5
+\1${}\|j\MM{}$;\5
+\&{continue};\5
+${}\}{}$\2\6
+${}\|c[\|k]\K\\{one}{}$;\5
+\&{break};\6
+\4\&{case} \\{eol}:\5
+\\{panic}(\.{"This\ can't\ happen"});\6
+\4${}\}{}$\2\6
+\&{break};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U84.\fi
+
+\M{90}A different kind of excitement awaits us when we consider
+occupying the new cell.
+
+If the cases \PB{$\|f(\\{lft},\\{mid})$}, \PB{$\|f(\\{lft},\\{rt})$}, \PB{$\|f(%
+\\{mid},\\{mid})$}, and \PB{$\|f(\\{mid},\\{rt})$}
+are modified here to set \PB{$\\{viable}\K\T{0}$}, the program will count
+{\it polyomino trees\/} instead of normal polyominoes. (In a
+polyomino tree there is exactly one way to get from one cell to another
+via rook moves.) These are the four cases in which already-connected
+cells are connected again.
+$$\vbox{\offinterlineskip
+\halign{\strut\hfil\tt#\quad&\vrule#&
+\hbox to4em{\hfil\tt#\hfil}&
+\hbox to4em{\hfil\tt#\hfil}&
+\hbox to4em{\hfil\tt#\hfil}&
+\hbox to4em{\hfil\tt#\hfil}&
+\hbox to4em{\hfil\tt#\hfil}&
+\vrule#\cr
+&\omit&0&1&(&-&)\cr
+\noalign{\vskip2pt}
+\omit&&\multispan5\hrulefill&\cr
+\omit&height3pt&&&&&&\cr
+0&&01\sp(k)&01&    0(&0-\relax&0)\relax&\cr
+1&&()&    ()&(-\relax&--\relax&-)\relax&\cr
+(&&(-&\sp(e)&  \sp(e)&(-\sp(f)&()\sp(f)&\cr
+-&&--&    --&--\sp(g)&--\sp(f)&-)\sp(f)&\cr
+)&&-)&    -)&--\relax&--\sp(h)&-)\sp(h)&\cr
+\rm left edge&&)\sp(i)&\sp(e)&\sp(e)&-&)&\cr
+\omit&height1pt&&&&&&\cr
+\omit&&\multispan5\hrulefill&\cr
+\noalign{\smallskip}
+\key(e) Impossible case\hfil\cr
+\key(f) Not viable in polyomino trees\hfil\cr
+\key(g) Merge with mate of \.(\hfil\cr
+\key(h) Merge with mate of \.)\hfil\cr
+\key(i) Downgrade the next component if open\hfil\cr
+\key(j) Downgrade the previous component if open\hfil\cr
+\key(k) Or possibly \.{0)\sp(i)} or \.{0(\sp(j)}\hfil\cr
+}}$$
+The somewhat unusual case \.{01\sp(k)}\ \ becomes \.{0)\sp(i)} if
+no nonzero cells lie to the left but the left edge has already
+been occupied somewhere in the rows above. It becomes \.{0(\sp(j)}
+if no nonzero cells lie to the right but the right edge has already
+been occupied somewhere in the rows above.
+
+\Y\B\4\X90:Change array \PB{\|c} for target $\alpha_1$\X${}\E{}$\6
+$\\{viable}\K\T{1};{}$\6
+${}\\{src}\MG\\{lo}\PP,\39\\{src}\MG\\{hi}\PP{}$;\C{ implicitly multiply the
+generating function $g(\alpha)$ by $z$ }\6
+\&{switch} (\\{pair})\5
+${}\{{}$\1\6
+\4\&{case} \|f${}(\\{one},\39\\{zero}){}$:\5
+\&{case} \|f${}(\\{one},\39\\{one}){}$:\5
+${}\|c[\\{row\_end}-\T{1}]\K\\{lft},\39\|c[\\{row\_end}]\K\\{rt};{}$\6
+\4\&{case} \|f${}(\\{zero},\39\\{one}){}$:\5
+\&{case} \|f${}(\\{zero},\39\\{lft}){}$:\5
+\&{case} \|f${}(\\{zero},\39\\{mid}){}$:\5
+\&{case} \|f${}(\\{zero},\39\\{rt}){}$:\5
+\&{case} \|f${}(\\{lft},\39\\{mid}){}$:\5
+\&{case} \|f${}(\\{lft},\39\\{rt}){}$:\5
+\&{case} \|f${}(\\{mid},\39\\{mid}){}$:\5
+\&{case} \|f${}(\\{mid},\39\\{rt}){}$:\5
+\&{case} \|f${}(\\{eol},\39\\{mid}){}$:\5
+\&{case} \|f${}(\\{eol},\39\\{rt}){}$:\5
+\&{break};\6
+\4\&{case} \|f${}(\\{one},\39\\{lft}){}$:\5
+${}\|c[\\{row\_end}-\T{1}]\K\\{lft},\39\|c[\\{row\_end}]\K\\{mid}{}$;\5
+\&{break};\6
+\4\&{case} \|f${}(\\{one},\39\\{mid}){}$:\5
+\&{case} \|f${}(\\{one},\39\\{rt}){}$:\5
+${}\|c[\\{row\_end}-\T{1}]\K\\{mid}{}$;\5
+\&{break};\6
+\4\&{case} \|f${}(\\{lft},\39\\{zero}){}$:\5
+\&{case} \|f${}(\\{mid},\39\\{zero}){}$:\5
+\&{case} \|f${}(\\{mid},\39\\{one}){}$:\5
+${}\|c[\\{row\_end}]\K\\{mid}{}$;\5
+\&{break};\6
+\4\&{case} \|f${}(\\{mid},\39\\{lft}){}$:\5
+${}\|c[\\{row\_end}]\K\\{mid};{}$\6
+\X91:Merge with the mate of the former \PB{\\{lft}}\X;\5
+\&{break};\6
+\4\&{case} \|f${}(\\{rt},\39\\{zero}){}$:\5
+\&{case} \|f${}(\\{rt},\39\\{one}){}$:\5
+${}\|c[\\{row\_end}-\T{1}]\K\\{mid},\39\|c[\\{row\_end}]\K\\{rt}{}$;\5
+\&{break};\6
+\4\&{case} \|f${}(\\{rt},\39\\{lft}){}$:\5
+${}\|c[\\{row\_end}-\T{1}]\K\|c[\\{row\_end}]\K\\{mid}{}$;\5
+\&{break};\6
+\4\&{case} \|f${}(\\{rt},\39\\{mid}){}$:\5
+\&{case} \|f${}(\\{rt},\39\\{rt}){}$:\5
+${}\|c[\\{row\_end}-\T{1}]\K\\{mid};{}$\6
+\X92:Merge with the mate of the former \PB{\\{rt}}\X;\5
+\&{break};\6
+\4\&{case} \|f${}(\\{eol},\39\\{zero}){}$:\5
+${}\|c[\\{row\_end}]\K\\{rt};{}$\6
+\X93:Downgrade the next component if it is open\X;\5
+\&{break};\6
+\4\&{case} \|f${}(\\{zero},\39\\{zero}){}$:\5
+\X94:Cautiously introduce a new \PB{\\{one}}\X;\5
+\&{break};\6
+\4\&{case} \|f${}(\\{lft},\39\\{one}){}$:\5
+\&{case} \|f${}(\\{lft},\39\\{lft}){}$:\5
+\&{case} \|f${}(\\{eol},\39\\{one}){}$:\5
+\&{case} \|f${}(\\{eol},\39\\{lft}){}$:\5
+\\{panic}(\.{"Impossible\ configur}\)\.{ation"});\6
+\4\&{default}:\5
+\\{panic}(\.{"Impossible\ pair"});\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{row\_end}\E\|w){}$\1\5
+\X95:Make special corrections at the right edge\X;\2\par
+\Us80\ET83.\fi
+
+\M{91}\B\X91:Merge with the mate of the former \PB{\\{lft}}\X${}\E{}$\6
+\&{for} ${}(\|k\K\\{row\_end}+\T{1},\39\|j\K\T{0};{}$  ; ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{switch} (\|c[\|k])\5
+${}\{{}$\1\6
+\4\&{case} \\{lft}:\5
+${}\|j\PP;{}$\6
+\4\&{case} \\{zero}:\5
+\&{case} \\{one}:\5
+\&{case} \\{mid}:\5
+\&{continue};\6
+\4\&{case} \\{rt}:\5
+\&{if} ${}(\R\|j){}$\1\5
+\&{break};\2\6
+${}\|j\MM{}$;\5
+\&{continue};\6
+\4\&{case} \\{eol}:\5
+\\{panic}(\.{"Unexpected\ eol"});\6
+\4${}\}{}$\2\6
+${}\|c[\|k]\K\\{mid}{}$;\5
+\&{break};\6
+\4${}\}{}$\2\par
+\U90.\fi
+
+\M{92}\B\X92:Merge with the mate of the former \PB{\\{rt}}\X${}\E{}$\6
+\&{for} ${}(\|k\K\\{row\_end}-\T{2},\39\|j\K\T{0};{}$  ; ${}\|k\MM){}$\5
+${}\{{}$\1\6
+\&{switch} (\|c[\|k])\5
+${}\{{}$\1\6
+\4\&{case} \\{rt}:\5
+${}\|j\PP;{}$\6
+\4\&{case} \\{zero}:\5
+\&{case} \\{one}:\5
+\&{case} \\{mid}:\5
+\&{continue};\6
+\4\&{case} \\{lft}:\5
+\&{if} ${}(\R\|j){}$\1\5
+\&{break};\2\6
+${}\|j\MM{}$;\5
+\&{continue};\6
+\4\&{case} \\{eol}:\5
+\\{panic}(\.{"Unexpected\ eol"});\6
+\4${}\}{}$\2\6
+${}\|c[\|k]\K\\{mid}{}$;\5
+\&{break};\6
+\4${}\}{}$\2\par
+\U90.\fi
+
+\M{93}\B\X93:Downgrade the next component if it is open\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{2};{}$  ; ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{switch} (\|c[\|k])\5
+${}\{{}$\1\6
+\4\&{case} \\{zero}:\5
+\&{continue};\6
+\4\&{case} \\{mid}:\5
+${}\|c[\|k]\K\\{lft};{}$\6
+\4\&{case} \\{one}:\5
+\&{case} \\{lft}:\5
+\&{case} \\{eol}:\5
+\&{break};\6
+\4\&{case} \\{rt}:\5
+${}\|c[\|k]\K\\{one};{}$\6
+\4${}\}{}$\2\6
+\&{break};\6
+\4${}\}{}$\2\par
+\U90.\fi
+
+\M{94}\B\X94:Cautiously introduce a new \PB{\\{one}}\X${}\E{}$\6
+$\|c[\\{row\_end}]\K\\{one};{}$\6
+\&{for} ${}(\|k\K\\{row\_end}-\T{2};{}$ ${}\|c[\|k]\E\\{zero};{}$ ${}\|k\MM){}$%
+\1\5
+;\2\6
+\&{if} ${}(\R\|k){}$\5
+${}\{{}$\C{ we're introducing a new leftmost \.1 }\1\6
+\&{for} ${}(\|k\K\\{row\_end}+\T{1};{}$  ; ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{switch} (\|c[\|k])\5
+${}\{{}$\1\6
+\4\&{case} \\{zero}:\5
+\&{continue};\6
+\4\&{case} \\{mid}:\5
+${}\|c[\|k]\K\\{lft},\39\|c[\\{row\_end}]\K\\{rt};{}$\6
+\4\&{case} \\{one}:\5
+\&{case} \\{lft}:\5
+\&{case} \\{eol}:\5
+\&{break};\6
+\4\&{case} \\{rt}:\5
+${}\|c[\|k]\K\\{one},\39\|c[\\{row\_end}]\K\\{rt};{}$\6
+\4${}\}{}$\2\6
+\&{break};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\\{row\_end}+\T{1};{}$ ${}\|c[\|j]\E\\{zero};{}$ ${}\|j\PP){}$%
+\1\5
+;\2\6
+\&{if} ${}(\|c[\|j]\E\\{eol}){}$\5
+${}\{{}$\C{ we're introducing a new rightmost \.1 }\1\6
+\&{if} ${}(\|c[\|k]\E\\{mid}){}$\1\5
+${}\|c[\|k]\K\\{rt},\39\|c[\\{row\_end}]\K\\{lft};{}$\2\6
+\&{else} \&{if} ${}(\|c[\|k]\E\\{lft}){}$\1\5
+${}\|c[\|k]\K\\{one},\39\|c[\\{row\_end}]\K\\{lft};{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U90.\fi
+
+\M{95}\B\X95:Make special corrections at the right edge\X${}\E{}$\6
+\&{switch} (\|c[\\{row\_end}])\5
+${}\{{}$\1\6
+\4\&{case} \\{rt}:\5
+${}\|c[\\{row\_end}]\K\\{mid};{}$\6
+\4\&{case} \\{zero}:\5
+\&{case} \\{mid}:\5
+\&{case} \\{lft}:\5
+\&{break};\6
+\4\&{case} \\{one}:\5
+${}\|c[\\{row\_end}]\K\\{lft};{}$\6
+\X96:Downgrade the previous component if it is open\X;\6
+\4${}\}{}$\2\par
+\U90.\fi
+
+\M{96}\B\X96:Downgrade the previous component if it is open\X${}\E{}$\6
+\&{for} ${}(\|k\K\\{row\_end}-\T{1};{}$  ; ${}\|k\MM){}$\5
+${}\{{}$\1\6
+\&{switch} (\|c[\|k])\5
+${}\{{}$\1\6
+\4\&{case} \\{zero}:\5
+\&{continue};\6
+\4\&{case} \\{mid}:\5
+${}\|c[\|k]\K\\{rt};{}$\6
+\4\&{case} \\{one}:\5
+\&{case} \\{rt}:\5
+\&{case} \\{eol}:\5
+\&{break};\6
+\4\&{case} \\{lft}:\5
+${}\|c[\|k]\K\\{one};{}$\6
+\4${}\}{}$\2\6
+\&{break};\6
+\4${}\}{}$\2\par
+\U95.\fi
+
+\N{1}{97}Nittier-and-grittier. The last nontrivial hurdle facing us
+is the problem of what to do after a target configuration has
+been constructed in \PB{\|c[\T{1}]} through \PB{\|c[\|w]}. It's not a Big
+Problem,
+but it does require care, especially with respect to the
+generating function arithmetic.
+
+An all-\PB{\\{zero}} target configuration is preserved only in the
+first few passes, before we've reached the end of row~1.
+
+\Y\B\4\X97:Process target configuration \PB{\|c} (downward)\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{row\_end}\E\|w){}$\1\5
+\X100:Canonize the configuration\X;\2\6
+${}\\{target}\K\\{packit}(\,);{}$\6
+\&{if} ${}(\\{target}.\|o.\|l\V\\{target}.\|o.\|h\V(\|r\E\T{1}\W\\{row\_end}<%
+\|w)){}$\5
+${}\{{}$\1\6
+\X101:If \PB{\\{target}} is already present, make \PB{\|p} point to it\X;\6
+\&{if} ${}(\R\|p){}$\1\5
+\X102:Get a downward slot for \PB{\\{target}} if it is really viable\X;\2\6
+\&{if} ${}(\|p\W(\\{src}\MG\\{lo}\Z(\|j\K\|p\MG\\{lim}))){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{src}\MG\\{hi}<\|j){}$\1\5
+${}\|j\K\\{src}\MG\\{hi};{}$\2\6
+\&{if} ${}(\|j>\|p\MG\\{hi}\V\\{src}\MG\\{lo}<\|p\MG\\{lo}){}$\1\5
+${}\|p\K\\{move\_down}(\|p,\39\\{src}\MG\\{lo},\39\|j);{}$\2\6
+\&{if} (\\{verbose})\5
+${}\{{}$\1\6
+\\{printf}(\.{"\ ->\ "});\5
+${}\\{print\_config}(\\{row\_end}+\T{1}){}$;\5
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\6
+${}\\{update}(\\{src},\39\|p,\39\|j);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\|r>\|w){}$\5
+${}\{{}$\1\6
+\&{if} (\\{verbose})\1\5
+\\{printf}(\.{"\ ->\ 0\\n"});\2\6
+${}\\{update}(\\{src},\39\NULL,\39\\{src}\MG\\{hi}){}$;\C{ polyominoes
+completed }\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U80.\fi
+
+\M{98}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\&{cstring} \\{target};\C{ the packed name of the current target configuration
+}\6
+\&{int} \\{hash};\C{ its hash address }\par
+\fi
+
+\M{99}\B\X67:Local variables\X${}\mathrel+\E{}$\6
+\&{register} \&{config} ${}{*}\|p{}$;\C{ current target of interest }\par
+\fi
+
+\M{100}At the end of a row we change the configuration to its left-right
+reflection, if the reflection is lexicographically smaller. This reduction to
+a canonical form reduces the number of active configurations by a factor of
+nearly~2, at least for the next few passes. (The reduction can be justified
+by observing that we could have operated from right to left instead of from
+left to right, on each row that follows a left-heavy row.)
+
+Notice that a code like \.{0(0} will be reflected to \.{0)0}.
+
+\Y\B\4\X100:Canonize the configuration\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{1},\39\|k\K\|w;{}$ ${}\|j\Z\|k;{}$ ${}\|j\PP,\39\|k\MM){}$%
+\1\6
+\&{if} ${}(\|c[\|j]\I\\{reflect}[\|c[\|k]]){}$\1\5
+\&{break};\2\2\6
+\&{if} ${}(\|c[\|j]>\\{reflect}[\|c[\|k]]){}$\1\6
+\&{for} ( ; ${}\|j\Z\|k;{}$ ${}\|j\PP,\39\|k\MM){}$\5
+${}\{{}$\1\6
+\&{register} \&{int} \|i${}\K\|c[\|k];{}$\7
+${}\|c[\|k]\K\\{reflect}[\|c[\|j]];{}$\6
+${}\|c[\|j]\K\\{reflect}[\|i];{}$\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\par
+\Us97\ET103.\fi
+
+\M{101}We take care to move \PB{\|p} to the top of its hash list, when present,
+and to set the global variable \PB{\\{hash}} as required by \PB{\\{move\_down}}
+and \PB{\\{move\_up}}.
+
+\Y\B\4\X101:If \PB{\\{target}} is already present, make \PB{\|p} point to it%
+\X${}\E{}$\6
+$\\{hash}\K\\{mangle}(\\{target});{}$\6
+${}\|p\K\\{hash\_table}[\\{hash}];{}$\6
+\&{if} ${}(\|p\W\R(\|p\MG\|s.\|o.\|l\E\\{target}.\|o.\|l\W\|p\MG\|s.\|o.\|h\E%
+\\{target}.\|o.\|h)){}$\5
+${}\{{}$\1\6
+\&{register} \&{config} ${}{*}\|q;{}$\7
+\&{for} ${}(\|q\K\|p,\39\|p\K\|p\MG\\{link};{}$ \|p; ${}\|q\K\|p,\39\|p\K\|p\MG%
+\\{link}){}$\1\6
+\&{if} ${}(\|p\MG\|s.\|o.\|l\E\\{target}.\|o.\|l\W\|p\MG\|s.\|o.\|h\E%
+\\{target}.\|o.\|h){}$\1\5
+\&{break};\2\2\6
+\&{if} (\|p)\5
+${}\{{}$\1\6
+${}\|q\MG\\{link}\K\|p\MG\\{link}{}$;\C{ remove \PB{\|p} from its former place
+in the list }\6
+${}\|p\MG\\{link}\K\\{hash\_table}[\\{hash}]{}$;\C{ and insert it at the front
+}\6
+${}\\{hash\_table}[\\{hash}]\K\|p;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\Us97\ET103.\fi
+
+\M{102}If the target is viable, \PB{\|p} will be set to a fresh node with
+\PB{$\|p\MG\\{state}\K\\{raw}$}. The reader can verify that \PB{\\{move\_down}}
+will not
+then be necessary.
+
+\Y\B\4\X102:Get a downward slot for \PB{\\{target}} if it is really viable\X${}%
+\E{}$\6
+${}\{{}$\1\6
+${}\|j\K\\{connectivity}(\\{row\_end}+\T{1});{}$\6
+\&{if} ${}(\|r\G\|w){}$\1\5
+${}\|j\K\\{int\_part}(\|j);{}$\2\6
+\&{else} \&{if} ${}(\\{int\_part}(\|j)\E\\{eps\_part}(\|j)){}$\1\5
+${}\|j\K\\{int\_part}(\|j)+(\|w-\|r);{}$\2\6
+\&{else}\1\5
+${}\|j\K\\{int\_part}(\|j)+(\|w-\T{1}-\|r){}$;\C{ \PB{\|j} more cells are
+needed in a valid polyomino }\2\6
+\&{if} ${}(\\{src}\MG\\{lo}+\|j\Z\|n){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\PP\\{configs}\E\T{1000000000}){}$\1\5
+${}\\{configs}\K\T{0},\39\\{hconfigs}\PP;{}$\2\6
+${}\|p\K\\{get\_slot\_down}((\\{src}\MG\\{hi}>\|n-\|j\?\|n-\|j:\\{src}\MG%
+\\{hi})-\\{src}\MG\\{lo});{}$\6
+${}\|p\MG\\{link}\K\\{hash\_table}[\\{hash}],\39\\{hash\_table}[\\{hash}]\K%
+\|p;{}$\6
+${}\|p\MG\|s\K\\{target};{}$\6
+${}\|p\MG\\{lo}\K\\{src}\MG\\{lo},\39\|p\MG\\{hi}\K\\{src}\MG\\{hi},\39\|p\MG%
+\\{lim}\K\|n-\|j;{}$\6
+\&{if} ${}(\|p\MG\\{hi}>\|p\MG\\{lim}){}$\1\5
+${}\|p\MG\\{hi}\K\|p\MG\\{lim};{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U97.\fi
+
+\M{103}\B\X103:Process target configuration \PB{\|c} (upward)\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{row\_end}\E\|w){}$\1\5
+\X100:Canonize the configuration\X;\2\6
+${}\\{target}\K\\{packit}(\,);{}$\6
+\&{if} ${}(\\{target}.\|o.\|l\V\\{target}.\|o.\|h\V(\|r\E\T{1}\W\\{row\_end}<%
+\|w)){}$\5
+${}\{{}$\1\6
+\X101:If \PB{\\{target}} is already present, make \PB{\|p} point to it\X;\6
+\&{if} ${}(\R\|p){}$\1\5
+\X104:Get an upward slot for \PB{\\{target}} if it is really viable\X;\2\6
+\&{if} ${}(\|p\W(\\{src}\MG\\{lo}\Z(\|j\K\|p\MG\\{lim}))){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{src}\MG\\{hi}<\|j){}$\1\5
+${}\|j\K\\{src}\MG\\{hi};{}$\2\6
+\&{if} ${}(\|j>\|p\MG\\{hi}\V\\{src}\MG\\{lo}<\|p\MG\\{lo}){}$\1\5
+${}\|p\K\\{move\_up}(\|p,\39\\{src}\MG\\{lo},\39\|j);{}$\2\6
+\&{if} (\\{verbose})\5
+${}\{{}$\1\6
+\\{printf}(\.{"\ ->\ "});\5
+${}\\{print\_config}(\\{row\_end}+\T{1}){}$;\5
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\6
+${}\\{update}(\\{src},\39\|p,\39\|j);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\|r>\|w){}$\5
+${}\{{}$\1\6
+\&{if} (\\{verbose})\1\5
+\\{printf}(\.{"\ ->\ 0\\n"});\2\6
+${}\\{update}(\\{src},\39\NULL,\39\\{src}\MG\\{hi}){}$;\C{ polyominoes
+completed }\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U83.\fi
+
+\M{104}\B\X104:Get an upward slot for \PB{\\{target}} if it is really viable%
+\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|j\K\\{connectivity}(\\{row\_end}+\T{1});{}$\6
+\&{if} ${}(\|r\G\|w){}$\1\5
+${}\|j\K\\{int\_part}(\|j);{}$\2\6
+\&{else} \&{if} ${}(\\{int\_part}(\|j)\E\\{eps\_part}(\|j)){}$\1\5
+${}\|j\K\\{int\_part}(\|j)+(\|w-\|r);{}$\2\6
+\&{else}\1\5
+${}\|j\K\\{int\_part}(\|j)+(\|w-\T{1}-\|r){}$;\C{ \PB{\|j} more cells are
+needed in a valid polyomino }\2\6
+\&{if} ${}(\\{src}\MG\\{lo}+\|j\Z\|n){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\PP\\{configs}\E\T{1000000000}){}$\1\5
+${}\\{configs}\K\T{0},\39\\{hconfigs}\PP;{}$\2\6
+${}\|p\K\\{get\_slot\_up}((\\{src}\MG\\{hi}>\|n-\|j\?\|n-\|j:\\{src}\MG\\{hi})-%
+\\{src}\MG\\{lo});{}$\6
+${}\|p\MG\\{link}\K\\{hash\_table}[\\{hash}],\39\\{hash\_table}[\\{hash}]\K%
+\|p;{}$\6
+${}\|p\MG\|s\K\\{target};{}$\6
+${}\|p\MG\\{lo}\K\\{src}\MG\\{lo},\39\|p\MG\\{hi}\K\\{src}\MG\\{hi},\39\|p\MG%
+\\{lim}\K\|n-\|j;{}$\6
+\&{if} ${}(\|p\MG\\{hi}>\|p\MG\\{lim}){}$\1\5
+${}\|p\MG\\{hi}\K\|p\MG\\{lim};{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U103.\fi
+
+\N{1}{105}Checkpointing. One of the goals of this program is to establish
+new world records. Thus, local resources
+are probably being stretched to their current limits, and several days
+of running time might well be involved.
+
+It's prudent therefore to make the program stop at a suitable
+``checkpoint,'' firming up what has been accomplished so far;
+then we won't have to go back to square one when recovering
+from a disaster. We should also use {\mc POLYSLAVE} to reduce the
+intermediate data at such times, thereby freeing up nearly all
+of the disk space we've been filling before we proceed to fill some more.
+
+The code in this section is executed at a particularly convenient
+time: A new row is about to begin, and so is a new downward pass.
+It's as good a time as any to dump out the configuration-table-so-far
+in a form that can easily be used by a special version of this program
+to get going again when we're ready to resume. (See the change file
+\.{polynum-restart.ch} for details.)
+
+\Y\B\4\D$\\{gig\_threshold}$ \5
+\T{5}\C{ try to avoid filling more than about twice this      many gigabytes of
+disk space }\par
+\Y\B\4\X105:Check if this run has gone on too long\X${}\E{}$\6
+\&{if} ${}(\\{file\_extension}\G\\{gig\_threshold}\W\\{trg}\I\\{conf}){}$\5
+${}\{{}$\1\6
+\X106:Shut down the {\mc POLYSLAVE} process\X;\6
+${}\\{sprintf}(\\{filename},\39\.{"\%.90s.dump"},\39\\{base\_name});{}$\6
+${}\\{out\_file}\K\\{fopen}(\\{filename},\39\.{"wb"});{}$\6
+\&{if} ${}(\R\\{out\_file}){}$\1\5
+\\{panic}(\.{"I\ can't\ open\ the\ du}\)\.{mp\ file"});\2\6
+\X107:Dump all information needed to restart\X;\6
+\X72:Print statistics about this run\X;\6
+${}\\{printf}(\.{"[\%d\ bytes\ written\ o}\)\.{n\ file\ \%s.]\\n"},\39%
+\\{ftell}(\\{out\_file}),\39\\{filename});{}$\6
+\\{exit}(\T{1});\6
+\4${}\}{}$\2\par
+\U79.\fi
+
+\M{106}A special \PB{\\{sync}} instruction with parameter 255 tells {\mc
+POLYSLAVE}
+that it should invoke its own checkpointing activity.
+
+\Y\B\4\X106:Shut down the {\mc POLYSLAVE} process\X${}\E{}$\6
+$\\{put\_inst}(\\{sync},\39\T{255});{}$\6
+\X16:Empty the buffer and close the output file\X;\6
+\\{printf}(\.{"Checkpoint\ stop:\ Pl}\)\.{ease\ process\ that\ da}\)\.{ta\ with%
+\ polyslave,\\n}\)\.{"});\6
+\\{printf}(\.{"then\ resume\ the\ com}\)\.{putation\ with\ polynu}\)%
+\.{m-restart.\\n"});\par
+\U105.\fi
+
+\M{107}Since we're at the beginning of a downward pass, the user will be
+able to restart this program with different values of \PB{\\{conf\_size}} and
+\PB{\\{slave\_size}} if desired.
+
+\Y\B\4\X107:Dump all information needed to restart\X${}\E{}$\6
+$\\{dump\_data}[\T{0}]\K\|n;{}$\6
+${}\\{dump\_data}[\T{1}]\K\|w;{}$\6
+${}\\{dump\_data}[\T{2}]\K\|r;{}$\6
+${}\\{dump\_data}[\T{3}]\K\\{trg}-\\{conf};{}$\6
+${}\\{dump\_data}[\T{4}]\K\\{strg};{}$\6
+\&{if} ${}(\\{fwrite}(\\{dump\_data},\39\&{sizeof}(\&{int}),\39\T{5},\39\\{out%
+\_file})\I\T{5}){}$\1\5
+\\{panic}(\.{"Bad\ write\ at\ beginn}\)\.{ing\ of\ dump"});\2\6
+\&{if} ${}(\\{fwrite}(\\{conf},\39\&{sizeof}(\&{config}),\39\\{trg}-\\{conf},%
+\39\\{out\_file})\I\\{trg}-\\{conf}){}$\1\5
+\\{panic}(\.{"Couldn't\ dump\ the\ c}\)\.{onfiguration\ table"});\2\par
+\U105.\fi
+
+\M{108}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{dump\_data}[\T{5}];\C{ parameters needed to restart }\par
+\fi
+
+\N{1}{109}Computational experience. With a suitable change file
+it is not difficult to convert this program to a one-pass routine
+that does the evaluation directly, provided that $n$ and $w$ are
+reasonably small. For example, when $n=30$ and $2\le w\le15$,
+all the computations were completed in 192 seconds (on 12 December 2000).
+The most difficult case, which took 68 seconds to complete, was
+for $w=13$, when
+100,488 slots (with 0 holes)
+and 218980 counters (with 4114 wasted)
+were needed.
+
+The resulting number of $n$-ominoes for $n\le30$ agreed perfectly with the
+answers obtained from a completely different algorithm, using my now-obsolete
+program {\mc POLYENUM}. That program had taken more than 15 hours
+to count 30-ominoes, so Jensen's method ran almost 300 times faster.
+
+Setting $n=47$ led to much more of an adventure, of course, since
+all space and time requirements grow exponentially. Some runs lasted
+several days, and various glitches and hardware failures added to the
+excitement. Detailed statistics about the performance, including the
+histograms computed here, were helpful for planning and
+for diagnosing various problems.
+
+\Y\B\4\D$\\{hist\_size}$ \5
+\T{100}\par
+\Y\B\4\X109:Print and clear the hash/slot tables\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{hist\_size};{}$ ${}\|k\PP){}$\1\5
+${}\\{hhist}[\|k]\K\T{0};{}$\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\\{nmax};{}$ ${}\|k\PP){}$\1\5
+${}\\{chist}[\|k]\K\T{0};{}$\2\6
+${}\\{jj}\K\T{0};{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\\{hash\_mask};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|p\K\\{hash\_table}[\|k],\39\|j\K\T{0};{}$ \|p; ${}\|p\K\|p\MG%
+\\{link},\39\|j\PP){}$\1\5
+${}\\{chist}[\|p\MG\\{hi}-\|p\MG\\{lo}]\PP;{}$\2\6
+\&{if} ${}(\|j>\\{jj}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|j\G\\{hist\_size}){}$\1\5
+${}\|j\K\\{hist\_size}-\T{1};{}$\2\6
+${}\\{jj}\K\|j;{}$\6
+\4${}\}{}$\2\6
+${}\\{hhist}[\|j]\PP;{}$\6
+${}\\{hash\_table}[\|k]\K\NULL;{}$\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"Hash\ histogram:"});\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\\{jj};{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\ \%d"},\39\\{hhist}[\|j]);{}$\2\6
+\\{printf}(\.{"\\nCounters:"});\6
+\&{for} ${}(\|k\K\\{nmax};{}$ ${}\|k\G\T{0};{}$ ${}\|k\MM){}$\1\6
+\&{if} (\\{chist}[\|k])\1\5
+\&{break};\2\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j\Z\|k;{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\ \%d"},\39\\{chist}[\|j]);{}$\2\6
+\&{for} ${}(\|k\K\\{nmax};{}$ ${}\|k\G\T{0};{}$ ${}\|k\MM){}$\1\6
+\&{if} (\\{slot}[\|k])\1\5
+\&{break};\2\2\6
+\&{if} ${}(\|k\G\T{0}){}$\5
+${}\{{}$\1\6
+\\{printf}(\.{"\\nHoles:"});\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j\Z\|k;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|p\K\\{slot}[\|j],\39\\{jj}\K\T{0};{}$ \|p; ${}\|p\K\|p\MG%
+\\{link},\39\\{jj}\PP){}$\1\5
+;\2\6
+${}\\{printf}(\.{"\ \%d"},\39\\{jj});{}$\6
+${}\\{slot}[\|j]\K\NULL;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n"});\6
+${}\\{holes}\K\\{sholes}\K\T{0}{}$;\par
+\U81.\fi
+
+\M{110}\B\X7:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{hhist}[\\{hist\_size}];\C{ histogram of hash chain lengths }\6
+\&{int} ${}\\{chist}[\\{nmax}+\T{1}]{}$;\C{ histogram of counter table lengths
+}\6
+\&{int} \\{jj};\C{ auxiliary variable for statistics calculations }\par
+\fi
+
+\M{111}The greatest difficulty for $n=47$ occurred when $w=20$; indeed,
+more than 100 gigabytes of data were passed to {\mc POLYSLAVE} in
+that case, and the computation lasted several days,
+so the checkpointing algorithm proved to be particularly helpful.
+
+Here is a summary of the main statistics from those runs. The number of
+``configs'' is the total of distinct configurations, summed over all passes.
+The number of ``moves'' is the number of times \PB{\\{move\_up}} or \PB{\\{move%
+\_down}} was
+called to increase the space allocated to a generating function.
+$$\vbox{\halign{&\quad\hfil#\cr
+$w\ $&slots&counters&configs&moves&bytes&\mc POLYNUM&\mc POLYSLAVE\cr
+\noalign{\vskip2pt}
+23&    0.3M&    0.3M&   109M&   3M&  0.4G&     14 min&        5 min\cr
+22&    6.2M&    8.0M&  2150M& 129M& 10.2G&    267 min\rlap*& 35 min\rlap*\cr
+21&   28.6M&   46.5M&  9481M&1053M& 58.8G&   1911 min\rlap*&314 min\rlap*\cr
+20&   40.2M&   94.0M& 12852M&2267M&103.6G&   2960 min\rlap*&574 min\rlap*\cr
+19&   31.5M&  105.6M&  9183M&2099M& 86.8G&   1803 min\rlap*&497 min\rlap*\cr
+18&   19.4M&   85.5M&  5220M&1318M& 52.9G&    749 min\rlap*&324 min\rlap*\cr
+17&   10.1M&   58.3M&  2514M& 678M& 26.7G&    280 min\rlap*&172 min\rlap*\cr
+16&    4.5M&   34.2M&  1091M& 308M& 11.9G&    137 min\rlap*&104 min\rlap*\cr
+15&    1.9M&   18.2M&   437M& 127M&  4.9G&     51 min\rlap*& 44 min\rlap*\cr
+14&    0.7M&    8.8M&   167M&  49M&  2.0G&     22 min&       31 min\cr
+13&    0.3M&    4.1M&    62M&  19M&  0.8G&      8 min&       12 min\cr
+12&     98K&    1.8M&    23M&   7M&  0.3G&      3 min&        5 min\cr
+11&     37K&    789K&   8.5M& 2.6M&  0.1G&     84 sec&        2 min\cr
+10&     14K&    334K&   3.1M& 0.9M&   40M&     45 sec&       21 sec\cr
+9&      5K&    148K&  1124K& 340K&   15M&     30 sec&        7 sec\cr
+8&      2K&     59K&   402K& 119K&    5M&     23 sec&        2 sec\cr
+7&     875&     24K&   144K&  43K&  1.9M&     20 sec&        1 sec\cr
+6&     350&     10K&    50K&  14K&  618K&     17 sec&        0 sec\cr
+5&     146&      4K&    17K&   5K&  206K&     14 sec&        0 sec\cr
+4&      57&    1484&   5410& 1460&   59K&     11 sec&        0 sec\cr
+3&      22&     553&   1658&  430&   17K&      8 sec&        0 sec\cr
+2&       7&     180&    318&   76&    3K&      6 sec&        0 sec\cr
+}}$$
+* Done on computers with 1 gigabyte of memory, thanks to
+Andy Kacsmar of Stanford's database group.
+
+\smallskip\noindent (The case $w=24$ was omitted because of the formula
+$$
+8{h+w-2\choose w-1}-3hw+2h+2w-8,
+$$
+which gives the total number of $n$-ominoes spanning an $h\times w$
+rectangle when $n=h+w-1$ and $h>1$ and $w>1$.)
+
+\fi
+
+\M{112}I was glad to see that the allocation system used here for
+variable-length
+nodes, allowing ``holes,'' worked quite well: More than 98 percent of
+the memory space was typically being put to good use when it was needed.
+In fact, only 8 holes were present when the maximum demand of 40,219,325
+slots occurred in the runs for $n=47$ (row 10 and column 11
+when $w=20$); only 105 counters were wasted when the maximum demand of
+105,578,552 counters occurred (row 12 and column 10 when $w=19$).
+
+\fi
+
+\M{113}Joke: George P\'olya was a polymath who worked on polyominoes.
+
+\fi
+
+\N{1}{114}Index.
+\fi
+
+\inx
+\fin
+\con

@@ -1,0 +1,59 @@
+\I\X31:Allocate the main arrays\X
+\U30.
+\I\X38:Backtrack to the previous level\X
+\U36.
+\I\X35:Check consistency\X
+\U30.
+\I\X32:Copy all the temporary cells to the \PB{\\{mem}} and \PB{\\{cmem}}
+arrays in proper format\X
+\U30.
+\I\X34:Copy all the temporary variable nodes to the \PB{\\{vmem}} array in
+proper format\X
+\U30.
+\I\X16:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash table at \PB{\|p}\X
+\U11.
+\I\X3, 7, 26:Global variables\X
+\U2.
+\I\X17:Handle a duplicate literal\X
+\U11.
+\I\X8, 14:Initialize everything\X
+\U2.
+\I\X10:Input the clause in \PB{\\{buf}}\X
+\U9.
+\I\X9:Input the clauses\X
+\U2.
+\I\X33:Insert the cells for the literals of clause \PB{\|c}\X
+\U32.
+\I\X13:Install a new \PB{\&{chunk}}\X
+\U11.
+\I\X12:Install a new \PB{\&{vchunk}}\X
+\U11.
+\I\X37:Make variable \PB{\\{level}} non-watched by the clauses in the
+non-chosen list; \PB{\&{goto} \\{try\_again}} if that would make a clause empty%
+\X
+\U36.
+\I\X19:Move \PB{\\{cur\_cell}} backward to the previous cell\X
+\Us18\ET33.
+\I\X20:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary variable\X
+\U34.
+\I\X39:Print the solution found\X
+\U36.
+\I\X4:Process the command line\X
+\U2.
+\I\X15:Put the variable name beginning at \PB{\\{buf}[\|j]} in \PB{$\\{cur\_tmp%
+\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X
+\U11.
+\I\X18:Remove all variables of the current clause\X
+\U10.
+\I\X21:Report the successful completion of the input phase\X
+\U2.
+\I\X11:Scan and record a variable; negate it if \PB{$\|i\E\T{1}$}\X
+\U10.
+\I\X30:Set up the main data structures\X
+\U2.
+\I\X36:Solve the problem\X
+\U2.
+\I\X27, 28, 29:Subroutines\X
+\U2.
+\I\X5, 6, 23, 24, 25:Type definitions\X
+\U2.

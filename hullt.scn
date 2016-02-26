@@ -1,0 +1,28 @@
+\I\X14:Delete or replace \PB{\\{qqq}} from the hull\X
+\Us12\ET15.
+\I\X12:Do Case 1\X
+\U10.
+\I\X15:Do Case 2\X
+\U10.
+\I\X10:Find convex hull of \PB{\|g}\X
+\U1.
+\I\X2, 5:Global variables\X
+\U1.
+\I\X4:Initialize the array of nodes\X
+\U6.
+\I\X6:Initialize the data structures\X
+\U10.
+\I\X13:Insert \PB{\\{vv}} at the right of the tree\X
+\U12.
+\I\X16:Insert \PB{\\{vv}} in tree, linked by \PB{\\{ppar}}\X
+\U15.
+\I\X7:Local variables\X
+\U1.
+\I\X11:Print the convex hull\X
+\U10.
+\I\X9, 17:Procedures\X
+\U1.
+\I\X3:Type declarations\X
+\U1.
+\I\X8:Verify the integrity of the data structures\X
+\U10.

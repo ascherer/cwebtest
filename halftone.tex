@@ -1,0 +1,411 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Introduction. This program prepares data for the examples in my
+paper ``Fonts for digital halftones.'' The input file (\PB{\\{stdin}}) is
+assumed to be an EPS file output by Adobe Photoshop$^{\rm TM}$
+on a Macintosh with the binary EPS option, having a resolution
+of 72 pixels per inch.
+This file either has $m$ rows of $n$ columns each,
+or $m+n-1$ rows of $m+n-1$ columns each,
+or $2m$ rows of $2n$ columns each; in the second case the image
+has been rotated $45^\circ$ clockwise. (These images were
+obtained by starting with a given $km\times kn$ image, optionally rotating
+it $45^\circ$, and then using Photoshop's Image Size operation to reduce
+to the desired number of pixel units. In my experiments I took $k=8$,
+so that I could also use the dot diffusion method;
+but $k$ need not be an integer. Larger values of $k$ tend to make
+the reduced images more accurate than smaller values do.)
+
+The output file (\PB{\\{stdout}}) is a sequence of ASCII characters that
+can be placed into \TeX\ files leading
+to typeset output images of size $8m\times8n$,
+using fonts like those described in the paper.
+In the first case, we output $m$ lines of 65-level pixel data.
+In the second (rotated) case, we output $2m$ lines of 33-level pixel data.
+In the third case, we output $2m$ lines of 17-level pixel data.
+
+\Y\B\4\D$\|m$ \5
+\T{64}\C{ base number of rows }\par
+\B\4\D$\|n$ \5
+\T{55}\C{ base number of columns }\par
+\B\4\D$\|r$ \5
+\T{64}\C{ $\max(m,n)$ }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\&{float} ${}\|a[\|m+\|m+\T{2}][\|n+\|r]{}$;\C{ darknesses: 0.0 is white, 1.0
+is black }\7
+\X4:Global variables\X;\7
+${}\\{main}(\\{argc},\39\\{argv}){}$\1\1\6
+\&{int} \\{argc};\6
+\&{char} ${}{*}\\{argv}[\,];\2\2{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|l${},{}$ \|p;\6
+\&{int} \\{levels}${},{}$ \\{trash}${},{}$ \\{ii}${},{}$ \\{jj};\6
+\&{float} \\{dampening}${}\K\T{1.0},{}$ \\{brightness}${}\K\T{1.0};{}$\7
+\X2:Check for nonstandard \PB{\\{dampening}} and \PB{\\{brightness}} factors\X;%
+\6
+\X3:Determine the type of input by looking at the bounding box\X;\6
+${}\\{fprintf}(\\{stderr},\39\.{"Making\ \%d\ lines\ of\ }\)\.{\%d-level\ data%
+\\n"},\39(\\{levels}<\T{65}\?\|m+\|m:\|m),\39\\{levels});{}$\6
+${}\\{printf}(\.{"\\\\begin\%shalftone\\n}\)\.{"},\39\\{levels}\E\T{33}\?%
+\.{"alt"}:\.{""});{}$\6
+\X5:Input the graphic data\X;\6
+\X12:Translate input to output\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}Optional command-line arguments allow the user to multiply the diffusion
+constants by a \PB{\\{dampening}} factor and/or to multiply the
+brightness by a \PB{\\{brightness}} factor.
+
+\Y\B\4\X2:Check for nonstandard \PB{\\{dampening}} and \PB{\\{brightness}}
+factors\X${}\E{}$\6
+\&{if} ${}(\\{argc}>\T{1}\W\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%g"},\39{\AND}%
+\\{dampening})\E\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Using\ dampening\ fac}\)\.{tor\ \%g\\n"},\39%
+\\{dampening});{}$\6
+\&{if} ${}(\\{argc}>\T{2}\W\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%g"},\39{\AND}%
+\\{brightness})\E\T{1}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ \ and\ brightness\ fa}\)\.{ctor\ \%g\\n"},%
+\39\\{brightness});{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}Macintosh conventions indicate the end of a line by the
+ASCII $\langle\,$carriage return$\,\rangle$ character
+(i.e., control-M, aka \.{\char`\\r}), but the \CEE/ library is
+set up to work best with newlines (i.e., control-J, aka \.{\char`\\n}).
+We aren't worried about efficiency, so we simply input one character
+at a time. This program assumes Macintosh conventions.
+
+The job here is to look for the sequence \.{Box:} in the input,
+followed by 0, 0, the number of columns, and the number of rows.
+
+\Y\B\4\D$\\{panic}(\|s)$ \6
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\|s){}$;\5
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\par
+\Y\B\4\X3:Determine the type of input by looking at the bounding box\X${}\E{}$\6
+$\|k\K\T{0};{}$\6
+\4\\{scan}:\6
+\&{if} ${}(\|k\PP>\T{1000}){}$\1\5
+\\{panic}(\.{"Couldn't\ find\ the\ b}\)\.{ounding\ box\ info!\\n"});\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'B'}){}$\1\5
+\&{goto} \\{scan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'o'}){}$\1\5
+\&{goto} \\{scan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'x'}){}$\1\5
+\&{goto} \\{scan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{':'}){}$\1\5
+\&{goto} \\{scan};\2\6
+\&{if} ${}(\\{scanf}(\.{"\%d\ \%d\ \%d\ \%d"},\39{\AND}\\{llx},\39{\AND}%
+\\{lly},\39{\AND}\\{urx},\39{\AND}\\{ury})\I\T{4}\V\\{llx}\I\T{0}\V\\{lly}\I%
+\T{0}){}$\1\5
+\\{panic}(\.{"Bad\ bounding\ box\ da}\)\.{ta!\\n"});\2\6
+\&{if} ${}(\\{urx}\E\|n\W\\{ury}\E\|m){}$\1\5
+${}\\{levels}\K\T{65};{}$\2\6
+\&{else} \&{if} ${}(\\{urx}\E\|n+\|n\W\\{ury}\E\|m+\|m){}$\1\5
+${}\\{levels}\K\T{17};{}$\2\6
+\&{else} \&{if} ${}(\\{urx}\E\|m+\|n-\T{1}\W\\{ury}\E\\{urx}){}$\1\5
+${}\\{levels}\K\T{33};{}$\2\6
+\&{else}\1\5
+\\{panic}(\.{"Bounding\ box\ doesn'}\)\.{t\ match\ the\ formats\ }\)\.{I\ know!%
+\\n"});\2\par
+\U1.\fi
+
+\M{4}\B\X4:Global variables\X${}\E{}$\6
+\&{int} \\{llx}${},{}$ \\{lly}${},{}$ \\{urx}${},{}$ \\{ury};\C{ bounding box
+parameters }\par
+\A8.
+\U1.\fi
+
+\M{5}After we've seen the bounding box, we look for \.{beginimage\char`\\r};
+this will be followed by the pixel data, one character per byte.
+
+\Y\B\4\X5:Input the graphic data\X${}\E{}$\6
+$\|k\K\T{0};{}$\6
+\4\\{skan}:\6
+\&{if} ${}(\|k\PP>\T{10000}){}$\1\5
+\\{panic}(\.{"Couldn't\ find\ the\ p}\)\.{ixel\ data!\\n"});\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'b'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'e'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'g'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'i'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'n'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'i'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'m'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'a'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'g'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'e'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'\\r'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{levels}\E\T{33}){}$\1\5
+\X7:Input rotated pixel data\X\2\6
+\&{else}\1\5
+\X6:Input rectangular pixel data\X;\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'\\r'}){}$\1\5
+\\{panic}(\.{"Wrong\ amount\ of\ pix}\)\.{el\ data!\\n"});\2\par
+\U1.\fi
+
+\M{6}Photoshop follows the conventions of photographers who consider
+0~to be black and 1~to be white; but we follow the conventions of
+computer scientists who tend to regard 0~as devoid of ink (white)
+and 1~as full of ink (black).
+
+We use the fact that global arrays are initially zero to assume that
+there are all-white rows of 0s above and below the
+input data in the rectangular case.
+
+\Y\B\4\X6:Input rectangular pixel data\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\\{ury};{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{urx};{}$ ${}\|j\PP){}$\1\5
+${}\|a[\|i][\|j]\K\T{1.0}-\\{brightness}*\\{getchar}(\,)/\T{255.0}{}$;\2\2\par
+\U5.\fi
+
+\M{7}In the rotated case, we transpose and partially shift the input so that
+the eventual $i$th row is in positions $a[i][j+\lfloor i/2\rfloor]$
+for $0\le j<n$. This arrangement turns out to be most convenient
+for the output phase.
+
+\xdef\matrixsec{\secno} % remember the number of this section
+For example, suppose $m=5$ and $n=3$; the
+input is a $7\times7$ array that can be expressed in the form
+$$\pmatrix{0&0&0&a&A&l&0\cr
+0&0&b&B&F&J&k\cr
+0&c&C&G&K&O&S\cr
+d&D&H&L&P&T&j\cr
+e&I&M&Q&U&i&0\cr
+e&N&R&V&h&0&0\cr
+0&f&W&g&0&0&0\cr}.$$
+In practice the boundary values $a$, $b$, $c$, $d$, $e$, $f$, $g$, $h$, $h$,
+$i$, $j$, $k$,~$l$ are very small, so they are essentially ``white'' and of
+little importance ink-wise. In this step we transform the input to the
+configuration
+$$\pmatrix{l&k&0&0&0&0&0\cr
+A&J&S&0&0&0&0\cr
+a&F&O&j&0&0&0\cr
+0&B&K&T&0&0&0\cr
+0&b&G&P&i&0&0\cr
+0&0&C&L&U&0&0\cr
+0&0&c&H&Q&h&0\cr
+0&0&0&D&M&V&0\cr
+0&0&0&d&I&R&g\cr
+0&0&0&0&E&N&W\cr}
+\quad\hbox{and later we will output}\quad
+\pmatrix{ &l& &k& &0\cr
+A& &J& &S&\cr
+&F& &O& &j\cr
+B& &K& &T&\cr
+&G& &P& &i\cr
+C& &L& &U&\cr
+&H& &Q& &h\cr
+D& &M& &V&\cr
+&I& &R& &g\cr
+E& &N& &W&\cr}.$$
+
+\Y\B\4\X7:Input rotated pixel data\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{ury};{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{urx};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\\{ii}\K\|m+\|i-\|j{}$;\5
+${}\\{jj}\K\|i+\|j+\T{1}-\|m;{}$\6
+\&{if} ${}(\\{ii}\G\T{0}\W\\{ii}<\|m+\|m\W\\{jj}\G\T{0}\W\\{jj}<\|n+\|n){}$\1\5
+${}\|a[\\{ii}][\|i]\K\T{1.0}-\\{brightness}*\\{getchar}(\,)/\T{255.0};{}$\2\6
+\&{else}\1\5
+${}\\{trash}\K\\{getchar}(\,);{}$\2\6
+\4${}\}{}$\2\2\6
+${}\|a[\T{0}][\|n-\T{1}]\K\T{1.0}-\\{brightness}{}$;\C{ restore ``lost value''
+}\6
+\4${}\}{}$\2\par
+\U5.\fi
+
+\N{1}{8}Diffusing the error. We convert the darkness values to
+65, 33, or 17 levels by generalizing the Floyd--Steinberg algorithm
+for adaptive grayscale~[{\sl Proceedings of the
+Society for Information Display\/ \bf17} (1976), 75--77].
+The idea is to find the best
+available density value, then to diffuse the error into adjacent
+pixels that haven't yet been processed.
+
+Given a font with $k$ black dots in character~$k$ for $0\le k\le l$,
+we might assume that the apparent density of the $k$th character
+would be $k/l$.
+But physical properties of output devices make the actual density
+nonlinear. The following table is based on measurements
+from observations on font \.{ddith300}
+with a Canon {\mc LBP-CX} laserprinter,
+and it should be accurate enough for practical purposes on similar
+machines. But in fact
+the measurements could not be terribly precise, because the readings were not
+strictly monotone, and because the amount of toner was found to vary
+between the top and bottom of a page. Users should make their
+own measurements before adapting this routine to other equipment.
+
+\Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{float} \|d[\T{65}]${}\K\{\T{0.000},\39\T{0.060},\39\T{0.114},\39\T{0.162},%
+\39\T{0.205},\39\T{0.243},\39\T{0.276},\39\T{0.306},\39\T{0.332},\39\T{0.355},%
+\3{-1}\39\T{0.375},\39\T{0.393},\39\T{0.408},\39\T{0.422},\39\T{0.435},\39%
+\T{0.446},\39\T{0.456},\39\T{0.465},\39\T{0.474},\39\T{0.482},\3{-1}\39%
+\T{0.490},\39\T{0.498},\39\T{0.505},\39\T{0.512},\39\T{0.520},\39\T{0.527},\39%
+\T{0.535},\39\T{0.543},\39\T{0.551},\39\T{0.559},\3{-1}\39\T{0.568},\39%
+\T{0.577},\39\T{0.586},\39\T{0.596},\39\T{0.605},\39\T{0.615},\39\T{0.625},\39%
+\T{0.635},\39\T{0.646},\39\T{0.656},\3{-1}\39\T{0.667},\39\T{0.677},\39%
+\T{0.688},\39\T{0.699},\39\T{0.710},\39\T{0.720},\39\T{0.731},\39\T{0.742},\39%
+\T{0.753},\39\T{0.764},\3{-1}\39\T{0.775},\39\T{0.787},\39\T{0.798},\39%
+\T{0.810},\39\T{0.822},\39\T{0.835},\39\T{0.849},\39\T{0.863},\39\T{0.878},\39%
+\T{0.894},\3{-1}\39\T{0.912},\39\T{0.931},\39\T{0.952},\39\T{0.975},\39%
+\T{1.000}\}{}$;\par
+\fi
+
+\M{9}In the main loop, we will want to find the best approximation to
+$a[i][j]$ from among the available densities $d[0]$, $d[p]$, $d[2p]$,
+$d[3p]$,~\dots, where $p$ is 1, 2, or~4. A straightforward modification
+of binary search works well for this purpose:
+
+\Y\B\4\X9:Find $l$ so that $d[l]$ is as close as possible to $a[i][j]$\X${}%
+\E{}$\6
+\&{if} ${}(\|a[\|i][\|j]\Z\T{0.0}){}$\1\5
+${}\|l\K\T{0};{}$\2\6
+\&{else} \&{if} ${}(\|a[\|i][\|j]\G\T{1.0}){}$\1\5
+${}\|l\K\T{64};{}$\2\6
+\&{else}\5
+${}\{{}$\5
+\1\&{register} \&{int} \\{lo\_l}${}\K\T{0},{}$ \\{hi\_l}${}\K\T{64};{}$\7
+\&{while} ${}(\\{hi\_l}-\\{lo\_l}>\|p){}$\5
+${}\{{}$\5
+\1\&{register} \&{int} \\{mid\_l}${}\K(\\{lo\_l}+\\{hi\_l})\GG\T{1}{}$;\C{ %
+\PB{$\\{hi\_l}-\\{lo\_l}$} is halved each time, so \PB{\\{mid\_l}} is a
+multiple of~\PB{\|p} }\7
+\&{if} ${}(\|a[\|i][\|j]\G\|d[\\{mid\_l}]){}$\1\5
+${}\\{lo\_l}\K\\{mid\_l};{}$\2\6
+\&{else}\1\5
+${}\\{hi\_l}\K\\{mid\_l};{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|a[\|i][\|j]-\|d[\\{lo\_l}]\Z\|d[\\{hi\_l}]-\|a[\|i][\|j]){}$\1\5
+${}\|l\K\\{lo\_l};{}$\2\6
+\&{else}\1\5
+${}\|l\K\\{hi\_l};{}$\2\6
+\4${}\}{}$\2\par
+\Us10\ET11.\fi
+
+\M{10}The rectangular case is simplest, so we consider it first. Our strategy
+will be to go down each column, starting at the left, and to disperse the
+error to the four unprocessed neighbors.
+
+\Y\B\4\D$\\{alpha}$ \5
+\T{0.4375}\C{ 7/16, error diffusion to S neighbor }\par
+\B\4\D$\\{beta}$ \5
+\T{0.1875}\C{ 3/16, error diffusion to NE neighbor }\par
+\B\4\D$\\{gamma}$ \5
+\T{0.3125}\C{ 5/16, error diffusion to E neighbor }\par
+\B\4\D$\\{delta}$ \5
+\T{0.0625}\C{ 1/16, error diffusion to SE neighbor }\par
+\Y\B\4\X10:Process \PB{\|a[\|i][\|j]} in the rectangular case\X${}\E{}$\6
+${}\{{}$\5
+\1\&{register} \&{float} \\{err};\7
+\&{if} ${}(\|i\E\T{0}\V\|i>\\{ury}){}$\1\5
+${}\|l\K\T{0}{}$;\C{ must use white outside the output region }\2\6
+\&{else}\1\5
+\X9:Find $l$ so that $d[l]$ is as close as possible to $a[i][j]$\X;\2\6
+${}\\{err}\K\|a[\|i][\|j]-\|d[\|l];{}$\6
+${}\|a[\|i][\|j]\K(\&{float})(\|l/\|p){}$;\C{ henceforth \PB{\|a[\|i][\|j]} is
+a level not a density }\6
+\&{if} ${}(\|i\Z\\{ury}){}$\1\5
+${}\|a[\|i+\T{1}][\|j]\MRL{+{\K}}\\{alpha}*\\{dampening}*\\{err};{}$\2\6
+\&{if} ${}(\|j<\\{urx}-\T{1}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|i>\T{0}){}$\1\5
+${}\|a[\|i-\T{1}][\|j+\T{1}]\MRL{+{\K}}\\{beta}*\\{dampening}*\\{err};{}$\2\6
+${}\|a[\|i][\|j+\T{1}]\MRL{+{\K}}\\{gamma}*\\{dampening}*\\{err};{}$\6
+\&{if} ${}(\|i\Z\\{ury}){}$\1\5
+${}\|a[\|i+\T{1}][\|j+\T{1}]\MRL{+{\K}}\\{delta}*\\{dampening}*\\{err};{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{11}The rotated case is essentially the same, but the unprocessed
+neighbors of \PB{\|a[\|i][\|j]} are now \PB{$\|a[\|i+\T{1}][\|j]$}, \PB{$\|a[%
+\|i][\|j+\T{1}]$}, \PB{$\|a[\|i+\T{1}][\|j+\T{1}]$},
+and~\PB{$\|a[\|i+\T{2}][\|j+\T{1}]$}. (For example, the eight neighbors of $K$
+in
+the matrices of section~\matrixsec\ are $B$, $F$, $J$, $O$, $T$, $P$,
+$L$,~$G$.)
+
+Some of the computation in this step is redundant because the values
+are known to be~zero.
+
+\Y\B\4\X11:Process \PB{\|a[\|i][\|j]} in the rotated case\X${}\E{}$\6
+${}\{{}$\5
+\1\&{register} \&{float} \\{err};\7
+\&{if} ${}((\|i\GG\T{1})\Z\|j-\|n\V(\|i\GG\T{1})>\|j){}$\1\5
+${}\|l\K\T{0}{}$;\C{ must use white outside the output region }\2\6
+\&{else}\1\5
+\X9:Find $l$ so that $d[l]$ is as close as possible to $a[i][j]$\X;\2\6
+${}\\{err}\K\|a[\|i][\|j]-\|d[\|l];{}$\6
+${}\|a[\|i][\|j]\K(\&{float})(\|l/\|p){}$;\C{ henceforth \PB{\|a[\|i][\|j]} is
+a level not a density }\6
+\&{if} ${}(\|i<\|m+\|m-\T{1}){}$\1\5
+${}\|a[\|i+\T{1}][\|j]\MRL{+{\K}}\\{alpha}*\\{dampening}*\\{err};{}$\2\6
+\&{if} ${}(\|j<\|m+\|n-\T{2}){}$\5
+${}\{{}$\1\6
+${}\|a[\|i][\|j+\T{1}]\MRL{+{\K}}\\{beta}*\\{dampening}*\\{err};{}$\6
+\&{if} ${}(\|i<\|m+\|m-\T{1}){}$\1\5
+${}\|a[\|i+\T{1}][\|j+\T{1}]\MRL{+{\K}}\\{gamma}*\\{dampening}*\\{err};{}$\2\6
+\&{if} ${}(\|i<\|m+\|m-\T{2}){}$\1\5
+${}\|a[\|i+\T{2}][\|j+\T{1}]\MRL{+{\K}}\\{delta}*\\{dampening}*\\{err};{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{12}Finally we are ready to put everything together.
+
+\Y\B\4\X12:Translate input to output\X${}\E{}$\6
+$\|p\K\T{64}/(\\{levels}-\T{1});{}$\6
+\&{if} ${}(\|p\I\T{2}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{urx};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i\Z\\{ury}+\T{1};{}$ ${}\|i\PP){}$\1\5
+\X10:Process \PB{\|a[\|i][\|j]} in the rectangular case\X;\2\2\6
+\&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\\{ury};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{urx};{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\%c"},\39(\|p\E\T{1}\?\.{'0'}:((\|i+\|j)\AND\T{1})\?\.{'a'}:%
+\.{'A'})+{}$(\&{int}) \|a[\|i][\|j]);\2\6
+\\{printf}(\.{".\\n"});\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|m+\|n-\T{1};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|m+\|m;{}$ ${}\|i\PP){}$\1\5
+\X11:Process \PB{\|a[\|i][\|j]} in the rotated case\X;\2\2\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|m+\|m;{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\%c"},\39\.{'0'}+{}$(\&{int}) \|a[\|i]${}[\|j+(\|i\GG%
+\T{1})]);{}$\2\6
+\\{printf}(\.{".\\n"});\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\\\endhalftone\\n"});\par
+\U1.\fi
+
+\N{1}{13}Index.
+\fi
+
+\inx
+\fin
+\con

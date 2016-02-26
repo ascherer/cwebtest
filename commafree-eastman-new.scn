@@ -1,0 +1,15 @@
+\I\X3:Do Eastman's algorithm\X
+\U1.
+\I\X6:Do one phase of Eastman's algorithm, putting \PB{\\{tt}} boundary points
+into \PB{\\{bb}}\X
+\U3.
+\I\X4:Initialize\X
+\U3.
+\I\X8:Print the solution\X
+\U1.
+\I\X2:Process the command line\X
+\U1.
+\I\X7:Retain \PB{\|i} as a boundary point\X
+\U6.
+\I\X5:Subroutines\X
+\U1.

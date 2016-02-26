@@ -1,0 +1,18 @@
+\I\X4:Apply Korf's procedure\X
+\U1.
+\I\X2:Input the initial position\X
+\U1.
+\I\X11:Output the results\X
+\U1.
+\I\X7:Prepare to move east, then \PB{\&{break}}\X
+\U6.
+\I\X8:Prepare to move north, then \PB{\&{break}}\X
+\U6.
+\I\X10:Prepare to move south, then \PB{\&{break}}\X
+\U6.
+\I\X9:Prepare to move west, then \PB{\&{break}}\X
+\U6.
+\I\X5:Set \PB{\\{moves}} to the minimum number of happy moves\X
+\U4.
+\I\X6:Try for a solution with \PB{\|t} more moves\X
+\U4.

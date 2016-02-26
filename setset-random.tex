@@ -1,0 +1,92 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. This little program makes empirical tests by which I can
+check the accuracy of the {\mc SETSET} program. (See that program
+for explanations.)
+
+\Y\B\4\D$\|m$ \5
+\T{12}\C{ size of each hand }\par
+\B\4\D$\|n$ \5
+\T{100000000}\C{ number of random trials }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{"gb\_flip.h"}\C{ use the Stanford GraphBase random number
+routines }\6
+\&{char} \\{deck}[\T{81}];\6
+\&{char} \\{occ}[\T{81}];\6
+\&{char} \|z[\T{3}][\T{3}]${}\K\{\{\T{0},\39\T{2},\39\T{1}\},\39\{\T{2},\39%
+\T{1},\39\T{0}\},\39\{\T{1},\39\T{0},\39\T{2}\}\}{}$;\C{ $x+y+z\equiv0$ (mod 3)
+}\6
+\&{char} \\{third}[\T{81}][\T{128}];\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|t;\6
+\&{int} \\{reps}${},{}$ \\{count};\7
+\X2:Initialize\X;\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+${}\\{count}\K\T{0};{}$\6
+\&{for} ${}(\\{reps}\K\T{0};{}$ ${}\\{reps}<\|n;{}$ ${}\\{reps}\PP){}$\5
+${}\{{}$\1\6
+\X4:Shuffle the deck\X;\6
+\X3:Increase \PB{\\{count}} if there are no SETs\X;\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"\%d/\%d\\n"},\39\\{count},\39\|n);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\D$\\{pack}(\|a,\|b,\|c,\|d)$ \5
+$(((\|a)*\T{3}+(\|b))*\T{3}+(\|c))*\T{3}+{}$(\|d)\par
+\Y\B\4\X2:Initialize\X${}\E{}$\6
+\\{gb\_init\_rand}(\T{0});\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{81};{}$ ${}\|k\PP){}$\1\5
+${}\\{deck}[\|k]\K\|k;{}$\2\6
+\&{for} ${}(\|k\K\T{81}-\|m;{}$ ${}\|k<\T{81};{}$ ${}\|k\PP){}$\1\5
+${}\\{occ}[\|k]\K\T{1};{}$\2\6
+${}\{{}$\1\6
+\&{int} \|a${},{}$ \|b${},{}$ \|c${},{}$ \|d${},{}$ \|e${},{}$ \|f${},{}$ %
+\|g${},{}$ \|h;\7
+\&{for} ${}(\|a\K\T{0};{}$ ${}\|a<\T{3};{}$ ${}\|a\PP){}$\1\6
+\&{for} ${}(\|b\K\T{0};{}$ ${}\|b<\T{3};{}$ ${}\|b\PP){}$\1\6
+\&{for} ${}(\|c\K\T{0};{}$ ${}\|c<\T{3};{}$ ${}\|c\PP){}$\1\6
+\&{for} ${}(\|d\K\T{0};{}$ ${}\|d<\T{3};{}$ ${}\|d\PP){}$\1\6
+\&{for} ${}(\|e\K\T{0};{}$ ${}\|e<\T{3};{}$ ${}\|e\PP){}$\1\6
+\&{for} ${}(\|f\K\T{0};{}$ ${}\|f<\T{3};{}$ ${}\|f\PP){}$\1\6
+\&{for} ${}(\|g\K\T{0};{}$ ${}\|g<\T{3};{}$ ${}\|g\PP){}$\1\6
+\&{for} ${}(\|h\K\T{0};{}$ ${}\|h<\T{3};{}$ ${}\|h\PP){}$\1\5
+${}\\{third}[\\{pack}(\|a,\39\|b,\39\|c,\39\|d)][\\{pack}(\|e,\39\|f,\39\|g,\39%
+\|h)]\K\\{pack}(\|z[\|a][\|e],\39\|z[\|b][\|f],\39\|z[\|c][\|g],\39\|z[\|d][%
+\|h]);{}$\2\2\2\2\2\2\2\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}\B\X3:Increase \PB{\\{count}} if there are no SETs\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{81}-\|m;{}$ ${}\|j<\T{80};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\|j+\T{1};{}$ ${}\|k<\T{81};{}$ ${}\|k\PP){}$\1\6
+\&{if} (\\{occ}[\\{third}[\\{deck}[\|j]][\\{deck}[\|k]]])\1\5
+\&{goto} \\{set\_found};\2\2\2\6
+${}\\{count}\PP;{}$\6
+\4\\{set\_found}:\par
+\U1.\fi
+
+\M{4}\B\X4:Shuffle the deck\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{81};{}$ ${}\|j>\T{81}-\|m;{}$ ${}\|j\MM){}$\5
+${}\{{}$\1\6
+${}\|t\K\\{deck}[\|j-\T{1}];{}$\6
+${}\\{occ}[\|t]\K\T{0};{}$\6
+${}\|k\K\\{gb\_unif\_rand}(\|j);{}$\6
+${}\\{deck}[\|j-\T{1}]\K\\{deck}[\|k];{}$\6
+${}\\{occ}[\\{deck}[\|k]]\K\T{1};{}$\6
+${}\\{deck}[\|k]\K\|t;{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\N{1}{5}Index.
+
+\fi
+
+
+\inx
+\fin
+\con

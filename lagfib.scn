@@ -1,0 +1,13 @@
+\I\X4:Change the basis to eliminate $z^t$\X
+\U1.
+\I\X5:Gather statistics for case $t$\X
+\U1.
+\I\X2, 6:Global variables\X
+\U1.
+\I\X3:Initialize for the case $t=r$\X
+\U1.
+\I\X7:Print out an interesting linear dependency\X
+\U5.
+\I\X8:Print the statistics\X
+\U1.
+

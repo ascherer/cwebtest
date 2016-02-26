@@ -1,0 +1,999 @@
+\input cwebmac
+\datethis
+
+
+\N{1}{1}Introduction. Nob sent me another problem today, and as usual I
+couldn't
+put it down. The challenge is to count how many ways we can pack isosceles
+triangles into a regular decagon. There are two kinds of triangles, one
+with base angles $72^\circ$ and the other with base angles $36^\circ$.
+We are given 25 of the former and 5 of the latter.
+
+These triangles have nice properties, which makes the problem appealing.
+If we represent angles as multiples of $36^\circ$, the large triangles
+have angles 2, 2, 1 and sides 1, 1, $\phi^{-1}$; the small triangles
+have angles 1, 1, 3 and sides $\phi^{-2}$, $\phi^{-2}$, $\phi^{-1}$.
+The area of the 10-gon, which has unit sides, is $10\phi^2A$, where $A$
+is the area of a large triangle. The small triangle has $\phi^{-3}A$.
+And it turns out that $25+5\phi^{-3}=10\phi^2$, because $\phi^{-3}=
+\sqrt5-2$ and $2\phi^2=\sqrt5+3$.
+
+My backtrack program works by maintaining a residual polygon-to-be-filled,
+since I don't think I can use cells as I do with polyominoes or polyhexes.
+Each polygon is represented as a cyclic list of the form $a_0$, $x_0$, $a_1$,
+$x_1$, $a_2$, \dots, $a_n$, $x_n$, $a_0$, where the $a$'s are angles and
+the $x$'s are lengths. When $a_k<5$, angle $a_k$ is a convex corner; at
+each stage we choose a convex corner and replace $(a_k,x_k)$ by
+$(a_k-\theta_1$, $s_1$, $10-\theta_2$, $s_2$, $5-\theta_3$, $x_k-s_3)$,
+where $(\theta_1,s_1,\theta_2,s_2,\theta_3,s_3)$ is one of the six ways to
+place a triangle at that corner. Adjustments are then made so that all
+the $a$'s and $x$'s are positive.
+
+Here are transformations that convert to positive, when possible:
+If $x_k=0$ we replace $(a_{k-1},0,a_k)$ by $(a_{k-1}+a_k-5)$. If $x_k<0$
+we replace $(a_{k-1},x_k,a_k)$ by $(a_{k-1}+5,-x_k,a_k-5)$. If $a_k=0$
+we replace $(a_{k-1},x_{k-1},0,x_k)$ by $(a_{k-1}-5,x_k-x_{k-1})$.
+When all $x$'s are positive and no $a$'s are zero, the polygon is erroneous
+if any $a_k$ is negative or $\ge10$.
+
+I thought about replacing $(x_{k-1},5,x_k)$ by $(x_{k-1}+x_k)$, but
+decided against it.  Later, after watching the method in action, I
+decided to do that replacement after all.
+
+The first draft of this program seemed to work fine on special cases,
+but when I ran it to completion on the full decagon problem it missed
+some of the solutions. (It found only 5463628, while I knew from
+symmetry considerations that the correct total would have the form
+$20x+32$. The correct total is 5464292.) A serious bug in my original
+reasoning, explained below, had to be corrected, hence the program is
+now considerably more complicated than I thought it would be.
+
+\Y\B\4\D$\\{big}$ \5
+\T{25}\C{ this many big triangles must be placed }\par
+\B\4\D$\\{small}$ \5
+\T{5}\C{ and this many small ones }\par
+\B\4\D$\\{total\_req}$ \5
+$(\\{big}+\\{small}{}$)\par
+\B\4\D$\\{eps}$ \5
+$(\\{argc}>\T{2}{}$)\C{ causes PostScript output, one file per solution }\par
+\B\4\D$\\{debug}$ \5
+$(\\{argc}>\T{3}{}$)\C{ enables regular consistency checks }\par
+\B\4\D$\\{verbose}$ \5
+$(\\{argc}>\T{4}{}$)\C{ causes extra printout }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\X2:Type definitions\X\6
+\X4:Global variables\X\6
+\X3:Subroutines\X\7
+${}\\{main}(\\{argc},\39\\{argv}){}$\1\1\6
+\&{int} \\{argc};\6
+\&{char} ${}{*}\\{argv}[\,];\2\2{}$\6
+${}\{{}$\1\6
+\&{int} \|i${},{}$ \|j${},{}$ \|k;\6
+\&{register} \&{int} \|l;\C{ level of backtracking }\6
+\&{int} \\{vert}${}\K\T{0}{}$;\C{ number of vertices known }\6
+\&{int} \\{count}${}\K\T{0},{}$ \\{interval}${}\K\T{1},{}$ \\{eps\_interval}${}%
+\K\T{1},{}$ \\{big\_need}${}\K\\{big},{}$ \\{small\_need}${}\K\\{small};{}$\6
+\&{register} \&{node} ${}{*}\|p,{}$ ${}{*}\|q,{}$ ${}{*}\\{pp},{}$ ${}{*}%
+\\{qq},{}$ ${}{*}\|r,{}$ ${}{*}\\{rr};{}$\7
+\&{if} ${}(\\{argc}>\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}\\{interval});{}$\6
+\&{if} (\\{eps})\1\5
+${}\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}\\{eps\_interval});{}$\2\6
+\4${}\}{}$\2\6
+\X7:Initialize the tables\X;\6
+\X12:Backtrack through all solutions\X;\6
+${}\\{printf}(\.{"Altogether\ \%d\ solut}\)\.{ions.\\n"},\39\\{count});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{2}Polygons. Circular lists that represent polygons
+are doubly linked in a straightforward way.
+The only slightly tricky thing is that we represent lengths in the
+form $s\phi^{-1}+t\phi^{-2}$, where $s$ and $t$ are integers.
+
+Each angle contains a vertex number. The first few vertices come from
+the initial input. Each level of backtracking adds two more, some of
+which will be identified with earlier vertices.
+
+\Y\B\4\X2:Type definitions\X${}\E{}$\6
+\&{typedef} \&{struct} \&{node\_struct} ${}\{{}$\1\6
+\&{struct} \&{node\_struct} ${}{*}\\{next},{}$ ${}{*}\\{prev};{}$\6
+\&{int} \|s;\C{ angle, or first component of length }\6
+\&{int} \|t;\C{ vertex number, or second component of length }\6
+\&{int} \\{dir};\C{ direction to the next vertex (used only in angle nodes }\2\6
+${}\}{}$ \&{node};\par
+\U1.\fi
+
+\M{3}The nodes are allocated with a normal sort of available space list.
+
+\Y\B\4\X3:Subroutines\X${}\E{}$\6
+\&{node} ${}{*}\\{get\_avail}(\,){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{node} ${}{*}\|p;{}$\7
+\&{if} (\\{avail})\5
+${}\{{}$\1\6
+${}\|p\K\\{avail};{}$\6
+${}\\{avail}\K\|p\MG\\{next};{}$\6
+\4${}\}{}$\2\6
+\&{else} \&{if} ${}(\\{next\_node}\E\\{bad\_node}){}$\5
+${}\{{}$\1\6
+\\{printf}(\.{"ALLOCATING...\\n"});\C{ temporary }\6
+${}\|p\K{}$(\&{node} ${}{*}){}$ \\{calloc}${}(\T{1000},\39\&{sizeof}(%
+\&{node}));{}$\6
+\&{if} ${}(\|p\E\NULL){}$\5
+${}\{{}$\1\6
+\\{printf}(\.{"Out\ of\ memory!\\n"});\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+${}\\{next\_node}\K\|p+\T{1};{}$\6
+${}\\{bad\_node}\K\|p+\T{1000};{}$\6
+\4${}\}{}$\2\6
+\&{else}\1\5
+${}\|p\K\\{next\_node}\PP;{}$\2\6
+\&{return} \|p;\6
+\4${}\}{}$\2\par
+\As35\ET38.
+\U1.\fi
+
+\M{4}\B\X4:Global variables\X${}\E{}$\6
+\&{node} ${}{*}\\{avail}{}$;\C{ a node that was recycled }\6
+\&{node} ${}{*}\\{next\_node}{}$;\C{ the next node not yet used }\6
+\&{node} ${}{*}\\{bad\_node}{}$;\C{ end of currently allocated block of nodes }%
+\par
+\As5, 6, 8, 11, 13, 33\ETs36.
+\U1.\fi
+
+\M{5}Here are the six ways to place triangles---three ways each.
+
+\Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{triang}[\T{6}][\T{9}]${}\K\{\{\T{2},\39\T{1},\39\T{1},\39\T{1},\39%
+\T{1},\39\T{1},\39\T{2},\39\T{1},\39\T{0}\},\39\{\T{1},\39\T{1},\39\T{1},\39%
+\T{2},\39\T{1},\39\T{0},\39\T{2},\39\T{1},\39\T{1}\},\39\{\T{2},\39\T{1},\39%
+\T{0},\39\T{2},\39\T{1},\39\T{1},\39\T{1},\39\T{1},\39\T{1}\},\3{-1}\39\{\T{1},%
+\39\T{0},\39\T{1},\39\T{3},\39\T{0},\39\T{1},\39\T{1},\39\T{1},\39\T{0}\},\39\{%
+\T{3},\39\T{0},\39\T{1},\39\T{1},\39\T{1},\39\T{0},\39\T{1},\39\T{0},\39\T{1}%
+\},\39\{\T{1},\39\T{1},\39\T{0},\39\T{1},\39\T{0},\39\T{1},\39\T{3},\39\T{0},%
+\39\T{1}\}\}{}$;\par
+\fi
+
+\M{6}A complication mentioned later will make it necessary to work with more
+than
+one polygon in certain cases. So in general we assume that there is a
+stack of polygons to be filled, pointed to by \PB{\\{poly}[\T{0}]}, \dots, \PB{%
+\\{poly}[\\{top}]};
+we will currently be working on \PB{\\{poly}[\\{top}]}.
+
+\Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}\\{poly}[\\{total\_req}]{}$;\C{ polygons to be filled }\6
+\&{int} \\{top};\C{ index to the topmost one }\par
+\fi
+
+\M{7}The \PB{\\{dir}} fields of the polygon will always satisfy the invariant
+relation \PB{$\|p\MG\\{dir}\K\|p\MG\\{prev}\MG\\{prev}\MG\\{dir}+\T{5}-\|p\MG%
+\|s$}, modulo~10,
+when \PB{\|p} is an angle node. Moreover, the sum of $5-s$ over all angle
+nodes of a polygon will equal 10.
+
+\Y\B\4\D$\\{init\_pts}$ \5
+\T{10}\par
+\Y\B\4\X7:Initialize the tables\X${}\E{}$\6
+$\|p\K\\{get\_avail}(\,);{}$\6
+${}\\{poly}[\T{0}]\K\|p;{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{init\_pts};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|q\K\\{get\_avail}(\,);{}$\6
+${}\|p\MG\|s\K\T{4};{}$\6
+${}\|p\MG\|t\K\\{vert}\PP;{}$\6
+${}\|p\MG\\{dir}\K\|j;{}$\6
+${}\|p\MG\\{next}\K\|q;{}$\6
+${}\|q\MG\\{prev}\K\|p;{}$\6
+${}\|p\K(\|j<\\{init\_pts}-\T{1}\?\\{get\_avail}(\,):\\{poly}[\T{0}]);{}$\6
+${}\|q\MG\|s\K\T{1};{}$\6
+${}\|q\MG\|t\K\T{1};{}$\6
+${}\|q\MG\\{next}\K\|p;{}$\6
+${}\|p\MG\\{prev}\K\|q;{}$\6
+\4${}\}{}$\2\par
+\As9, 10\ETs37.
+\U1.\fi
+
+\N{1}{8}Coordinates. The method I sketched in the introduction sounded good
+to me at first, but it has a fatal flaw. The problem occurs when we
+try to branch at a convex corner that has already been covered by
+another part of the polygon. (Consider, for example, the case where
+the polygon consists of two nonadjacent triangles, separated by a
+crooked path traced in both directions so that it contributes nothing
+to the total area.) To avoid this bug, it is necessary to know more
+than the sequence of lengths and angles; we need to be able to tell
+when two vertices are identical as points in the plane.
+
+Floating-point arithmetic could be used for this purpose, with care, but
+I prefer to use exact integer arithmetic. We can regard each vertex
+as a point in the complex plane, represented in the form $\sum_{k=0}^9
+x_k\zeta^k$, where the $x$'s are integers and $\zeta=e^{\pi i/5}$ is a
+10th root of unity. This is possible because the location of each point
+is the location of a previous point plus a number of the form $(s
++t\phi^{-1})\zeta^k$, and because $\phi^{-1}=\zeta^2-\zeta^3$. (We scale
+all dimensions up by $\phi$ for convenience.) Such a representation is
+highly redundant, because $\zeta$ satisfies the equation $\zeta^4-\zeta^3
++\zeta^2-\zeta+1=0$; but it is unique if $x_4=\cdots=x_9=0$, because that
+equation is irreducible over the rationals. (See {\sl Seminumerical
+Algorithms}, exercise 4.6.2-32.)
+
+The absolute values of $x_0$, $x_1$, $x_2$, and $x_3$ will be small in any
+covering, because they are obtained by adding small numbers of the
+form $(s+t\phi^{-1})\zeta^k$ for at most 30 values of $(s,t,k)$.  So
+we will represent each point internally as a single 32-bit number,
+$$(x_3+128)\cdot 2^{24}+(x_2+128)\cdot 2^{16}+(x_1+128)\cdot 2^8+x_0+128\,.$$
+To compute the coordinates of each point it suffices to have short tables
+for the amounts to add to the representation when we want to add
+$\zeta^k$ or $\phi^{-1}\zeta^k$.
+
+\Y\B\4\D$\\{pack}(\|a,\|b,\|c,\|d)$ \5
+$(\|a\LL\T{24})+(\|b\LL\T{16})+(\|c\LL\T{8})+{}$\|d\par
+\Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{unsigned} \&{int} ${}\|x[\\{init\_pts}+\T{2}*\\{total\_req}]{}$;\C{ the
+coordinates }\6
+\&{unsigned} \&{int} \\{delta\_s}[\T{10}]${}\K\{\\{pack}(\T{0},\39\T{0},\39%
+\T{0},\39\T{1}),\39\\{pack}(\T{0},\39\T{0},\39\T{1},\39\T{0}),\39\\{pack}(%
+\T{0},\39\T{1},\39\T{0},\39\T{0}),\39\\{pack}(\T{1},\39\T{0},\39\T{0},\39%
+\T{0}),\39\\{pack}(\T{1},\39{-}\T{1},\39\T{1},\39{-}\T{1}),\3{-1}\39\\{pack}(%
+\T{0},\39\T{0},\39\T{0},\39{-}\T{1}),\39\\{pack}(\T{0},\39\T{0},\39{-}\T{1},\39%
+\T{0}),\39\\{pack}(\T{0},\39{-}\T{1},\39\T{0},\39\T{0}),\39\\{pack}({-}\T{1},%
+\39\T{0},\39\T{0},\39\T{0}),\39\\{pack}({-}\T{1},\39\T{1},\39{-}\T{1},\39\T{1})%
+\};{}$\6
+\&{unsigned} \&{int} \\{delta\_t}[\T{10}]${}\K\{\\{pack}({-}\T{1},\39\T{1},\39%
+\T{0},\39\T{0}),\39\\{pack}(\T{0},\39\T{1},\39{-}\T{1},\39\T{1}),\39\\{pack}(%
+\T{1},\39{-}\T{1},\39\T{1},\39\T{0}),\39\\{pack}(\T{0},\39\T{0},\39\T{1},\39{-}%
+\T{1}),\39\\{pack}(\T{0},\39\T{1},\39{-}\T{1},\39\T{0}),\3{-1}\39\\{pack}(%
+\T{1},\39{-}\T{1},\39\T{0},\39\T{0}),\39\\{pack}(\T{0},\39{-}\T{1},\39\T{1},%
+\39{-}\T{1}),\39\\{pack}({-}\T{1},\39\T{1},\39{-}\T{1},\39\T{0}),\39\\{pack}(%
+\T{0},\39\T{0},\39{-}\T{1},\39\T{1}),\39\\{pack}(\T{0},\39{-}\T{1},\39\T{1},\39%
+\T{0})\}{}$;\par
+\fi
+
+\M{9}\B\X7:Initialize the tables\X${}\mathrel+\E{}$\6
+$\|x[\T{0}]\K\\{pack}(\T{128},\39\T{128},\39\T{128},\39\T{128});{}$\6
+\&{for} ${}(\|j\K\T{1},\39\|p\K\\{poly}[\T{0}];{}$ ${}\|j<\\{init\_pts};{}$ ${}%
+\|j\PP,\39\|p\K\|p\MG\\{next}\MG\\{next}){}$\1\5
+${}\|x[\|j]\K\|x[\|j-\T{1}]+\|p\MG\\{next}\MG\|s*\\{delta\_s}[\|p\MG\\{dir}]+%
+\|p\MG\\{next}\MG\|t*\\{delta\_t}[\|p\MG\\{dir}]{}$;\2\par
+\fi
+
+\M{10}We will occasionally need to decide whether a number of the form
+$s+t\phi^{-1}$ is positive, negative, or zero. There is an interesting
+recursive way to make this test: The answer is obvious unless $st<0$;
+and in the latter case $s+t\phi^{-1}$ has the same sign as $s\phi+t=
+s+t+s\phi^{-1}$, so we can replace $(s,t)$ by the pair $(s+t,s)$.
+
+But for our purposes it is sufficient simply to test the sign of $13s+8t$,
+since $s$ and $t$ will not get large enough to make this trick fail.
+
+\Y\B\4\X7:Initialize the tables\X${}\mathrel+\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{6};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\\{thresh1}[\|j]\K\T{13}*\\{triang}[\|j][\T{1}]+\T{8}*\\{triang}[\|j][%
+\T{2}];{}$\6
+${}\\{thresh3}[\|j]\K\T{13}*\\{triang}[\|j][\T{7}]+\T{8}*\\{triang}[\|j][%
+\T{8}];{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{11}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{thresh1}[\T{6}];\C{ encoded version of the first length }\6
+\&{int} \\{thresh3}[\T{6}];\C{ encoded version of the third length }\par
+\fi
+
+\N{1}{12}Backtracking.
+
+Two heuristics allow a quick decision: A triangle position is impossible
+if the existing angle is too small, or if the existing
+side is too small and between two convex angles (i.e., between angles
+that each have $s<5$).
+
+\Y\B\4\X12:Backtrack through all solutions\X${}\E{}$\6
+$\|l\K\T{0};{}$\6
+\4\\{newlev}:\6
+\&{if} ${}(\|l\E\\{total\_req}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{top}<\T{0}){}$\1\5
+\X30:Record a solution\X;\2\6
+\&{goto} \\{backup};\6
+\4${}\}{}$\2\6
+${}\\{ht}[\|l]\K\\{top};{}$\6
+${}\\{lb}[\|l]\K(\\{big\_need}\E\T{0}\?\T{3}:\T{0});{}$\6
+${}\\{ub}[\|l]\K(\\{small\_need}\E\T{0}\?\T{3}:\T{6});{}$\6
+\X14:Find corner to branch on\X;\6
+${}\\{way}[\|l]\K\\{lb}[\|l];{}$\6
+\4\\{tryit}:\5
+${}\|j\K\\{way}[\|l];{}$\6
+${}\|p\K\\{choice}[\|l];{}$\6
+\&{if} ${}(\|p\MG\|s<\\{triang}[\|j][\T{0}]){}$\1\5
+\&{goto} \\{nogood};\C{ angle is too small }\2\6
+${}\|q\K\|p\MG\\{next};{}$\6
+${}\|r\K\|q\MG\\{next};{}$\6
+\&{if} ${}(\|r\MG\|s<\T{5}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\T{13}*\|q\MG\|s+\T{8}*\|q\MG\|t<\\{thresh3}[\|j]){}$\1\5
+\&{goto} \\{nogood};\C{ side after \PB{\|p} is too small }\2\6
+\&{if} ${}(\T{13}*\|q\MG\|s+\T{8}*\|q\MG\|t\E\\{thresh3}[\|j]\W\|r\MG\|s<%
+\\{triang}[\|j][\T{6}]){}$\1\5
+\&{goto} \\{nogood};\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|p\MG\|s\E\\{triang}[\|j][\T{0}]\W\|p\MG\\{prev}\MG\\{prev}\MG\|s<%
+\T{5}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\T{13}*\|p\MG\\{prev}\MG\|s+\T{8}*\|p\MG\\{prev}\MG\|t<\\{thresh1}[%
+\|j]){}$\1\5
+\&{goto} \\{nogood};\C{ side preceding \PB{\|p} is too small }\2\6
+\&{if} ${}(\T{13}*\|p\MG\\{prev}\MG\|s+\T{8}*\|p\MG\\{prev}\MG\|t\E\\{thresh1}[%
+\|j]\W\|p\MG\\{prev}\MG\\{prev}\MG\|s<\\{triang}[\|j][\T{3}]){}$\1\5
+\&{goto} \\{nogood};\2\6
+\4${}\}{}$\2\6
+\X15:Install triangle \PB{\|j} at position \PB{\\{choice}[\|l]}\X;\6
+\&{if} (\\{debug})\1\5
+\X27:Examine the current choice and its ramifications\X;\2\6
+\&{if} ${}(\\{way}[\|l]<\T{3}){}$\1\5
+${}\\{big\_need}\MM{}$;\5
+\2\&{else}\1\5
+${}\\{small\_need}\MM;{}$\2\6
+${}\|l\PP;{}$\6
+${}\\{vert}\MRL{+{\K}}\T{2};{}$\6
+\&{goto} \\{newlev};\6
+\4\\{nogood}:\6
+\&{if} ${}(\PP\\{way}[\|l]<\\{ub}[\|l]){}$\1\5
+\&{goto} \\{tryit};\2\6
+\4\\{backup}:\6
+\&{if} ${}(\|l\E\T{0}){}$\1\5
+\&{goto} \\{done};\2\6
+${}\|l\MM;{}$\6
+${}\\{vert}\MRL{-{\K}}\T{2};{}$\6
+\&{if} ${}(\\{way}[\|l]<\T{3}){}$\1\5
+${}\\{big\_need}\PP{}$;\5
+\2\&{else}\1\5
+${}\\{small\_need}\PP;{}$\2\6
+\X28:Undo the changes made in level \PB{\|l}\X;\6
+\&{goto} \\{nogood};\6
+\4\\{done}:\par
+\U1.\fi
+
+\M{13}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}\\{bhoice}[\\{total\_req}]{}$;\C{ convex corner where branching
+occurs }\6
+\&{int} \\{way}[\\{total\_req}];\C{ which way we tried to place a triangle }\6
+\&{node} ${}{*}\\{choice}[\\{total\_req}]{}$;\C{ where we tried to place it }\6
+\&{node} ${}{*}\\{save}[\\{total\_req}]{}$;\C{ polygons to restore when
+backtracing }\6
+\&{int} \\{lb}[\\{total\_req}]${},{}$ \\{ub}[\\{total\_req}];\C{ bounds on \PB{%
+\\{way}} }\6
+\&{int} \\{ht}[\\{total\_req}];\C{ size of stack when the choice was made }\par
+\fi
+
+\M{14}After experimenting with simpler rules here, I decided it was best to
+choose a corner that results in the fewest possibilities with respect to
+the two heuristics just mentioned.
+
+We also must restrict the branch point to a convex corner. Otherwise
+we might miss important solutions.
+
+\Y\B\4\X14:Find corner to branch on\X${}\E{}$\6
+\&{for} ${}(\|p\K\\{poly}[\\{top}],\39\\{rr}\K\|p\MG\\{prev}\MG\\{prev},\39\|i%
+\K\T{10000000};{}$  ; ${}\\{rr}\K\|p,\39\|p\K\|r){}$\5
+${}\{{}$\1\6
+${}\|q\K\|p\MG\\{next};{}$\6
+${}\|r\K\|q\MG\\{next};{}$\6
+\&{if} ${}(\|p\MG\|s<\T{5}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\\{lb}[\|l],\39\|k\K\T{0};{}$ ${}\|j<\\{ub}[\|l];{}$ ${}\|j%
+\PP){}$\1\6
+\&{if} ${}(\|p\MG\|s\G\\{triang}[\|j][\T{0}]\W(\|r\MG\|s>\T{5}\V(\T{13}*(\|q\MG%
+\|s)+\T{8}*(\|q\MG\|t))\G\\{thresh3}[\|j])\W(\|p\MG\|s>\\{triang}[\|j][\T{0}]\V%
+\\{rr}\MG\|s>\T{5}\V\T{13}*\|p\MG\\{prev}\MG\|s+\T{8}*\|p\MG\\{prev}\MG\|t\G%
+\\{thresh1}[\|j])){}$\1\5
+${}\|k\PP;{}$\2\2\6
+\&{if} ${}(\|k<\|i){}$\1\5
+${}\|i\K\|k,\39\\{pp}\K\|p;{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|r\E\\{poly}[\\{top}]){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+${}\\{choice}[\|l]\K\\{pp}{}$;\par
+\U12.\fi
+
+\M{15}\B\X15:Install triangle \PB{\|j} at position \PB{\\{choice}[\|l]}\X${}%
+\E{}$\6
+\X16:Copy the current polygon and save the old version\X;\6
+\X17:Create new vertices \PB{\\{pp}}, \PB{\\{qq}}, and the line \PB{\|r}
+between them\X;\6
+\X18:Insert \PB{\\{qq}} at the choice point; split into two polygons if
+necessary\X;\6
+\X22:Insert \PB{\\{pp}} at the choice point; split into two polygons if
+necessary\X;\par
+\U12.\fi
+
+\M{16}My first draft program avoided full copying by copying only the nodes
+that changed. It was rather elegant, but alas---it implemented a bad algorithm.
+The correct algorithm manipulates the lists in more complex ways, hence
+partial copying is no longer feasible; it would be too complicated.
+
+\Y\B\4\X16:Copy the current polygon and save the old version\X${}\E{}$\6
+$\\{save}[\|l]\K\\{poly}[\\{top}];{}$\6
+${}\\{rr}\K\\{get\_avail}(\,);{}$\6
+\&{for} ${}(\\{pp}\K\\{rr},\39\|p\K\\{choice}[\|l];{}$  ; ${}\|p\K\|p\MG%
+\\{next}){}$\5
+${}\{{}$\1\6
+${}\\{pp}\MG\|s\K\|p\MG\|s;{}$\6
+${}\\{pp}\MG\|t\K\|p\MG\|t;{}$\6
+${}\\{pp}\MG\\{dir}\K\|p\MG\\{dir};{}$\6
+${}\\{qq}\K\\{get\_avail}(\,);{}$\6
+${}\\{pp}\MG\\{next}\K\\{qq};{}$\6
+${}\\{qq}\MG\\{prev}\K\\{pp};{}$\6
+${}\|p\K\|p\MG\\{next};{}$\6
+${}\\{qq}\MG\|s\K\|p\MG\|s;{}$\6
+${}\\{qq}\MG\|t\K\|p\MG\|t;{}$\6
+\&{if} ${}(\|p\MG\\{next}\E\\{choice}[\|l]){}$\1\5
+\&{break};\2\6
+${}\\{pp}\K\\{get\_avail}(\,);{}$\6
+${}\\{qq}\MG\\{next}\K\\{pp};{}$\6
+${}\\{pp}\MG\\{prev}\K\\{qq};{}$\6
+\4${}\}{}$\2\6
+${}\\{qq}\MG\\{next}\K\\{rr};{}$\6
+${}\\{rr}\MG\\{prev}\K\\{qq}{}$;\C{ \PB{\\{poly}[\\{top}]} has not been updated
+}\par
+\U15.\fi
+
+\M{17}\B\X17:Create new vertices \PB{\\{pp}}, \PB{\\{qq}}, and the line \PB{%
+\|r} between them\X${}\E{}$\6
+$\\{pp}\K\\{get\_avail}(\,);{}$\6
+${}\\{pp}\MG\|t\K\\{vert};{}$\6
+${}\\{qq}\K\\{get\_avail}(\,);{}$\6
+${}\\{qq}\MG\|t\K\\{vert}+\T{1};{}$\6
+${}\|r\K\\{get\_avail}(\,);{}$\6
+${}\|r\MG\|s\K\\{triang}[\|j][\T{4}];{}$\6
+${}\|r\MG\|t\K\\{triang}[\|j][\T{5}];{}$\6
+${}\\{pp}\MG\\{next}\K\|r;{}$\6
+${}\|r\MG\\{prev}\K\\{pp};{}$\6
+${}\|r\MG\\{next}\K\\{qq};{}$\6
+${}\\{qq}\MG\\{prev}\K\|r;{}$\6
+${}\|k\K(\\{rr}\MG\\{dir}+\\{triang}[\|j][\T{0}]+\T{100})\MOD\T{10}{}$;\C{
+direction from the choice node to \PB{\\{pp}} }\6
+${}\|x[\\{vert}]\K\|x[\\{rr}\MG\|t]+\\{triang}[\|j][\T{1}]*\\{delta\_s}[\|k]+%
+\\{triang}[\|j][\T{2}]*\\{delta\_t}[\|k];{}$\6
+${}\|k\K(\|k+\\{triang}[\|j][\T{3}]+\T{5})\MOD\T{10};{}$\6
+${}\\{pp}\MG\\{dir}\K\|k;{}$\6
+${}\\{pp}\MG\|s\K\T{10}-\\{triang}[\|j][\T{3}];{}$\6
+${}\|x[\\{vert}+\T{1}]\K\|x[\\{vert}]+\\{triang}[\|j][\T{4}]*\\{delta\_s}[\|k]+%
+\\{triang}[\|j][\T{5}]*\\{delta\_t}[\|k]{}$;\par
+\U15.\fi
+
+\M{18}We maintain the following conditions in the polygons: (1) All angles
+$s$ are in the range $s\le 9$, $s\ne0$, $s\ne5$. (2)~All vertices are at
+distinct points in the plane.
+
+We don't bother to check that the new polygon doesn't intersect itself,
+except when the point of intersection is at a vertex. Self-intersecting
+polygons of other types  will not lead to solutions,
+since they will doubly cover some
+points and will therefore be incompletely filled when we have used up
+our quota of triangles. If we checked for self-intersection, the search
+tree would be smaller, but I think the total search time would be
+longer, because of the extra time spent in checking.
+
+Previous steps have created nodes \PB{\\{rr}}, \PB{\\{pp}}, \PB{\\{qq}} for the
+new
+triangle. Node \PB{\\{rr}} is the choice point in the current polygon; we have
+not
+yet linked \PB{\\{pp}} and \PB{\\{qq}} into that polygon, nor have we recorded
+anything about it in \PB{\\{poly}[\\{top}]}. The triangle will be inserted in
+such
+a way that the line from \PB{\\{rr}} to \PB{\\{qq}} runs along the existing
+line
+from \PB{\\{rr}} to its successor.
+
+\Y\B\4\X18:Insert \PB{\\{qq}} at the choice point; split into two polygons if
+necessary\X${}\E{}$\6
+$\|q\K\\{rr}\MG\\{next};{}$\6
+${}\|p\K\|q\MG\\{next}{}$;\C{ \PB{\|q} is the line between \PB{\\{rr}} and \PB{%
+\|p} }\6
+${}\|k\K\T{13}*\|q\MG\|s+\T{8}*\|q\MG\|t;{}$\6
+\&{if} ${}(\|k\E\\{thresh3}[\|j]){}$\1\5
+\X19:Connect \PB{\\{pp}} directly to existing vertex \PB{$\|p\E\\{qq}$}\X\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\|k>\\{thresh3}[\|j]){}$\5
+${}\{{}$\C{ the line from \PB{\\{rr}} to \PB{\|p} is longer than needed }\1\6
+${}\|q\MG\|s\MRL{-{\K}}\\{triang}[\|j][\T{7}];{}$\6
+${}\|q\MG\|t\MRL{-{\K}}\\{triang}[\|j][\T{8}];{}$\6
+${}\\{qq}\MG\|s\K\T{5}-\\{triang}[\|j][\T{6}];{}$\6
+\4${}\}{}$\2\6
+\&{else}\5
+${}\{{}$\C{ the line from \PB{\\{rr}} to \PB{\|p} is shorter than from \PB{%
+\\{rr}} to \PB{\\{qq}} }\1\6
+${}\|p\MG\|s\MRL{-{\K}}\T{5}{}$;\C{ we know this is $>0$ }\6
+${}\|q\MG\|s\K\\{triang}[\|j][\T{7}]-\|q\MG\|s;{}$\6
+${}\|q\MG\|t\K\\{triang}[\|j][\T{8}]-\|q\MG\|t;{}$\6
+${}\\{qq}\MG\|s\K\T{10}-\\{triang}[\|j][\T{6}];{}$\6
+\4${}\}{}$\2\6
+${}\\{qq}\MG\\{next}\K\|q;{}$\6
+${}\|q\MG\\{prev}\K\\{qq};{}$\6
+${}\\{qq}\MG\\{dir}\K\\{pp}\MG\\{dir}+\T{5}-\\{qq}\MG\|s;{}$\6
+\&{for} ${}(\|p\K\|p\MG\\{next}\MG\\{next};{}$ ${}\|p\I\\{rr};{}$ ${}\|p\K\|p%
+\MG\\{next}\MG\\{next}){}$\1\6
+\&{if} ${}(\|x[\|p\MG\|t]\E\|x[\\{vert}+\T{1}]){}$\5
+${}\{{}$\C{ \PB{\\{qq}} coincides with a previous point }\1\6
+\X20:Split off a polygon at position \PB{$\\{qq}\E\|p$}\X;\6
+\&{break};\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\6
+\X21:Remove angle 0 or 5 at \PB{\|p}, if present after the \PB{\\{qq}}
+insertion stage\X;\par
+\U15.\fi
+
+\M{19}Node \PB{\|r} is the line between \PB{\\{pp}} and \PB{\\{qq}}; node \PB{%
+\|q} is the line between
+\PB{\\{rr}} and \PB{\|p}. We've discovered that these lines are identical; so
+we discard
+\PB{\|q} and \PB{\\{qq}}. If the new angle at \PB{\|p} is negative,
+backtracking will
+occur at level \PB{$\|l+\T{1}$}, so we don't bother to check for that unlikely
+event.
+
+\Y\B\4\X19:Connect \PB{\\{pp}} directly to existing vertex \PB{$\|p\E\\{qq}$}%
+\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|r\MG\\{next}\K\|p;{}$\6
+${}\|p\MG\\{prev}\K\|r;{}$\6
+${}\|q\MG\\{next}\K\\{qq};{}$\6
+${}\\{qq}\MG\\{next}\K\\{avail};{}$\6
+${}\\{avail}\K\|q;{}$\6
+${}\|p\MG\|s\MRL{-{\K}}\\{triang}[\|j][\T{6}];{}$\6
+\4${}\}{}$\2\par
+\U18.\fi
+
+\M{20}This part of the program is the price I had to pay to fix my original
+ill-understood algorithm. We separate out the subpolygon (\PB{\\{qq}}, \dots,
+\PB{$\|p-\\{pred}$}, \PB{\\{qq}}) and connect \PB{\\{pp}} to \PB{\|p} and its
+successors rather than to~\PB{\\{qq}}.
+
+The split-off polygon might not have a winding number of 1 (I mean, the
+sum of its exterior angles \PB{$\T{5}-\|s$} might not be 10). Then it might
+have
+no convex corners. But in such a case, the remaining polygon would have
+a negative angle, so we would never have to look at the split-off polygon
+(which is lower in the stack). This reasoning is somewhat subtle, and the
+case may never arise, but I do want to record it here because I think it
+is correct and because I don't want to imply that I ignored a
+potential problem.
+
+\Y\B\4\X20:Split off a polygon at position \PB{$\\{qq}\E\|p$}\X${}\E{}$\6
+$\\{qq}\MG\\{prev}\K\|p\MG\\{prev};{}$\6
+${}\|p\MG\\{prev}\MG\\{next}\K\\{qq};{}$\6
+${}\|k\K\\{qq}\MG\|s+\|p\MG\|s-\T{10};{}$\6
+${}\\{qq}\MG\|s\K(\|p\MG\\{prev}\MG\\{prev}\MG\\{dir}+\T{105}-\\{qq}\MG\\{dir})%
+\MOD\T{10}{}$;\C{ \PB{$\\{qq}\MG\\{dir}$} stays the same }\6
+${}\|p\MG\\{prev}\K\|r;{}$\6
+${}\|r\MG\\{next}\K\|p;{}$\6
+${}\|p\MG\|s\K\|k-\\{qq}\MG\|s{}$;\C{ if negative, we'll discover a problem
+soon }\6
+${}\|k\K\\{qq}\MG\|s;{}$\6
+\&{if} ${}(\|k\E\T{0}\V\|k\E\T{5}){}$\5
+${}\{{}$\C{ recall that \PB{$\|q\K\\{qq}\MG\\{next}$} }\1\6
+${}\\{qq}\K\\{qq}\MG\\{prev};{}$\6
+\&{if} ${}(\|k\E\T{5}){}$\1\5
+${}\\{qq}\MG\|s\MRL{+{\K}}\|q\MG\|s,\39\\{qq}\MG\|t\MRL{+{\K}}\|q\MG\|t;{}$\2\6
+\&{else} \&{if} ${}(\T{13}*(\\{qq}\MG\|s-\|q\MG\|s)+\T{8}*(\\{qq}\MG\|t-\|q\MG%
+\|t)<\T{0}){}$\1\5
+${}\\{qq}\MG\|s\K\|q\MG\|s-\\{qq}\MG\|s,\39\\{qq}\MG\|t\K\|q\MG\|t-\\{qq}\MG%
+\|t,\39\\{qq}\MG\\{prev}\MG\|s\MRL{-{\K}}\T{5},\39\\{qq}\MG\\{prev}\MG\\{dir}%
+\MRL{+{\K}}\T{5};{}$\2\6
+\&{else}\1\5
+${}\\{qq}\MG\|s\MRL{-{\K}}\|q\MG\|s,\39\\{qq}\MG\|t\MRL{-{\K}}\|q\MG\|t,\39\|q%
+\MG\\{next}\MG\|s\MRL{-{\K}}\T{5};{}$\2\6
+${}\\{qq}\MG\\{next}\K\|q\MG\\{next};{}$\6
+${}\|q\MG\\{next}\MG\\{prev}\K\\{qq};{}$\6
+${}\\{qq}\K\|q\MG\\{next};{}$\6
+${}\|q\MG\\{next}\K\\{avail};{}$\6
+${}\\{avail}\K\|q\MG\\{prev};{}$\6
+\4${}\}{}$\2\6
+${}\\{poly}[\\{top}\PP]\K\\{qq}{}$;\par
+\U18.\fi
+
+\M{21}If the new angle at \PB{\|p} is zero, there's a possibility that point %
+\PB{\\{pp}}
+is coincident with the successor of \PB{\|p}. In that case we temporarily
+retain both points, with a line of length 0 between them.
+
+\Y\B\4\X21:Remove angle 0 or 5 at \PB{\|p}, if present after the \PB{\\{qq}}
+insertion stage\X${}\E{}$\6
+\&{if} ${}(\|p\MG\|s\E\T{0}\V\|p\MG\|s\E\T{5}){}$\5
+${}\{{}$\1\6
+${}\|q\K\|p\MG\\{next}{}$;\C{ at this point \PB{$\|r\K\|p\MG\\{prev}$} }\6
+\&{if} ${}(\|p\MG\|s\E\T{5}){}$\1\5
+${}\|r\MG\|s\MRL{+{\K}}\|q\MG\|s,\39\|r\MG\|t\MRL{+{\K}}\|q\MG\|t;{}$\2\6
+\&{else} \&{if} ${}(\T{13}*(\|r\MG\|s-\|q\MG\|s)+\T{8}*(\|r\MG\|t-\|q\MG\|t)\Z%
+\T{0}){}$\1\5
+${}\|r\MG\|s\K\|q\MG\|s-\|r\MG\|s,\39\|r\MG\|t\K\|q\MG\|t-\|r\MG\|t,\39\\{pp}%
+\MG\|s\MRL{-{\K}}\T{5},\39\\{pp}\MG\\{dir}\MRL{+{\K}}\T{5}{}$;\C{ \PB{$\\{pp}\K%
+\|r\MG\\{prev}$} }\2\6
+\&{else}\1\5
+${}\|r\MG\|s\MRL{-{\K}}\|q\MG\|s,\39\|r\MG\|t\MRL{-{\K}}\|q\MG\|t,\39\|q\MG%
+\\{next}\MG\|s\MRL{-{\K}}\T{5};{}$\2\6
+${}\|r\MG\\{next}\K\|q\MG\\{next};{}$\6
+${}\|q\MG\\{next}\MG\\{prev}\K\|r;{}$\6
+${}\|q\MG\\{next}\K\\{avail};{}$\6
+${}\\{avail}\K\|p;{}$\6
+\4${}\}{}$\2\par
+\U18.\fi
+
+\M{22}How do things stand now? We have a path from \PB{\\{pp}} to \PB{\\{rr}},
+and \PB{\|r} is
+the line out of \PB{\\{pp}}; the length of \PB{\|r} might be zero. Variables %
+\PB{\|p}, \PB{\|q},
+and \PB{\\{qq}} are currently unused. The remaining task is to insert the line
+from \PB{\\{rr}} to \PB{\\{pp}}.
+
+The happiest situation occurs when we find that the former angle at \PB{\\{rr}}
+is
+just the angle of the new triangle, and the vertex preceding \PB{\\{rr}}
+coincides
+with \PB{\\{pp}}, and the length of \PB{\|r} is zero. This means the current
+polygon has been completely filled, and we've made progress!
+
+\Y\B\4\X22:Insert \PB{\\{pp}} at the choice point; split into two polygons if
+necessary\X${}\E{}$\6
+\&{if} ${}(\\{rr}\MG\|s\E\\{triang}[\|j][\T{0}]){}$\5
+${}\{{}$\1\6
+${}\|q\K\\{rr}\MG\\{prev};{}$\6
+${}\|p\K\|q\MG\\{prev}{}$;\C{ \PB{\|q} is the line between \PB{\|p} and \PB{%
+\\{rr}} }\6
+${}\|k\K\T{13}*\|q\MG\|s+\T{8}*\|q\MG\|t;{}$\6
+\&{if} ${}(\|k\E\\{thresh1}[\|j]){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|p\E\\{pp}\MG\\{next}\MG\\{next}){}$\5
+${}\{{}$\C{ hurray }\1\6
+${}\\{rr}\MG\\{next}\K\\{avail};{}$\6
+${}\\{avail}\K\\{pp};{}$\6
+${}\\{top}\MM;{}$\6
+\&{goto} \\{insert\_done};\6
+\4${}\}{}$\2\6
+\X23:Connect existing vertex \PB{$\|p\E\\{pp}$} directly to the path following %
+\PB{\\{pp}}\X;\6
+\&{goto} \\{insert\_almost\_done};\6
+\4${}\}{}$\2\6
+\&{else}\1\5
+\X24:Connect vertex \PB{\|p} to \PB{\\{pp}}, removing node \PB{\\{rr}}\X;\2\6
+\4${}\}{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{rr}\MG\|s\MRL{-{\K}}\\{triang}[\|j][\T{0}];{}$\6
+${}\\{rr}\MG\\{dir}\MRL{+{\K}}\\{triang}[\|j][\T{0}];{}$\6
+${}\|q\K\\{get\_avail}(\,);{}$\6
+${}\|q\MG\\{prev}\K\\{rr};{}$\6
+${}\\{rr}\MG\\{next}\K\|q;{}$\6
+${}\|q\MG\|s\K\\{triang}[\|j][\T{1}];{}$\6
+${}\|q\MG\|t\K\\{triang}[\|j][\T{2}];{}$\6
+${}\|q\MG\\{next}\K\\{pp};{}$\6
+${}\\{pp}\MG\\{prev}\K\|q;{}$\6
+${}\|p\K\\{rr};{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|p\K\|p\MG\\{prev}\MG\\{prev};{}$ ${}\|p\I\\{pp};{}$ ${}\|p\K\|p%
+\MG\\{prev}\MG\\{prev}){}$\1\6
+\&{if} ${}(\|x[\|p\MG\|t]\E\|x[\\{vert}]){}$\5
+${}\{{}$\C{ \PB{\\{pp}} coincides with a previous point }\1\6
+\X25:Split off a polygon at position \PB{$\\{pp}\E\|p$}\X;\6
+\&{break};\6
+\4${}\}{}$\2\2\6
+\4\\{insert\_almost\_done}:\5
+\X26:Remove angle 0 or 5 at \PB{\|p}, if present after the \PB{\\{pp}}
+insertion stage\X;\6
+${}\\{poly}[\\{top}]\K\|p;{}$\6
+\4\\{insert\_done}:\par
+\U15.\fi
+
+\M{23}At this point \PB{$\|q\K\\{rr}\MG\\{prev}$}. We will recycle nodes \PB{%
+\|q}, \PB{\\{rr}}, and \PB{\\{pp}}.
+
+\Y\B\4\X23:Connect existing vertex \PB{$\|p\E\\{pp}$} directly to the path
+following \PB{\\{pp}}\X${}\E{}$\6
+$\|p\MG\\{next}\K\\{pp}\MG\\{next};{}$\6
+${}\\{pp}\MG\\{next}\MG\\{prev}\K\|p;{}$\6
+${}\|p\MG\|s\MRL{-{\K}}\T{10}-\\{pp}\MG\|s;{}$\6
+${}\|p\MG\\{dir}\K\\{pp}\MG\\{dir};{}$\6
+${}\\{pp}\MG\\{next}\K\\{avail};{}$\6
+${}\\{rr}\MG\\{next}\K\\{pp};{}$\6
+${}\\{avail}\K\|q{}$;\par
+\U22.\fi
+
+\M{24}\B\X24:Connect vertex \PB{\|p} to \PB{\\{pp}}, removing node \PB{\\{rr}}%
+\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\|k>\\{thresh1}[\|j]){}$\5
+${}\{{}$\C{ the line from \PB{\|p} to \PB{\\{rr}} is longer than needed }\1\6
+${}\|q\MG\|s\MRL{-{\K}}\\{triang}[\|j][\T{1}];{}$\6
+${}\|q\MG\|t\MRL{-{\K}}\\{triang}[\|j][\T{2}];{}$\6
+${}\\{pp}\MG\|s\MRL{-{\K}}\T{5};{}$\6
+\4${}\}{}$\2\6
+\&{else}\5
+${}\{{}$\C{ it's shorter than from \PB{\\{rr}} to \PB{\\{pp}} }\1\6
+${}\|p\MG\|s\MRL{-{\K}}\T{5}{}$;\C{ we know this is $>0$ }\6
+${}\|p\MG\\{dir}\MRL{+{\K}}\T{5};{}$\6
+${}\|q\MG\|s\K\\{triang}[\|j][\T{1}]-\|q\MG\|s;{}$\6
+${}\|q\MG\|t\K\\{triang}[\|j][\T{2}]-\|q\MG\|t;{}$\6
+\4${}\}{}$\2\6
+${}\|q\MG\\{next}\K\\{pp};{}$\6
+${}\\{pp}\MG\\{prev}\K\|q;{}$\6
+${}\\{rr}\MG\\{next}\K\\{avail};{}$\6
+${}\\{avail}\K\\{rr};{}$\6
+\4${}\}{}$\2\par
+\U22.\fi
+
+\M{25}\B\X25:Split off a polygon at position \PB{$\\{pp}\E\|p$}\X${}\E{}$\6
+$\\{qq}\K\\{pp}\MG\\{next};{}$\6
+\&{if} ${}(\\{qq}\MG\\{next}\E\|p){}$\5
+${}\{{}$\C{ remove trivial length-0 leg }\1\6
+${}\|p\MG\|s\MRL{+{\K}}\\{pp}\MG\|s-\T{5};{}$\6
+${}\|p\MG\\{prev}\K\\{pp}\MG\\{prev};{}$\6
+${}\\{pp}\MG\\{prev}\MG\\{next}\K\|p;{}$\6
+${}\\{qq}\MG\\{next}\K\\{avail};{}$\6
+${}\\{avail}\K\\{pp};{}$\6
+\4${}\}{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|q\K\|p\MG\\{next};{}$\6
+${}\|p\MG\\{next}\K\\{qq};{}$\6
+${}\\{qq}\MG\\{prev}\K\|p;{}$\6
+${}\\{pp}\MG\\{next}\K\|q;{}$\6
+${}\|q\MG\\{prev}\K\\{pp};{}$\6
+${}\|k\K\\{pp}\MG\\{dir};{}$\6
+${}\\{pp}\MG\\{dir}\K\|p\MG\\{dir};{}$\6
+${}\|p\MG\\{dir}\K\|k;{}$\6
+${}\|k\K\|p\MG\|s+\\{pp}\MG\|s-\T{10};{}$\6
+${}\\{pp}\MG\|s\K(\\{pp}\MG\\{prev}\MG\\{prev}\MG\\{dir}+\T{105}-\\{pp}\MG%
+\\{dir})\MOD\T{10};{}$\6
+${}\|p\MG\|s\K\|k-\\{pp}\MG\|s{}$;\C{ if negative, we'll catch it }\6
+${}\|k\K\\{pp}\MG\|s;{}$\6
+\&{if} ${}(\|k\E\T{0}\V\|k\E\T{5}){}$\5
+${}\{{}$\1\6
+${}\\{pp}\K\\{pp}\MG\\{prev};{}$\6
+\&{if} ${}(\|k\E\T{5}){}$\1\5
+${}\\{pp}\MG\|s\MRL{+{\K}}\|q\MG\|s,\39\\{pp}\MG\|t\MRL{+{\K}}\|q\MG\|t;{}$\2\6
+\&{else} \&{if} ${}(\T{13}*(\\{pp}\MG\|s-\|q\MG\|s)+\T{8}*(\\{pp}\MG\|t-\|q\MG%
+\|t)<\T{0}){}$\1\5
+${}\\{pp}\MG\|s\K\|q\MG\|s-\\{pp}\MG\|s,\39\\{pp}\MG\|t\K\|q\MG\|t-\\{pp}\MG%
+\|t,\39\\{pp}\MG\\{prev}\MG\|s\MRL{-{\K}}\T{5},\39\\{pp}\MG\\{prev}\MG\\{dir}%
+\MRL{+{\K}}\T{5};{}$\2\6
+\&{else}\1\5
+${}\\{pp}\MG\|s\MRL{-{\K}}\|q\MG\|s,\39\\{pp}\MG\|t\MRL{-{\K}}\|q\MG\|t,\39\|q%
+\MG\\{next}\MG\|s\MRL{-{\K}}\T{5};{}$\2\6
+${}\\{pp}\MG\\{next}\K\|q\MG\\{next};{}$\6
+${}\|q\MG\\{next}\MG\\{prev}\K\\{pp};{}$\6
+${}\\{pp}\K\|q\MG\\{next};{}$\6
+${}\|q\MG\\{next}\K\\{avail};{}$\6
+${}\\{avail}\K\|q\MG\\{prev};{}$\6
+\4${}\}{}$\2\6
+${}\\{poly}[\\{top}\PP]\K\\{pp};{}$\6
+\4${}\}{}$\2\par
+\U22.\fi
+
+\M{26}I sure wish I had been able to figure out an elegant way to get rid of
+so many special cases. Sigh. This, at least, is the last.
+
+The polygon we're left with consists entirely of old vertices, so they
+are distinct.
+
+\Y\B\4\X26:Remove angle 0 or 5 at \PB{\|p}, if present after the \PB{\\{pp}}
+insertion stage\X${}\E{}$\6
+\&{if} ${}(\|p\MG\|s\E\T{0}\V\|p\MG\|s\E\T{5}){}$\5
+${}\{{}$\1\6
+${}\|q\K\|p\MG\\{next};{}$\6
+${}\|r\K\|p\MG\\{prev};{}$\6
+\&{if} ${}(\|p\MG\|s\E\T{5}){}$\1\5
+${}\|r\MG\|s\MRL{+{\K}}\|q\MG\|s,\39\|r\MG\|t\MRL{+{\K}}\|q\MG\|t;{}$\2\6
+\&{else} \&{if} ${}(\T{13}*(\|r\MG\|s-\|q\MG\|s)+\T{8}*(\|r\MG\|t-\|q\MG\|t)\Z%
+\T{0}){}$\1\5
+${}\|r\MG\|s\K\|q\MG\|s-\|r\MG\|s,\39\|r\MG\|t\K\|q\MG\|t-\|r\MG\|t,\39\|r\MG%
+\\{prev}\MG\|s\MRL{-{\K}}\T{5},\39\|r\MG\\{prev}\MG\\{dir}\MRL{+{\K}}\T{5};{}$%
+\2\6
+\&{else}\1\5
+${}\|r\MG\|s\MRL{-{\K}}\|q\MG\|s,\39\|r\MG\|t\MRL{-{\K}}\|q\MG\|t,\39\|q\MG%
+\\{next}\MG\|s\MRL{-{\K}}\T{5};{}$\2\6
+${}\|r\MG\\{next}\K\|q\MG\\{next};{}$\6
+${}\|q\MG\\{next}\MG\\{prev}\K\|r;{}$\6
+${}\|q\MG\\{next}\K\\{avail};{}$\6
+${}\\{avail}\K\|p;{}$\6
+${}\|p\K\|r\MG\\{next};{}$\6
+\4${}\}{}$\2\par
+\U22.\fi
+
+\M{27}\B\X27:Examine the current choice and its ramifications\X${}\E{}$\6
+${}\{{}$\1\6
+\&{int} \\{badsums}${}\K\T{0},{}$ \\{negangle}${}\K\T{0};{}$\7
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"Level\ \%d:\ vertex\ \%d}\)\.{\ with\ triangle\ \%d\\n"},\39%
+\|l,\39\\{choice}[\|l]\MG\|t,\39\\{way}[\|l]);{}$\2\6
+\&{for} ${}(\|j\K\\{ht}[\|l];{}$ ${}\|j\Z\\{top};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|p\K\\{poly}[\|j],\39\|k\K\|p\MG\\{prev}\MG\\{prev}\MG\\{dir},\39%
+\|i\K\T{0};{}$  ; \,)\5
+${}\{{}$\1\6
+${}\|q\K\|p\MG\\{next};{}$\6
+\&{if} ${}(\|q\MG\\{prev}\I\|p){}$\1\5
+\\{printf}(\.{"\ badlink!"});\2\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"\ \%d(\%d)"},\39\|p\MG\|t,\39\|p\MG\|s);{}$\2\6
+\&{if} ${}(\|p\MG\|s\E\T{0}\V\|p\MG\|s\E\T{5}){}$\1\5
+\\{printf}(\.{"\ badangle!"});\2\6
+\&{if} ${}(\|p\MG\|s<\T{0}\W\|j\E\\{top}){}$\1\5
+${}\\{negangle}\K\T{1};{}$\2\6
+\&{if} ${}((\|k+\T{105}-\|p\MG\|s-\|p\MG\\{dir})\MOD\T{10}\I\T{0}){}$\1\5
+\\{printf}(\.{"baddir!"});\2\6
+${}\|i\MRL{+{\K}}\T{5}-\|p\MG\|s;{}$\6
+${}\|k\K\|p\MG\\{dir};{}$\6
+${}\|p\K\|q\MG\\{next};{}$\6
+\&{if} ${}(\|p\MG\\{prev}\I\|q){}$\1\5
+\\{printf}(\.{"\ badlink!"});\2\6
+\&{if} (\\{verbose})\1\5
+${}\\{printf}(\.{"\ \%d,\%d"},\39\|q\MG\|s,\39\|q\MG\|t);{}$\2\6
+\&{if} ${}(\|p\E\\{poly}[\|j]){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|i\I\T{10}){}$\1\5
+${}\\{badsums}\PP;{}$\2\6
+\&{if} (\\{verbose})\1\5
+\\{printf}(\.{"\\n"});\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{badsums}\W\R\\{negangle}){}$\1\5
+\\{printf}(\.{"\ badsum!\\n"});\2\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{28}\B\X28:Undo the changes made in level \PB{\|l}\X${}\E{}$\6
+\&{for} ${}(\|j\K\\{top};{}$ ${}\|j\G\\{ht}[\|l];{}$ ${}\|j\MM){}$\5
+${}\{{}$\1\6
+${}\\{poly}[\|j]\MG\\{prev}\MG\\{next}\K\\{avail};{}$\6
+${}\\{avail}\K\\{poly}[\|j];{}$\6
+\4${}\}{}$\2\6
+${}\\{top}\K\\{ht}[\|l];{}$\6
+${}\\{poly}[\\{top}]\K\\{save}[\|l]{}$;\par
+\U12.\fi
+
+\N{1}{29}Solutions. The terminal gets only a minimum of information
+from which a tiling can be constructed.
+
+\fi
+
+\M{30}\B\X30:Record a solution\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{count}\PP;{}$\6
+\&{if} ${}(\\{count}\MOD\\{interval}\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\%d:"},\39\\{count});{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|l;{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\ \%d-\%d"},\39\\{choice}[\|j]\MG\|t,\39\\{way}[\|j]);{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{eps}\W\\{count}\MOD\\{eps\_interval}\E\T{0}){}$\1\5
+\X31:Output a PostScript version\X;\2\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{31}Here's how we get encapsulated PostScript output for a solution.
+
+\Y\B\4\X31:Output a PostScript version\X${}\E{}$\6
+${}\{{}$\1\6
+\X32:Open \PB{\\{eps\_file}} for output, and define a triangle subroutine\X;\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|l;{}$ ${}\|j\PP){}$\1\5
+\X34:Output the triangle for level \PB{\|j}\X;\2\6
+\\{fclose}(\\{eps\_file});\6
+\4${}\}{}$\2\par
+\U30.\fi
+
+\M{32}The PostScript `\.t' subroutine simply draws a triangle between three
+given points.
+
+\Y\B\4\X32:Open \PB{\\{eps\_file}} for output, and define a triangle subroutine%
+\X${}\E{}$\6
+$\\{sprintf}(\\{buffer},\39\.{"\%s.\%d"},\39\\{argv}[\T{0}],\39\\{count});{}$\6
+${}\\{eps\_file}\K\\{fopen}(\\{buffer},\39\.{"w"});{}$\6
+\&{if} ${}(\R\\{eps\_file}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"Can't\ open\ file\ \%s!}\)\.{\\n"},\39\\{buffer});{}$\6
+${}\\{exit}({-}\T{4});{}$\6
+\4${}\}{}$\2\6
+${}\\{fprintf}(\\{eps\_file},\39\.{"\%\%!\\n\%\%\%\%BoundingBo}\)\.{x:\ \%d\ %
+\%d\ \%d\ \%d\\n"},\39\\{bbxlo}-\T{1},\39\\{bbylo}-\T{1},\39\\{bbxhi}+\T{1},\39%
+\\{bbyhi}+\T{1});{}$\6
+${}\\{fprintf}(\\{eps\_file},\39\.{"/t\ \{\ moveto\ lineto\ }\)\.{lineto\
+closepath\ str}\)\.{oke\ \}\ bind\ def\\n"}){}$;\par
+\U31.\fi
+
+\M{33}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \\{buffer}[\T{100}];\C{ output file name (e.g. `\.{decagon.1}') }\6
+\&{FILE} ${}{*}\\{eps\_file};{}$\6
+\&{int} \\{bbxlo}${},{}$ \\{bbylo}${},{}$ \\{bbxhi}${},{}$ \\{bbyhi};\C{
+PostScript bounding box coordinates }\par
+\fi
+
+\M{34}\B\X34:Output the triangle for level \PB{\|j}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{print\_coord}(\\{choice}[\|j]\MG\|t);{}$\6
+${}\\{print\_coord}(\\{init\_pts}+\|j+\|j);{}$\6
+${}\\{print\_coord}(\\{init\_pts}+\T{1}+\|j+\|j);{}$\6
+${}\\{fprintf}(\\{eps\_file},\39\.{"\ t\\n"});{}$\6
+\4${}\}{}$\2\par
+\U31.\fi
+
+\M{35}\B\X3:Subroutines\X${}\mathrel+\E{}$\6
+\\{print\_coord}(\|j)\1\1\6
+\&{int} \|j;\2\2\6
+${}\{{}$\1\6
+\&{register} \&{float} \\{xx}${},{}$ \\{yy};\6
+\&{register} \&{int} \|k;\6
+\&{register} \&{unsigned} \|b;\7
+\&{for} ${}(\\{xx}\K\\{yy}\K\T{0.0},\39\|k\K\T{0},\39\|b\K\|x[\|j];{}$ ${}\|k<%
+\T{4};{}$ ${}\|k\PP,\39\|b\MRL{{\GG}{\K}}\T{8}){}$\5
+${}\{{}$\1\6
+${}\\{xx}\MRL{+{\K}}((\&{int})(\|b\AND\T{\^ff})-\T{128})*\\{cos}[\|k];{}$\6
+${}\\{yy}\MRL{+{\K}}((\&{int})(\|b\AND\T{\^ff})-\T{128})*\\{sin}[\|k];{}$\6
+\4${}\}{}$\2\6
+${}\\{fprintf}(\\{eps\_file},\39\.{"\ \%d\ \%d"},\39{}$(\&{int}) \\{xx}${},%
+\39{}$(\&{int}) \\{yy});\6
+\4${}\}{}$\2\par
+\fi
+
+\M{36}\B\D$\\{cos36}$ \5
+\T{80.9017}\C{ 100 times $\cos 36^\circ$ }\par
+\B\4\D$\\{cos72}$ \5
+\T{30.9017}\C{ 100 times $\cos 72^\circ$ }\par
+\B\4\D$\\{sin36}$ \5
+\T{58.7785}\C{ 100 times $\sin 36^\circ$ }\par
+\B\4\D$\\{sin72}$ \5
+\T{95.1057}\C{ 100 times $\sin 72^\circ$ }\par
+\Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{float} \\{cos}[\,]${}\K\{\T{100.0},\39\\{cos36},\39\\{cos72},\39{-}\\{cos72}%
+\};{}$\6
+\&{float} \\{sin}[\,]${}\K\{\T{0.0},\39\\{sin36},\39\\{sin72},\39\\{sin72}%
+\}{}$;\par
+\fi
+
+\M{37}\B\X7:Initialize the tables\X${}\mathrel+\E{}$\6
+${}\{{}$\1\6
+\&{float} \\{xx}${},{}$ \\{yy};\6
+\&{unsigned} \|b;\7
+${}\\{bbxlo}\K\\{bbylo}\K\T{100000};{}$\6
+${}\\{bbxhi}\K\\{bbyhi}\K{-}\T{100000};{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{init\_pts};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\\{xx}\K\\{yy}\K\T{0.0},\39\|k\K\T{0},\39\|b\K\|x[\|j];{}$ ${}\|k<%
+\T{4};{}$ ${}\|k\PP,\39\|b\MRL{{\GG}{\K}}\T{8}){}$\5
+${}\{{}$\1\6
+${}\\{xx}\MRL{+{\K}}((\&{int})(\|b\AND\T{\^ff})-\T{128})*\\{cos}[\|k];{}$\6
+${}\\{yy}\MRL{+{\K}}((\&{int})(\|b\AND\T{\^ff})-\T{128})*\\{sin}[\|k];{}$\6
+\4${}\}{}$\2\6
+\&{if} ((\&{int}) \\{xx}${}<\\{bbxlo}){}$\1\5
+${}\\{bbxlo}\K{}$(\&{int}) \\{xx};\2\6
+\&{if} ((\&{int}) \\{yy}${}<\\{bbylo}){}$\1\5
+${}\\{bbylo}\K{}$(\&{int}) \\{yy};\2\6
+\&{if} ((\&{int}) \\{xx}${}>\\{bbxhi}){}$\1\5
+${}\\{bbxhi}\K{}$(\&{int}) \\{xx};\2\6
+\&{if} ((\&{int}) \\{yy}${}>\\{bbyhi}){}$\1\5
+${}\\{bbyhi}\K{}$(\&{int}) \\{yy};\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{38}Index.
+\Y\B\4\X3:Subroutines\X${}\mathrel+\E{}$\6
+\\{temp1}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\\{printf}(\.{""});\6
+\4${}\}{}$\2\7
+\\{temp2}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\\{printf}(\.{""});\6
+\4${}\}{}$\2\par
+\fi
+
+\inx
+\fin
+\con

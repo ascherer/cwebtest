@@ -1,0 +1,51 @@
+\I\X14:Advance \PB{\|p} to the next smallest feasible value, and set \PB{$\|q\K%
+\|a[\|s]-\|p$}\X
+\U12.
+\I\X6:Apply the factor method\X
+\U5.
+\I\X8:Backtrack until $l(n)$ is known\X
+\U1.
+\I\X17:Find bounds $(\PB{\\{lbp}},\PB{\\{ubp}})$ and $(\PB{\\{lbq}},\PB{%
+\\{ubq}})$ on where \PB{\|p} and \PB{\|q} can be inserted; but go to \PB{%
+\\{failpq}} if they can't both be accommodated\X
+\U12.
+\I\X9:Given that \PB{$\|l[\|p]<\|s$}, increase \PB{\|p} to the next such
+element\X
+\U14.
+\I\X10:Given that \PB{$\|l[\|p]\G\|s$}, increase \PB{\|p} to the next element
+with \PB{$\|l[\|p]<\|s$}\X
+\Us13\ET14.
+\I\X5:Initialize the \PB{\|l} and \PB{\\{down}} tables\X
+\U1.
+\I\X4:Input the next lower bound, \PB{\\{lb}}\X
+\U1.
+\I\X20:Make forced moves if \PB{\|p} has a special form\X
+\U19.
+\I\X22:Make forced moves if \PB{\|q} has a special form\X
+\U21.
+\I\X3:Output the value of $l(n)$\X
+\U1.
+\I\X2:Process the command line\X
+\U1.
+\I\X15:Put local variables on the stack and update outdegrees\X
+\U12.
+\I\X19:Put \PB{\|p} into the chain at location \PB{\\{ubp}}; \PB{\&{goto} %
+\\{failp}} if there's a problem\X
+\U12.
+\I\X21:Put \PB{\|q} into the chain at location \PB{\\{ubq}}; \PB{\&{goto} %
+\\{failq}} if there's a problem\X
+\U12.
+\I\X16:Restore local variables from the stack and downdate outdegrees\X
+\U12.
+\I\X13:Set \PB{\|p} to its smallest feasible value, and \PB{$\|q\K\|a[\|s]-%
+\|p$}\X
+\U12.
+\I\X12:Try to fix the rest of the chain; \PB{\&{goto} \\{backtrackdone}} if
+it's possible\X
+\U8.
+\I\X18:Undo a change\X
+\U12.
+\I\X7:Update the upper bounds based on the chain found\X
+\U12.
+\I\X11:Update the \PB{\\{down}} links\X
+\U1.

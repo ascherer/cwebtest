@@ -1,0 +1,1540 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. This program is part of a series of ``SAT-solvers'' that I'm
+putting
+together for my own education as I prepare to write Section 7.2.2.2 of
+{\sl The Art of Computer Programming}. My intent is to have a variety of
+compatible programs on which I can run experiments to learn how different
+approaches work in practice.
+
+This time I'm implementing the algorithm that physicists have christened
+``Survey Propagation.'' It's a development of a message-passing idea
+called ``Belief Propagation,'' which in turn extends ``Warning Propagation.''
+[See Braunstein, M\'ezard, and Zecchina,
+{\sl Random Structures \char`\& Algorithms\/
+\bf27} (2005), 201--226.] And I'm also implementing an extended, improved
+algorithm that incorporates ``reinforcement'' [see Chavas, Furtlehner,
+M\'ezard, and Zecchina, {\sl Journal of Statistical Mechanics\/}
+(November 2005), P11016, 25~pages]. While writing this code I was greatly
+helped by studying an implementation prepared by Carlo Baldassi in March 2012.
+
+\fi
+
+\M{2}If you have already read {\mc SAT8}, or any other program of this
+series, you might as well skip now past the rest of this introduction,
+and past the code for the
+``I/O wrapper'' that is presented in the next dozen or so
+sections, because you've seen it before. (Except that there are several
+new command-line options, and the output is a reduced set of clauses
+rather than a solution.)
+
+The input appears on \PB{\\{stdin}} as a series of lines, with one clause per
+line.
+Each clause is a sequence of literals separated by spaces. Each literal is
+a sequence of one to eight ASCII characters between \.{!} and \.{\}},
+inclusive, not beginning with \.{\~},
+optionally preceded by \.{\~} (which makes the literal ``negative'').
+For example, Rivest's famous clauses on four variables,
+found in 6.5--(13) and 7.1.1--(32) of {\sl TAOCP}, can be represented by the
+following eight lines of input:
+$$\chardef~=`\~
+\vcenter{\halign{\tt#\cr
+x2 x3 ~x4\cr
+x1 x3 x4\cr
+~x1 x2 x4\cr
+~x1 ~x2 x3\cr
+~x2 ~x3 x4\cr
+~x1 ~x3 ~x4\cr
+x1 ~x2 ~x4\cr
+x1 x2 ~x3\cr}}$$
+Input lines that begin with \.{\~\ } are ignored (treated as comments).
+The output will be `\.{\~\~?}' if the algorithm could not
+find a way to satisfy the input clauses.
+Otherwise it will be a {\it partial\/} solution: a
+list of noncontradictory literals that cover some but maybe not all of the
+clauses, separated by spaces. (``Noncontradictory'' means that we don't
+have both a literal and its negation.) The residual problem, which must
+be satisfied if the partial assignment turns out to be valid, is
+written to an auxiliary file. (The partial assignment might be faulty;
+the algorithm has pretty good heuristics, but there are no guarantees.)
+
+The input above would, for example, probably
+yield `\.{\~\~?}'. But if the final clause were omitted, the output might be
+`\.{\~x1} \.{\~x2}', leaving a residual problem with the two clauses
+`\.{x3} \.{\~x4}' and `\.{x3} \.{x4}'.
+Or it might be `\.{\~x3}', leaving the (unsatisfiable) residual
+problem `\.{x2} \.{\~x4}', `\.{x1} \.{x4}', `\.{\~x1} \.{x2}, \.{x4}',
+`\.{\~x1} \.{\~x2}', `\.{x1} \.{\~x2} \.{\~x4}'.
+
+The running time in ``mems'' is also reported, together with the approximate
+number of bytes needed for data storage. One ``mem'' essentially means a
+memory access to a 64-bit word.
+(These totals don't include the time or space needed to parse the
+input or to format the output.)
+
+\fi
+
+\M{3}So here's the structure of the program. (Skip ahead if you are
+impatient to see the interesting stuff.)
+
+\Y\B\4\D$\|o$ \5
+$\\{mems}\PP{}$\C{ count one mem }\par
+\B\4\D$\\{oo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{2}\C{ count two mems }\par
+\B\4\D$\\{ooo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{3}\C{ count three mems }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\8\#\&{include} \.{<string.h>}\6
+\8\#\&{include} \.{"gb\_flip.h"}\6
+\&{typedef} \&{unsigned} \&{int} \&{uint};\C{ a convenient abbreviation }\6
+\&{typedef} \&{unsigned} \&{long} \&{long} \&{ullng};\C{ ditto }\7
+\X6:Type definitions\X;\6
+\X4:Global variables\X;\6
+\X26:Subroutines\X;\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{uint} \|c${},{}$ \|g${},{}$ \|h${},{}$ \|i${},{}$ \|j${},{}$ %
+\|k${},{}$ \|l${},{}$ \|p${},{}$ \|q${},{}$ \|r${},{}$ \\{ii}${},{}$ %
+\\{kk}${},{}$ \\{ll}${},{}$ \\{fcount};\7
+\X5:Process the command line\X;\6
+\X9:Initialize everything\X;\6
+\X10:Input the clauses\X;\6
+\&{if} ${}(\\{verbose}\AND\\{show\_basics}){}$\1\5
+\X22:Report the successful completion of the input phase\X;\2\6
+\X28:Set up the main data structures\X;\6
+${}\\{imems}\K\\{mems},\39\\{mems}\K\T{0};{}$\6
+\X35:Solve the problem\X;\6
+\&{if} ${}(\\{verbose}\AND\\{show\_basics}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Altogether\ \%llu+\%ll}\)\.{u\ mems,\ \%llu\
+bytes.\\}\)\.{n"},\39\\{imems},\39\\{mems},\39\\{bytes});{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{4}\B\D$\\{show\_basics}$ \5
+\T{1}\C{ \PB{\\{verbose}} code for basic stats }\par
+\B\4\D$\\{show\_choices}$ \5
+\T{2}\C{ \PB{\\{verbose}} code for backtrack logging }\par
+\B\4\D$\\{show\_details}$ \5
+\T{4}\C{ \PB{\\{verbose}} code for further commentary }\par
+\B\4\D$\\{show\_gory\_details}$ \5
+\T{8}\C{ \PB{\\{verbose}} code turned on when debugging }\par
+\B\4\D$\\{show\_histogram}$ \5
+\T{16}\C{ \PB{\\{verbose}} code to make a $\pi\times\pi$ histogram }\par
+\B\4\D$\\{show\_pis}$ \5
+\T{32}\C{ \PB{\\{verbose}} code to print out all the $\pi$'s }\par
+\Y\B\4\X4:Global variables\X${}\E{}$\6
+\&{int} \\{random\_seed}${}\K\T{0}{}$;\C{ seed for the random words of \PB{%
+\\{gb\_rand}} }\6
+\&{int} \\{verbose}${}\K\\{show\_basics}{}$;\C{ level of verbosity }\6
+\&{int} \\{hbits}${}\K\T{8}{}$;\C{ logarithm of the number of the hash lists }\6
+\&{int} \\{buf\_size}${}\K\T{1024}{}$;\C{ must exceed the length of the longest
+input line }\6
+\&{int} \\{max\_iter}${}\K\T{1000}{}$;\C{ maximum iterations }\6
+\&{int} \\{min\_iter}${}\K\T{5}{}$;\C{ minimum iterations before reinforcement
+kicks in }\6
+\&{int} \\{confidence}${}\K\T{50}{}$;\C{ lower limit for confidence of setting
+a variable }\6
+\&{double} \\{damper}${}\K\T{0.99}{}$;\C{ the damping factor for reinforcement
+}\6
+\&{double} \\{threshold}${}\K\T{0.01}{}$;\C{ upper limit for convergence check
+}\6
+\&{ullng} \\{imems}${},{}$ \\{mems};\C{ mem counts }\6
+\&{ullng} \\{thresh}${}\K\T{0}{}$;\C{ report when \PB{\\{mems}} exceeds this,
+if \PB{$\\{delta}\I\T{0}$} }\6
+\&{ullng} \\{delta}${}\K\T{0}{}$;\C{ report every \PB{\\{delta}} or so mems }\6
+\&{ullng} \\{bytes};\C{ memory used by main data structures }\par
+\As8, 25, 36\ETs54.
+\U3.\fi
+
+\M{5}On the command line one can specify any or all of the following options:
+\smallskip
+\item{$\bullet$}
+`\.v$\langle\,$integer$\,\rangle$' to enable various levels of verbose
+output on \PB{\\{stderr}}.
+\item{$\bullet$}
+`\.h$\langle\,$positive integer$\,\rangle$' to adjust the hash table size.
+\item{$\bullet$}
+`\.b$\langle\,$positive integer$\,\rangle$' to adjust the size of the input
+buffer.
+\item{$\bullet$}
+`\.s$\langle\,$integer$\,\rangle$' to define the seed for any random numbers
+that are used.
+\item{$\bullet$}
+`\.d$\langle\,$integer$\,\rangle$' to set \PB{\\{delta}} for periodic state
+reports.
+\item{$\bullet$}
+`\.t$\langle\,$integer$\,\rangle$' to define the maximum number of iterations.
+\item{$\bullet$}
+`\.l$\langle\,$integer$\,\rangle$' to define the minimum number of iterations
+before reinforcement begins.
+\item{$\bullet$}
+`\.c$\langle\,$integer$\,\rangle$' to define the \PB{\\{confidence}}
+percentage,
+above which we decide that a variable is sufficiently biased to be assigned
+a value.
+\item{$\bullet$}
+`\.p$\langle\,$float$\,\rangle$' to define the damping factor \PB{\\{damper}}
+for reinforcement.
+\item{$\bullet$}
+`\.e$\langle\,$float$\,\rangle$' to define the \PB{\\{threshold}}
+by which we decide that the messages have converged.
+\smallskip\noindent
+The defaults are listed with `Global variables' above.
+
+\Y\B\4\X5:Process the command line\X${}\E{}$\6
+\&{for} ${}(\|j\K\\{argc}-\T{1},\39\|k\K\T{0};{}$ \|j; ${}\|j\MM){}$\1\6
+\&{switch} (\\{argv}[\|j][\T{0}])\5
+${}\{{}$\1\6
+\4\&{case} \.{'v'}:\5
+${}\|k\MRL{{\OR}{\K}}(\\{sscanf}(\\{argv}[\|j]+\T{1},\39\.{"\%d"},\39{\AND}%
+\\{verbose})-\T{1}){}$;\5
+\&{break};\6
+\4\&{case} \.{'h'}:\5
+${}\|k\MRL{{\OR}{\K}}(\\{sscanf}(\\{argv}[\|j]+\T{1},\39\.{"\%d"},\39{\AND}%
+\\{hbits})-\T{1}){}$;\5
+\&{break};\6
+\4\&{case} \.{'b'}:\5
+${}\|k\MRL{{\OR}{\K}}(\\{sscanf}(\\{argv}[\|j]+\T{1},\39\.{"\%d"},\39{\AND}%
+\\{buf\_size})-\T{1}){}$;\5
+\&{break};\6
+\4\&{case} \.{'s'}:\5
+${}\|k\MRL{{\OR}{\K}}(\\{sscanf}(\\{argv}[\|j]+\T{1},\39\.{"\%d"},\39{\AND}%
+\\{random\_seed})-\T{1}){}$;\5
+\&{break};\6
+\4\&{case} \.{'d'}:\5
+${}\|k\MRL{{\OR}{\K}}(\\{sscanf}(\\{argv}[\|j]+\T{1},\39\.{"\%lld"},\39{\AND}%
+\\{delta})-\T{1}){}$;\5
+${}\\{thresh}\K\\{delta}{}$;\5
+\&{break};\6
+\4\&{case} \.{'t'}:\5
+${}\|k\MRL{{\OR}{\K}}(\\{sscanf}(\\{argv}[\|j]+\T{1},\39\.{"\%d"},\39{\AND}%
+\\{max\_iter})-\T{1}){}$;\5
+\&{break};\6
+\4\&{case} \.{'l'}:\5
+${}\|k\MRL{{\OR}{\K}}(\\{sscanf}(\\{argv}[\|j]+\T{1},\39\.{"\%d"},\39{\AND}%
+\\{min\_iter})-\T{1}){}$;\5
+\&{break};\6
+\4\&{case} \.{'c'}:\5
+${}\|k\MRL{{\OR}{\K}}(\\{sscanf}(\\{argv}[\|j]+\T{1},\39\.{"\%d"},\39{\AND}%
+\\{confidence})-\T{1}){}$;\5
+\&{break};\6
+\4\&{case} \.{'p'}:\5
+${}\|k\MRL{{\OR}{\K}}(\\{sscanf}(\\{argv}[\|j]+\T{1},\39\.{"\%lf"},\39{\AND}%
+\\{damper})-\T{1}){}$;\5
+\&{break};\6
+\4\&{case} \.{'e'}:\5
+${}\|k\MRL{{\OR}{\K}}(\\{sscanf}(\\{argv}[\|j]+\T{1},\39\.{"\%lf"},\39{\AND}%
+\\{threshold})-\T{1}){}$;\5
+\&{break};\6
+\4\&{default}:\5
+${}\|k\K\T{1}{}$;\C{ unrecognized command-line option }\6
+\4${}\}{}$\2\2\6
+\&{if} ${}(\|k\V\\{hbits}<\T{0}\V\\{hbits}>\T{30}\V\\{buf\_size}\Z\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ [v<n>]\ [h}\)\.{<n>]\ [b<n>]\
+[s<n>]\ [}\)\.{d<n>]\ [t<n>]\ [l<n>]\ }\)\.{[c<n>]\ [p<f>]\ [e<f>]}\)\.{\\n"},%
+\39\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{damper}<\T{0.0}\V\\{damper}>\T{1.0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Parameter\ p\ should\ }\)\.{be\ between\ 0.0\
+and\ 1}\)\.{.0!\\n"});{}$\6
+${}\\{exit}({-}\T{666});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{confidence}<\T{0}\V\\{confidence}>\T{100}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Parameter\ c\ should\ }\)\.{be\ between\ 0\
+and\ 100}\)\.{!\\n"});{}$\6
+${}\\{exit}({-}\T{667});{}$\6
+\4${}\}{}$\2\par
+\U3.\fi
+
+\N{1}{6}The I/O wrapper. The following routines read the input and absorb it
+into
+temporary data areas from which all of the ``real'' data structures
+can readily be initialized. My intent is to incorporate these routines in all
+of the SAT-solvers in this series. Therefore I've tried to make the code
+short and simple, yet versatile enough so that almost no restrictions are
+placed on the sizes of problems that can be handled. These routines are
+supposed to work properly unless there are more than
+$2^{32}-1=4$,294,967,295 occurrences of literals in clauses,
+or more than $2^{31}-1=2$,147,483,647 variables or clauses.
+
+In these temporary tables, each variable is represented by four things:
+its unique name; its serial number; the clause number (if any) in which it has
+most recently appeared; and a pointer to the previous variable (if any)
+with the same hash address. Several variables at a time
+are represented sequentially in small chunks of memory called ``vchunks,''
+which are allocated as needed (and freed later).
+
+\Y\B\4\D$\\{vars\_per\_vchunk}$ \5
+\T{341}\C{ preferably $(2^k-1)/3$ for some $k$ }\par
+\Y\B\4\X6:Type definitions\X${}\E{}$\6
+\&{typedef} \&{union} ${}\{{}$\1\6
+\&{char} \\{ch8}[\T{8}];\6
+\&{uint} \\{u2}[\T{2}];\6
+\&{long} \&{long} \\{lng};\2\6
+${}\}{}$ \&{octa};\6
+\&{typedef} \&{struct} \&{tmp\_var\_struct} ${}\{{}$\1\6
+\&{octa} \\{name};\C{ the name (one to seven ASCII characters) }\6
+\&{uint} \\{serial};\C{ 0 for the first variable, 1 for the second, etc. }\6
+\&{int} \\{stamp};\C{ \PB{\|m} if positively in clause \PB{\|m}; \PB{${-}\|m$}
+if negatively there }\6
+\&{struct} \&{tmp\_var\_struct} ${}{*}\\{next}{}$;\C{ pointer for hash list }\2%
+\6
+${}\}{}$ \&{tmp\_var};\7
+\&{typedef} \&{struct} \&{vchunk\_struct} ${}\{{}$\1\6
+\&{struct} \&{vchunk\_struct} ${}{*}\\{prev}{}$;\C{ previous chunk allocated
+(if any) }\6
+\&{tmp\_var} \\{var}[\\{vars\_per\_vchunk}];\2\6
+${}\}{}$ \&{vchunk};\par
+\As7\ET24.
+\U3.\fi
+
+\M{7}Each clause in the temporary tables is represented by a sequence of
+one or more pointers to the \PB{\&{tmp\_var}} nodes of the literals involved.
+A negated literal is indicated by adding~1 to such a pointer.
+The first literal of a clause is indicated by adding~2.
+Several of these pointers are represented sequentially in chunks
+of memory, which are allocated as needed and freed later.
+
+\Y\B\4\D$\\{cells\_per\_chunk}$ \5
+\T{511}\C{ preferably $2^k-1$ for some $k$ }\par
+\Y\B\4\X6:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} \&{chunk\_struct} ${}\{{}$\1\6
+\&{struct} \&{chunk\_struct} ${}{*}\\{prev}{}$;\C{ previous chunk allocated (if
+any) }\6
+\&{tmp\_var} ${}{*}\\{cell}[\\{cells\_per\_chunk}];{}$\2\6
+${}\}{}$ \&{chunk};\par
+\fi
+
+\M{8}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{char} ${}{*}\\{buf}{}$;\C{ buffer for reading the lines (clauses) of \PB{%
+\\{stdin}} }\6
+\&{tmp\_var} ${}{*}{*}\\{hash}{}$;\C{ heads of the hash lists }\6
+\&{uint} \\{hash\_bits}[\T{93}][\T{8}];\C{ random bits for universal hash
+function }\6
+\&{vchunk} ${}{*}\\{cur\_vchunk}{}$;\C{ the vchunk currently being filled }\6
+\&{tmp\_var} ${}{*}\\{cur\_tmp\_var}{}$;\C{ current place to create new \PB{%
+\&{tmp\_var}} entries }\6
+\&{tmp\_var} ${}{*}\\{bad\_tmp\_var}{}$;\C{ the \PB{\\{cur\_tmp\_var}} when we
+need a new \PB{\&{vchunk}} }\6
+\&{chunk} ${}{*}\\{cur\_chunk}{}$;\C{ the chunk currently being filled }\6
+\&{tmp\_var} ${}{*}{*}\\{cur\_cell}{}$;\C{ current place to create new elements
+of a clause }\6
+\&{tmp\_var} ${}{*}{*}\\{bad\_cell}{}$;\C{ the \PB{\\{cur\_cell}} when we need
+a new \PB{\&{chunk}} }\6
+\&{ullng} \\{vars};\C{ how many distinct variables have we seen? }\6
+\&{ullng} \\{clauses};\C{ how many clauses have we seen? }\6
+\&{ullng} \\{nullclauses};\C{ how many of them were null? }\6
+\&{ullng} \\{cells};\C{ how many occurrences of literals in clauses? }\par
+\fi
+
+\M{9}\B\X9:Initialize everything\X${}\E{}$\6
+\\{gb\_init\_rand}(\\{random\_seed});\6
+${}\\{buf}\K{}$(\&{char} ${}{*}){}$ \\{malloc}${}(\\{buf\_size}*\&{sizeof}(%
+\&{char}));{}$\6
+\&{if} ${}(\R\\{buf}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Couldn't\ allocate\ t}\)\.{he\ input\ buffer\
+(buf}\)\.{\_size=\%d)!\\n"},\39\\{buf\_size});{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+${}\\{hash}\K{}$(\&{tmp\_var} ${}{*}{*}){}$ \\{malloc}${}(\&{sizeof}(\&{tmp%
+\_var})\LL\\{hbits});{}$\6
+\&{if} ${}(\R\\{hash}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Couldn't\ allocate\ \%}\)\.{d\ hash\ list\
+heads\ (h}\)\.{bits=\%d)!\\n"},\39\T{1}\LL\\{hbits},\39\\{hbits});{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|h\K\T{0};{}$ ${}\|h<\T{1}\LL\\{hbits};{}$ ${}\|h\PP){}$\1\5
+${}\\{hash}[\|h]\K\NULL{}$;\2\par
+\A15.
+\U3.\fi
+
+\M{10}The hash address of each variable name has $h$ bits, where $h$ is the
+value of the adjustable parameter \PB{\\{hbits}}.
+Thus the average number of variables per hash list is $n/2^h$ when there
+are $n$ different variables. A warning is printed if this average number
+exceeds 10. (For example, if $h$ has its default value, 8, the program will
+suggest that you might want to increase $h$ if your input has 2560
+different variables or more.)
+
+All the hashing takes place at the very beginning,
+and the hash tables are actually recycled before any SAT-solving takes place;
+therefore the setting of this parameter is by no means crucial. But I didn't
+want to bother with fancy coding that would determine $h$ automatically.
+
+\Y\B\4\X10:Input the clauses\X${}\E{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{fgets}(\\{buf},\39\\{buf\_size},\39\\{stdin})){}$\1\5
+\&{break};\2\6
+${}\\{clauses}\PP;{}$\6
+\&{if} ${}(\\{buf}[\\{strlen}(\\{buf})-\T{1}]\I\.{'\\n'}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"The\ clause\ on\ line\ }\)\.{\%d\ (\%.20s...)\
+is\ too}\)\.{\ long\ for\ me;\\n"},\39\\{clauses},\39\\{buf});{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ my\ buf\_size\ is\ onl}\)\.{y\ \%d!\\n"},\39%
+\\{buf\_size});{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"Please\ use\ the\ comm}\)\.{and-line\ option\
+b<ne}\)\.{wsize>.\\n"});{}$\6
+${}\\{exit}({-}\T{4});{}$\6
+\4${}\}{}$\2\6
+\X11:Input the clause in \PB{\\{buf}}\X;\6
+\4${}\}{}$\2\6
+\&{if} ${}((\\{vars}\GG\\{hbits})\G\T{10}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"There\ are\ \%d\ variab}\)\.{les\ but\ only\ %
+\%d\ hash}\)\.{\ tables;\\n"},\39\\{vars},\39\T{1}\LL\\{hbits});{}$\6
+\&{while} ${}((\\{vars}\GG\\{hbits})\G\T{10}){}$\1\5
+${}\\{hbits}\PP;{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ maybe\ you\ should\ u}\)\.{se\ command-line\
+opti}\)\.{on\ h\%d?\\n"},\39\\{hbits});{}$\6
+\4${}\}{}$\2\6
+${}\\{clauses}\MRL{-{\K}}\\{nullclauses};{}$\6
+\&{if} ${}(\\{clauses}\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"No\ clauses\ were\ inp}\)\.{ut!\\n"});{}$\6
+${}\\{exit}({-}\T{77});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{vars}\G\T{\^80000000}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Whoa,\ the\ input\ had}\)\.{\ \%llu\
+variables!\\n"},\39\\{cells});{}$\6
+${}\\{exit}({-}\T{664});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{clauses}\G\T{\^80000000}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Whoa,\ the\ input\ had}\)\.{\ \%llu\ clauses!%
+\\n"},\39\\{cells});{}$\6
+${}\\{exit}({-}\T{665});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{cells}\G\T{\^100000000}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Whoa,\ the\ input\ had}\)\.{\ \%llu\
+occurrences\ of}\)\.{\ literals!\\n"},\39\\{cells});{}$\6
+${}\\{exit}({-}\T{666});{}$\6
+\4${}\}{}$\2\par
+\U3.\fi
+
+\M{11}\B\X11:Input the clause in \PB{\\{buf}}\X${}\E{}$\6
+\&{for} ${}(\|j\K\|k\K\T{0};{}$  ; \,)\5
+${}\{{}$\1\6
+\&{while} ${}(\\{buf}[\|j]\E\.{'\ '}){}$\1\5
+${}\|j\PP{}$;\C{ scan to nonblank }\2\6
+\&{if} ${}(\\{buf}[\|j]\E\.{'\\n'}){}$\1\5
+\&{break};\2\6
+\&{if} ${}(\\{buf}[\|j]<\.{'\ '}\V\\{buf}[\|j]>\.{'\~'}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Illegal\ character\ (}\)\.{code\ \#\%x)\ in\
+the\ cla}\)\.{use\ on\ line\ \%d!\\n"},\39\\{buf}[\|j],\39\\{clauses});{}$\6
+${}\\{exit}({-}\T{5});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{buf}[\|j]\E\.{'\~'}){}$\1\5
+${}\|i\K\T{1},\39\|j\PP;{}$\2\6
+\&{else}\1\5
+${}\|i\K\T{0};{}$\2\6
+\X12:Scan and record a variable; negate it if \PB{$\|i\E\T{1}$}\X;\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|k\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"(Empty\ line\ \%d\ is\ b}\)\.{eing\ ignored)%
+\\n"},\39\\{clauses});{}$\6
+${}\\{nullclauses}\PP{}$;\C{ strictly speaking it would be unsatisfiable }\6
+\4${}\}{}$\2\6
+\&{goto} \\{clause\_done};\6
+\4\\{empty\_clause}:\5
+\X19:Remove all variables of the current clause\X;\6
+\4\\{clause\_done}:\5
+${}\\{cells}\MRL{+{\K}}\|k{}$;\par
+\U10.\fi
+
+\M{12}We need a hack to insert the bit codes 1 and/or 2 into a pointer value.
+
+\Y\B\4\D$\\{hack\_in}(\|q,\|t)$ \5
+(\&{tmp\_var} ${}{*})(\|t\OR{}$(\&{ullng}) \|q)\par
+\Y\B\4\X12:Scan and record a variable; negate it if \PB{$\|i\E\T{1}$}\X${}\E{}$%
+\6
+${}\{{}$\1\6
+\&{register} \&{tmp\_var} ${}{*}\|p;{}$\7
+\&{if} ${}(\\{cur\_tmp\_var}\E\\{bad\_tmp\_var}){}$\1\5
+\X13:Install a new \PB{\&{vchunk}}\X;\2\6
+\X16:Put the variable name beginning at \PB{\\{buf}[\|j]} in \PB{$\\{cur\_tmp%
+\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X;\6
+\X17:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash table at \PB{\|p}\X;\6
+\&{if} ${}(\|p\MG\\{stamp}\E\\{clauses}\V\|p\MG\\{stamp}\E{-}\\{clauses}){}$\1\5
+\X18:Handle a duplicate literal\X\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|p\MG\\{stamp}\K(\|i\?{-}\\{clauses}:\\{clauses});{}$\6
+\&{if} ${}(\\{cur\_cell}\E\\{bad\_cell}){}$\1\5
+\X14:Install a new \PB{\&{chunk}}\X;\2\6
+${}{*}\\{cur\_cell}\K\|p;{}$\6
+\&{if} ${}(\|i\E\T{1}){}$\1\5
+${}{*}\\{cur\_cell}\K\\{hack\_in}({*}\\{cur\_cell},\39\T{1});{}$\2\6
+\&{if} ${}(\|k\E\T{0}){}$\1\5
+${}{*}\\{cur\_cell}\K\\{hack\_in}({*}\\{cur\_cell},\39\T{2});{}$\2\6
+${}\\{cur\_cell}\PP,\39\|k\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U11.\fi
+
+\M{13}\B\X13:Install a new \PB{\&{vchunk}}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{vchunk} ${}{*}\\{new\_vchunk};{}$\7
+${}\\{new\_vchunk}\K{}$(\&{vchunk} ${}{*}){}$ \\{malloc}(\&{sizeof}(%
+\&{vchunk}));\6
+\&{if} ${}(\R\\{new\_vchunk}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Can't\ allocate\ a\ ne}\)\.{w\ vchunk!%
+\\n"});{}$\6
+${}\\{exit}({-}\T{6});{}$\6
+\4${}\}{}$\2\6
+${}\\{new\_vchunk}\MG\\{prev}\K\\{cur\_vchunk},\39\\{cur\_vchunk}\K\\{new%
+\_vchunk};{}$\6
+${}\\{cur\_tmp\_var}\K{\AND}\\{new\_vchunk}\MG\\{var}[\T{0}];{}$\6
+${}\\{bad\_tmp\_var}\K{\AND}\\{new\_vchunk}\MG\\{var}[\\{vars\_per%
+\_vchunk}];{}$\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{14}\B\X14:Install a new \PB{\&{chunk}}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{chunk} ${}{*}\\{new\_chunk};{}$\7
+${}\\{new\_chunk}\K{}$(\&{chunk} ${}{*}){}$ \\{malloc}(\&{sizeof}(\&{chunk}));\6
+\&{if} ${}(\R\\{new\_chunk}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Can't\ allocate\ a\ ne}\)\.{w\ chunk!%
+\\n"});{}$\6
+${}\\{exit}({-}\T{7});{}$\6
+\4${}\}{}$\2\6
+${}\\{new\_chunk}\MG\\{prev}\K\\{cur\_chunk},\39\\{cur\_chunk}\K\\{new%
+\_chunk};{}$\6
+${}\\{cur\_cell}\K{\AND}\\{new\_chunk}\MG\\{cell}[\T{0}];{}$\6
+${}\\{bad\_cell}\K{\AND}\\{new\_chunk}\MG\\{cell}[\\{cells\_per\_chunk}];{}$\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{15}The hash code is computed via ``universal hashing,'' using the following
+precomputed tables of random bits.
+
+\Y\B\4\X9:Initialize everything\X${}\mathrel+\E{}$\6
+\&{for} ${}(\|j\K\T{92};{}$ \|j; ${}\|j\MM){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{8};{}$ ${}\|k\PP){}$\1\5
+${}\\{hash\_bits}[\|j][\|k]\K\\{gb\_next\_rand}(\,){}$;\2\2\par
+\fi
+
+\M{16}\B\X16:Put the variable name beginning at \PB{\\{buf}[\|j]} in \PB{$%
+\\{cur\_tmp\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X${}\E{}$\6
+$\\{cur\_tmp\_var}\MG\\{name}.\\{lng}\K\T{0};{}$\6
+\&{for} ${}(\|h\K\|l\K\T{0};{}$ ${}\\{buf}[\|j+\|l]>\.{'\ '}\W\\{buf}[\|j+\|l]%
+\Z\.{'\~'};{}$ ${}\|l\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|l>\T{7}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Variable\ name\ \%.9s.}\)\.{..\ in\ the\
+clause\ on\ }\)\.{line\ \%d\ is\ too\ long!}\)\.{\\n"},\39\\{buf}+\|j,\39%
+\\{clauses});{}$\6
+${}\\{exit}({-}\T{8});{}$\6
+\4${}\}{}$\2\6
+${}\|h\MRL{{\XOR}{\K}}\\{hash\_bits}[\\{buf}[\|j+\|l]-\.{'!'}][\|l];{}$\6
+${}\\{cur\_tmp\_var}\MG\\{name}.\\{ch8}[\|l]\K\\{buf}[\|j+\|l];{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|l\E\T{0}){}$\1\5
+\&{goto} \\{empty\_clause};\C{ `\.\~' by itself is like `true' }\2\6
+${}\|j\MRL{+{\K}}\|l;{}$\6
+${}\|h\MRL{\AND{\K}}(\T{1}\LL\\{hbits})-\T{1}{}$;\par
+\U12.\fi
+
+\M{17}\B\X17:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash table at \PB{%
+\|p}\X${}\E{}$\6
+\&{for} ${}(\|p\K\\{hash}[\|h];{}$ \|p; ${}\|p\K\|p\MG\\{next}){}$\1\6
+\&{if} ${}(\|p\MG\\{name}.\\{lng}\E\\{cur\_tmp\_var}\MG\\{name}.\\{lng}){}$\1\5
+\&{break};\2\2\6
+\&{if} ${}(\R\|p){}$\5
+${}\{{}$\C{ new variable found }\1\6
+${}\|p\K\\{cur\_tmp\_var}\PP;{}$\6
+${}\|p\MG\\{next}\K\\{hash}[\|h],\39\\{hash}[\|h]\K\|p;{}$\6
+${}\|p\MG\\{serial}\K\\{vars}\PP;{}$\6
+${}\|p\MG\\{stamp}\K\T{0};{}$\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{18}The most interesting aspect of the input phase is probably the
+``unwinding''
+that we might need to do when encountering a literal more than once
+in the same clause.
+
+\Y\B\4\X18:Handle a duplicate literal\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}((\|p\MG\\{stamp}>\T{0})\E(\|i>\T{0})){}$\1\5
+\&{goto} \\{empty\_clause};\2\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{19}An input line that begins with `\.{\~\ }' is silently treated as a
+comment.
+Otherwise redundant clauses are logged, in case they were unintentional.
+(One can, however, intentionally
+use redundant clauses to force the order of the variables.)
+
+\Y\B\4\X19:Remove all variables of the current clause\X${}\E{}$\6
+\&{while} (\|k)\5
+${}\{{}$\1\6
+\X20:Move \PB{\\{cur\_cell}} backward to the previous cell\X;\6
+${}\|k\MM;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}((\\{buf}[\T{0}]\I\.{'\~'})\V(\\{buf}[\T{1}]\I\.{'\ '})){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"(The\ clause\ on\ line}\)\.{\ \%d\ is\ always\
+satisf}\)\.{ied)\\n"},\39\\{clauses});{}$\2\6
+${}\\{nullclauses}\PP{}$;\par
+\U11.\fi
+
+\M{20}\B\X20:Move \PB{\\{cur\_cell}} backward to the previous cell\X${}\E{}$\6
+\&{if} ${}(\\{cur\_cell}>{\AND}\\{cur\_chunk}\MG\\{cell}[\T{0}]){}$\1\5
+${}\\{cur\_cell}\MM;{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{register} \&{chunk} ${}{*}\\{old\_chunk}\K\\{cur\_chunk};{}$\7
+${}\\{cur\_chunk}\K\\{old\_chunk}\MG\\{prev}{}$;\5
+\\{free}(\\{old\_chunk});\6
+${}\\{bad\_cell}\K{\AND}\\{cur\_chunk}\MG\\{cell}[\\{cells\_per\_chunk}];{}$\6
+${}\\{cur\_cell}\K\\{bad\_cell}-\T{1};{}$\6
+\4${}\}{}$\2\par
+\Us19\ET32.\fi
+
+\M{21}\B\X21:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary
+variable\X${}\E{}$\6
+\&{if} ${}(\\{cur\_tmp\_var}>{\AND}\\{cur\_vchunk}\MG\\{var}[\T{0}]){}$\1\5
+${}\\{cur\_tmp\_var}\MM;{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{register} \&{vchunk} ${}{*}\\{old\_vchunk}\K\\{cur\_vchunk};{}$\7
+${}\\{cur\_vchunk}\K\\{old\_vchunk}\MG\\{prev}{}$;\5
+\\{free}(\\{old\_vchunk});\6
+${}\\{bad\_tmp\_var}\K{\AND}\\{cur\_vchunk}\MG\\{var}[\\{vars\_per%
+\_vchunk}];{}$\6
+${}\\{cur\_tmp\_var}\K\\{bad\_tmp\_var}-\T{1};{}$\6
+\4${}\}{}$\2\par
+\U33.\fi
+
+\M{22}\B\X22:Report the successful completion of the input phase\X${}\E{}$\6
+$\\{fprintf}(\\{stderr},\39\.{"(\%d\ variables,\ \%d\ c}\)\.{lauses,\ \%llu\
+literal}\)\.{s\ successfully\ read)}\)\.{\\n"},\39\\{vars},\39\\{clauses},\39%
+\\{cells}){}$;\par
+\U3.\fi
+
+\N{1}{23}SAT solving, version 9. Survey Propagation is slightly similar to
+WalkSAT,
+but it's really a new kettle of fish. Clauses pass messages to each of
+their literals, representing locally known information about the other
+literals in the clause. Literals pass messages to each of the clauses that they
+or their complement are in, representing locally known information about
+the other clauses to which they belong. When we find a variable with a
+strong tendency to be true or false, we fix its value and reduce to a
+smaller system. Local information continues to propagate until we get
+some sort of convergence.
+
+The clause-to-literal messages are called $\eta$'s. If $c$ is a clause
+and $l$ is a literal, $\eta_{c\to l}$ is a fraction between 0 and~1
+that is {\it large\/} if $c$ urgently needs $l$ to be true, otherwise
+it's small.
+
+The literal-to-clause messages are called $\pi$'s. They too are fractions
+between 0 and~1, but they're sort of dual because they represent
+flexibility: The value of $\pi_{l\to c}$ is {\it small\/} when
+clauses other than~$c$ badly want $l$ to be true.
+
+An ``external force field'' that gently nudges literal $l$ towards a
+particular value, with urgency $\eta_l$, is also present. This
+force-of-reinforcement tends to improve decision-making, because it encourages
+the algorithm to decide between competing tendencies.
+
+Internally we maintain a single value $\pi_l$ for each literal, namely
+$1-\eta_l$ times the product of $1-\eta_{c\to l}$ over all clauses~$c$
+that contain~$l$.
+The message $\pi_{l\to c}$ is then simply $\pi_l$ when $l\notin c$;
+and it's $\pi_l/(1-\eta_{c\to l})$ when $l\in c$.
+We use a special data structure to
+count the factors of this product that happen to be zero (within
+floating-point precision), so that division by zero isn't a problem.
+
+\fi
+
+\M{24}The data structures are analogous to those of previous programs in this
+series. There are three main arrays, \PB{\\{cmem}}, \PB{\\{lmem}}, and \PB{%
+\\{mem}}. Structured
+\PB{\&{clause}} nodes appear in \PB{\\{cmem}}, and structured \PB{\&{literal}}
+nodes
+appear in \PB{\\{lmem}}. Each clause points to a sequential list of literals
+and
+$\eta$'s in~\PB{\\{mem}}; each literal points to a linked list of clause slots
+in~\PB{\\{mem}}, showing where that literal occurs in the problem. The literal
+nodes in \PB{\\{lmem}} also hold $\eta_l$ and $\pi_l$.
+
+As in most previous programs of this series, the literals $x$ and $\bar x$
+are represented internally by $2k$ and $2k+1$ when $x$ is variable number~$k$.
+
+The symbolic names of variables are kept separately in an array called \PB{%
+\\{nmem}}.
+
+\Y\B\4\X6:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} ${}\{{}$\1\6
+\&{double} \\{eta};\C{ the external force on this literal }\6
+\&{double} \\{pi};\C{ this literal's current $\pi$ value }\6
+\&{uint} \\{zf};\C{ the number of suppressed zero factors in \PB{\\{pi}} }\6
+\&{uint} \\{link};\C{ first occurrence of the literal in \PB{\\{mem}}, plus 1 }%
+\6
+\&{int} \\{rating};\C{ $+1$ positive, $-1$ negative, $0$ wishy-washy or wild }%
+\2\6
+${}\}{}$ \&{literal};\C{ would it go faster if I added four more bytes of
+padding? }\6
+\&{typedef} \&{struct} ${}\{{}$\1\6
+\&{uint} \\{start};\C{ where the literal list starts in \PB{\\{mem}} }\6
+\&{uint} \\{size};\C{ number of remaining literals in clause postprocessing
+phase }\2\6
+${}\}{}$ \&{clause};\6
+\&{typedef} \&{struct} ${}\{{}$\1\6
+\&{union} ${}\{{}$\5
+\1\&{double} \|d;\6
+\&{ullng} \|u;\2\6
+${}\}{}$\5
+\\{eta};\C{ $\eta$ message for a literal }\6
+\&{uint} \\{lit};\C{ number of that literal }\6
+\&{uint} \\{next};\C{ where that literal next appears in \PB{\\{mem}}, plus 1 }%
+\2\6
+${}\}{}$ \&{mem\_item};\par
+\fi
+
+\M{25}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{clause} ${}{*}\\{cmem}{}$;\C{ the master array of clauses }\6
+\&{literal} ${}{*}\\{lmem}{}$;\C{ the master array of literals }\6
+\&{mem\_item} ${}{*}\\{mem}{}$;\C{ the master array of literals in clauses }\6
+\&{mem\_item} ${}{*}\\{cur\_mcell}{}$;\C{ the current cell of interest in \PB{%
+\\{mem}} }\6
+\&{octa} ${}{*}\\{nmem}{}$;\C{ the master array of symbolic variable names }\6
+\&{double} ${}{*}\\{gam}{}$;\C{ temporary array to hold gamma ratios }\par
+\fi
+
+\M{26}Here is a subroutine that prints a clause symbolically. It illustrates
+some of the conventions of the data structures that have been explained above.
+I use it only for debugging.
+
+\Y\B\4\X26:Subroutines\X${}\E{}$\6
+\&{void} \\{print\_clause}(\&{uint} \|c)\1\1\2\2\6
+${}\{{}$\C{ the first clause is called clause 1, not 0 }\1\6
+\&{register} \&{uint} \|l${},{}$ \\{ll};\7
+${}\\{fprintf}(\\{stderr},\39\.{"\%d:\\n"},\39\|c){}$;\C{ show the clause
+number }\6
+\&{for} ${}(\|l\K\\{cmem}[\|c-\T{1}].\\{start};{}$ ${}\|l<\\{cmem}[\|c].%
+\\{start};{}$ ${}\|l\PP){}$\5
+${}\{{}$\1\6
+${}\\{ll}\K\\{mem}[\|l].\\{lit};{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ \%s\%.8s(\%d),\ eta=\%.}\)\.{15g\\n"},\39%
+\\{ll}\AND\T{1}\?\.{"\~"}:\.{""},\39\\{nmem}[\\{ll}\GG\T{1}].\\{ch8},\39\\{ll}%
+\GG\T{1},\39\\{mem}[\|l].\\{eta}.\|d);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\As27\ET47.
+\U3.\fi
+
+\M{27}Another simple subroutine shows the two $\pi$ and $\eta$
+values for a given variable.
+
+\Y\B\4\X26:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_var}(\&{uint} \|k)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{uint} \|l${}\K\|k\LL\T{1};{}$\7
+${}\\{fprintf}(\\{stderr},\39\.{"pi(\%.8s)=\%.15g(\%d),}\)\.{\ eta(\%.8s)=%
+\%.15g,\ "},\39\\{nmem}[\|k].\\{ch8},\39\\{lmem}[\|l].\\{pi},\39\\{lmem}[\|l].%
+\\{zf},\39\\{nmem}[\|k].\\{ch8},\39\\{lmem}[\|l].\\{eta});{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"pi(\~\%.8s)=\%.15g(\%d)}\)\.{,\ eta(\~\%.8s)=%
+\%.15g\\n}\)\.{"},\39\\{nmem}[\|k].\\{ch8},\39\\{lmem}[\|l+\T{1}].\\{pi},\39%
+\\{lmem}[\|l+\T{1}].\\{zf},\39\\{nmem}[\|k].\\{ch8},\39\\{lmem}[\|l+\T{1}].%
+\\{eta});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{28}Initializing the real data structures.
+We're ready now to convert the temporary chunks of data into the
+form we want, and to recycle those chunks.
+
+\Y\B\4\X28:Set up the main data structures\X${}\E{}$\6
+\X29:Allocate the main arrays\X;\6
+\X30:Zero the links\X;\6
+\X31:Copy all the temporary cells to the \PB{\\{mem}} and \PB{\\{cmem}} arrays
+in proper format\X;\6
+\X33:Copy all the temporary variable nodes to the \PB{\\{nmem}} array in proper
+format\X;\6
+\X34:Check consistency\X;\par
+\U3.\fi
+
+\M{29}\B\X29:Allocate the main arrays\X${}\E{}$\6
+\\{free}(\\{buf});\5
+\\{free}(\\{hash});\C{ a tiny gesture to make a little room }\6
+${}\\{lmem}\K{}$(\&{literal} ${}{*}){}$ \\{malloc}${}((\\{vars}+\\{vars}+%
+\T{1})*\&{sizeof}(\&{literal}));{}$\6
+\&{if} ${}(\R\\{lmem}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Oops,\ I\ can't\ alloc}\)\.{ate\ the\ lmem\
+array!\\}\)\.{n"});{}$\6
+${}\\{exit}({-}\T{12});{}$\6
+\4${}\}{}$\2\6
+${}\\{bytes}\K(\\{vars}+\\{vars}+\T{1})*\&{sizeof}(\&{literal});{}$\6
+${}\\{nmem}\K{}$(\&{octa} ${}{*}){}$ \\{malloc}${}(\\{vars}*\&{sizeof}(%
+\&{octa}));{}$\6
+\&{if} ${}(\R\\{nmem}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Oops,\ I\ can't\ alloc}\)\.{ate\ the\ nmem\
+array!\\}\)\.{n"});{}$\6
+${}\\{exit}({-}\T{13});{}$\6
+\4${}\}{}$\2\6
+${}\\{bytes}\MRL{+{\K}}\\{vars}*\&{sizeof}(\&{octa});{}$\6
+${}\\{mem}\K{}$(\&{mem\_item} ${}{*}){}$ \\{malloc}${}(\\{cells}*\&{sizeof}(%
+\&{mem\_item}));{}$\6
+\&{if} ${}(\R\\{mem}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Oops,\ I\ can't\ alloc}\)\.{ate\ the\ big\ mem%
+\ arra}\)\.{y!\\n"});{}$\6
+${}\\{exit}({-}\T{10});{}$\6
+\4${}\}{}$\2\6
+${}\\{bytes}\MRL{+{\K}}\\{cells}*\&{sizeof}(\&{mem\_item});{}$\6
+${}\\{cmem}\K{}$(\&{clause} ${}{*}){}$ \\{malloc}${}((\\{clauses}+\T{1})*%
+\&{sizeof}(\&{clause}));{}$\6
+\&{if} ${}(\R\\{cmem}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Oops,\ I\ can't\ alloc}\)\.{ate\ the\ cmem\
+array!\\}\)\.{n"});{}$\6
+${}\\{exit}({-}\T{11});{}$\6
+\4${}\}{}$\2\6
+${}\\{bytes}\MRL{+{\K}}(\\{clauses}+\T{1})*\&{sizeof}(\&{clause}){}$;\par
+\U28.\fi
+
+\M{30}\B\X30:Zero the links\X${}\E{}$\6
+\&{for} ${}(\|l\K\\{vars}+\\{vars};{}$ \|l; ${}\|l\MM){}$\1\5
+${}\|o,\39\\{lmem}[\|l-\T{1}].\\{link}\K\T{0}{}$;\2\par
+\U28.\fi
+
+\M{31}\B\X31:Copy all the temporary cells to the \PB{\\{mem}} and \PB{\\{cmem}}
+arrays in proper format\X${}\E{}$\6
+\&{for} ${}(\|c\K\\{clauses},\39\\{cur\_mcell}\K\\{mem}+\\{cells},\39\\{kk}\K%
+\T{0};{}$ \|c; ${}\|c\MM){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{cmem}[\|c].\\{start}\K\\{cur\_mcell}-\\{mem};{}$\6
+${}\|k\K\T{0};{}$\6
+\X32:Insert the cells for the literals of clause \PB{\|c}\X;\6
+\&{if} ${}(\|k>\\{kk}){}$\1\5
+${}\\{kk}\K\|k{}$;\C{ maximum clause size seen so far }\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{cur\_mcell}\I\\{mem}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Confusion\ about\ the}\)\.{\ number\ of\
+cells!\\n"});{}$\6
+${}\\{exit}({-}\T{99});{}$\6
+\4${}\}{}$\2\6
+${}\|o,\39\\{cmem}[\T{0}].\\{start}\K\T{0};{}$\6
+${}\\{gam}\K{}$(\&{double} ${}{*}){}$ \\{malloc}${}(\\{kk}*\&{sizeof}(%
+\&{double}));{}$\6
+\&{if} ${}(\R\\{gam}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Oops,\ I\ can't\ alloc}\)\.{ate\ the\ gamma\
+array!}\)\.{\\n"});{}$\6
+${}\\{exit}({-}\T{16});{}$\6
+\4${}\}{}$\2\6
+${}\\{bytes}\MRL{+{\K}}\\{kk}*\&{sizeof}(\&{double}){}$;\par
+\U28.\fi
+
+\M{32}The basic idea is to ``unwind'' the steps that we went through while
+building up the chunks.
+
+\Y\B\4\D$\\{hack\_out}(\|q)$ \5
+(((\&{ullng}) \|q)${}\AND\T{\^3}{}$)\par
+\B\4\D$\\{hack\_clean}(\|q)$ \5
+((\&{tmp\_var} ${}{*})({}$(\&{ullng}) \|q${}\AND{-}\T{4}){}$)\par
+\Y\B\4\X32:Insert the cells for the literals of clause \PB{\|c}\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{2};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\X20:Move \PB{\\{cur\_cell}} backward to the previous cell\X;\6
+${}\|i\K\\{hack\_out}({*}\\{cur\_cell});{}$\6
+${}\|p\K\\{hack\_clean}({*}\\{cur\_cell})\MG\\{serial};{}$\6
+${}\\{cur\_mcell}\MM;{}$\6
+${}\|o,\39\\{cur\_mcell}\MG\\{lit}\K\|l\K\|p+\|p+(\|i\AND\T{1});{}$\6
+${}\\{oo},\39\\{cur\_mcell}\MG\\{next}\K\\{lmem}[\|l].\\{link};{}$\6
+${}\|o,\39\\{lmem}[\|l].\\{link}\K\\{cur\_mcell}-\\{mem}+\T{1};{}$\6
+\4${}\}{}$\2\par
+\U31.\fi
+
+\M{33}\B\X33:Copy all the temporary variable nodes to the \PB{\\{nmem}} array
+in proper format\X${}\E{}$\6
+\&{for} ${}(\|c\K\\{vars};{}$ \|c; ${}\|c\MM){}$\5
+${}\{{}$\1\6
+\X21:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary variable\X;%
+\6
+${}\|o,\39\\{nmem}[\|c-\T{1}].\\{lng}\K\\{cur\_tmp\_var}\MG\\{name}.\\{lng};{}$%
+\6
+\4${}\}{}$\2\par
+\U28.\fi
+
+\M{34}We should now have unwound all the temporary data chunks back to their
+beginnings.
+
+\Y\B\4\X34:Check consistency\X${}\E{}$\6
+\&{if} ${}(\\{cur\_cell}\I{\AND}\\{cur\_chunk}\MG\\{cell}[\T{0}]\V\\{cur%
+\_chunk}\MG\\{prev}\I\NULL\V\\{cur\_tmp\_var}\I{\AND}\\{cur\_vchunk}\MG\\{var}[%
+\T{0}]\V\\{cur\_vchunk}\MG\\{prev}\I\NULL){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"This\ can't\ happen\ (}\)\.{consistency\ check%
+\ fa}\)\.{ilure)!\\n"});{}$\6
+${}\\{exit}({-}\T{14});{}$\6
+\4${}\}{}$\2\6
+\\{free}(\\{cur\_chunk});\5
+\\{free}(\\{cur\_vchunk});\par
+\U28.\fi
+
+\N{1}{35}Doing it. So we take surveys.
+
+\Y\B\4\X35:Solve the problem\X${}\E{}$\6
+$\\{factor}\K\T{1.0};{}$\6
+\X37:Initialize all $\eta$'s to random fractions\X;\6
+\&{for} ${}(\\{iter}\K\T{0};{}$ ${}\\{iter}<\\{max\_iter};{}$ ${}\\{iter}%
+\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}((\\{iter}\AND\T{1})\W\\{iter}\G\\{min\_iter}){}$\5
+${}\{{}$\1\6
+\X39:Adjust the reinforcement fields\X;\6
+\X40:Exit if the clauses are pseudo-satisfied\X;\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{verbose}\AND\\{show\_choices}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"beginning\ iteration}\)\.{\ \%d\\n"},\39%
+\\{iter}+\T{1});{}$\2\6
+\X38:Compute the $\pi$'s\X;\6
+\X41:Update the $\eta$'s\X;\6
+\&{if} ${}(\\{verbose}\AND\\{show\_details}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ (max\ diff\ \%.15g,\ \%}\)\.{lld\ mems)%
+\\n"},\39\\{max\_diff},\39\\{mems});{}$\2\6
+\&{if} ${}(\\{delta}\W(\\{mems}\G\\{thresh})){}$\5
+${}\{{}$\1\6
+${}\\{thresh}\MRL{+{\K}}\\{delta};{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ after\ \%lld\ mems,\ i}\)\.{teration\ \%d\
+had\ max\ }\)\.{diff\ \%g\\n"},\39\\{mems},\39\\{iter}+\T{1},\39\\{max%
+\_diff});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{max\_diff}<\\{threshold}\W\\{iter}\G\\{min\_iter}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\X42:Output a reduced problem\X;\par
+\U3.\fi
+
+\M{36}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{iter};\C{ number of the current iteration }\6
+\&{double} \\{acc}${},{}$ \\{etabar}${},{}$ \\{pi0}${},{}$ \\{pi1}${},{}$ %
+\\{old\_eta}${},{}$ \\{new\_eta}${},{}$ \\{new\_gam}${},{}$ \\{factor}${},{}$ %
+\\{rein}${},{}$ \\{diff};\C{ intermediate registers for floating-point
+calculations }\6
+\&{double} \\{max\_diff};\C{ biggest change from \PB{\\{old\_eta}} to \PB{%
+\\{new\_eta}} }\6
+\&{double} \\{factor};\C{ \PB{\\{damper}}$^t$ if we've reinforced $t$ times }\6
+\&{int} \\{azf};\C{ number of zero factors suppressed from \PB{\\{acc}} }\6
+\&{int} \\{max\_iter};\par
+\fi
+
+\M{37}The macro \PB{\\{gb\_next\_rand}(\,)} delivers a 31-bit random integer,
+and my convention is to charge four mems whenever it is called.
+
+The initial values of $\eta_{c\to l}$ are random, but the
+initial values of the external fields $\eta_l$ are zero.
+
+After this point the computation becomes deterministic.
+
+\Y\B\4\X37:Initialize all $\eta$'s to random fractions\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{cells};{}$ ${}\|k\PP){}$\1\5
+${}\\{mems}\MRL{+{\K}}\T{5},\39\\{mem}[\|k].\\{eta}.\|d\K((\&{double})(\\{gb%
+\_next\_rand}(\,)))/\T{2147483647.0};{}$\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{vars}+\\{vars};{}$ ${}\|k\MRL{+{\K}}%
+\T{2}){}$\1\5
+${}\\{ooo},\39\\{lmem}[\|k].\\{eta}\K\T{0.0},\39\\{lmem}[\|k+\T{1}].\\{eta}\K%
+\T{0.0}{}$;\2\par
+\U35.\fi
+
+\M{38}\B\X38:Compute the $\pi$'s\X${}\E{}$\6
+\&{for} ${}(\|l\K\T{0};{}$ ${}\|l<\\{vars}+\\{vars};{}$ ${}\|l\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\\{lmem}[\|l].\\{eta}\E\T{1.0}){}$\1\5
+${}\\{acc}\K\T{1.0},\39\\{azf}\K\T{1};{}$\2\6
+\&{else}\1\5
+${}\\{acc}\K\T{1.0}-\\{lmem}[\|l].\\{eta},\39\\{azf}\K\T{0};{}$\2\6
+\&{for} ${}(\|j\K\\{lmem}[\|l].\\{link};{}$ \|j; ${}\|j\K\\{mem}[\|j-\T{1}].%
+\\{next}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{etabar}\K\T{1.0}-\\{mem}[\|j-\T{1}].\\{eta}.\|d;{}$\6
+\&{if} ${}(\\{etabar}\E\T{0.0}){}$\1\5
+${}\\{azf}\PP;{}$\2\6
+\&{else}\1\5
+${}\\{acc}\MRL{*{\K}}\\{etabar};{}$\2\6
+\4${}\}{}$\2\6
+${}\\{oo},\39\\{lmem}[\|l].\\{zf}\K\\{azf},\39\\{lmem}[\|l].\\{pi}\K\\{acc};{}$%
+\6
+\4${}\}{}$\2\par
+\U35.\fi
+
+\M{39}Either $\eta_l$ or $\eta_{\bar l}$ is zero; the other is
+$(1-\PB{\\{factor}})$ times $\vert p-q\vert$, where $p$ and $q$ are the
+normalized
+forces that favor $l$ and $\bar l$.
+
+In this loop \PB{$\|l\K\T{2}\|k$}, when we process variable~$k$.
+The \PB{\\{rating}} field
+of \PB{\|l} is set to $+1$, $0$, or $-1$ if we currently rate the variable's
+value as $1$, $*$, or $0$.
+
+This rating ``field'' is based on what the physicists also call a ``field,''
+but in a different context: They consider that literal~\PB{\|l} tends to be
+$(1,0,*)$ with probabilities that are respectively proportional to
+$(\pi_{\bar l}(1{-}\pi_l),\allowbreak\,\pi_l(1{-}\pi_{\bar l}),
+\allowbreak\,\pi_{\bar l}\pi_l)$.
+These probabilities can be normalized so that they are $(p,q,r)$ with
+$p+q+r=1$. The rating is 0 if and only if $r\ge\max\{p,q\}$; otherwise it's
+$+1$ when $p>q$, or $-1$ when $p<q$. The condition $r\ge\max\{p,q\}$ turns out
+to be equivalent to saying that $\pi_l$ and $\pi_{\bar l}$ are
+both $\ge0.5$. Later we will use $\vert p-q\vert$ to decide the
+``bias'' of a literal.
+
+\Y\B\4\X39:Adjust the reinforcement fields\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{factor}\MRL{*{\K}}\\{damper};{}$\6
+${}\\{rein}\K\T{1.0}-\\{factor};{}$\6
+\&{if} ${}(\\{verbose}\AND\\{show\_details}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ (rein=\%.15g)\\n"},\39\\{rein});{}$\2\6
+\&{for} ${}(\|l\K\T{0};{}$ ${}\|l<\\{vars}+\\{vars};{}$ ${}\|l\MRL{+{\K}}%
+\T{2}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\\{lmem}[\|l].\\{zf}){}$\1\5
+${}\\{pi0}\K\T{0.0};{}$\2\6
+\&{else}\1\5
+${}\|o,\39\\{pi0}\K\\{lmem}[\|l].\\{pi};{}$\2\6
+\&{if} ${}(\|o,\39\\{lmem}[\|l+\T{1}].\\{zf}){}$\1\5
+${}\\{pi1}\K\T{0.0};{}$\2\6
+\&{else}\1\5
+${}\|o,\39\\{pi1}\K\\{lmem}[\|l+\T{1}].\\{pi};{}$\2\6
+\&{if} ${}(\\{pi0}+\\{pi1}\E\T{0.0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{verbose}\AND\\{show\_basics}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ a\ contradict}\)\.{ion\ was\ found\
+after\ }\)\.{iteration\ \%d!\\n"},\39\\{iter});{}$\2\6
+\&{goto} \\{contradiction};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{pi1}>\\{pi0}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{lmem}[\|l].\\{rating}\K(\\{pi0}\G\T{0.5}\?\T{0}:\T{1});{}$\6
+\&{if} ${}((\\{verbose}\AND\\{show\_gory\_details})\W\\{lmem}[\|l+\T{1}].%
+\\{eta}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ eta(\~\%.8s)\ reset\\n}\)\.{"},\39\\{nmem}[%
+\|l\GG\T{1}].\\{ch8});{}$\2\6
+${}\\{oo},\39\\{lmem}[\|l].\\{eta}\K\\{rein}*(\\{pi1}-\\{pi0})/(\\{pi0}+%
+\\{pi1}-\\{pi0}*\\{pi1}),\39\\{lmem}[\|l+\T{1}].\\{eta}\K\T{0.0};{}$\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\|o,\39\\{lmem}[\|l].\\{rating}\K(\\{pi1}\G\T{0.5}\?\T{0}:{-}\T{1});{}$\6
+\&{if} ${}((\\{verbose}\AND\\{show\_gory\_details})\W\\{lmem}[\|l].\\{eta}){}$%
+\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ eta(\%.8s)\ reset\\n"},\39\\{nmem}[\|l\GG%
+\T{1}].\\{ch8});{}$\2\6
+${}\\{oo},\39\\{lmem}[\|l+\T{1}].\\{eta}\K\\{rein}*(\\{pi0}-\\{pi1})/(\\{pi0}+%
+\\{pi1}-\\{pi0}*\\{pi1}),\39\\{lmem}[\|l].\\{eta}\K\T{0.0};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U35.\fi
+
+\M{40}A clause is ``pseudo-satisfied'' if it contains a variable whose
+current value is rated~$*$, or if it is satisfied in the normal way.
+With luck, we get to a pseudo-satisfied state before \PB{\\{max\_diff}} gets
+small. (This seems to be a transient phenomenon in many examples:
+If we wait for \PB{\\{max\_diff}} to get small, the $\pi$'s might all be
+approaching~1 and very few variables would become fixed.)
+
+\Y\B\4\X40:Exit if the clauses are pseudo-satisfied\X${}\E{}$\6
+\&{for} ${}(\|k\K\|c\K\T{0};{}$ ${}\|c<\\{clauses};{}$ ${}\|c\PP){}$\5
+${}\{{}$\1\6
+\&{for} (\|o; ${}\|k<\\{cmem}[\|c+\T{1}].\\{start};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39\|l\K\\{mem}[\|k].\\{lit},\39\|p\K\\{lmem}[\|l\AND{-}\T{2}].%
+\\{rating};{}$\6
+\&{if} ${}(\|p\E\T{0}){}$\1\5
+\&{goto} \\{ok};\2\6
+\&{if} (((\&{int}) \|p${}<\T{0})\E(\|l\AND\T{1})){}$\1\5
+\&{goto} \\{ok};\2\6
+\4${}\}{}$\2\6
+\&{goto} \\{not\_ok};\C{ clause not pseudo-satisfied }\6
+\4\\{ok}:\5
+${}\|k\K\\{cmem}[\|c+\T{1}].\\{start};{}$\6
+\&{continue};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{verbose}\AND\\{show\_details}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Clauses\ pseudo-sati}\)\.{sfied\ on\ iteration%
+\ \%}\)\.{d\\n"},\39\\{iter}+\T{1});{}$\2\6
+\&{break};\C{ yes, we made it through all of them }\6
+\\{not\_ok}:\par
+\U35.\fi
+
+\M{41}If the clause is $l_1\lor\cdots\lor l_k$, we compute
+ratios $\gamma_1$,~\dots,~$\gamma_k$ representing the perceived
+difficulty of making $l_i$ true; then $\eta_i$ is the product
+$\gamma_1\ldots\gamma_{i-1}\gamma_{i+1}\ldots\gamma_k$.
+
+\Y\B\4\X41:Update the $\eta$'s\X${}\E{}$\6
+$\\{max\_diff}\K\T{0.0};{}$\6
+\&{for} ${}(\|k\K\|c\K\T{0};{}$ ${}\|c<\\{clauses};{}$ ${}\|c\PP){}$\5
+${}\{{}$\1\6
+${}\\{acc}\K\T{1.0},\39\\{azf}\K\T{0};{}$\6
+\&{for} ${}(\|o,\39\|j\K\T{0};{}$ ${}\|k<\\{cmem}[\|c+\T{1}].\\{start};{}$ ${}%
+\|j\PP,\39\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|l\K\\{mem}[\|k].\\{lit};{}$\6
+\&{if} ${}(\|o,\39\\{lmem}[\|l\XOR\T{1}].\\{zf}){}$\1\5
+${}\\{pi0}\K\T{0.0};{}$\2\6
+\&{else}\1\5
+${}\|o,\39\\{pi0}\K\\{lmem}[\|l\XOR\T{1}].\\{pi};{}$\2\6
+${}\|o,\39\\{old\_eta}\K\\{mem}[\|k].\\{eta}.\|d;{}$\6
+\&{if} ${}(\\{old\_eta}\E\T{1.0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\\{lmem}[\|l].\\{zf}>\T{1}){}$\1\5
+${}\\{pi1}\K\T{0.0};{}$\2\6
+\&{else}\1\5
+${}\|o,\39\\{pi1}\K\\{lmem}[\|l].\\{pi};{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\|o,\39\\{lmem}[\|l].\\{zf}){}$\1\5
+${}\\{pi1}\K\T{0.0};{}$\2\6
+\&{else}\1\5
+${}\|o,\39\\{pi1}\K\\{lmem}[\|l].\\{pi}/(\T{1.0}-\\{old\_eta});{}$\2\6
+${}\\{pi1}\K\\{pi1}*(\T{1.0}-\\{pi0});{}$\6
+\&{if} ${}(\\{pi1}\E\T{0.0}){}$\1\5
+${}\\{azf}\PP,\39\|o,\39\\{gam}[\|j]\K\T{0.0};{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{new\_gam}\K\\{pi1}/(\\{pi1}+\\{pi0});{}$\6
+${}\|o,\39\\{gam}[\|j]\K\\{new\_gam};{}$\6
+${}\\{acc}\MRL{*{\K}}\\{new\_gam};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|i\K\|j;{}$ \|i; ${}\|i\MM){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\\{gam}[\|j-\|i]\E\T{0.0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{azf}>\T{1}){}$\1\5
+${}\\{new\_eta}\K\T{0.0};{}$\2\6
+\&{else}\1\5
+${}\\{new\_eta}\K\\{acc};{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} (\\{azf})\1\5
+${}\\{new\_eta}\K\T{0.0};{}$\2\6
+\&{else}\1\5
+${}\\{new\_eta}\K\\{acc}/\\{gam}[\|j-\|i];{}$\2\6
+${}\|o,\39\\{diff}\K\\{new\_eta}-\\{mem}[\|k-\|i].\\{eta}.\|d;{}$\6
+\&{if} ${}(\\{diff}>\T{0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{diff}>\\{max\_diff}){}$\1\5
+${}\\{max\_diff}\K\\{diff};{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}({-}\\{diff}>\\{max\_diff}){}$\1\5
+${}\\{max\_diff}\K{-}\\{diff};{}$\2\6
+${}\|o,\39\\{mem}[\|k-\|i].\\{eta}.\|d\K\\{new\_eta};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U35.\fi
+
+\N{1}{42}The aftermath. When convergence or pseudo-satisfiability is achieved,
+we want to use the
+values of $\pi_l$ to decide which variables should probably become 0 or~1.
+For example, if $\pi_l$ is small but $\pi_{\bar l}$ is large,
+literal~$l$ should be true.
+
+\Y\B\4\X42:Output a reduced problem\X${}\E{}$\6
+\&{if} ${}(\\{iter}\E\\{max\_iter}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{verbose}\AND\\{show\_basics}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"The\ messages\ didn't}\)\.{\ converge.%
+\\n"});{}$\2\6
+\&{goto} \\{contradiction};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{verbose}\AND\\{show\_pis}){}$\1\5
+\X43:Print all the $\pi$'s\X;\2\6
+\&{if} ${}(\\{verbose}\AND\\{show\_histogram}){}$\1\5
+\X44:Print a two-dimension histogram of $\pi_v$ versus $\pi_{\bar v}$\X;\2\6
+\X45:Decide which variables to fix\X;\6
+\X46:Preprocess the clauses for reduction\X;\6
+\X52:Reduce the problem\X;\6
+\X53:Output the reduced problem\X;\6
+\&{goto} \\{done};\6
+\4\\{contradiction}:\5
+\\{printf}(\.{"\~\~?\\n"}); \\{done}:\par
+\U35.\fi
+
+\M{43}Here we show not only $\pi_v$ and $\pi_{\bar v}$ for each variable~$v$,
+but also the associated ``fields'' $(p,q,r)$ described above.
+
+\Y\B\4\X43:Print all the $\pi$'s\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{iter}<\\{max\_iter}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"converged\ after\ \%d\ }\)\.{iterations.\\n"},%
+\39\\{iter}+\T{1});{}$\2\6
+\&{else}\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"no\ convergence\ (dif}\)\.{f\ \%g)\ after\ \%d%
+\ itera}\)\.{tions.\\n"},\39\\{max\_diff},\39\\{max\_iter});{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"variable\ \ \ \ \ \ pi(v)}\)\.{\ \ \ \ \ \ \ \
+pi(\~v)\ \ \ \ \ \ }\)\.{\ \ \ 1\ \ \ \ 0\ \ \ \ *\\n"});{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{vars};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{double} \\{den};\7
+${}\\{fprintf}(\\{stderr},\39\.{"\%8.8s\ \%10.7f(\%d)\ \%1}\)\.{0.7f(\%d)"},\39%
+\\{nmem}[\|k].\\{ch8},\39\\{lmem}[\|k+\|k].\\{pi},\39\\{lmem}[\|k+\|k].\\{zf},%
+\39\\{lmem}[\|k+\|k+\T{1}].\\{pi},\39\\{lmem}[\|k+\|k+\T{1}].\\{zf});{}$\6
+${}\\{pi0}\K\\{lmem}[\|k+\|k].\\{pi};{}$\6
+\&{if} ${}(\\{lmem}[\|k+\|k].\\{zf}){}$\1\5
+${}\\{pi0}\K\T{0.0};{}$\2\6
+${}\\{pi1}\K\\{lmem}[\|k+\|k+\T{1}].\\{pi};{}$\6
+\&{if} ${}(\\{lmem}[\|k+\|k+\T{1}].\\{zf}){}$\1\5
+${}\\{pi1}\K\T{0.0};{}$\2\6
+${}\\{den}\K\\{pi0}+\\{pi1}-\\{pi0}*\\{pi1};{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ \ \ \ \%4.2f\ \%4.2f\ \%4.}\)\.{2f\\n"},\39%
+\\{pi1}*(\T{1}-\\{pi0})/\\{den},\39\\{pi0}*(\T{1}-\\{pi1})/\\{den},\39\\{pi0}*%
+\\{pi1}/\\{den});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U42.\fi
+
+\M{44}\B\X44:Print a two-dimension histogram of $\pi_v$ versus $\pi_{\bar v}$%
+\X${}\E{}$\6
+${}\{{}$\1\6
+\&{uint} \\{hist}[\T{10}][\T{10}];\7
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{10};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{10};{}$ ${}\|k\PP){}$\1\5
+${}\\{hist}[\|j][\|k]\K\T{0};{}$\2\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{vars};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|i\K(\&{int})(\T{10}*\\{lmem}[\|k+\|k].\\{pi}),\39\|j\K(\&{int})(\T{10}*%
+\\{lmem}[\|k+\|k+\T{1}].\\{pi});{}$\6
+\&{if} ${}(\\{lmem}[\|k+\|k].\\{zf}){}$\1\5
+${}\|i\K\T{0};{}$\2\6
+\&{if} ${}(\\{lmem}[\|k+\|k+\T{1}].\\{zf}){}$\1\5
+${}\|j\K\T{0};{}$\2\6
+\&{if} ${}(\|i\E\T{10}){}$\1\5
+${}\|i\K\T{9};{}$\2\6
+\&{if} ${}(\|j\E\T{10}){}$\1\5
+${}\|j\K\T{9};{}$\2\6
+${}\\{hist}[\|i][\|j]\PP;{}$\6
+\4${}\}{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"Histogram\ of\ the\ pi}\)\.{'s,\ after\ \%d\
+iterati}\)\.{ons:\\n"},\39\\{iter}+\T{1});{}$\6
+\&{for} ${}(\|j\K\T{10};{}$ \|j; ${}\|j\MM){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{10};{}$ ${}\|i\PP){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\%7d"},\39\\{hist}[\|i][\|j-\T{1}]);{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U42.\fi
+
+\M{45}The difference $b=100\,\vert p-q\vert$ in the field of variable~$v$
+represents $v$'s percentage bias
+towards a non-$*$ value. All variables for which $b$ is greater than
+or equal to the \PB{\\{confidence}} parameter are placed into bucket~\PB{\|b}.
+Then we go through buckets 100, 99, etc., fixing those variables.
+We also make a ``\PB{\\{unit}}'' bucket for literals that appear in unit
+clauses after reduction.
+
+Links within the bucket lists are odd numbers, terminated by~2; they
+appear in the \PB{\\{rating}} fields of \PB{\\{lmem}[\T{1}]}, \PB{\\{lmem}[%
+\T{3}]}, etc.
+
+It's probably unwise for the user to make \PB{$\\{confidence}<\T{50}$}, because
+the pseudo-satisfiability test rates a variable of field $(.5,0,.5)$
+as a~`$*$'. But we haven't ruled that out; after all, this program
+is just experimental, and it's sometimes interesting to explore the
+consequences of unwise decisions. Therefore we recompute the
+\PB{\\{rating}} fields in \PB{\\{lmem}[\T{0}]}, \PB{\\{lmem}[\T{2}]}, etc., so
+that they
+merely reflect the sign of $p-q$.
+
+\Y\B\4\X45:Decide which variables to fix\X${}\E{}$\6
+\&{for} ${}(\|k\K\\{confidence};{}$ ${}\|k\Z\T{100};{}$ ${}\|k\PP){}$\1\5
+${}\|o,\39\\{bucket}[\|k]\K\T{2};{}$\2\6
+${}\\{unit}\K\T{2};{}$\6
+\&{for} ${}(\|l\K\T{0};{}$ ${}\|l<\\{vars}+\\{vars};{}$ ${}\|l\MRL{+{\K}}%
+\T{2}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\\{lmem}[\|l].\\{zf}){}$\1\5
+${}\\{pi0}\K\T{0.0};{}$\2\6
+\&{else}\1\5
+${}\|o,\39\\{pi0}\K\\{lmem}[\|l].\\{pi};{}$\2\6
+\&{if} ${}(\|o,\39\\{lmem}[\|l+\T{1}].\\{zf}){}$\1\5
+${}\\{pi1}\K\T{0.0};{}$\2\6
+\&{else}\1\5
+${}\|o,\39\\{pi1}\K\\{lmem}[\|l+\T{1}].\\{pi};{}$\2\6
+\&{if} ${}(\\{pi0}+\\{pi1}\E\T{0.0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{verbose}\AND\\{show\_basics}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ a\ contradict}\)\.{ion\ was\ found!%
+\\n"});{}$\2\6
+\&{goto} \\{contradiction};\6
+\4${}\}{}$\2\6
+${}\\{acc}\K(\\{pi1}-\\{pi0})/(\\{pi0}+\\{pi1}-\\{pi0}*\\{pi1});{}$\6
+${}\|o,\39\\{lmem}[\|l].\\{rating}\K\\{acc}>\T{0}\?{+}\T{1}:\\{acc}<\T{0}\?{-}%
+\T{1}:\T{0};{}$\6
+\&{if} ${}(\\{acc}<\T{0}){}$\1\5
+${}\\{acc}\K{-}\\{acc};{}$\2\6
+${}\|j\K(\&{int})(\T{100.0}*\\{acc});{}$\6
+\&{if} ${}(\|j\G\\{confidence}){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39\\{lmem}[\|l+\T{1}].\\{rating}\K\\{bucket}[\|j];{}$\6
+${}\|o,\39\\{bucket}[\|j]\K\|l+\T{1};{}$\6
+${}\\{fixcount}\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{verbose}\AND\\{show\_basics}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"(fixing\ \%d\ variable}\)\.{s\ after\ \%d\
+iteration}\)\.{s,\ e=\%g)\\n"},\39\\{fixcount},\39\\{iter}+\T{1},\39\\{max%
+\_diff}){}$;\2\par
+\U42.\fi
+
+\M{46}We're done with the \PB{\\{eta}} fields in the clauses of cells.
+So we replace them now with pointers to the relevant clause numbers.
+
+At this point we also take note of unit clauses that might be present
+in the input, just in case the user didn't reduce them away before
+presenting the problem.
+
+\Y\B\4\D$\\{cl}(\|p)$ \5
+$\\{mem}[\|p].\\{eta}.{}$\|u\C{ new use for the \PB{\\{eta}} field }\par
+\Y\B\4\X46:Preprocess the clauses for reduction\X${}\E{}$\6
+\&{for} ${}(\|k\K\|c\K\T{0};{}$ ${}\|c<\\{clauses};{}$ ${}\|c\PP){}$\5
+${}\{{}$\1\6
+\&{for} ( ; ${}\|k<\\{cmem}[\|c+\T{1}].\\{start};{}$ ${}\|k\PP){}$\1\5
+${}\|o,\39\\{cl}(\|k)\K\|c;{}$\2\6
+${}\\{oo},\39\\{cmem}[\|c].\\{size}\K\|k-\\{cmem}[\|c].\\{start};{}$\6
+\&{if} ${}(\\{cmem}[\|c].\\{size}\E\T{1}){}$\5
+${}\{{}$\1\6
+\X51:Enforce the unit literal \PB{$\\{mem}[\|k-\T{1}].\\{lit}$}\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U42.\fi
+
+\M{47}Here now is a subroutine that fixes the variables in a given bucket list.
+
+\Y\B\4\X26:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{fixlist}(\&{register} \&{int} \|k${},\39{}$\&{int} \|b)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|c${},{}$ \|j${},{}$ \|l${},{}$ \\{ll}${},{}$ \|p${},{}$ %
+\|q;\7
+\&{for} ( ; ${}\|k\AND\T{1};{}$ \|o${},\39\|k\K\\{lmem}[\|k].\\{rating}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\\{lmem}[\|k-\T{1}].\\{rating}<\T{0}){}$\1\5
+${}\|l\K\|k;{}$\2\6
+\&{else}\1\5
+${}\|l\K\|k-\T{1};{}$\2\6
+${}\\{printf}(\.{"\ \%s\%.8s"},\39\|l\AND\T{1}\?\.{"\~"}:\.{""},\39\\{nmem}[\|l%
+\GG\T{1}].\\{ch8});{}$\6
+\X48:Mark the clauses that contain \PB{\|l} satisfied\X;\6
+\X49:Remove $\bar l$ from all clauses\X;\6
+\4${}\}{}$\2\6
+\&{return} \T{1};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{48}\B\X48:Mark the clauses that contain \PB{\|l} satisfied\X${}\E{}$\6
+\&{for} ${}(\|o,\39\|p\K\\{lmem}[\|l].\\{link};{}$ \|p; \|o${},\39\|p\K\\{mem}[%
+\|p-\T{1}].\\{next}){}$\5
+${}\{{}$\1\6
+${}\\{oo},\39\|c\K\\{cl}(\|p-\T{1}),\39\|j\K\\{cmem}[\|c].\\{size};{}$\6
+\&{if} (\|j)\1\5
+${}\|o,\39\\{cmem}[\|c].\\{size}\K\T{0};{}$\2\6
+\4${}\}{}$\2\par
+\U47.\fi
+
+\M{49}Removed literals are flagged by a special code in their \PB{\\{next}}
+field.
+
+\Y\B\4\D$\\{removed}$ \5
+$(\&{uint})({-}\T{1}{}$)\par
+\Y\B\4\X49:Remove $\bar l$ from all clauses\X${}\E{}$\6
+\&{for} ${}(\|o,\39\|p\K\\{lmem}[\|l\XOR\T{1}].\\{link};{}$ \|p; ${}\|p\K%
+\|q){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|q\K\\{mem}[\|p-\T{1}].\\{next};{}$\6
+${}\\{oo},\39\|c\K\\{cl}(\|p-\T{1}),\39\|j\K\\{cmem}[\|c].\\{size};{}$\6
+\&{if} ${}(\|j\E\T{0}){}$\1\5
+\&{continue};\C{ clause already satisfied }\2\6
+${}\\{oo},\39\\{mem}[\|p-\T{1}].\\{next}\K\\{removed},\39\\{cmem}[\|c].\\{size}%
+\K\|j-\T{1};{}$\6
+\&{if} ${}(\|j\E\T{2}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|o,\39\|p\K\\{cmem}[\|c].\\{start};{}$ \|o${},\39\\{mem}[\|p].%
+\\{next}\E\\{removed};{}$ ${}\|p\PP){}$\1\5
+;\2\6
+\X50:Enforce the unit literal \PB{$\\{mem}[\|p].\\{lit}$}\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U47.\fi
+
+\M{50}I expect that unit literals will have become sufficiently biased that
+we've already decided to fix them. But the \PB{\\{unit}} bucket is there just
+in case we didn't.
+
+\Y\B\4\X50:Enforce the unit literal \PB{$\\{mem}[\|p].\\{lit}$}\X${}\E{}$\6
+$\\{ll}\K\\{mem}[\|p].\\{lit};{}$\6
+\&{if} ${}(\\{ll}\AND\T{1}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\\{lmem}[\\{ll}].\\{rating}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\\{lmem}[\\{ll}-\T{1}].\\{rating}>\T{0}){}$\1\5
+\&{goto} \\{contra};\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\|o,\39\\{lmem}[\\{ll}-\T{1}].\\{rating}\K{-}\T{1};{}$\6
+${}\|o,\39\\{lmem}[\\{ll}].\\{rating}\K\\{unit},\39\\{unit}\K\\{ll},\39%
+\\{unitcount}\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\\{lmem}[\\{ll}+\T{1}].\\{rating}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\\{lmem}[\\{ll}].\\{rating}<\T{0}){}$\5
+${}\{{}$\1\6
+\4\\{contra}:\5
+\\{printf}(\.{"\\n"});\6
+${}\\{fprintf}(\\{stderr},\39\.{"Oops,\ clause\ \%d\ is\ }\)\.{contradicted"},%
+\39\|c);{}$\6
+\&{if} ${}(\|b\G\T{0}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ in\ bucket\ \%d!\\n"},\39\|b);{}$\2\6
+\&{else}\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ while\ propagating\ }\)\.{unit\ literals!%
+\\n"});{}$\2\6
+\&{return} \T{0};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\|o,\39\\{lmem}[\\{ll}].\\{rating}\K{+}\T{1};{}$\6
+${}\|o,\39\\{lmem}[\\{ll}+\T{1}].\\{rating}\K\\{unit},\39\\{unit}\K\\{ll}+%
+\T{1},\39\\{unitcount}\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U49.\fi
+
+\M{51}\B\X51:Enforce the unit literal \PB{$\\{mem}[\|k-\T{1}].\\{lit}$}\X${}%
+\E{}$\6
+$\\{ll}\K\\{mem}[\|k-\T{1}].\\{lit};{}$\6
+\&{if} ${}(\\{ll}\AND\T{1}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\\{lmem}[\\{ll}].\\{rating}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\\{lmem}[\\{ll}-\T{1}].\\{rating}>\T{0}){}$\1\5
+\&{goto} \\{contra};\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\|o,\39\\{lmem}[\\{ll}-\T{1}].\\{rating}\K{-}\T{1};{}$\6
+${}\|o,\39\\{lmem}[\\{ll}].\\{rating}\K\\{unit},\39\\{unit}\K\\{ll},\39%
+\\{unitcount}\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\\{lmem}[\\{ll}+\T{1}].\\{rating}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\\{lmem}[\\{ll}].\\{rating}<\T{0}){}$\5
+${}\{{}$\1\6
+\4\\{contra}:\5
+\\{printf}(\.{"\\n"});\6
+${}\\{fprintf}(\\{stderr},\39\.{"Oops,\ clause\ \%d\ is\ }\)\.{contradicted!%
+\\n"},\39\|c);{}$\6
+\&{goto} \\{contradiction};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+${}\|o,\39\\{lmem}[\\{ll}].\\{rating}\K{+}\T{1};{}$\6
+${}\|o,\39\\{lmem}[\\{ll}+\T{1}].\\{rating}\K\\{unit},\39\\{unit}\K\\{ll}+%
+\T{1},\39\\{unitcount}\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U46.\fi
+
+\M{52}\B\X52:Reduce the problem\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{100};{}$ ${}\|k\G\\{confidence};{}$ ${}\|k\MM){}$\1\6
+\&{if} ${}(\\{ooo},\39\\{fixlist}(\\{bucket}[\|k],\39\|k)\E\T{0}){}$\1\5
+\&{goto} \\{contradiction};\2\2\6
+\&{while} ${}(\\{unit}\AND\T{1}){}$\5
+${}\{{}$\1\6
+${}\|p\K\\{unit},\39\\{unit}\K\T{2};{}$\6
+\&{if} ${}(\\{oo},\39\\{fixlist}(\|p,\39{-}\T{1})\E\T{0}){}$\1\5
+\&{goto} \\{contradiction};\2\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\&{if} ${}(\\{unitcount}\W(\\{verbose}\AND\\{show\_basics})){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"(unit\ propagation\ f}\)\.{ixed\ \%d\ more\
+variabl}\)\.{e\%s)\\n"},\39\\{unitcount},\39\\{unitcount}\E\T{1}\?\.{""}:%
+\.{"s"}){}$;\2\par
+\U42.\fi
+
+\M{53}\B\X53:Output the reduced problem\X${}\E{}$\6
+$\\{sprintf}(\\{name\_buf},\39\.{"/tmp/sat9-\%d.dat"},\39\\{random\_seed});{}$\6
+${}\\{out\_file}\K\\{fopen}(\\{name\_buf},\39\.{"w"});{}$\6
+\&{if} ${}(\R\\{out\_file}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ can't\ open\ `\%s'\ f}\)\.{or\ writing!%
+\\n"});{}$\6
+${}\\{exit}({-}\T{668});{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\\{kk}\K\|k\K\|p\K\|c\K\T{0};{}$ ${}\|c<\\{clauses};{}$ ${}\|c%
+\PP){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|i\K\\{cmem}[\|c].\\{size};{}$\6
+\&{if} ${}(\|i\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|k\K\\{cmem}[\|c+\T{1}].\\{start};{}$\6
+\&{continue};\6
+\4${}\}{}$\2\6
+${}\|p\PP;{}$\6
+\&{while} ${}(\|i>\\{kk}){}$\1\5
+${}\\{gam}[\\{kk}\PP]\K\T{0};{}$\2\6
+${}\\{gam}[\|i-\T{1}]\MRL{+{\K}}\T{1};{}$\6
+\&{for} (\|o; ${}\|k<\\{cmem}[\|c+\T{1}].\\{start};{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\|o,\39\\{mem}[\|k].\\{next}\I\\{removed}){}$\5
+${}\{{}$\1\6
+${}\|l\K\\{mem}[\|k].\\{lit};{}$\6
+${}\\{fprintf}(\\{out\_file},\39\.{"\ \%s\%.8s"},\39\|l\AND\T{1}\?\.{"\~"}:%
+\.{""},\39\\{nmem}[\|l\GG\T{1}].\\{ch8});{}$\6
+\4${}\}{}$\2\2\6
+${}\\{fprintf}(\\{out\_file},\39\.{"\\n"});{}$\6
+\4${}\}{}$\2\6
+\\{fclose}(\\{out\_file});\6
+${}\\{fprintf}(\\{stderr},\39\.{"Reduced\ problem\ of\ }\)\.{\%d\ clauses\
+written\ o}\)\.{n\ file\ \%s\\n"},\39\|p,\39\\{name\_buf});{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{kk};{}$ ${}\|i\PP){}$\1\6
+\&{if} (\\{gam}[\|i])\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ (\%g\ \%d-clauses)\\n"},\39\\{gam}[\|i],\39%
+\|i+\T{1}){}$;\2\2\par
+\U42.\fi
+
+\M{54}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{bucket}[\T{101}]${},{}$ \\{unit};\6
+\&{int} \\{fixcount}${},{}$ \\{unitcount};\6
+\&{char} \\{name\_buf}[\T{32}];\6
+\&{FILE} ${}{*}\\{out\_file}{}$;\par
+\fi
+
+\N{1}{55}Index.
+\fi
+
+\inx
+\fin
+\con

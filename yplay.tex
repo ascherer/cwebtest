@@ -1,0 +1,82 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. This simple program calculates Schensted's Y function.
+Consider the array
+$$\let\\=\null\catcode`\ =\active\def {\ }\vcenter{\halign{\tt#\hfil\cr
+\\    x\cr
+\\   x x        x     \cr
+\\  x o o      x o      x\cr
+\\ o o x x    o o x    o o    o\cr
+\\x o x x x  o o x x  o o x  o o  o\cr
+}}.$$
+The first nine columns of these five rows were given as standard input;
+this array shows the standard output.
+
+In general the standard input should consist of $n+1$ lines of $2n+1$
+characters, for some $n$, using only spaces and \.x's and \.o's.
+(Otherwise who knows what might occur. I wrote this in a terrific hurry.)
+
+\Y\B\4\D$\\{maxn}$ \5
+\T{100}\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\&{char} ${}\|a[\\{maxn}+\T{1}][\\{maxn}+\T{1}][\\{maxn}+\\{maxn}+\T{1}];{}$\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|n${},{}$ \|s;\7
+\X2:Read the input into a[0], determining \PB{\|n}\X;\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\1\5
+\X3:Compute \PB{\|a[\|k]} from \PB{$\|a[\|k-\T{1}]$}\X;\2\6
+\X4:Print the results\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Read the input into a[0], determining \PB{\|n}\X${}\E{}$\6
+$\\{fgets}(\|a[\T{0}][\T{0}],\39\\{maxn}+\T{2},\39\\{stdin});{}$\6
+\&{for} ${}(\|n\K\T{0};{}$ ${}\|a[\T{0}][\T{0}][\|n]\E\.{'\ '};{}$ ${}\|n%
+\PP){}$\1\5
+;\2\6
+${}\|a[\T{0}][\T{0}][\|n+\|n+\T{1}]\K\.{'\\0'};{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{fgets}(\|a[\T{0}][\|k],\39\\{maxn}+\T{2},\39\\{stdin});{}$\6
+${}\|a[\T{0}][\|k][\|n+\|n+\T{1}]\K\T{0};{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}\B\X3:Compute \PB{\|a[\|k]} from \PB{$\|a[\|k-\T{1}]$}\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j\Z\|n-\|k;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i\Z\|n+\|n-\|k-\|k;{}$ ${}\|i\PP){}$\1\5
+${}\|a[\|k][\|j][\|i]\K\.{'\ '};{}$\2\6
+\&{for} ${}(\|i\K\|n-\|k-\|j;{}$ ${}\|i\Z\|n-\|k+\|j;{}$ ${}\|i\MRL{+{\K}}%
+\T{2}){}$\5
+${}\{{}$\1\6
+${}\|s\K\T{0};{}$\6
+\&{if} ${}(\|a[\|k-\T{1}][\|j][\|i+\T{1}]\E\.{'o'}){}$\1\5
+${}\|s\PP;{}$\2\6
+\&{if} ${}(\|a[\|k-\T{1}][\|j+\T{1}][\|i]\E\.{'o'}){}$\1\5
+${}\|s\PP;{}$\2\6
+\&{if} ${}(\|a[\|k-\T{1}][\|j+\T{1}][\|i+\T{2}]\E\.{'o'}){}$\1\5
+${}\|s\PP;{}$\2\6
+${}\|a[\|k][\|j][\|i]\K(\|s>\T{1}\?\.{'o'}:\.{'x'});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{4}\B\X4:Print the results\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\\{printf}(\|a[\T{0}][\|k]);\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|k;{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\ \ \%s"},\39\|a[\|j][\|k-\|j]);{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\N{1}{5}Index.
+\fi
+
+\inx
+\fin
+\con

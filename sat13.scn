@@ -1,0 +1,225 @@
+\I\X57, 89, 96, 109, 116:Allocate the auxiliary arrays\X
+\U45.
+\I\X47, 56:Allocate the other main arrays\X
+\U45.
+\I\X46:Allocate \PB{\\{vmem}} and \PB{\\{heap}}\X
+\U45.
+\I\X128:Backtrack to \PB{\\{jumplev}}\X
+\Us125, 133, 134\ETs137.
+\I\X82:Bump the bumps\X
+\Us125\ET133.
+\I\X91:Bump \PB{\\{curstamp}} to a new value\X
+\U86.
+\I\X81:Bump \PB{\|c}'s activity\X
+\Us87\ET93.
+\I\X70:Bump \PB{\|l}'s activity\X
+\Us87, 88\ETs95.
+\I\X138:Call it quits\X
+\U124.
+\I\X35:Check all clauses for spurious data\X
+\U34.
+\I\X55:Check consistency\X
+\U45.
+\I\X72:Check the sanity of the heap\X
+\U34.
+\I\X37:Check the trail\X
+\U34.
+\I\X38:Check the variables\X
+\U34.
+\I\X36:Check the watch lists\X
+\U34.
+\I\X75:Choose the next decision literal, \PB{\|l}\X
+\U124.
+\I\X101:Clear the stack\X
+\U100.
+\I\X8:Close the files\X
+\U2.
+\I\X127:Complete the current level, or \PB{\&{goto} \\{confl}}\X
+\U124.
+\I\X114:Compress the database\X
+\U113.
+\I\X112:Compute ranges for clause recycling\X
+\U133.
+\I\X110:Compute the scaled range of \PB{\|c}\X
+\U112.
+\I\X49:Copy all the temporary cells to the \PB{\\{mem}} and \PB{\\{bmem}} and %
+\PB{\\{trail}} arrays in proper format\X
+\U45.
+\I\X54:Copy all the temporary variable nodes to the \PB{\\{vmem}} array in
+proper format\X
+\U45.
+\I\X66:Deal with a binary conflict\X
+\U58.
+\I\X67:Deal with a nonbinary conflict\X
+\U65.
+\I\X86:Deal with the conflict clause \PB{\|c}\X
+\U125.
+\I\X139:Debugging fallbacks\X
+\U2.
+\I\X52:Define \PB{$\\{mem}[\|c].\\{lit}$} at level 0\X
+\U51.
+\I\X61:Delete \PB{\|l} from clause \PB{\\{wa}}\X
+\U60.
+\I\X77:Delete \PB{\|v} from the heap\X
+\Us75\ET137.
+\I\X104:Determine the address, \PB{\|c}, for the learned clause\X
+\U103.
+\I\X105:Discard clause \PB{\\{prev\_learned}} if it is subsumed by the current
+learned clause\X
+\U104.
+\I\X51:Do special things for unary and binary clauses\X
+\U49.
+\I\X118:Establish heap order in the clause heap\X
+\U115.
+\I\X48:Figure out how big \PB{\\{mem}} ought to be\X
+\U47.
+\I\X20:Find \PB{$\\{cur\_tmp\_var}\MG\\{name}$} in the hash table at \PB{\|p}\X
+\U15.
+\I\X133:Finish a full run\X
+\U124.
+\I\X130:Finish the initialization\X
+\U124.
+\I\X137:Flush literals\X
+\U136.
+\I\X65:Force a new value, if appropriate, or \PB{\&{goto} \\{confl}}\X
+\U60.
+\I\X4, 11, 27, 41, 59, 80, 90, 97, 111, 140:Global variables\X
+\U2.
+\I\X21:Handle a duplicate literal\X
+\U15.
+\I\X100:If $\bar l$ is redundant, \PB{\&{goto} \\{redundant}}\X
+\U102.
+\I\X63:If clause \PB{\\{wa}} is satisfied by \PB{\\{ll}}, keep \PB{\\{wa}} on
+the watch list and \PB{\&{continue}}\X
+\U60.
+\I\X6:If there's a problem, print a message about \.{Usage:} and \PB{\\{exit}}\X
+\U3.
+\I\X120:Increase the range of \PB{\|t} clauses from \PB{\|j} to \PB{$\|j+%
+\T{1}$}\X
+\U115.
+\I\X88:Initialize a binary conflict\X
+\U86.
+\I\X87:Initialize a nonbinary conflict\X
+\U86.
+\I\X12, 18:Initialize everything\X
+\U2.
+\I\X79:Initialize the heap from a file\X
+\U45.
+\I\X78:Initialize the heap randomly\X
+\U45.
+\I\X14:Input the clause in \PB{\\{buf}}\X
+\U13.
+\I\X13:Input the clauses\X
+\U2.
+\I\X50:Insert the cells for the literals of clause \PB{\|c}\X
+\U49.
+\I\X17:Install a new \PB{\&{chunk}}\X
+\U15.
+\I\X16:Install a new \PB{\&{vchunk}}\X
+\U15.
+\I\X64:Keep \PB{\\{wa}} on the watch list\X
+\Us60\ET63.
+\I\X126:Learn a clause of size 1\X
+\U125.
+\I\X134:Learn from the conflict at \PB{\\{conflict\_level}}\X
+\U133.
+\I\X103:Learn the simplified clause\X
+\Us125\ET134.
+\I\X23:Move \PB{\\{cur\_cell}} backward to the previous cell\X
+\Us22\ET50.
+\I\X24:Move \PB{\\{cur\_tmp\_var}} backward to the previous temporary variable\X
+\U54.
+\I\X108:Output \PB{\|c} to the file of learned clauses\X
+\U103.
+\I\X135:Place the literals learned at \PB{\\{minjumplev}} at the end of the
+trail\X
+\U133.
+\I\X7:Print farewell messages\X
+\U2.
+\I\X129:Print the solution found\X
+\U125.
+\I\X3:Process the command line\X
+\U2.
+\I\X58:Propagate binary implications of \PB{\|l}; \PB{\&{goto} \\{confl}} if a
+conflict arises\X
+\Us65\ET127.
+\I\X60:Propagate nonbinary implications of \PB{\\{lt}}; \PB{\&{goto} \\{confl}}
+if there's a conflict\X
+\U127.
+\I\X19:Put the variable name beginning at \PB{\\{buf}[\|j]} in \PB{$\\{cur\_tmp%
+\_var}\MG\\{name}$} and compute its hash code \PB{\|h}\X
+\Us15\ET79.
+\I\X117:Put \PB{\\{jj}} entries of range \PB{\|j} into the clause heap\X
+\U115.
+\I\X74:Put \PB{\|v} into the heap\X
+\U128.
+\I\X122:Recompute all the watch lists\X
+\U113.
+\I\X68:Record a binary conflict\X
+\U66.
+\I\X69:Record a nonbinary conflict\X
+\U67.
+\I\X113:Recycle half of the learned clauses\X
+\U133.
+\I\X92:Reduce \PB{\\{xnew}} to zero\X
+\U86.
+\I\X53:Reformat the binary implications\X
+\U49.
+\I\X22:Remove all variables of the current clause\X
+\U14.
+\I\X106:Remove \PB{\|c} from \PB{\|l}'s watch list\X
+\Us98\ET105.
+\I\X115:Remove \PB{$\|t\K\|s-\\{budget}$} clauses at the threshold\X
+\U114.
+\I\X25:Report the successful completion of the input phase\X
+\U2.
+\I\X84:Rescale all clause activities\X
+\U81.
+\I\X83:Rescale all variable activities\X
+\U70.
+\I\X125:Resolve the current conflict\X
+\U124.
+\I\X94:Resolve with binary reason\X
+\U93.
+\I\X93:Resolve with the reason of \PB{\|l}\X
+\U92.
+\I\X5:Respond to a command-line option, setting \PB{\|k} nonzero on error\X
+\U3.
+\I\X136:Restart unless \PB{\\{agility}} is high\X
+\U124.
+\I\X15:Scan and record a variable; negate it if \PB{$\|i\E\T{1}$}\X
+\U14.
+\I\X132:Schedule the next recycling pass\X
+\U133.
+\I\X131:Schedule the next restart\X
+\U136.
+\I\X45:Set up the main data structures\X
+\U2.
+\I\X76:Set \PB{\|h} to a random integer less than \PB{\\{hn}}\X
+\Us75\ET78.
+\I\X119:Sift \PB{\\{accum}} into the clause heap at \PB{\|p}\X
+\Us118\ET120.
+\I\X73:Sift \PB{\|v} up in the heap\X
+\Us70\ET74.
+\I\X102:Simplify the learned clause\X
+\U125.
+\I\X124:Solve the problem\X
+\U2.
+\I\X95:Stamp \PB{\|l} as part of the conflict clause milieu\X
+\Us87, 93\ETs94.
+\I\X107:Store the learned clause \PB{\|c}\X
+\U103.
+\I\X31, 32, 33, 34, 39, 42, 43, 44, 71:Subroutines\X
+\U2.
+\I\X98:Subsume \PB{\|c} by removing its first literal\X
+\U93.
+\I\X62:Swap \PB{\\{wa}} to the watch list of \PB{\|l} and \PB{\&{continue}}\X
+\U60.
+\I\X9, 10, 28, 29, 30:Type definitions\X
+\U2.
+\I\X40:Update the smoothed-average stats after a clause has been learned\X
+\U102.
+\I\X123:Watch the first two literals of \PB{\|c}\X
+\U122.
+\I\X121:Wrap up clause \PB{\\{cc}}\X
+\U114.

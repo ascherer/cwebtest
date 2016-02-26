@@ -1,0 +1,68 @@
+\I\X12:Check for a perfect matching\X
+\U7.
+\I\X35:Cover all other columns of \PB{\\{cur\_node}}\X
+\U31.
+\I\X30:Create the node for the \PB{\|k}th edge from \PB{\\{ll}}\X
+\U29.
+\I\X31:Dance\X
+\U23.
+\I\X13:Display the matching problem on \PB{\\{stderr}}\X
+\U12.
+\I\X24:Display the remaining matching problem on \PB{\\{stderr}}\X
+\U23.
+\I\X23:Find all perfect matchings in the remaining bigraph\X
+\U12.
+\I\X6:Find all solutions\X
+\U1.
+\I\X19:Force a move from \PB{\\{ll}}\X
+\U18.
+\I\X21:Force a move from \PB{\|l}\X
+\U18.
+\I\X8:Generate the table of legal shifts\X
+\U6.
+\I\X11, 22, 28:Global variables\X
+\U1.
+\I\X9:If the shape isn't covered by $\{s_1,\ldots,s_d\}$, \PB{\&{goto} %
+\\{shapenot}}\X
+\U6.
+\I\X10:If the square isn't covered by $\{(s_1,t_1),\ldots,(s_d,t_d)\}$, \PB{%
+\&{goto} \\{squarenot}}\X
+\U7.
+\I\X29:Initialize for dancing\X
+\U23.
+\I\X4:Input row \PB{\|i} of the shape\X
+\U3.
+\I\X3:Input the shape\X
+\U1.
+\I\X27, 32, 38:Local variables\X
+\U23.
+\I\X18:Make all remaining forced moves\X
+\U12.
+\I\X16:Make forced moves from the shape, or \PB{\&{goto} \\{done}}\X
+\U12.
+\I\X14:Make forced moves from the square, or \PB{\&{goto} \\{done}}\X
+\U12.
+\I\X20:Make shape cell \PB{\|l} inactive\X
+\U19.
+\I\X17:Make square cell \PB{\\{ll}} inactive\X
+\Us16\ET21.
+\I\X40:Print a solution\X
+\Us23\ET39.
+\I\X41:Print statistics about the run\X
+\U1.
+\I\X2:Process the command line\X
+\U1.
+\I\X39:Record solution and \PB{\&{goto} \\{recover}}\X
+\U31.
+\I\X15:Remove all other edges that go to shape position \PB{\|l}\X
+\U14.
+\I\X7:Run through all sequences of shifts, $(t_2,\ldots,t_d)$\X
+\U6.
+\I\X37:Set \PB{\\{best\_col}} to the best column for branching\X
+\U31.
+\I\X33, 34, 42:Subroutines\X
+\U1.
+\I\X25, 26:Type definitions\X
+\U1.
+\I\X36:Uncover all other columns of \PB{\\{cur\_node}}\X
+\U31.

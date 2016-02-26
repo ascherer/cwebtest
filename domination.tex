@@ -1,0 +1,189 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. A quick program to output the ``domination'' or ``majorization''
+relation when it is defined on permutations of multisets instead of
+on partitions.
+
+Let's say that digits are permuted. Then $x_1\ldots x_n\succeq y_1\ldots y_n$
+if and only if $\sum_{i=1}^j [x_i\ge k]\ge\sum_{i=1}^j [y_i\ge k]$ for
+all $j$ and~$k$.
+
+This relation is self-dual in the sense that
+$x_1\ldots x_n\succeq y_1\ldots y_n$ if and only if
+$x_n\ldots x_1\preceq y_n\ldots y_1$.
+And if the digits consist of equal quantities of the
+numbers 1~through~$k$, then $x_1\ldots x_n\succeq y_1\ldots y_n$ if and only if
+$\bar x_1\ldots\bar x_n\preceq \bar y_1\ldots\bar y_n$, where $\bar x=
+k+1-x$.
+
+It's emphatically {\it not\/} a lattice, in most cases.
+
+Here I just compute the relation and its transitive reduction
+by brute force. When I learn better algorithms for transitive reduction,
+I can use this as an interesting example.
+
+(Well, maybe not! In the examples I tried, we seem to
+have $x$ covers $y$ if and only if $x$ differs from $y$ by a transposition
+and $x$ has exactly one more inversion than $y$. Furthermore, it appears
+that the covering relation on multiset permutations such as
+$\{1,1,2,2,3\}$ is obtained by taking the relation on set permutations
+$\{1,1',2,2',3\}$ and removing all cases in which $1'$ occurs before~1
+or $2'$ before~2. Thus, some additional theory apparently lurks in
+the background, making this whole program unnecessary --- except as a
+way to confirm the conjectures in further cases before I go ahead and
+find proofs.)
+
+\Y\B\4\D$\\{maxn}$ \5
+\T{63}\C{ this many elements at most }\par
+\B\4\D$\\{maxp}$ \5
+\T{1000}\C{ this many perms at most }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<string.h>}\6
+\&{char} ${}\\{perm}[\\{maxp}][\\{maxn}+\T{1}]{}$;\C{ the permutations }\6
+\&{char} ${}\\{work}[\\{maxn}+\T{1}]{}$;\C{ where I generate new ones }\6
+\&{char} \\{rel}[\\{maxp}][\\{maxp}];\C{ nonzero if $x\prec y$ }\6
+\&{char} \\{red}[\\{maxp}][\\{maxp}];\C{ reduced relation }\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|l${},{}$ \\{ll}${},{}$ %
+\|m${},{}$ \|n${},{}$ \|s${},{}$ \\{dom};\7
+\X2:Set \PB{\\{work}} to the string that is to be permuted, and check it\X;\6
+\X3:Generate the rest of the permutations\X;\6
+\X4:Compute the dominance relation\X;\6
+\X5:Do transitive reduction\X;\6
+\X6:Print the results\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Set \PB{\\{work}} to the string that is to be permuted, and check it%
+\X${}\E{}$\6
+\&{if} ${}(\\{argc}\I\T{2}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ digits\_to}\)\.{\_permute\\n"},%
+\39\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ \\{argv}[\T{1}][\|j]; ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|j>\\{maxn}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"String\ too\ long\ (ma}\)\.{xn=\%d)!\\n"},\39%
+\\{maxn});{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{argv}[\T{1}][\|j]<\.{'0'}\V\\{argv}[\T{1}][\|j]>\.{'9'}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"The\ string\ \%s\ shoul}\)\.{d\ contain\
+digits\ onl}\)\.{y!\\n"},\39\\{argv}[\T{1}]);{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|j>\T{0}\W\\{argv}[\T{1}][\|j-\T{1}]>\\{argv}[\T{1}][\|j]){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"The\ string\ \%s\ shoul}\)\.{d\ be\
+nondecreasing!\\}\)\.{n"},\39\\{argv}[\T{1}]);{}$\6
+${}\\{exit}({-}\T{4});{}$\6
+\4${}\}{}$\2\6
+${}\\{work}[\|j+\T{1}]\K\\{argv}[\T{1}][\|j];{}$\6
+\4${}\}{}$\2\6
+${}\|n\K\|j{}$;\par
+\U1.\fi
+
+\M{3}Here I use ye olde Algorithm 7.2.1.2L.
+
+\Y\B\4\X3:Generate the rest of the permutations\X${}\E{}$\6
+$\|m\K\T{0};{}$\6
+\4\\{l1}:\5
+\&{if} ${}(\|m\E\\{maxp}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Too\ many\ permutatio}\)\.{ns\ (maxp=\%d)!%
+\\n"},\39\\{maxp});{}$\6
+${}\\{exit}({-}\T{5});{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\1\5
+${}\\{perm}[\|m][\|j]\K\\{work}[\|j+\T{1}];{}$\2\6
+${}\|m\PP;{}$\6
+\4\\{l2}:\5
+\&{for} ${}(\|j\K\|n-\T{1};{}$ ${}\\{work}[\|j]\G\\{work}[\|j+\T{1}];{}$ ${}\|j%
+\MM){}$\1\5
+;\2\6
+\&{if} ${}(\|j\E\T{0}){}$\1\5
+\&{goto} \\{done};\2\6
+\4\\{l3}:\5
+\&{for} ${}(\|l\K\|n;{}$ ${}\\{work}[\|j]\G\\{work}[\|l];{}$ ${}\|l\MM){}$\1\5
+;\2\6
+${}\|s\K\\{work}[\|j],\39\\{work}[\|j]\K\\{work}[\|l],\39\\{work}[\|l]\K\|s;{}$%
+\6
+\4\\{l4}:\5
+\&{for} ${}(\|k\K\|j+\T{1},\39\|l\K\|n;{}$ ${}\|k<\|l;{}$ ${}\|k\PP,\39\|l%
+\MM){}$\1\5
+${}\|s\K\\{work}[\|k],\39\\{work}[\|k]\K\\{work}[\|l],\39\\{work}[\|l]\K\|s;{}$%
+\2\6
+\&{goto} \\{l1};\6
+\4\\{done}:\par
+\U1.\fi
+
+\M{4}We use the fact that dominance is a subset of (reverse) lexicographic
+order.
+In other words, if $x_1\ldots x_n$ is lexicographically less than
+$y_1\ldots y_n$ we cannot have $x_1\ldots x_n\succeq y_1\ldots y_n$.
+
+\Y\B\4\X4:Compute the dominance relation\X${}\E{}$\6
+\&{for} ${}(\|l\K\T{0};{}$ ${}\|l<\|m;{}$ ${}\|l\PP){}$\1\6
+\&{for} ${}(\\{ll}\K\|l+\T{1};{}$ ${}\\{ll}<\|m;{}$ ${}\\{ll}\PP){}$\5
+${}\{{}$\1\6
+${}\\{dom}\K\T{0};{}$\6
+\&{for} ${}(\|k\K\\{work}[\|n]+\T{1};{}$ ${}\|k\Z\\{work}[\T{1}];{}$ ${}\|k%
+\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\|s\K\T{0};{}$ ${}\|i\Z\|j;{}$ ${}\|i\PP){}$\1\5
+${}\|s\MRL{+{\K}}(\\{perm}[\|l][\|i]\G\|k\?\T{1}:\T{0})-(\\{perm}[\\{ll}][\|i]%
+\G\|k\?\T{1}:\T{0});{}$\2\6
+\&{if} ${}(\|s>\T{0}){}$\1\5
+\&{goto} \\{fin};\2\6
+\&{if} ${}(\|s<\T{0}){}$\1\5
+${}\\{dom}\K\T{1};{}$\2\6
+\4${}\}{}$\2\2\6
+\&{if} (\\{dom})\1\5
+${}\\{rel}[\|l][\\{ll}]\K\T{1};{}$\2\6
+\4\\{fin}:\6
+\4${}\}{}$\2\2\par
+\U1.\fi
+
+\M{5}Hey, I'm just using brute force today.
+
+\Y\B\4\X5:Do transitive reduction\X${}\E{}$\6
+\&{for} ${}(\|l\K\T{0};{}$ ${}\|l<\|m;{}$ ${}\|l\PP){}$\1\6
+\&{for} ${}(\\{ll}\K\|l+\T{1};{}$ ${}\\{ll}<\|m;{}$ ${}\\{ll}\PP){}$\5
+${}\{{}$\1\6
+\&{if} (\\{rel}[\|l][\\{ll}])\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\|l+\T{1};{}$ ${}\|j<\\{ll};{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\\{rel}[\|l][\|j]\W\\{rel}[\|j][\\{ll}]){}$\1\5
+\&{goto} \\{nope};\2\2\6
+${}\\{red}[\|l][\\{ll}]\K\T{1};{}$\6
+\4${}\}{}$\2\6
+\4\\{nope}:\6
+\4${}\}{}$\2\2\par
+\U1.\fi
+
+\M{6}\B\X6:Print the results\X${}\E{}$\6
+\&{for} ${}(\|l\K\T{0};{}$ ${}\|l<\|m;{}$ ${}\|l\PP){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\%s\ <"},\39\\{perm}[\|l]);{}$\6
+\&{for} ${}(\\{ll}\K\|l+\T{1};{}$ ${}\\{ll}<\|m;{}$ ${}\\{ll}\PP){}$\1\6
+\&{if} (\\{red}[\|l][\\{ll}])\1\5
+${}\\{printf}(\.{"\ \%s"},\39\\{perm}[\\{ll}]);{}$\2\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\N{1}{7}Index.
+
+\fi
+
+
+\inx
+\fin
+\con

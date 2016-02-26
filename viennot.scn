@@ -1,0 +1,20 @@
+\I\X8:Begin a new wall\X
+\U7.
+\I\X13:Change the mode and \PB{\&{goto} \\{look}}\X
+\U11.
+\I\X10:Check the inverse bijection\X
+\U2.
+\I\X5:Check the number of walls\X
+\U2.
+\I\X7:Find the tower corresponding to \PB{\|d}\X
+\U2.
+\I\X4:Move to the next nested string, or \PB{\&{goto} \\{done}}\X
+\U2.
+\I\X9:Place a brick\X
+\U7.
+\I\X11:Remove a brick if it's free and ready, or \PB{$\\{check}({-}\\{mode})$}\X
+\U10.
+\I\X12:Remove a wall's base\X
+\U11.
+\I\X3:Set up the first nested string, \PB{\|d}\X
+\U2.

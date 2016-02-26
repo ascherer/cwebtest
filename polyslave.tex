@@ -1,0 +1,662 @@
+\input cwebmac
+\datethis
+
+
+\N{1}{1}Introduction. This program obediently carries out the wishes of
+{\mc POLYNUM}, which has compiled a set of one-byte and four-byte
+instructions for us to interpret.
+
+But instead of producing high-precision output, it does all its
+arithmetic modulo a given number $m\le256$.
+That trick keeps memory usage small; it allows the user to reconstruct
+true answers of almost unlimited size just by trying sufficiently
+many different values of~$m$. And if anybody is concerned about
+bits getting clobbered by cosmic radiation, they can gain additional
+confidence in the accuracy by running the calculations for
+more moduli than strictly necessary.
+
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<setjmp.h>}\6
+\&{jmp\_buf} \\{restart\_point};\7
+\X2:Type definitions\X\6
+\X5:Global variables\X\6
+\X3:Subroutines\X\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\X6:Local variables\X;\6
+\X4:Scan the command line\X;\6
+\\{setjmp}(\\{restart\_point});\C{ \PB{\\{longjmp}} will return here if
+necessary }\6
+\X15:Initialize\X;\6
+\X17:Interpret the instructions in the input\X;\6
+\X25:Print statistics\X;\6
+\\{exit}(\T{0});\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}It is easy to adapt this program to work with counters that occupy either
+one byte (\PB{\&{unsigned} \&{char}}), two bytes (\PB{\&{unsigned} \&{short}}),
+or
+four bytes (\PB{\&{unsigned} \&{int}}), depending on how much memory is
+available.
+
+Even if we limit ourselves to one-byte counters, exact results of up to 362
+bits can be determined. For example,
+the eleven moduli 256, 253, 251, 247, 245, 243, 241, 239, 233, 229, 227
+will suffice to enumerate $n$-ominoes for $n\le46$; and the additional modulus
+223 will carry us through $n\le50$. (If some day we have the resources to
+go even higher, the next moduli to try would be 211, 199, and 197.)
+
+However, the author's experience with the case \PB{$\|n\K\T{47}$} showed that
+the memory
+space needed for counters in this program was not as precious as the memory
+space needed for configurations in {\mc POLYNUM}. Therefore the
+four-byte moduli $2^{31}=2147483648$, $2^{31}-1$ (which is prime), and
+$2^{31}-3$ (which equals $5\cdot19\cdot22605091$) worked out best.
+Together they reach nearly to $10^{28}$, which would actually be large
+enough to count 49-ominoes.
+
+With a little extra work I could have allowed moduli up to $2^{32}$.
+But I didn't bother, because $2^{31}$ turned out to be plenty big.
+
+\Y\B\4\D$\\{maxm}$ \5
+$(\T{1}\LL\T{31}{}$)\C{ the modulus $m$ must not exceed this }\par
+\Y\B\4\X2:Type definitions\X${}\E{}$\6
+\&{typedef} \&{unsigned} \&{int} \&{counter};\C{ the main data type in our
+arrays }\par
+\A11.
+\U1.\fi
+
+\M{3}The program checks frequently that everything in the input file
+is legitimate. If not, too bad; the run is terminated (although
+a debugger can help diagnose nonobvious problems). Extensive checks like this
+have helped the author to detect errors in the program as well as errors in
+the input.
+
+\Y\B\4\X3:Subroutines\X${}\E{}$\6
+\&{void} \\{panic}(\&{char} ${}{*}\\{mess}){}$\1\1\2\2\6
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"\%s!\\n"},\39\\{mess});{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\par
+\As8, 9, 10\ETs12.
+\U1.\fi
+
+\M{4}Several gigabytes of input might be needed, so the input file name will
+be extended by \.{.0}, \.{.1}, \dots, just as in {\mc POLYNUM}.
+
+Output data suitable for processing by {\it Mathematica\/} will be
+written on a file with the same name as the input but extended by
+the modulus and \.{.m}.
+
+\Y\B\4\X4:Scan the command line\X${}\E{}$\6
+\&{if} ${}(\\{argc}\I\T{3}\V\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%u"},\39{\AND}%
+\\{modulus})\I\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ infilenam}\)\.{e\ modulus\\n"},%
+\39\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+${}\\{base\_name}\K\\{argv}[\T{1}];{}$\6
+\&{if} ${}(\\{modulus}<\T{2}\V\\{modulus}>\\{maxm}){}$\1\5
+\\{panic}(\.{"Improper\ modulus"});\2\6
+${}\|m\K\\{modulus};{}$\6
+${}\\{sprintf}(\\{filename},\39\.{"\%.90s-\%u.m"},\39\\{base\_name},\39%
+\\{modulus});{}$\6
+${}\\{math\_file}\K\\{fopen}(\\{filename},\39\.{"w"});{}$\6
+\&{if} ${}(\R\\{math\_file}){}$\1\5
+\\{panic}(\.{"I\ can't\ open\ the\ ou}\)\.{tput\ file"});\2\par
+\U1.\fi
+
+\M{5}\B\X5:Global variables\X${}\E{}$\6
+\&{unsigned} \&{int} \\{modulus};\C{ results will discard multiples of this
+number }\6
+\&{char} ${}{*}\\{base\_name},{}$ \\{filename}[\T{100}];\6
+\&{FILE} ${}{*}\\{math\_file}{}$;\C{ the output file }\par
+\As7, 14, 16\ETs28.
+\U1.\fi
+
+\M{6}\B\X6:Local variables\X${}\E{}$\6
+\&{register} \&{int} \|k;\C{ all-purpose index register }\6
+\&{register} \&{unsigned} \&{int} \|m;\C{ register copy of \PB{\\{modulus}} }%
+\par
+\A18.
+\U1.\fi
+
+\N{1}{7}Input. Let's start with the basic routines that are needed to
+read instructions from the input file(s).
+As soon as $2^{30}$ bytes of data have been read from file \.{foo.0},
+we'll turn to file \.{foo.1}, etc.
+
+\Y\B\4\D$\\{filelength\_threshold}$ \5
+$(\T{1}\LL\T{30}{}$)\C{ should match     the corresponding number in {\mc
+POLYNUM}  }\par
+\B\4\D$\\{buf\_size}$ \5
+$(\T{1}\LL\T{16}{}$)\C{ should be a divisor of \PB{\\{filelength\_threshold}} }%
+\par
+\Y\B\4\X5:Global variables\X${}\mathrel+\E{}$\6
+\&{FILE} ${}{*}\\{in\_file}{}$;\C{ the input file }\6
+\&{union} ${}\{{}$\1\6
+\&{unsigned} \&{char} ${}\\{buf}[\\{buf\_size}+\T{10}]{}$;\C{ place for binary
+input }\6
+\&{unsigned} \&{int} \\{foo};\C{ force \PB{$\\{in}.\\{buf}$} to be aligned
+somewhat sensibly }\2\6
+${}\}{}$ \\{in};\6
+\&{unsigned} \&{char} ${}{*}\\{buf\_ptr}{}$;\C{ our current place in the buffer
+}\6
+\&{int} \\{bytes\_in};\C{ the number of bytes seen so far in the current input
+file }\6
+\&{unsigned} \&{int} \\{checksum};\C{ a way to help identify bad I/O }\6
+\&{FILE} ${}{*}\\{ck\_file}{}$;\C{ the checksum file }\6
+\&{unsigned} \&{int} \\{checkbuf};\C{ a check sum for comparison }\6
+\&{int} \\{file\_extension};\C{ the number of GGbytes input }\par
+\fi
+
+\M{8}\B\X3:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{open\_it}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+${}\\{sprintf}(\\{filename},\39\.{"\%.90s.\%d"},\39\\{base\_name},\39\\{file%
+\_extension});{}$\6
+${}\\{in\_file}\K\\{fopen}(\\{filename},\39\.{"rb"});{}$\6
+\&{if} ${}(\R\\{in\_file}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ can't\ open\ file\ \%}\)\.{s"},\39%
+\\{filename});{}$\6
+\\{panic}(\.{"\ for\ input"});\6
+\4${}\}{}$\2\6
+${}\\{bytes\_in}\K\\{checksum}\K\T{0};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{9}If the check sum is bad, we go back to the beginning. Some incorrect
+definitions may have been output to \PB{\\{math\_file}}, but we'll append
+new definitions that override them.
+
+\Y\B\4\X3:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{close\_it}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{if} ${}(\\{fread}({\AND}\\{checkbuf},\39{}$\&{sizeof}(\&{unsigned} %
+\&{int})${},\39\T{1},\39\\{ck\_file})\I\T{1}){}$\1\5
+\\{panic}(\.{"I\ couldn't\ read\ the}\)\.{\ check\ sum"});\2\6
+\&{if} ${}(\\{fclose}(\\{in\_file})\I\T{0}){}$\1\5
+\\{panic}(\.{"I\ couldn't\ close\ th}\)\.{e\ input\ file"});\2\6
+${}\\{printf}(\.{"[\%d\ bytes\ read\ from}\)\.{\ file\ \%s,\ checksum\ \%}\)%
+\.{u.]\\n"},\39\\{bytes\_in},\39\\{filename},\39\\{checksum});{}$\6
+\&{if} ${}(\\{checkbuf}\I\\{checksum}){}$\5
+${}\{{}$\1\6
+\\{printf}(\.{"Checksum\ mismatch!\ }\)\.{Restarting...\\n"});\6
+${}\\{longjmp}(\\{restart\_point},\39\T{1});{}$\6
+\4${}\}{}$\2\6
+\\{fflush}(\\{stdout});\6
+\4${}\}{}$\2\par
+\fi
+
+\M{10}My first draft of this program simply used \PB{\\{fread}} to input one or
+three
+bytes at a time. But that turned out to be incredibly slow on my system,
+so now I'm doing my own buffering.
+
+The program here uses the fact that six consecutive zero bytes cannot be
+present in a valid input; thus we need not make a special check for premature
+end-of-file.
+
+\Y\B\4\D$\\{end\_of\_buffer}$ \5
+${\AND}\\{in}.\\{buf}[\\{buf\_size}+\T{4}{}$]\par
+\Y\B\4\X3:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{read\_it}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|t${},{}$ \|k;\6
+\&{register} \&{unsigned} \&{int} \|s;\7
+\&{if} ${}(\\{bytes\_in}\G\\{filelength\_threshold}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{bytes\_in}\I\\{filelength\_threshold}){}$\1\5
+\\{panic}(\.{"Improper\ buffer\ siz}\)\.{e"});\2\6
+\\{close\_it}(\,);\6
+${}\\{file\_extension}\PP;{}$\6
+\\{open\_it}(\,);\6
+\4${}\}{}$\2\6
+${}\|t\K\\{fread}(\\{in}.\\{buf}+\T{4},\39{}$\&{sizeof}(\&{unsigned} %
+\&{char})${},\39\\{buf\_size},\39\\{in\_file});{}$\6
+\&{if} ${}(\|t<\\{buf\_size}){}$\1\5
+${}\\{in}.\\{buf}[\|t+\T{4}]\K\\{in}.\\{buf}[\|t+\T{5}]\K\\{in}.\\{buf}[\|t+%
+\T{6}]\K\\{in}.\\{buf}[\|t+\T{7}]\K\\{in}.\\{buf}[\|t+\T{8}]\K\T{\^81}{}$;\C{
+will cause \PB{\\{sync}} 1 error if read }\2\6
+${}\\{bytes\_in}\MRL{+{\K}}\|t;{}$\6
+\&{for} ${}(\|k\K\|s\K\T{0};{}$ ${}\|k<\|t;{}$ ${}\|k\PP){}$\1\5
+${}\|s\K(\|s\LL\T{1})+\\{in}.\\{buf}[\|k+\T{4}];{}$\2\6
+${}\\{checksum}\MRL{+{\K}}\|s;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{11}A four-byte instruction has the binary form $(0xaaaaaa)_2$,
+$(bbbbbbbb)_2$,
+$(cccccccc)_2$, $(dddddddd)_2$, where
+$(aaaaaabbbbbbbbccccccccdddddddd)_2$ is a 30-bit address specified
+in big-endian fashion.
+If $x=0$ it means, ``This is the new source address $s$.''
+If $x=1$ it means, ``This is the new target address $t$.''
+
+A one-byte instruction has the binary form $(1ooopppp)_2$, with a 3-bit
+opcode $(ooo)_2$ and a 4-bit parameter $(pppp)_2$. If the parameter is zero,
+the following byte is regarded as an 8-bit parameter $(pppppppp)_2$, and
+it should not be zero. (In that case the ``one-byte instruction'' actually
+occupies two bytes.)
+
+In the instruction definitions below, $p$ stands for the parameter,
+$s$ stands for the current source address, and $t$ stands for the
+current target address. The slave processor operates on a large
+array called \PB{\\{count}}.
+
+Opcode 0 (\PB{\\{sync}}) means, ``We have just finished row \PB{\|p}.'' A
+report
+is given to the user.
+
+Opcode 1 (\PB{\\{clear}}) means, ``Set \PB{$\\{count}[\|t+\|j]\K\T{0}$} for $0%
+\le j< p$.''
+
+Opcode 2 (\PB{\\{copy}}) means, ``Set \PB{$\\{count}[\|t+\|j]\K\\{count}[\|s+%
+\|j]$} for $0\le j<p$.''
+
+Opcode 3 (\PB{\\{add}}) means, ``Set \PB{$\\{count}[\|t+\|j]\MRL{+{\K}}%
+\\{count}[\|s+\|j]$} for $0\le j<p$.''
+
+Opcode 4 (\PB{\\{inc\_src}}) means, ``Set \PB{$\|s\MRL{+{\K}}\|p$}.''
+
+Opcode 5 (\PB{\\{dec\_src}}) means, ``Set \PB{$\|s\MRL{-{\K}}\|p$}.''
+
+Opcode 6 (\PB{\\{inc\_trg}}) means, ``Set \PB{$\|t\MRL{+{\K}}\|p$}.''
+
+Opcode 7 (\PB{\\{dec\_trg}}) means, ``Set \PB{$\|t\MRL{-{\K}}\|p$}.''
+
+\Y\B\4\D$\\{targ\_bit}$ \5
+\T{\^40000000}\C{ specifies \PB{\|t} in a four-byte instruction }\par
+\Y\B\4\X2:Type definitions\X${}\mathrel+\E{}$\6
+\&{typedef} \&{enum} ${}\{{}$\1\6
+${}\\{sync},\39\\{clear},\39\\{copy},\39\\{add},\39\\{inc\_src},\39\\{dec%
+\_src},\39\\{inc\_trg},\39\\{dec\_trg}{}$\2\6
+${}\}{}$ \&{opcode};\par
+\fi
+
+\M{12}The \PB{\\{get\_inst}} routine reads the next instruction from the input
+and returns the value of its parameter, also storing the opcode
+in the global variable \PB{\\{op}}. Changes to \PB{\|s} and \PB{\|t} are taken
+care
+of automatically, so that \PB{\\{op}} is reduced to either \PB{\\{sync}},
+\PB{\\{clear}}, \PB{\\{copy}}, or \PB{\\{add}}.
+
+\Y\B\4\D$\\{advance\_b}$ \6
+\&{if} ${}(\PP\|b\E\\{end\_of\_buffer}){}$\5
+${}\{{}$\5
+\1\\{read\_it}(\,);\5
+${}\|b\K{\AND}\\{in}.\\{buf}[\T{4}]{}$;\5
+${}\}{}$\2\par
+\Y\B\4\X3:Subroutines\X${}\mathrel+\E{}$\6
+\&{opcode} \\{get\_inst}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{unsigned} \&{char} ${}{*}\|b\K\\{buf\_ptr};{}$\6
+\&{register} \&{opcode} \|o;\6
+\&{register} \&{int} \|p;\7
+\4\\{restart}:\5
+\\{advance\_b};\6
+\&{if} ${}(\R({*}\|b\AND\T{\^80})){}$\1\5
+\X13:Change the source or target address and \PB{\&{goto} \\{restart}}\X;\2\6
+${}\|o\K({*}\|b\GG\T{4})\AND\T{7};{}$\6
+${}\|p\K{*}\|b\AND\T{\^f};{}$\6
+\&{if} ${}(\R\|p){}$\5
+${}\{{}$\1\6
+\\{advance\_b};\6
+${}\|p\K{*}\|b;{}$\6
+\&{if} ${}(\R\|p){}$\1\5
+\\{panic}(\.{"Parameter\ is\ zero"});\2\6
+\4${}\}{}$\2\6
+\&{switch} (\|o)\5
+${}\{{}$\1\6
+\4\&{case} \\{inc\_src}:\5
+${}\\{cur\_src}\MRL{+{\K}}\|p{}$;\5
+\&{goto} \\{restart};\6
+\4\&{case} \\{dec\_src}:\5
+${}\\{cur\_src}\MRL{-{\K}}\|p{}$;\5
+\&{goto} \\{restart};\6
+\4\&{case} \\{inc\_trg}:\5
+${}\\{cur\_trg}\MRL{+{\K}}\|p{}$;\5
+\&{goto} \\{restart};\6
+\4\&{case} \\{dec\_trg}:\5
+${}\\{cur\_trg}\MRL{-{\K}}\|p{}$;\5
+\&{goto} \\{restart};\6
+\4\&{default}:\5
+${}\\{op}\K\|o;{}$\6
+\4${}\}{}$\2\6
+\&{if} (\\{verbose})\5
+${}\{{}$\1\6
+\&{if} ${}(\\{op}\E\\{clear}){}$\1\5
+${}\\{printf}(\.{"\{clear\ \%d\ ->\%d\}\\n"},\39\|p,\39\\{cur\_trg});{}$\2\6
+\&{else} \&{if} ${}(\\{op}>\\{clear}){}$\1\5
+${}\\{printf}(\.{"\{\%s\ \%d\ \%d->\%d\}\\n"},\39\\{sym}[\\{op}],\39\|p,\39%
+\\{cur\_src},\39\\{cur\_trg});{}$\2\6
+\4${}\}{}$\2\6
+${}\\{buf\_ptr}\K\|b;{}$\6
+\&{return} \|p;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{13}\B\X13:Change the source or target address and \PB{\&{goto} \\{restart}}%
+\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\|b+\T{3}\G\\{end\_of\_buffer}){}$\5
+${}\{{}$\1\6
+${}{*}(\|b-\\{buf\_size})\K{*}\|b,\39{*}(\|b+\T{1}-\\{buf\_size})\K{*}(\|b+%
+\T{1}),\39{*}(\|b+\T{2}-\\{buf\_size})\K{*}(\|b+\T{2});{}$\6
+\\{read\_it}(\,);\6
+${}\|b\MRL{-{\K}}\\{buf\_size};{}$\6
+\4${}\}{}$\2\6
+${}\|p\K(({*}\|b\AND\T{\^3f})\LL\T{24})+({*}(\|b+\T{1})\LL\T{16})+({*}(\|b+%
+\T{2})\LL\T{8})+{*}(\|b+\T{3});{}$\6
+\&{if} ${}({*}\|b\AND\T{\^40}){}$\1\5
+${}\\{cur\_trg}\K\|p;{}$\2\6
+\&{else}\1\5
+${}\\{cur\_src}\K\|p;{}$\2\6
+${}\|b\MRL{+{\K}}\T{3};{}$\6
+\&{goto} \\{restart};\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{14}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\&{opcode} \\{op};\C{ operation code found by \PB{\\{get\_inst}} }\6
+\&{int} \\{verbose}${}\K\T{0}{}$;\C{ set nonzero when debugging }\6
+\&{char} ${}{*}\\{sym}[\T{4}]\K\{\.{"sync"},\39\.{"clear"},\39\.{"copy"},\39%
+\.{"add"}\};{}$\6
+\&{int} \\{cur\_src}${},{}$ \\{cur\_trg};\C{ current source and target
+addresses, \PB{\|s} and \PB{\|t} }\par
+\fi
+
+\M{15}The first six bytes of the instruction file are, however, special.
+Byte~0 is the number $n$ of cells in the largest polyominoes being
+enumerated. When a \PB{\\{sync}} is interpreted, {\mc POLYSLAVE}
+outputs the current values of \PB{\\{count}[\|j]} for $1\le j\le n$.
+
+Byte 1 is the number of the final row. If this number is $r$, {\mc
+POLYSLAVE} will terminate after interpreting the instruction \PB{\\{sync}}~$r$.
+
+Bytes 2--5 specify the (big-endian) number of elements in the \PB{\\{count}}
+array.
+
+Initially \PB{$\|s\K\|t\K\T{0}$}, \PB{$\\{count}[\T{0}]\K\T{1}$}, and \PB{%
+\\{count}[\|j]} is assumed to be zero
+for $1\le j\le n$.
+
+\Y\B\4\X15:Initialize\X${}\E{}$\6
+$\\{sprintf}(\\{filename},\39\.{"\%.90s.ck"},\39\\{base\_name});{}$\6
+${}\\{ck\_file}\K\\{fopen}(\\{filename},\39\.{"rb"});{}$\6
+\&{if} ${}(\R\\{ck\_file}){}$\1\5
+\\{panic}(\.{"I\ can't\ open\ the\ ch}\)\.{ecksum\ file"});\2\6
+\\{open\_it}(\,);\6
+\\{read\_it}(\,);\6
+${}\|n\K\\{in}.\\{buf}[\T{4}];{}$\6
+${}\\{last\_row}\K\\{in}.\\{buf}[\T{5}];{}$\6
+${}\\{prev\_row}\K\T{0};{}$\6
+${}\\{slave\_size}\K(\\{in}.\\{buf}[\T{6}]\LL\T{24})+(\\{in}.\\{buf}[\T{7}]\LL%
+\T{16})+(\\{in}.\\{buf}[\T{8}]\LL\T{8})+\\{in}.\\{buf}[\T{9}];{}$\6
+${}\\{buf\_ptr}\K{\AND}\\{in}.\\{buf}[\T{9}];{}$\6
+${}\|w\K\|n+\T{2}-\\{last\_row};{}$\6
+\&{if} ${}(\|w<\T{2}\V\|n<\|w+\|w-\T{1}\V\|n>\|w+\|w+\T{126}){}$\1\5
+\\{panic}(\.{"Bad\ bytes\ at\ the\ be}\)\.{ginning"});\2\6
+${}\\{count}\K{}$(\&{counter} ${}{*}){}$ \\{calloc}${}(\\{slave\_size},\39%
+\&{sizeof}(\&{counter}));{}$\6
+\&{if} ${}(\R\\{count}){}$\1\5
+\\{panic}(\.{"I\ couldn't\ allocate}\)\.{\ the\ counter\ array"});\2\6
+${}\\{count}[\T{0}]\K\T{1}{}$;\C{ prime the pump }\6
+${}\\{cur\_src}\K\\{cur\_trg}\K\T{0};{}$\6
+${}\\{scount}\K{}$(\&{counter} ${}{*}){}$ \\{calloc}${}(\|n+\T{1},\39%
+\&{sizeof}(\&{counter}));{}$\6
+\&{if} ${}(\R\\{scount}){}$\1\5
+\\{panic}(\.{"I\ couldn't\ allocate}\)\.{\ the\ array\ of\ totals}\)\.{"});\2%
+\par
+\U1.\fi
+
+\M{16}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \|n;\C{ the maximum polyomino size of interest }\6
+\&{int} \\{last\_row};\C{ the row whose end will complete our mission }\6
+\&{int} \\{prev\_row};\C{ the row whose end we've most recently seen }\6
+\&{int} \|w;\C{ width of polynominoes being counted             (deduced from %
+\PB{\|n} and \PB{\\{last\_row}}) }\6
+\&{int} \\{slave\_size};\C{ the number of counters in memory }\6
+\&{counter} ${}{*}\\{count}{}$;\C{ base address of The Big Table }\6
+\&{counter} ${}{*}\\{scount}{}$;\C{ base address of totals captured at \PB{%
+\\{sync}} commands }\par
+\fi
+
+\N{1}{17}Servitude. This program is so easy to write, I could even have
+done it without the use of literate programming. (But of course
+it wouldn't be nearly as much fun without \.{CWEB}.)
+
+\Y\B\4\X17:Interpret the instructions in the input\X${}\E{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+${}\|p\K\\{get\_inst}(\,);{}$\6
+\&{if} ${}(\\{cur\_trg}+\|p>\\{slave\_size}\W\\{op}\G\\{clear}){}$\1\5
+\\{panic}(\.{"Target\ address\ out\ }\)\.{of\ range"});\2\6
+\&{if} ${}(\\{cur\_src}+\|p>\\{slave\_size}\W\\{op}\G\\{copy}){}$\1\5
+\\{panic}(\.{"Source\ address\ out\ }\)\.{of\ range"});\2\6
+\&{switch} (\\{op})\5
+${}\{{}$\1\6
+\4\&{case} \\{sync}:\5
+\X22:Finish a row; \PB{\&{goto} \\{done}} if it was the last\X;\5
+\&{break};\6
+\4\&{case} \\{clear}:\5
+\X19:Clear \PB{\|p} counters\X;\5
+\&{break};\6
+\4\&{case} \\{copy}:\5
+\X20:Copy \PB{\|p} counters\X;\5
+\&{break};\6
+\4\&{case} \\{add}:\5
+\X21:Add \PB{\|p} counters\X;\5
+\&{break};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4\\{done}:\par
+\U1.\fi
+
+\M{18}\B\X6:Local variables\X${}\mathrel+\E{}$\6
+\&{register} \&{int} \|p;\C{ parameter of the current instruction }\6
+\&{register} \&{unsigned} \&{int} \|a;\C{ an accumulator for arithmetic }\par
+\fi
+
+\M{19}\B\X19:Clear \PB{\|p} counters\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|p;{}$ ${}\|k\PP){}$\1\5
+${}\\{count}[\\{cur\_trg}+\|k]\K\T{0}{}$;\2\par
+\U17.\fi
+
+\M{20}\B\X20:Copy \PB{\|p} counters\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|p;{}$ ${}\|k\PP){}$\1\5
+${}\\{count}[\\{cur\_trg}+\|k]\K\\{count}[\\{cur\_src}+\|k]{}$;\2\par
+\U17.\fi
+
+\M{21}I wonder what kind of machine language code my \CEE/ compiler
+is giving me here, but I'm afraid to look.
+
+\Y\B\4\X21:Add \PB{\|p} counters\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|p;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|a\K\\{count}[\\{cur\_trg}+\|k]+\\{count}[\\{cur\_src}+\|k];{}$\6
+\&{if} ${}(\|a\G\|m){}$\1\5
+${}\|a\MRL{-{\K}}\|m;{}$\2\6
+${}\\{count}[\\{cur\_trg}+\|k]\K\|a;{}$\6
+\4${}\}{}$\2\par
+\U17.\fi
+
+\M{22}The \PB{\\{sync}} instruction, at least, gives me a little chance to be
+creative,
+especially with respect to checking the sanity of the source file.
+
+\Y\B\4\X22:Finish a row; \PB{\&{goto} \\{done}} if it was the last\X${}\E{}$\6
+\X23:Check that \PB{\|p} has the correct value\X;\6
+\X24:Output the relevant counters for completed polyominoes\X;\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\1\5
+${}\\{scount}[\|k]\K\\{count}[\|k];{}$\2\6
+\&{if} ${}(\|p\E\\{last\_row}){}$\1\5
+\&{goto} \\{done};\2\par
+\U17.\fi
+
+\M{23}\B\X23:Check that \PB{\|p} has the correct value\X${}\E{}$\6
+\&{if} ${}(\|p\E\T{255}){}$\1\5
+\X26:Go into special shutdown mode\X;\2\6
+\&{if} ${}(\|p\E\T{1}){}$\1\5
+\\{panic}(\.{"File\ read\ error"});\C{ see \PB{\\{read\_it}} }\2\6
+\&{if} ${}(\R\\{prev\_row}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|p\I\|w+\T{1}){}$\1\5
+\\{panic}(\.{"Bad\ first\ sync"});\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\|p\I\\{prev\_row}+\T{1}){}$\1\5
+\\{panic}(\.{"Out\ of\ sync"});\2\6
+${}\\{prev\_row}\K\|p{}$;\par
+\U22.\fi
+
+\M{24}\B\X24:Output the relevant counters for completed polyominoes\X${}\E{}$\6
+$\\{printf}(\.{"Polyominoes\ that\ sp}\)\.{an\ \%dx\%d\ rectangles\ }\)\.{(mod\
+\%u):\\n"},\39\|p-\T{1},\39\|w,\39\|m);{}$\6
+${}\\{fprintf}(\\{math\_file},\39\.{"p[\%d,\%d,\%u]=\{0"},\39\|p-\T{1},\39\|w,%
+\39\|m);{}$\6
+\&{for} ${}(\|k\K\T{2};{}$ ${}\|k<\|w+\|p-\T{2};{}$ ${}\|k\PP){}$\1\5
+${}\\{fprintf}(\\{math\_file},\39\.{",0"});{}$\2\6
+\&{for} ( ; ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{count}[\|k]\G\\{scount}[\|k]){}$\1\5
+${}\|a\K\\{count}[\|k]-\\{scount}[\|k];{}$\2\6
+\&{else}\1\5
+${}\|a\K\\{count}[\|k]+\|m-\\{scount}[\|k];{}$\2\6
+${}\\{printf}(\.{"\ \%d:\%d"},\39\|a,\39\|k);{}$\6
+${}\\{fprintf}(\\{math\_file},\39\.{",\%d"},\39\|a);{}$\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\\{fflush}(\\{stdout});\6
+${}\\{fprintf}(\\{math\_file},\39\.{"\}\\n"}){}$;\par
+\U22.\fi
+
+\M{25}\B\X25:Print statistics\X${}\E{}$\6
+$\\{printf}(\.{"All\ done!\ Final\ tot}\)\.{als\ (mod\ \%u):\\n"},\39\|m);{}$\6
+\&{for} ${}(\|k\K\|w+\|w-\T{1};{}$ ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\ \%d:\%d"},\39\\{count}[\|k],\39\|k);{}$\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\\{close\_it}(\,);\par
+\U1.\fi
+
+\N{1}{26}Checkpointing. {\mc POLYNUM} issues the special command \PB{%
+\\{sync}}~255
+when it wants to pause for breath and shore up its knowledge.
+Therefore, if we see that instruction,  we must immediately
+dump all the counters into a temporary file.
+A special variant of this program is able to read that file
+and reconstitute all the data, as if there had been no break in
+the action. (See the change file \.{polyslave-restart.ch} for details.)
+
+\Y\B\4\X26:Go into special shutdown mode\X${}\E{}$\6
+${}\{{}$\1\6
+\\{close\_it}(\,);\6
+\\{printf}(\.{"Checkpoint\ stop:\ Af}\)\.{ter\ processing\ with\ }\)\.{all\
+desired\ moduli,\\}\)\.{n"});\6
+\\{printf}(\.{"\ please\ resume\ with}\)\.{\ polynum-restart\ and}\)\.{\
+polyslave-restart.\\}\)\.{n"});\6
+${}\\{sprintf}(\\{filename},\39\.{"\%.90s-\%u.dump"},\39\\{base\_name},\39%
+\|m);{}$\6
+${}\\{out\_file}\K\\{fopen}(\\{filename},\39\.{"wb"});{}$\6
+\&{if} ${}(\R\\{out\_file}){}$\1\5
+\\{panic}(\.{"I\ can't\ open\ the\ du}\)\.{mp\ file"});\2\6
+\X27:Dump all information needed to restart\X;\6
+\\{exit}(\T{1});\6
+\4${}\}{}$\2\par
+\U23.\fi
+
+\M{27}\B\X27:Dump all information needed to restart\X${}\E{}$\6
+$\\{dump\_data}[\T{0}]\K\|n;{}$\6
+${}\\{dump\_data}[\T{1}]\K\|w;{}$\6
+${}\\{dump\_data}[\T{2}]\K\|m;{}$\6
+${}\\{dump\_data}[\T{3}]\K\\{slave\_size};{}$\6
+${}\\{dump\_data}[\T{4}]\K\\{prev\_row};{}$\6
+\&{if} ${}(\\{fwrite}(\\{dump\_data},\39{}$\&{sizeof}(\&{unsigned} \&{int})${},%
+\39\T{5},\39\\{out\_file})\I\T{5}){}$\1\5
+\\{panic}(\.{"Bad\ write\ at\ beginn}\)\.{ing\ of\ dump"});\2\6
+\&{if} ${}(\\{fwrite}(\\{scount},\39\&{sizeof}(\&{counter}),\39\|n+\T{1},\39%
+\\{out\_file})\I\|n+\T{1}){}$\1\5
+\\{panic}(\.{"Couldn't\ dump\ the\ s}\)\.{ubtotals"});\2\6
+\&{if} ${}(\\{fwrite}(\\{count},\39\&{sizeof}(\&{counter}),\39\\{slave\_size},%
+\39\\{out\_file})\I\\{slave\_size}){}$\1\5
+\\{panic}(\.{"Couldn't\ dump\ the\ c}\)\.{ounters"});\2\6
+${}\\{printf}(\.{"[\%u\ bytes\ written\ o}\)\.{n\ file\ \%s.]\\n"},\39%
+\\{ftell}(\\{out\_file}),\39\\{filename}){}$;\par
+\U26.\fi
+
+\M{28}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\&{unsigned} \&{int} \\{dump\_data}[\T{5}];\C{ parameters needed to restart }\6
+\&{FILE} ${}{*}\\{out\_file}{}$;\par
+\fi
+
+\M{29}For the record, here are three shell scripts called \.{nums},
+\.{slaves}, and \.{slaves-restart}, which were used to
+run {\mc POLYNUM} and {\mc POLYSLAVE} when $n=47$:
+\bigskip
+\hbox{\qquad\tt\hbox to 9em{nums\hfil}\vtop{\halign{\.{#}\hfil\cr
+\#!/bin/sh\cr
+if [ \$\# -ne 3 ]; then\cr
+\quad  echo "Usage: nums width configs counts"\cr
+\quad  exit 255\cr
+fi\cr
+\noalign{\smallskip}
+time polynum 47 \$1 \$2 \$3 /home/tmp/poly47-\$1\cr
+slaves \$1\cr
+while [ \$? = 1 ]; do\cr
+\quad  mv /home/tmp/poly47-\$1.dump /home/tmp/poly47-\$1.dump\~\cr
+\quad  time polynum-restart 47 \$1 \$2 \$3 /home/tmp/poly47-\$1\cr
+\quad  slaves-restart \$1\cr
+done\cr
+}}}
+\bigskip
+\hbox{\qquad\tt\hbox to 9em{slaves\hfil}\vtop{\halign{\.{#}\hfil\cr
+\#!/bin/sh\cr
+for m in 2147483648 2147483647 2147483645; do\cr
+\quad  time polyslave /home/tmp/poly47-\$1 \$m\cr
+done\cr
+}}}
+\bigskip
+\hbox{\qquad\tt\hbox to 9em{slaves-restart\hfil}\vtop{\halign{\.{#}\hfil\cr
+\#!/bin/sh\cr
+for m in 2147483648 2147483647 2147483645; do\cr
+\quad  cp /home/tmp/poly47-\$1-\$m.dump /home/tmp/poly47-\$1-\$m.dump\~\cr
+\quad  time polyslave-restart /home/tmp/poly47-\$1 \$m\cr
+done\cr
+}}}
+\bigskip
+And here is the {\it Mathematica\/} script used to convert modular numbers
+to multiprecise integers:
+$$
+\vbox{\halign{\.{#}\hfil\cr
+(* for Chinese Remainders, say for example\cr
+\quad   chinese[\{13,17,19\}]\cr
+\quad   x=cdecode[\{1,2,3\}]\cr
+and x (= 4031) will satisfy Mod[x,13]=1, Mod[x,17]=2, Mod[x,19]=3 *)\cr
+\noalign{\smallskip}
+chinese[l\_]:=Block[\{\},chinmod=Apply[Times,l];\cr
+\quad chinlist=Table[(chinmod/l[[k]])PowerMod[chinmod/l[[k]],-1,l[[k]]],\cr
+\qquad \{k,Length[l]\}]]\cr
+cdecode[l\_]:=Mod[chinlist.l,chinmod]\cr
+\noalign{\smallskip}
+m=2\^31\cr
+chinese[\{m,m-1,m-3\}]\cr
+fn[a\_,b\_]:="poly47-"<>a<>"-"<>ToString[m-b]<>".m"\cr
+squash[a\_,w\_]:=Block[\{\},Get[fn[a,0]];Get[fn[a,1]];Get[fn[a,3]];\cr
+\quad Do[q[h,w]= cdecode[\{p[h,w,m],p[h,w,m-1],p[h,w,m-3]\}],\{h,w,48-w\}];\cr
+\quad Save["poly47-"<>a<>".m",q];\cr
+\quad Clear[q]]\cr
+}}$$
+
+
+\fi
+
+\N{1}{30}Index.
+\fi
+
+\inx
+\fin
+\con

@@ -1,0 +1,69 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. Given $n$, generate BDDL to compute a representation of all
+restricted growth sequences $a_1\ldots a_n$ (and thus of all set
+partitions of $\{1,\ldots,n\}$).
+
+\Y\B\4\D$\\{maxn}$ \5
+\T{500}\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\&{int} \|n;\6
+\&{int} ${}\\{subscr}[\\{maxn}+\T{1}][\\{maxn}]{}$;\C{ allocation of variable
+subscripts }\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k;\7
+\&{if} ${}(\\{argc}\I\T{2}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
+\|n)\I\T{1}\V\|n\Z\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ n\\n"},\39\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"\#\ beginning\ the\ out}\)\.{put\ of\ BDDL-RGROWTH\ }\)\.{\%d%
+\\n"},\39\|n);{}$\6
+\&{for} ${}(\|i\K\T{0},\39\|k\K\|n;{}$ \|k; ${}\|k\MM){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|k;{}$ ${}\|j\PP){}$\1\5
+${}\\{subscr}[\|k][\|j]\K\|i\PP;{}$\2\2\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"f\%d=c1\\n"},\39\|j);{}$\2\6
+\&{for} ${}(\|k\K\|n;{}$ \|k; ${}\|k\MM){}$\1\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|k;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"f0=x\%d?f\%d:c0\\n"},\39\\{subscr}[\|k][\T{0}],\39\|j);{}$\6
+${}\\{printf}(\.{"f\%d=x\%d?c0:f\%d\\n"},\39\\{maxn},\39\\{subscr}[\|k][\T{0}],%
+\39\|j+\T{1});{}$\6
+${}\\{printf}(\.{"f\%d=x\%d?c0:f\%d\\n"},\39\\{maxn}+\T{1},\39\\{subscr}[\|k][%
+\T{0}],\39\|j);{}$\6
+\&{for} ${}(\|i\K\T{1};{}$ ${}\|i<\|j;{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"f0=x\%d?f\%d:f0\\n"},\39\\{subscr}[\|k][\|i],\39\\{maxn}+%
+\T{1});{}$\6
+${}\\{printf}(\.{"f\%d=x\%d?c0:f\%d\\n"},\39\\{maxn},\39\\{subscr}[\|k][\|i],%
+\39\\{maxn});{}$\6
+${}\\{printf}(\.{"f\%d=x\%d?c0:f\%d\\n"},\39\\{maxn}+\T{1},\39\\{subscr}[\|k][%
+\|i],\39\\{maxn}+\T{1});{}$\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"f0=x\%d?f\%d:f0\\n"},\39\\{subscr}[\|k][\|j],\39\\{maxn});{}$%
+\6
+\&{for} ${}(\|i\PP;{}$ ${}\|i<\|k;{}$ ${}\|i\PP){}$\1\5
+${}\\{printf}(\.{"f0=x\%d?c0:f0\\n"},\39\\{subscr}[\|k][\|i],\39\|j);{}$\2\6
+${}\\{printf}(\.{"f\%d=f0\\n"},\39\|j);{}$\6
+\4${}\}{}$\2\2\6
+${}\\{printf}(\.{"f1=x\%d?f1:c0\\n"},\39\\{subscr}[\T{1}][\T{0}]);{}$\6
+${}\\{printf}(\.{"!\ f1\ represents\ res}\)\.{tricted\ growth\ seque}\)\.{nces\
+of\ length\ \%d\\n"},\39\|n);{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{2}Index.
+
+
+
+\fi
+
+
+\inx
+\fin
+\con

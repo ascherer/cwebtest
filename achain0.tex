@@ -1,0 +1,422 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. This program is a transcription of the code that I wrote in
+1969 to determine the length $l(n)$ of a shortest addition chain for~$n$.
+My original program was written in {\mc IMP}, an idiosyncratic language
+that was basically an assembly program for the Control Data 6600.
+It computed $l(n)$ for $n\le18269$, and it consumed an unknown
+but probably nontrivial amount of background time on the computer
+over a period of several weeks.
+I decided to see how efficient that program really was, by recoding
+it for a modern machine.
+
+Better techniques for that problem are known by now, of course.
+I think I can also make the original method go quite a bit faster,
+by changing the data structures.
+But I'll never know how much speedup is achieved by any of the
+newer approaches until I get the old algorithm running again.
+
+The command line should have two parameters, which name an input file
+and an output file. Both files contain values of $l(1)$, $l(2)$, \dots,
+with one byte per value, using visible {\mc ASCII} characters by
+adding \PB{\.{'\ '}} to each integer value. The numbers in the input file
+need not be exact, but they must be valid lower bounds; if the
+input file contains fewer than $n$ bytes, this program uses
+the simple lower bound of Theorem 4.6.3C. The
+output file gets answers one byte at a time, and I expect to
+``kill'' the program manually before it finishes.
+
+By the way, it's fun to look at the output file with a text editor.
+
+\Y\B\4\D$\\{nmax}$ \5
+\T{10000000}\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\8\#\&{include} \.{<time.h>}\6
+\&{char} \|l[\\{nmax}];\6
+\&{int} \|a[\T{129}];\6
+\&{struct} ${}\{{}$\1\6
+\&{int} \\{lbp}${},{}$ \\{ubp}${},{}$ \\{lbq}${},{}$ \\{ubq}${},{}$ \\{savep};%
+\2\6
+${}\}{}$ \\{stack}[\T{128}];\6
+\&{FILE} ${}{*}\\{infile},{}$ ${}{*}\\{outfile};{}$\6
+\&{int} \\{prime}[\T{1000}];\C{ 1000 primes will take us past 60 million }\6
+\&{int} \\{pr};\C{ the number of primes known so far }\6
+\&{char} \|x[\T{64}];\C{ exponents of the binary representation of $n$ }\7
+\&{int} \\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1%
+\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|p${},{}$ \|q${},{}$ \|n${},{}$ %
+\|s${},{}$ \\{ubp}${},{}$ \\{ubq}${},{}$ \\{lbp}${},{}$ \\{lbq};\6
+\&{int} \\{lb}${},{}$ \\{ub}${},{}$ \\{timer}${}\K\T{0};{}$\7
+\X2:Process the command line\X;\6
+${}\\{prime}[\T{0}]\K\T{2},\39\\{pr}\K\T{1};{}$\6
+${}\|a[\T{0}]\K\T{1},\39\|a[\T{1}]\K\T{2}{}$;\C{ an addition chain always
+begins like this }\6
+\&{for} ${}(\|n\K\T{1};{}$ ${}\|n<\\{nmax};{}$ ${}\|n\PP){}$\5
+${}\{{}$\1\6
+\X4:Input the next lower bound, \PB{\\{lb}}\X;\6
+\X5:Find an upper bound; or in simple cases, set $l(n)$ and \PB{\&{goto} %
+\\{done}}\X;\6
+\X7:Backtrack until $l(n)$ is known\X;\6
+\4\\{done}:\5
+\X3:Output the value of $l(n)$\X;\6
+\&{if} ${}(\|n\MOD\T{1000}\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\|j\K\\{clock}(\,);{}$\6
+${}\\{printf}(\.{"\%d..\%d\ done\ in\ \%.5g}\)\.{\ minutes\\n"},\39\|n-\T{999},%
+\39\|n,\39(\&{double})(\|j-\\{timer})/(\T{60}*\.{CLOCKS\_PER\_SEC}));{}$\6
+${}\\{timer}\K\|j;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Process the command line\X${}\E{}$\6
+\&{if} ${}(\\{argc}\I\T{3}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ infile\ ou}\)\.{tfile\\n"},\39%
+\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+${}\\{infile}\K\\{fopen}(\\{argv}[\T{1}],\39\.{"r"});{}$\6
+\&{if} ${}(\R\\{infile}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ couldn't\ open\ `\%s}\)\.{'\ for\ reading!%
+\\n"},\39\\{argv}[\T{1}]);{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+${}\\{outfile}\K\\{fopen}(\\{argv}[\T{2}],\39\.{"w"});{}$\6
+\&{if} ${}(\R\\{outfile}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"I\ couldn't\ open\ `\%s}\)\.{'\ for\ writing!%
+\\n"},\39\\{argv}[\T{2}]);{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}\B\X3:Output the value of $l(n)$\X${}\E{}$\6
+$\\{fprintf}(\\{outfile},\39\.{"\%c"},\39\|l[\|n]+\.{'\ '});{}$\6
+\\{fflush}(\\{outfile});\C{ make sure the result is viewable immediately }\par
+\U1.\fi
+
+\M{4}At this point I compute the ``lower bound'' $\lfloor\lg n\rfloor+3$,
+which is valid if $\nu n>4$. Simple cases where $\nu n\le 4$ will be
+handled separately below.
+
+\Y\B\4\X4:Input the next lower bound, \PB{\\{lb}}\X${}\E{}$\6
+\&{for} ${}(\|q\K\|n,\39\|i\K{-}\T{1},\39\|j\K\T{0};{}$ \|q; ${}\|q\MRL{{\GG}{%
+\K}}\T{1},\39\|i\PP){}$\1\6
+\&{if} ${}(\|q\AND\T{1}){}$\1\5
+${}\|x[\|j\PP]\K\|i{}$;\C{ now $i=\lfloor\lg n\rfloor$ and $j=\nu n$ }\2\2\6
+${}\\{lb}\K\\{fgetc}(\\{infile})-\.{'\ '}{}$;\C{ \PB{\\{fgetc}} will return a
+negative value after EOF }\6
+\&{if} ${}(\\{lb}<\|i+\T{3}){}$\1\5
+${}\\{lb}\K\|i+\T{3}{}$;\2\par
+\U1.\fi
+
+\M{5}Three elementary and well-known upper bounds are considered:
+(i)~$l(n)\le\lfloor\lg n\rfloor+\nu n-1$;
+(ii)~$l(n)\le l(n-1)+1$;
+(iii)~$l(n)\le l(p)+l(q)$ if $n=pq$.
+
+Furthermore, there are four special cases
+when Theorem 4.6.3C tells us we can save a step.
+In this regard, I had to learn (the hard way) to avoid a
+curious bug: Three of the four cases in Theorem 4.6.3C arise
+when we factor $n$, so I thought I needed to test only the
+other case here. But I got a surprise when $n=165$: Then
+$n=3\cdot55$, so the factor method gave the upper bound
+$l(3)+l(55)=10$; but another factorization, $n=5\cdot33$,
+gives the better bound $l(5)+l(33)=9$.
+
+\Y\B\4\X5:Find an upper bound; or in simple cases, set $l(n)$ and \PB{\&{goto} %
+\\{done}}\X${}\E{}$\6
+$\\{ub}\K\|i+\|j-\T{1};{}$\6
+\&{if} ${}(\\{ub}>\|l[\|n-\T{1}]+\T{1}){}$\1\5
+${}\\{ub}\K\|l[\|n-\T{1}]+\T{1};{}$\2\6
+\X6:Try reducing \PB{\\{ub}} with the factor method\X;\6
+${}\|l[\|n]\K\\{ub};{}$\6
+\&{if} ${}(\|j\Z\T{3}){}$\1\5
+\&{goto} \\{done};\2\6
+\&{if} ${}(\|j\E\T{4}){}$\5
+${}\{{}$\1\6
+${}\|p\K\|x[\T{3}]-\|x[\T{2}],\39\|q\K\|x[\T{1}]-\|x[\T{0}];{}$\6
+\&{if} ${}(\|p\E\|q\V\|p\E\|q+\T{1}\V(\|q\E\T{1}\W(\|p\E\T{3}\V(\|p\E\T{5}\W%
+\|x[\T{2}]\E\|x[\T{1}]+\T{1})))){}$\1\5
+${}\|l[\|n]\K\|i+\T{2};{}$\2\6
+\&{goto} \\{done};\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{6}It's important to try the factor method even when \PB{$\|j\Z\T{4}$},
+because
+of the way prime numbers are recognized here: We would miss the
+prime~3, for example.
+
+On the other hand, we don't need to remember large primes that will
+never arise as factors of any future~$n$.
+
+\Y\B\4\X6:Try reducing \PB{\\{ub}} with the factor method\X${}\E{}$\6
+\&{if} ${}(\|n>\T{2}){}$\1\6
+\&{for} ${}(\|s\K\T{0};{}$  ; ${}\|s\PP){}$\5
+${}\{{}$\1\6
+${}\|p\K\\{prime}[\|s];{}$\6
+${}\|q\K\|n/\|p;{}$\6
+\&{if} ${}(\|n\E\|p*\|q){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|l[\|p]+\|l[\|q]<\\{ub}){}$\1\5
+${}\\{ub}\K\|l[\|p]+\|l[\|q];{}$\2\6
+\&{break};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|q\Z\|p){}$\5
+${}\{{}$\C{ $n$ is prime }\1\6
+\&{if} ${}(\\{pr}<\T{1000}){}$\1\5
+${}\\{prime}[\\{pr}\PP]\K\|n;{}$\2\6
+\&{break};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\par
+\U5.\fi
+
+\N{1}{7}The interesting part. All the above was necessary just to get
+warmed up and to set the groundwork for nontrivial cases.
+The method adopted is simple, but it has some subtleties that
+I discovered one by one in the 60s.
+
+If \PB{$\\{lb}<\\{ub}$}, we will try to build an addition chain of length \PB{$%
+\\{ub}-\T{1}$}.
+If that succeeds, we decrease \PB{\\{ub}} and try again. Finally we will
+have established the fact that $l(n)=\PB{\\{ub}}$.
+
+\Y\B\4\X7:Backtrack until $l(n)$ is known\X${}\E{}$\6
+\&{while} ${}(\\{lb}<\\{ub}){}$\5
+${}\{{}$\1\6
+${}\|a[\\{ub}-\T{1}]\K\|n;{}$\6
+\&{for} ${}(\|i\K\T{2};{}$ ${}\|i<\\{ub}-\T{1};{}$ ${}\|i\PP){}$\1\5
+${}\|a[\|i]\K\T{0};{}$\2\6
+\X8:Try to fill in the rest of the chain; \PB{\&{goto} \\{done}} if it's
+impossible\X;\6
+${}\|l[\|n]\K\MM\\{ub};{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{8}We maintain a stack of subproblems, as usual when backtracking.
+Suppose \PB{\|a[\|t]} is the sum of two items already present, for all
+$t>s$; we want to make sure that \PB{\|a[\|s]} is legitimate too.
+For this purpose we try all combinations \PB{$\|a[\|s]\K\|p+\|q$} where
+$p\ge a[s]/2$, trying to make both $p$ and $q$ present.
+
+Two key methods are used to prune down the number of possibilities
+explored. First, the number $p$ can't be inserted into $a[t]$ when $t<l(p)$.
+Second, two consecutive nonzero entries of an addition chain must
+satisfy $a_t<a_{t+1}\le 2a_t$.
+
+Suppose, for example, that we have a partial solution with $a_{10}=100$
+and $a_{13}=500$, but $a_{11}$ and $a_{12}$ still are zero (meaning that
+they haven't been filled in). Then we can't set $a_{11}=124$, because
+that would force $a_{12}$ to be at most $248$, and $a_{13}$ would be
+unsupportable. It follows that $a_{11}$ must lie between 125 and 200.
+
+Now suppose that $a_{10}=100$ and $a_{13}=200$, while $a_{11}$ and
+$a_{12}$ are still vacant. In this case $a_{11}$ can be any value
+from 101 to 199, {\it including\/} 199 (because we cannot be
+sure that the chain will require $a_{12}$). That's what I meant
+by a subtlety.
+
+In general, for each value of~$s$, we have three nested loops: one on
+the value of~$p$ described above, one on the different places
+where $p$ might go into the chain, and one on the different places
+where $q$ might go into the chain.
+
+The following program is organized outside-in. I could also have
+written it inside-out; but either way (as I tried to explain in my old paper
+on \PB{\&{goto}} statements) there seems to be a need for jumping
+into a loop.
+
+My program from 1969 didn't have the statement
+`\PB{ \&{if} ${}(\\{ubp}\E\|s-\T{1}\W\\{lbp}<\\{ubp}){}$ ${}\\{lbp}\K%
+\\{ubp};{}$}'
+but that improvement is easily justified. For if there's no solution
+with \PB{\|p} in position \PB{$\|a[\|s-\T{1}]$}, there won't be one with \PB{%
+\|p} placed
+even earlier.
+
+[Hmm: My ``subtle'' argument above doesn't {\it really\/} need to
+allow $a_{11}=199$.]
+
+\Y\B\4\X8:Try to fill in the rest of the chain; \PB{\&{goto} \\{done}} if it's
+impossible\X${}\E{}$\6
+\&{for} ${}(\|s\K\\{ub}-\T{1};{}$ ${}\|s>\T{1};{}$ ${}\|s\MM){}$\1\6
+\&{if} (\|a[\|s])\5
+${}\{{}$\1\6
+\&{for} ${}(\|q\K\|a[\|s]\GG\T{1},\39\|p\K\|a[\|s]-\|q;{}$ \|q; ${}\|p\PP,\39%
+\|q\MM){}$\5
+${}\{{}$\1\6
+\X9:Find bounds \PB{\\{lbp}} and \PB{\\{ubp}} on where \PB{\|p} can be
+inserted; \PB{\&{goto} \\{tryq}} if \PB{\|p} is already present\X;\6
+\&{if} ${}(\\{ubp}\E\|s-\T{1}\W\\{lbp}<\\{ubp}){}$\1\5
+${}\\{lbp}\K\\{ubp};{}$\2\6
+\&{for} ( ; ${}\\{ubp}\G\\{lbp};{}$ ${}\\{ubp}\MM){}$\5
+${}\{{}$\1\6
+${}\|a[\\{ubp}]\K\|p;{}$\6
+\4\\{tryq}:\5
+\X10:Find bounds \PB{\\{lbq}} and \PB{\\{ubq}} on where \PB{\|q} can be
+inserted; \PB{\&{goto} \\{happiness}} if \PB{\|q} is already present\X;\6
+\&{for} ( ; ${}\\{ubq}\G\\{lbq};{}$ ${}\\{ubq}\MM){}$\5
+${}\{{}$\1\6
+${}\|a[\\{ubq}]\K\|q;{}$\6
+\4\\{happiness}:\5
+${}\\{stack}[\|s].\\{savep}\K\|p;{}$\6
+${}\\{stack}[\|s].\\{lbp}\K\\{lbp},\39\\{stack}[\|s].\\{ubp}\K\\{ubp};{}$\6
+${}\\{stack}[\|s].\\{lbq}\K\\{lbq},\39\\{stack}[\|s].\\{ubq}\K\\{ubq};{}$\6
+\&{goto} \\{onward};\C{ now \PB{\|a[\|s]} is covered; try to fill in \PB{$\|a[%
+\|s-\T{1}]$} }\6
+\4\\{backup}:\5
+${}\|s\PP;{}$\6
+\&{if} ${}(\|s\E\\{ub}){}$\1\5
+\&{goto} \\{done};\2\6
+\&{if} ${}(\|a[\|s]\E\T{0}){}$\1\5
+\&{goto} \\{backup};\2\6
+${}\\{lbq}\K\\{stack}[\|s].\\{lbq},\39\\{ubq}\K\\{stack}[\|s].\\{ubq};{}$\6
+${}\\{lbp}\K\\{stack}[\|s].\\{lbp},\39\\{ubp}\K\\{stack}[\|s].\\{ubp};{}$\6
+${}\|p\K\\{stack}[\|s].\\{savep},\39\|q\K\|a[\|s]-\|p;{}$\6
+${}\|a[\\{ubq}]\K\T{0};{}$\6
+\4${}\}{}$\2\6
+${}\|a[\\{ubp}]\K\T{0};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{goto} \\{backup};\6
+\4\\{onward}:\5
+\&{continue};\6
+\4${}\}{}$\2\2\par
+\U7.\fi
+
+\M{9}The heart of the computation is the following routine, which decides
+where insertion is possible. A tedious case analysis seems necessary.
+We set \PB{\\{ubp}} to a harmless value so that the subsequent statement
+\PB{$\|a[\\{ubp}]\K\T{0}$} doesn't remove \PB{\|p} if \PB{\|p} was already
+present.
+
+\Y\B\4\D$\\{harmless}$ \5
+\T{128}\par
+\Y\B\4\X9:Find bounds \PB{\\{lbp}} and \PB{\\{ubp}} on where \PB{\|p} can be
+inserted; \PB{\&{goto} \\{tryq}} if \PB{\|p} is already present\X${}\E{}$\6
+$\\{lbp}\K\|l[\|p];{}$\6
+\&{if} ${}(\\{lbp}\Z\T{1}){}$\1\5
+\&{goto} \\{p\_ready};\C{ if \PB{\|p} is 1 or 2, it's already there }\2\6
+\&{if} ${}(\\{lbp}\G\\{ub}){}$\1\5
+\&{goto} \\{p\_hopeless};\2\6
+\4\\{p\_search}:\5
+\&{while} ${}(\|a[\\{lbp}]<\|p){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|a[\\{lbp}]\E\T{0}){}$\1\5
+\&{goto} \\{p\_empty\_slot};\2\6
+${}\\{lbp}\PP;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|a[\\{lbp}]\E\|p){}$\1\5
+\&{goto} \\{p\_ready};\2\6
+\4\\{p\_hopeless}:\5
+${}\\{ubp}\K\\{lbp}-\T{1}{}$;\5
+\&{goto} \\{p\_done};\C{ no way }\6
+\4\\{p\_empty\_slot}:\5
+\&{for} ${}(\|j\K\\{lbp}-\T{1};{}$ ${}\|a[\|j]\E\T{0};{}$ ${}\|j\MM){}$\1\5
+;\2\6
+${}\|i\K\|a[\|j];{}$\6
+\&{if} ${}(\|p<\|i){}$\1\5
+\&{goto} \\{p\_hopeless};\2\6
+\&{for} ${}(\|i\MRL{+{\K}}\|i,\39\|j\PP;{}$ ${}\|j<\\{lbp};{}$ ${}\|j\PP){}$\1\5
+${}\|i\MRL{+{\K}}\|i;{}$\2\6
+\&{while} ${}(\|p>\|i){}$\5
+${}\{{}$\1\6
+${}\\{lbp}\PP;{}$\6
+\&{if} (\|a[\\{lbp}])\1\5
+\&{goto} \\{p\_search};\2\6
+${}\|i\MRL{+{\K}}\|i;{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\\{lbp}+\T{1};{}$ ${}\|a[\|j]\E\T{0};{}$ ${}\|j\PP){}$\1\5
+;\2\6
+${}\|i\K\|a[\|j];{}$\6
+\&{if} ${}(\|i\Z\|p){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|i<\|p){}$\5
+${}\{{}$\1\6
+${}\\{lbp}\K\|j+\T{1}{}$;\5
+\&{goto} \\{p\_search};\6
+\4${}\}{}$\2\6
+\4\\{p\_ready}:\5
+${}\\{ubp}\K\\{lbp}\K\\{harmless};{}$\6
+\&{goto} \\{tryq};\C{ we found \PB{\|p} }\6
+\4${}\}{}$\2\6
+\&{for} ${}(\\{ubp}\K\|j-\T{1},\39\|i\K(\|i+\T{1})\GG\T{1};{}$ ${}\|p<\|i;{}$
+${}\\{ubp}\MM){}$\1\5
+${}\|i\K(\|i+\T{1})\GG\T{1};{}$\2\6
+\4\\{p\_done}:\par
+\U8.\fi
+
+\M{10}The other case is essentially the same. So if I have a bug in
+one routine, it probably is present in the other one too.
+
+\Y\B\4\X10:Find bounds \PB{\\{lbq}} and \PB{\\{ubq}} on where \PB{\|q} can be
+inserted; \PB{\&{goto} \\{happiness}} if \PB{\|q} is already present\X${}\E{}$\6
+$\\{lbq}\K\|l[\|q];{}$\6
+\&{if} ${}(\\{lbq}\G\\{ub}){}$\1\5
+\&{goto} \\{q\_hopeless};\2\6
+\&{if} ${}(\\{lbq}\Z\T{1}){}$\1\5
+\&{goto} \\{q\_ready};\C{ if \PB{\|q} is 1 or 2, it's already there }\2\6
+\4\\{q\_search}:\5
+\&{while} ${}(\|a[\\{lbq}]<\|q){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|a[\\{lbq}]\E\T{0}){}$\1\5
+\&{goto} \\{q\_empty\_slot};\2\6
+${}\\{lbq}\PP;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|a[\\{lbq}]\E\|q){}$\1\5
+\&{goto} \\{q\_ready};\2\6
+\4\\{q\_hopeless}:\5
+${}\\{ubq}\K\\{lbq}-\T{1}{}$;\5
+\&{goto} \\{q\_done};\C{ no way }\6
+\4\\{q\_empty\_slot}:\5
+\&{for} ${}(\|j\K\\{lbq}-\T{1};{}$ ${}\|a[\|j]\E\T{0};{}$ ${}\|j\MM){}$\1\5
+;\2\6
+${}\|i\K\|a[\|j];{}$\6
+\&{if} ${}(\|q<\|i){}$\1\5
+\&{goto} \\{q\_hopeless};\2\6
+\&{for} ${}(\|i\MRL{+{\K}}\|i,\39\|j\PP;{}$ ${}\|j<\\{lbq};{}$ ${}\|j\PP){}$\1\5
+${}\|i\MRL{+{\K}}\|i;{}$\2\6
+\&{while} ${}(\|q>\|i){}$\5
+${}\{{}$\1\6
+${}\\{lbq}\PP;{}$\6
+\&{if} (\|a[\\{lbq}])\1\5
+\&{goto} \\{q\_search};\2\6
+${}\|i\MRL{+{\K}}\|i;{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\\{lbq}+\T{1};{}$ ${}\|a[\|j]\E\T{0};{}$ ${}\|j\PP){}$\1\5
+;\2\6
+${}\|i\K\|a[\|j];{}$\6
+\&{if} ${}(\|i\Z\|q){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|i<\|q){}$\5
+${}\{{}$\1\6
+${}\\{lbq}\K\|j+\T{1}{}$;\5
+\&{goto} \\{q\_search};\6
+\4${}\}{}$\2\6
+\4\\{q\_ready}:\5
+${}\\{ubq}\K\\{lbq}\K\\{harmless};{}$\6
+\&{goto} \\{happiness};\C{ we found \PB{\|p} }\6
+\4${}\}{}$\2\6
+\&{for} ${}(\\{ubq}\K\|j-\T{1},\39\|i\K(\|i+\T{1})\GG\T{1};{}$ ${}\|q<\|i;{}$
+${}\\{ubq}\MM){}$\1\5
+${}\|i\K(\|i+\T{1})\GG\T{1};{}$\2\6
+\4\\{q\_done}:\par
+\U8.\fi
+
+\N{1}{11}Index.
+
+
+\fi
+
+
+\inx
+\fin
+\con

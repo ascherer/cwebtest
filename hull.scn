@@ -1,0 +1,23 @@
+\I\X12:Compile two new instructions, for \PB{$(\|u,\\{vv})$} and \PB{$(\\{vv},%
+\|v)$}\X
+\U11.
+\I\X8:Find convex hull of \PB{\|g}\X
+\U1.
+\I\X10:Follow the instructions; \PB{\&{continue}} if \PB{\\{vv}} is inside the
+current hull\X
+\U8.
+\I\X2, 5:Global variables\X
+\U1.
+\I\X4:Initialize the array of instructions\X
+\U6.
+\I\X6:Initialize the data structures\X
+\U8.
+\I\X7:Local variables\X
+\U1.
+\I\X9:Print the convex hull\X
+\U8.
+\I\X13:Procedures\X
+\U1.
+\I\X11:Update the convex hull, knowing that \PB{\\{vv}} lies outside the
+consecutive hull vertices \PB{\|u} and \PB{\|v}\X
+\U8.

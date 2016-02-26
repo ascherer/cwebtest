@@ -1,0 +1,27 @@
+\I\X15, 17:Additional code reached by \PB{\&{goto}} statements\X
+\U5.
+\I\X5:Backtrack until finding a solution or exhausting all possibilities\X
+\U2.
+\I\X19:Check for binary method\X
+\U18.
+\I\X18:Check for known upper bound to simplify the work\X
+\U2.
+\I\X8:Decrease \PB{\|t} and vet another entry, or go to \PB{\\{found}}\X
+\U5.
+\I\X2:Find a shortest strong chain for $n$\X
+\U1.
+\I\X4:Initialize to try for a chain of length $m$\X
+\U2.
+\I\X14:Place \PB{\\{hint}[\|l]}\X
+\U5.
+\I\X6:Print diagnostic info\X
+\U5.
+\I\X21:Print special reason\X
+\U1.
+\I\X10:Put $a'$, $a''$, and $a'-a''$ into \PB{$\\{hint}[\|l+\T{1}]$}, \PB{$%
+\\{hint}[\|l+\T{2}]$}, and \PB{$\\{hint}[\|l+\T{3}]$}\X
+\U8.
+\I\X3:Set $m$ to the obvious lower bound\X
+\U2.
+\I\X7, 9, 12, 13, 20:Subroutines\X
+\U1.

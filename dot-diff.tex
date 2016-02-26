@@ -1,0 +1,441 @@
+\input cwebmac
+\datethis
+\font\logo=logo10
+\def\MF{{\logo META}\-{\logo FONT}}
+
+
+\N{1}{1}Introduction. This program prepares a \MF\ file for a special-purpose
+font
+that will approximate a given picture. The input file (\PB{\\{stdin}}) is
+assumed to be an EPS file output by Adobe Photoshop$^{\rm TM}$
+on a Macintosh with the binary EPS option, containing $m$~rows of
+$n$~columns each;
+in Photoshop terminology the image is $m$~pixels high and $n$~pixels
+wide, in grayscale mode, with a resolution of 72 pixels per inch.
+The output file (\PB{\\{stdout}}) will be a sequence of $m$~lines like
+$$\.{row 10; data "d01...53";}$$
+this means that the pixel data for row 10 is the string of $n$~bits
+$110100000001\ldots01010011$ encoded as a hexadecimal string of length $n/4$.
+
+For simplicity, this program assumes that $m=512$ and $n=440$.
+
+\Y\B\4\D$\|m$ \5
+\T{512}\C{ this many rows }\par
+\B\4\D$\|n$ \5
+\T{440}\C{ this many columns }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\&{float} ${}\|a[\|m+\T{2}][\|n+\T{2}]{}$;\C{ darknesses: 0.0 is white, 1.0 is
+black }\7
+\X4:Global variables\X\6
+\X12:Subroutines\X\7
+${}\\{main}(\\{argc},\39\\{argv}){}$\1\1\6
+\&{int} \\{argc};\6
+\&{char} ${}{*}\\{argv}[\,];\2\2{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|l${},{}$ \\{ii}${},{}$ %
+\\{jj}${},{}$ \|w;\6
+\&{register} \&{float} \\{err};\6
+\&{float} \\{zeta}${}\K\T{0.2},{}$ \\{sharpening}${}\K\T{0.9};{}$\7
+\X2:Check for nonstandard \PB{\\{zeta}} and \PB{\\{sharpening}} factors\X;\6
+\X3:Check the beginning lines of the input file\X;\6
+\X5:Input the graphic data\X;\6
+\X15:Translate input to output\X;\6
+\X17:Spew out the answers\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}Optional command-line arguments allow the user to change the
+\PB{\\{zeta}} and/or \PB{\\{sharpening}} parameters discussed below.
+
+\Y\B\4\X2:Check for nonstandard \PB{\\{zeta}} and \PB{\\{sharpening}} factors%
+\X${}\E{}$\6
+\&{if} ${}(\\{argc}>\T{1}\W\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%g"},\39{\AND}%
+\\{zeta})\E\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Using\ zeta\ =\ \%g\\n"},\39\\{zeta});{}$\6
+\&{if} ${}(\\{argc}>\T{2}\W\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%g"},\39{\AND}%
+\\{sharpening})\E\T{1}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ \ and\ sharpening\ fa}\)\.{ctor\ \%g\\n"},%
+\39\\{sharpening});{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}Macintosh conventions indicate the end of a line by the
+ASCII $\langle\,$carriage return$\,\rangle$ character
+(i.e., control-M, aka \.{\char`\\r}), but the \CEE/ library is
+set up to work best with newlines (i.e., control-J, aka \.{\char`\\n}).
+We aren't worried about efficiency, so we simply input one character
+at a time. This program assumes Macintosh conventions.
+
+The job here is to look for the sequence \.{Box:} in the input,
+followed by 0, 0, the number of columns, and the number of rows.
+
+\Y\B\4\D$\\{panic}(\|s)$ \6
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\|s){}$;\5
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\par
+\Y\B\4\X3:Check the beginning lines of the input file\X${}\E{}$\6
+$\|k\K\T{0};{}$\6
+\4\\{scan}:\6
+\&{if} ${}(\|k\PP>\T{1000}){}$\1\5
+\\{panic}(\.{"Couldn't\ find\ the\ b}\)\.{ounding\ box\ info!\\n"});\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'B'}){}$\1\5
+\&{goto} \\{scan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'o'}){}$\1\5
+\&{goto} \\{scan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'x'}){}$\1\5
+\&{goto} \\{scan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{':'}){}$\1\5
+\&{goto} \\{scan};\2\6
+\&{if} ${}(\\{scanf}(\.{"\%d\ \%d\ \%d\ \%d"},\39{\AND}\\{llx},\39{\AND}%
+\\{lly},\39{\AND}\\{urx},\39{\AND}\\{ury})\I\T{4}\V\\{llx}\I\T{0}\V\\{lly}\I%
+\T{0}){}$\1\5
+\\{panic}(\.{"Bad\ bounding\ box\ da}\)\.{ta!\\n"});\2\6
+\&{if} ${}(\\{urx}\I\|n\V\\{ury}\I\|m){}$\1\5
+\\{panic}(\.{"The\ image\ doesn't\ h}\)\.{ave\ the\ corect\ width}\)\.{\ and\
+height!\\n"});\2\par
+\U1.\fi
+
+\M{4}\B\X4:Global variables\X${}\E{}$\6
+\&{int} \\{llx}${},{}$ \\{lly}${},{}$ \\{urx}${},{}$ \\{ury};\C{ bounding box
+parameters }\par
+\As8\ET11.
+\U1.\fi
+
+\M{5}After we've seen the bounding box, we look for \.{beginimage\char`\\r};
+this will be followed by the pixel data, one character per byte.
+
+\Y\B\4\X5:Input the graphic data\X${}\E{}$\6
+$\|k\K\T{0};{}$\6
+\4\\{skan}:\6
+\&{if} ${}(\|k\PP>\T{10000}){}$\1\5
+\\{panic}(\.{"Couldn't\ find\ the\ p}\)\.{ixel\ data!\\n"});\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'b'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'e'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'g'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'i'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'n'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'i'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'m'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'a'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'g'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'e'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'\\r'}){}$\1\5
+\&{goto} \\{skan};\2\6
+\X6:Input rectangular pixel data\X;\6
+\&{if} ${}(\\{getchar}(\,)\I\.{'\\r'}){}$\1\5
+\\{panic}(\.{"Wrong\ amount\ of\ pix}\)\.{el\ data!\\n"});\2\par
+\U1.\fi
+
+\M{6}Photoshop follows the conventions of photographers who consider
+0~to be black and 1~to be white; but we follow the conventions of
+computer scientists who tend to regard 0~as devoid of ink (white)
+and 1~as full of ink (black).
+
+We use the fact that global arrays are initially zero to assume that
+there are all-white rows of 0s above, below, and to the left and right
+of the input data.
+
+\Y\B\4\X6:Input rectangular pixel data\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\\{ury};{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\\{urx};{}$ ${}\|j\PP){}$\1\5
+${}\|a[\|i][\|j]\K\T{1.0}-\\{getchar}(\,)/\T{255.0}{}$;\2\2\par
+\U5.\fi
+
+\N{1}{7}Dot diffusion. Our job is to go from eight-bit pixels to one-bit
+pixels;
+that is, from 256 shades of gray to an approximation that uses only
+black and white. The method used here is called {\it dot diffusion\/}
+(see [D.~E. Knuth, ``Digital halftones by dot diffusion,'' {\sl ACM
+Transactions on Graphics\/ \bf6} (1987), 245--273]); it works as follows:
+The pixels are divided into 64 classes, numbered from 0 to~63. We convert the
+pixel values to 0s and 1s by assigning values first to all the pixels of
+class~0, then to all the pixels of class~1, etc. The error incurred at each
+step is distributed to the neighbors whose class numbers are higher. This is
+done by means of precomputed tables \PB{\\{class\_row}}, \PB{\\{class\_col}}, %
+\PB{\\{start}},
+\PB{\\{del\_i}}, \PB{\\{del\_j}}, and \PB{\\{alpha}} whose function is easy to
+deduce from the
+following code segment.
+
+\Y\B\4\X7:Choose pixel values and diffuse the errors in the buffer\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{64};{}$ ${}\|k\PP){}$\1\6
+\&{for} ${}(\|i\K\\{class\_row}[\|k];{}$ ${}\|i\Z\|m;{}$ ${}\|i\MRL{+{\K}}%
+\T{8}){}$\1\6
+\&{for} ${}(\|j\K\\{class\_col}[\|k];{}$ ${}\|j\Z\|n;{}$ ${}\|j\MRL{+{\K}}%
+\T{8}){}$\5
+${}\{{}$\1\6
+\X9:Decide the color of pixel \PB{$[\|i,\|j]$} and the resulting \PB{\\{err}}%
+\X;\6
+\&{for} ${}(\|l\K\\{start}[\|k];{}$ ${}\|l<\\{start}[\|k+\T{1}];{}$ ${}\|l%
+\PP){}$\1\5
+${}\|a[\|i+\\{del\_i}[\|l]][\|j+\\{del\_j}[\|l]]\MRL{+{\K}}\\{err}*\\{alpha}[%
+\|l];{}$\2\6
+\4${}\}{}$\2\2\2\par
+\U15.\fi
+
+\M{8}We will use the following model for estimating the effect of a given
+bit pattern in the output: If a pixel is black, its darkness is~1.0;
+if it is white but at least one of its four neighbors is black, its
+darkness is~\PB{\\{zeta}}; if it is white and has four white neighbors, its
+darkness is~0.0. Laserprinters of the 1980s tended to spatter toner
+in a way that could be approximated roughly by taking \PB{$\\{zeta}\K\T{0.2}$}
+in
+this model. The value of \PB{\\{zeta}} should be between $-0.25$ and $+1.0$.
+
+An auxiliary array \PB{\\{aa}} holds code values
+\PB{\\{white}}, \PB{\\{gray}}, or~\PB{\\{black}} to facilitate computations in
+this model.
+All cells are initially \PB{\\{white}}; but when we decide to make a pixel
+\PB{\\{black}}, we change its \PB{\\{white}} neighbors (if any) to \PB{%
+\\{gray}}.
+
+\Y\B\4\D$\\{white}$ \5
+\T{0}\C{ code for a white pixel with all white neighbors }\par
+\B\4\D$\\{gray}$ \5
+\T{1}\C{ code for a white pixel with 1, 2, 3, or 4 black neighbors }\par
+\B\4\D$\\{black}$ \5
+\T{2}\C{ code for a black pixel }\par
+\Y\B\4\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{char} ${}\\{aa}[\|m+\T{2}][\|n+\T{2}]{}$;\C{ \PB{\\{white}}, \PB{\\{gray}},
+or \PB{\\{black}} status of final pixels }\par
+\fi
+
+\M{9}In this step the current pixel's final one-bit value is determined.
+It presently is either \PB{\\{white}} or \PB{\\{gray}}; we either leave it as
+is,
+or we blacken it and gray its white neighbors, whichever minimizes the
+magnitude of the error.
+
+Potentially \PB{\\{gray}} values near the newly chosen pixel make this
+calculation slightly tricky.
+Notice, for example, that the very first black pixel to be
+created will increase the local darkness of the image by \PB{$\T{1}+\T{4}%
+\\{zeta}$}.
+Suppose the original image is entirely black, so that \PB{\|a[\|i][\|j]} is~1.0
+for \PB{$\T{1}\Z\|i\Z\|m$} and \PB{$\T{1}\Z\|j\Z\|n$}. If a pixel of class~0 is
+set to \PB{\\{white}},
+the error (i.e., the darkness that needs to be diffused to its
+upperclass neighbors) is 1.0; but if it is set to \PB{\\{black}}, the error
+is $-4zeta$. The algorithm will choose \PB{\\{black}} unless \PB{$\\{zeta}\G%
+\T{.25}$}.
+
+\Y\B\4\X9:Decide the color of pixel \PB{$[\|i,\|j]$} and the resulting \PB{%
+\\{err}}\X${}\E{}$\6
+\&{if} ${}(\\{aa}[\|i][\|j]\E\\{white}){}$\1\5
+${}\\{err}\K\|a[\|i][\|j]-\T{1.0}-\T{4}*\\{zeta};{}$\2\6
+\&{else}\5
+${}\{{}$\C{ \PB{$\\{aa}[\|i][\|j]\E\\{gray}$} }\1\6
+${}\\{err}\K\|a[\|i][\|j]-\T{1.0}+\\{zeta};{}$\6
+\&{if} ${}(\\{aa}[\|i-\T{1}][\|j]\E\\{white}){}$\1\5
+${}\\{err}\MRL{-{\K}}\\{zeta};{}$\2\6
+\&{if} ${}(\\{aa}[\|i+\T{1}][\|j]\E\\{white}){}$\1\5
+${}\\{err}\MRL{-{\K}}\\{zeta};{}$\2\6
+\&{if} ${}(\\{aa}[\|i][\|j-\T{1}]\E\\{white}){}$\1\5
+${}\\{err}\MRL{-{\K}}\\{zeta};{}$\2\6
+\&{if} ${}(\\{aa}[\|i][\|j+\T{1}]\E\\{white}){}$\1\5
+${}\\{err}\MRL{-{\K}}\\{zeta};{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{err}+\|a[\|i][\|j]>\T{0}){}$\5
+${}\{{}$\C{ black is better }\1\6
+${}\\{aa}[\|i][\|j]\K\\{black};{}$\6
+\&{if} ${}(\\{aa}[\|i-\T{1}][\|j]\E\\{white}){}$\1\5
+${}\\{aa}[\|i-\T{1}][\|j]\K\\{gray};{}$\2\6
+\&{if} ${}(\\{aa}[\|i+\T{1}][\|j]\E\\{white}){}$\1\5
+${}\\{aa}[\|i+\T{1}][\|j]\K\\{gray};{}$\2\6
+\&{if} ${}(\\{aa}[\|i][\|j-\T{1}]\E\\{white}){}$\1\5
+${}\\{aa}[\|i][\|j-\T{1}]\K\\{gray};{}$\2\6
+\&{if} ${}(\\{aa}[\|i][\|j+\T{1}]\E\\{white}){}$\1\5
+${}\\{aa}[\|i][\|j+\T{1}]\K\\{gray};{}$\2\6
+\4${}\}{}$\2\6
+\&{else}\1\5
+${}\\{err}\K\|a[\|i][\|j]{}$;\C{ keep it white or gray }\2\par
+\U7.\fi
+
+\N{1}{10}Computing the diffusion tables. The tables for dot diffusion could be
+specified by a large number of boring assignment statements, but it is more
+fun to compute them by a method that reveals some of the mysterious underlying
+structure.
+
+\Y\B\4\X10:Initialize the diffusion tables\X${}\E{}$\6
+\X13:Initialize the class number matrix\X;\6
+\X14:Compile ``instructions'' for the diffusion operations\X;\par
+\U15.\fi
+
+\M{11}\B\X4:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \\{class\_row}[\T{64}]${},{}$ \\{class\_col}[\T{64}];\C{ first row and
+column for a given class }\6
+\&{char} \\{class\_number}[\T{10}][\T{10}];\C{ the number of a given position }%
+\6
+\&{int} \\{kk}${}\K\T{0}{}$;\C{ how many classes have been done so far }\6
+\&{int} \\{start}[\T{65}];\C{ the first instruction for a given class }\6
+\&{int} \\{del\_i}[\T{256}]${},{}$ \\{del\_j}[\T{256}];\C{ relative location of
+a neighbor }\6
+\&{float} \\{alpha}[\T{256}];\C{ diffusion coefficient for a neighbor }\par
+\fi
+
+\M{12}The order of classes used here is the order in which pixels might be
+blackened in a font for halftones based on dots in a $45^\circ$ grid.
+In fact, it is precisely the pattern used in the font \.{ddith300},
+discussed in the author's paper ``Fonts for Digital Halftones''
+[Chapter~21 of {\sl Selected Papers on Digital Typography\/}].
+
+\Y\B\4\X12:Subroutines\X${}\E{}$\6
+\&{void} ${}\\{store}(\|i,\39\|j){}$\1\1\6
+\&{int} \|i${},{}$ \|j;\2\2\6
+${}\{{}$\1\6
+\&{if} ${}(\|i<\T{1}){}$\1\5
+${}\|i\MRL{+{\K}}\T{8}{}$;\5
+\2\&{else} \&{if} ${}(\|i>\T{8}){}$\1\5
+${}\|i\MRL{-{\K}}\T{8};{}$\2\6
+\&{if} ${}(\|j<\T{1}){}$\1\5
+${}\|j\MRL{+{\K}}\T{8}{}$;\5
+\2\&{else} \&{if} ${}(\|j>\T{8}){}$\1\5
+${}\|j\MRL{-{\K}}\T{8};{}$\2\6
+${}\\{class\_number}[\|i][\|j]\K\\{kk};{}$\6
+${}\\{class\_row}[\\{kk}]\K\|i{}$;\5
+${}\\{class\_col}[\\{kk}]\K\|j;{}$\6
+${}\\{kk}\PP;{}$\6
+\4${}\}{}$\2\7
+\&{void} ${}\\{store\_eight}(\|i,\39\|j){}$\1\1\6
+\&{int} \|i${},{}$ \|j;\2\2\6
+${}\{{}$\1\6
+${}\\{store}(\|i,\39\|j){}$;\5
+${}\\{store}(\|i-\T{4},\39\|j+\T{4}){}$;\5
+${}\\{store}(\T{1}-\|j,\39\|i-\T{4}){}$;\5
+${}\\{store}(\T{5}-\|j,\39\|i);{}$\6
+${}\\{store}(\|j,\39\T{5}-\|i){}$;\5
+${}\\{store}(\T{4}+\|j,\39\T{1}-\|i){}$;\5
+${}\\{store}(\T{5}-\|i,\39\T{5}-\|j){}$;\5
+${}\\{store}(\T{1}-\|i,\39\T{1}-\|j);{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{13}\B\X13:Initialize the class number matrix\X${}\E{}$\6
+$\\{store\_eight}(\T{7},\39\T{2}){}$;\5
+${}\\{store\_eight}(\T{8},\39\T{3}){}$;\5
+${}\\{store\_eight}(\T{8},\39\T{2}){}$;\5
+${}\\{store\_eight}(\T{8},\39\T{1});{}$\6
+${}\\{store\_eight}(\T{1},\39\T{4}){}$;\5
+${}\\{store\_eight}(\T{1},\39\T{3}){}$;\5
+${}\\{store\_eight}(\T{1},\39\T{2}){}$;\5
+${}\\{store\_eight}(\T{2},\39\T{3});{}$\6
+\&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\T{8};{}$ ${}\|i\PP){}$\1\5
+${}\\{class\_number}[\|i][\T{0}]\K\\{class\_number}[\|i][\T{8}],\39\\{class%
+\_number}[\|i][\T{9}]\K\\{class\_number}[\|i][\T{1}];{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j\Z\T{9};{}$ ${}\|j\PP){}$\1\5
+${}\\{class\_number}[\T{0}][\|j]\K\\{class\_number}[\T{8}][\|j],\39\\{class%
+\_number}[\T{9}][\|j]\K\\{class\_number}[\T{1}][\|j]{}$;\2\par
+\U10.\fi
+
+\M{14}The ``compilation'' in this step simulates going through the diffusion
+process the slow way, recording the actions it performs. Then those actions
+can all be done at high speed later.
+
+\Y\B\4\X14:Compile ``instructions'' for the diffusion operations\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0},\39\|l\K\T{0};{}$ ${}\|k<\T{64};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{start}[\|k]\K\|l{}$;\C{ \PB{\|l} is the number of instructions compiled
+so far }\6
+${}\|i\K\\{class\_row}[\|k]{}$;\5
+${}\|j\K\\{class\_col}[\|k]{}$;\5
+${}\|w\K\T{0};{}$\6
+\&{for} ${}(\\{ii}\K\|i-\T{1};{}$ ${}\\{ii}\Z\|i+\T{1};{}$ ${}\\{ii}\PP){}$\1\6
+\&{for} ${}(\\{jj}\K\|j-\T{1};{}$ ${}\\{jj}\Z\|j+\T{1};{}$ ${}\\{jj}\PP){}$\1\6
+\&{if} ${}(\\{class\_number}[\\{ii}][\\{jj}]>\|k){}$\5
+${}\{{}$\1\6
+${}\\{del\_i}[\|l]\K\\{ii}-\|i{}$;\5
+${}\\{del\_j}[\|l]\K\\{jj}-\|j{}$;\5
+${}\|l\PP;{}$\6
+\&{if} ${}(\\{ii}\I\|i\W\\{jj}\I\|j){}$\1\5
+${}\|w\PP{}$;\C{ diagonal neighbors get weight 1 }\2\6
+\&{else}\1\5
+${}\|w\MRL{+{\K}}\T{2}{}$;\C{ orthogonal neighbors get weight 2 }\2\6
+\4${}\}{}$\2\2\2\6
+\&{for} ${}(\\{jj}\K\\{start}[\|k];{}$ ${}\\{jj}<\|l;{}$ ${}\\{jj}\PP){}$\1\6
+\&{if} ${}(\\{del\_i}[\\{jj}]\I\T{0}\W\\{del\_j}[\\{jj}]\I\T{0}){}$\1\5
+${}\\{alpha}[\\{jj}]\K\T{1.0}/\|w;{}$\2\6
+\&{else}\1\5
+${}\\{alpha}[\\{jj}]\K\T{2.0}/\|w;{}$\2\2\6
+\4${}\}{}$\2\6
+${}\\{start}[\T{64}]\K\|l{}$;\C{ at this point \PB{\|l} will be 256 }\par
+\U10.\fi
+
+\N{1}{15}Synthesis. Now we're ready to put the pieces together.
+
+\Y\B\4\X15:Translate input to output\X${}\E{}$\6
+\X10:Initialize the diffusion tables\X;\6
+\&{if} (\\{sharpening})\1\5
+\X16:Sharpen the input\X;\2\6
+\X7:Choose pixel values and diffuse the errors in the buffer\X;\par
+\U1.\fi
+
+\M{16}Experience shows that dot diffusion often does a better job if
+we apply a filtering operation that exaggerates the differences between
+the intensities of a pixel and its neighbors:
+$$a_{ij}\gets {a_{ij}-\alpha {\bar a}_{ij}\over 1-\alpha},$$
+where ${\bar a}_{ij}={1\over9}\sum_{\delta=-1}^{+1}\sum_{\epsilon=-1}^{+1}
+a_{(i+\delta)(j+\epsilon)}$ is the average value of $a_{ij}$ and its
+eight neighbors. (See the discussion
+in the {\sl Transactions on Graphics\/} paper cited earlier. The
+parameter $\alpha$ is the \PB{\\{sharpening}} value, which must obviously
+be less than~1.0.)
+
+We could use a buffering scheme to apply this transformation in place,
+but it's easier to store the new value of $a_{ij}$ in $a_{(i-1)(j-1)}$
+and then shift everything back into position afterwards. The values
+of $a_{i0}$ and $a_{0j}$ don't have to be restored to zero after this
+step, because they will not be examined again.
+
+\Y\B\4\X16:Sharpen the input\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\|m;{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\5
+\1\&{float} \\{abar};\7
+${}\\{abar}\K(\|a[\|i-\T{1}][\|j-\T{1}]+\|a[\|i-\T{1}][\|j]+\|a[\|i-\T{1}][\|j+%
+\T{1}]+\|a[\|i][\|j-\T{1}]+\3{-1}\|a[\|i][\|j]+\|a[\|i][\|j+\T{1}]+\|a[\|i+%
+\T{1}][\|j-\T{1}]+\|a[\|i+\T{1}][\|j]+\|a[\|i+\T{1}][\|j+\T{1}])/\T{9.0};{}$\6
+${}\|a[\|i-\T{1}][\|j-\T{1}]\K(\|a[\|i][\|j]-\\{sharpening}*\\{abar})/(\T{1.0}-%
+\\{sharpening});{}$\6
+\4${}\}{}$\2\2\6
+\&{for} ${}(\|i\K\|m;{}$ ${}\|i>\T{0};{}$ ${}\|i\MM){}$\1\6
+\&{for} ${}(\|j\K\|n;{}$ ${}\|j>\T{0};{}$ ${}\|j\MM){}$\1\5
+${}\|a[\|i][\|j]\K(\|a[\|i-\T{1}][\|j-\T{1}]\Z\T{0.0}\?\T{0.0}:\|a[\|i-\T{1}][%
+\|j-\T{1}]\G\T{1.0}\?\T{1.0}:\|a[\|i-\T{1}][\|j-\T{1}]);{}$\2\2\6
+\4${}\}{}$\2\par
+\U15.\fi
+
+\M{17}Here I'm assuming that \PB{\|n} is a multiple of 4.
+
+\Y\B\4\X17:Spew out the answers\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\|m;{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"row\ \%d;\ data\ \\""},\39\|i);{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\MRL{+{\K}}\T{4}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0},\39\|w\K\T{0};{}$ ${}\|k<\T{4};{}$ ${}\|k\PP){}$\1\5
+${}\|w\K\|w+\|w+(\\{aa}[\|i][\|j+\|k]\E\\{black}\?\T{1}:\T{0});{}$\2\6
+${}\\{printf}(\.{"\%x"},\39\|w);{}$\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\";\\n"});\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\N{1}{18}Index.
+\fi
+
+\inx
+\fin
+\con

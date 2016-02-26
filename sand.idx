@@ -1,0 +1,27 @@
+\I\\{Arc}, 1.
+\I\\{arcs}, 3.
+\I\\{argc}, \[1], 2.
+\I\\{argv}, \[1], 2.
+\I\|{d}, \[1].
+\I\\{exit}, 2.
+\I\\{fprintf}, 2.
+\I\\{Graph}, 1.
+\I\|{h}, \[4].
+\I\|{j}, \[1], \[4].
+\I\|{k}, \[1], \[4].
+\I\\{main}, \[1].
+\I\|{n}, \[1].
+\I\\{next}, 3.
+\I\\{panic\_code}, 2.
+\I\\{printf}, 5.
+\I\|{r}, \[1].
+\I\\{reduce}, \[4], 5.
+\I\\{restore\_graph}, 2.
+\I\\{sscanf}, 2.
+\I\\{stderr}, 2.
+\I\|{t}, \[1].
+\I\\{tip}, 3.
+\I\\{vec}, \[1], 3, 4.
+\I\\{Vertex}, 1.
+\I\\{vertices}, 3.
+\I\|{x}, \[1].

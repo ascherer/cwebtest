@@ -1,0 +1,10 @@
+\I\X6:Compute $s=\sigma_r(v)$\X
+\U5.
+\I\X5:Do round \PB{\|r}\X
+\U1.
+\I\X3:Make the initial signatures\X
+\U1.
+\I\X2:Process the command line\X
+\U1.
+\I\X4:Set signature of all \PB{\|v}'s unseen neighbors to \PB{\|k}\X
+\U3.

@@ -1,0 +1,541 @@
+\input cwebmac
+
+\N{1}{1}Intro. This program finds all ``perfect digital invariants'' of
+order~$m$
+in the decimal system, namely all integers that satisfy $\pi_m x=x$,
+where $\pi_m$ takes an integer into the sum of the $m$th powers of its digits.
+
+It can be shown without difficulty that such integers have at most $m+1$
+digits.
+Indeed, if $10^p\le x<10^{p+1}$ we have $\pi_m x<10^p$ whenever $p>m$.
+(The proof follows from the fact that $(m+1)9^m<10^{m+1}$.)
+
+It's an interesting backtrack program, in which I successively choose the
+digits $9\ge x_1\ge x_2\ge\cdots\ge x_{m+1}\ge0$ that will be the
+digits of~$x$ (in some order). Lower bounds and upper bounds on $x$
+are sufficiently sharp to rule out lots of cases before very many
+of those digits have been specified. (And if $m$ is small,
+I could even run through {\it all\/} such sequences of digits, because there
+are only $m+10\choose 9$ of them. That's about 2.5 billion when $m=40$.)
+
+The only high-precision arithmetic needed here is addition. I implement it
+with binary-coded decimal representation (15 digits per octabyte),
+using bitwise techniques as suggested in exercise 7.1.3--100.
+
+Memory references (mems) are counted as if an optimizing compiler were
+doing things like inlining subroutines, and as if the distribution arrays were
+packed into a single octabyte. I actually keep the elements unpacked, to keep
+debugging simple.
+
+\Y\B\4\D$\\{maxm}$ \5
+\T{1000}\par
+\B\4\D$\\{maxdigs}$ \5
+$(\T{1}+(\\{maxm}/\T{15}){}$)\C{ octabytes per binary-coded decimal number }\par
+\B\4\D$\|o$ \5
+$\\{mems}\PP{}$\par
+\B\4\D$\\{oo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{2}\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\&{int} \|m;\C{ command-line parameter }\6
+\&{typedef} \&{unsigned} \&{long} \&{long} \&{ull};\6
+\&{ull} \\{mems};\6
+\&{ull} \\{nodes};\6
+\&{ull} \\{thresh}${}\K\T{10000000000}{}$;\C{ reporting time }\6
+\&{ull} ${}\\{profile}[\\{maxm}+\T{3}];{}$\6
+\&{int} \\{count};\6
+\&{int} \\{vbose};\C{ level of verbosity }\7
+\X8:Global variables\X;\6
+\X4:Subroutines\X;\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|l${},{}$ \|p${},{}$ \|r${},{}$ %
+\|t${},{}$ \\{pd}${},{}$ \\{alt}${},{}$ \\{blt}${},{}$ \\{xl}${},{}$ %
+\\{change};\7
+\X3:Process the command line\X;\6
+\X7:Precompute the power tables\X;\6
+\X11:Backtrack through all cases\X;\6
+${}\\{fprintf}(\\{stderr},\39\.{"Altogether\ \%d\ solut}\)\.{ions\ for\ m=\%d\
+(\%llu\ }\)\.{nodes,\ \%llu\ mems).\\n}\)\.{"},\39\\{count},\39\|m,\39%
+\\{nodes},\39\\{mems});{}$\6
+\&{if} (\\{vbose})\1\5
+\X2:Print the profile\X;\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Print the profile\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Profile:\ \ \ \ \ \ \ \ \ \ 1}\)\.{\\n"});{}$\6
+\&{for} ${}(\|k\K\T{2};{}$ ${}\|k\Z\|m+\T{2};{}$ ${}\|k\PP){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\%19lld\\n"},\39\\{profile}[\|k]);{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}\B\X3:Process the command line\X${}\E{}$\6
+\&{if} ${}(\\{argc}<\T{2}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
+\|m)\I\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ m\ [profil}\)\.{e]\ [verbose]\
+[extrav}\)\.{erbose]\\n"},\39\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+${}\\{vbose}\K\\{argc}-\T{2};{}$\6
+\&{if} ${}(\|m<\T{2}\V\|m>\\{maxm}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ m\ should\ be\ }\)\.{between\ 2\ and\ %
+\%d,\ no}\)\.{t\ \%d!\\n"},\39\\{maxm},\39\|m);{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+${}\\{mdigs}\K\T{1}+(\|m/\T{15}){}$;\par
+\U1.\fi
+
+\N{1}{4}Tricky arithmetic. I've got to deal with biggish numbers and inspect
+their
+decimal digits. But I'm using a binary computer and I don't want to
+be repeatedly dividing by powers of~10. So I have an addition routine
+that computes (say) the sum of hexadecimal-coded numbers
+\PB{\T{\^344159959}} and \PB{\T{\^271828043}}, giving \PB{\T{\^615988002}} as
+if
+the  numbers were decimal instead.
+
+\Y\B\4\X4:Subroutines\X${}\E{}$\6
+\&{void} \\{add}(\&{ull} ${}{*}\|p,\39{}$\&{ull} ${}{*}\|q,\39{}$\&{ull} ${}{*}%
+\|r){}$\1\1\2\2\6
+${}\{{}$\C{ add \PB{\|p} to \PB{\|q}, giving \PB{\|r} }\1\6
+\&{register} \&{int} \|k${},{}$ \|c;\6
+\&{register} \&{ull} \|t${},{}$ \|w${},{}$ \|x${},{}$ \|y;\7
+\&{for} ${}(\|k\K\|c\K\T{0};{}$ ${}\|k<\\{mdigs};{}$ ${}\|k\PP){}$\1\5
+\X5:Add \PB{$\|c+{*}(\|p+\|k)$} to \PB{${*}(\|q+\|k)$}, giving \PB{${*}(\|r+%
+\|k)$} and carry~\PB{\|c}\X;\2\6
+\&{if} (\|c)\5
+${}\{{}$\C{ this shouldn't happen }\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Overflow!\\n"});{}$\6
+${}\\{exit}({-}\T{999});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\As6\ET10.
+\U1.\fi
+
+\M{5}It's interesting that I must add \PB{\|c} to \PB{\|x} here, {\it not\/}
+to~\PB{\|y}.
+Otherwise the nondecimal digit \.{a} might appear in the result.
+
+\Y\B\4\X5:Add \PB{$\|c+{*}(\|p+\|k)$} to \PB{${*}(\|q+\|k)$}, giving \PB{${*}(%
+\|r+\|k)$} and carry~\PB{\|c}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|o,\39\|x\K{*}(\|p+\|k)+\|c{}$;\C{ \PB{\|x} might have a nondecimal digit
+now }\6
+${}\|o,\39\|y\K{*}(\|q+\|k)+\T{\^666666666666666}{}$;\C{ no cross-digit carries
+occur }\6
+${}\|t\K\|x+\|y;{}$\6
+${}\|w\K(\|t\XOR\|x\XOR\|y)\AND\T{\^1111111111111110}{}$;\C{ this is where
+cross-digit carries happen }\6
+${}\|w\K(\|w\XOR\T{\^1111111111111110})\GG\T{3};{}$\6
+${}\|t\MRL{-{\K}}\|w+(\|w\LL\T{1}){}$;\C{ subtract 6 where there were no
+carries }\6
+${}\|o,\39{*}(\|r+\|k)\K\|t\AND\T{\^fffffffffffffff};{}$\6
+${}\|c\K\|t\GG\T{60};{}$\6
+\4${}\}{}$\2\par
+\U4.\fi
+
+\M{6}At the beginning of this program, I need a table of $0^m$, $1^m$, $2^m$,
+\dots,~$9^m$. So why not compute it via addition?
+
+\Y\B\4\X4:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{kmult}(\&{int} \|k${},\39{}$\&{ull} ${}{*}\|a){}$\1\1\2\2\6
+${}\{{}$\C{ multiply \PB{\|a} by $k$ }\1\6
+\&{switch} (\|k)\5
+${}\{{}$\1\6
+\4\&{case} \T{8}:\5
+${}\\{add}(\|a,\39\|a,\39\|a);{}$\6
+\4\&{case} \T{4}:\5
+${}\\{add}(\|a,\39\|a,\39\|a);{}$\6
+\4\&{case} \T{2}:\5
+${}\\{add}(\|a,\39\|a,\39\|a){}$;\5
+\&{break};\6
+\4\&{case} \T{6}:\5
+${}\\{add}(\|a,\39\|a,\39\|a);{}$\6
+\4\&{case} \T{3}:\5
+${}\\{add}(\|a,\39\|a,\39\|z){}$;\5
+${}\\{add}(\|a,\39\|z,\39\|a){}$;\5
+\&{break};\6
+\4\&{case} \T{5}:\5
+${}\\{add}(\|a,\39\|a,\39\|z){}$;\5
+${}\\{add}(\|z,\39\|z,\39\|z){}$;\5
+${}\\{add}(\|a,\39\|z,\39\|a){}$;\5
+\&{break};\6
+\4\&{case} \T{9}:\5
+${}\\{add}(\|a,\39\|a,\39\|z){}$;\5
+${}\\{add}(\|z,\39\|z,\39\|z){}$;\5
+${}\\{add}(\|z,\39\|z,\39\|z){}$;\5
+${}\\{add}(\|a,\39\|z,\39\|a){}$;\5
+\&{break};\6
+\4\&{case} \T{7}:\5
+${}\\{add}(\|a,\39\|a,\39\|z){}$;\5
+${}\\{add}(\|a,\39\|z,\39\|z){}$;\5
+${}\\{add}(\|z,\39\|z,\39\|z){}$;\5
+${}\\{add}(\|a,\39\|z,\39\|a){}$;\5
+\&{break};\6
+\4\&{case} \T{0}:\5
+\&{case} \T{1}:\5
+\&{break};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{7}\B\X7:Precompute the power tables\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\T{10};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{table}[\T{1}][\|k][\T{0}]\K\|k;{}$\6
+\&{for} ${}(\|j\K\T{2};{}$ ${}\|j\Z\|m;{}$ ${}\|j\PP){}$\1\5
+${}\\{kmult}(\|k,\39\\{table}[\T{1}][\|k]){}$;\C{ compute $k^m$ }\2\6
+\&{for} ${}(\|j\K\T{2};{}$ ${}\|j\Z\|m+\T{1};{}$ ${}\|j\PP){}$\1\5
+${}\\{add}(\\{table}[\T{1}][\|k],\39\\{table}[\|j-\T{1}][\|k],\39\\{table}[%
+\|j][\|k]){}$;\C{ compute $j\cdot k^m$ }\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{8}\B\X8:Global variables\X${}\E{}$\6
+\&{int} \\{mdigs};\C{ our multiprecision arithmetic routine uses this many
+octabytes }\6
+\&{ull} ${}\\{table}[\\{maxm}+\T{2}][\T{10}][\\{maxdigs}]{}$;\C{ precomputed
+tables of $j\cdot k^m$ }\6
+\&{ull} \|z[\\{maxdigs}];\C{ temporary buffer for bignums }\par
+\A14.
+\U1.\fi
+
+\M{9}Here's a macro that delivers a given digit (nybble) of a mutlibyte number.
+
+\Y\B\4\D$\\{nybb}(\|a,\|p)$ \5
+$(\&{int})((\|a[\|p/\T{15}]\GG(\T{4}*(\|p\MOD\T{15})))\AND\T{\^f}{}$)\par
+\fi
+
+\M{10}When debugging, or operating verbosely, I want to see all digits of a
+multiprecise number, with a vertical bar just before digit number~\PB{\|t}.
+
+\Y\B\4\X4:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{printnum}(\&{ull} ${}{*}\|a,\39{}$\&{int} \|t)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|k;\7
+\&{for} ${}(\|k\K\|m;{}$ ${}\|k\G\T{0};{}$ ${}\|k\MM){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|t\E\|k){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"|"});{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"\%d"},\39\\{nybb}(\|a,\39\|k));{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{11}The algorithm. This program has the overall structure of a typical
+backtrack program, with a few twists. One of those twists is the
+state parameter~\PB{\\{pd}}, which is nonzero when the move at level~\PB{$\|l-%
+\T{1}$} was forced.
+(Such cases are rare, but important.)
+
+\Y\B\4\X11:Backtrack through all cases\X${}\E{}$\6
+\4\\{b1}:\5
+\X15:Initialize the data structures\X;\6
+\4\\{b2}:\5
+${}\\{profile}[\|l]\PP,\39\\{nodes}\PP;{}$\6
+\X12:Report the current state, if \PB{$\\{mems}\G\\{thresh}$}\X;\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{10};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{pdist}[\|l][\|k]\K\\{pdist}[\|l-\T{1}][\|k];{}$\6
+${}\\{dist}[\|l][\|k]\K\\{dist}[\|l-\T{1}][\|k]+(\|k\E\\{xl}\?\T{1}:\T{0});{}$\6
+\4${}\}{}$\2\6
+${}\\{oo},\39\\{oo}{}$;\C{ two mems to copy \PB{\\{pdist}} and \PB{\\{dist}},
+which could have been packed }\6
+\&{if} (\\{pd})\1\5
+\X22:Absorb a forced move\X\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\|r\E\T{0}){}$\1\5
+\&{goto} \\{b5};\C{ we haven't room to accept a new digit \PB{\\{xl}} }\2\6
+${}\|r\MM,\39\\{add}(\\{sig}[\|l-\T{1}],\39\\{table}[\T{1}][\\{xl}],\39\\{sig}[%
+\|l]);{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|l>\|m+\T{1}){}$\1\5
+\X17:Print a solution and \PB{\&{goto} \\{b5}}\X;\2\6
+\4\\{b3}:\5
+\&{if} ${}(\\{vbose}>\T{1}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Level\ \%d,\ trying\ \%d}\)\.{\ (\%lld\ mems)%
+\\n"},\39\|l,\39\\{xl},\39\\{mems});{}$\2\6
+\X18:If there's an easy way to prove that $x_l$ can't be \PB{$\Z$ \\{xl}}, \PB{%
+\&{goto} \\{b5}}\X;\6
+\4\\{move}:\5
+\X16:Advance to the next level with $x_l=\PB{\\{xl}}$ and \PB{\&{goto} \\{b2}}%
+\X;\6
+\4\\{b4}:\5
+\&{if} (\\{xl})\5
+${}\{{}$\1\6
+${}\\{xl}\MM;{}$\6
+${}\|o,\39\\{pd}\K\\{pdist}[\|l][\\{xl}]{}$;\C{ \PB{\\{dist}[\|l][\\{xl}]} was
+zero }\6
+\&{goto} \\{b3};\6
+\4${}\}{}$\2\6
+\4\\{b5}:\5
+\&{if} ${}(\MM\|l){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{pd}\K\\{pdsave}[\|l];{}$\6
+\&{if} (\\{pd})\1\5
+\&{goto} \\{b5};\2\6
+\X21:Restore the previous state at level \PB{\|l}\X;\6
+\&{goto} \\{b4};\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{12}\B\X12:Report the current state, if \PB{$\\{mems}\G\\{thresh}$}\X${}\E{}$%
+\6
+\&{if} ${}(\\{mems}\G\\{thresh}){}$\5
+${}\{{}$\1\6
+${}\\{thresh}\MRL{+{\K}}\T{10000000000};{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"After\ \%lld\ mems:"},\39\\{mems});{}$\6
+\&{for} ${}(\|k\K\T{2};{}$ ${}\|k\Z\|l;{}$ ${}\|k\PP){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ \%lld"},\39\\{profile}[\|k]);{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
+\4${}\}{}$\2\par
+\U11.\fi
+
+\M{13}The purpose of backtrack level \PB{\|l} is to compute the $l$th largest
+digit,
+$x_l$, of a solution~$x$, assuming that $x_1$, \dots,~$x_{l-1}$ have already
+been specified.
+
+The main idea is to compute bounds $a_l$ and $b_l$ such that $a_l\le x\le b_l$
+must be valid, whenever $x_1$, \dots,~$x_{l-1}$ have the given values and
+$x_l$ is at most a given threshold value~\PB{\\{xl}}. Those bounds, like all of
+the
+multiprecise numbers in this computation, are $(m+1)$-digit numbers whose
+individual digits are $a_{lm}\ldots a_{l0}$ and $b_{lm}\ldots b_{l0}$.
+They share a common prefix $p_m\ldots p_{t+1}$ of length $m+1-t$; thus
+if $a_l<b_l$ we have $0\le t\le m$ and $a_{lt}<b_{lt}$.
+
+The main point is that each of the digits in the multiset
+$P=\{p_m,\ldots,p_{t+1}\}$ must appear in~$x$, and so must each of the
+digits in the multiset $D=\{d_1,\ldots,d_{t-1}\}$. Therefore we know that
+each of the digits in $S=P\cup D$ must be present in any solution~$x$.
+(Recall that if $d$ appears $a$ times in a multiset~$A$ and $b$ times in
+a multiset~$B$, then it appears $\max(a,b)$ times in $A\cup B$.)
+
+The digit \PB{\|d} occurs \PB{\\{dist}[\|l][\|d]} times in $D$ and \PB{%
+\\{pdist}[\|l][\|d]} times in~$P$.
+If \PB{$\|d>\\{xl}$} we must have \PB{$\\{pdist}[\|l][\|d]\Z\\{dist}[\|l][%
+\|d]$}.
+If \PB{$\|d\K\\{xl}$} we set $\PB{\\{pd}}=\max(0,\PB{\\{pdist}}[l][d]-\PB{%
+\\{dist}}[l][d])$.
+Thus, if \PB{\\{xl}} occurs thrice in $D$ but only
+once in~$P$, we have $pd=0$; but if \PB{\\{xl}} occurs thrice in $P$ but only
+once in~$D$, we have $pd=2$. In the latter case we must choose $x_l=\PB{%
+\\{xl}}$
+and also $x_{l+1}=\PB{\\{xl}}$.
+
+Let \PB{\|r} be the number of unknown digits of \PB{\|x}. (When \PB{$\\{pd}\K%
+\T{0}$}, this is
+$m+1$ minus $\vert S\vert$, the number of known digits.) If
+$a_{lt}<b_{lt}<\PB{\\{xl}}$,
+we know that $r>0$ and that one of the unknown digits lies between
+$a_{lt}$ and~$b_{lt}$, inclusive.
+
+When \PB{\\{xl}} decreases, the bounds get tighter, hence the prefix can
+become longer. And that's good.
+
+These are the key facts governing our bounds $a_l$ and $b_l$. In order
+to do the computations conveniently we maintain the sum of known digits,
+$\PB{\\{sig}}[l]=\sum_{k=0}^{xl-1}\PB{\\{pdist}}[l][k]\cdot k^m+
+\sum_{k=xl}^9\PB{\\{dist}}[l][k]\cdot k^m+\PB{\\{pd}}\cdot\PB{\\{xl}}^m$.
+
+\fi
+
+\M{14}\B\X8:Global variables\X${}\mathrel+\E{}$\6
+\&{int} ${}\\{dist}[\\{maxm}+\T{1}][\T{16}],{}$ ${}\\{pdist}[\\{maxm}+\T{1}][%
+\T{16}];{}$\6
+\&{ull} ${}\|a[\\{maxm}+\T{1}][\\{maxdigs}],{}$ ${}\|b[\\{maxm}+\T{1}][%
+\\{maxdigs}],{}$ ${}\\{sig}[\\{maxm}+\T{1}][\\{maxdigs}];{}$\6
+\&{int} ${}\|x[\\{maxm}+\T{1}],{}$ ${}\\{rsave}[\\{maxm}+\T{1}],{}$ ${}%
+\\{tsave}[\\{maxm}+\T{1}],{}$ ${}\\{pdsave}[\\{maxm}+\T{1}]{}$;\par
+\fi
+
+\M{15}\B\X15:Initialize the data structures\X${}\E{}$\6
+$\|l\K\T{1};{}$\6
+${}\\{pd}\K\\{pdsave}[\T{1}]\K\T{0};{}$\6
+${}\\{alt}\K\T{0},\39\\{blt}\K\T{9};{}$\6
+${}\|t\K\|m,\39\|r\K\|m+\T{1};{}$\6
+${}\\{xl}\K\T{9};{}$\6
+${}\\{profile}[\T{1}]\K\T{1};{}$\6
+\&{goto} \\{b3};\C{ I really don't want to do step \PB{\\{b2}} at root level! }%
+\par
+\U11.\fi
+
+\M{16}\B\X16:Advance to the next level with $x_l=\PB{\\{xl}}$ and \PB{\&{goto} %
+\\{b2}}\X${}\E{}$\6
+$\\{oo},\39\\{tsave}[\|l]\K\|t,\39\\{rsave}[\|l]\K\|r;{}$\6
+${}\|o,\39\\{pdsave}[\|l]\K\\{pd};{}$\6
+${}\|o,\39\|x[\|l\PP]\K\\{xl};{}$\6
+\&{goto} \\{b2};\par
+\U11.\fi
+
+\M{17}\B\X17:Print a solution and \PB{\&{goto} \\{b5}}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{count}\PP;{}$\6
+${}\\{printf}(\.{"\%d:\ "},\39\\{count});{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\|m+\T{1};{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\.{"\%d"},\39\|x[\|k]);{}$\2\6
+\\{printf}(\.{"->"});\6
+\&{for} ${}(\|k\K\|m;{}$ ${}\|k\G\T{0};{}$ ${}\|k\MM){}$\1\5
+${}\\{printf}(\.{"\%d"},\39\\{nybb}(\\{sig}[\|l],\39\|k));{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\&{goto} \\{b5};\6
+\4${}\}{}$\2\par
+\U11.\fi
+
+\M{18}When this code is performed, \PB{\\{sig}[\|l]} and \PB{\\{dist}[\|l]} and
+\PB{\\{pdist}[\|l]}
+are supposed to be up to date, as well as \PB{\\{xl}}, \PB{\|t}, \PB{\|r}, \PB{%
+\\{alt}}, and \PB{\\{blt}}.
+
+\Y\B\4\X18:If there's an easy way to prove that $x_l$ can't be \PB{$\Z$ %
+\\{xl}}, \PB{\&{goto} \\{b5}}\X${}\E{}$\6
+\4\\{loop}:\5
+\&{if} ${}(\|t\G\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{change}\K\T{0};{}$\6
+\X19:Recompute $a_l$ and $b_l$\X;\6
+\&{if} ${}(\\{vbose}>\T{2}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ a="});{}$\6
+${}\\{printnum}(\|a[\|l],\39\|t);{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{",b="});{}$\6
+${}\\{printnum}(\|b[\|l],\39\|t);{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
+\4${}\}{}$\2\6
+\&{if} (\\{change})\1\5
+\&{goto} \\{loop};\C{ either $a_l$ or $b_l$ or both can be improved }\2\6
+\&{while} ${}(\\{alt}\E\\{blt}){}$\1\5
+\X20:Increase the current prefix, or \PB{\&{goto} \\{b5}}\X;\2\6
+\&{if} (\\{change})\1\5
+\&{goto} \\{loop};\2\6
+\4${}\}{}$\2\par
+\U11.\fi
+
+\M{19}The numbers \PB{\\{alt}} and \PB{\\{blt}} just past the prefix give
+important constraints
+on what the future can bring. If we can improve them, we can often
+improve them further yet, and possibly even extend the prefix.
+
+\Y\B\4\X19:Recompute $a_l$ and $b_l$\X${}\E{}$\6
+\&{if} ${}(\\{blt}<\\{xl}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|r\E\T{0}){}$\1\5
+\&{goto} \\{b5};\2\6
+${}\\{add}(\\{sig}[\|l],\39\\{table}[\T{1}][\\{alt}],\39\|a[\|l]){}$;\C{ $a_l%
+\gets\PB{\\{sig}}[l]+\PB{\\{alt}}^m$ }\6
+${}\\{add}(\\{sig}[\|l],\39\\{table}[\T{1}][\\{blt}],\39\|b[\|l]);{}$\6
+${}\\{add}(\|b[\|l],\39\\{table}[\|r-\T{1}][\\{xl}],\39\|b[\|l]){}$;\C{ $b_l%
+\gets\PB{\\{sig}}[l]+\PB{\\{blt}}^m+(r-1)\cdot\PB{\\{xl}}^m$ }\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{mdigs};{}$ ${}\|k\PP){}$\1\5
+${}\\{oo},\39\|a[\|l][\|k]\K\\{sig}[\|l][\|k]{}$;\C{ $a_l\gets\PB{\\{sig}}[l]$
+}\2\6
+${}\\{add}(\\{sig}[\|l],\39\\{table}[\|r][\\{xl}],\39\|b[\|l]){}$;\C{ $b_l\gets%
+\PB{\\{sig}}[l]+r\cdot\PB{\\{xl}}^m$ }\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|o,\39\\{alt}\I\\{nybb}(\|a[\|l],\39\|t)){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{alt}>\\{nybb}(\|a[\|l],\39\|t)){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Confusion\ (a\ decrea}\)\.{sed)!\\n"});{}$\6
+${}\\{exit}({-}\T{13});{}$\6
+\4${}\}{}$\2\6
+${}\\{alt}\K\\{nybb}(\|a[\|l],\39\|t);{}$\6
+\&{if} ${}(\\{blt}<\\{xl}){}$\1\5
+${}\\{change}\K\T{1};{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|o,\39\\{blt}\I\\{nybb}(\|b[\|l],\39\|t)){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{blt}<\\{nybb}(\|b[\|l],\39\|t)){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Confusion\ (b\ increa}\)\.{sed)!\\n"});{}$\6
+${}\\{exit}({-}\T{14});{}$\6
+\4${}\}{}$\2\6
+${}\\{blt}\K\\{nybb}(\|b[\|l],\39\|t);{}$\6
+\&{if} ${}(\\{blt}<\\{xl}){}$\1\5
+${}\\{change}\K\T{1};{}$\2\6
+\4${}\}{}$\2\par
+\U18.\fi
+
+\M{20}Here's the most delicate (and most important) part, as we've learned
+another digit of~\PB{\|x}.
+
+Incidentally, here's an interesting example of a ``flowchart'' where
+a \PB{\&{goto}} statement seems necessary without repeating code. Consider
+two conditions $A$ and $B$, and two actions $\alpha$ and $\beta$.
+If $A$ and $B$, we want to do $\alpha$ then~$\beta$;
+if $A$ and not $B$, we want to do nothing;
+if not~$A$, we want to do $\beta$. Without a \PB{\&{goto}} I must either
+evaluate $A$ twice (as in
+`if (not $A$) or $B$ then (if $A$ do $\alpha$; do~$\beta$)')
+or code $\beta$ twice (as in
+`if $A$ then (if $B$ do $\alpha$ and $\beta$) else do $\beta$').
+
+\Y\B\4\X20:Increase the current prefix, or \PB{\&{goto} \\{b5}}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|o,\39\|p\K\\{pdist}[\|l][\\{blt}];{}$\6
+\&{if} ${}(\\{blt}\G\\{xl}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|o,\39\|p<\\{dist}[\|l][\\{blt}]){}$\1\5
+\&{goto} \\{okay};\C{ a ``necessary'' \PB{\&{goto}}! }\2\6
+\&{if} ${}(\\{blt}>\\{xl}){}$\1\5
+\&{goto} \\{b5};\C{ oops, we've already saturated that digit }\2\6
+${}\\{pd}\K\|p+\T{1}-\\{dist}[\|l][\\{blt}]{}$;\C{ \PB{\\{pd}} becomes
+positive, if it wasn't already }\6
+\4${}\}{}$\2\6
+\&{if} ${}(\MM\|r<\T{0}){}$\1\5
+\&{goto} \\{b5};\2\6
+${}\\{add}(\\{sig}[\|l],\39\\{table}[\T{1}][\\{blt}],\39\\{sig}[\|l]){}$;\C{
+newly known digit less than \PB{\\{xl}} }\6
+\4\\{okay}:\5
+${}\|o,\39\\{pdist}[\|l][\\{blt}]\K\|p+\T{1};{}$\6
+${}\|t\MM,\39\\{change}\K\T{1};{}$\6
+\&{if} ${}(\|t<\T{0}){}$\1\5
+\&{break};\2\6
+${}\\{oo},\39\\{alt}\K\\{nybb}(\|a[\|l],\39\|t),\39\\{blt}\K\\{nybb}(\|b[\|l],%
+\39\|t);{}$\6
+\4${}\}{}$\2\par
+\U18.\fi
+
+\M{21}\B\X21:Restore the previous state at level \PB{\|l}\X${}\E{}$\6
+$\\{oo},\39\|t\K\\{tsave}[\|l],\39\|r\K\\{rsave}[\|l];{}$\6
+\&{if} ${}(\|t\G\T{0}){}$\1\5
+${}\\{oo},\39\\{alt}\K\\{nybb}(\|a[\|l],\39\|t),\39\\{blt}\K\\{nybb}(\|b[\|l],%
+\39\|t);{}$\2\6
+\&{else}\1\5
+${}\\{alt}\K\\{blt}\K\T{9};{}$\2\6
+${}\|o,\39\\{xl}\K\|x[\|l]{}$;\par
+\U11.\fi
+
+\M{22}When \PB{\\{dist}} is ``catching up'' with \PB{\\{pdist}}, we don't
+change \PB{\\{sig}},
+because a digit that occurred in the prefix was already accounted for;
+we knew that an \PB{\\{xl}} would be coming, and it has finally arrived.
+(Also \PB{\|t} and \PB{\|r} remain unchanged.)
+
+\Y\B\4\X22:Absorb a forced move\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{vbose}>\T{1}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Level\ \%d,\ that\ \%d\ w}\)\.{as\ forced%
+\\n"},\39\|l,\39\\{xl});{}$\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{mdigs};{}$ ${}\|k\PP){}$\1\5
+${}\\{oo},\39\\{sig}[\|l][\|k]\K\\{sig}[\|l-\T{1}][\|k];{}$\2\6
+\&{if} ${}(\MM\\{pd}){}$\1\5
+\&{goto} \\{move};\2\6
+\4${}\}{}$\2\par
+\U11.\fi
+
+\N{1}{23}Index.
+\fi
+
+\inx
+\fin
+\con

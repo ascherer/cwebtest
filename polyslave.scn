@@ -1,0 +1,34 @@
+\I\X21:Add \PB{\|p} counters\X
+\U17.
+\I\X13:Change the source or target address and \PB{\&{goto} \\{restart}}\X
+\U12.
+\I\X23:Check that \PB{\|p} has the correct value\X
+\U22.
+\I\X19:Clear \PB{\|p} counters\X
+\U17.
+\I\X20:Copy \PB{\|p} counters\X
+\U17.
+\I\X27:Dump all information needed to restart\X
+\U26.
+\I\X22:Finish a row; \PB{\&{goto} \\{done}} if it was the last\X
+\U17.
+\I\X5, 7, 14, 16, 28:Global variables\X
+\U1.
+\I\X26:Go into special shutdown mode\X
+\U23.
+\I\X15:Initialize\X
+\U1.
+\I\X17:Interpret the instructions in the input\X
+\U1.
+\I\X6, 18:Local variables\X
+\U1.
+\I\X24:Output the relevant counters for completed polyominoes\X
+\U22.
+\I\X25:Print statistics\X
+\U1.
+\I\X4:Scan the command line\X
+\U1.
+\I\X3, 8, 9, 10, 12:Subroutines\X
+\U1.
+\I\X2, 11:Type definitions\X
+\U1.

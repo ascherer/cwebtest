@@ -1,0 +1,20 @@
+\I\X7:Assign rank to sets and print independent ones\X
+\U4.
+\I\X5:Create empty list\X
+\U4.
+\I\X9:Find all sets in list \PB{\\{nh}} that already contain \PB{\|y} and
+remove excess elements from \PB{\|t}\X
+\U8.
+\I\X3:Initialize list memory to available\X
+\U1.
+\I\X10:Insert $y\cup a$ for each $a\in t$\X
+\U8.
+\I\X4:Pass from rank $r$ to $r+1$\X
+\U1.
+\I\X6:Return list \PB{\|h} to available storage\X
+\U4.
+\I\X2:Set initial contents of \PB{\\{rank}} table\X
+\U1.
+\I\X8, 11, 12, 13, 14, 15, 16, 17, 18:Subroutines\X
+\U1.
+

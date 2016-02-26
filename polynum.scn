@@ -1,0 +1,112 @@
+\I\X74:Allocate \PB{$\|p\MG\\{addr}$} (downward) and check that memory hasn't
+overflowed\X
+\U73.
+\I\X70:Allocate \PB{$\|p\MG\\{addr}$} (upward) and check that memory hasn't
+overflowed\X
+\U69.
+\I\X42:Append \PB{\\{cm}} to the current partial component\X
+\Us38\ET49.
+\I\X43:Append \PB{\\{cm}} to \PB{$\\{stk}[\|s].\\{open\_cost}$}\X
+\Us38, 42, 47\ETs49.
+\I\X45:Append \PB{$\\{stk}[\|s+\T{1}].\\{open\_cost}$} to \PB{$\\{stk}[\|s].%
+\\{open\_cost}$}\X
+\U44.
+\I\X100:Canonize the configuration\X
+\Us97\ET103.
+\I\X88:Cautiously delete a \PB{\\{mid}} that may be leftmost\X
+\U84.
+\I\X89:Cautiously delete a \PB{\\{mid}} that may be rightmost\X
+\U84.
+\I\X94:Cautiously introduce a new \PB{\\{one}}\X
+\U90.
+\I\X84:Change array \PB{\|c} for target $\alpha_0$\X
+\Us80\ET83.
+\I\X90:Change array \PB{\|c} for target $\alpha_1$\X
+\Us80\ET83.
+\I\X105:Check if this run has gone on too long\X
+\U79.
+\I\X44:Combine the top two items on the stack\X
+\Us38, 49\ETs52.
+\I\X40:Compress $\.-^*\.)$ following \.( into a single token in Phase 0\X
+\U38.
+\I\X50:Compress $\.-^*\.)$ following \.( into a single token in Phase 1\X
+\U49.
+\I\X41:Compress $\.-^*\.)$ following \.- into a single token in Phase 0\X
+\U38.
+\I\X51:Compress $\.-^*\.)$ following \.- into a single token in Phase 1\X
+\U49.
+\I\X93:Downgrade the next component if it is open\X
+\U90.
+\I\X87:Downgrade the predecessor of the \PB{\\{rt}}\X
+\U84.
+\I\X96:Downgrade the previous component if it is open\X
+\U95.
+\I\X86:Downgrade the successor of the \PB{\\{lft}}\X
+\U84.
+\I\X107:Dump all information needed to restart\X
+\U105.
+\I\X16:Empty the buffer and close the output file\X
+\Us4\ET106.
+\I\X46:Finish processing \PB{\\{lft}}\X
+\Us38\ET49.
+\I\X47:Finish processing \PB{\\{mid}}\X
+\Us38\ET49.
+\I\X52:Finish the connectivity bound calculation and return the answer\X
+\U35.
+\I\X102:Get a downward slot for \PB{\\{target}} if it is really viable\X
+\U97.
+\I\X104:Get an upward slot for \PB{\\{target}} if it is really viable\X
+\U103.
+\I\X79:Get ready for a downward pass, or \PB{\&{break}} when done\X
+\U78.
+\I\X82:Get ready for an upward pass, or \PB{\&{break}} when done\X
+\U78.
+\I\X36:Get ready to compute connectivity\X
+\U35.
+\I\X7, 8, 18, 27, 34, 39, 57, 65, 68, 71, 85, 98, 108, 110:Global variables\X
+\U4.
+\I\X101:If \PB{\\{target}} is already present, make \PB{\|p} point to it\X
+\Us97\ET103.
+\I\X15, 58, 62, 66, 77:Initialize\X
+\U4.
+\I\X67, 99:Local variables\X
+\U4.
+\I\X95:Make special corrections at the right edge\X
+\U90.
+\I\X91:Merge with the mate of the former \PB{\\{lft}}\X
+\U90.
+\I\X92:Merge with the mate of the former \PB{\\{rt}}\X
+\U90.
+\I\X78:Output instructions for the postprocessor\X
+\U4.
+\I\X80:Pass downward over all configurations created on the previous pass\X
+\U78.
+\I\X83:Pass upward over all configurations created on the previous pass\X
+\U78.
+\I\X109:Print and clear the hash/slot tables\X
+\U81.
+\I\X81:Print current stats and clear the hash/slot tables\X
+\Us79\ET82.
+\I\X72:Print statistics about this run\X
+\Us4\ET105.
+\I\X97:Process target configuration \PB{\|c} (downward)\X
+\U80.
+\I\X103:Process target configuration \PB{\|c} (upward)\X
+\U83.
+\I\X38:Scan a nonzero token cluster in Phase 0\X
+\U35.
+\I\X49:Scan a nonzero token cluster in Phase 1\X
+\U35.
+\I\X37:Scan for zeros in Phase 0\X
+\U35.
+\I\X48:Scan for zeros in Phase 1\X
+\U35.
+\I\X6:Scan the command line\X
+\U4.
+\I\X106:Shut down the {\mc POLYSLAVE} process\X
+\U105.
+\I\X5, 9, 10, 11, 13, 14, 17, 30, 31, 32, 35, 55, 56, 59, 63, 64, 69, 73, 75,
+76:Subroutines\X
+\U4.
+\I\X12, 26, 28, 29, 33, 54, 60, 61:Type definitions\X
+\U4.

@@ -1,0 +1,653 @@
+\input cwebmac
+\datethis
+\def\sqprod{\setbox0=\hbox{\kern-.13em$\times$\kern-.13em}
+     \dimen0=\ht0 \advance\dimen0 -.09em \ht0=\dimen0
+     \dimen0=\dp0 \advance\dimen0 -.09em \dp0=\dimen0
+     \mathbin{\vcenter{\hrule\kern-.4pt
+       \hbox{\vrule\kern-.4pt\phantom{$\box0$}\kern-.4pt\vrule}\kern-.4pt
+       \hrule}}}
+
+
+\N{1}{1}Intro. This program enumerates biconnected squaregraphs of small order,
+more or less by brute force.
+
+Every such graph of perimeter $2p$ is definable by a set partition of
+$2p$ elements into $p$ blocks of size~2. Equivalently, it's definable
+by a restricted growth string of a very simple kind, namely
+a permutation of the multiset $\{0,0,1,1,\ldots,p-1,p-1\}$ in which the first
+appearance of $j>0$ is preceded by $j-1$. For example, the restricted
+growth string $01023132$ corresponds to the set partition
+$13\mid26\mid48\mid57$.
+
+However, the set partition is considered to be {\it circular}, so that
+it corresponds to taking $2p$ points around a circle and connecting them
+by chords. Positions $(1,2,\ldots,8)$ around a circle are equivalent to
+positions $(2,\ldots,8,1)$; so the set partition above is also equivalent
+to $24\mid37\mid51\mid68$, which has the restricted growth string
+$01210323$. And there are six others, because we consider $2p$
+cyclic shifts.
+
+Therefore it turns out that restricted growth strings are not the
+best representations of the set partitions in this application. Instead
+we use the cyclic distances or ``deltas'' to the next occurrence of each
+symbol; for instance, the growth string $01023132$ corresponds to the delta
+sequence $24642464$. Cyclic shifting of the growth sequence is complicated,
+because the digits need to be renamed; the delta sequence, however,
+simply shifts cyclically. For instance, the delta sequence of $01210323$
+is $46424642$.
+
+A squaregraph is represented by its {\it canonical
+sequence}, which is the lexicographically smallest of the $2p$
+associated delta sequences. In our example, the smallest
+turns out to be $24642464$. (And only four of the eight possible shifts
+actually lead to different results in this case, because the
+graph has a nontrivial automorphism.)
+
+Two additional restrictions must be satisfied. First, the restricted
+growth sequence must not contain a subword of the form $abcabc$ (not
+necessarily consecutive). Our example satisfies this restriction, because
+the relevant subwords of $01023132$ are $010212$, $010313$, $002332$, $123132$,
+and because the condition is preserved under cyclic shifting. When this
+restriction is met, there's a unique way to subdivide the circle into regions
+by connecting the chords. (The algorithm below demonstrates this fact
+constructively.)
+
+Each of the regions just mentioned will have two or more vertices,
+where the paths between consecutive vertices are either segments of the
+circle or segments of a chord. Furthermore, a region whose boundaries
+are interior --- not segments of the enclosing circle --- will always have
+four or more vertices. (Again, the algorithm below will prove this.)
+
+The squaregraph that corresponds to a canonical string that meets
+this conditions is defined to be
+the dual of the region graph, namely the graph whose vertices are the
+regions, with adjacency defined as sharing the same segment of a chord.
+For example, $24642464$ turns out to be the graph of the
+so-called ``straight tromino,'' also known as $P_4\sqprod K_2$.
+
+A final constraint is that none of the regions may include more than one
+circle segment. For example, set partitions like $0011$ and $01012323$ are
+disallowed. This restriction makes the squaregraph biconnected,
+because it is equivalent to saying that there are no
+articulation points.
+
+The reader who tries to draw the resulting graphs will soon understand
+why the name ``squaregraphs'' is brilliant.
+(Also the Wikipedia already has a nice example picture!)
+
+One might argue whether or not the shortest possible sequence, $00$,
+is a biconnected squaregraph. Is the ``bridge'' $K_2$ biconnected?
+In fact, should the empty string perhaps also qualify?
+Anyway this program starts out with $p=3$, because the smaller cases
+are obvious. (For example, the only biconnected squaregraph with $p=2$
+is the square $C_4$, which corresponds to the canonical sequence $2222$.)
+
+For each squaregraph we give its canonical sequence, $\delta_0\delta_1\ldots
+\delta_{2p-1}$; the number of interior vertices, $q$; and the number
+of squares, $s$. The graph then has $2p+q$ vertices altogether, and
+$p+2s$ edges. We also compute the automorphisms, which are ``dihedral'': cyclic
+and/or reflected.  In verbose mode, the full graph is listed as well.
+
+If a squaregraph is not isomorphic to its reflection,
+we list it only once, by taking the minimum of the
+two canonical sequences.
+
+\fi
+
+\M{2}OK, here we go.
+
+One simplification is obvious: The first element $\delta_0$ of the delta
+sequence can't be~1, because that would produce an articulation point.
+And because the sequence is canonical, we must have $\delta_j\ge\delta_0$
+for all $j$. In particular, $\delta_0\le p$; and in fact $\delta_0=p$
+is impossible, when $p>2$, because of the $abcabc$ condition.
+
+When reporting totals, we consider both ``unlabeled'' delta sequences
+(reduced by symmetries to canonical form) and ``labeled'' ones
+(not reduced by symmetries). For example, $24642464$ corresponds to
+three different labeled solutions, namely $46424642$ and $64246424$
+in addition to itself.
+
+The labeling condition essentially corresponds to assigning a direction
+to one edge on the periphery of the squarefree graph. That edge and
+that direction tell us what the delta sequence is; the delta sequence
+determines all other vertices and edges uniquely, in any squaregraph.
+
+\Y\B\4\D$\\{maxp}$ \5
+\T{10}\C{ upper bound on $p$ }\par
+\B\4\D$\\{verbose}$ \5
+$(\\{argc}>\T{1}{}$)\C{ a command-line parameter triggers verbosity }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\X3:Global variables\X;\7
+\&{int} \\{pp};\C{ the current perimeter }\6
+\&{int} \\{ptot}${},{}$ \\{pltot};\C{ how many found with the current perimeter
+}\6
+\&{int} ${}\\{vtot}[\\{maxp}*\\{maxp}],{}$ ${}\\{vltot}[\\{maxp}*\\{maxp}],{}$
+${}\\{stot}[\\{maxp}*\\{maxp}],{}$ ${}\\{sltot}[\\{maxp}*\\{maxp}]{}$;\C{ how
+many graphs found with a given number of vertices or squares }\7
+\X6:Subroutines\X;\7
+\\{main}(\&{int} \\{argc})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|l${},{}$ \|p${},{}$ \|q${},{}$ %
+\|s;\6
+\&{int} \\{rfl}${},{}$ \\{rot};\7
+\&{for} ${}(\|p\K\T{3};{}$ ${}\|p\Z\\{maxp};{}$ ${}\|p\PP){}$\5
+${}\{{}$\1\6
+${}\\{pp}\K\|p+\|p;{}$\6
+${}\\{ptot}\K\\{pltot}\K\T{0};{}$\6
+\&{for} ${}(\|j\K\T{2};{}$ ${}\|j<\|p;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\X4:Initialize the delta sequence, with $\delta_0=j$\X;\6
+\X5:Generate all answers for $(p,j)$\X;\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"\%d\ (\%d\ labeled)\ wit}\)\.{h\ perimeter\ \%d;\ "},\39%
+\\{ptot},\39\\{pltot},\39\\{pp});{}$\6
+${}\\{printf}(\.{"\%d\ (\%d\ labeled)\ wit}\)\.{h\ \%d\ vertices;\ "},\39%
+\\{vtot}[\\{pp}],\39\\{vltot}[\\{pp}],\39\\{pp});{}$\6
+${}\\{printf}(\.{"\%d\ (\%d\ labeled)\ wit}\)\.{h\ \%d\ vertices;\ "},\39%
+\\{vtot}[\\{pp}+\T{1}],\39\\{vltot}[\\{pp}+\T{1}],\39\\{pp}+\T{1});{}$\6
+${}\\{printf}(\.{"\%d\ (\%d\ labeled)\ wit}\)\.{h\ \%d\ squares.\\n"},\39%
+\\{stot}[\|p-\T{1}],\39\\{sltot}[\|p-\T{1}],\39\|p-\T{1});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{3}Generating the deltas.
+The delta sequence is stored in array \PB{\\{del}}, and another array \PB{%
+\\{occ}}
+records the cells of the implicit restricted growth string that are
+currently known (``occupied''). If the first occurrence of $j$
+in the growth string is in cell $i_j$, we set $\PB{\\{back}}[i_j]=i_{j-1}$
+for $0<j<p$.
+
+\Y\B\4\X3:Global variables\X${}\E{}$\6
+\&{int} ${}\\{del}[\T{4}*\\{maxp}];{}$\6
+\&{int} ${}\\{occ}[\T{3}*\\{maxp}+\T{1}];{}$\6
+\&{int} ${}\\{back}[\T{2}*\\{maxp}]{}$;\par
+\A12.
+\U2.\fi
+
+\M{4}\B\X4:Initialize the delta sequence, with $\delta_0=j$\X${}\E{}$\6
+$\\{del}[\T{0}]\K\|j,\39\\{del}[\|j]\K\\{pp}-\|j;{}$\6
+${}\\{occ}[\T{0}]\K\\{occ}[\|j]\K\T{1};{}$\6
+${}\|k\K\T{1},\39\|s\K\T{0}{}$;\par
+\U2.\fi
+
+\M{5}This program is one of those backtrack jobs
+where I still like to use \PB{\&{goto}} statements,
+forty years after the ``structured programming revolution.''
+
+The value of \PB{\|s} points to the most recent entry that we've entered
+into the \PB{\\{del}} table. It's essentially a stack pointer.
+
+\Y\B\4\X5:Generate all answers for $(p,j)$\X${}\E{}$\6
+\4\\{advance}:\5
+\&{while} (\\{occ}[\|k])\1\5
+${}\|k\PP;{}$\2\6
+\&{if} ${}(\|k\E\\{pp}){}$\1\5
+\X8:Print the current \PB{\\{del}} table if it's a solution, then \PB{\&{goto} %
+\\{next}}\X;\2\6
+${}\\{occ}[\|k]\K\T{1},\39\\{back}[\|k]\K\|s;{}$\6
+${}\|l\K\|k+\|j{}$;\C{ the first conceivable way to place the mate of cell \PB{%
+\|k} }\6
+\4\\{nextslot}:\5
+\&{while} (\\{occ}[\|l])\1\5
+${}\|l\PP;{}$\2\6
+\&{if} ${}(\|l\G\\{pp}){}$\1\5
+\&{goto} \\{backtrack};\C{ no more places to match cell \PB{\|k} }\2\6
+\&{if} ${}(\\{abcabc}(\|k,\39\|l)){}$\5
+${}\{{}$\1\6
+${}\|l\PP{}$;\5
+\&{goto} \\{nextslot};\6
+\4${}\}{}$\2\6
+${}\\{del}[\|k]\K\|l-\|k,\39\\{del}[\|l]\K\\{pp}-\|l+\|k,\39\\{occ}[\|l]\K%
+\T{1};{}$\6
+${}\|s\K\|k\PP;{}$\6
+\&{goto} \\{advance};\6
+\4\\{next}:\5
+${}\\{occ}[\|s+\\{del}[\|s]]\K\T{0};{}$\6
+${}\|k\K\|s;{}$\6
+\4\\{backtrack}:\5
+${}\\{occ}[\|k]\K\T{0};{}$\6
+${}\|k\K\\{back}[\|k];{}$\6
+\&{if} (\|k)\5
+${}\{{}$\1\6
+${}\|l\K\|k+\\{del}[\|k],\39\\{occ}[\|l]\K\T{0},\39\|l\PP;{}$\6
+\&{goto} \\{nextslot};\6
+\4${}\}{}$\2\6
+${}\\{occ}[\|j]\K\T{0}{}$;\par
+\U2.\fi
+
+\M{6}\B\X6:Subroutines\X${}\E{}$\6
+\&{int} \\{abcabc}(\&{int} \|k${},\39{}$\&{int} \|l)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j;\7
+\&{for} ${}(\|j\K\\{back}[\|k];{}$ \|j; ${}\|j\K\\{back}[\|j]){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|l<\|j+\\{del}[\|j]){}$\1\5
+\&{continue};\2\6
+\&{for} ${}(\|i\K\\{back}[\|j];{}$  ; ${}\|i\K\\{back}[\|i]){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|j+\\{del}[\|j]<\|i+\\{del}[\|i]){}$\1\5
+\&{goto} \.{OK};\2\6
+\&{if} ${}(\|i+\\{del}[\|i]<\|k){}$\1\5
+\&{goto} \.{OK};\2\6
+\&{return} \T{1};\C{ $abcabc$ failure: $i<j<k<i+\delta_i<j+\delta_j<l$ }\6
+\4\.{OK}:\5
+\&{if} ${}(\|i\E\T{0}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{return} \T{0};\C{ no problem }\6
+\4${}\}{}$\2\par
+\As13, 15, 18, 19\ETs20.
+\U2.\fi
+
+\N{1}{7}Testing canonicity. We want to reject a delta sequence that isn't
+canonical, namely when it (or its reflection) has a cyclic shift
+that's smaller. While we're doing this we can also determine any
+automorphisms (symmetries) that are present.
+
+When a sequence is canonical, we set \PB{$\\{rfl}\K\T{1}$} if it has reflection
+symmetry,
+and \PB{$\\{rot}\K\|q$} if it has \PB{\|q}-fold rotation symmetry. (The latter
+means
+that shifting by $2p/q$ yields the same result, where $q$ is as large
+as possible.)
+
+The reflection of a delta sequence $\delta_0\delta_1\ldots\delta_{2p-1}$ is
+$(2p-\delta_{2p-1})\ldots(2p-\delta_1)(2p-\delta_0)$. The delta sequence
+$24642464$, for example, has reflection $42464246$.
+Hence \PB{$\\{rfl}\K\T{1}$} and \PB{$\\{rot}\K\T{2}$}, corresponding to the
+four symmetries
+of the straight tromino.
+
+Incidentally, simply connected polyominoes are always squaregraphs.
+The L-tromino corresponds to delta sequence $23635256$; it has
+two symmetries, exhibited by \PB{$\\{rfl}\K\T{1}$} and \PB{$\\{rot}\K\T{1}$}.
+
+\fi
+
+\M{8}\B\X8:Print the current \PB{\\{del}} table if it's a solution, then \PB{%
+\&{goto} \\{next}}\X${}\E{}$\6
+${}\{{}$\1\6
+\X9:Determine the automorphisms, but \PB{\&{goto} \\{next}} if \PB{\\{del}}
+isn't canonical\X;\6
+\X16:Construct the graph corresponding to the chords of \PB{\\{del}}\X;\6
+\X22:Mark the regions, but \PB{\&{goto} \\{next}} if there's an articulation
+problem\X;\6
+\X23:Print \PB{\\{del}} and its characteristics\X;\6
+\X25:Update the totals\X;\6
+\&{goto} \\{next};\6
+\4${}\}{}$\2\par
+\U5.\fi
+
+\M{9}\B\X9:Determine the automorphisms, but \PB{\&{goto} \\{next}} if \PB{%
+\\{del}} isn't canonical\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{pp};{}$ ${}\|k\PP){}$\1\5
+${}\\{del}[\\{pp}+\|k]\K\\{del}[\|k];{}$\2\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\\{pp};{}$ ${}\|k\PP){}$\5
+${}\{{}$\C{ try cyclic shifting by \PB{\|k} }\1\6
+\&{for} ${}(\|q\K\|k;{}$ ${}\|q<\|k+\\{pp};{}$ ${}\|q\PP){}$\1\6
+\&{if} ${}(\\{del}[\|q]\I\\{del}[\|q-\|k]){}$\1\5
+\&{break};\2\2\6
+\&{if} ${}(\\{del}[\|q]<\\{del}[\|q-\|k]){}$\1\5
+\&{goto} \\{next};\C{ not canonical }\2\6
+\&{if} ${}(\|q\E\|k+\\{pp}){}$\1\5
+\&{break};\C{ match found }\2\6
+\4${}\}{}$\2\6
+${}\\{rot}\K\\{pp}/\|k{}$;\C{ \PB{\\{pp}} is a multiple of \PB{\|k} }\6
+\X10:Check the reflected delta sequence for canonicity and possible identity\X;%
+\par
+\U8.\fi
+
+\M{10}The reflected sequence is unchanged by a $k$-shift if and only if the
+unreflected sequence is.
+
+\Y\B\4\D$\\{rdel}(\|x)$ \5
+$\\{pp}-\\{del}[\\{pp}+\\{pp}-\|x{}$]\par
+\Y\B\4\X10:Check the reflected delta sequence for canonicity and possible
+identity\X${}\E{}$\6
+$\\{rfl}\K\T{0};{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\\{pp};{}$ ${}\|k\PP){}$\5
+${}\{{}$\C{ try cyclic shifting by \PB{\|k} }\1\6
+\&{for} ${}(\|q\K\|k;{}$ ${}\|q<\|k+\\{pp};{}$ ${}\|q\PP){}$\1\6
+\&{if} ${}(\\{rdel}(\|q)\I\\{del}[\|q-\|k]){}$\1\5
+\&{break};\2\2\6
+\&{if} ${}(\|q\E\|k+\\{pp}){}$\5
+${}\{{}$\1\6
+${}\\{rfl}\K\T{1};{}$\6
+\&{break};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{rdel}(\|q)<\\{del}[\|q-\|k]){}$\1\5
+\&{goto} \\{next};\C{ not canonical }\2\6
+\4${}\}{}$\2\par
+\U9.\fi
+
+\N{1}{11}Constructing the graph. Now comes the fun part, where we actually
+build the squaregraph vertices and edges, by constructing the regions
+defined by the chords.
+
+The data structure used here is undoubtedly overkill, but this program
+was written with an intent to favor transparency over trickery.
+
+Each region is represented as a cyclic sequence of edges, with
+\PB{$\|e[\|j].\\{succ}$} the index of the successor to edge~$j$. There are two
+kinds of edges, external and internal. External edge~$j$, for
+$1\le j\le2p$, simply corresponds to a segment of the enclosing circle,
+from point $j-1$ to point~$j$ (modulo~$2p$). An internal edge~$j$, on the
+other hand, can be distinguished from the external edges because $j>2p$;
+it represents a segment of the chord that runs between points \PB{$\|e[\|j].%
+\\{from}$}
+and \PB{$\|e[\|j].\\{to}$}. It also has a ``mate,'' $e[j\pm1]$, which runs the
+other way on the same chord segment and belongs to an adjacent region.
+
+After the whole graph has been constructed we will mark each edge
+with the number of the region to which it belongs.
+
+\fi
+
+\M{12}\B\X3:Global variables\X${}\mathrel+\E{}$\6
+\&{struct} ${}\{{}$\1\6
+\&{int} \\{succ};\C{ index of the next edge in this region }\6
+\&{int} \\{from}${},{}$ \\{to};\C{ points that define the chord, if internal }\6
+\&{int} \\{reg};\C{ region number }\2\6
+${}\}{}$ ${}\|e[\T{2}*\\{maxp}*\\{maxp}];{}$\6
+\&{int} \\{eptr};\C{ address of first unused entry in \PB{\|e} }\par
+\fi
+
+\M{13}New edges are allocated in mated pairs.
+
+The \PB{\|e} array, with \PB{$\T{2}*\\{maxp}*\\{maxp}$} entries, should have
+plenty of
+room for all the edges we need. But we check it, just to be sure.
+
+\Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{newedge}(\&{int} \|s${},\39{}$\&{int} \|t)\1\1\2\2\6
+${}\{{}$\1\6
+${}\|e[\\{eptr}].\\{from}\K\|e[\\{eptr}+\T{1}].\\{to}\K\|s;{}$\6
+${}\|e[\\{eptr}].\\{to}\K\|e[\\{eptr}+\T{1}].\\{from}\K\|t;{}$\6
+${}\|e[\\{eptr}].\\{reg}\K\|e[\\{eptr}+\T{1}].\\{reg}\K\T{0};{}$\6
+${}\\{eptr}\MRL{+{\K}}\T{2};{}$\6
+\&{if} ${}(\\{eptr}\G\T{2}*\\{maxp}*\\{maxp}){}$\5
+${}\{{}$\1\6
+${}\\{fprint}(\\{stderr},\39\.{"Memory\ overflow!\\n"});{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\6
+\&{return} \\{eptr}${}-\T{2};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{14}For convenience we assume that \PB{\\{eptr}} is always even, so that the
+mate
+of edge~$k$ is obtained by simply complementing the units bit of~$k$.
+
+\Y\B\4\D$\\{mate}(\|k)$ \5
+$((\|k)\XOR\T{1}{}$)\par
+\fi
+
+\M{15}We could have made the region lists doubly linked, but they tend to
+be short. Therefore it probably doesn't hurt to search sequentially
+for the predecessor of an edge.
+
+\Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{pred}(\&{int} \|k)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j;\7
+\&{for} ${}(\|j\K\|k;{}$ ${}\|e[\|j].\\{succ}\I\|k;{}$ ${}\|j\K\|e[\|j].%
+\\{succ}){}$\1\5
+;\2\6
+\&{return} \|j;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{16}The task of building the graph consists of starting with just the
+enclosing circle, then inserting the chords one by one.
+
+\Y\B\4\X16:Construct the graph corresponding to the chords of \PB{\\{del}}\X${}%
+\E{}$\6
+\X17:Initialize for chord placement\X;\6
+\&{for} ${}(\|k\K\|s;{}$  ; ${}\|k\K\\{back}[\|k]){}$\5
+${}\{{}$\1\6
+${}\\{newchord}(\|k,\39(\|k+\\{del}[\|k])\MOD\\{pp});{}$\6
+\&{if} ${}(\|k\E\T{0}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\par
+\U8.\fi
+
+\M{17}\B\X17:Initialize for chord placement\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\\{pp};{}$ ${}\|k\PP){}$\1\5
+${}\|e[\|k].\\{succ}\K\|k+\T{1},\39\|e[\|k].\\{reg}\K\T{0};{}$\2\6
+${}\|e[\\{pp}].\\{succ}\K\T{1},\39\|e[\\{pp}].\\{reg}\K\T{0};{}$\6
+${}\\{eptr}\K\\{pp}+\T{2}{}$;\C{ we want \PB{\\{eptr}} to be even, as mentioned
+earlier }\6
+${}\|e[\\{pp}+\T{1}].\\{reg}\K{-}\T{1}{}$;\C{ make the discarded edge unusable
+}\par
+\U16.\fi
+
+\M{18}The \PB{\\{newchord}} subroutine, which inserts a chord from point \PB{%
+\|s} to
+point~\PB{\|t}, is the heart of the computation. It subdivides existing regions
+that are crossed by the new chord.
+
+Consider, for example, the insertion of the very first chord. Then
+we want to insert a new edge, and its mate, so that there are two regions.
+External edge \PB{$\|s+\T{1}$} will then be succeeded by the new edge from \PB{%
+\|s} to~\PB{\|t},
+and external edge \PB{$\|t+\T{1}$} will be succeeded by the new edge from \PB{%
+\|t} to~\PB{\|s}.
+
+Every chord insertion process ends in a similar way, with the
+insertion of a new edge from \PB{\|t} to~\PB{\|s} that succeeds edge \PB{$\|t+%
+\T{1}$},
+and insertion of the mate edge from \PB{\|s} to~\PB{\|t} that succeeds some
+other edge~\PB{\|q}.
+
+\Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{finishchord}(\&{int} \|q${},\39{}$\&{int} \|s${},\39{}$\&{int} \|t)%
+\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|m${}\K\\{newedge}(\|s,\39\|t);{}$\7
+${}\|e[\|m].\\{succ}\K\|e[\|t+\T{1}].\\{succ},\39\|e[\|m+\T{1}].\\{succ}\K\|e[%
+\|q].\\{succ};{}$\6
+${}\|e[\|t+\T{1}].\\{succ}\K\|m+\T{1},\39\|e[\|q].\\{succ}\K\|m;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{19}A more complex operation is needed when we split a region by introducing
+an interior vertex. Then we need to create two new pairs of mated edges.
+One of these, from \PB{\|t} to~\PB{\|s}, becomes the successor of some
+{\it interior\/} edge~\PB{\|p}, which is being cut into two edges; its mate,
+from \PB{\|s} to~\PB{\|t}, becomes the successor of a given edge~\PB{\|q},
+which
+doesn't need to be cut. The second mated pair of new edges becomes
+the other half of edge~\PB{\|p} (and its mate) after cutting.
+
+The following subroutine returns the index of the internal edge that
+can be used to continue chord insertion on the next region to be
+encountered between \PB{\|s} and~\PB{\|t}.
+
+\Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{internalchord}(\&{int} \|p${},\39{}$\&{int} \|q${},\39{}$\&{int} %
+\|s${},\39{}$\&{int} \|t)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|m${}\K\\{newedge}(\|s,\39\|t),{}$ \\{mm}${}\K%
+\\{newedge}(\|e[\|p].\\{from},\39\|e[\|p].\\{to});{}$\6
+\&{register} \&{int} \\{pp}${}\K\\{mate}(\|p),{}$ \\{ppp}${}\K\\{pred}(%
+\\{pp});{}$\7
+${}\|e[\|m].\\{succ}\K\\{mm},\39\|e[\|m+\T{1}].\\{succ}\K\|e[\|q].\\{succ};{}$\6
+${}\|e[\\{mm}].\\{succ}\K\|e[\|p].\\{succ},\39\|e[\\{mm}+\T{1}].\\{succ}\K%
+\\{pp};{}$\6
+${}\|e[\|p].\\{succ}\K\|m+\T{1},\39\|e[\|q].\\{succ}\K\|m,\39\|e[\\{ppp}].%
+\\{succ}\K\\{mm}+\T{1};{}$\6
+\&{return} \\{mm}${}+\T{1};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{20}Now we're ready to insert a new chord in its entirety.
+
+We use the fact that points $(a,b,c)$ are ``cyclically ordered'' if and
+only if $(b-a)\bmod\PB{\\{pp}}<(c-a)\bmod\PB{\\{pp}}$.
+
+\Y\B\4\X6:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{newchord}(\&{int} \|s${},\39{}$\&{int} \|t)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|p${},{}$ \|q;\7
+\&{for} ${}(\|q\K\|s+\T{1};{}$  ; \,)\5
+${}\{{}$\1\6
+${}\|p\K\|e[\|q].\\{succ}{}$;\C{ the edge following \PB{\|q} will never be cut
+}\6
+\&{for} ${}(\|p\K\|e[\|p].\\{succ};{}$  ; ${}\|p\K\|e[\|p].\\{succ}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|p\E\|q){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"This\ can't\ happen\ (}\)\.{newchord\ loop)!%
+\\n"});{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|p\Z\\{pp}){}$\5
+${}\{{}$\C{ exterior edge }\1\6
+\&{if} ${}(\|p\E\|t+\T{1}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\C{ interior edge }\1\6
+\&{if} ${}(((\|t-\|e[\|p].\\{from}+\\{pp})\MOD\\{pp})<((\|e[\|p].\\{to}-\|e[%
+\|p].\\{from}+\\{pp})\MOD\\{pp})){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|p\Z\\{pp}){}$\1\5
+\&{break};\2\6
+${}\|q\K\\{internalchord}(\|p,\39\|q,\39\|s,\39\|t){}$;\C{ see the discussion
+below }\6
+\4${}\}{}$\2\6
+${}\\{finishchord}(\|q,\39\|s,\39\|t);{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{21}The situation that arises when the \PB{\\{internalchord}} routine is
+called in the loop above needs some justification and further explanation.
+
+Edge \PB{\|p} is an internal edge that goes from $s'$ to $t'$, say. We also
+know that the points $(s,s',t,t')$ appear in that order as we traverse the
+outer circle.
+
+If the predecessor of edge \PB{\|p} is also an internal edge, say from
+$s''$ to $t''$, then the points $(s,s'',s',t'',t')$ are in cyclic order.
+In order to be sure that the new chord from $s$ to~$t$ is forced to cut
+edge~$p$, we need to know that $(t'',t,t')$ are in cyclic order. The
+alternative is the cyclic order $(s,s'',s',t,t'',t')$; if that were true,
+the edge to cut would be ambiguous. Fortunately, however, the $abcabc$
+condition has ruled out such a possibility.
+
+A similar argument applies if the successor of edge \PB{\|p} is internal;
+again, we conclude that the \PB{\\{newchord}} algorithm is justified
+in cutting edge~\PB{\|p}.
+
+A fancier argument would set up an invariant relation on each region
+that arises during the construction process, showing that the
+endpoints of each internal edge maintain a simple cyclic relationship.
+Instead of making formal definitions, an example should suffice here:
+Consider a region with edges $(k_1,k_2,\ldots,k_8)$ in cyclic order,
+where $k_1$, $k_2$, and $k_5$ are external, while $k_3$ is
+internal from $s_3$ to $t_3$, etc. Then $k_2-1=k_1$, $s_3=k_2$, $t_4=k_5-1$,
+$s_6=k_5$, and $t_8=k_1-1$; and the points
+$$(k_1,k_2,s_4,t_3,k_5-1,k_5,s_7,t_6,s_8,t_7,k_1-1)$$
+are in cyclic order. Think about it.
+
+\fi
+
+\M{22}Once we've inserted the chords, we can construct the graph by
+giving each region an identifying number.
+
+At the same time we can reject cases with articulation points ---
+namely, when a region has more than one exterior edge.
+
+When this computation is finished, we will have discovered the total number of
+regions, \PB{\|l}, which is also the total number of vertices in the
+corresponding
+squaregraph.
+
+Note: We execute this code at a time when the local variables \PB{\|p}, \PB{%
+\|j},
+and~\PB{\|s} must not be changed. (They are part of the backtracking mechanism
+for delta sequences.) The author apologies for not subroutinizing everything.
+
+\Y\B\4\X22:Mark the regions, but \PB{\&{goto} \\{next}} if there's an
+articulation problem\X${}\E{}$\6
+\&{for} ${}(\|l\K\T{0},\39\|k\K\T{1};{}$ ${}\|k<\\{eptr};{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\|e[\|k].\\{reg}\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\|e[\|k].\\{reg}\K\PP\|l;{}$\6
+\&{for} ${}(\|q\K\|e[\|k].\\{succ};{}$ ${}\|e[\|q].\\{reg}\E\T{0};{}$ ${}\|q\K%
+\|e[\|q].\\{succ}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|q\Z\\{pp}){}$\1\5
+\&{goto} \\{next};\2\6
+${}\|e[\|q].\\{reg}\K\|l;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\par
+\U8.\fi
+
+\N{1}{23}Finishing up. The rest of this program is easy.
+
+When we're ready to print a delta sequence, we know the total number
+of vertices in the corresponding squarefree graph, \PB{\|l}. The total number
+of edges is also essentially known, because there are
+\PB{$(\\{eptr}-\\{pp}-\T{2})/\T{2}$} pairs of mates. Furthermore, each square
+has four sides;
+hence the number of squares, times 4, is the number of perimeter edges
+plus twice the number of nonperimeter edges.
+
+\Y\B\4\X23:Print \PB{\\{del}} and its characteristics\X${}\E{}$\6
+$\\{ptot}\PP;{}$\6
+${}\\{printf}(\.{"\%d:"},\39\\{ptot});{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{pp};{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\.{"\ \%d"},\39\\{del}[\|k]);{}$\2\6
+${}\\{printf}(\.{"\ (\%d\%s),"},\39\\{rot},\39\\{rfl}\?\.{"R"}:\.{""});{}$\6
+${}\\{printf}(\.{"\ \%d\ v,\ \%d\ e,\ \%d\ iv,}\)\.{\ \%d\ sq\\n"},\39\|l,\39(%
+\\{eptr}\GG\T{1})-\T{1}-\|p,\39\|l-\\{pp},\39(\\{eptr}\GG\T{2})-\|p){}$;\C{
+that's vertices, edges, internal vertices, and squares }\6
+\&{if} (\\{verbose})\1\5
+\X24:Print the graph\X;\2\par
+\U8.\fi
+
+\M{24}\B\X24:Print the graph\X${}\E{}$\6
+\&{for} ${}(\|k\K\|q\K\T{1};{}$ ${}\|k\Z\|l;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{register} \&{int} \|r;\7
+${}\\{printf}(\.{"\ \%d\ --"},\39\|k);{}$\6
+\&{while} ${}(\|e[\|q].\\{reg}\I\|k){}$\1\5
+${}\|q\PP;{}$\2\6
+\&{for} ${}(\|r\K\|e[\|q].\\{succ};{}$  ; ${}\|r\K\|e[\|r].\\{succ}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|r\Z\\{pp}){}$\1\5
+\&{break};\2\6
+${}\\{printf}(\.{"\ \%d"},\39\|e[\\{mate}(\|r)].\\{reg});{}$\6
+\&{if} ${}(\|r\E\|q){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\U23.\fi
+
+\M{25}\B\X25:Update the totals\X${}\E{}$\6
+$\|q\K\\{pp}/\\{rot};{}$\6
+\&{if} ${}(\\{rfl}\E\T{0}){}$\1\5
+${}\|q\MRL{{\LL}{\K}}\T{1}{}$;\C{ now \PB{\|q} is the number of labeled
+varieties of \PB{\\{del}} }\2\6
+${}\\{pltot}\MRL{+{\K}}\|q;{}$\6
+${}\\{vtot}[\|l]\PP;{}$\6
+${}\\{vltot}[\|l]\MRL{+{\K}}\|q;{}$\6
+${}\\{stot}[(\\{eptr}\GG\T{2})-\|p]\PP;{}$\6
+${}\\{sltot}[(\\{eptr}\GG\T{2})-\|p]\MRL{+{\K}}\|q{}$;\par
+\U8.\fi
+
+\N{1}{26}Index.
+\fi
+
+\inx
+\fin
+\con
