@@ -1,0 +1,13 @@
+\I\X5:Do the first phase\X
+\U1.
+\I\X7:Do the second phase\X
+\U1.
+\I\X2, 4:Initialize\X
+\U1.
+\I\X6:Put \PB{\\{curbits}} and \PB{\\{curaux}} into the new list with weight %
+\PB{\|w}\X
+\U5.
+\I\X8:Put \PB{\\{curbits}} into the new list with weight \PB{\|w}\X
+\U7.
+\I\X9:Repack the data into shorter packets\X
+\U7.

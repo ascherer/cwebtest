@@ -1,0 +1,1529 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Introduction. This program solves a fairly general kind of sliding
+block
+puzzle. Indeed, it emphasizes generality over speed, although it does try to
+implement breadth-first search on large graphs in a reasonably efficient
+way. (I~plan to write a program based on more advanced techniques later, with
+this one available for doublechecking the results.)
+I apologize for not taking time to prepare a fancy user interface; all you'll
+find here is a shortest-path-to-solution-of-a-sliding-block-puzzle engine.
+
+\fi
+
+\M{2}The puzzle can have up to 15 different kinds of pieces, named in
+hexadecimal
+from \.1 to~\.f. These pieces are specified in the standard input file, one
+line per piece, by giving a rectangular pattern of 0s and~1s, where 0 means
+`empty' and 1~means `occupied'. Rows of the pattern are separated by slashes
+as in the examples below.
+
+The first line of standard input is special: It should contain the overall
+board size in the form `\\{rows} \.x \\{columns}', followed by
+any desired commentary (usually the name of the puzzle). This first line
+is followed by piece definitions of the form `\\{piecename} \.= \\{pattern}'.
+
+Two more lines of input should follow the piece definitions, one for the
+starting configuration and one for the stopping configuration. (I may
+extend this later to allow several ways to stop.) Each configuration is
+specified in a shorthand form by telling how to fill in the board,
+repeatedly naming the piece that occupies the topmost and leftmost
+yet-unspecified cell, or \.0 if that cell is empty, or \.x if that cell
+is permanently blocked. Trailing zeros may be omitted.
+
+For example, here's how we could specify a strange (but easy to solve)
+$5\times5$ puzzle that has four pieces of three kinds:
+$$\vbox{\halign{\tt#\hfill\cr
+5 x 5 (a silly example)\cr
+1 = 111/01\cr
+2 = 101/111\cr
+3 = 1\cr
+1xx200000000033\cr
+000xx00033001002\cr
+}}$$
+The same puzzle can be illustrated more conventionally as follows:
+$$\setbox0=\hbox to 0pt{\hss\vrule height8.5pt depth3.5pt\hss}
+\setbox1=\hbox{\smash{\lower3.7pt\vbox{\hrule width 12pt}}}
+\catcode`\!=\active \def!{\copy0}
+\def\\#1{\hbox to 12pt{\hss#1\hss}}
+\def\_#1{\hbox to 12pt{\copy1\kern-12pt\hss#1\hss}}
+\vbox{\offinterlineskip\halign{\strut\tt#\hfil\cr
+\hidewidth\hfil\rm Starting position\hidewidth\cr
+\noalign{\vskip-6pt}
+\_{}\_{}\_{}\cr
+!\_1\\1\_1!\_{}\_{}\cr
+!\\2!\_1!\\2!\_0!\_0!\cr
+!\_2\_2\_2!\_0!\_0!\cr
+!\_0!\_0!\_0!\_0!\_0!\cr
+!\_3!\_3!\_0!\_0!\_0!\cr}}
+\hskip10em
+\vbox{\offinterlineskip\halign{\strut\tt#\hfil\cr
+\hidewidth\hfil\rm Stopping position\hidewidth\cr
+\noalign{\vskip-6pt}
+\_{}\_{}\_{}\cr
+!\_0!\_0!\_0!\_{}\_{}\cr
+!\_0!\_0!\_0!\_3!\_3!\cr
+!\_0!\_0!\_1\\1\_1!\cr
+!\_0!\_0!\\2!\_1!\\2!\cr
+!\_0!\_0!\_2\_2\_2!\cr}}
+$$
+The two `\.3' pieces are indistinguishable from each other.
+If I had wanted to distinguish them, I would have introduced
+another piece name, for example by saying `\.{4 = 1}'.
+
+\fi
+
+\M{3}Six different styles of sliding-block moves are supported by this program,
+and the user should specify the desired style on the command line.
+\smallskip
+\def\sty#1. {\par\noindent\hangindent 30pt\hbox{\bf Style #1.\enspace}}
+\sty0. Move a single piece one step left, right, up, or down. The newly
+occupied cells must previously have been empty.
+\sty1. Move a single piece one or more steps left, right, up, or down.
+(This is a sequence of style-0 moves, all applied to the same piece
+in the same direction, counted as a single move.)
+\sty2. Move a single piece one or more steps. (This is a sequence of
+style-0 moves, all applied to the same piece but not necessarily in
+the same direction.)
+\sty3. Move a subset of pieces one step left, right, up, or down. (This is
+like style~0, but several pieces may move as if they were a single
+``superpiece.'')
+\sty4. Move a subset of pieces one or more steps left, right, up, or down.
+(This is the superpiece analog of style~1.)
+\sty5. Move a subset of pieces one or more steps. (The superpiece analog of
+style~2.)
+\smallskip\noindent
+The subsets of pieces moved in styles 3, 4, and 5 need not be connected
+to each other. Indeed, an astute reader will have noticed that our
+input conventions allow individual pieces to have disconnected components.
+
+The silly puzzle specified above can, for example, be solved in
+respectively (20, 10, 4, 10, 4, 2) moves of styles (0, 1, 2, 3, 4, 5).
+Notice that a small change to that puzzle would make certain positions
+impossible without superpiece moves; thus, superpiece moves are not
+simply luxuries, they might be necessary when solving certain puzzles.
+
+\fi
+
+\M{4}OK, here now is the general outline of the program.
+There are no surprises yet, except perhaps for the fact that we
+prepare to make a \PB{\\{longjmp}}.
+
+\Y\B\4\D$\\{verbose}$ \5
+\\{Verbose}\C{ avoid a possible 64-bit-pointer glitch in \.{libgb} }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\8\#\&{include} \.{<setjmp.h>}\6
+\8\#\&{include} \.{"gb\_flip.h"}\C{ GraphBase random number generator }\6
+\&{typedef} \&{unsigned} \&{int} \&{uint};\6
+\&{jmp\_buf} \\{success\_point};\6
+\&{int} \\{style};\6
+\&{int} \\{verbose};\7
+\X6:Global variables\X\6
+\X10:Subroutines\X\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|t;\6
+\&{int} \|d;\7
+\X5:Process the command line\X;\6
+\X13:Read the puzzle specification; abort if it isn't right\X;\6
+\X24:Initialize\X;\6
+\X34:Solve the puzzle\X;\6
+\4\\{hurray}:\5
+\X39:Print the solution\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{5}If the style parameter is followed by another parameter on the command
+line, the second parameter causes verbose output if it is positive,
+or suppresses the solution details if it is negative.
+
+\Y\B\4\X5:Process the command line\X${}\E{}$\6
+\&{if} ${}(\R(\\{argc}\G\T{2}\W\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{%
+\AND}\\{style})\E\T{1}\W\3{-1}(\\{argc}\E\T{2}\V\\{sscanf}(\\{argv}[\T{2}],\39%
+\.{"\%d"},\39{\AND}\\{verbose})\E\T{1}))){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ style\ [ve}\)\.{rbose]\\n"},\39%
+\\{argv}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{style}<\T{0}\V\\{style}>\T{5}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ the\ style\ sh}\)\.{ould\ be\ between\
+0\ an}\)\.{d\ 5,\ not\ \%d!\\n"},\39\\{style});{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\par
+\U4.\fi
+
+\N{1}{6}Representing the board. An $r\times c$ board will be represented as
+an array of $rc+2c+r+1$ entries.
+The upper left corner corresponds to position $c+1$ in this array;
+moving up, down, left, or right corresponds to
+adding $-(c+1)$, $(c+1)$, $-1$, or $1$ to the current board position.
+Boundary marks appear in the first $c+1$ and last $c+1$ positions,
+and in positions $c+k(c+1)$ for $1\le k<r$;
+these prohibit the pieces from sliding off the edges of the board.
+
+The following code uses the fact that $rc+2c+r+1$ is at most
+$3m+2$ when $rc\le m$; the maximum occurs when $r=1$ and $c=m$.
+
+\Y\B\4\D$\\{bdry}$ \5
+\T{999999}\C{ boundary mark }\par
+\B\4\D$\\{obst}$ \5
+\T{999998}\C{ permanent obstruction }\par
+\B\4\D$\\{maxsize}$ \5
+\T{256}\C{ maximum $r\times c$; should be a multiple of 8 }\par
+\B\4\D$\\{boardsize}$ \5
+$(\\{maxsize}*\T{3}+\T{2}{}$)\par
+\Y\B\4\X6:Global variables\X${}\E{}$\6
+\&{int} \\{board}[\\{boardsize}];\C{ main board for analyzing configurations }\6
+\&{int} \\{aboard}[\\{boardsize}];\C{ auxiliary board }\6
+\&{int} \\{rows};\C{ the number of rows in the board }\6
+\&{int} \\{cols};\C{ the number of columns in the board }\6
+\&{int} \\{colsp};\C{ \PB{$\\{cols}+\T{1}$} }\6
+\&{int} \\{ul}${},{}$ \\{lr};\C{ location of upper left and lower right corners
+in the board }\6
+\&{int} \\{delta}[\T{4}]${}\K\{\T{1},\39{-}\T{1}\}{}$;\C{ offsets in \PB{%
+\\{board}} for moving right, left, down, up }\par
+\As8, 11, 18, 21, 25, 27, 49\ETs53.
+\U4.\fi
+
+\M{7}Every type of piece is specified by a list of board offsets from the
+piece's topmost/leftmost cell, terminated by zero. For example, the
+offsets for the piece named \.1 in the silly example are
+$(1, 2, 7, 0)$ because there are five columns.
+If there had been six columns, the same piece would have had
+offsets $(1,2,8,0)$.
+
+The following code is executed when a new piece is being defined.
+
+\Y\B\4\D$\\{boardover}()$ \6
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ I\ can't\ hand}\)\.{le\ that\ large\ a%
+\ boar}\)\.{d;\\n"});{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ please\ recompile\ m}\)\.{e\ with\ more\
+maxsize.}\)\.{\\n"});{}$\6
+${}\\{exit}({-}\T{3});{}$\6
+\4${}\}{}$\2\par
+\Y\B\4\X7:Compute the offsets for a piece\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{char} ${}{*}\|p;{}$\7
+\&{for} ${}(\|t\K{-}\T{1},\39\|j\K\|k\K\T{0},\39\|p\K{\AND}\\{buf}[\T{4}];{}$
+; ${}\|p\PP){}$\1\6
+\&{switch} ${}({*}\|p){}$\5
+${}\{{}$\1\6
+\4\&{case} \.{'1'}:\5
+\&{if} ${}(\|t<\T{0}){}$\1\5
+${}\|t\K\|k{}$;\5
+\2\&{else}\1\5
+${}\\{off}[\\{curo}\PP]\K\|k-\|t;{}$\2\6
+\&{if} ${}(\\{curo}\G\\{maxsize}){}$\1\5
+\\{boardover}(\,);\2\6
+\4\&{case} \.{'0'}:\5
+${}\|j\PP,\39\|k\PP{}$;\5
+\&{break};\6
+\4\&{case} \.{'/'}:\5
+${}\|k\MRL{+{\K}}\\{colsp}-\|j,\39\|j\K\T{0}{}$;\5
+\&{break};\6
+\4\&{case} \.{'\\n'}:\5
+\&{goto} \\{offsets\_done};\6
+\4\&{default}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"Bad\ character\ `\%c'\ }\)\.{in\ definition\
+of\ pie}\)\.{ce\ \%c!\\n"},\39{*}\|p,\39\\{buf}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{4});{}$\6
+\4${}\}{}$\2\2\6
+\4\\{offsets\_done}:\5
+\&{if} ${}(\|t<\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Piece\ \%c\ is\ empty!\\}\)\.{n"},\39\\{buf}[%
+\T{0}]){}$;\5
+${}\\{exit}({-}\T{5});{}$\6
+\4${}\}{}$\2\6
+${}\\{off}[\\{curo}\PP]\K\T{0};{}$\6
+\&{if} ${}(\\{curo}\G\\{maxsize}){}$\1\5
+\\{boardover}(\,);\2\6
+\4${}\}{}$\2\par
+\U15.\fi
+
+\M{8}\B\D$\\{bufsize}$ \5
+\T{1024}\C{ maximum length of input lines }\par
+\Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{off}[\\{maxsize}];\C{ offset lists for pieces }\6
+\&{int} \\{offstart}[\T{16}];\C{ starting points in the \PB{\\{off}} table }\6
+\&{int} \\{curo};\C{ the number of offsets stored so far }\6
+\&{char} \\{buf}[\\{bufsize}];\C{ input buffer }\par
+\fi
+
+\M{9}A board position is specified by putting block numbers in each occupied
+cell. The number of blocks on the board might exceed the number of piece
+types, since different blocks can have the same type; we assign numbers
+arbitrarily to the blocks.
+
+For example, the \PB{\\{board}} array might look like this in the ``silly''
+starting position:
+$$\vbox{\halign{\hfil#\hfil&&\quad\hfil#\hfil\cr
+\PB{\\{bdry}}&\PB{\\{bdry}}&\PB{\\{bdry}}&\PB{\\{bdry}}&\PB{\\{bdry}}&\PB{%
+\\{bdry}}\cr
+4&4&4&\PB{\\{obst}}&\PB{\\{obst}}&\PB{\\{bdry}}\cr
+3&4&3&0&0&\PB{\\{bdry}}\cr
+3&3&3&0&0&\PB{\\{bdry}}\cr
+0&0&0&0&0&\PB{\\{bdry}}\cr
+2&1&0&0&0&\PB{\\{bdry}}\cr
+\PB{\\{bdry}}&\PB{\\{bdry}}&\PB{\\{bdry}}&\PB{\\{bdry}}&\PB{\\{bdry}}\cr}}$$
+Any permutation of the numbers $\{1,2,3,4\}$ would be equally valid.
+
+\fi
+
+\M{10}Here is a subroutine that fills the board from a specification in
+the input buffer. It returns \PB{${-}\T{1}$} if too many cells are specified,
+or \PB{${-}\T{2}$} if an illegal character is found.
+Otherwise it returns the number of conflicts found, namely the
+number of cells that were erroneously filled more than once.
+
+\Y\B\4\X10:Subroutines\X${}\E{}$\6
+\&{int} \\{fill\_board}(\&{int} \\{board}[\,]${},\39{}$\&{int} \\{piece}[%
+\,]${},\39{}$\&{int} \\{place}[\,])\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|c${},{}$ \|k${},{}$ \|t;\6
+\&{register} \&{char} ${}{*}\|p;{}$\7
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{ul};{}$ ${}\|j\PP){}$\1\5
+${}\\{board}[\|j]\K\\{bdry};{}$\2\6
+\&{for} ${}(\|j\K\\{ul};{}$ ${}\|j\Z\\{lr};{}$ ${}\|j\PP){}$\1\5
+${}\\{board}[\|j]\K{-}\T{1};{}$\2\6
+\&{for} ${}(\|j\K\\{ul}+\\{cols};{}$ ${}\|j\Z\\{lr};{}$ ${}\|j\MRL{+{\K}}%
+\\{colsp}){}$\1\5
+${}\\{board}[\|j]\K\\{bdry};{}$\2\6
+\&{for} ( ; ${}\|j\Z\\{lr}+\\{colsp};{}$ ${}\|j\PP){}$\1\5
+${}\\{board}[\|j]\K\\{bdry};{}$\2\6
+\&{for} ${}(\|p\K{\AND}\\{buf}[\T{0}],\39\|j\K\\{ul},\39\\{bcount}\K\|c\K%
+\T{0};{}$ ${}{*}\|p\I\.{'\\n'};{}$ ${}\|p\PP){}$\5
+${}\{{}$\1\6
+\&{while} ${}(\\{board}[\|j]\G\T{0}){}$\1\6
+\&{if} ${}(\PP\|j>\\{lr}){}$\1\5
+\&{return} ${}{-}\T{1};{}$\2\2\6
+\&{if} ${}({*}\|p\E\.{'0'}){}$\1\5
+${}\\{board}[\|j]\K\|t\K\T{0};{}$\2\6
+\&{else} \&{if} ${}({*}\|p\G\.{'1'}\W{*}\|p\Z\.{'9'}){}$\1\5
+${}\|t\K{*}\|p-\.{'0'};{}$\2\6
+\&{else} \&{if} ${}({*}\|p\G\.{'a'}\W{*}\|p\Z\.{'f'}){}$\1\5
+${}\|t\K{*}\|p-(\.{'a'}-\T{10});{}$\2\6
+\&{else} \&{if} ${}({*}\|p\E\.{'x'}){}$\1\5
+${}\|t\K\T{0},\39\\{board}[\|j]\K\\{obst};{}$\2\6
+\&{else}\1\5
+\&{return} ${}{-}\T{2};{}$\2\6
+\&{if} (\|t)\5
+${}\{{}$\1\6
+${}\\{bcount}\PP;{}$\6
+${}\\{piece}[\\{bcount}]\K\|t;{}$\6
+${}\\{place}[\\{bcount}]\K\|j;{}$\6
+${}\\{board}[\|j]\K\\{bcount};{}$\6
+\&{for} ${}(\|k\K\\{offstart}[\|t];{}$ \\{off}[\|k]; ${}\|k\PP){}$\1\6
+\&{if} ${}(\|j+\\{off}[\|k]<\\{ul}\V\|j+\\{off}[\|k]>\\{lr}\V\\{board}[\|j+%
+\\{off}[\|k]]\G\T{0}){}$\1\5
+${}\|c\PP;{}$\2\6
+\&{else}\1\5
+${}\\{board}[\|j+\\{off}[\|k]]\K\\{bcount};{}$\2\2\6
+\4${}\}{}$\2\6
+${}\|j\PP;{}$\6
+\4${}\}{}$\2\6
+\&{for} ( ; ${}\|j\Z\\{lr};{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\\{board}[\|j]<\T{0}){}$\1\5
+${}\\{board}[\|j]\K\T{0};{}$\2\2\6
+\&{return} \|c;\6
+\4${}\}{}$\2\par
+\As12, 20, 22, 23, 26, 28, 43, 50\ETs55.
+\U4.\fi
+
+\M{11}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{bcount};\C{ the number of blocks on the board }\6
+\&{int} \\{piece}[\\{maxsize}]${},{}$ \\{apiece}[\\{maxsize}];\C{ the piece
+names of each block }\6
+\&{int} \\{place}[\\{maxsize}]${},{}$ \\{aplace}[\\{maxsize}];\C{ the
+topmost/leftmost                                          positions of each
+block }\par
+\fi
+
+\M{12}The next subroutine prints a given board on standard output,
+in a somewhat readable format that shows connections between
+adjacent cells of each block. The starting position
+specified by the ``silly'' input would, for example, be rendered thus:
+$$\catcode`\!=\active \chardef!="7C % vertical bar
+\obeyspaces
+\vbox{\baselineskip=9pt\halign{\tt#\hfill\cr
+1-1-1\cr
+{}  !\cr
+2 1 2 0 0\cr
+!   !\cr
+2-2-2 0 0\cr
+\cr
+0 0 0 0 0\cr
+\cr
+3 3 0 0 0\cr}}$$
+
+\Y\B\4\D$\\{cell}(\|j,\|k)$ \5
+$\\{board}[\\{ul}+(\|j)*\\{colsp}+\|k{}$]\par
+\Y\B\4\X10:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_board}(\&{int} \\{board}[\,]${},\39{}$\&{int} \\{piece}[\,])%
+\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k;\7
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{rows};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{cols};{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\.{"\ \%c"},\39\\{cell}(\|j,\39\|k)\E\\{cell}(\|j-\T{1},\39\|k)\W%
+\\{cell}(\|j,\39\|k)\W\\{cell}(\|j,\39\|k)<\\{obst}\?\.{'|'}:\.{'\ '});{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\\{cols};{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\\{cell}(\|j,\39\|k)<\T{0}){}$\1\5
+\\{printf}(\.{"\ ?"});\2\6
+\&{else} \&{if} ${}(\\{cell}(\|j,\39\|k)<\\{obst}){}$\1\5
+${}\\{printf}(\.{"\%c\%x"},\39\\{cell}(\|j,\39\|k)\E\\{cell}(\|j,\39\|k-\T{1})%
+\W\\{cell}(\|j,\39\|k)\W\\{cell}(\|j,\39\|k)<\\{obst}\?\.{'-'}:\.{'\ '},\3{-1}%
+\39\\{piece}[\\{cell}(\|j,\39\|k)]);{}$\2\6
+\&{else}\1\5
+\\{printf}(\.{"\ \ "});\2\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{13}Armed with those routines and subroutines,
+we're ready to process the entire input file.
+
+\Y\B\4\X13:Read the puzzle specification; abort if it isn't right\X${}\E{}$\6
+\X14:Read the board size\X;\6
+\X15:Read the piece specs\X;\6
+\X16:Read the starting configuration into \PB{\\{board}}\X;\6
+\X17:Read the stopping configuration into \PB{\\{aboard}}\X;\par
+\U4.\fi
+
+\M{14}\B\X14:Read the board size\X${}\E{}$\6
+$\\{fgets}(\\{buf},\39\\{bufsize},\39\\{stdin});{}$\6
+\&{if} ${}(\\{sscanf}(\\{buf},\39\.{"\%d\ x\ \%d"},\39{\AND}\\{rows},\39{\AND}%
+\\{cols})\I\T{2}\V\\{rows}\Z\T{0}\V\\{cols}\Z\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Bad\ specification\ o}\)\.{f\ rows\ x\ cols!%
+\\n"});{}$\6
+${}\\{exit}({-}\T{6});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{rows}*\\{cols}>\\{maxsize}){}$\1\5
+\\{boardover}(\,);\2\6
+${}\\{colsp}\K\\{cols}+\T{1};{}$\6
+${}\\{delta}[\T{2}]\K\\{colsp},\39\\{delta}[\T{3}]\K{-}\\{colsp};{}$\6
+${}\\{ul}\K\\{colsp};{}$\6
+${}\\{lr}\K(\\{rows}+\T{1})*\\{colsp}-\T{2}{}$;\par
+\U13.\fi
+
+\M{15}\B\X15:Read the piece specs\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\T{16};{}$ ${}\|j\PP){}$\1\5
+${}\\{offstart}[\|j]\K{-}\T{1};{}$\2\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{fgets}(\\{buf},\39\\{bufsize},\39\\{stdin})){}$\5
+${}\{{}$\1\6
+${}\\{buf}[\T{0}]\K\.{'\\n'}{}$;\5
+\&{break};\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{buf}[\T{0}]\E\.{'\\n'}){}$\1\5
+\&{continue};\2\6
+\&{if} ${}(\\{buf}[\T{1}]\I\.{'\ '}\V\\{buf}[\T{2}]\I\.{'='}\V\\{buf}[\T{3}]\I%
+\.{'\ '}){}$\1\5
+\&{break};\2\6
+\&{if} ${}(\\{buf}[\T{0}]\G\.{'1'}\W\\{buf}[\T{0}]\Z\.{'9'}){}$\1\5
+${}\|t\K\\{buf}[\T{0}]-\.{'0'};{}$\2\6
+\&{else} \&{if} ${}(\\{buf}[\T{0}]\G\.{'a'}\W\\{buf}[\T{0}]\Z\.{'f'}){}$\1\5
+${}\|t\K\\{buf}[\T{0}]-(\.{'a'}-\T{10});{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"Bad\ piece\ name\ (\%c)}\)\.{!\\n"},\39\\{buf}[\T{0}]);{}$\6
+${}\\{exit}({-}\T{7});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{offstart}[\|t]\G\T{0}){}$\1\5
+${}\\{printf}(\.{"Warning:\ Redefiniti}\)\.{on\ of\ piece\ \%c\ is\ be}\)\.{ing%
+\ ignored.\\n"},\39\\{buf}[\T{0}]);{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{offstart}[\|t]\K\\{curo};{}$\6
+\X7:Compute the offsets for a piece\X;\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U13.\fi
+
+\M{16}\B\X16:Read the starting configuration into \PB{\\{board}}\X${}\E{}$\6
+$\|t\K\\{fill\_board}(\\{board},\39\\{piece},\39\\{place});{}$\6
+\\{printf}(\.{"Starting\ configurat}\)\.{ion:\\n"});\6
+${}\\{print\_board}(\\{board},\39\\{piece});{}$\6
+\&{if} (\|t)\5
+${}\{{}$\1\6
+\&{if} ${}(\|t>\T{0}){}$\1\6
+\&{if} ${}(\|t\E\T{1}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Oops,\ you\ filled\ a\ }\)\.{cell\ twice!%
+\\n"});{}$\2\6
+\&{else}\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Oops,\ you\ overfille}\)\.{d\ \%d\ cells!%
+\\n"},\39\|t);{}$\2\2\6
+\&{else}\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Oops,\ \%s!\\n"},\39\|t\E{-}\T{1}\?\.{"your\
+board\ wasn't\ b}\)\.{ig\ enough"}:\.{"the\ configuration\ c}\)\.{ontains\ an\
+illegal\ c}\)\.{haracter"});{}$\2\6
+${}\\{exit}({-}\T{8});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{bcount}\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"The\ puzzle\ doesn't\ }\)\.{have\ any\ pieces!%
+\\n"});{}$\6
+${}\\{exit}({-}\T{9});{}$\6
+\4${}\}{}$\2\par
+\U13.\fi
+
+\M{17}\B\X17:Read the stopping configuration into \PB{\\{aboard}}\X${}\E{}$\6
+$\\{fgets}(\\{buf},\39\\{bufsize},\39\\{stdin});{}$\6
+${}\|t\K\\{fill\_board}(\\{aboard},\39\\{apiece},\39\\{aplace});{}$\6
+\\{printf}(\.{"\\nStopping\ configur}\)\.{ation:\\n"});\6
+${}\\{print\_board}(\\{aboard},\39\\{apiece});{}$\6
+\&{if} (\|t)\5
+${}\{{}$\1\6
+\&{if} ${}(\|t>\T{0}){}$\1\6
+\&{if} ${}(\|t\E\T{1}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Oops,\ you\ filled\ a\ }\)\.{cell\ twice!%
+\\n"});{}$\2\6
+\&{else}\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Oops,\ you\ overfille}\)\.{d\ \%d\ cells!%
+\\n"},\39\|t);{}$\2\2\6
+\&{else}\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"Oops,\ \%s!\\n"},\39\|t\E{-}\T{1}\?\.{"your\
+board\ wasn't\ b}\)\.{ig\ enough"}:\.{"the\ configuration\ c}\)\.{ontains\ an\
+illegal\ c}\)\.{haracter"});{}$\2\6
+${}\\{exit}({-}\T{10});{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{16};{}$ ${}\|j\PP){}$\1\5
+${}\\{balance}[\|j]\K\T{0};{}$\2\6
+\&{for} ${}(\|j\K\\{ul};{}$ ${}\|j\Z\\{lr};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}((\\{board}[\|j]<\\{obst})\I(\\{aboard}[\|j]<\\{obst})){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"The\ dead\ cells\ (x's}\)\.{)\ are\ in\
+different\ p}\)\.{laces!\\n"});{}$\6
+${}\\{exit}({-}\T{11});{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{board}[\|j]<\\{obst}){}$\1\5
+${}\\{balance}[\\{piece}[\\{board}[\|j]]]\PP,\39\\{balance}[\\{apiece}[%
+\\{aboard}[\|j]]]\MM;{}$\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{16};{}$ ${}\|j\PP){}$\1\6
+\&{if} (\\{balance}[\|j])\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Wrong\ number\ of\ pie}\)\.{ces\ in\ the\
+stopping\ }\)\.{configuration!\\n"});{}$\6
+${}\\{exit}({-}\T{12});{}$\6
+\4${}\}{}$\2\2\par
+\U13.\fi
+
+\M{18}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{balance}[\T{16}];\C{ counters used to ensure that no pieces are lost
+}\par
+\fi
+
+\N{1}{19}Breadth-first search. Now we're ready for the heart of the
+calculation,
+which is conceptually very simple: If we have found all configurations
+reachable in fewer than $d$ moves, those reachable in $d$ moves are obtained
+by making one more move from each of those that are reachable in $d-1$.
+In other words, we want to proceed essentially as follows.
+$$\vbox{\halign{#\hfil\cr
+$c_1={}$starting position;\cr
+$m_0=1$; \ $k=2$;\cr
+{\bf for} $(d=1;$\ ;\ \PB{$\|d\PP$})\ $\{$\cr
+\quad$m_d=k$;\cr
+\quad{\bf for} $(j=m_{d-1};\ j<m_d;\ $\PB{$\|j\PP$})\cr
+\qquad{\bf for} (all positions $p$ reachable in one move from $c_j$)\cr
+\quad\qquad{\bf if} ($p$ is new) $c_k=p$, \ \PB{$\|k\PP$};\cr
+\quad{\bf if} ($m_d\equiv k$) {\bf break};\cr
+$\}$\cr}}$$
+
+The main problem is to test efficiently whether a given position $p$ is
+new. For this purpose we can use the fact that moves from configurations
+at distance $d-1$ always go to configurations at distance $d-2$, $d-1$,
+or $d$; therefore we can safely {\it forget\/} all configurations $c_j$
+for $j<m_{d-2}$ when making the test. This principle significantly
+reduces the memory requirements.
+
+One convenient way to test newness and to discard stale data rapidly
+is to use hash chains, ignoring all entries at the end of a chain
+when their index $j$ becomes less than a given cutoff.
+In other words, we compute a hash address for each configuration,
+and we store each configuration with a pointer to the previous one
+that had the same hash code. Whenever we come to a pointer that is
+less than $m_{d-2}$, we can stop looking further in a chain.
+
+\fi
+
+\M{20}A configuration is represented internally as a sequence of nybbles
+that list successive piece names, just as in the shorthand form
+used for starting and stopping configurations in the input but
+omitting the \.x's. For example, the ``silly'' starting configuration
+is the hexadecimal number \.{1200000000033}, which is actually
+stored as two 32-bit quantities \PB{\T{\^12000000}} and \PB{\T{\^00033000}}.
+
+Here's a subroutine that packs a given \PB{\\{board}} into its encoded form.
+It puts 32-bit codes into the \PB{\\{config}} array, and returns the
+number of such codes that were stored.
+
+\Y\B\4\X10:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{pack}(\&{int} \\{board}[\,]${},\39{}$\&{int} \\{piece}[\,])\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|p${},{}$ \|s${},{}$ %
+\|t;\7
+\&{for} ${}(\|j\K\\{ul};{}$ ${}\|j\Z\\{lr};{}$ ${}\|j\PP){}$\1\5
+${}\\{xboard}[\|j]\K\T{0};{}$\2\6
+\&{for} ${}(\|i\K\|s\K\T{0},\39\|p\K\T{28},\39\|j\K\\{ul},\39\|t\K%
+\\{bcount};{}$ \|t; ${}\|j\PP){}$\1\6
+\&{if} ${}(\\{board}[\|j]<\\{obst}\W\R\\{xboard}[\|j]){}$\5
+${}\{{}$\1\6
+${}\|k\K\\{piece}[\\{board}[\|j]];{}$\6
+\&{if} (\|k)\5
+${}\{{}$\1\6
+${}\|t\MM,\39\|s\MRL{+{\K}}\|k\LL\|p;{}$\6
+\&{for} ${}(\|k\K\\{offstart}[\|k];{}$ \\{off}[\|k]; ${}\|k\PP){}$\1\5
+${}\\{xboard}[\|j+\\{off}[\|k]]\K\T{1};{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\R\|p){}$\1\5
+${}\\{config}[\|i\PP]\K\|s,\39\|s\K\T{0},\39\|p\K\T{28};{}$\2\6
+\&{else}\1\5
+${}\|p\MRL{-{\K}}\T{4};{}$\2\6
+\4${}\}{}$\2\2\6
+\&{if} ${}(\|p\I\T{28}){}$\1\5
+${}\\{config}[\|i\PP]\K\|s;{}$\2\6
+\&{return} \|i;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{21}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \\{xboard}[\\{boardsize}];\C{ places filled ahead of time }\6
+\&{uint} ${}\\{config}[\\{maxsize}/\T{8}]{}$;\C{ a packed configuration }\par
+\fi
+
+\M{22}\B\X10:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_config}(\&{uint} \\{config}[\,]${},\39{}$\&{int} \|n)\1\1\2%
+\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|t;\7
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n-\T{1};{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\%08x"},\39\\{config}[\|j]);{}$\2\6
+\&{for} ${}(\|t\K\\{config}[\|n-\T{1}],\39\|j\K\T{8};{}$ ${}(\|t\AND\T{\^f})\E%
+\T{0};{}$ ${}\|j\MM){}$\1\5
+${}\|t\MRL{{\GG}{\K}}\T{4};{}$\2\6
+${}\\{printf}(\.{"\%0*x"},\39\|j,\39\|t){}$;\C{ we omit the trailing zeros }\6
+\4${}\}{}$\2\par
+\fi
+
+\M{23}Conversely, we can reconstruct a board from its packed representation.
+
+\Y\B\4\X10:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{unpack}(\&{int} \\{board}[\,]${},\39{}$\&{int} \\{piece}[\,]${},%
+\39{}$\&{int} \\{place}[\,]${},\39{}$\&{uint} \\{config}[\,])\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|p${},{}$ \|s${},{}$ %
+\|t;\7
+\&{for} ${}(\|j\K\\{ul};{}$ ${}\|j\Z\\{lr};{}$ ${}\|j\PP){}$\1\5
+${}\\{xboard}[\|j]\K\T{0};{}$\2\6
+\&{for} ${}(\|p\K\|i\K\T{0},\39\|j\K\\{ul},\39\|t\K\\{bcount};{}$ \|t; ${}\|j%
+\PP){}$\1\6
+\&{if} ${}(\\{board}[\|j]<\\{obst}\W\R\\{xboard}[\|j]){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\R\|p){}$\1\5
+${}\|s\K\\{config}[\|i\PP],\39\|p\K\T{28};{}$\2\6
+\&{else}\1\5
+${}\|p\MRL{-{\K}}\T{4};{}$\2\6
+${}\|k\K(\|s\GG\|p)\AND\T{\^f};{}$\6
+\&{if} (\|k)\5
+${}\{{}$\1\6
+${}\\{board}[\|j]\K\|t,\39\\{piece}[\|t]\K\|k,\39\\{place}[\|t]\K\|j;{}$\6
+\&{for} ${}(\|k\K\\{offstart}[\|k];{}$ \\{off}[\|k]; ${}\|k\PP){}$\1\5
+${}\\{xboard}[\|j+\\{off}[\|k]]\K\T{1},\39\\{board}[\|j+\\{off}[\|k]]\K\|t;{}$%
+\2\6
+${}\|t\MM;{}$\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\\{board}[\|j]\K\T{0};{}$\2\6
+\4${}\}{}$\2\2\6
+\&{for} ( ; ${}\|j\Z\\{lr};{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\\{board}[\|j]<\\{obst}\W\R\\{xboard}[\|j]){}$\1\5
+${}\\{board}[\|j]\K\T{0};{}$\2\2\6
+\&{return} \|i;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{24}We use ``universal hashing'' to compute hash codes, xoring random bits
+based on individual bytes. These random bits appear in tables called \PB{%
+\\{uni}}.
+
+\Y\B\4\X24:Initialize\X${}\E{}$\6
+\\{gb\_init\_rand}(\T{0});\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{4};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k<\T{256};{}$ ${}\|k\PP){}$\1\5
+${}\\{uni}[\|j][\|k]\K\\{gb\_next\_rand}(\,){}$;\2\2\par
+\A30.
+\U4.\fi
+
+\M{25}The number of hash chains, \PB{\\{hashsize}}, should be a power of 2,
+and it deserves to be chosen somewhat carefully.
+If it is too large, we'll interfere with our machine's cache memory;
+if it is too small, we'll spend too much time going through hash chains.
+At present I've decided
+to assume that \PB{\\{hashsize}} is at most $2^{16}$, so that the \PB{\\{uni}}
+table
+entries are \PB{\&{short}} (16-bit) quantities.
+
+The total number of configurations might be huge, so I allow 64 bits for
+the main hash table pointers.
+(Programmers in future years will chuckle when they read this code,
+having blissfully forgotten the olden days when
+people like me had to fuss over 32-bit numbers.)
+
+\Y\B\4\D$\\{hashsize}$ \5
+$(\T{1}\LL\T{13}{}$)\C{ should be a power of two, not more than \PB{$\T{1}\LL%
+\T{16}$} }\par
+\B\4\D$\\{hashcode}(\|x)$ \5
+$(\\{uni}[\T{0}][\|x\AND\T{\^ff}]+\\{uni}[\T{1}][(\|x\GG\T{8})\AND\T{\^ff}]+%
+\\{uni}[\T{2}][(\|x\GG\T{16})\AND\T{\^ff}]+\\{uni}[\T{3}][\|x\GG\T{24}]{}$)\par
+\Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{short} \\{uni}[\T{4}][\T{256}];\C{ bits for universal hashing }\6
+\&{uint} \\{hash}[\\{hashsize}];\C{ hash table pointers (low half) }\6
+\&{uint} \\{hashh}[\\{hashsize}];\C{ hash table pointers (high half) }\par
+\fi
+
+\M{26}\B\X10:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{print\_big}(\&{uint} \\{hi}${},\39{}$\&{uint} \\{lo})\1\1\2\2\6
+${}\{{}$\1\6
+${}\\{printf}(\.{"\%.15g"},\39{}$((\&{double}) \\{hi})${}*\T{4294967296.0}+{}$(%
+\&{double}) \\{lo});\6
+\4${}\}{}$\2\7
+\&{void} \\{print\_bigx}(\&{uint} \\{hi}${},\39{}$\&{uint} \\{lo})\1\1\2\2\6
+${}\{{}$\1\6
+\&{if} (\\{hi})\1\5
+${}\\{printf}(\.{"\%x\%08x"},\39\\{hi},\39\\{lo});{}$\2\6
+\&{else}\1\5
+${}\\{printf}(\.{"\%x"},\39\\{lo});{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{27}Of course I don't expect to keep all configurations in memory
+simultaneously,
+except on simple problems. Instead, I keep a table of \PB{\\{memsize}}
+integers,
+containing variable-size packets that represent individual configurations.
+An address into this table is conceptually a 64-bit number, but we actually
+use the address mod \PB{\\{memsize}} because stale data is discarded.
+The value of \PB{\\{memsize}} is a power of~2 so that this reduction is
+efficient.
+
+The first word of a packet is a pointer to the previous packet having the
+same hash code. This pointer is {\it relative\/} to the current packet,
+so that it needs to contain only 32 bits at most.
+
+The second word of a packet \PB{\|p} is a (relative) pointer to the
+configuration
+from which \PB{\|p} was derived. This word could be omitted in the interests
+of space, but it is handy if we want to see an actual solution to
+the puzzle instead of merely knowing the optimum number of moves.
+
+The remaining words of a packet are the packed encoding of a configuration.
+If the packet begins near the end of the \PB{\\{pos}} array, it actually
+extends
+past \PB{\\{pos}[\\{memsize}]}; enough extra space has been provided there
+to avoid any need for wrapping packets around the \PB{\\{memsize}} boundary.
+
+\Y\B\4\D$\\{memsize}$ \5
+$(\T{1}\LL\T{25}{}$)\C{ space for the configurations we need to know about }\par
+\B\4\D$\\{maxmoves}$ \5
+\T{1000}\C{ upper bound on path length }\par
+\Y\B\4\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{uint} ${}\\{pos}[\\{memsize}+\\{maxsize}/\T{8}+\T{1}]{}$;\C{ currently known
+configurations }\6
+\&{uint} \\{cutoff};\C{ pointer below which we needn't search (low half) }\6
+\&{uint} \\{cutoffh};\C{ pointer below which we needn't search (high half) }\6
+\&{uint} \\{curpos};\C{ pointer to first unused configuration slot (low half) }%
+\6
+\&{uint} \\{curposh};\C{ pointer to first unused configuration slot (high half)
+}\6
+\&{uint} \\{source};\C{ pointer to the configuration we're moving from (low
+half) }\6
+\&{uint} \\{sourceh};\C{ pointer to the configuration we're moving from (high
+half) }\6
+\&{uint} \\{nextsource}${},{}$ \\{nextsourceh};\C{ next values of \PB{%
+\\{source}} and \PB{\\{sourceh}} }\6
+\&{uint} \\{maxpos};\C{ pointer to first unusable configuration slot (low half)
+}\6
+\&{uint} \\{maxposh};\C{ pointer to first unusable configuration slot (high
+half) }\6
+\&{uint} \\{configs};\C{ total number of configurations so far (low half) }\6
+\&{uint} \\{configsh};\C{ total number of configurations so far (high half) }\6
+\&{uint} \\{oldconfigs};\C{ value of \PB{\\{configs}} when we began working at
+distance \PB{\|d} }\6
+\&{uint} \\{milestone}[\\{maxmoves}];\C{ value of \PB{\\{curpos}} at various
+distances }\6
+\&{uint} \\{milestoneh}[\\{maxmoves}];\C{ value of \PB{\\{curposh}} at various
+distances }\6
+\&{uint} \\{shortcut};\C{ \PB{$\\{milestone}[\|d]-\\{cutoff}$} }\6
+\&{int} \\{goalhash};\C{ hash code for the stopping position }\6
+\&{uint} ${}\\{goal}[\\{maxsize}/\T{8}]{}$;\C{ packed version of the stopping
+position }\6
+\&{uint} ${}\\{start}[\\{maxsize}/\T{8}]{}$;\C{ packed version of the starting
+position }\par
+\fi
+
+\M{28}The \PB{\\{hashin}} subroutine looks for a given \PB{\\{board}}
+configuration in the
+master table, inserting it if it is new.
+The value returned is 0 unless the \PB{\\{trick}} parameter is nonzero.
+In the latter case, which is used for moves of style 2 or style 5,
+special processing needs to be done; we'll explain it later.
+
+\Y\B\4\X10:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{hashin}(\&{int} \\{trick})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|h${},{}$ \|j${},{}$ \|k${},{}$ \|n${},{}$ \\{bound};\7
+${}\|n\K\\{pack}(\\{board},\39\\{piece});{}$\6
+\&{for} ${}(\|h\K\\{hashcode}(\\{config}[\T{0}]),\39\|j\K\T{1};{}$ ${}\|j<%
+\|n;{}$ ${}\|j\PP){}$\1\5
+${}\|h\MRL{{\XOR}{\K}}\\{hashcode}(\\{config}[\|j]);{}$\2\6
+${}\|h\MRL{\AND{\K}}\\{hashsize}-\T{1};{}$\6
+\&{if} ${}(\\{hashh}[\|h]\E\\{cutoffh}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{hash}[\|h]<\\{cutoff}){}$\1\5
+\&{goto} \\{newguy};\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\\{hashh}[\|h]<\\{cutoffh}){}$\1\5
+\&{goto} \\{newguy};\2\6
+${}\\{bound}\K\\{hash}[\|h]-\\{cutoff};{}$\6
+\&{for} ${}(\|j\K\\{hash}[\|h]\AND(\\{memsize}-\T{1});{}$  ; ${}\|j\K(\|j-%
+\\{pos}[\|j])\AND(\\{memsize}-\T{1})){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|n;{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\\{config}[\|k]\I\\{pos}[\|j+\T{2}+\|k]){}$\1\5
+\&{goto} \\{nope};\2\2\6
+\&{if} (\\{trick})\1\5
+\X44:Handle the tricky case and \PB{\&{return}}\X;\2\6
+\&{return} \T{0};\6
+\4\\{nope}:\5
+${}\\{bound}\MRL{-{\K}}\\{pos}[\|j];{}$\6
+\&{if} ${}(\\{bound}<\T{0}){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\4\\{newguy}:\5
+\X31:Insert \PB{\\{config}} into the \PB{\\{pos}} table\X;\6
+\&{if} ${}(\|h\E\\{goalhash}){}$\1\5
+\X29:Test if \PB{\\{config}} equals the goal\X;\2\6
+\&{return} \\{trick};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{29}If the current configuration achieves the goal, \PB{\\{hashin}} happily
+terminates
+the search process, and sends control immediately to the external label
+called `\PB{\\{hurray}}'.
+
+\Y\B\4\X29:Test if \PB{\\{config}} equals the goal\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|n;{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\\{config}[\|k]\I\\{goal}[\|k]){}$\1\5
+\&{goto} \\{not\_yet};\2\2\6
+${}\\{longjmp}(\\{success\_point},\39\T{1});{}$\6
+\4\\{not\_yet}:\5
+;\6
+\4${}\}{}$\2\par
+\U28.\fi
+
+\M{30}\B\X24:Initialize\X${}\mathrel+\E{}$\6
+\&{if} (\\{setjmp}(\\{success\_point}))\1\5
+\&{goto} \\{hurray};\C{ get ready for \PB{\\{longjmp}} }\2\par
+\fi
+
+\M{31}\B\X31:Insert \PB{\\{config}} into the \PB{\\{pos}} table\X${}\E{}$\6
+$\|j\K\\{curpos}\AND(\\{memsize}-\T{1});{}$\6
+${}\\{pos}[\|j]\K\\{curpos}-\\{hash}[\|h];{}$\6
+\&{if} ${}(\\{pos}[\|j]>\\{memsize}\V\\{curposh}>\\{hashh}[\|h]+(\\{pos}[\|j]>%
+\\{curpos})){}$\1\5
+${}\\{pos}[\|j]\K\\{memsize}{}$;\C{ relative link that exceeds all cutoffs }\2\6
+${}\\{pos}[\|j+\T{1}]\K\\{curpos}-\\{source}{}$;\C{ relative link to previous
+position }\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|n;{}$ ${}\|k\PP){}$\1\5
+${}\\{pos}[\|j+\T{2}+\|k]\K\\{config}[\|k];{}$\2\6
+${}\\{hash}[\|h]\K\\{curpos},\39\\{hashh}[\|h]\K\\{curposh};{}$\6
+\X32:Update \PB{\\{configs}}\X;\6
+\X33:Update \PB{\\{curpos}}\X;\par
+\U28.\fi
+
+\M{32}When we encounter a new configuration, we print it if it's the
+first to be found at the current distance, or if \PB{\\{verbose}} is set.
+
+\Y\B\4\X32:Update \PB{\\{configs}}\X${}\E{}$\6
+\&{if} ${}(\\{configs}\E\\{oldconfigs}\V\\{verbose}>\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{print\_config}(\\{config},\39\|n);{}$\6
+\&{if} ${}(\\{verbose}>\T{0}){}$\5
+${}\{{}$\1\6
+\\{printf}(\.{"\ ("});\6
+${}\\{print\_big}(\\{configsh},\39\\{configs});{}$\6
+\\{printf}(\.{"=\#"});\6
+${}\\{print\_bigx}(\\{curposh},\39\\{curpos});{}$\6
+\\{printf}(\.{",\ from\ \#"});\6
+${}\\{print\_bigx}(\\{sourceh},\39\\{source});{}$\6
+\\{printf}(\.{")\\n"});\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\\{configs}\PP;{}$\6
+\&{if} ${}(\\{configs}\E\T{0}){}$\1\5
+${}\\{configsh}\PP{}$;\2\par
+\U31.\fi
+
+\M{33}\B\X33:Update \PB{\\{curpos}}\X${}\E{}$\6
+$\\{curpos}\MRL{+{\K}}\|n+\T{2};{}$\6
+\&{if} ${}(\\{curpos}<\|n+\T{2}){}$\1\5
+${}\\{curposh}\PP;{}$\2\6
+\&{if} ${}((\\{curpos}\AND(\\{memsize}-\T{1}))<\|n+\T{2}){}$\1\5
+${}\\{curpos}\MRL{\AND{\K}}{-}\\{memsize};{}$\2\6
+\&{if} ${}(\\{curposh}\E\\{maxposh}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{curpos}\Z\\{maxpos}){}$\1\5
+\&{goto} \\{okay};\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\\{curposh}<\\{maxposh}){}$\1\5
+\&{goto} \\{okay};\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"Sorry,\ my\ memsize\ i}\)\.{sn't\ big\ enough\
+for\ }\)\.{this\ puzzle.\\n"});{}$\6
+${}\\{exit}({-}\T{13});{}$\6
+\4\\{okay}:\par
+\U31.\fi
+
+\M{34}So now we know how to deal with configurations, and we're ready to
+carry out our overall search plan.
+
+\Y\B\4\X34:Solve the puzzle\X${}\E{}$\6
+$\\{printf}(\.{"\\n(using\ moves\ of\ s}\)\.{tyle\ \%d)\\n"},\39\\{style});{}$\6
+\X36:Remember the starting configuration\X;\6
+\4\\{restart}:\5
+\X35:Remember the stopping configuration\X;\6
+\X37:Put the starting configuration into \PB{\\{pos}}\X;\6
+\&{for} ${}(\|d\K\T{1};{}$ ${}\|d<\\{maxmoves};{}$ ${}\|d\PP){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"***\ Distance\ \%d:\\n"},\39\|d);{}$\6
+${}\\{milestone}[\|d]\K\\{curpos},\39\\{milestoneh}[\|d]\K\\{curposh};{}$\6
+${}\\{oldconfigs}\K\\{configs};{}$\6
+\X38:Generate all positions at distance \PB{\|d}\X;\6
+\&{if} ${}(\\{configs}\E\\{oldconfigs}){}$\1\5
+\\{exit}(\T{0});\C{ no solution }\2\6
+\&{if} ${}(\\{verbose}\Z\T{0}){}$\1\5
+${}\\{printf}(\.{"\ and\ \%d\ more.\\n"},\39\\{configs}-\\{oldconfigs}-%
+\T{1});{}$\2\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"No\ solution\ found\ y}\)\.{et\ (maxmoves=\%d)!\\n"},\39%
+\\{maxmoves});{}$\6
+\\{exit}(\T{0});\par
+\U4.\fi
+
+\M{35}\B\X35:Remember the stopping configuration\X${}\E{}$\6
+$\|t\K\\{pack}(\\{aboard},\39\\{apiece});{}$\6
+\&{for} ${}(\|k\K\\{goalhash}\K\T{0};{}$ ${}\|k<\|t;{}$ ${}\|k\PP){}$\1\5
+${}\\{goal}[\|k]\K\\{config}[\|k],\39\\{goalhash}\MRL{{\XOR}{\K}}\\{hashcode}(%
+\\{config}[\|k]);{}$\2\6
+${}\\{goalhash}\MRL{\AND{\K}}\\{hashsize}-\T{1}{}$;\par
+\U34.\fi
+
+\M{36}We might need to return to the starting position when reconstructing
+a solution.
+
+\Y\B\4\X36:Remember the starting configuration\X${}\E{}$\6
+$\|t\K\\{pack}(\\{board},\39\\{piece});{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|t;{}$ ${}\|k\PP){}$\1\5
+${}\\{start}[\|k]\K\\{config}[\|k]{}$;\2\par
+\U34.\fi
+
+\M{37}\B\X37:Put the starting configuration into \PB{\\{pos}}\X${}\E{}$\6
+$\\{curpos}\K\\{cutoff}\K\\{milestone}[\T{0}]\K\T{1},\39\\{curposh}\K%
+\\{cutoffh}\K\\{milestoneh}[\T{0}]\K\T{0};{}$\6
+${}\\{source}\K\\{sourceh}\K\\{configs}\K\\{configsh}\K\\{oldconfigs}\K\|d\K%
+\T{0};{}$\6
+${}\\{maxposh}\K\T{1};{}$\6
+\\{printf}(\.{"***\ Distance\ 0:\\n"});\6
+\\{hashin}(\T{0});\6
+\&{if} ${}(\\{verbose}\Z\T{0}){}$\1\5
+\\{printf}(\.{".\\n"});\2\par
+\U34.\fi
+
+\M{38}\B\X38:Generate all positions at distance \PB{\|d}\X${}\E{}$\6
+\&{if} ${}(\|d>\T{1}){}$\1\5
+${}\\{cutoff}\K\\{milestone}[\|d-\T{2}],\39\\{cutoffh}\K\\{milestoneh}[\|d-%
+\T{2}];{}$\2\6
+${}\\{shortcut}\K\\{curpos}-\\{cutoff};{}$\6
+${}\\{maxpos}\K\\{cutoff}+\\{memsize},\39\\{maxposh}\K\\{cutoffh}+(\\{maxpos}<%
+\\{memsize});{}$\6
+\&{for} ${}(\\{source}\K\\{milestone}[\|d-\T{1}],\39\\{sourceh}\K%
+\\{milestoneh}[\|d-\T{1}];{}$ ${}\\{source}\I\\{milestone}[\|d]\V\\{sourceh}\I%
+\\{milestoneh}[\|d];{}$ ${}\\{source}\K\\{nextsource},\39\\{sourceh}\K%
+\\{nextsourceh}){}$\5
+${}\{{}$\1\6
+${}\|j\K\\{unpack}(\\{board},\39\\{piece},\39\\{place},\39{\AND}\\{pos}[(%
+\\{source}\AND(\\{memsize}-\T{1}))+\T{2}])+\T{2};{}$\6
+${}\\{nextsource}\K\\{source}+\|j,\39\\{nextsourceh}\K\\{sourceh}+(%
+\\{nextsource}<\|j);{}$\6
+\&{if} ${}((\\{nextsource}\AND(\\{memsize}-\T{1}))<\|j){}$\1\5
+${}\\{nextsource}\MRL{\AND{\K}}{-}\\{memsize};{}$\2\6
+\X42:Hash in every move from \PB{\\{board}}\X;\6
+\4${}\}{}$\2\par
+\U34.\fi
+
+\N{1}{39}The answer. We've found a solution in \PB{\|d} moves.
+
+\Y\B\4\X39:Print the solution\X${}\E{}$\6
+\&{if} ${}(\|d\E\T{0}){}$\5
+${}\{{}$\1\6
+\\{printf}(\.{"\\nYou're\ joking:\ Th}\)\.{at\ puzzle\ is\ solved\ }\)\.{in\
+zero\ moves!\\n"});\6
+\\{exit}(\T{0});\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"...\ Solution!\\n"});\6
+\&{if} ${}(\\{verbose}<\T{0}){}$\1\5
+\\{exit}(\T{0});\2\6
+\X40:Print all of the key moves that survive in \PB{\\{pos}}; \PB{\\{exit}} if
+done\X;\6
+\X41:Apologize for lack of memory and go back to square one with reduced
+problem\X;\par
+\U4.\fi
+
+\M{40}Going backward, we can reconstruct the winning line, as long as the data
+appears in the top \PB{\\{memsize}} positions of our configuration list.
+
+\Y\B\4\X40:Print all of the key moves that survive in \PB{\\{pos}}; \PB{%
+\\{exit}} if done\X${}\E{}$\6
+\&{if} ${}(\\{curposh}\V\\{curpos}>\\{memsize}){}$\5
+${}\{{}$\1\6
+${}\\{maxpos}\K\\{curpos}-\\{memsize};{}$\6
+${}\\{maxposh}\K\\{curposh}-(\\{maxpos}>\\{curpos});{}$\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\\{maxpos}\K\\{maxposh}\K\T{0};{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j\Z\\{lr}+\\{colsp};{}$ ${}\|j\PP){}$\1\5
+${}\\{aboard}[\|j]\K\\{board}[\|j];{}$\2\6
+\&{while} ${}(\\{sourceh}>\\{maxposh}\V(\\{sourceh}\E\\{maxposh}\W\\{source}\G%
+\\{maxpos})){}$\5
+${}\{{}$\1\6
+${}\|d\MM;{}$\6
+\&{if} ${}(\|d\E\T{0}){}$\1\5
+\\{exit}(\T{0});\2\6
+${}\\{printf}(\.{"\\n\%d:\\n"},\39\|d);{}$\6
+${}\|k\K\\{source}\AND(\\{memsize}-\T{1});{}$\6
+${}\\{unpack}(\\{aboard},\39\\{apiece},\39\\{place},\39{\AND}\\{pos}[\|k+%
+\T{2}]);{}$\6
+${}\\{print\_board}(\\{aboard},\39\\{apiece});{}$\6
+\&{if} ${}(\\{source}<\\{pos}[\|k+\T{1}]){}$\1\5
+${}\\{sourceh}\MM;{}$\2\6
+${}\\{source}\K\\{source}-\\{pos}[\|k+\T{1}];{}$\6
+\4${}\}{}$\2\par
+\U39.\fi
+
+\M{41}\B\X41:Apologize for lack of memory and go back to square one with
+reduced problem\X${}\E{}$\6
+$\\{printf}(\.{"(Unfortunately\ I've}\)\.{\ forgotten\ how\ to\ ge}\)\.{t\ to\
+level\ \%d,\\n"},\39\|d);{}$\6
+\\{printf}(\.{"\ so\ I'll\ have\ to\ re}\)\.{construct\ that\ part.}\)\.{\
+Please\ bear\ with\ me}\)\.{.)\\n"});\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{hashsize};{}$ ${}\|j\PP){}$\1\5
+${}\\{hash}[\|j]\K\\{hashh}[\|j]\K\T{0};{}$\2\6
+${}\\{unpack}(\\{board},\39\\{piece},\39\\{place},\39\\{start});{}$\6
+\&{goto} \\{restart};\par
+\U39.\fi
+
+\N{1}{42}Moving. The last thing we need to do is actually slide the blocks.
+It seems simple, but the task can be tricky when we get into
+moves of high-order styles.
+
+\Y\B\4\X42:Hash in every move from \PB{\\{board}}\X${}\E{}$\6
+\&{if} ${}(\\{style}<\T{3}){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{4};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{1};{}$ ${}\|k\Z\\{bcount};{}$ ${}\|k\PP){}$\1\5
+${}\\{move}(\|k,\39\\{delta}[\|j],\39\\{delta}[\|j]);{}$\2\2\2\6
+\&{else}\1\5
+\X57:Try all supermoves\X;\2\par
+\U38.\fi
+
+\M{43}In the \PB{\\{move}} subroutine, parameter \PB{\|k} is a block number,
+parameter \PB{\\{del}} is a displacement, and parameter \PB{\\{delo}} is such
+that we've recently considered a board with displacement \PB{$\\{del}-%
+\\{delo}$}.
+
+\Y\B\4\X10:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{move}(\&{int} \|k${},\39{}$\&{int} \\{del}${},\39{}$\&{int} %
+\\{delo})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|s${},{}$ \|t;\7
+${}\|s\K\\{place}[\|k],\39\|t\K\\{piece}[\|k];{}$\6
+\&{for} ${}(\|j\K\\{offstart}[\|t];{}$  ; ${}\|j\PP){}$\5
+${}\{{}$\C{ we remove the piece }\1\6
+${}\\{board}[\|s+\\{off}[\|j]]\K\T{0};{}$\6
+\&{if} ${}(\R\\{off}[\|j]){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\\{offstart}[\|t];{}$  ; ${}\|j\PP){}$\5
+${}\{{}$\C{ we test if it fits in new position }\1\6
+\&{if} ${}(\\{board}[\|s+\\{del}+\\{off}[\|j]]){}$\1\5
+\&{goto} \\{illegal};\2\6
+\&{if} ${}(\R\\{off}[\|j]){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\\{offstart}[\|t];{}$  ; ${}\|j\PP){}$\5
+${}\{{}$\C{ if so, we move it }\1\6
+${}\\{board}[\|s+\\{del}+\\{off}[\|j]]\K\|k;{}$\6
+\&{if} ${}(\R\\{off}[\|j]){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{hashin}(\\{style}\E\T{2})\V\\{style}\E\T{1}){}$\1\5
+\X45:Unmove the piece and recurse\X\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\\{offstart}[\|t];{}$  ; ${}\|j\PP){}$\5
+${}\{{}$\C{ remove the shifted piece }\1\6
+${}\\{board}[\|s+\\{del}+\\{off}[\|j]]\K\T{0};{}$\6
+\&{if} ${}(\R\\{off}[\|j]){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\4\\{illegal}:\6
+\&{for} ${}(\|j\K\\{offstart}[\|t];{}$  ; ${}\|j\PP){}$\5
+${}\{{}$\C{ replace the unshifted piece }\1\6
+${}\\{board}[\|s+\\{off}[\|j]]\K\|k;{}$\6
+\&{if} ${}(\R\\{off}[\|j]){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{44}Style 1 is straightforward: We keep moving in direction \PB{\\{delo}}
+until we
+bump into an obstacle. But style~2 is more subtle, because we need to explore
+all reachable possibilities. I thank Gary McDonald for pointing out a
+serious blunder in my first attempt to find all of the style-2 moves.
+
+The basic idea we use, to find all configurations that are reachable by
+moving a single piece any number of times, is the well-known technique
+of depth-first search. But there's a twist, because such a sequence of
+moves might go through configurations that already exist in the hash table;
+we can't simply stop searching when we encounter an old configuration.
+For example, consider the starting board \.{0102}, from which we can
+reach \.{0120} or \.{0012} or \.{1002} in a single move. A~second move,
+from \.{0120}, leads to \.{1020}. And then when we're considering
+possible second moves from \.{1002}, we dare not stop at the
+``already seen'' \.{1020}, lest we fail to discover the move to \.{1200}.
+
+We can, however, argue that every valid style-2 move at distance~$d$ can be
+reached by a path that begins at distance $d-1$ and stays entirely at
+distance~$d$ after the first step. (The shortest path to that move
+clearly has this property.)
+
+Suppose we're exploring the style-2 moves at distance $d$ that are successors
+of configuration $\alpha$ at distance $d-1$. If we encounter some
+configuration~$\beta$ that has already been seen, there are two cases:
+The predecessor of~$\beta$ might be~$\alpha$, or it might be some other
+configuration, $\alpha'$. In the former case, we needn't explore any
+further past~$\beta$, because the depth-first search procedure will already
+have been there and done that. (Only one piece has moved, when changing
+from $\alpha$ to~$\beta$, so it must be the same as the piece we're currently
+trying to move.) On the other hand if $\alpha\ne\alpha'$, the example above
+shows that we need to look past~$\beta$ into potentially unknown territory, or
+we might miss some legal moves from~$\alpha$. In this second case we
+need a way to avoid encountering $\beta$ again and again, endlessly.
+
+To resolve this dilemma without adding additional ``mark bits'' to the data
+structure, we will {\it rename\/} the predecessor of~$\beta$, by changing it
+from $\alpha'$ to~$\alpha$. This change is legitimate, since $\beta$ is
+reachable in one move from both $\alpha'$ and~$\alpha$, which both are at
+distance~$d-1$. Then if we encounter $\beta$ again, we won't have to
+reconsider it; infinite looping will be impossible.
+
+This strategy tells us how to implement the unfinished ``tricky'' part
+of the \PB{\\{hashin}} routine. When the following code is encountered, we've
+just
+found a known configuration~$\beta$ that begins at $j$ in the \PB{\\{pos}}
+array.
+
+\Y\B\4\X44:Handle the tricky case and \PB{\&{return}}\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{bound}<\\{shortcut}){}$\1\5
+\&{return} \T{0};\C{ return if $\beta$ not at distance $d$ }\2\6
+${}\|n\K(\|j-\\{source})\MOD(\\{memsize}-\T{1}){}$;\C{ find the distance from $%
+\beta$ to $\alpha$ }\6
+\&{if} ${}(\\{pos}[\|j+\T{1}]\E\|n){}$\1\5
+\&{return} \T{0};\C{ return if $\alpha$ preceded $\beta$ }\2\6
+${}\\{pos}[\|j+\T{1}]\K\|n{}$;\C{ otherwise make $\alpha$ precede $\beta$ }\6
+\&{return} \T{1};\C{ and continue the depth-first search }\6
+\4${}\}{}$\2\par
+\U28.\fi
+
+\M{45}Local variables \PB{\|s} and \PB{\|t} need not be preserved across the
+recursive
+call in this part of the \PB{\\{move}} routine. (I don't expect a typical
+compiler
+to recognize that fact; but maybe I underestimate the current state
+of compiler technology.)
+
+\Y\B\4\X45:Unmove the piece and recurse\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\\{offstart}[\|t];{}$  ; ${}\|j\PP){}$\5
+${}\{{}$\C{ remove the shifted piece }\1\6
+${}\\{board}[\|s+\\{del}+\\{off}[\|j]]\K\T{0};{}$\6
+\&{if} ${}(\R\\{off}[\|j]){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\\{offstart}[\|t];{}$  ; ${}\|j\PP){}$\5
+${}\{{}$\C{ replace the unshifted piece }\1\6
+${}\\{board}[\|s+\\{off}[\|j]]\K\|k;{}$\6
+\&{if} ${}(\R\\{off}[\|j]){}$\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{style}\E\T{1}){}$\1\5
+${}\\{move}(\|k,\39\\{del}+\\{delo},\39\\{delo});{}$\2\6
+\&{else}\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{4};{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\\{delta}[\|j]\I{-}\\{delo}){}$\1\5
+${}\\{move}(\|k,\39\\{del}+\\{delta}[\|j],\39\\{delta}[\|j]);{}$\2\2\2\6
+\4${}\}{}$\2\par
+\U43.\fi
+
+\N{1}{46}Supermoving. The remaining job is the most interesting one: How should
+we
+deal with the possibility of sliding several blocks simultaneously?
+
+A puzzle with $m$ blocks has $2^m-1$ potential superpieces,
+and one can easily construct examples in which that upper limit is achieved.
+Fortunately, however, reasonable puzzles have only a reasonable number of
+superpiece moves; our job is to avoid examining unnecessary cases. The
+following algorithm is sort of a cute way to do that.
+
+First, we prepare for future calculations by making \PB{\\{aboard}} an edited
+copy of
+\PB{\\{board}}. In the process, we change \PB{\\{bdry}} and \PB{\\{obst}} items
+to zero,
+considering the zeros now to be a special kind of ``stuck'' block,
+and we link together all cells belonging to each block.
+This linking will be more efficient than the offset-oriented method
+used before.
+
+\Y\B\4\X46:Copy and link the \PB{\\{board}}\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j\Z\\{bcount};{}$ ${}\|j\PP){}$\1\5
+${}\\{head}[\|j]\K{-}\T{1};{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j\Z\\{lr}+\\{colsp};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|k\K\\{board}[\|j];{}$\6
+\&{if} (\|k)\5
+${}\{{}$\1\6
+\&{if} ${}(\|k\G\\{obst}){}$\1\5
+${}\|k\K\T{0};{}$\2\6
+${}\\{aboard}[\|j]\K\|k;{}$\6
+${}\\{link}[\|j]\K\\{head}[\|k];{}$\6
+${}\\{head}[\|k]\K\|j;{}$\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\\{aboard}[\|j]\K{-}\T{1};{}$\2\6
+\4${}\}{}$\2\par
+\U57.\fi
+
+\M{47}Elementary graph theory helps now.
+
+Consider the digraph whose vertices are blocks, with arcs $u\to v$
+whenever $u$ would bump into $v$ when block $u$ is shifted by a given amount.
+The superpieces are {\it ideals\/} of this graph, namely they have the
+property that if $u$ is in the superpiece and $u\to v$ then $v$ is
+also in the superpiece. Indeed, every ideal that is nonempty and does not
+contain the stuck block is a superpiece, and conversely.
+So the problem that faces us is equivalent to generating all such ideals
+in a given digraph.
+
+The complement of an ideal is an ideal of the dual digraph (the digraph
+in which arcs are reversed). And the digraph for sliding left is the
+dual of the digraph for sliding right. So the problem of generating all
+superpieces for left/right slides is equivalent to generating all ideals
+of the digraph that corresponds to moving from $k-1$ to $k$.
+If such an ideal doesn't contain the stuck block, it defines a superpiece for
+sliding right; otherwise its complement defines a superpiece for sliding left.
+
+We can construct that digraph by running through the links just made:
+After the following code has been executed, the arcs leading from~$u$ will
+be to \PB{\\{aboard}}$[l]$, \PB{\\{aboard}}$[l']$, \PB{\\{aboard}}$[l'']$,
+etc., where
+$l=\PB{\\{out}[\|u]}$, $l'=\PB{\\{olink}}[l]$, $l''=\PB{\\{olink}}[l']$, etc.;
+the arcs leading
+into~$u$ will be similar, with \PB{\\{in}} and \PB{\\{ilink}} instead of \PB{%
+\\{out}} and \PB{\\{olink}}.
+
+\Y\B\4\X47:Construct the digraph for \PB{$\\{del}\K\T{1}$}\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j\Z\\{bcount};{}$ ${}\|j\PP){}$\1\5
+${}\\{out}[\|j]\K\\{in}[\|j]\K{-}\T{1};{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j\Z\\{bcount};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\\{head}[\|j];{}$ ${}\|k\G\\{ul};{}$ ${}\|k\K\\{link}[\|k]){}$%
+\5
+${}\{{}$\C{ \PB{$\\{aboard}[\|k]\K\|j$} }\1\6
+${}\|t\K\\{aboard}[\|k-\T{1}];{}$\6
+\&{if} ${}(\|t\I\|j\W\|t\G\T{0}\W(\\{out}[\|t]<\T{0}\V\\{aboard}[\\{out}[\|t]]%
+\I\|j)){}$\5
+${}\{{}$\1\6
+${}\\{olink}[\|k]\K\\{out}[\|t],\39\\{out}[\|t]\K\|k;{}$\6
+${}\\{ilink}[\|k-\T{1}]\K\\{in}[\|j],\39\\{in}[\|j]\K\|k-\T{1};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\par
+\U57.\fi
+
+\M{48}And the problem of generating all superpieces for up/down slides
+is equivalent to generating all ideals of a very similar digraph.
+
+\Y\B\4\X48:Construct the digraph for \PB{$\\{del}\K\\{colsp}$}\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j\Z\\{bcount};{}$ ${}\|j\PP){}$\1\5
+${}\\{out}[\|j]\K\\{in}[\|j]\K{-}\T{1};{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j\Z\\{bcount};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\\{head}[\|j];{}$ ${}\|k\G\\{ul};{}$ ${}\|k\K\\{link}[\|k]){}$%
+\5
+${}\{{}$\C{ \PB{$\\{aboard}[\|k]\K\|j$} }\1\6
+${}\|t\K\\{aboard}[\|k-\\{colsp}];{}$\6
+\&{if} ${}(\|t\I\|j\W\|t\G\T{0}\W(\\{out}[\|t]<\T{0}\V\\{aboard}[\\{out}[\|t]]%
+\I\|j)){}$\5
+${}\{{}$\1\6
+${}\\{olink}[\|k]\K\\{out}[\|t],\39\\{out}[\|t]\K\|k;{}$\6
+${}\\{ilink}[\|k-\\{colsp}]\K\\{in}[\|j],\39\\{in}[\|j]\K\|k-\\{colsp};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\par
+\U57.\fi
+
+\M{49}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{int} ${}\\{head}[\\{maxsize}+\T{1}],{}$ ${}\\{out}[\\{maxsize}+\T{1}],{}$
+${}\\{in}[\\{maxsize}+\T{1}]{}$;\C{ list heads }\6
+\&{int} \\{link}[\\{boardsize}]${},{}$ \\{olink}[\\{boardsize}]${},{}$ %
+\\{ilink}[\\{boardsize}];\C{ links }\par
+\fi
+
+\M{50}The following subroutine for ideals of a digraph maintains a permutation
+of the vertices in an array \PB{\\{perm}}, with the inverse permutation in \PB{%
+\\{iperm}}.
+Elements \PB{\\{inx}[\|l]} through \PB{$\\{inx}[\|l+\T{1}]-\T{1}$} of this
+array are known to be
+simultaneously either in or out of the ideal, according as \PB{$\\{decision}[%
+\|l]\K\T{1}$}
+or \PB{$\\{decision}[\|l]\K\T{0}$}, based on the decision
+made on level~\PB{\|l} of a backtrack tree.
+
+The basic invariant relation is that we could obtain an ideal by either
+excluding or including all elements of index $\ge\PB{\\{inx}[\|l]}$ in \PB{%
+\\{perm}}.
+This property holds
+when $l=0$ because \PB{$\\{inx}[\T{0}]\K\T{0}$}. To raise the level, we decide
+first to
+exclude vertex \PB{\\{perm}[\\{inx}[\|l]]}; this also excludes all vertices
+that lead to it, and we rearrange \PB{\\{perm}} in order to bring those
+elements into their proper place. Afterwards, we decide to include
+vertex \PB{\\{perm}[\\{inx}[\|l]]}; this also includes all vertices that lead
+from it,
+in a similar way.
+
+Vertex 0 corresponds to an artificial piece that is ``stuck,'' as
+explained above. If this vertex is excluded from the ideal, we create a list
+of all board positions for vertices that are included; this
+will define a superpiece for shifts by \PB{\\{del}}. But if the stuck vertex is
+included in the ideal, we create a list of all board positions for vertices
+that are excluded; the list in that case will define a superpiece for shifts
+by \PB{${-}\\{del}$}. The list contains \PB{\\{lstart}[\|l]} entries at the
+beginning of level~\PB{\|l}.
+
+\Y\B\4\X10:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} ${}\\{supermove}(\&{int},\39\&{int}){}$;\C{ see below }\7
+\&{void} \\{ideals}(\&{int} \\{del})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|l${},{}$ \|p${},{}$ \|u${},{}$ %
+\|v${},{}$ \|t;\7
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j\Z\\{bcount};{}$ ${}\|j\PP){}$\1\5
+${}\\{perm}[\|j]\K\\{iperm}[\|j]\K\|j;{}$\2\6
+${}\|l\K\|p\K\T{0};{}$\6
+\4\\{excl}:\5
+${}\\{decision}[\|l]\K\T{0},\39\\{lstart}[\|l]\K\|p;{}$\6
+\&{for} ${}(\|j\K\\{inx}[\|l],\39\|t\K\|j+\T{1};{}$ ${}\|j<\|t;{}$ ${}\|j%
+\PP){}$\1\5
+\X51:Put all vertices that lead to \PB{\\{perm}[\|j]} into positions near $j$%
+\X;\2\6
+\&{if} ${}(\|t>\\{bcount}){}$\5
+${}\{{}$\1\6
+\X54:Process an ideal\X;\5
+\&{goto} \\{incl};\6
+\4${}\}{}$\2\6
+${}\\{inx}[\PP\|l]\K\|t{}$;\5
+\&{goto} \\{excl};\6
+\4\\{incl}:\5
+${}\\{decision}[\|l]\K\T{1},\39\|p\K\\{lstart}[\|l];{}$\6
+\&{for} ${}(\|j\K\\{inx}[\|l],\39\|t\K\|j+\T{1};{}$ ${}\|j<\|t;{}$ ${}\|j%
+\PP){}$\1\5
+\X52:Put all vertices that lead from \PB{\\{perm}[\|j]} into positions near $j$%
+\X;\2\6
+\&{if} ${}(\|t>\\{bcount}){}$\5
+${}\{{}$\1\6
+\X54:Process an ideal\X;\5
+\&{goto} \\{backup};\6
+\4${}\}{}$\2\6
+${}\\{inx}[\PP\|l]\K\|t{}$;\5
+\&{goto} \\{excl};\6
+\4\\{backup}:\5
+\&{if} (\|l)\5
+${}\{{}$\1\6
+${}\|l\MM;{}$\6
+\&{if} (\\{decision}[\|l])\1\5
+\&{goto} \\{backup};\2\6
+\&{goto} \\{incl};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{51}\B\X51:Put all vertices that lead to \PB{\\{perm}[\|j]} into positions
+near $j$\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|v\K\\{perm}[\|j];{}$\6
+\&{for} ${}(\|k\K\\{in}[\|v];{}$ ${}\|k\G\T{0};{}$ ${}\|k\K\\{ilink}[\|k]){}$\5
+${}\{{}$\1\6
+${}\|u\K\\{aboard}[\|k];{}$\6
+\&{if} ${}(\\{iperm}[\|u]\G\|t){}$\5
+${}\{{}$\1\6
+\&{register} \&{int} \\{uu}${}\K\\{perm}[\|t],{}$ \\{tt}${}\K\\{iperm}[\|u];{}$%
+\7
+${}\\{perm}[\|t]\K\|u,\39\\{perm}[\\{tt}]\K\\{uu},\39\\{iperm}[\|u]\K\|t,\39%
+\\{iperm}[\\{uu}]\K\\{tt};{}$\6
+${}\|t\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{decision}[\T{0}]\E\T{1}){}$\1\6
+\&{for} ${}(\|v\K\\{head}[\|v];{}$ ${}\|v\G\T{0};{}$ ${}\|v\K\\{link}[\|v]){}$%
+\1\5
+${}\\{super}[\|p\PP]\K\|v;{}$\2\2\6
+\4${}\}{}$\2\par
+\U50.\fi
+
+\M{52}\B\X52:Put all vertices that lead from \PB{\\{perm}[\|j]} into positions
+near $j$\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|u\K\\{perm}[\|j];{}$\6
+\&{for} ${}(\|k\K\\{out}[\|u];{}$ ${}\|k\G\T{0};{}$ ${}\|k\K\\{olink}[\|k]){}$\5
+${}\{{}$\1\6
+${}\|v\K\\{aboard}[\|k];{}$\6
+\&{if} ${}(\\{iperm}[\|v]\G\|t){}$\5
+${}\{{}$\1\6
+\&{register} \&{int} \\{vv}${}\K\\{perm}[\|t],{}$ \\{tt}${}\K\\{iperm}[\|v];{}$%
+\7
+${}\\{perm}[\|t]\K\|v,\39\\{perm}[\\{tt}]\K\\{vv},\39\\{iperm}[\|v]\K\|t,\39%
+\\{iperm}[\\{vv}]\K\\{tt};{}$\6
+${}\|t\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{decision}[\T{0}]\E\T{0}){}$\1\6
+\&{for} ${}(\|u\K\\{head}[\|u];{}$ ${}\|u\G\T{0};{}$ ${}\|u\K\\{link}[\|u]){}$%
+\1\5
+${}\\{super}[\|p\PP]\K\|u;{}$\2\2\6
+\4${}\}{}$\2\par
+\U50.\fi
+
+\M{53}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{int} ${}\\{perm}[\\{maxsize}+\T{1}],{}$ ${}\\{iperm}[\\{maxsize}+\T{1}]{}$;%
+\C{ basic permutation and its inverse }\6
+\&{char} \\{decision}[\\{maxsize}];\C{ decisions }\6
+\&{int} \\{inx}[\\{maxsize}]${},{}$ \\{lstart}[\\{maxsize}];\C{ backup values
+at decision points }\6
+\&{int} \\{super}[\\{maxsize}];\C{ offsets for the current superpiece }\par
+\fi
+
+\M{54}\B\X54:Process an ideal\X${}\E{}$\6
+\&{if} (\|p)\5
+${}\{{}$\1\6
+${}\\{super}[\|p]\K\T{0}{}$;\C{ sentinel at end of the superpiece }\6
+\&{if} ${}(\\{decision}[\T{0}]\E\T{0}){}$\1\5
+${}\\{supermove}(\\{del},\39\\{del});{}$\2\6
+\&{else}\1\5
+${}\\{supermove}({-}\\{del},\39{-}\\{del});{}$\2\6
+\4${}\}{}$\2\par
+\U50.\fi
+
+\M{55}The \PB{\\{supermove}} routine is like \PB{\\{move}}, but it uses the
+superpiece
+defined in \PB{\\{super}} instead of using block~\PB{\|k}.
+
+\Y\B\4\X10:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{supermove}(\&{int} \\{del}${},\39{}$\&{int} \\{delo})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|s${},{}$ \|t;\7
+\&{for} ${}(\|j\K\T{0};{}$ \\{super}[\|j]; ${}\|j\PP){}$\5
+${}\{{}$\C{ we remove the superpiece }\1\6
+${}\\{board}[\\{super}[\|j]]\K\T{0};{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ \\{super}[\|j]; ${}\|j\PP){}$\5
+${}\{{}$\C{ we test if it fits in new position }\1\6
+\&{if} ${}(\\{board}[\\{del}+\\{super}[\|j]]){}$\1\5
+\&{goto} \\{illegal};\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ \\{super}[\|j]; ${}\|j\PP){}$\5
+${}\{{}$\C{ if so, we move it }\1\6
+${}\\{board}[\\{del}+\\{super}[\|j]]\K\\{aboard}[\\{super}[\|j]];{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{hashin}(\\{style}\E\T{5})\V\\{style}\E\T{4}){}$\1\5
+\X56:Unmove the superpiece and recurse\X\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ \\{super}[\|j]; ${}\|j\PP){}$\5
+${}\{{}$\C{ remove the shifted superpiece }\1\6
+${}\\{board}[\\{del}+\\{super}[\|j]]\K\T{0};{}$\6
+\4${}\}{}$\2\6
+\4\\{illegal}:\6
+\&{for} ${}(\|j\K\T{0};{}$ \\{super}[\|j]; ${}\|j\PP){}$\5
+${}\{{}$\C{ replace the unshifted superpiece }\1\6
+${}\\{board}[\\{super}[\|j]]\K\\{aboard}[\\{super}[\|j]];{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{56}After we've moved a superpiece once, the digraph changes and so do the
+ideals. But that's OK; the \PB{\\{supermove}} routine checks that
+we aren't blocked at any step of the way.
+
+\Y\B\4\X56:Unmove the superpiece and recurse\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ \\{super}[\|j]; ${}\|j\PP){}$\5
+${}\{{}$\C{ remove the shifted superpiece }\1\6
+${}\\{board}[\\{del}+\\{super}[\|j]]\K\T{0};{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ \\{super}[\|j]; ${}\|j\PP){}$\5
+${}\{{}$\C{ replace the unshifted superpiece }\1\6
+${}\\{board}[\\{super}[\|j]]\K\\{aboard}[\\{super}[\|j]];{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{style}\E\T{4}){}$\1\5
+${}\\{supermove}(\\{del}+\\{delo},\39\\{delo});{}$\2\6
+\&{else}\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{4};{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\\{delta}[\|j]\I{-}\\{delo}){}$\1\5
+${}\\{supermove}(\\{del}+\\{delta}[\|j],\39\\{delta}[\|j]);{}$\2\2\2\6
+\4${}\}{}$\2\par
+\U55.\fi
+
+\M{57}The program now comes to a glorious conclusion as we put the remaining
+pieces of code together.
+
+\Y\B\4\X57:Try all supermoves\X${}\E{}$\6
+${}\{{}$\1\6
+\X46:Copy and link the \PB{\\{board}}\X;\6
+\X48:Construct the digraph for \PB{$\\{del}\K\\{colsp}$}\X;\6
+\\{ideals}(\\{colsp});\6
+${}\\{head}[\T{0}]\K\\{lr}+\T{1}{}$;\C{ I apologize for this tricky
+optimization }\6
+\X47:Construct the digraph for \PB{$\\{del}\K\T{1}$}\X;\6
+\\{ideals}(\T{1});\6
+\4${}\}{}$\2\par
+\U42.\fi
+
+\N{1}{58}Index.
+\fi
+
+\inx
+\fin
+\con

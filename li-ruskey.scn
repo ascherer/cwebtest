@@ -1,0 +1,57 @@
+\I\X3:Abort if \PB{\|j} is not a legal value for $j_k$\X
+\U2.
+\I\X34:Compile the link-change strings \PB{$\\{vertex}[\|k].\\{tau}[\,]$}\X
+\U31.
+\I\X40:Compile \PB{$\\{vertex}[\|k].\\{tau}[\T{0}]$}\X
+\U34.
+\I\X35:Compile \PB{$\\{vertex}[\|k].\\{tau}[\T{1}]$}\X
+\U34.
+\I\X42:Find $l_1$ for \PB{\\{tau}[\T{0}]}\X
+\U40.
+\I\X38:Find $l_1$ for \PB{\\{tau}[\T{1}]}\X
+\U35.
+\I\X41:Find $r_1$ for \PB{\\{tau}[\T{0}]}\X
+\U40.
+\I\X36:Find $r_1$ for \PB{\\{tau}[\T{1}]}\X
+\U35.
+\I\X43:Find the next $r_j$ and $l_j$ for \PB{\\{tau}[\T{0}]}\X
+\U40.
+\I\X39:Find the next $r_j$ and $l_j$ for \PB{\\{tau}[\T{1}]}\X
+\U35.
+\I\X46:Generate the answers\X
+\U1.
+\I\X4, 8, 14, 24, 30, 32, 37, 47, 57, 60:Global variables\X
+\U1.
+\I\X7, 13, 16, 23, 31, 61:Initialize the data structures\X
+\U1.
+\I\X44:Link siblings together\X
+\U34.
+\I\X5, 9, 45:Local variables\X
+\U1.
+\I\X49:Make node \PB{\|p} passive\X
+\U46.
+\I\X33:Merge the sets $A_k$ and $B_k$, retaining preorder\X
+\U31.
+\I\X52:Move backward, setting \PB{$\|p\MG\\{bit}\K\T{0}$}\X
+\U46.
+\I\X51:Move forward, setting \PB{$\|p\MG\\{bit}\K\T{1}$}\X
+\U46.
+\I\X12:Other fields of an \&{info} record\X
+\U6.
+\I\X2:Parse the command line\X
+\U1.
+\I\X53:Print out all the current bits\X
+\U46.
+\I\X54:Print the fringe in symbolic form\X
+\U53.
+\I\X50:Repair the stale pointer \PB{$\|p\MG\\{left}$}\X
+\U46.
+\I\X48:Set \PB{\|p} to the rightmost active node of the fringe, and activate
+everything to its right\X
+\U46.
+\I\X56:Set \PB{\|r} to the non-stale form of \PB{$\|q\MG\\{left}$}\X
+\U54.
+\I\X15, 58, 59:Subroutines\X
+\U1.
+\I\X6, 29, 55:Type definitions\X
+\U1.

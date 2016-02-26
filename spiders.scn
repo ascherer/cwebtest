@@ -1,0 +1,39 @@
+\I\X17:Compute the \PB{\\{bstart}} links for \PB{\|k}'s family\X
+\U16.
+\I\X21:Delete block $k$ before $l$\X
+\U19.
+\I\X8:Fill in all \PB{\\{umax}} and \PB{\\{vmax}} links, traversing in reverse
+postorder\X
+\U7.
+\I\X24:Generate the answers\X
+\U1.
+\I\X4, 9, 12, 18, 25, 32:Global variables\X
+\U1.
+\I\X7, 10, 11, 16:Initialize the data structures\X
+\U1.
+\I\X20:Insert block $k$ before $l$ and \PB{\&{return}}\X
+\U19.
+\I\X23:Launch the active list\X
+\U24.
+\I\X5:Local variables\X
+\U1.
+\I\X29:Move backward, setting \PB{$\\{bit}[\|k]\K\T{0}$}\X
+\U24.
+\I\X28:Move forward, setting \PB{$\\{bit}[\|k]\K\T{1}$}\X
+\U24.
+\I\X3:Parse the command line\X
+\U1.
+\I\X30:Print out all the current bits\X
+\U24.
+\I\X33:Print out the results of initialization\X
+\U24.
+\I\X31:Print the active list in symbolic form\X
+\U30.
+\I\X27:Put \PB{\|k} to sleep\X
+\U24.
+\I\X22:Replace block $k$ by block $i$ and \PB{\&{return}}\X
+\U21.
+\I\X26:Set \PB{\|k} to the rightmost nonsleeping node of the active list\X
+\U24.
+\I\X13, 19:Subroutines\X
+\U1.

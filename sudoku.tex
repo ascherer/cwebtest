@@ -1,0 +1,112 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. Mike Spivey announced a programming contest in February 2005,
+asking for a program that solves ``sudoku'' puzzles (which evidently
+appear daily in British newspapers). This program takes a sudoku
+specification in standard input and creates --- on standard output ---
+a file that can be piped into {\mc DANCE} in order to deduce all
+solutions.
+
+Brief explanation: Each possible placement of a digit corresponds to
+a row, column, and box where that digit does not yet appear.
+We want an exact cover of those rows, columns, and boxes.
+
+Apology: I wrote this in a big hurry. But I couldn't resist
+the task, because it is such a nice application of exact covering.
+
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\&{char} \\{buf}[\T{11}];\6
+\&{int} \\{row}[\T{9}][\T{10}]${},{}$ \\{col}[\T{9}][\T{10}]${},{}$ \\{box}[%
+\T{9}][\T{10}];\C{ things to cover }\6
+\&{int} \\{board}[\T{9}][\T{9}];\C{ positions already filled }\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|d${},{}$ \|x;\7
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{9};{}$ ${}\|k\PP){}$\1\5
+\X2:Input row \PB{\|k}\X;\2\6
+\X3:Output the column names needed by {\mc DANCE}\X;\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{9};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{9};{}$ ${}\|k\PP){}$\1\6
+\&{if} ${}(\R\\{board}[\|k][\|j]){}$\1\5
+\X4:Output the possibilities for filling column \PB{\|j} of row \PB{\|k}\X;\2\2%
+\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}In a production system I would of course try to give more
+informative error messages about malformed input data.
+Here I simply quit, if the rules haven't been followed.
+
+\Y\B\4\D$\\{panic}(\|m)$ \6
+${}\{{}$\5
+\1${}\\{fprintf}(\\{stderr},\39\.{"\%s!\\n\%s"},\39\|m,\39\\{buf}){}$;\5
+${}\\{exit}({-}\T{1}){}$;\5
+${}\}{}$\2\par
+\Y\B\4\X2:Input row \PB{\|k}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{fgets}(\\{buf},\39\T{11},\39\\{stdin});{}$\6
+\&{if} ${}(\\{buf}[\T{9}]\I\.{'\\n'}){}$\1\5
+\\{panic}(\.{"Input\ line\ should\ h}\)\.{ave\ 9\ characters\ exa}\)\.{ctly!%
+\\n"});\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{9};{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\\{buf}[\|j]\I\.{'.'}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{buf}[\|j]<\.{'1'}\V\\{buf}[\|j]>\.{'9'}){}$\1\5
+\\{panic}(\.{"Illegal\ character\ i}\)\.{n\ input!\\n"});\2\6
+${}\|d\K\\{buf}[\|j]-\.{'0'};{}$\6
+\&{if} (\\{row}[\|k][\|d])\1\5
+\\{panic}(\.{"Two\ identical\ digit}\)\.{s\ in\ a\ row!\\n"});\2\6
+${}\\{row}[\|k][\|d]\K\T{1};{}$\6
+\&{if} (\\{col}[\|j][\|d])\1\5
+\\{panic}(\.{"Two\ identical\ digit}\)\.{s\ in\ a\ column!\\n"});\2\6
+${}\\{col}[\|j][\|d]\K\T{1};{}$\6
+${}\|x\K((\&{int})(\|k/\T{3}))*\T{3}+((\&{int})(\|j/\T{3}));{}$\6
+\&{if} (\\{box}[\|x][\|d])\1\5
+\\{panic}(\.{"Two\ identical\ digit}\)\.{s\ in\ a\ box!\\n"});\2\6
+${}\\{box}[\|x][\|d]\K\T{1};{}$\6
+${}\\{board}[\|k][\|j]\K\T{1};{}$\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}First we print out all the positions, rows, columns, and boxes that
+need to be covered.
+
+\Y\B\4\X3:Output the column names needed by {\mc DANCE}\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{9};{}$ ${}\|k\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{9};{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\R\\{board}[\|k][\|j]){}$\1\5
+${}\\{printf}(\.{"\ p\%d\%d"},\39\|k,\39\|j);{}$\2\2\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{9};{}$ ${}\|k\PP){}$\1\6
+\&{for} ${}(\|d\K\T{1};{}$ ${}\|d\Z\T{9};{}$ ${}\|d\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\R\\{row}[\|k][\|d]){}$\1\5
+${}\\{printf}(\.{"\ r\%d\%d"},\39\|k,\39\|d);{}$\2\6
+\&{if} ${}(\R\\{col}[\|k][\|d]){}$\1\5
+${}\\{printf}(\.{"\ c\%d\%d"},\39\|k,\39\|d);{}$\2\6
+\&{if} ${}(\R\\{box}[\|k][\|d]){}$\1\5
+${}\\{printf}(\.{"\ b\%d\%d"},\39\|k,\39\|d);{}$\2\6
+\4${}\}{}$\2\2\6
+\\{printf}(\.{"\\n"});\par
+\U1.\fi
+
+\M{4}Then we print out all the possible placements.
+
+\Y\B\4\X4:Output the possibilities for filling column \PB{\|j} of row \PB{\|k}%
+\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|x\K((\&{int})(\|k/\T{3}))*\T{3}+((\&{int})(\|j/\T{3}));{}$\6
+\&{for} ${}(\|d\K\T{1};{}$ ${}\|d\Z\T{9};{}$ ${}\|d\PP){}$\1\6
+\&{if} ${}(\R\\{row}[\|k][\|d]\W\R\\{col}[\|j][\|d]\W\R\\{box}[\|x][\|d]){}$\1\5
+${}\\{printf}(\.{"p\%d\%d\ r\%d\%d\ c\%d\%d\ b}\)\.{\%d\%d\\n"},\39\|k,\39\|j,%
+\39\|k,\39\|d,\39\|j,\39\|d,\39\|x,\39\|d);{}$\2\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\N{1}{5}Index.
+\fi
+
+\inx
+\fin
+\con

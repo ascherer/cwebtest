@@ -1,0 +1,19 @@
+\I\X12:Compute the edges of triangle 0\X
+\U11.
+\I\X13:Compute the neighbors of triangle \PB{\|k}\X
+\U1.
+\I\X14:Compute \PB{\\{t36}}\X
+\U13.
+\I\X15:Compute \PB{\\{t45}}\X
+\U13.
+\I\X16:Compute \PB{\\{t90}}\X
+\U13.
+\I\X6, 9, 10:Global variables\X
+\U1.
+\I\X11:Set up triangle 0\X
+\U1.
+\I\X3, 4, 5, 8:Subroutines\X
+\U1.
+\I\X2, 7:Type definitions\X
+\U1.
+

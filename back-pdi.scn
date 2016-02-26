@@ -1,0 +1,35 @@
+\I\X22:Absorb a forced move\X
+\U11.
+\I\X5:Add \PB{$\|c+{*}(\|p+\|k)$} to \PB{${*}(\|q+\|k)$}, giving \PB{${*}(\|r+%
+\|k)$} and carry~\PB{\|c}\X
+\U4.
+\I\X16:Advance to the next level with $x_l=\PB{\\{xl}}$ and \PB{\&{goto} %
+\\{b2}}\X
+\U11.
+\I\X11:Backtrack through all cases\X
+\U1.
+\I\X8, 14:Global variables\X
+\U1.
+\I\X18:If there's an easy way to prove that $x_l$ can't be \PB{$\Z$ \\{xl}}, %
+\PB{\&{goto} \\{b5}}\X
+\U11.
+\I\X20:Increase the current prefix, or \PB{\&{goto} \\{b5}}\X
+\U18.
+\I\X15:Initialize the data structures\X
+\U11.
+\I\X7:Precompute the power tables\X
+\U1.
+\I\X17:Print a solution and \PB{\&{goto} \\{b5}}\X
+\U11.
+\I\X2:Print the profile\X
+\U1.
+\I\X3:Process the command line\X
+\U1.
+\I\X19:Recompute $a_l$ and $b_l$\X
+\U18.
+\I\X12:Report the current state, if \PB{$\\{mems}\G\\{thresh}$}\X
+\U11.
+\I\X21:Restore the previous state at level \PB{\|l}\X
+\U11.
+\I\X4, 6, 10:Subroutines\X
+\U1.

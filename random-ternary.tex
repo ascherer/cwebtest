@@ -1,0 +1,150 @@
+\input cwebmac
+
+\N{1}{1}Intro. Here's an implementation of the Panholzer--Prodinger algorithm,
+which generates a uniformly random
+``decorated'' ternary tree. (It generalizes the
+binary method of R\'emy, Algorithm 7.2.1.6R, and solves exercise
+7.2.1.6--65.) They presented it in
+{\sl Discrete Mathematics \bf250} (2002), 181--195, but without
+spelling out an efficient implementation.
+
+Although the algorithm is short, it is not easy to discover;
+the reader who thinks otherwise is invited to invent it before reading further.
+
+I'm using a linked structure as in the presentation of in R\'emy's method
+in Volume 4A: There are $3n+1$ links $L_0$, $L_1$, \dots,~$L_{3n}$,
+which are a permutation of the integers $\{0,1,\ldots,3n\}$. Internal
+(branch) nodes have numbers congruent to 2 (mod~3). The root is
+node number~$L_0$; the descendants of branch $3k-1$ are the nodes
+numbered $L_{3k-2}$, $L_{3k-1}$, $L_{3k}$. For example, if $n=3$ and
+$(L_0,L_1,\ldots,L_9)=(5,0,1,3,2,6,7,8,4,9)$, the root is node~5
+(a branch node); its left child is node~2 (another branch), its
+middle child is node~6 (external), and its right child is node~8
+(yet another branch).
+
+I also maintain the inverse permutation $(P_0,\ldots,P_{3n})$,
+so that we can determine the parent of each node.
+
+\Y\B\4\D$\\{nmax}$ \5
+\T{1000}\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\8\#\&{include} \.{"gb\_flip.h"}\C{ random number generator from the Stanford
+GraphBase }\6
+\&{int} \\{nn}${},{}$ \\{seed};\C{ command-line parameters }\6
+\&{int} \|L[\\{nmax}]${},{}$ \|P[\\{nmax}];\C{ the links and their inverses }\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|n${},{}$ \\{nnn}${},{}$
+\|p${},{}$ \|q${},{}$ \|r${},{}$ \|x;\7
+\X2:Process the command line\X;\6
+\&{for} ${}(\|n\K\|L[\T{0}]\K\|P[\T{0}]\K\T{0};{}$ ${}\|n<\\{nn};{}$ \,)\1\5
+\X3:Extend a solution for \PB{\|n} to a solution for \PB{$\|n+\T{1}$}, and
+increase \PB{\|n}\X;\2\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k\Z\T{3}*\\{nn};{}$ ${}\|k\PP){}$\1\5
+${}\\{printf}(\.{"\ \%d"},\39\|L[\|k]);{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Process the command line\X${}\E{}$\6
+\&{if} ${}(\\{argc}\I\T{3}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
+\\{nn})\I\T{1}\V\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}\\{seed})\I%
+\T{1}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ n\ seed\\n"},\39\\{argv}[%
+\T{0}]);{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\\{gb\_init\_rand}(\\{seed});\par
+\U1.\fi
+
+\M{3}\B\D$\\{sanity\_checking}$ \5
+\T{1}\par
+\Y\B\4\X3:Extend a solution for \PB{\|n} to a solution for \PB{$\|n+\T{1}$},
+and increase \PB{\|n}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|n\PP;{}$\6
+${}\\{nnn}\K\T{3}*\|n;{}$\6
+${}\|x\K\\{gb\_unif\_rand}(\T{3}*(\\{nnn}-\T{1})*(\\{nnn}-\T{2}));{}$\6
+${}\|p\K\\{nnn}-(\|x\MOD\T{3});{}$\6
+${}\|q\K\\{nnn}-((\|x+\T{1})\MOD\T{3});{}$\6
+${}\|r\K\\{nnn}-((\|x+\T{2})\MOD\T{3});{}$\6
+${}\|k\K((\&{int})(\|x/\T{3}))\MOD(\\{nnn}-\T{2});{}$\6
+${}\|j\K(\&{int})(\|x/(\T{9}*\|n-\T{6}));{}$\6
+${}\|L[\|p]\K\\{nnn},\39\|P[\\{nnn}]\K\|p;{}$\6
+${}\|L[\|q]\K\|L[\|k],\39\|P[\|L[\|k]]\K\|q,\39\|L[\|k]\K\\{nnn}-\T{1},\39\|P[%
+\\{nnn}-\T{1}]\K\|k;{}$\6
+\X5:Do the magic switcheroo\X;\6
+\&{if} (\\{sanity\_checking})\5
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i\Z\\{nnn};{}$ ${}\|i\PP){}$\1\6
+\&{if} ${}(\|P[\|L[\|i]]\I\|i){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"(whoa---the\ links\ a}\)\.{re\ fouled\ up!)%
+\\n"});{}$\6
+${}\\{exit}({-}\T{2});{}$\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{4}Variables $j$ and $L_k$ correspond to P-and-P's nodes $y$ and $x$;
+they are random integers with $0\le j\le 3n+1$ and $0\le k\le3n$.
+The basic idea is to insert a new branch node (node number $3n-1$)
+in place of node~$L_k$; but this new node has the old node~$L_k$ as
+one of its children (pointed to by~$L_q$), so we haven't really
+lost anything. Another child,
+pointed to by~$L_p$, is the leaf~$3n$. The third child, pointed
+to by~$L_r$, has to somehow encode the fact that we also need
+to place the leaf~$3n-2$ while maintaining randomness.
+
+There are two main cases, depending on whether node number~$y$ is
+a proper ancestor of node number~$x$.
+
+The crucial point, proved in the paper, is that we can recover
+$x$, $y$, and $p$ by looking at the switched links.
+
+\fi
+
+\M{5}\B\X5:Do the magic switcheroo\X${}\E{}$\6
+\&{for} ${}(\|i\K\|k+\T{1}-((\|k+\T{2})\MOD\T{3});{}$ ${}\|i>\T{0}\W\|i\I%
+\|j;{}$ ${}\|i\K\|P[\|i]+\T{1}-((\|P[\|i]+\T{2})\MOD\T{3})){}$\1\5
+;\2\6
+\&{if} ${}(\|i>\T{0}){}$\1\5
+\X6:Do the harder case\X\2\6
+\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\|j\E\|L[\|q]){}$\5
+${}\{{}$\C{ $y=x$ }\1\6
+${}\|L[\|r]\K\|L[\|q],\39\|P[\|L[\|q]]\K\|r,\39\|L[\|q]\K\\{nnn}-\T{2},\39\|P[%
+\\{nnn}-\T{2}]\K\|q;{}$\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\|j\E\\{nnn}-\T{2}){}$\5
+${}\{{}$\C{ $y$ is the  special leaf }\1\6
+${}\|L[\|r]\K\\{nnn}-\T{2},\39\|P[\\{nnn}-\T{2}]\K\|r;{}$\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\|L[\|P[\|j]]\K\\{nnn}-\T{2},\39\|P[\\{nnn}-\T{2}]\K\|P[\|j],\39\|L[\|r]\K%
+\|j,\39\|P[\|j]\K\|r;{}$\2\6
+\4${}\}{}$\2\par
+\U3.\fi
+
+\M{6}The ``harder case'' isn't really hard for the computer;
+it's just harder for a human being to visualize.
+
+\Y\B\4\X6:Do the harder case\X${}\E{}$\6
+${}\{{}$\1\6
+${}\|L[\|k]\K\\{nnn}-\T{2},\39\|P[\\{nnn}-\T{2}]\K\|k;{}$\6
+${}\|i\K\|P[\|j]{}$;\C{ the link to $y$ }\6
+${}\|L[\|i]\K\\{nnn}-\T{1},\39\|P[\\{nnn}-\T{1}]\K\|i,\39\|L[\|r]\K\|j,\39\|P[%
+\|j]\K\|r;{}$\6
+\4${}\}{}$\2\par
+\U5.\fi
+
+\N{1}{7}Index.
+\fi
+
+\inx
+\fin
+\con

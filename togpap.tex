@@ -1,0 +1,696 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Introduction. I'm reregenerating the illustrations for my
+paper in the Transactions on Graphics. This program has little
+generality, but it could be easily modified.
+
+\Y\B\4\D$\|m$ \5
+\T{360}\C{ this many rows }\par
+\B\4\D$\|n$ \5
+\T{250}\C{ this many columns }\par
+\B\4\D$\\{lisacode}$ \5
+\T{1}\C{ say 1 for Mona Lisa }\par
+\B\4\D$\\{spherecode}$ \5
+\T{2}\C{ say 2 for the sphere }\par
+\B\4\D$\\{fscode}$ \5
+\T{1}\C{ say 1 for Floyd-Steinberg }\par
+\B\4\D$\\{odithcode}$ \5
+\T{2}\C{ say 2 for ordered dither }\par
+\B\4\D$\\{ddiffcode}$ \5
+\T{3}\C{ say 3 for dot diffusion }\par
+\B\4\D$\\{sdiffcode}$ \5
+\T{4}\C{ say 4 for smooth dot diffusion }\par
+\B\4\D$\\{ariescode}$ \5
+\T{5}\C{ say 5 for ARIES }\par
+\Y\B\8\#\&{include} \.{<gb\_graph.h>}\6
+\8\#\&{include} \.{<gb\_lisa.h>}\6
+\8\#\&{include} \.{<math.h>}\6
+\8\#\&{include} \.{<time.h>}\6
+\ATH\6
+\&{time\_t} \\{clock};\6
+\&{double} ${}\|A[\|m+\T{2}][\T{256}]{}$;\C{ pixel data (darknesses), bordered
+by zero }\6
+\&{int} \\{board}[\T{10}][\T{10}];\7
+${}\\{Graph}*\\{gg};{}$\7
+\&{int} \\{kk};\7
+\X6:Global variables\X\6
+\X7:Subroutines\X\7
+${}\\{main}(\\{argc},\39\\{argv}){}$\1\1\6
+\&{int} \\{argc};\6
+\&{char} ${}{*}\\{argv}[\,];\2\2{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|l${},{}$ \\{ii}${},{}$ %
+\\{jj};\6
+\&{register} \&{double} \\{err};\6
+\&{register} \\{Graph}${}{*}\|g;{}$\6
+\&{register} \\{Vertex}${}{*}\|u,{}$ ${}{*}\|v;{}$\6
+\&{register} \\{Arc}${}{*}\|a;{}$\6
+\&{int} \\{imagecode}${},{}$ \\{sharpcode}${},{}$ \\{methodcode};\7
+\X2:Scan the command line, give help if necessary\X;\6
+\X3:Input the image\X;\6
+\X4:Sharpen if requested\X;\6
+\X5:Generate and print the base matrix, if any\X;\6
+\X33:Compute the answer\X;\6
+\X29:Spew out the answers\X;\6
+\X34:Print relevant statistics\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\X2:Scan the command line, give help if necessary\X${}\E{}$\6
+\&{if} ${}(\\{argc}\I\T{4}\V\\{sscanf}(\\{argv}[\T{1}],\39\.{"\%d"},\39{\AND}%
+\\{imagecode})\I\T{1}\V\3{-1}\\{sscanf}(\\{argv}[\T{2}],\39\.{"\%d"},\39{\AND}%
+\\{sharpcode})\I\T{1}\V\3{-1}\\{sscanf}(\\{argv}[\T{3}],\39\.{"\%d"},\39{\AND}%
+\\{methodcode})\I\T{1}){}$\5
+${}\{{}$\1\6
+\4\\{usage}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ imagecode}\)\.{\ sharpcode\
+methodcod}\)\.{e\\n"},\39\\{argv}[\T{0}]);{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ Mona\ Lisa\ =\ \%d,\ Sp}\)\.{here\ =\ \%d%
+\\n"},\39\\{lisacode},\39\\{spherecode});{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ unretouched\ =\ 0,\ e}\)\.{dges\ enhanced\ =%
+\ 1\\n"});{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ Floyd-Steinberg\ =\ }\)\.{\%d,\ ordered\
+dither\ =}\)\.{\ \%d,\\n"},\39\\{fscode},\39\\{odithcode});{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ dot\ diffusion\ =\ \%d}\)\.{,\ smooth\ dot\
+diffusi}\)\.{on\ =\ \%d,\\n"},\39\\{ddiffcode},\39\\{sdiffcode});{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ ARIES\ =\ \%d\\n"},\39\\{ariescode});{}$\6
+\\{exit}(\T{0});\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}\B\X3:Input the image\X${}\E{}$\6
+\&{if} ${}(\\{imagecode}\E\\{lisacode}){}$\5
+${}\{{}$\5
+\1\\{Area}\\{workplace};\7
+\&{register} \&{int} ${}{*}\\{mtx}\K\\{lisa}(\|m,\39\|n,\39\T{255},\39\T{0},\39%
+\T{0},\39\T{0},\39\T{0},\39\T{0},\39\T{0},\39\\{workplace});{}$\7
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|m;{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\1\5
+${}\|A[\|i+\T{1}][\|j+\T{1}]\K\\{pow}(\T{1.0}-({*}(\\{mtx}+\|i*\|n+\|j)+%
+\T{0.5})/\T{256.0},\39\T{2.0});{}$\2\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"(Mona\ Lisa\ image\ lo}\)\.{aded)\\n"});{}$\6
+\4${}\}{}$\2\6
+\&{else} \&{if} ${}(\\{imagecode}\E\\{spherecode}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\|m;{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{register} \&{double} \|x${}\K(\|i-\T{120.0})/\T{111.5},{}$ \|y${}\K(\|j-%
+\T{120.0})/\T{111.5};{}$\7
+\&{if} ${}(\|x*\|x+\|y*\|y\G\T{1.0}){}$\1\5
+${}\|A[\|i][\|j]\K(\T{1500.0}*\|i+\|j*\|j)/\T{1000000.0};{}$\2\6
+\&{else}\1\5
+${}\|A[\|i][\|j]\K(\T{9.0}+\|x-\T{4.0}*\|y-\T{8.0}*\\{sqrt}(\T{1.0}-\|x*\|x-%
+\|y*\|y))/\T{18.0};{}$\2\6
+\4${}\}{}$\2\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"(Sphere\ image\ loade}\)\.{d)\\n"});{}$\6
+\4${}\}{}$\2\6
+\&{else}\1\5
+\&{goto} \\{usage};\2\par
+\U1.\fi
+
+\M{4}\B\X4:Sharpen if requested\X${}\E{}$\6
+\&{if} ${}(\\{sharpcode}\E\T{1}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\|m;{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\1\5
+${}\|A[\|i-\T{1}][\|j-\T{1}]\K\T{9}*\|A[\|i][\|j]-\3{-1}(\|A[\|i-\T{1}][\|j-%
+\T{1}]+\|A[\|i-\T{1}][\|j]+\|A[\|i-\T{1}][\|j+\T{1}]+\|A[\|i][\|j-\T{1}]+\3{-1}%
+\|A[\|i][\|j+\T{1}]+\|A[\|i+\T{1}][\|j-\T{1}]+\|A[\|i+\T{1}][\|j]+\|A[\|i+%
+\T{1}][\|j+\T{1}]);{}$\2\2\6
+\&{for} ${}(\|i\K\|m;{}$ ${}\|i>\T{0};{}$ ${}\|i\MM){}$\1\6
+\&{for} ${}(\|j\K\|n;{}$ ${}\|j>\T{0};{}$ ${}\|j\MM){}$\1\5
+${}\|A[\|i][\|j]\K(\|A[\|i-\T{1}][\|j-\T{1}]\Z\T{0.0}\?\T{0.0}:\|A[\|i-\T{1}][%
+\|j-\T{1}]\G\T{1.0}\?\T{1.0}:\|A[\|i-\T{1}][\|j-\T{1}]);{}$\2\2\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|m;{}$ ${}\|i\PP){}$\1\5
+${}\|A[\|i][\T{0}]\K\T{0.0};{}$\2\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\1\5
+${}\|A[\T{0}][\|j]\K\T{0.0};{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"(with\ enhanced\ edge}\)\.{s)\\n"});{}$\6
+\4${}\}{}$\2\6
+\&{else} \&{if} ${}(\\{sharpcode}\E\T{0}){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"(no\ sharpening)\\n"});{}$\2\6
+\&{else}\1\5
+\&{goto} \\{usage};\2\par
+\U1.\fi
+
+\M{5}\B\X5:Generate and print the base matrix, if any\X${}\E{}$\6
+\&{switch} (\\{methodcode})\5
+${}\{{}$\1\6
+\4\&{case} \\{fscode}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"(using\ Floyd-Steinb}\)\.{erg\ error\
+diffusion)}\)\.{\\n"}){}$;\5
+\&{goto} \\{done};\6
+\4\&{case} \\{odithcode}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"(using\ ordered\ dith}\)\.{ering)\\n"});{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{4};{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{4};{}$ ${}\|j\PP){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{4};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\\{ii}\K\T{4}*\\{di}[\|k]+\T{2}*\\{di}[\|j]+\\{di}[\|i]+\T{2};{}$\6
+${}\\{jj}\K\T{4}*\\{dj}[\|k]+\T{2}*\\{dj}[\|j]+\\{dj}[\|i]+\T{2};{}$\6
+${}\\{kk}\K\T{16}*\|i+\T{4}*\|j+\|k;{}$\6
+${}\\{board}[\T{8}-(\\{jj}\AND\T{7})][\T{1}+(\\{ii}\AND\T{7})]\K\\{kk};{}$\6
+\4${}\}{}$\2\2\2\6
+\&{goto} \\{finishit};\6
+\4\&{case} \\{ddiffcode}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"(using\ dot\ diffusio}\)\.{n)\\n"}){}$;\5
+\&{break};\6
+\4\&{case} \\{sdiffcode}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"(using\ smooth\ dot\ d}\)\.{iffusion)%
+\\n"}){}$;\5
+\&{break};\6
+\4\&{case} \\{ariescode}:\5
+${}\\{fprintf}(\\{stderr},\39\.{"(using\ ARIES)\\n"}){}$;\5
+\&{break};\6
+\4\&{default}:\5
+\&{goto} \\{usage};\6
+\4${}\}{}$\2\6
+\X9:Set up the board for dot diffusion\X;\6
+\4\\{finishit}:\6
+\&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\T{8};{}$ ${}\|i\PP){}$\1\5
+${}\\{board}[\|i][\T{0}]\K\\{board}[\|i][\T{8}],\39\\{board}[\|i][\T{9}]\K%
+\\{board}[\|i][\T{1}];{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j\Z\T{9};{}$ ${}\|j\PP){}$\1\5
+${}\\{board}[\T{0}][\|j]\K\\{board}[\T{8}][\|j],\39\\{board}[\T{9}][\|j]\K%
+\\{board}[\T{1}][\|j];{}$\2\6
+\&{if} ${}(\\{methodcode}\G\\{ddiffcode}){}$\1\5
+\X11:Install the vertices and arcs of the control graph\X;\2\6
+\X10:Print the board\X;\6
+\\{done}:\par
+\U1.\fi
+
+\M{6}\B\X6:Global variables\X${}\E{}$\6
+\&{int} \\{di}[\T{4}]${}\K\{\T{0},\39\T{1},\39\T{0},\39\T{1}\};{}$\6
+\&{int} \\{dj}[\T{4}]${}\K\{\T{0},\39\T{1},\39\T{1},\39\T{0}\}{}$;\par
+\As8, 14, 16, 19\ETs26.
+\U1.\fi
+
+\M{7}\B\X7:Subroutines\X${}\E{}$\6
+\&{void} ${}\\{store}(\|i,\39\|j){}$\1\1\6
+\&{int} \|i${},{}$ \|j;\2\2\6
+${}\{{}$\1\6
+${}\\{Vertex}*\|v;{}$\6
+\&{if} ${}(\|i<\T{1}){}$\1\5
+${}\|i\MRL{+{\K}}\T{8}{}$;\5
+\2\&{else} \&{if} ${}(\|i>\T{8}){}$\1\5
+${}\|i\MRL{-{\K}}\T{8};{}$\2\6
+\&{if} ${}(\|j<\T{1}){}$\1\5
+${}\|j\MRL{+{\K}}\T{8}{}$;\5
+\2\&{else} \&{if} ${}(\|j>\T{8}){}$\1\5
+${}\|j\MRL{-{\K}}\T{8};{}$\2\6
+${}\\{board}[\|i][\|j]\K\\{kk};{}$\6
+${}\|v\K\\{gg}\MG\\{vertices}+\\{kk};{}$\6
+${}\\{sprintf}(\\{name\_buffer},\39\.{"\%d"},\39\\{kk});{}$\6
+${}\|v\MG\\{name}\K\\{gb\_save\_string}(\\{name\_buffer});{}$\6
+${}\|v\MG\\{row}\K\|i{}$;\5
+${}\|v\MG\\{col}\K\|j;{}$\6
+${}\\{kk}\PP;{}$\6
+\4${}\}{}$\2\7
+\&{void} ${}\\{store\_eight}(\|i,\39\|j){}$\1\1\6
+\&{int} \|i${},{}$ \|j;\2\2\6
+${}\{{}$\1\6
+${}\\{store}(\|i,\39\|j){}$;\5
+${}\\{store}(\|i-\T{4},\39\|j+\T{4}){}$;\5
+${}\\{store}(\T{1}-\|j,\39\|i-\T{4}){}$;\5
+${}\\{store}(\T{5}-\|j,\39\|i);{}$\6
+${}\\{store}(\|j,\39\T{5}-\|i){}$;\5
+${}\\{store}(\T{4}+\|j,\39\T{1}-\|i){}$;\5
+${}\\{store}(\T{5}-\|i,\39\T{5}-\|j){}$;\5
+${}\\{store}(\T{1}-\|i,\39\T{1}-\|j);{}$\6
+\4${}\}{}$\2\par
+\A25.
+\U1.\fi
+
+\M{8}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{char} \\{name\_buffer}[\,]${}\K\.{"99"}{}$;\par
+\fi
+
+\M{9}\B\D$\\{row}$ \5
+$\|u.{}$\|I\par
+\B\4\D$\\{col}$ \5
+$\|v.{}$\|I\par
+\B\4\D$\\{weight}$ \5
+$\|w.{}$\|I\par
+\B\4\D$\\{del\_i}$ \5
+$\|a.{}$\|I\par
+\B\4\D$\\{del\_j}$ \5
+$\|b.{}$\|I\par
+\Y\B\4\X9:Set up the board for dot diffusion\X${}\E{}$\6
+$\\{kk}\K\T{0};{}$\6
+${}\\{gg}\K\|g\K\\{gb\_new\_graph}(\T{64});{}$\6
+${}\\{store\_eight}(\T{7},\39\T{2}){}$;\5
+${}\\{store\_eight}(\T{8},\39\T{3}){}$;\5
+${}\\{store\_eight}(\T{8},\39\T{2}){}$;\5
+${}\\{store\_eight}(\T{8},\39\T{1});{}$\6
+${}\\{store\_eight}(\T{1},\39\T{4}){}$;\5
+${}\\{store\_eight}(\T{1},\39\T{3}){}$;\5
+${}\\{store\_eight}(\T{1},\39\T{2}){}$;\5
+${}\\{store\_eight}(\T{2},\39\T{3}){}$;\par
+\U5.\fi
+
+\M{10}\B\X10:Print the board\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\T{8};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\T{8};{}$ ${}\|j\PP){}$\1\5
+${}\\{fprintf}(\\{stderr},\39\.{"\ \%2d"},\39\\{board}[\|i][\|j]);{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"\\n"});{}$\6
+\4${}\}{}$\2\par
+\U5.\fi
+
+\M{11}\B\X11:Install the vertices and arcs of the control graph\X${}\E{}$\6
+\&{if} ${}(\\{methodcode}\E\\{ddiffcode}){}$\5
+${}\{{}$\C{ dot diffusion, two dots per $8\times8$ cell }\1\6
+\&{for} ${}(\|v\K\|g\MG\\{vertices};{}$ ${}\|v<\|g\MG\\{vertices}+\T{64};{}$
+${}\|v\PP){}$\5
+${}\{{}$\1\6
+${}\|i\K\|v\MG\\{row};{}$\6
+${}\|j\K\|v\MG\\{col};{}$\6
+${}\|v\MG\\{weight}\K\T{0};{}$\6
+\&{for} ${}(\\{ii}\K\|i-\T{1};{}$ ${}\\{ii}\Z\|i+\T{1};{}$ ${}\\{ii}\PP){}$\1\6
+\&{for} ${}(\\{jj}\K\|j-\T{1};{}$ ${}\\{jj}\Z\|j+\T{1};{}$ ${}\\{jj}\PP){}$\5
+${}\{{}$\1\6
+${}\|u\K\|g\MG\\{vertices}+\\{board}[\\{ii}][\\{jj}];{}$\6
+\&{if} ${}(\|u>\|v){}$\5
+${}\{{}$\1\6
+${}\\{gb\_new\_arc}(\|v,\39\|u,\39\T{0});{}$\6
+${}\|v\MG\\{arcs}\MG\\{del\_i}\K\\{ii}-\|i;{}$\6
+${}\|v\MG\\{arcs}\MG\\{del\_j}\K\\{jj}-\|j;{}$\6
+${}\|v\MG\\{weight}\MRL{+{\K}}\T{3}-(\\{ii}-\|i)*(\\{ii}-\|i)-(\\{jj}-\|j)*(%
+\\{jj}-\|j);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{else}\5
+${}\{{}$\C{ each vertex has a neighborhood covering 32 classes }\1\6
+\&{for} ${}(\|v\K\|g\MG\\{vertices};{}$ ${}\|v<\|g\MG\\{vertices}+\T{64};{}$
+${}\|v\PP){}$\5
+${}\{{}$\1\6
+${}\|i\K\|v\MG\\{row};{}$\6
+${}\|j\K\|v\MG\\{col};{}$\6
+\&{for} ${}(\\{jj}\K\|j-\T{3};{}$ ${}\\{jj}\Z\|j+\T{3};{}$ ${}\\{jj}\PP){}$\5
+${}\{{}$\5
+\1\&{register} \&{int} \\{del}${}\K(\\{jj}<\|j\?\|j-\\{jj}:\\{jj}-\|j);{}$\7
+\&{for} ${}(\\{ii}\K\|i-\T{3}+\\{del};{}$ ${}\\{ii}\Z\|i+\T{4}-\\{del};{}$ ${}%
+\\{ii}\PP){}$\5
+${}\{{}$\1\6
+${}\|u\K\|g\MG\\{vertices}+\\{board}[\\{ii}\AND\T{7}][\\{jj}\AND\T{7}];{}$\6
+\&{if} ${}(\|u>\|v){}$\5
+${}\{{}$\1\6
+${}\\{gb\_new\_arc}(\|v,\39\|u,\39\T{0});{}$\6
+${}\|v\MG\\{arcs}\MG\\{del\_i}\K\\{ii}-\|i;{}$\6
+${}\|v\MG\\{arcs}\MG\\{del\_j}\K\\{jj}-\|j;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{10};{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{10};{}$ ${}\|j\PP){}$\1\5
+${}\\{board}[\|i][\|j]\MRL{{\GG}{\K}}\T{1};{}$\2\2\6
+\4${}\}{}$\2\par
+\U5.\fi
+
+\N{1}{12}Error diffusion. The Floyd-Steinberg algorithm uses a threshold of
+0.5 at each pixel and distributes the error to the four unprocessed
+neighbors.
+
+\Y\B\4\D$\\{alpha}$ \5
+\T{0.4375}\C{ 7/16, error diffusion to E neighbor }\par
+\B\4\D$\\{beta}$ \5
+\T{0.1875}\C{ 3/16, error diffusion to SW neighbor }\par
+\B\4\D$\\{gamma}$ \5
+\T{0.3125}\C{ 5/16, error diffusion to S neighbor }\par
+\B\4\D$\\{delta}$ \5
+\T{0.0625}\C{ 1/16, error diffusion to SE neighbor }\par
+\B\4\D$\\{check}(\|i,\|j)$ \6
+${}\{{}$\1\6
+\&{if} ${}(\|A[\|i][\|j]<\\{lo\_A}){}$\1\5
+${}\\{lo\_A}\K\|A[\|i][\|j];{}$\2\6
+\&{if} ${}(\|A[\|i][\|j]>\\{hi\_A}){}$\1\5
+${}\\{hi\_A}\K\|A[\|i][\|j];{}$\2\6
+\4${}\}{}$\2\par
+\Y\B\4\X12:Do Floyd-Steinberg\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\|m;{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\\{err}\K\|A[\|i][\|j];{}$\6
+\&{if} ${}(\\{err}\G\T{.5}){}$\1\5
+${}\\{err}\MRL{-{\K}}\T{1.0};{}$\2\6
+${}\|A[\|i][\|j]\MRL{-{\K}}\\{err}{}$;\C{ now it's 0 or 1 }\6
+${}\|A[\|i][\|j+\T{1}]\MRL{+{\K}}\\{err}*\\{alpha}{}$;\5
+${}\\{check}(\|i,\39\|j+\T{1});{}$\6
+${}\|A[\|i+\T{1}][\|j-\T{1}]\MRL{+{\K}}\\{err}*\\{beta}{}$;\5
+${}\\{check}(\|i+\T{1},\39\|j-\T{1});{}$\6
+${}\|A[\|i+\T{1}][\|j]\MRL{+{\K}}\\{err}*\\{gamma}{}$;\5
+${}\\{check}(\|i+\T{1},\39\|j);{}$\6
+${}\|A[\|i+\T{1}][\|j+\T{1}]\MRL{+{\K}}\\{err}*\\{delta}{}$;\5
+${}\\{check}(\|i+\T{1},\39\|j+\T{1});{}$\6
+\4${}\}{}$\2\2\par
+\U33.\fi
+
+\M{13}\B\X13:Print boundary leakage and extreme values\X${}\E{}$\6
+\&{if} ${}(\\{methodcode}\I\\{sdiffcode}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i\Z\|m+\T{1};{}$ ${}\|i\PP){}$\1\5
+${}\\{edge\_accum}\MRL{+{\K}}\\{fabs}(\|A[\|i][\T{0}])+\\{fabs}(\|A[\|i][\|n+%
+\T{1}]);{}$\2\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\1\5
+${}\\{edge\_accum}\MRL{+{\K}}\\{fabs}(\|A[\T{0}][\|j])+\\{fabs}(\|A[\|m+\T{1}][%
+\|j]);{}$\2\6
+\4${}\}{}$\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"Total\ leakage\ at\ bo}\)\.{undaries:\ \%.20g%
+\\n"},\39\\{edge\_accum});{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"Data\ remained\ betwe}\)\.{en\ \%.20g\ and\ %
+\%.20g\\n}\)\.{"},\39\\{lo\_A},\39\\{hi\_A}){}$;\par
+\U34.\fi
+
+\M{14}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{double} \\{edge\_accum};\6
+\&{double} \\{lo\_A}${}\K\T{100000.0},{}$ \\{hi\_A}${}\K{-}\T{100000.0}{}$;\C{
+record-breaking values }\par
+\fi
+
+\N{1}{15}Ordered dithering. The ordered dither algorithm uses a threshold
+based on the pixel's place in the grid.
+
+\Y\B\4\X15:Do ordered dither\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\|m;{}$ ${}\|i\PP){}$\1\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\|k\K\\{board}[\|i\AND\T{7}][\|j\AND\T{7}];{}$\6
+${}\\{err}\K\|A[\|i][\|j];{}$\6
+\&{if} ${}(\\{err}\G(\|k+\T{0.5})/\T{64.0}){}$\1\5
+${}\\{err}\MRL{-{\K}}\T{1.0};{}$\2\6
+${}\|A[\|i][\|j]\MRL{-{\K}}\\{err}{}$;\C{ now it's 0 or 1 }\6
+${}\\{accum}\MRL{+{\K}}\\{fabs}(\\{err}){}$;\C{ accumulate undiffused error }\6
+${}\\{block\_err}[(\|i-\T{1})\GG\T{3}][(\|j-\T{1})\GG\T{3}]\MRL{+{\K}}%
+\\{err}{}$;\C{ accumulate error in $8\times8$ block }\6
+\4${}\}{}$\2\2\par
+\U33.\fi
+
+\M{16}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{double} \\{accum};\6
+\&{double} ${}\\{block\_err}[(\|m+\T{7})\GG\T{3}][(\|n+\T{7})\GG\T{3}];{}$\6
+\&{int} \\{bad\_blocks};\par
+\fi
+
+\M{17}\B\X17:Print accumulated lossage\X${}\E{}$\6
+$\\{fprintf}(\\{stderr},\39\.{"Total\ undiffused\ er}\)\.{ror:\ \%.20g\\n"},\39%
+\\{accum});{}$\6
+\&{for} ${}(\|i\K\T{0},\39\\{accum}\K\T{0.0};{}$ ${}\|i<\|m;{}$ ${}\|i\MRL{+{%
+\K}}\T{8}){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|n;{}$ ${}\|j\MRL{+{\K}}\T{8}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{fabs}(\\{block\_err}[\|i\GG\T{3}][\|j\GG\T{3}])>\T{1.0}){}$\1\5
+${}\\{bad\_blocks}\PP;{}$\2\6
+${}\\{accum}\MRL{+{\K}}\\{fabs}(\\{block\_err}[\|i\GG\T{3}][\|j\GG\T{3}]);{}$\6
+\4${}\}{}$\2\2\6
+${}\\{fprintf}(\\{stderr},\39\.{"Total\ block\ error:\ }\)\.{\%.20g\ (\%d\ bad)%
+\\n"},\39\\{accum},\39\\{bad\_blocks}){}$;\par
+\U34.\fi
+
+\N{1}{18}Dot diffusion. The dot diffusion algorithm uses a fixed threshold
+of 0.5 and distributes errors
+to higher-class neighbor pixels, except at baron positions.
+
+\Y\B\4\X18:Do dot diffusion\X${}\E{}$\6
+\&{for} ${}(\|v\K\|g\MG\\{vertices};{}$ ${}\|v<\|g\MG\\{vertices}+\T{64};{}$
+${}\|v\PP){}$\1\6
+\&{for} ${}(\|i\K\|v\MG\\{row};{}$ ${}\|i\Z\|m;{}$ ${}\|i\MRL{+{\K}}\T{8}){}$\1%
+\6
+\&{for} ${}(\|j\K\|v\MG\\{col};{}$ ${}\|j\Z\|n;{}$ ${}\|j\MRL{+{\K}}\T{8}){}$\5
+${}\{{}$\1\6
+${}\\{err}\K\|A[\|i][\|j];{}$\6
+\&{if} ${}(\\{err}\G\T{.5}){}$\1\5
+${}\\{err}\MRL{-{\K}}\T{1.0};{}$\2\6
+${}\|A[\|i][\|j]\MRL{-{\K}}\\{err}{}$;\C{ now it's 0 or 1 }\6
+\&{if} ${}(\|v\MG\\{arcs}){}$\1\5
+\X20:Distribute the error to near neighbors\X\2\6
+\&{else}\5
+${}\{{}$\C{ baron }\1\6
+${}\\{accum}\MRL{+{\K}}\\{fabs}(\\{err});{}$\6
+${}\\{barons}\PP;{}$\6
+\&{if} ${}(\\{fabs}(\\{err})>\T{0.5}){}$\1\5
+${}\\{bad\_barons}\PP;{}$\2\6
+\&{if} ${}(\\{err}<\\{lo\_err}){}$\1\5
+${}\\{lo\_err}\K\\{err};{}$\2\6
+\&{if} ${}(\\{err}>\\{hi\_err}){}$\1\5
+${}\\{hi\_err}\K\\{err};{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\2\par
+\U33.\fi
+
+\M{19}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{barons};\C{ how many barons are there? }\6
+\&{int} \\{bad\_barons};\C{ how many of them eat more than 0.5 error? }\6
+\&{double} \\{lo\_err}${}\K\T{100000.0},{}$ \\{hi\_err}${}\K{-}\T{100000.0}{}$;%
+\C{ record-breaking errors }\par
+\fi
+
+\M{20}\B\X20:Distribute the error to near neighbors\X${}\E{}$\6
+\&{for} ${}(\|a\K\|v\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\\{ii}\K\|i+\|a\MG\\{del\_i}{}$;\5
+${}\\{jj}\K\|j+\|a\MG\\{del\_j};{}$\6
+${}\|A[\\{ii}][\\{jj}]\MRL{+{\K}}\\{err}*(\&{double})(\T{3}-\|a\MG\\{del\_i}*%
+\|a\MG\\{del\_i}-\|a\MG\\{del\_j}*\|a\MG\\{del\_j})/{}$(\&{double}) \|v${}\MG%
+\\{weight};{}$\6
+${}\\{check}(\\{ii},\39\\{jj});{}$\6
+\4${}\}{}$\2\par
+\U18.\fi
+
+\M{21}Smooth dot diffusion is similar, but it uses a class-based threshold
+and considers a larger neighborhood of size 32.
+
+\Y\B\4\X21:Do smooth dot diffusion\X${}\E{}$\6
+\&{for} ${}(\|v\K\|g\MG\\{vertices};{}$ ${}\|v<\|g\MG\\{vertices}+\T{64};{}$
+${}\|v\PP){}$\1\6
+\&{for} ${}(\|i\K\|v\MG\\{row};{}$ ${}\|i\Z\|m;{}$ ${}\|i\MRL{+{\K}}\T{8}){}$\1%
+\6
+\&{for} ${}(\|j\K\|v\MG\\{col};{}$ ${}\|j\Z\|n;{}$ ${}\|j\MRL{+{\K}}\T{8}){}$\5
+${}\{{}$\1\6
+${}\|k\K(\|v-\|g\MG\\{vertices})\GG\T{1}{}$;\C{ class number }\6
+${}\\{err}\K\|A[\|i][\|j];{}$\6
+\&{if} ${}(\\{err}\G\T{.5}/(\&{double})(\T{32}-\|k)){}$\1\5
+${}\\{err}\MRL{-{\K}}\T{1.0};{}$\2\6
+${}\|A[\|i][\|j]\MRL{-{\K}}\\{err}{}$;\C{ now it's 0 or 1 }\6
+\&{if} ${}(\|v\MG\\{arcs}){}$\1\5
+\X22:Distribute the error to dot neighbors\X\2\6
+\&{else}\5
+${}\{{}$\C{ baron }\1\6
+${}\\{accum}\MRL{+{\K}}\\{fabs}(\\{err});{}$\6
+${}\\{barons}\PP;{}$\6
+\&{if} ${}(\\{fabs}(\\{err})>\T{0.5}){}$\1\5
+${}\\{bad\_barons}\PP;{}$\2\6
+\&{if} ${}(\\{err}<\\{lo\_err}){}$\1\5
+${}\\{lo\_err}\K\\{err};{}$\2\6
+\&{if} ${}(\\{err}>\\{hi\_err}){}$\1\5
+${}\\{hi\_err}\K\\{err};{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\2\par
+\U33.\fi
+
+\M{22}This pixel has \PB{$\T{31}-\|k$} neighbors of higher classes; each shares
+equally
+in the distribution.
+
+\Y\B\4\X22:Distribute the error to dot neighbors\X${}\E{}$\6
+\&{for} ${}(\|a\K\|v\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\\{ii}\K\|i+\|a\MG\\{del\_i}{}$;\5
+${}\\{jj}\K\|j+\|a\MG\\{del\_j};{}$\6
+\&{if} ${}(\\{ii}>\T{0}\W\\{ii}\Z\|m\W\\{jj}>\T{0}\W\\{jj}\Z\|n){}$\5
+${}\{{}$\1\6
+${}\|A[\\{ii}][\\{jj}]\MRL{+{\K}}\\{err}/(\&{double})(\T{31}-\|k){}$;\5
+${}\\{check}(\\{ii},\39\\{jj});{}$\6
+\4${}\}{}$\2\6
+\&{else}\1\5
+${}\\{edge\_accum}\MRL{+{\K}}\\{fabs}(\\{err}){}$;\C{ error leaks out the
+boundary }\2\6
+\4${}\}{}$\2\par
+\U21.\fi
+
+\M{23}\B\X23:Print baronial lossage\X${}\E{}$\6
+$\\{fprintf}(\\{stderr},\39\.{"Total\ undiffused\ er}\)\.{ror\ \%.20g\ at\ \%d\
+baro}\)\.{ns\\n"},\39\\{accum},\39\\{barons});{}$\6
+${}\\{fprintf}(\\{stderr},\39\.{"\ \ (\%d\ bad,\ min\ \%.20}\)\.{g,\ max\ %
+\%.20g)\\n"},\39\\{bad\_barons},\39\\{lo\_err},\39\\{hi\_err}){}$;\par
+\U34.\fi
+
+\N{1}{24}Alias-Reducing Image-Enhancing Screening. The ARIES method works
+with 32-pixel dots and dithers them but adjusts the threshold
+by considering the average intensity in the dot.
+
+\Y\B\4\X24:Do ARIES\X${}\E{}$\6
+\&{for} ${}(\|i\K{-}\T{1};{}$ ${}\|i\Z\|m+\T{3};{}$ ${}\|i\MRL{+{\K}}\T{4}){}$%
+\1\6
+\&{for} ${}(\|j\K(\|i\AND\T{4})\?\T{2}:{-}\T{2};{}$ ${}\|j\Z\|n+\T{3};{}$ ${}%
+\|j\MRL{+{\K}}\T{8}){}$\5
+${}\{{}$\5
+\1\&{double} \|s${}\K\T{0.5};{}$\7
+${}\\{ll}\K\T{0}{}$;\C{ number of cells in current dot }\6
+\&{for} ${}(\\{jj}\K\|j-\T{3};{}$ ${}\\{jj}\Z\|j+\T{3};{}$ ${}\\{jj}\PP){}$\5
+${}\{{}$\5
+\1\&{register} \&{int} \\{del}${}\K(\\{jj}<\|j\?\|j-\\{jj}:\\{jj}-\|j);{}$\7
+\&{for} ${}(\\{ii}\K\|i-\T{3}+\\{del};{}$ ${}\\{ii}\Z\|i+\T{4}-\\{del};{}$ ${}%
+\\{ii}\PP){}$\1\6
+\&{if} ${}(\\{ii}>\T{0}\W\\{ii}\Z\|m\W\\{jj}>\T{0}\W\\{jj}\Z\|n){}$\1\5
+${}\|s\MRL{+{\K}}\|A[\\{ii}][\\{jj}],\39\\{rank}(\\{ii},\39\\{jj});{}$\2\2\6
+\4${}\}{}$\2\6
+\X27:Blacken the top $\lfloor s\rfloor$ pixels of the dot\X;\6
+\4${}\}{}$\2\2\par
+\U33.\fi
+
+\M{25}The ranking procedure sorts the entries by the key $a_{ij}-k/32$,
+where $k$ is the class number of cell $(i,j)$.
+
+\Y\B\4\X7:Subroutines\X${}\mathrel+\E{}$\6
+$\\{rank}(\|i,\39\|j){}$\1\1\6
+\&{int} \|i${},{}$ \|j;\2\2\6
+${}\{{}$\1\6
+\&{register} \&{double} \\{key}${}\K\|A[\|i][\|j]-\\{board}[\|i\AND\T{7}][\|j%
+\AND\T{7}]/\T{32.0};{}$\6
+\&{register} \&{int} \|l;\7
+\&{for} ${}(\|l\K\\{ll};{}$ ${}\|l>\T{0};{}$ ${}\|l\MM){}$\1\6
+\&{if} ${}(\\{key}\G\\{val}[\|l-\T{1}]){}$\1\5
+\&{break};\2\6
+\&{else}\1\5
+${}\\{inxi}[\|l]\K\\{inxi}[\|l-\T{1}],\39\\{inxj}[\|l]\K\\{inxj}[\|l-\T{1}],\39%
+\\{val}[\|l]\K\\{val}[\|l-\T{1}];{}$\2\2\6
+${}\\{inxi}[\|l]\K\|i{}$;\5
+${}\\{inxj}[\|l]\K\|j{}$;\5
+${}\\{val}[\|l]\K\\{key}{}$;\5
+${}\\{ll}\PP;{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{26}\B\X6:Global variables\X${}\mathrel+\E{}$\6
+\&{int} \\{ll};\C{ the number of items in the ranking table }\6
+\&{int} \\{inxi}[\T{32}]${},{}$ \\{inxj}[\T{32}];\C{ indices of the ranked
+pixels }\6
+\&{double} \\{val}[\T{32}];\C{ keys of the ranked pixels }\par
+\fi
+
+\M{27}I have to admit that I rather like this implementation of ARIES!
+
+\Y\B\4\X27:Blacken the top $\lfloor s\rfloor$ pixels of the dot\X${}\E{}$\6
+\&{if} (\\{ll})\5
+${}\{{}$\5
+\1${}\\{barons}\PP{}$;\5
+${}\\{accum}\MRL{+{\K}}\\{fabs}(\|s-\T{0.5}-{}$(\&{int}) \|s);\5
+${}\}{}$\2\6
+\&{while} ${}(\\{ll}>\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{ll}\MM{}$;\5
+${}\|s\MRL{-{\K}}\T{1.0};{}$\6
+${}\\{ii}\K\\{inxi}[\\{ll}]{}$;\5
+${}\\{jj}\K\\{inxj}[\\{ll}];{}$\6
+${}\\{err}\K\|A[\\{ii}][\\{jj}];{}$\6
+\&{if} ${}(\|s\G\T{0.0}){}$\1\5
+${}\\{err}\MRL{-{\K}}\T{1.0};{}$\2\6
+${}\|A[\\{ii}][\\{jj}]\MRL{-{\K}}\\{err}{}$;\C{ now it's 0 or 1 }\6
+\4${}\}{}$\2\par
+\U24.\fi
+
+\M{28}\B\X28:Print ARIES lossage\X${}\E{}$\6
+$\\{fprintf}(\\{stderr},\39\.{"Total\ lossage\ \%.20g}\)\.{\ in\ \%d\ dots%
+\\n"},\39\\{accum},\39\\{barons}){}$;\par
+\U34.\fi
+
+\N{1}{29}Encapsulated PostScript. When all has been done (but all has
+not necessarily been
+said), we output the matrix as a PostScript file with resolution
+72 pixels per inch.
+
+\Y\B\4\X29:Spew out the answers\X${}\E{}$\6
+\X30:Output the header of the EPS file\X;\6
+\X31:Output the image\X;\6
+\X32:Output the trailer of the EPS file\X;\par
+\U1.\fi
+
+\M{30}\B\X30:Output the header of the EPS file\X${}\E{}$\6
+\\{printf}(\.{"\%\%!PS\\n"});\6
+${}\\{printf}(\.{"\%\%\%\%BoundingBox:\ 0\ }\)\.{0\ \%d\ \%d\\n"},\39\|n,\39%
+\|m);{}$\6
+\\{printf}(\.{"\%\%\%\%Creator:\ togpap}\)\.{\\n"});\6
+${}\\{clock}\K\\{time}(\T{0});{}$\6
+${}\\{printf}(\.{"\%\%\%\%CreationDate:\ \%}\)\.{s"},\39\\{ctime}({\AND}%
+\\{clock}));{}$\6
+\\{printf}(\.{"\%\%\%\%Pages:\ 1\\n"});\6
+\\{printf}(\.{"\%\%\%\%EndProlog\\n"});\6
+\\{printf}(\.{"\%\%\%\%Page:\ 1\ 1\\n"});\6
+${}\\{printf}(\.{"/picstr\ \%d\ string\ d}\)\.{ef\\n"},\39(\|n+\T{7})\GG%
+\T{3});{}$\6
+${}\\{printf}(\.{"\%d\ \%d\ scale\\n"},\39\|n,\39\|m);{}$\6
+${}\\{printf}(\.{"\%d\ \%d\ true\ [\%d\ 0\ 0\ }\)\.{-\%d\ 0\ \%d]\\n"},\39\|n,%
+\39\|m,\39\|n,\39\|m,\39\|m);{}$\6
+\\{printf}(\.{"\ \{currentfile\ picst}\)\.{r\ readhexstring\ pop\}}\)\.{\
+imagemask\\n"});\par
+\U29.\fi
+
+\M{31}\B\X31:Output the image\X${}\E{}$\6
+\&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\|m;{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\MRL{+{\K}}\T{8}){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\T{0},\39\|l\K\T{0};{}$ ${}\|k<\T{8};{}$ ${}\|k\PP){}$\1\5
+${}\|l\K\|l+\|l+(\|A[\|i][\|j+\|k]\?\T{1}:\T{0});{}$\2\6
+${}\\{printf}(\.{"\%02x"},\39\|l);{}$\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\U29.\fi
+
+\M{32}\B\X32:Output the trailer of the EPS file\X${}\E{}$\6
+\\{printf}(\.{"\%\%\%\%EOF\\n"});\par
+\U29.\fi
+
+\N{1}{33}Synthesis. And now to put the pieces together:
+
+\Y\B\4\X33:Compute the answer\X${}\E{}$\6
+\&{switch} (\\{methodcode})\5
+${}\{{}$\1\6
+\4\&{case} \\{fscode}:\5
+\X12:Do Floyd-Steinberg\X;\5
+\&{break};\6
+\4\&{case} \\{odithcode}:\5
+\X15:Do ordered dither\X;\5
+\&{break};\6
+\4\&{case} \\{ddiffcode}:\5
+\X18:Do dot diffusion\X;\5
+\&{break};\6
+\4\&{case} \\{sdiffcode}:\5
+\X21:Do smooth dot diffusion\X;\5
+\&{break};\6
+\4\&{case} \\{ariescode}:\5
+\X24:Do ARIES\X;\5
+\&{break};\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{34}\B\X34:Print relevant statistics\X${}\E{}$\6
+\&{switch} (\\{methodcode})\5
+${}\{{}$\1\6
+\4\&{case} \\{odithcode}:\5
+\X17:Print accumulated lossage\X;\5
+\&{break};\6
+\4\&{case} \\{ariescode}:\5
+\X28:Print ARIES lossage\X;\5
+\&{break};\6
+\4\&{case} \\{ddiffcode}:\5
+\&{case} \\{sdiffcode}:\5
+\X23:Print baronial lossage\X;\6
+\4\&{case} \\{fscode}:\5
+\X13:Print boundary leakage and extreme values\X;\5
+\&{break};\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\N{1}{35}Index.
+\fi
+
+\inx
+\fin
+\con

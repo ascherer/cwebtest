@@ -1,0 +1,481 @@
+\input cwebmac
+% This file is part of the Stanford GraphBase (c) Stanford University 1990
+\nocon
+
+
+\N{1}{1}Introduction. This is a hastily written implementation of the treehull
+algorithm, using simple binary search trees and hoping that they
+don't get too far out of balance.
+
+\Y\B\F\\{Graph} \5
+\\{int}\C{ \PB{\\{gb\_graph}} defines the \PB{\&{Graph}} type and a few others
+}\par
+\B\F\\{Vertex} \5
+\\{int}\par
+\B\F\\{Arc} \5
+\\{int}\par
+\B\F\\{Area} \5
+\\{int}\par
+\Y\B\8\#\&{include} \.{"gb\_graph.h"}\6
+\8\#\&{include} \.{"gb\_miles.h"}\6
+\8\#\&{include} \.{"gb\_rand.h"}\6
+\X3:Type declarations\X\7
+\&{int} \|n${}\K\T{128};{}$\7
+\X2:Global variables\X\6
+\X9:Procedures\X\7
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\X7:Local variables\X\7
+\&{Graph} ${}{*}\|g\K\\{miles}(\T{128},\39\T{0},\39\T{0},\39\T{0},\39\T{0},\39%
+\T{0},\39\T{0}){}$;\7
+${}\\{mems}\K\\{ccs}\K\T{0};{}$\6
+\X10:Find convex hull of \PB{\|g}\X;\6
+${}\\{printf}(\.{"Total\ of\ \%d\ mems\ an}\)\.{d\ \%d\ calls\ on\ ccw.\\n}\)%
+\.{"},\39\\{mems},\39\\{ccs});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}I'm instrumenting this in a simple way.
+
+\Y\B\4\D$\|o$ \5
+$\\{mems}\PP{}$\par
+\B\4\D$\\{oo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{2}\par
+\B\4\D$\\{ooo}$ \5
+$\\{mems}\MRL{+{\K}}{}$\T{3}\par
+\Y\B\4\X2:Global variables\X${}\E{}$\6
+\&{int} \\{mems};\C{ memory accesses }\6
+\&{int} \\{ccs};\C{ calls on \PB{\\{ccw}} }\par
+\A5.
+\U1.\fi
+
+\N{1}{3}Data structures.
+For now, each vertex is represented by two coordinates stored in the
+utility fields \PB{$\|x.\|i$} and \PB{$\|y.\|i$}. I'm also putting a serial
+number into
+\PB{$\|z.\|i$}, so that I can check whether different algorithms generate
+identical hulls.
+
+We use separate nodes for the current convex hull. These nodes have
+a bunch of fields: \PB{$\|p\MG\\{vert}$} points to the vertex; \PB{$\|p\MG%
+\\{succ}$} and \PB{$\|p\MG\\{pred}$}
+point to next and previous nodes in a circular list; \PB{$\|p\MG\\{left}$} and %
+\PB{$\|p\MG\\{right}$}
+point to left and right children in a tree that's superimposed on the list;
+\PB{$\|p\MG\\{parent}$} is present too, it points to a field within the parent
+node;
+\PB{$\|p\MG\\{prio}$} is the priority if we are implementing the tree as a
+treap.
+
+Actually I'm not doing much with \PB{\\{prio}} until I've got the rest of
+the program debugged. Then I'll have to change parent pointer because I'll
+need to rotate upward in the tree.
+
+The \PB{\\{head}} node has the root of the tree in its \PB{\\{right}} field,
+and
+it represents the special vertex that isn't in the tree.
+
+\Y\B\4\X3:Type declarations\X${}\E{}$\6
+\&{typedef} \&{struct} \&{node\_struct} ${}\{{}$\1\6
+\&{struct} \\{vertex\_struct} ${}{*}\\{vert};{}$\6
+\&{struct} \&{node\_struct} ${}{*}\\{succ},{}$ ${}{*}\\{pred},{}$ ${}{*}%
+\\{left},{}$ ${}{*}\\{right},{}$ ${}{*}{*}\\{parent};{}$\6
+\&{long} \\{prio};\2\6
+${}\}{}$ \&{node};\par
+\U1.\fi
+
+\M{4}\B\X4:Initialize the array of nodes\X${}\E{}$\6
+$\\{head}\K{}$(\&{node} ${}{*}){}$ \\{gb\_alloc}${}((\|g\MG\|n)*\&{sizeof}(%
+\&{node}),\39\\{working\_storage});{}$\6
+\&{if} ${}(\\{head}\E\NULL){}$\1\5
+\&{return} (\T{1});\C{ fixthis }\2\6
+${}\\{next\_node}\K\\{head}{}$;\par
+\U6.\fi
+
+\M{5}\B\X2:Global variables\X${}\mathrel+\E{}$\6
+\&{node} ${}{*}\\{head}{}$;\C{ beginning of the hull data structure }\6
+\&{node} ${}{*}\\{next\_node}{}$;\C{ first unused slot in that array }\6
+\&{Area} \\{working\_storage};\6
+\&{int} \\{serial\_no}${}\K\T{1}{}$;\C{ used to disambiguate entries with equal
+coordinates }\par
+\fi
+
+\M{6}We assume that the vertices have been given to us in a GraphBase-type
+graph. The algorithm begins with a trivial hull that contains
+only the first two vertices.
+
+\Y\B\4\X6:Initialize the data structures\X${}\E{}$\6
+\\{init\_area}(\\{working\_storage});\6
+\X4:Initialize the array of nodes\X;\6
+${}\|o,\39\|u\K\|g\MG\\{vertices};{}$\6
+${}\|v\K\|u+\T{1};{}$\6
+${}\|u\MG\|z.\|i\K\T{0};{}$\6
+${}\|v\MG\|z.\|i\K\T{1};{}$\6
+${}\|p\K\PP\\{next\_node};{}$\6
+${}\\{ooo},\39\\{head}\MG\\{succ}\K\\{head}\MG\\{pred}\K\\{head}\MG\\{right}\K%
+\|p;{}$\6
+${}\\{oo},\39\|p\MG\\{succ}\K\|p\MG\\{pred}\K\\{head};{}$\6
+${}\|o,\39\|p\MG\\{parent}\K{\AND}(\\{head}\MG\\{right});{}$\6
+${}\\{oo},\39\|p\MG\\{left}\K\|p\MG\\{right}\K\NULL;{}$\6
+\\{gb\_init\_rand}(\,);\6
+${}\|p\MG\\{prio}\K\\{gb\_next\_rand}(\,);{}$\6
+${}\|o,\39\\{head}\MG\\{vert}\K\|u;{}$\6
+${}\|o,\39\|p\MG\\{vert}\K\|v;{}$\6
+${}\\{next\_node}\PP;{}$\6
+\&{if} ${}(\|n<\T{150}){}$\1\5
+${}\\{printf}(\.{"Beginning\ with\ (\%s;}\)\.{\ \%s)\\n"},\39\|u\MG\\{name},\39%
+\|v\MG\\{name}){}$;\2\par
+\U10.\fi
+
+\M{7}We'll probably need a bunch of local variables to do elementary operations
+on
+data structures.
+
+\Y\B\4\X7:Local variables\X${}\E{}$\6
+\&{Vertex} ${}{*}\|u,{}$ ${}{*}\|v,{}$ ${}{*}\\{vv},{}$ ${}{*}\|w;{}$\6
+\&{node} ${}{*}\|p,{}$ ${}{*}\\{pp},{}$ ${}{*}\|q,{}$ ${}{*}\\{qq},{}$ ${}{*}%
+\\{qqq},{}$ ${}{*}\|r,{}$ ${}{*}\\{rr},{}$ ${}{*}\|s,{}$ ${}{*}\\{ss},{}$
+${}{*}\\{tt},{}$ ${}{*}{*}\\{par},{}$ ${}{*}{*}\\{ppar};{}$\6
+\&{int} \\{replaced};\C{ will be nonzero if we've just replaced a hull element
+}\par
+\U1.\fi
+
+\M{8}Here's a routine I used when debugging (in fact I should have written
+it sooner than I did).
+
+\Y\B\4\X8:Verify the integrity of the data structures\X${}\E{}$\6
+$\|p\K\\{head};{}$\6
+${}\\{count}\K\T{0};{}$\6
+\&{do}\5
+${}\{{}$\1\6
+${}\\{count}\PP;{}$\6
+${}\|p\MG\\{prio}\K(\|p\MG\\{prio}\AND\T{\^ffff0000})+\\{count};{}$\6
+\&{if} ${}(\|p\MG\\{succ}\MG\\{pred}\I\|p){}$\1\5
+${}\\{printf}(\.{"succ/pred\ failure\ a}\)\.{t\ \%s!\\n"},\39\|p\MG\\{vert}\MG%
+\\{name});{}$\2\6
+\&{if} ${}(\|p\I\\{head}\W{*}(\|p\MG\\{parent})\I\|p){}$\1\5
+${}\\{printf}(\.{"parent/child\ failur}\)\.{e\ at\ \%s!\\n"},\39\|p\MG\\{vert}%
+\MG\\{name});{}$\2\6
+${}\|p\K\|p\MG\\{succ};{}$\6
+\4${}\}{}$\2\5
+\&{while} ${}(\|p\I\\{head});{}$\6
+${}\\{count}\K\T{1};{}$\6
+${}\\{inorder}(\\{head}\MG\\{right}){}$;\par
+\U10.\fi
+
+\M{9}\B\X9:Procedures\X${}\E{}$\6
+\&{int} \\{count};\7
+\\{inorder}(\|p)\1\1\6
+\&{node} ${}{*}\|p;\2\2{}$\6
+${}\{{}$\1\6
+\&{if} (\|p)\5
+${}\{{}$\1\6
+${}\\{inorder}(\|p\MG\\{left});{}$\6
+\&{if} ${}((\|p\MG\\{prio}\AND\T{\^ffff})\I\PP\\{count}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"tree\ node\ \%d\ is\ mis}\)\.{sing\ at\ \%d:\ \%s!\\n"},\39%
+\\{count},\39\|p\MG\\{prio}\AND\T{\^ffff},\39\|p\MG\\{vert}\MG\\{name});{}$\6
+${}\\{count}\K\|p\MG\\{prio}\AND\T{\^ffff};{}$\6
+\4${}\}{}$\2\6
+${}\\{inorder}(\|p\MG\\{right});{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\A17.
+\U1.\fi
+
+\N{1}{10}Hull updating.
+The main loop of the algorithm updates the data structure incrementally
+by adding one new vertex at a time. If the new vertex lies outside the
+current convex hull, we put it into the cycle and possibly delete some
+vertices that were previously part of the hull.
+
+\Y\B\4\X10:Find convex hull of \PB{\|g}\X${}\E{}$\6
+\X6:Initialize the data structures\X;\6
+\&{for} ${}(\\{oo},\39\\{vv}\K\|g\MG\\{vertices}+\T{2};{}$ ${}\\{vv}<\|g\MG%
+\\{vertices}+\|g\MG\|n;{}$ ${}\\{vv}\PP){}$\5
+${}\{{}$\1\6
+${}\\{vv}\MG\|z.\|i\K\PP\\{serial\_no};{}$\6
+${}\|o,\39\|q\K\\{head}\MG\\{pred};{}$\6
+${}\\{replaced}\K\T{0};{}$\6
+${}\|o,\39\|u\K\\{head}\MG\\{vert};{}$\6
+\&{if} ${}(\|o,\39\\{ccw}(\\{vv},\39\|u,\39\|q\MG\\{vert})){}$\1\5
+\X12:Do Case 1\X\2\6
+\&{else}\1\5
+\X15:Do Case 2\X;\2\6
+\X8:Verify the integrity of the data structures\X;\6
+\4${}\}{}$\2\6
+\X11:Print the convex hull\X;\par
+\U1.\fi
+
+\M{11}Let me do the easy part first, since it's bedtime and I can worry about
+the rest tomorrow.
+
+\Y\B\4\X11:Print the convex hull\X${}\E{}$\6
+$\|p\K\\{head};{}$\6
+\\{printf}(\.{"The\ convex\ hull\ is:}\)\.{\\n"});\6
+\&{do}\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"\ \ \%s\\n"},\39\|p\MG\\{vert}\MG\\{name});{}$\6
+${}\|p\K\|p\MG\\{succ};{}$\6
+\4${}\}{}$\2\5
+\&{while} ${}(\|p\I\\{head}){}$;\par
+\U10.\fi
+
+\M{12}In Case 1 we don't need the tree structure since we've already found
+that the new vertex is outside the hull at the tree root position.
+
+\Y\B\4\X12:Do Case 1\X${}\E{}$\6
+${}\{{}$\5
+\1${}\\{qqq}\K\\{head};{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+${}\|o,\39\|r\K\\{qqq}\MG\\{succ};{}$\6
+\&{if} ${}(\|r\E\|q){}$\1\5
+\&{break};\C{ can't eliminate any more }\2\6
+\&{if} ${}(\\{oo},\39\\{ccw}(\\{vv},\39\\{qqq}\MG\\{vert},\39\|r\MG%
+\\{vert})){}$\1\5
+\&{break};\2\6
+\X14:Delete or replace \PB{\\{qqq}} from the hull\X;\6
+${}\\{qqq}\K\|r;{}$\6
+\4${}\}{}$\2\6
+${}\\{qq}\K\\{qqq};{}$\6
+${}\\{qqq}\K\|q;{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+${}\|o,\39\|r\K\\{qqq}\MG\\{pred};{}$\6
+\&{if} ${}(\|r\E\\{qq}){}$\1\5
+\&{break};\2\6
+\&{if} ${}(\\{oo},\39\\{ccw}(\\{vv},\39\|r\MG\\{vert},\39\\{qqq}\MG%
+\\{vert})){}$\1\5
+\&{break};\2\6
+\X14:Delete or replace \PB{\\{qqq}} from the hull\X;\6
+${}\\{qqq}\K\|r;{}$\6
+\4${}\}{}$\2\6
+${}\|q\K\\{qqq};{}$\6
+\&{if} ${}(\R\\{replaced}){}$\1\5
+\X13:Insert \PB{\\{vv}} at the right of the tree\X;\2\6
+\&{if} ${}(\|n<\T{150}){}$\1\5
+${}\\{printf}(\.{"New\ hull\ sequence\ (}\)\.{\%s;\ \%s;\ \%s)\\n"},\39\|q\MG%
+\\{vert}\MG\\{name},\39\\{vv}\MG\\{name},\39\\{qq}\MG\\{vert}\MG\\{name});{}$\2%
+\6
+\4${}\}{}$\2\par
+\U10.\fi
+
+\M{13}At this point \PB{$\|q\E\\{head}\MG\\{pred}$} is the tree's rightmost
+node.
+
+\Y\B\4\X13:Insert \PB{\\{vv}} at the right of the tree\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{tt}\K\\{next\_node}\PP;{}$\6
+${}\|o,\39\\{tt}\MG\\{vert}\K\\{vv};{}$\6
+${}\|o,\39\\{tt}\MG\\{succ}\K\\{head};{}$\6
+${}\|o,\39\\{tt}\MG\\{pred}\K\|q;{}$\6
+${}\|o,\39\\{head}\MG\\{pred}\K\\{tt};{}$\6
+${}\|o,\39\|q\MG\\{succ}\K\\{tt};{}$\6
+${}\\{oo},\39\\{tt}\MG\\{left}\K\\{tt}\MG\\{right}\K\NULL;{}$\6
+${}\|o,\39\\{tt}\MG\\{parent}\K{\AND}(\|q\MG\\{right});{}$\6
+${}\|o,\39\|q\MG\\{right}\K\\{tt};{}$\6
+${}\\{tt}\MG\\{prio}\K\\{gb\_next\_rand}(\,);{}$\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{14}Nodes don't need to be recycled.
+
+\Y\B\4\X14:Delete or replace \PB{\\{qqq}} from the hull\X${}\E{}$\6
+\&{if} (\\{replaced})\5
+${}\{{}$\1\6
+${}\|o,\39\\{pp}\K\\{qqq}\MG\\{pred};{}$\6
+${}\|o,\39\\{tt}\K\\{qqq}\MG\\{succ};{}$\6
+${}\|o,\39\\{pp}\MG\\{succ}\K\\{tt};{}$\6
+${}\|o,\39\\{tt}\MG\\{pred}\K\\{pp};{}$\6
+${}\|o,\39\\{par}\K\\{qqq}\MG\\{parent};{}$\6
+${}\|o,\39\\{pp}\K\\{qqq}\MG\\{left};{}$\6
+\&{if} ${}(\|o,\39(\\{ss}\K\\{qqq}\MG\\{right})\E\NULL){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|n<\T{150}){}$\1\5
+${}\\{printf}(\.{"(Deleting\ \%s\ from\ t}\)\.{ree,\ case\ 1)\\n"},\39\\{qqq}%
+\MG\\{vert}\MG\\{name});{}$\2\6
+${}\|o,\39{*}\\{par}\K\\{pp};{}$\6
+\&{if} ${}(\\{pp}\I\NULL){}$\1\5
+${}\|o,\39\\{pp}\MG\\{parent}\K\\{par};{}$\2\6
+\4${}\}{}$\2\6
+\&{else} \&{if} ${}(\\{pp}\E\NULL){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|n<\T{150}){}$\1\5
+${}\\{printf}(\.{"(Deleting\ \%s\ from\ t}\)\.{ree,\ case\ 2)\\n"},\39\\{qqq}%
+\MG\\{vert}\MG\\{name});{}$\2\6
+${}\|o,\39{*}\\{par}\K\\{ss};{}$\6
+${}\|o,\39\\{ss}\MG\\{parent}\K\\{par};{}$\6
+\4${}\}{}$\2\6
+\&{else}\5
+${}\{{}$\C{ \PB{$\\{tt}\MG\\{left}\E\NULL$} }\1\6
+${}\|o,\39\\{tt}\MG\\{left}\K\\{pp};{}$\6
+${}\|o,\39\\{pp}\MG\\{parent}\K{\AND}(\\{tt}\MG\\{left});{}$\6
+\&{if} ${}(\\{ss}\I\\{tt}){}$\5
+${}\{{}$\C{ have to delete \PB{\\{tt}} from its present place }\1\6
+\&{if} ${}(\|n<\T{150}){}$\1\5
+${}\\{printf}(\.{"(Deleting\ \%s\ from\ t}\)\.{ree,\ hard\ case)\\n"},\39%
+\\{qqq}\MG\\{vert}\MG\\{name});{}$\2\6
+${}\|o,\39\\{ppar}\K\\{tt}\MG\\{parent};{}$\6
+${}\|o,\39\\{pp}\K\\{tt}\MG\\{right};{}$\6
+${}\|o,\39{*}\\{ppar}\K\\{pp};{}$\6
+\&{if} ${}(\\{pp}\I\NULL){}$\1\5
+${}\|o,\39\\{pp}\MG\\{parent}\K\\{ppar};{}$\2\6
+${}\|o,\39\\{tt}\MG\\{right}\K\\{ss};{}$\6
+${}\|o,\39\\{ss}\MG\\{parent}\K{\AND}(\\{tt}\MG\\{right});{}$\6
+\4${}\}{}$\2\6
+\&{else} \&{if} ${}(\|n<\T{150}){}$\1\5
+${}\\{printf}(\.{"(Deleting\ \%s\ from\ t}\)\.{ree,\ case\ 3)\\n"},\39\\{qqq}%
+\MG\\{vert}\MG\\{name});{}$\2\6
+${}\|o,\39{*}\\{par}\K\\{tt};{}$\6
+${}\|o,\39\\{tt}\MG\\{parent}\K\\{par};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|o,\39\\{qqq}\MG\\{vert}\K\\{vv};{}$\6
+${}\\{replaced}\K\T{1};{}$\6
+\4${}\}{}$\2\par
+\Us12\ET15.\fi
+
+\M{15}\B\X15:Do Case 2\X${}\E{}$\6
+${}\{{}$\5
+\1${}\|o,\39\\{qq}\K\\{head}\MG\\{right};{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{if} ${}(\\{qq}\E\|q\V(\|o,\39\\{ccw}(\|u,\39\\{vv},\39\\{qq}\MG%
+\\{vert}))){}$\5
+${}\{{}$\1\6
+${}\|o,\39\|r\K\\{qq}\MG\\{left};{}$\6
+\&{if} ${}(\|r\E\NULL){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{ppar}\K{\AND}(\\{qq}\MG\\{left});{}$\6
+\&{break};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|o,\39\|r\K\\{qq}\MG\\{right};{}$\6
+\&{if} ${}(\|r\E\NULL){}$\5
+${}\{{}$\1\6
+${}\|o,\39\\{ppar}\K{\AND}(\\{qq}\MG\\{right});{}$\6
+${}\|o,\39\\{qq}\K\\{qq}\MG\\{succ};{}$\6
+\&{break};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\\{qq}\K\|r;{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|o,\39(\|r\K\\{qq}\MG\\{pred})\E\\{head}\V(\\{oo},\39\\{ccw}(%
+\\{vv},\39\\{qq}\MG\\{vert},\39\|r\MG\\{vert}))){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|r\I\\{head}){}$\5
+${}\{{}$\1\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+${}\\{qqq}\K\|r;{}$\6
+${}\|o,\39\|r\K\\{qqq}\MG\\{pred};{}$\6
+\&{if} ${}(\|r\E\\{head}){}$\1\5
+\&{break};\2\6
+\&{if} ${}(\\{oo},\39\\{ccw}(\\{vv},\39\|r\MG\\{vert},\39\\{qqq}\MG%
+\\{vert})){}$\1\5
+\&{break};\2\6
+\X14:Delete or replace \PB{\\{qqq}} from the hull\X;\6
+\4${}\}{}$\2\6
+${}\|r\K\\{qqq};{}$\6
+\4${}\}{}$\2\6
+${}\\{qqq}\K\\{qq};{}$\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\&{if} ${}(\\{qqq}\E\|q){}$\1\5
+\&{break};\2\6
+${}\\{oo},\39\\{rr}\K\\{qqq}\MG\\{succ};{}$\6
+\&{if} ${}(\\{oo},\39\\{ccw}(\\{vv},\39\\{qqq}\MG\\{vert},\39\\{rr}\MG%
+\\{vert})){}$\1\5
+\&{break};\2\6
+\X14:Delete or replace \PB{\\{qqq}} from the hull\X;\6
+${}\\{qqq}\K\\{rr};{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\R\\{replaced}){}$\1\5
+\X16:Insert \PB{\\{vv}} in tree, linked by \PB{\\{ppar}}\X;\2\6
+\&{if} ${}(\|n<\T{150}){}$\1\5
+${}\\{printf}(\.{"New\ hull\ sequence\ (}\)\.{\%s;\ \%s;\ \%s)\\n"},\39\|r\MG%
+\\{vert}\MG\\{name},\39\\{vv}\MG\\{name},\39\\{qqq}\MG\\{vert}\MG\\{name});{}$%
+\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U10.\fi
+
+\M{16}\B\X16:Insert \PB{\\{vv}} in tree, linked by \PB{\\{ppar}}\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{tt}\K\\{next\_node}\PP;{}$\6
+${}\|o,\39\\{tt}\MG\\{vert}\K\\{vv};{}$\6
+${}\|o,\39\\{tt}\MG\\{succ}\K\\{qq};{}$\6
+${}\|o,\39\\{tt}\MG\\{pred}\K\|r;{}$\6
+${}\|o,\39\\{qq}\MG\\{pred}\K\\{tt};{}$\6
+${}\|o,\39\|r\MG\\{succ}\K\\{tt};{}$\6
+${}\\{oo},\39\\{tt}\MG\\{left}\K\\{tt}\MG\\{right}\K\NULL;{}$\6
+${}\|o,\39\\{tt}\MG\\{parent}\K\\{ppar};{}$\6
+${}\|o,\39{*}\\{ppar}\K\\{tt};{}$\6
+${}\\{tt}\MG\\{prio}\K\\{gb\_next\_rand}(\,);{}$\6
+\4${}\}{}$\2\par
+\U15.\fi
+
+\N{1}{17}Determinants. I need code for the primitive function \PB{\\{ccw}}.
+Floating-point arithmetic suffices for my purposes.
+
+We want to evaluate the determinant
+$$ccw(u,v,w)=\left\vert\matrix{u(x)&u(y)&1\cr v(x)&v(y)&1\cr w(x)&w(y)&1\cr}
+\right\vert=\left\vert\matrix{u(x)-w(x)&u(y)-w(y)\cr v(x)-w(x)&v(y)-w(y)\cr}
+\right\vert\,.$$
+
+\Y\B\4\X9:Procedures\X${}\mathrel+\E{}$\6
+\&{int} ${}\\{ccw}(\|u,\39\|v,\39\|w){}$\1\1\6
+\&{Vertex} ${}{*}\|u,{}$ ${}{*}\|v,{}$ ${}{*}\|w;\2\2{}$\6
+${}\{{}$\5
+\1\&{register} \&{double} \\{wx}${}\K{}$(\&{double}) \|w${}\MG\|x.\|i,{}$ %
+\\{wy}${}\K{}$(\&{double}) \|w${}\MG\|y.\|i;{}$\6
+\&{register} \&{double} \\{det}${}\K{}$((\&{double}) \|u${}\MG\|x.\|i-%
+\\{wx})*{}$((\&{double}) \|v${}\MG\|y.\|i-\\{wy})-{}$((\&{double}) \|u${}\MG%
+\|y.\|i-\\{wy})*{}$((\&{double}) \|v${}\MG\|x.\|i-\\{wx});{}$\6
+\&{Vertex} ${}{*}\\{uu}\K\|u,{}$ ${}{*}\\{vv}\K\|v,{}$ ${}{*}\\{ww}\K\|w,{}$
+${}{*}\|t;{}$\7
+\&{if} ${}(\\{det}\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{det}\K\T{1};{}$\6
+\&{if} ${}(\|u\MG\|x.\|i>\|v\MG\|x.\|i\V(\|u\MG\|x.\|i\E\|v\MG\|x.\|i\W(\|u\MG%
+\|y.\|i>\|v\MG\|y.\|i\V(\|u\MG\|y.\|i\E\|v\MG\|y.\|i\W\|u\MG\|z.\|i>\|v\MG\|z.%
+\|i)))){}$\5
+${}\{{}$\1\6
+${}\|t\K\|u{}$;\5
+${}\|u\K\|v{}$;\5
+${}\|v\K\|t{}$;\5
+${}\\{det}\K{-}\\{det};{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|v\MG\|x.\|i>\|w\MG\|x.\|i\V(\|v\MG\|x.\|i\E\|w\MG\|x.\|i\W(\|v\MG%
+\|y.\|i>\|w\MG\|y.\|i\V(\|v\MG\|y.\|i\E\|w\MG\|y.\|i\W\|v\MG\|z.\|i>\|w\MG\|z.%
+\|i)))){}$\5
+${}\{{}$\1\6
+${}\|t\K\|v{}$;\5
+${}\|v\K\|w{}$;\5
+${}\|w\K\|t{}$;\5
+${}\\{det}\K{-}\\{det};{}$\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|u\MG\|x.\|i>\|v\MG\|x.\|i\V(\|u\MG\|x.\|i\E\|v\MG\|x.\|i\W(\|u\MG%
+\|y.\|i>\|v\MG\|y.\|i\V(\|u\MG\|y.\|i\E\|v\MG\|y.\|i\W\|u\MG\|z.\|i<\|v\MG\|z.%
+\|i)))){}$\5
+${}\{{}$\1\6
+${}\\{det}\K{-}\\{det};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|n<\T{150}){}$\1\5
+${}\\{printf}(\.{"cc(\%s;\ \%s;\ \%s)\ is\ \%}\)\.{s\\n"},\39\\{uu}\MG\\{name},%
+\39\\{vv}\MG\\{name},\39\\{ww}\MG\\{name},\39\\{det}>\T{0}\?\.{"true"}:%
+\.{"false"});{}$\2\6
+${}\\{ccs}\PP;{}$\6
+\&{return} ${}(\\{det}>\T{0});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\inx
+\fin
+\con

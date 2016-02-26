@@ -1,0 +1,38 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. A triviality to put the Flammenkamp--Clift table of addition
+chain data into the format of my {\mc ACHAIN} programs.
+
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|c${},{}$ \|h${},{}$ \|i${},{}$ \|j${},{}$ \|k${},{}$ %
+\|n;\7
+\&{for} ${}(\|n\K\T{1},\39\|h\K\T{0};{}$  ; ${}\|n\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\R\|h){}$\5
+${}\{{}$\1\6
+${}\|c\K\\{fgetc}(\\{stdin});{}$\6
+\&{if} ${}(\|c\E\.{EOF}){}$\1\5
+\&{break};\2\6
+${}\|h\K\T{3};{}$\6
+\4${}\}{}$\5
+\2\&{else}\1\5
+${}\|h\MM,\39\|c\MRL{{\GG}{\K}}\T{2};{}$\2\6
+\&{for} ${}(\|i\K\|j\K\T{0},\39\|k\K\|n;{}$ \|k; ${}\|k\MRL{{\GG}{\K}}\T{1},\39%
+\|j\PP){}$\1\5
+${}\|i\MRL{+{\K}}\|k\AND\T{1};{}$\2\6
+\&{for} ${}(\|i\MM;{}$ \|i; ${}\|j\PP){}$\1\5
+${}\|i\MRL{{\GG}{\K}}\T{1};{}$\2\6
+${}\\{putchar}((\|c\AND\T{3})+\|j+(\.{'\ '}-\T{1}));{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{2}Index.
+\fi
+
+\inx
+\fin
+\con

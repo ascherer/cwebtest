@@ -1,0 +1,60 @@
+\I\X66:Assertion failure subroutine\X
+\U5.
+\I\X46:Build the \RNBPM/ for \PB{$\\{chartstack}[\|s+\T{1}]$}\X
+\U42.
+\I\X13:Check that we've filled out the whole tree\X
+\U10.
+\I\X57:Copy $R^-$ into \PB{$\\{chartstack}[\|s+\T{1}]$}, where $R$ is the right
+subtree of~$c$\X
+\U55.
+\I\X59:Copy the rest of the tree into \PB{$\\{chartstack}[\|s+\T{1}]$}\X
+\U55.
+\I\X44:Copy the tree $T$ underlying the next $T^*$ to \PB{$\\{chartstack}[\|s+%
+\T{1}]$}\X
+\U42.
+\I\X31:Create the initial permutation\X
+\Us49\ET62.
+\I\X20:Create the state chart\X
+\U16.
+\I\X43:Determine the number \PB{\|m} of initial rank~0 nodes, and stack them\X
+\U42.
+\I\X49, 62:Find and print the corresponding planar maps\X
+\U5.
+\I\X16:Find and print the three conjugates of \PB{\|T}\X
+\U5.
+\I\X56:Find the last node, \PB{\|c}, in preorder that has rank~0, and its
+parent~\PB{\|p}\X
+\U55.
+\I\X8, 15, 30, 41:Global variables\X
+\U5.
+\I\X45:Handle the case of an empty tree\X
+\U42.
+\I\X61:Hook everything together with three magic splices\X
+\U55.
+\I\X10:Introduce the buds and compute the ranks\X
+\U9.
+\I\X9:Parse the arguments; report a problem and \PB{\\{exit}} if they don't
+define a skew tree\X
+\U6.
+\I\X35:Print and count the face cycles\X
+\U33.
+\I\X34:Print and count the vertex cycles\X
+\U33.
+\I\X22:Print the conjugates from the state chart\X
+\U16.
+\I\X23:Print the tree with all buds shown\X
+\U16.
+\I\X6:Process the command line\X
+\U5.
+\I\X60:Recursively build the \RNBPM/ for $S$\X
+\U55.
+\I\X58:Recursively build the \RNBPM/ for $T$\X
+\U55.
+\I\X48:Splice everything into a cycle\X
+\U42.
+\I\X47:Splice the new \RNBPM/ to the previous fragment\X
+\U42.
+\I\X11, 12, 17, 18, 19, 21, 24, 32, 33, 42, 55:Subroutines\X
+\U5.
+\I\X7, 14:Type definitions\X
+\U5.

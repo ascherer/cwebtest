@@ -1,0 +1,34 @@
+\I\\{abort}, \[2], 5.
+\I\\{argc}, \[1].
+\I\\{argv}, \[1], 2, 6.
+\I\\{buffer}, \[3], 6.
+\I\\{build}, 6, \[7].
+\I\\{exit}, 1, 2, 6.
+\I\\{fprintf}, 1, 2, 6.
+\I\|{g}, \[3].
+\I\\{gb\_new\_edge}, 7.
+\I\\{gb\_new\_graph}, 6.
+\I\\{gb\_save\_string}, 6.
+\I\&{Graph}, 3.
+\I\\{id}, 1, 6.
+\I\|{j}, \[1], \[7].
+\I\\{jj}, 2, \[3], 5, 6, 7.
+\I\|{k}, \[1].
+\I\\{lft}, \[7].
+\I\\{llink}, \[3], 5, 7.
+\I\\{main}, \[1].
+\I\\{maxn}, \[3].
+\I\\{mess}, 2.
+\I\\{name}, 6.
+\I\|{p}, \[2].
+\I\\{printf}, 1.
+\I\\{rlink}, \[3], 5, 7.
+\I\\{rt}, \[7].
+\I\\{save\_graph}, 1.
+\I\\{sprintf}, 6.
+\I\\{stack}, \[3], 4, 5, 6.
+\I\\{stackitem}, \[7].
+\I\\{stderr}, 1, 2, 6.
+\I\|{t}, \[7].
+\I\\{vert}, \[6], 7.
+\I\\{vertices}, 6.

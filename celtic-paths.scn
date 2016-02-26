@@ -1,0 +1,37 @@
+\I\X7:Check for consistency\X
+\U5.
+\I\X12:Check neighbors in three-region tiles\X
+\U10.
+\I\X11, 22:Declare the magic tables\X
+\U3.
+\I\X8:Do the black/white coloring\X
+\U3.
+\I\X9:Do the inside/outside coloring\X
+\U3.
+\I\X18:Handle a blank tile\X
+\U17.
+\I\X21:Handle a tile with three or four regions\X
+\U17.
+\I\X19:Handle a two-region tile\X
+\U17.
+\I\X20:Handle tile \.{1537}\X
+\U17.
+\I\X4:Initialize \PB{\\{codetable}}\X
+\U3.
+\I\X6:Parse the entry for row \PB{\|m} and column \PB{\|j}\X
+\U5.
+\I\X13:Produce the output\X
+\U3.
+\I\X16:Publish row \PB{\|i}\X
+\U13.
+\I\X15:Publish the postamble\X
+\U13.
+\I\X14:Publish the preamble\X
+\U13.
+\I\X10:Push all unseen neighbors of subregion \PB{[\|i][\|j][\|k]} onto the
+stack\X
+\U9.
+\I\X5:Read the input into \PB{\|a}, and check it for consistency\X
+\U3.
+\I\X17:Typeset tile $(i,j)$\X
+\U16.

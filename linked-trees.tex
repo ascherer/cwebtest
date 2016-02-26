@@ -1,0 +1,108 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. This program tests an amazingly simple algorithm that
+generates all $n$-node trees with the property that the $k$th node in preorder
+has $t_k$ link fields. (A link field is either zero or it points to
+a subtree.) In the special case that $t_k=2$ for $1\le k\le n$, we
+get Skarbek's algorithm for binary trees, Algorithm 7.2.1.6B. In the
+special case that $t_k=t$ for $1\le k\le n$, we get an algorithm that
+was sent to me by James Korsh in December 2004. I~happened to notice
+that Korsh's idea works in the general case considered here; but
+I'll let him have the fun of constructing a formal proof,
+because the basic insights are essentially his.
+
+The number of trees generated does not appear to have a simple formula
+in general. But one can show bijectively that such trees are equivalent
+to integer sequences $a_1\ldots a_{n-1}$ with the property
+that $a_1\ge\cdots\ge a_{n-1}\ge0$ and $a_k\le\sum_{j=1}^{n-k}(t_j-1)$.
+
+The numbers $t_1$, \dots, $t_n$ are input on the command line.
+
+\Y\B\4\D$\\{maxn}$ \5
+\T{100}\C{ $n$ should be less than this }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\&{int} \|h[\\{maxn}];\C{ the table of degrees; $h_k=t_k-1$ }\6
+\&{int} \|l[\\{maxn}][\\{maxn}];\C{ the links (right to left) }\6
+\&{int} \\{count};\7
+\\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j${},{}$ \|k${},{}$ \|n${},{}$ \|r${},{}$ \|x${},{}$ %
+\|y;\7
+\X2:Read the \PB{\|t}'s from the command line\X;\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|n;{}$ ${}\|j\PP){}$\1\5
+${}\|l[\|j][\|h[\|j]]\K\|j+\T{1};{}$\2\6
+\&{while} (\T{1})\5
+${}\{{}$\1\6
+\X3:Visit the current tree\X;\6
+\&{for} ${}(\|j\K\T{1},\39\|x\K\|l[\T{1}][\T{0}];{}$ ${}\|x\E\|j+\T{1};{}$ ${}%
+\|j\K\|x,\39\|x\K\|l[\|j][\T{0}]){}$\1\5
+${}\|l[\|j][\T{0}]\K\T{0},\39\|l[\|j][\|h[\|j]]\K\|x;{}$\2\6
+\&{if} ${}(\|j\E\|n){}$\1\5
+\&{break};\2\6
+\&{for} ${}(\|r\K\T{1};{}$ ${}\|l[\|j][\|r]\E\T{0};{}$ ${}\|r\PP){}$\1\5
+;\2\6
+\&{for} ${}(\|k\K\T{0},\39\|y\K\|l[\|j][\|r];{}$ \|l[\|y][\T{0}]; ${}\|k\K\|y,%
+\39\|y\K\|l[\|y][\T{0}]){}$\1\5
+;\2\6
+\&{if} (\|k)\1\5
+${}\|l[\|k][\T{0}]\K\T{0}{}$;\5
+\2\&{else}\1\5
+${}\|l[\|j][\|r]\K\T{0};{}$\2\6
+${}\|l[\|j][\T{0}]\K\T{0},\39\|l[\|j][\|r-\T{1}]\K\|y,\39\|l[\|y][\T{0}]\K%
+\|x;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}\B\D$\\{abort}(\|m)$ \6
+${}\{{}$\5
+\1${}\\{fprintf}(\\{stderr},\39\.{"\%s!\\n"},\39\|m);{}$\6
+\\{exit}(\|j);\5
+${}\}{}$\2\par
+\Y\B\4\X2:Read the \PB{\|t}'s from the command line\X${}\E{}$\6
+$\|n\K\\{argc}-\T{1};{}$\6
+\&{if} ${}(\|n\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Usage:\ \%s\ t1\ t2\ ...}\)\.{\ tn\\n"},\39%
+\\{argv}[\T{0}]);{}$\6
+\\{exit}(\T{0});\6
+\4${}\}{}$\2\6
+\&{if} ${}(\|n\G\\{maxn}){}$\1\5
+\\{abort}(\.{"I\ can't\ handle\ that}\)\.{\ many\ degrees"});\2\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{sscanf}(\\{argv}[\|j],\39\.{"\%d"},\39{\AND}\|h[\|j])\I\T{1}){}$%
+\1\5
+\\{abort}(\.{"unreadable\ degree"});\2\6
+${}\|h[\|j]\MM;{}$\6
+\&{if} ${}(\|h[\|j]<\T{0}){}$\1\5
+\\{abort}(\.{"Each\ degree\ must\ be}\)\.{\ positive"});\2\6
+\&{if} ${}(\|h[\|j]\G\\{maxn}){}$\1\5
+\\{abort}(\.{"Degree\ is\ too\ large}\)\.{"});\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}For each tree, we print out the array of links, with link~0 last.
+
+\Y\B\4\X3:Visit the current tree\X${}\E{}$\6
+$\\{count}\PP;{}$\6
+${}\\{printf}(\.{"\%d:"},\39\\{count});{}$\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|k\K\|h[\|j];{}$ ${}\|k\G\T{0};{}$ ${}\|k\MM){}$\1\5
+${}\\{printf}(\.{"\ \%d"},\39\|l[\|j][\|k]);{}$\2\6
+\&{if} ${}(\|j<\|n){}$\1\5
+\\{printf}(\.{";"});\2\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n"});\par
+\U1.\fi
+
+\N{1}{4}Index.
+
+\fi
+
+
+\inx
+\fin
+\con

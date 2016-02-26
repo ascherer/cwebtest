@@ -1,0 +1,25 @@
+\I\X9:Decrease \PB{\|t}, if possible, and try the next possibility; or \PB{%
+\&{goto} \\{done}}\X
+\U5.
+\I\X7:Downdate the data structures to the state they were in when level \PB{%
+\|t} was entered\X
+\U5.
+\I\X5:Find all simple paths of length \PB{$\|g\MG\|n-\T{2}$} from \PB{$\|a\MG%
+\\{tip}$} to \PB{\|z}, avoiding \PB{\|x}\X
+\U1.
+\I\X6:Increase \PB{\|t} and update the data structures to show that vertex \PB{%
+\|v} is now taken; \PB{\&{goto} \\{backtrack}} if no further moves are possible%
+\X
+\U5.
+\I\X8:Look at edge \PB{\|a} and its successors, advancing if it is a valid move%
+\X
+\U5.
+\I\X4:Prepare \PB{\|g} for backtracking, and find a vertex \PB{\|x} of minimum
+degree\X
+\U1.
+\I\X10:Record a solution\X
+\U6.
+\I\X2:Reduce \PB{\|g} to half size\X
+\U1.
+\I\X3:Remove self-loops\X
+\U4.

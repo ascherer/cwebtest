@@ -1,0 +1,47 @@
+\I\X11:Advance \PB{\|p} to the next smallest feasible value, and set \PB{$\|q\K%
+\|a[\|s]-\|p$}\X
+\U9.
+\I\X4:Backtrack through all solutions\X
+\U1.
+\I\X14:Find bounds $(\PB{\\{lbp}},\PB{\\{ubp}})$ and $(\PB{\\{lbq}},\PB{%
+\\{ubq}})$ on where \PB{\|p} and \PB{\|q} can be inserted; but go to \PB{%
+\\{failpq}} if they can't both be accommodated\X
+\U9.
+\I\X5:Given that \PB{$\|l[\|p]<\|s$}, increase \PB{\|p} to the next such
+element\X
+\U11.
+\I\X6:Given that \PB{$\|l[\|p]\G\|s$}, increase \PB{\|p} to the next element
+with \PB{$\|l[\|p]<\|s$}\X
+\Us10\ET11.
+\I\X7:Initialize the \PB{\\{down}} table\X
+\U1.
+\I\X3:Input the next value, \PB{\|l[\|n]}\X
+\U1.
+\I\X17:Make forced moves if \PB{\|p} has a special form\X
+\U16.
+\I\X19:Make forced moves if \PB{\|q} has a special form\X
+\U18.
+\I\X20:Print a solution\X
+\U9.
+\I\X2:Process the command line\X
+\U1.
+\I\X12:Put local variables on the stack and update outdegrees\X
+\U9.
+\I\X16:Put \PB{\|p} into the chain at location \PB{\\{ubp}}; \PB{\&{goto} %
+\\{failp}} if there's a problem\X
+\U9.
+\I\X18:Put \PB{\|q} into the chain at location \PB{\\{ubq}}; \PB{\&{goto} %
+\\{failq}} if there's a problem\X
+\U9.
+\I\X13:Restore local variables from the stack and downdate outdegrees\X
+\U9.
+\I\X10:Set \PB{\|p} to its smallest feasible value, and \PB{$\|q\K\|a[\|s]-%
+\|p$}\X
+\U9.
+\I\X9:Try to fix the rest of the chain, and output all the solutions\X
+\U4.
+\I\X15:Undo a change\X
+\U9.
+\I\X8:Update the \PB{\\{down}} links\X
+\U1.
+

@@ -1,0 +1,304 @@
+\input cwebmac
+\datethis
+
+
+
+
+\N{1}{1}Symmetric Hamiltonian cycles. This program finds all Hamiltonian cycles
+of
+an undirected graph in which the mapping $v\mapsto N-1-v$ is an
+automorphism, such that the same automorphism also applies to the cycle.
+
+We use a utility field to record the vertex degrees.
+
+\Y\B\4\D$\\{deg}$ \5
+$\|u.{}$\|I\par
+\B\4\D$\\{mm}$ \5
+\T{8}\C{ should be even }\par
+\B\4\D$\\{nn}$ \5
+\T{9}\par
+\Y\B\8\#\&{include} \.{"gb\_graph.h"}\C{ the GraphBase data structures }\6
+\8\#\&{include} \.{"gb\_basic.h"}\C{ standard graphs }\6
+\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{Graph} ${}{*}\|g\K\\{board}(\\{mm},\39\\{nn},\39\T{0},\39\T{0},\39\T{5},\39%
+\T{0},\39\T{0}){}$;\C{ knight moves on rectangular chessboard }\6
+\&{Vertex} ${}{*}\|x,{}$ ${}{*}\|z,{}$ ${}{*}\\{tmax};{}$\6
+\&{register} \&{Vertex} ${}{*}\|t,{}$ ${}{*}\|u,{}$ ${}{*}\|v;{}$\6
+\&{register} \&{Arc} ${}{*}\|a,{}$ ${}{*}\\{aa},{}$ ${}{*}\\{yy};{}$\6
+\&{register} \&{int} \|d;\6
+\&{Arc} ${}{*}\|b,{}$ ${}{*}\\{bb};{}$\6
+\&{int} \\{count}${}\K\T{0},{}$ \\{dcount}${}\K\T{0};{}$\6
+\&{int} \\{dmin};\7
+\X2:Reduce \PB{\|g} to half size\X;\6
+\X4:Prepare \PB{\|g} for backtracking, and find a vertex \PB{\|x} of minimum
+degree\X;\6
+\&{for} ${}(\|v\K\|g\MG\\{vertices};{}$ ${}\|v<\|g\MG\\{vertices}+\|g\MG\|n;{}$
+${}\|v\PP){}$\1\5
+${}\\{printf}(\.{"\ \%d"},\39\|v\MG\\{deg});{}$\2\6
+\\{printf}(\.{"\\n"});\C{ TEMPORARY CHECK }\6
+\&{if} ${}(\|x\MG\\{deg}<\T{2}){}$\5
+${}\{{}$\1\6
+${}\\{printf}(\.{"The\ minimum\ degree\ }\)\.{is\ \%d\ (vertex\ \%s)!\\n}\)%
+\.{"},\39\|x\MG\\{deg},\39\|x\MG\\{name});{}$\6
+\&{return} ${}{-}\T{1};{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|b\K\|x\MG\\{arcs};{}$ ${}\|b\MG\\{next};{}$ ${}\|b\K\|b\MG%
+\\{next}){}$\1\6
+\&{for} ${}(\\{bb}\K\|b\MG\\{next};{}$ \\{bb}; ${}\\{bb}\K\\{bb}\MG\\{next}){}$%
+\5
+${}\{{}$\1\6
+${}\|a\K\|b;{}$\6
+${}\|z\K\\{bb}\MG\\{tip};{}$\6
+\X5:Find all simple paths of length \PB{$\|g\MG\|n-\T{2}$} from \PB{$\|a\MG%
+\\{tip}$} to \PB{\|z}, avoiding \PB{\|x}\X;\6
+\4${}\}{}$\2\2\6
+${}\\{printf}(\.{"Altogether\ \%d\ solut}\)\.{ions\ and\ \%d\ wannabee}\)\.{s.%
+\\n"},\39\\{count},\39\\{dcount});{}$\6
+\&{for} ${}(\|v\K\|g\MG\\{vertices};{}$ ${}\|v<\|g\MG\\{vertices}+\|g\MG\|n;{}$
+${}\|v\PP){}$\1\5
+${}\\{printf}(\.{"\ \%d"},\39\|v\MG\\{deg});{}$\2\6
+\\{printf}(\.{"\\n"});\C{ TEMPORARY CHECK, SHOULD AGREE WITH FORMER VALUES }\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}We identify each vertex with its symmetric mate, and set the length
+of an arc to 1 if the arc crosses to the mate instead of staying in the
+same class.
+
+Multiple arcs and self-loops can be introduced in this step.
+
+\Y\B\4\D$\\{mate}(\|v)$ \5
+(\&{Vertex} ${}{*})({}$((\&{unsigned} \&{long}) \|g${}\MG\\{vertices})+{}$((%
+\&{unsigned} \&{long})(${}\|g\MG\\{vertices}+\|g\MG\|n-\T{1}))-{}$((%
+\&{unsigned} \&{long}) \|v))\par
+\Y\B\4\X2:Reduce \PB{\|g} to half size\X${}\E{}$\6
+\&{for} ${}(\|v\K\|g\MG\\{vertices};{}$ ${}\\{mate}(\|v)>\|v;{}$ ${}\|v\PP){}$%
+\1\6
+\&{for} ${}(\|a\K\|v\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\|u\K\\{mate}(\|a\MG\\{tip});{}$\6
+\&{if} ${}(\|u>\|a\MG\\{tip}){}$\1\5
+${}\|a\MG\\{len}\K\T{0};{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\|a\MG\\{len}\K\T{1};{}$\6
+${}\|a\MG\\{tip}\K\|u;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\6
+${}\|g\MG\|n\MRL{{/}{\K}}\T{2}{}$;\par
+\U1.\fi
+
+\M{3}Self-loops caused a subtle bug (my test for \PB{$\|v\MG\\{deg}\E\T{1}$}
+below
+failed), and they are of no interest in Hamiltonian circuits. So
+I'm now getting rid of them.
+
+\Y\B\4\X3:Remove self-loops\X${}\E{}$\6
+\&{for} ${}(\|v\K\|g\MG\\{vertices};{}$ ${}\|v<\|g\MG\\{vertices}+\|g\MG\|n;{}$
+${}\|v\PP){}$\1\6
+\&{for} ${}(\|a\K\|v\MG\\{arcs},\39\\{aa}\K\NULL;{}$ \|a; ${}\|a\K\|a\MG%
+\\{next}){}$\1\6
+\&{if} ${}(\|a\MG\\{tip}\E\|v){}$\5
+${}\{{}$\1\6
+\&{if} (\\{aa})\1\5
+${}\\{aa}\MG\\{next}\K\|a\MG\\{next};{}$\2\6
+\&{else}\1\5
+${}\|v\MG\\{arcs}\K\|a\MG\\{next};{}$\2\6
+\4${}\}{}$\2\6
+\&{else}\1\5
+${}\\{aa}\K\|a{}$;\2\2\2\par
+\U4.\fi
+
+\M{4}Vertices that have already appeared in the path are ``taken,'' and
+their \PB{\\{taken}} field is nonzero. Initially we make all those fields zero.
+
+\Y\B\4\D$\\{taken}$ \5
+$\|v.{}$\|I\par
+\Y\B\4\X4:Prepare \PB{\|g} for backtracking, and find a vertex \PB{\|x} of
+minimum degree\X${}\E{}$\6
+\X3:Remove self-loops\X;\6
+${}\\{dmin}\K\|g\MG\|n;{}$\6
+\&{for} ${}(\|v\K\|g\MG\\{vertices};{}$ ${}\|v<\|g\MG\\{vertices}+\|g\MG\|n;{}$
+${}\|v\PP){}$\5
+${}\{{}$\1\6
+${}\|v\MG\\{taken}\K\T{0};{}$\6
+${}\|d\K\T{0};{}$\6
+\&{for} ${}(\|a\K\|v\MG\\{arcs};{}$ \|a; ${}\|a\K\|a\MG\\{next}){}$\1\5
+${}\|d\PP;{}$\2\6
+${}\|v\MG\\{deg}\K\|d;{}$\6
+\&{if} ${}(\|d<\\{dmin}){}$\1\5
+${}\\{dmin}\K\|d,\39\|x\K\|v;{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\N{1}{5}The data structures. I use one simple rule to cut off unproductive
+branches of the search tree: If one of the vertices we could move to next
+is adjacent to only one other unused vertex, we must move to it now.
+
+The moves will be recorded in the vertex array of \PB{\|g}. More precisely, the
+\PB{\|k}th arc of the path will be \PB{$\|t\MG\\{ark}$} when \PB{\|t} is the %
+\PB{\|k}th vertex of
+the graph.
+
+This program is a typical backtrack program. I am more comfortable doing
+it with labels and goto statements than with while loops, but some day
+I may learn my lesson.
+
+\Y\B\4\D$\\{ark}$ \5
+$\|x.{}$\|A\par
+\Y\B\4\X5:Find all simple paths of length \PB{$\|g\MG\|n-\T{2}$} from \PB{$\|a%
+\MG\\{tip}$} to \PB{\|z}, avoiding \PB{\|x}\X${}\E{}$\6
+$\|v\K\|a\MG\\{tip};{}$\6
+${}\|t\K\|g\MG\\{vertices}{}$;\5
+${}\\{tmax}\K\|t+\|g\MG\|n-\T{1};{}$\6
+${}\|x\MG\\{taken}\K\T{1};{}$\6
+${}\|a\MG\\{len}\MRL{+{\K}}\T{4}{}$;\C{ the first move is ``forced'' }\6
+\4\\{advance}:\5
+\X6:Increase \PB{\|t} and update the data structures to show that vertex \PB{%
+\|v} is now taken; \PB{\&{goto} \\{backtrack}} if no further moves are possible%
+\X;\6
+\&{try} : \X8:Look at edge \PB{\|a} and its successors, advancing if it is a
+valid move\X;\6
+\4\\{restore}:\5
+\X7:Downdate the data structures to the state they were in when level \PB{\|t}
+was entered\X;\6
+\4\\{backtrack}:\5
+\X9:Decrease \PB{\|t}, if possible, and try the next possibility; or \PB{%
+\&{goto} \\{done}}\X;\6
+\\{done}:\par
+\U1.\fi
+
+\M{6}\B\X6:Increase \PB{\|t} and update the data structures to show that vertex
+\PB{\|v} is now taken; \PB{\&{goto} \\{backtrack}} if no further moves are
+possible\X${}\E{}$\6
+$\|t\MG\\{ark}\K\|a;{}$\6
+${}\|t\PP;{}$\6
+${}\|v\K\|a\MG\\{tip};{}$\6
+${}\|v\MG\\{taken}\K\T{1};{}$\6
+\&{if} ${}(\|v\E\|z){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|t\E\\{tmax}\W\|v\MG\\{deg}\E\T{1}){}$\1\5
+\X10:Record a solution\X;\2\6
+\&{goto} \\{backtrack};\6
+\4${}\}{}$\2\6
+${}\\{yy}\K\NULL{}$;\C{ \PB{\\{yy}} is a forced arc, if any exist }\6
+\&{for} ${}(\\{aa}\K\|v\MG\\{arcs};{}$ \\{aa}; ${}\\{aa}\K\\{aa}\MG\\{next}){}$%
+\5
+${}\{{}$\1\6
+${}\|u\K\\{aa}\MG\\{tip};{}$\6
+${}\|d\K\|u\MG\\{deg}-\T{1};{}$\6
+\&{if} ${}(\|d\E\T{1}\W\|u\MG\\{taken}\E\T{0}){}$\5
+${}\{{}$\1\6
+\&{if} (\\{yy})\1\5
+\&{goto} \\{restore};\C{ restoration will stop at \PB{\\{aa}} }\2\6
+${}\\{yy}\K\\{aa};{}$\6
+\4${}\}{}$\2\6
+${}\|u\MG\\{deg}\K\|d;{}$\6
+\4${}\}{}$\2\6
+\&{if} (\\{yy})\5
+${}\{{}$\1\6
+${}\|a\K\\{yy};{}$\6
+${}\|a\MG\\{len}\MRL{+{\K}}\T{4};{}$\6
+\&{goto} \\{advance};\6
+\4${}\}{}$\2\6
+${}\|a\K\|v\MG\\{arcs}{}$;\par
+\U5.\fi
+
+\M{7}\B\X7:Downdate the data structures to the state they were in when level %
+\PB{\|t} was entered\X${}\E{}$\6
+\&{for} ${}(\|a\K(\|t-\T{1})\MG\\{ark}\MG\\{tip}\MG\\{arcs};{}$ ${}\|a\I%
+\\{aa};{}$ ${}\|a\K\|a\MG\\{next}){}$\1\5
+${}\|a\MG\\{tip}\MG\\{deg}\PP{}$;\2\par
+\U5.\fi
+
+\M{8}\B\X8:Look at edge \PB{\|a} and its successors, advancing if it is a valid
+move\X${}\E{}$\6
+\&{while} (\|a)\5
+${}\{{}$\1\6
+\&{if} ${}(\|a\MG\\{tip}\MG\\{taken}\E\T{0}){}$\5
+${}\{{}$\1\6
+${}\|a\MG\\{len}\MRL{+{\K}}\T{2}{}$;\C{ oops, this is unnecessary residue of {%
+\sc SHAMR} }\6
+\&{goto} \\{advance};\6
+\4${}\}{}$\2\6
+${}\|a\K\|a\MG\\{next};{}$\6
+\4${}\}{}$\2\6
+\4\\{restore\_all}:\5
+${}\\{aa}\K\NULL{}$;\C{ all moves tried; we fall through to \PB{\\{restore}} }%
+\par
+\U5.\fi
+
+\M{9}Here we come to a subtle point. When a forced move is a duplicated arc,
+we want to continue with the duplicate arc; we don't want to backtrack!
+
+But that isn't the most subtle part. It turns out that we want to
+consider the duplicate arc {\it previous\/} to the one that worked.
+(That one should really have been considered forced; if on the other
+hand the first of two duplicate arcs is selected, the second one will
+decrease the degree to zero and cannot lead to a complete tour, so
+we don't want to reconsider it.) Get it? The present logic works
+only when there are at most two duplicate arcs.
+
+\Y\B\4\X9:Decrease \PB{\|t}, if possible, and try the next possibility; or \PB{%
+\&{goto} \\{done}}\X${}\E{}$\6
+$\|t\MM;{}$\6
+${}\|a\K\|t\MG\\{ark};{}$\6
+${}\|a\MG\\{tip}\MG\\{taken}\K\T{0};{}$\6
+${}\|d\K\|a\MG\\{len};{}$\6
+${}\|a\MG\\{len}\MRL{\AND{\K}}\T{1};$ \&{if} ${}(\|d<\T{4})$ $\{$ $\|a\K\|a\MG%
+\\{next};$ \&{goto} \6
+\&{try}\1\5
+;\2\6
+$\}$ \6
+\&{if} ${}(\|t\E\|g\MG\\{vertices}){}$\1\5
+\&{goto} \\{done};\2\6
+\&{for} ${}(\\{aa}\K(\|t-\T{1})\MG\\{ark}\MG\\{tip}\MG\\{arcs};{}$ ${}\\{aa}\I%
+\|a;{}$ ${}\\{aa}\K\\{aa}\MG\\{next}){}$\1\6
+\&{if} ${}(\\{aa}\MG\\{tip}\E\|a\MG\\{tip}){}$\5
+${}\{{}$\1\6
+${}\\{aa}\MG\\{len}\MRL{+{\K}}\T{4};{}$\6
+${}\|a\K\\{aa};{}$\6
+\&{goto} \\{advance};\6
+\4${}\}{}$\2\2\6
+\&{goto} \\{restore\_all};\C{ the move was forced }\par
+\U5.\fi
+
+\M{10}\B\X10:Record a solution\X${}\E{}$\6
+${}\{{}$\1\6
+\&{int} \|s${}\K\T{0};{}$\7
+\&{for} ${}(\|u\K\|g\MG\\{vertices};{}$ ${}\|u<\\{tmax};{}$ ${}\|u\PP){}$\1\5
+${}\|s\MRL{{\XOR}{\K}}\|u\MG\\{ark}\MG\\{len}\AND\T{1};{}$\2\6
+\&{if} (\|s)\5
+${}\{{}$\1\6
+${}\\{count}\PP;{}$\6
+\&{if} ${}(\\{count}\MOD\T{100000}\E\T{0}){}$\5
+${}\{{}$\C{ use 100000 for the $8\times8$ }\1\6
+${}\\{printf}(\.{"\%d:\ \%s"},\39\\{count},\39\|x\MG\\{name});{}$\6
+\&{for} ${}(\|u\K\|g\MG\\{vertices};{}$ ${}\|u<\\{tmax};{}$ ${}\|u\PP){}$\1\5
+${}\\{printf}(\.{"\%s\%s"},\39\|u\MG\\{ark}\MG\\{len}\AND\T{1}\?\.{"*"}:\.{"\
+"},\39\|u\MG\\{ark}\MG\\{tip}\MG\\{name});{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{dcount}\PP;{}$\6
+\&{if} ${}(\\{dcount}\MOD\T{100000}\E\T{0}){}$\5
+${}\{{}$\C{ use 1 for small cases }\1\6
+${}\\{printf}(\.{">\%d:\ \%s"},\39\\{dcount},\39\|x\MG\\{name});{}$\6
+\&{for} ${}(\|u\K\|g\MG\\{vertices};{}$ ${}\|u<\\{tmax};{}$ ${}\|u\PP){}$\1\5
+${}\\{printf}(\.{"\%s\%s"},\39\|u\MG\\{ark}\MG\\{len}\AND\T{1}\?\.{"*"}:\.{"\
+"},\39\|u\MG\\{ark}\MG\\{tip}\MG\\{name});{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U6.\fi
+
+\N{1}{11}Index.
+\fi
+
+\inx
+\fin
+\con

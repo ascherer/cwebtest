@@ -1,0 +1,154 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Introduction. This is a quick-and-dirty program related to
+exercise 3.6--14. I'm finding how many terms appear in the representation of
+$z^n$ with respect to bases of the form $z^0$, \dots,~$z^{t-1}$,
+$z^{n-r+t}$, \dots,~$z^{n-1}$, modulo $z^r+z^{r-s}+1$ and mod~2,
+where $1\le t\le r$.
+
+\Y\B\4\D$\|r$ \5
+\T{100}\C{ the longer lag }\par
+\B\4\D$\|s$ \5
+\T{37}\C{ the shorter lag }\par
+\B\4\D$\|n$ \5
+\T{400}\C{ the number of elements generated simultaneously by \PB{\\{ran%
+\_array}} }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\X2:Global variables\X\\{main}(\,)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|m${},{}$ \|t;\7
+\X3:Initialize for the case $t=r$\X;\6
+\&{while} (\|t)\5
+${}\{{}$\1\6
+\X5:Gather statistics for case $t$\X;\6
+${}\|t\MM;{}$\6
+\X4:Change the basis to eliminate $z^t$\X;\6
+\4${}\}{}$\2\6
+\X8:Print the statistics\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}The representation of $z^k=a_{k0}z^{b_0}+\cdots+a_{k(r-1)}z^{b_{r-1}}$
+appears in arrays \PB{\|a} and~\PB{\|b}. The largest power of~$z$ less than
+$z^n$ that
+is not in the basis is $z^m$.
+
+\Y\B\4\X2:Global variables\X${}\E{}$\6
+\&{int} ${}\|a[\|n+\T{1}][\|r]{}$;\C{ I could make this \PB{\&{char}}, but \PB{%
+\&{int}} aids debugging }\6
+\&{int} \|b[\|r];\C{ identifies the basis }\6
+\&{int} \|c[\|r]${},{}$ ${}\|d[\|n+\T{2}]{}$;\C{ for working storage }\6
+\&{int} \|p[\|n];\C{ is this power of $z$ in the basis? }\par
+\A6.
+\U1.\fi
+
+\M{3}\B\X3:Initialize for the case $t=r$\X${}\E{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|r;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+${}\|a[\|k][\|k]\K\T{1};{}$\6
+${}\|b[\|k]\K\|k;{}$\6
+${}\|p[\|k]\K\T{1};{}$\6
+\4${}\}{}$\2\6
+\&{for} ( ; ${}\|k\Z\|n;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j<\|r;{}$ ${}\|j\PP){}$\1\5
+${}\|a[\|k][\|j]\K\|a[\|k-\T{1}][\|j-\T{1}]{}$;\C{ $z^k=z\cdot z^{k-1}$ }\2\6
+\&{if} ${}(\|a[\|k-\T{1}][\|r-\T{1}]){}$\5
+${}\{{}$\1\6
+${}\|a[\|k][\T{0}]\K\T{1};{}$\6
+${}\|a[\|k][\|r-\|s]\MRL{{\XOR}{\K}}\T{1};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+${}\|m\K\|n-\T{1};{}$\6
+${}\|t\K\|r{}$;\par
+\U1.\fi
+
+\M{4}\B\X4:Change the basis to eliminate $z^t$\X${}\E{}$\6
+\&{for} ${}(\|k\K\|m;{}$ ${}\|a[\|k][\|t]\E\T{0};{}$ ${}\|k\MM){}$\1\5
+;\2\6
+${}\|b[\|t]\K\|k;{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|r;{}$ ${}\|j\PP){}$\1\5
+${}\|c[\|j]\K\|a[\|k][\|j];{}$\2\6
+${}\|c[\|t]\K\T{0};{}$\6
+${}\|p[\|t]\K\T{0};{}$\6
+${}\|p[\|k]\K\T{1};{}$\6
+\&{for} ( ; ${}\|k\G\|t;{}$ ${}\|k\MM){}$\1\6
+\&{if} (\|a[\|k][\|t])\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|r;{}$ ${}\|j\PP){}$\1\5
+${}\|a[\|k][\|j]\MRL{{\XOR}{\K}}\|c[\|j];{}$\2\2\2\6
+\&{if} (\|a[\|n][\|t])\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|r;{}$ ${}\|j\PP){}$\1\5
+${}\|a[\|n][\|j]\MRL{{\XOR}{\K}}\|c[\|j];{}$\2\2\6
+\&{while} ${}(\|p[\|m]\E\T{1}){}$\1\5
+${}\|m\MM{}$;\2\par
+\U1.\fi
+
+\M{5}We are interested in the number of nonzero coefficients in the
+representation of~$z^n$. However, if this representation depends on
+any of the ``forbidden'' powers $z^t$, \dots,~$z^{n-r+t-1}$, we want
+rather to exhibit the representation of~$z^m$.
+
+\Y\B\4\X5:Gather statistics for case $t$\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \\{forbidden}${}\K\T{0};{}$\7
+\&{for} ${}(\|j\K\T{0},\39\|i\K\T{0};{}$ ${}\|j<\|r;{}$ ${}\|j\PP){}$\1\6
+\&{if} (\|a[\|n][\|j])\5
+${}\{{}$\1\6
+\&{if} ${}(\|b[\|j]<\|n-\|r+\|t\W\|b[\|j]\G\|t){}$\1\5
+${}\\{forbidden}\K\T{1};{}$\2\6
+\&{else}\1\5
+${}\|i\PP;{}$\2\6
+\4${}\}{}$\2\2\6
+\&{if} (\\{forbidden})\1\5
+\X7:Print out an interesting linear dependency\X\2\6
+\&{else}\1\5
+${}\\{stat}[\|i]\PP;{}$\2\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{6}\B\X2:Global variables\X${}\mathrel+\E{}$\6
+\&{int} ${}\\{stat}[\|r+\T{1}]{}$;\C{ the number of cases with a given number
+of nonzero terms }\par
+\fi
+
+\M{7}\B\X7:Print out an interesting linear dependency\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\|n;{}$ ${}\|i\PP){}$\1\5
+${}\|d[\|i]\K\T{0};{}$\2\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|r;{}$ ${}\|j\PP){}$\1\6
+\&{if} (\|a[\|m][\|j])\1\5
+${}\|d[\|b[\|j]]\K\T{1};{}$\2\2\6
+${}\|d[\|m]\K\T{1};{}$\6
+${}\|d[\|n]\K\T{1};{}$\6
+${}\\{printf}(\.{"\%d:"},\39\|t);{}$\6
+\&{for} ${}(\|i\K\T{0};{}$  ; \,)\5
+${}\{{}$\1\6
+\&{while} ${}(\|d[\|i]\E\T{0}){}$\1\5
+${}\|i\PP;{}$\2\6
+\&{if} ${}(\|i\E\|n){}$\1\5
+\&{break};\2\6
+${}\\{printf}(\.{"\ \%d"},\39\|i);{}$\6
+\&{while} ${}(\|d[\|i]\E\T{1}){}$\1\5
+${}\|i\PP;{}$\2\6
+\&{if} ${}(\|i>\|n){}$\1\5
+${}\|i\K\|n;{}$\2\6
+${}\\{printf}(\.{"..\%d"},\39\|i-\T{1});{}$\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"\\n"});\6
+\4${}\}{}$\2\par
+\U5.\fi
+
+\M{8}\B\X8:Print the statistics\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j\Z\|r;{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\ \%3d:\ \%d\\n"},\39\|j,\39\\{stat}[\|j]){}$;\2\par
+\U1.\fi
+
+\N{1}{9}Index.
+
+\fi
+
+
+\inx
+\fin
+\con

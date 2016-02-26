@@ -1,0 +1,22 @@
+\I\X2:Build the rook table\X
+\U1.
+\I\X4:Compute and print the intermediate tableaux\X
+\U1.
+\I\X9:Compute the dual rook table\X
+\U1.
+\I\X11:Dually delete \PB{\|k}\X
+\U9.
+\I\X10:Dually insert \PB{\|k}\X
+\U9.
+\I\X5:Initialize the tableaux\X
+\U4.
+\I\X3:Make the inverse rook table\X
+\U1.
+\I\X7:Possibly delete \PB{\|k}\X
+\U4.
+\I\X6:Possibly insert \PB{\|k}\X
+\U4.
+\I\X12:Print the restricted growth string of the dual\X
+\U1.
+\I\X8:Print the tableau shape\X
+\Us6\ET7.

@@ -1,0 +1,422 @@
+\input cwebmac
+\datethis
+
+\N{1}{1}Intro. This program computes the BDD size of the hidden
+weighted bit function, given a permutation of the input variables.
+After I wrote the program {\mc HWB} a few days ago, and ran it
+for an hour in the case $n=100$ with 8 gigabytes of memory,
+I realized that the whole calculation can really be done
+{\it much\/} faster---indeed, in polynomial time.
+
+So now I'm doing it a better way. The new way is so efficient,
+in fact, that I'm going to have fun and implement it by
+simulating decimal arithmetic, using one byte per digit,
+throwing all ordinary notions of efficiency out the window.
+
+The previous method generated ``slot tables.'' Now I've renamed
+them ``slate tables,'' and discussed the relevant theory in
+Section 7.1.4 of TAOCP. With this theory I
+don't need to ``work top down'' and effectively generate each
+node of the BDD. Instead, I determine the number of
+beads of height $m$ by a direct calculation.
+
+\Y\B\4\D$\|n$ \5
+\T{100}\C{ the number of variables }\par
+\B\4\D$\\{memsize}$ \5
+\T{1000000}\C{ the number of bytes for arithmetic; must exceed $3n$ }\par
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\&{char} \\{mem}[\\{memsize}];\C{ the big storage area }\6
+\&{int} \\{memptr};\C{ the number of bytes in use }\6
+\&{int} \\{numptr};\C{ the number of numbers in use }\6
+\&{int} ${}\\{start}[\|n*\|n]{}$;\C{ where remembered numbers begin in \PB{%
+\\{mem}} }\6
+\&{int} \\{bico}[\|n][\|n];\C{ table of binomial coefficients that I've
+computed }\6
+\&{int} \\{addedA}[\|n]${},{}$ \\{addedB}[\|n]${},{}$ \\{addedC}[\|n]${},{}$ %
+\\{addedD}[\|n];\C{ constant memos }\6
+\&{unsigned} \&{char} \\{rev}[\T{256}];\C{ bit-reversal table: $0^R$, $1^R$, %
+\dots, $255^R$ }\6
+\&{int} ${}\\{perm}[\|n+\T{1}]{}$;\C{ the permutation }\6
+\&{int} \\{nonbeads};\C{ nonbeads found at the current height }\6
+\&{int} \\{tnonbeads};\C{ total nonbeads so far }\7
+\X3:Subroutines\X\7
+\\{main}(\&{int} \\{argc})\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i${},{}$ \|j${},{}$ \|k${},{}$ \|m${},{}$ \|p${},{}$ %
+\|s${},{}$ \\{ss}${},{}$ \|t${},{}$ \\{tt}${},{}$ \|w${},{}$ \\{ww};\7
+\X2:Set up the permutation, \PB{\\{perm}}\X;\6
+\X8:Initialize \PB{\\{mem}}\X;\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\|n;{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\X10:Compute $b_k$\X;\6
+\X11:Print $b_k$ and add it to the grand total\X;\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"height\ 0:\ 2\\n"});\C{ \PB{$\|k\K\|n$} is a simple special case
+}\6
+\X4:Print the grand total\X;\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}The purpose of this step is to set $\PB{\\{perm}}[j]=j\pi$ for $1\le j\le
+n$, where
+$\pi$ is the desired permutation of the input variables. And I set
+\PB{$\\{perm}[\T{0}]\K\|n+\T{1}$}, because \PB{$\\{perm}[\T{0}]\K\T{0}$} would
+make $x_0$ appear to be
+a member of $\{x_1,\ldots,x_k\}$.
+
+In this implementation I use (almost) the ``hybrid'' ordering of
+Bollig, L\"obbing, Sauerhoff, and Wegener.
+That means the first $n/5$ elements come alternately
+from the top $n/10$ and the bottom $n/10$.
+The remaining $4n/5$ elements are ordered according
+to the bit reversal of the difference between them and $9n/10$.
+
+\Y\B\4\X2:Set up the permutation, \PB{\\{perm}}\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{\^80},\39\|m\K\T{1};{}$ \|j; ${}\|j\MRL{{\GG}{\K}}\T{1},\39%
+\|m\MRL{{\LL}{\K}}\T{1}){}$\1\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{\^100};{}$ ${}\|k\MRL{+{\K}}\|j+\|j){}$\1\5
+${}\\{rev}[\|k+\|j]\K\\{rev}[\|k]+\|m;{}$\2\2\6
+\&{for} ${}(\|j\K\|m\K\T{1},\39\|k\K\|n;{}$ ${}\|j\Z\|n/\T{10};{}$ ${}\|j\PP,%
+\39\|k\MM,\39\|m\MRL{+{\K}}\T{2}){}$\1\5
+${}\\{perm}[\|k]\K\|m,\39\\{perm}[\|j]\K\|m+\T{1};{}$\2\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|m\Z\|n;{}$ ${}\|i\PP,\39\|m\PP){}$\5
+${}\{{}$\1\6
+\&{while} ${}(\\{rev}[\|i]>\|k-\|j){}$\1\5
+${}\|i\PP;{}$\2\6
+${}\\{perm}[\|k-\\{rev}[\|i]]\K\|m;{}$\6
+\4${}\}{}$\2\6
+\\{printf}(\.{"Starting\ from\ perm"});\6
+\&{for} ${}(\|j\K\T{1};{}$ ${}\|j\Z\|n;{}$ ${}\|j\PP){}$\1\5
+${}\\{printf}(\.{"\ \%d"},\39\\{perm}[\|j]);{}$\2\6
+\\{printf}(\.{"\\n"});\6
+${}\\{perm}[\T{0}]\K\|n+\T{1}{}$;\par
+\U1.\fi
+
+\N{1}{3}Decimal addition. The \PB{\|k}th number in my decimal memory starts
+at location \PB{\\{start}[\|k]} in \PB{\\{mem}}, and ends just before location
+\PB{$\\{start}[\|k+\T{1}]$}. Each byte of \PB{\\{mem}} contains a single digit,
+and
+the least significant digits come first.
+
+Number 0 is the grand total, and number 1 is the
+total-so-far at height~\PB{\|m}. The other numbers are binomial coefficients,
+which I compute from scratch as needed.
+
+To warm up, here's a routine to print out the \PB{\|k}th number:
+
+\Y\B\4\X3:Subroutines\X${}\E{}$\6
+\&{void} \\{printnum}(\&{int} \|k)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j;\7
+\&{for} ${}(\|j\K\\{start}[\|k+\T{1}]-\T{1};{}$ ${}\|j>\\{start}[\|k];{}$ ${}%
+\|j\MM){}$\1\6
+\&{if} (\\{mem}[\|j])\1\5
+\&{break};\2\2\6
+\&{for} ( ; ${}\|j\G\\{start}[\|k];{}$ ${}\|j\MM){}$\1\5
+${}\\{printf}(\.{"\%d"},\39\\{mem}[\|j]);{}$\2\6
+\4${}\}{}$\2\par
+\As5, 6, 7\ETs9.
+\U1.\fi
+
+\M{4}\B\X4:Print the grand total\X${}\E{}$\6
+\\{printf}(\.{"Altogether\ "});\6
+\\{printnum}(\T{0});\6
+${}\\{printf}(\.{"-\%d\ nodes;\ I\ used\ \%}\)\.{d\ bytes\ of\ memory\ fo}\)%
+\.{r\ \%d\ numbers.\\n"},\39\\{tnonbeads},\39\\{memptr},\39\\{numptr}){}$;\par
+\U1.\fi
+
+\M{5}\B\X3:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{clearnum}(\&{int} \|k)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|j;\7
+\&{for} ${}(\|j\K\\{start}[\|k];{}$ ${}\|j<\\{start}[\|k+\T{1}];{}$ ${}\|j%
+\PP){}$\1\5
+${}\\{mem}[\|j]\K\T{0};{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{6}The \PB{\\{add}} routine adds number \PB{\|k} to number \PB{\|l} and
+stores the result as a brand new number, whose index is returned.
+
+We assume (conservatively) that all numbers have at most \PB{\|n} digits.
+
+\Y\B\4\X3:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{add}(\&{int} \|k${},\39{}$\&{int} \|l)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \&{int} \|c${},{}$ \|i${},{}$ \|j;\7
+\&{if} ${}(\\{memptr}+\|n\G\\{memsize}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Out\ of\ memory\ (mems}\)\.{ize=\%d)!\\n"},\39%
+\\{memsize});{}$\6
+${}\\{exit}({-}\T{1});{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|c\K\T{0},\39\|i\K\\{start}[\|k],\39\|j\K\\{start}[\|l];{}$  ; ${}%
+\|i\PP,\39\|j\PP,\39\\{memptr}\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|i<\\{start}[\|k+\T{1}]){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|j<\\{start}[\|l+\T{1}]){}$\1\5
+${}\\{mem}[\\{memptr}]\K\\{mem}[\|i]+\\{mem}[\|j]+\|c;{}$\2\6
+\&{else}\1\5
+${}\\{mem}[\\{memptr}]\K\\{mem}[\|i]+\|c;{}$\2\6
+\4${}\}{}$\5
+\2\&{else}\5
+${}\{{}$\1\6
+\&{if} ${}(\|j<\\{start}[\|l+\T{1}]){}$\1\5
+${}\\{mem}[\\{memptr}]\K\\{mem}[\|j]+\|c;{}$\2\6
+\&{else}\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{if} ${}(\\{mem}[\\{memptr}]\G\T{10}){}$\1\5
+${}\|c\K\T{1},\39\\{mem}[\\{memptr}]\MRL{-{\K}}\T{10};{}$\2\6
+\&{else}\1\5
+${}\|c\K\T{0};{}$\2\6
+\4${}\}{}$\2\6
+\&{if} (\|c)\1\5
+${}\\{mem}[\\{memptr}\PP]\K\T{1};{}$\2\6
+${}\\{numptr}\PP;{}$\6
+${}\\{start}[\\{numptr}+\T{1}]\K\\{memptr};{}$\6
+\&{return} \\{numptr};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{7}Another variant of addition adds number \PB{\|l} to number \PB{\|k},
+and replaces number \PB{\|k} by the sum. This routine is used only
+when \PB{$\\{start}[\|k+\T{1}]-\\{start}[\|k]$} is large enough to contain the
+sum.
+
+\Y\B\4\X3:Subroutines\X${}\mathrel+\E{}$\6
+\&{void} \\{addto}(\&{int} \|k${},\39{}$\&{int} \|l)\1\1\2\2\6
+${}\{{}$\1\6
+\&{register} \|c${},{}$ \|i${},{}$ \|j;\7
+\&{for} ${}(\|c\K\T{0},\39\|i\K\\{start}[\|k],\39\|j\K\\{start}[\|l];{}$ ${}%
+\|i<\\{start}[\|k+\T{1}];{}$ ${}\|i\PP,\39\|j\PP){}$\5
+${}\{{}$\1\6
+${}\\{mem}[\|i]\MRL{+{\K}}(\|j<\\{start}[\|l+\T{1}]\?\\{mem}[\|j]:\T{0})+%
+\|c;{}$\6
+\&{if} ${}(\\{mem}[\|i]\G\T{10}){}$\1\5
+${}\|c\K\T{1},\39\\{mem}[\|i]\MRL{-{\K}}\T{10};{}$\2\6
+\&{else}\1\5
+${}\|c\K\T{0};{}$\2\6
+\4${}\}{}$\C{ here I could check to make sure that \PB{$\|c\K\T{0}$}, but I
+won't bother }\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{8}Number 2 in \PB{\\{mem}} is actually the constant `0', and number 3 is
+`1'.
+
+\Y\B\4\D$\\{grandtotal}$ \5
+\T{0}\par
+\B\4\D$\\{subtotal}$ \5
+\T{1}\par
+\B\4\D$\\{zero}$ \5
+\T{2}\par
+\B\4\D$\\{one}$ \5
+\T{3}\par
+\Y\B\4\X8:Initialize \PB{\\{mem}}\X${}\E{}$\6
+$\\{start}[\\{grandtotal}]\K\T{0};{}$\6
+${}\\{mem}[\T{0}]\K\T{2}{}$;\C{ the grand total is initially 2 }\6
+${}\\{start}[\\{subtotal}]\K\\{start}[\\{grandtotal}]+\|n;{}$\6
+${}\\{start}[\\{zero}]\K\\{start}[\\{subtotal}]+\|n,\39\\{start}[\\{zero}+%
+\T{1}]\K\\{start}[\\{zero}]+\T{1};{}$\6
+${}\\{mem}[\\{start}[\\{one}]]\K\T{1},\39\\{start}[\\{one}+\T{1}]\K\\{start}[%
+\\{one}]+\T{1};{}$\6
+${}\\{numptr}\K\\{one},\39\\{memptr}\K\\{start}[\\{numptr}+\T{1}]{}$;\par
+\U1.\fi
+
+\M{9}Here's how I compute binomial coefficients $m\choose k$,
+without attempting to optimize.
+
+\Y\B\4\X3:Subroutines\X${}\mathrel+\E{}$\6
+\&{int} \\{binom}(\&{int} \|m${},\39{}$\&{int} \|k)\1\1\2\2\6
+${}\{{}$\1\6
+\&{if} ${}(\|k<\T{0}\V\|k>\|m){}$\1\5
+\&{return} \\{zero};\2\6
+\&{if} ${}(\|k\E\T{0}\V\|k\E\|m){}$\1\5
+\&{return} \\{one};\2\6
+\&{if} ${}(\R\\{bico}[\|m][\|k]){}$\1\5
+${}\\{bico}[\|m][\|k]\K\\{add}(\\{binom}(\|m-\T{1},\39\|k),\39\\{binom}(\|m-%
+\T{1},\39\|k-\T{1}));{}$\2\6
+\&{return} \\{bico}[\|m][\|k];\6
+\4${}\}{}$\2\par
+\fi
+
+\N{1}{10}The algorithm. So much for infrastructure; let's get to work.
+
+\Y\B\4\X10:Compute $b_k$\X${}\E{}$\6
+\\{clearnum}(\\{subtotal});\6
+${}\\{nonbeads}\K\T{0};{}$\6
+${}\|m\K\|n-\|k;{}$\6
+\X14:Clear the four constant tables\X;\6
+\&{for} ${}(\|s\K\T{0};{}$ ${}\|s\Z\|k;{}$ ${}\|s\PP){}$\5
+${}\{{}$\1\6
+\X12:Add contributions for slates $(s,k)$ to \PB{\\{subtotal}}\X;\6
+\4${}\}{}$\2\6
+\X16:Correct for constant nonbeads\X;\par
+\U1.\fi
+
+\M{11}\B\X11:Print $b_k$ and add it to the grand total\X${}\E{}$\6
+$\\{printf}(\.{"height\ \%d:\ "},\39\|m);{}$\6
+\\{printnum}(\\{subtotal});\6
+\&{if} (\\{nonbeads})\1\5
+${}\\{printf}(\.{"-\%d\\n"},\39\\{nonbeads});{}$\2\6
+\&{else}\1\5
+\\{printf}(\.{"\\n"});\2\6
+${}\\{addto}(\\{grandtotal},\39\\{subtotal});{}$\6
+${}\\{tnonbeads}\MRL{+{\K}}\\{nonbeads}{}$;\par
+\U1.\fi
+
+\M{12}Each slate for $(s,k)$ is $[r_0,\ldots,r_m]$, where $r_j$ is
+0~or~1 when \PB{$\\{perm}[\|s+\|j]\Z\|k$}, otherwise $r_j$ is $x_l$ where \PB{$%
+\\{perm}[\|s+\|j]\K\|l$}.
+(The latter case represents one of the $m$ remaining variables.)
+I~compute the quantity $w$, which is the number of times the
+former case occurs; this is what Bollig et al.\ have called the
+``window size.''
+
+However, we set $r_0\gets0$ and $r_m\gets1$ if they aren't already constant;
+$r_0$ and/or $r_m$ are then called ``false constants.''
+With these conventions, there's exactly one slate table for each subfunction
+at height~$m$.
+
+Let $t=k-s$. The $w$ settings of the constant $r_j$'s run through all
+combinations of \PB{\\{ss}} 1s and \PB{\\{tt}} 0s such that \PB{$\\{ss}+\\{tt}%
+\K\|w$}, \PB{$\\{ss}\Z\|s$},
+and \PB{$\\{tt}\Z\|t$}.
+
+If at least one of the positions $\{r_1,\ldots,r_{m-1}\}$ is nonconstant,
+a particular slate can occur only for one value of~$s$. Otherwise the
+situation is more subtle, and I need to consider constant slates
+of four types depending on the boundary conditions.
+
+\smallskip
+$\bullet$ Type A, $r_0=0$ and $r_m=0$: Here $r_0$ might be a false constant.
+
+$\bullet$ Type B, $r_0=0$ and $r_m=1$: Here $r_0$ and/or $r_m$ might be false.
+
+$\bullet$ Type C, $r_0=1$ and $r_m=0$: Both $r_0$ and $r_m$ are true.
+
+$\bullet$ Type D, $r_0=1$ and $r_m=1$: Maybe $r_m$ is false.
+
+\smallskip\noindent
+A setting of \PB{\\{ss}} 1s and \PB{\\{tt}} 0s contributes to all four types if
+$r_0$
+and $r_m$ are true. It contributes only to type B if $r_0$ and $r_m$
+are false. It contributes only to types A and~B if $r_0$ is false but
+$r_m$ is true; only to B and~D if $r_0$ is true but $r_m$ is false.
+
+\Y\B\4\X12:Add contributions for slates $(s,k)$ to \PB{\\{subtotal}}\X${}\E{}$\6
+\&{for} ${}(\|w\K\\{ww}\K\|j\K\T{0};{}$ ${}\|j\Z\|m;{}$ ${}\|j\PP){}$\1\6
+\&{if} ${}(\\{perm}[\|s+\|j]\Z\|k){}$\5
+${}\{{}$\1\6
+${}\|w\PP;{}$\6
+\&{if} ${}(\|j>\T{0}\W\|j<\|m){}$\1\5
+${}\\{ww}\PP;{}$\2\6
+\4${}\}{}$\2\2\6
+\&{if} ${}(\\{ww}\E\|m-\T{1}){}$\1\5
+\X15:Add contributions for a constant case\X\2\6
+\&{else}\5
+${}\{{}$\1\6
+\X13:Correct for nonconstant nonbeads\X;\6
+\&{for} ${}(\|t\K\|k-\|s,\39\\{ss}\K\|s,\39\\{tt}\K\|w-\\{ss};{}$ ${}\\{tt}\Z%
+\|t;{}$ ${}\\{ss}\MM,\39\\{tt}\PP){}$\5
+${}\{{}$\1\6
+${}\\{addto}(\\{subtotal},\39\\{binom}(\|w,\39\\{ss}));{}$\6
+\&{if} ${}(\\{ss}\E\|p){}$\1\5
+${}\\{nonbeads}\PP{}$;\C{ see below }\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U10.\fi
+
+\M{13}Nonbeads $[r_0,\ldots,r_m]$ are of four kinds: (a)~$r_p=x_{k+1}$,
+$r_j=1$ for $j<p$, and $r_j=0$ for $j>p$; (b)~$[0,x_n,1]$;
+(c)~$[r_0,\ldots,r_m]=[0,\ldots,0]$, within Type~A;
+(d)~$[r_0,\ldots,r_m]=[1,\ldots,1]$, within Type~D.
+Here we look for (a) and (b).
+
+\Y\B\4\X13:Correct for nonconstant nonbeads\X${}\E{}$\6
+$\|p\K\|n+\T{1}{}$;\C{ \PB{$\|n+\T{1}$} is ``infinity'' }\6
+\&{if} ${}(\\{ww}\E\|m-\T{2}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\|m\E\T{2}\W\\{perm}[\|s+\T{1}]\E\|n){}$\1\5
+${}\|p\K(\\{perm}[\|s+\T{2}]\Z\|k\?\T{1}:\T{0});{}$\2\6
+\&{else} \&{if} ${}(\|w\E\|m){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|p\K\T{1};{}$  ; ${}\|p\PP){}$\1\6
+\&{if} ${}(\\{perm}[\|s+\|p]>\|k){}$\1\5
+\&{break};\2\2\6
+\&{if} ${}(\\{perm}[\|s+\|p]\I\|k+\T{1}){}$\1\5
+${}\|p\K\|n+\T{1};{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{14}Each constant type is a symmetric function. I need to contribute
+$m-1\choose r$ to the subtotal for each possible value of
+$r=r_1+\cdots+r_{m-1}$. But I want to contribute exactly once for
+every such~$r$; equal values of $r$ can arise from different values of~$s$.
+So there are tables \PB{\\{addedA}}, \PB{\\{addedB}}, \PB{\\{addedC}}, \PB{%
+\\{addedD}}, to remember
+when a particular $r$ has been contributed already to the counts of
+each type.
+
+\Y\B\4\X14:Clear the four constant tables\X${}\E{}$\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\|m;{}$ ${}\|j\PP){}$\1\5
+${}\\{addedA}[\|j]\K\\{addedB}[\|j]\K\\{addedC}[\|j]\K\\{addedD}[\|j]\K%
+\T{0}{}$;\2\par
+\U10.\fi
+
+\M{15}Here's where I hope logic hasn't failed me.
+
+\Y\B\4\X15:Add contributions for a constant case\X${}\E{}$\6
+${}\{{}$\1\6
+\&{for} ${}(\|t\K\|k-\|s,\39\\{ss}\K\|s,\39\\{tt}\K\|w-\\{ss};{}$ ${}\\{tt}\Z%
+\|t;{}$ ${}\\{ss}\MM,\39\\{tt}\PP){}$\1\6
+\&{if} ${}(\\{ss}\G\T{0}\W\\{tt}\G\T{0}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{perm}[\|s+\|m]\Z\|k){}$\5
+${}\{{}$\C{ true constant at right }\1\6
+\&{if} ${}(\R\\{addedA}[\\{ss}]){}$\1\5
+${}\\{addedA}[\\{ss}]\K\T{1},\39\\{addto}(\\{subtotal},\39\\{binom}(\|m-\T{1},%
+\39\\{ss}));{}$\2\6
+\&{if} ${}(\\{ss}>\T{0}\W\R\\{addedB}[\\{ss}-\T{1}]){}$\1\5
+${}\\{addedB}[\\{ss}-\T{1}]\K\T{1},\39\\{addto}(\\{subtotal},\39\\{binom}(\|m-%
+\T{1},\39\\{ss}-\T{1}));{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\R\\{addedB}[\\{ss}]){}$\1\5
+${}\\{addedB}[\\{ss}]\K\T{1},\39\\{addto}(\\{subtotal},\39\\{binom}(\|m-\T{1},%
+\39\\{ss}));{}$\2\6
+\&{if} ${}(\\{ss}>\T{0}\W\\{perm}[\|s]\Z\|k){}$\5
+${}\{{}$\C{ true constant at left }\1\6
+\&{if} ${}(\\{perm}[\|s+\|m]\Z\|k){}$\5
+${}\{{}$\C{ and also at right }\1\6
+\&{if} ${}(\R\\{addedC}[\\{ss}-\T{1}]){}$\1\5
+${}\\{addedC}[\\{ss}-\T{1}]\K\T{1},\39\\{addto}(\\{subtotal},\39\\{binom}(\|m-%
+\T{1},\39\\{ss}-\T{1}));{}$\2\6
+\&{if} ${}(\\{ss}>\T{1}\W\R\\{addedD}[\\{ss}-\T{2}]){}$\1\5
+${}\\{addedD}[\\{ss}-\T{2}]\K\T{1},\39\\{addto}(\\{subtotal},\39\\{binom}(\|m-%
+\T{1},\39\\{ss}-\T{2}));{}$\2\6
+\4${}\}{}$\5
+\2\&{else} \&{if} ${}(\R\\{addedD}[\\{ss}-\T{1}]){}$\1\5
+${}\\{addedD}[\\{ss}-\T{1}]\K\T{1},\39\\{addto}(\\{subtotal},\39\\{binom}(\|m-%
+\T{1},\39\\{ss}-\T{1}));{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\2\6
+\4${}\}{}$\2\par
+\U12.\fi
+
+\M{16}\B\X16:Correct for constant nonbeads\X${}\E{}$\6
+\&{if} (\\{addedA}[\T{0}])\1\5
+${}\\{nonbeads}\PP{}$;\C{ all 0s }\2\6
+\&{if} ${}(\\{addedD}[\|m-\T{1}]){}$\1\5
+${}\\{nonbeads}\PP{}$;\C{ all 1s }\2\par
+\U10.\fi
+
+\N{1}{17}Index.
+\fi
+
+\inx
+\fin
+\con
