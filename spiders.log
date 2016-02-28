@@ -1,4 +1,4 @@
-This is TeX, Version 3.14159265 (TeX Live 2015) (preloaded format=tex 2016.2.18)  28 FEB 2016 11:05
+This is TeX, Version 3.14159265 (TeX Live 2015) (preloaded format=tex 2016.2.18)  28 FEB 2016 11:16
 **spiders.tex
 (./spiders.tex (./cwebmac.tex
 \PPbox=\box16
@@ -56,4 +56,4 @@ This is `epsf.tex' v2.7.4 <14 February 2011>
                          \epsfsetgraph {#1}
 l.165 $$\epsfbox{deco.5}
                         $$
-Output written on spiders.dvi (1 page, 5068 bytes).
+Output written on spiders.dvi (1 page, 5472 bytes).
