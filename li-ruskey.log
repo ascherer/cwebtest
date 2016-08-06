@@ -1,0 +1,58 @@
+This is TeX, Version 3.14159265 (TeX Live 2016) (preloaded format=tex 2016.6.8)  6 AUG 2016 15:28
+**li-ruskey.tex
+(./li-ruskey.tex (/opt/texlive/2016/texmf-dist/tex/plain/cweb/cwebmac.tex
+\PPbox=\box16
+\MMbox=\box17
+\MGbox=\box18
+\MODbox=\box19
+\bak=\box20
+\bakk=\box21
+\ind=\count26
+\gdepth=\count27
+\secpagedepth=\count28
+\gtitle=\toks12
+\intersecskip=\skip18
+\toksA=\toks13
+\toksB=\toks14
+\toksC=\toks15
+\toksD=\toks16
+\toksE=\toks17
+\toksF=\toks18
+\usersanitizer=\toks19
+\countA=\count29
+\countB=\count30
+\countC=\count31
+\pagewidth=\dimen16
+\pageheight=\dimen17
+\fullpageheight=\dimen18
+\pageshift=\dimen19
+\cont=\write0
+\sbox=\box22
+\lbox=\box23
+\twodigits=\count32
+)
+(/opt/texlive/2016/texmf-dist/tex/generic/epsf/epsf.tex
+This is `epsf.tex' v2.7.4 <14 February 2011>
+\epsffilein=\read0
+\epsfframemargin=\dimen20
+\epsfframethickness=\dimen21
+\epsfrsize=\dimen22
+\epsftmp=\dimen23
+\epsftsize=\dimen24
+\epsfxsize=\dimen25
+\epsfysize=\dimen26
+\pspoints=\dimen27
+) *1 [2
+\openout0 = `li-ruskey.toc'.
+
+] [3]
+(li-ruskey.1
+! Could not open file li-ruskey.1, ignoring it.
+\epsfgetbb ...Could not open file #1, ignoring it}
+                                                  \else {\chardef \other = 1...
+
+\next #1->\epsfgetbb {#1}
+                         \epsfsetgraph {#1}
+l.159 $$\epsfbox{li-ruskey.1}
+                             $$
+Output written on li-ruskey.dvi (2 pages, 7732 bytes).
