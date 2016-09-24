@@ -39,7 +39,7 @@ do
 
 	if [ "$1" = "--get" ]
 	then
-		curl --remote-time $REMOTE/$FILE -o $FILE
+		curl --remote-time $REMOTE/$FILE -z $FILE -o $FILE
 	else
 		curl --head $REMOTE/$FILE
 	fi
