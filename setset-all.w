@@ -43,8 +43,8 @@ in which the third is the sum or difference of the first two.
 Incidentally, I've written this program for my own instruction, not for
 publication. I~still haven't had time to read the highly relevant
 papers by Adalbert Kerber, Reinhard Laue, and their colleagues at Bayreuth,
-^{Kerber, Adalbert}
-^{Laue, Reinhard}
+@^Kerber, Adalbert@>
+@^Laue, Reinhard@>
 although I've
 had those works in my files for many years. Members of that group
 probably are quite familiar with equivalent or better methods.
@@ -215,7 +215,7 @@ $j\ge D$.
 
 {\sl Important Note [30 April 2001]:\/} No, the algorithm does {\it not\/}
 work for arbitrary permutation groups. I thank Prof.\ Reinhard Laue for
-^{Laue, Reinhard}
+@^Laue, Reinhard@>
 pointing out a serious error. However, I do think the special group dealt
 with here is handled satisfactorily because of its highly transitive nature.
 

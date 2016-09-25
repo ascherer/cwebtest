@@ -16,7 +16,7 @@ the numbers 0--35. Position \.{Hxy} is the edge from $(x,y)$ to $(x+1,y)$;
 position \.{Vxy} is the edge from $(x,y)$ to $(x,y+1)$;
 position \.{Ixy} is the interior point $(x,y)$.
 For example,
-$$\.{H01 H11 V10 V11 {\char`174} I11}$$
+$$\.{H01 H11 V10 V11 {\char'174} I11}$$
 is one way to describe a board that makes a small cross shape.
 
 The remaining lines of input describe the polysticks. First comes the

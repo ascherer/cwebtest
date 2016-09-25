@@ -288,11 +288,11 @@ if (clauses==0) {
   exit(-77);
 }
 if (vars>=0x80000000) {
-  fprintf(stderr,"Whoa, the input had %llu variables!\n",cells);
+  fprintf(stderr,"Whoa, the input had %llu variables!\n",vars);
   exit(-664);
 }
 if (clauses>=0x80000000) {
-  fprintf(stderr,"Whoa, the input had %llu clauses!\n",cells);
+  fprintf(stderr,"Whoa, the input had %llu clauses!\n",clauses);
   exit(-665);
 }
 if (cells>=0x100000000) {
