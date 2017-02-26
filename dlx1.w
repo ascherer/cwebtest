@@ -101,7 +101,7 @@ Here is the overall structure:
 
 @d max_level 500 /* at most this many rows in a solution */
 @d max_cols 100000 /* at most this many columns */
-@d max_nodes 10000000 /* at most this many nonzero elements in the matrix */
+@d max_nodes 25000000 /* at most this many nonzero elements in the matrix */
 @d bufsize (9*max_cols+3) /* a buffer big enough to hold all column names */
 
 @c
@@ -266,6 +266,10 @@ are used in the code so that this nonstandard semantics will be more clear.
 A {\it spacer\/} node has |col<=0|. Its |up| field points to the start
 of the preceding row; its |down| field points to the end of the following row.
 Thus it's easy to traverse a row circularly, in either direction.
+
+If all rows have length |m|, we can do without the spacers by simply
+working modulo~|m|. But the majority of my applications have rows of
+variable length, so I've decided not to use that trick.
 
 [{\it Historical note:\/} An earlier version of this program, {\mc DLX0},
 was almost identical to this one except that it used doubly linked lists
@@ -607,6 +611,14 @@ if (mems>=timeout) {
 column that is being covered. Thus a node is never removed from a list
 twice.
 
+Note: I could have saved some mems in this routine, and in similar
+routines below, by not updating the |len| fields of secondary columns.
+But I chose not to make such an optimization because it might well be
+misleading: The insertion of a mem-free new branch `|if (cc<second)|'
+can be costly since it makes hardware branch prediction less effective.
+Furthermore those |len| fields are in column header nodes, which tend
+to remain in cache memory where they're readily accessible.
+
 @<Sub...@>=
 void cover(int c) {
   register int cc,l,r,rr,nn,uu,dd,t;
@@ -759,8 +771,8 @@ void print_progress(void) {
   fprintf(stderr," after "O"lld mems: "O"lld sols,",mems,count);
   for (f=0.0,fd=1.0,l=0;l<level;l++) {
     c=nd[choice[l]].col,d=nd[c].len;
-    for (k=0,p=nd[c].down;p!=choice[l];k++,p=nd[p].down) ;
-    fd*=d,f+=k/fd; /* choice |l| is |k+1| of |d| */
+    for (k=1,p=nd[c].down;p!=choice[l];k++,p=nd[p].down) ;
+    fd*=d,f+=(k-1)/fd; /* choice |l| is |k| of |d| */
     fprintf(stderr," "O"c"O"c",
       k<10? '0'+k: k<36? 'a'+k-10: k<62? 'A'+k-36: '*',
       d<10? '0'+d: d<36? 'a'+d-10: k<62? 'A'+d-36: '*');

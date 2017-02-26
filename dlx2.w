@@ -210,7 +210,7 @@ contains further info about the column.
 Each node contains four important fields. Two are the pointers |up|
 and |down| of doubly linked lists, already mentioned.
 A~third points directly to the column containing the node.
-And the last specifies a color, or if zero if no color is specified.
+And the last specifies a color, or zero if no color is specified.
 
 A ``pointer'' is an array index, not a \CEE/ reference (because the latter
 would occupy 64~bits and waste cache space). The |cl| array is for
@@ -586,6 +586,11 @@ if (mems>=timeout) {
 column that is being covered. Thus a node is never removed from a list
 twice.
 
+We can save time by not removing nodes from secondary columns that have been
+purified. (Such nodes have |color<0|. Note that |color| and |col| are
+stored in the same octabyte; hence we pay only one mem to look at
+them both.)
+
 @<Sub...@>=
 void cover(int c) {
   register int cc,l,r,rr,nn,uu,dd,t;
@@ -594,16 +599,18 @@ void cover(int c) {
   updates++;
   for (o,rr=nd[c].down;rr>=last_col;o,rr=nd[rr].down)
     for (nn=rr+1;nn!=rr;) {
-      o,uu=nd[nn].up,dd=nd[nn].down;
-      o,cc=nd[nn].col;
-      if (cc<=0) {
-        nn=uu;
-        continue;
+      if (o,nd[nn].color>=0) {
+        o,uu=nd[nn].up,dd=nd[nn].down;
+        cc=nd[nn].col;
+        if (cc<=0) {
+          nn=uu;
+          continue;
+        }
+        oo,nd[uu].down=dd,nd[dd].up=uu;
+        updates++;
+        o,t=nd[cc].len-1;
+        o,nd[cc].len=t;
       }
-      oo,nd[uu].down=dd,nd[dd].up=uu;
-      updates++;
-      o,t=nd[cc].len-1;
-      o,nd[cc].len=t;
       nn++;
     }
 }
@@ -622,15 +629,17 @@ void uncover(int c) {
   register int cc,l,r,rr,nn,uu,dd,t;
   for (o,rr=nd[c].down;rr>=last_col;o,rr=nd[rr].down)
     for (nn=rr+1;nn!=rr;) {
-      o,uu=nd[nn].up,dd=nd[nn].down;
-      o,cc=nd[nn].col;
-      if (cc<=0) {
-        nn=uu;
-        continue;
+      if (o,nd[nn].color>=0) {
+        o,uu=nd[nn].up,dd=nd[nn].down;
+        cc=nd[nn].col;
+        if (cc<=0) {
+          nn=uu;
+          continue;
+        }
+        oo,nd[uu].down=nd[dd].up=nn;
+        o,t=nd[cc].len+1;
+        o,nd[cc].len=t;
       }
-      oo,nd[uu].down=nd[dd].up=nn;
-      o,t=nd[cc].len+1;
-      o,nd[cc].len=t;
       nn++;
     }
   o,l=cl[c].prev,r=cl[c].next;
@@ -796,8 +805,8 @@ void print_progress(void) {
   fprintf(stderr," after "O"lld mems: "O"lld sols,",mems,count);
   for (f=0.0,fd=1.0,l=0;l<level;l++) {
     c=nd[choice[l]].col,d=nd[c].len;
-    for (k=0,p=nd[c].down;p!=choice[l];k++,p=nd[p].down) ;
-    fd*=d,f+=k/fd; /* choice |l| is |k+1| of |d| */
+    for (k=1,p=nd[c].down;p!=choice[l];k++,p=nd[p].down) ;
+    fd*=d,f+=(k-1)/fd; /* choice |l| is |k| of |d| */
     fprintf(stderr," "O"c"O"c",
       k<10? '0'+k: k<36? 'a'+k-10: k<62? 'A'+k-36: '*',
       d<10? '0'+d: d<36? 'a'+d-10: k<62? 'A'+d-36: '*');
