@@ -6,16 +6,21 @@ the purpose of this project is quality ensurance for variants of cweb.
   canonical version of this software system. on unix extract the 'latest'
   source tarball and invoke `make`. or use [cweb on
   github](https://github.com/ascherer/cweb).
-* [ansi compatible version](https://github.com/ascherer/cwebbin/tree/cweb-ansi)
-  is almost the same as the original, minus tons of compiler warnings. clone
-  [cwebbin](https://github.com/ascherer/cwebbin), check out branch
-  **cweb-ansi**, add the original source drop, and compile with
-  `make -f Makefile.unix boot cautiously all`.
 * [texlive cweb](https://tug.org/svn/texlive/trunk/Build/source/texk/web2c/cwebdir/)
   is shipped with 'TeX Live'; I have not compiled this version myself.
 * [extended version](https://github.com/ascherer/cwebbin) is a modified
   version of cweb aimed mostly at portability. it comes with a few extensions,
   but these are 'off' by default.
+* [ansi compatible version](https://github.com/ascherer/cwebbin)
+  is almost the same as the original, minus tons of compiler warnings.
+  the former special branch **cweb-ansi** is deprecated and should no longer
+  be used. instead, use the `cwebbin.spec` file and run
+  `debbuild -ba --with-anѕi SPECS/cwebbin.spec` or
+  `rpmbuild -ba --with-anѕi SPECS/cwebbin.spec` depending on your (GNU/Linux)
+  system. either command will run `make -f Makefile.unix boot cautiously all`
+  after modifying the `Makefile` so that only the minimal `ansi` changefiles
+  are applied to the sources. (you can apply these modifications to `Makefile`
+  manually with the `sed` command in `cwebbin.spec`.)
 * [hypertex version](https://github.com/ascherer/cwebbin/tree/hyper-sync-tex)
   is the latest extension of cweb/cwebbin. it extends **cweave** with the
   **r** option; switched 'on' with **+r**, cweave adds back-references to the
@@ -48,10 +53,12 @@ don knuth requests that such modified versions of cweb "don't screw up
 
 # how to use this project
 
-start with `git clone --mirror https://github.com/ascherer/cwebtest`. the
-default branch **master** is only used to set up the environment. much more
-interesting are the auxiliary branches for each of the cweb variants (see
-`git branch` for a list). individual commits on these branches show the results
-of applying **ctangle** and **cweave** on **all** `.w` sources. to see the
-differences just compare the heads of the branches, e.g., `git diff plain-cweb
-cwebbin` (do this on your local clone; Github can't show such large 'diffs').
+start with `git clone https://github.com/ascherer/cwebtest`. the
+default branch **master** is used to set up the environment by extracting the
+full set of knuthian example programmes.
+
+now invoke `./runall.sh -p <PATH TO YOUR CWEB> -v <VERSION OF YOUR CWEB>`.
+this will create a new branch with this commandline as its name
+by applying **ctangle** and **cweave** on **all** `.w` sources
+(ca. 250 commits at the time of writing). to see the
+differences just compare the heads of such branches.
