@@ -96,7 +96,7 @@ Here is the overall structure:
 
 @d max_level 500 /* at most this many rows in a solution */
 @d max_cols 1000 /* at most this many columns */
-@d max_nodes 10000000 /* at most this many nonzero elements in the matrix */
+@d max_nodes 100000000 /* at most this many nonzero elements in the matrix */
 @d bufsize (9*max_cols+3) /* a buffer big enough to hold all column names */
 
 @c
@@ -152,6 +152,10 @@ choices are shown during verbose tracing;
 `\.C$\langle\,$positive integer$\,\rangle$' limits the levels on which
 choices are shown in the periodic state reports;
 \item{$\bullet$}
+`\.l$\langle\,$nonnegative integer$\,\rangle$' gives a {\it lower\/} limit,
+relative to the maximum level so far achieved, to the levels on which
+choices are shown during verbose tracing;
+\item{$\bullet$}
 `\.t$\langle\,$positive integer$\,\rangle$' causes the program to
 stop after this many solutions have been found;
 \item{$\bullet$}
@@ -172,6 +176,8 @@ int randomizing; /* has `\.s' been specified? */
 int vbose=show_basics+show_warnings; /* level of verbosity */
 int spacing; /* solution $k$ is output if $k$ is a multiple of |spacing| */
 int show_choices_max=1000000; /* above this level, |show_choices| is ignored */
+int show_choices_gap=1000000; /* below level |maxl-show_choices_gap|,
+    |show_details| is ignored */
 int show_levels_max=1000000; /* above this level, state reports stop */
 int maxl=0; /* maximum level actually reached */
 char buf[bufsize]; /* input buffer */
@@ -200,13 +206,14 @@ case 's': k|=(sscanf(argv[j]+1,""O"d",&random_seed)-1),randomizing=1;@+break;
 case 'd': k|=(sscanf(argv[j]+1,""O"lld",&delta)-1),thresh=delta;@+break;
 case 'c': k|=(sscanf(argv[j]+1,""O"d",&show_choices_max)-1);@+break;
 case 'C': k|=(sscanf(argv[j]+1,""O"d",&show_levels_max)-1);@+break;
+case 'l': k|=(sscanf(argv[j]+1,""O"d",&show_choices_gap)-1);@+break;
 case 't': k|=(sscanf(argv[j]+1,""O"lld",&maxcount)-1);@+break;
 case 'T': k|=(sscanf(argv[j]+1,""O"lld",&timeout)-1);@+break;
 default: k=1; /* unrecognized command-line option */
 }
 if (k) {
-  fprintf(stderr,
-    "Usage: "O"s [v<n>] [m<n>] [s<n>] [d<n>] [c<n>] [C<n>] [T<n>] < foo.dlx\n",
+  fprintf(stderr, "Usage: "O"s [v<n>] [m<n>] [s<n>] [d<n>]"
+      " [c<n>] [C<n>] [l<n>] [t<n>] [T<n>] < foo.dlx\n",
                             argv[0]);
   exit(-1);
 }
@@ -268,7 +275,7 @@ relative order.
 Exception: In the node |nd[c]| that is the header for the list of
 column~|c|, we use the |col| field to hold the {\it length\/} of that
 list (excluding the header node itself).
-We also might use its |color| fields for special purposes.
+We also might use its |color| field for special purposes.
 The alternative names |len| for |col| and |aux| for |color|
 are used in the code so that this nonstandard semantics will be more clear.
 
@@ -1009,11 +1016,13 @@ solution, as mentioned above.
 
 @<Set |best_col| to  the best column for branching...@>=
 score=infty;
-if ((vbose&show_details) && level<show_choices_max)
-   fprintf(stderr,"Level "O"d:",level);
+if ((vbose&show_details) &&
+    level<show_choices_max && level>=maxl-show_choices_gap)
+  fprintf(stderr,"Level "O"d:",level);
 for (o,k=cl[root].next;k!=root;o,k=cl[k].next) {
   o,s=cl[k].slack;@+if (s>cl[k].bound) s=cl[k].bound;
-  if ((vbose&show_details) && level<show_choices_max) {
+  if ((vbose&show_details) &&
+      level<show_choices_max && level>=maxl-show_choices_gap) {
     if (cl[k].bound!=1 || s!=0) fprintf(stderr," "O".8s("O"d:"O"d,"O"d)",
                       cl[k].name,cl[k].bound-s,cl[k].bound,
                                  nd[k].len+s-cl[k].bound+1);
@@ -1031,7 +1040,8 @@ for (o,k=cl[root].next;k!=root;o,k=cl[k].next) {
     }
   }
 }
-if ((vbose&show_details) && level<show_choices_max) {
+if ((vbose&show_details) &&
+    level<show_choices_max && level>=maxl-show_choices_gap) {
   if (score<infty)
     fprintf(stderr," branching on "O".8s("O"d)\n",cl[best_col].name,score);
   else fprintf(stderr," core solution\n");
@@ -1132,7 +1142,7 @@ void print_progress(void) {
     fd*=d,f+=(k-1)/fd; /* choice |l| is |k| of |d| */
     fprintf(stderr," "O"c"O"c",
       k<10? '0'+k: k<36? 'a'+k-10: k<62? 'A'+k-36: '*',
-      d<10? '0'+d: d<36? 'a'+d-10: k<62? 'A'+d-36: '*');
+      d<10? '0'+d: d<36? 'a'+d-10: d<62? 'A'+d-36: '*');
     if (l>=show_levels_max) {
       fprintf(stderr,"...");
       break;
