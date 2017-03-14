@@ -29,7 +29,7 @@ These variables are derived from the Bailleux--Boufkhad method
 of encoding cardinality constraints:
 The auxiliary variable \.{A$k$} stands for the condition
 ``at least $k$ of the eight neighbors are alive.'' Similarly,
-\.{B$k$} stans for ``at least $k$ of the first four neighbors
+\.{B$k$} stands for ``at least $k$ of the first four neighbors
 are alive,'' and \.{C$k$} accounts for the other four neighbors.
 Codes \.D, \.E, \.F, and~\.G refer to pairs of neighbors.
 Thus, for instance, \.{10a11C2} means that at least two of the

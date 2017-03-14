@@ -1417,7 +1417,7 @@ void who_points_to(node *p) {
 }
 #endif
 
-@ We've seen that every superlegimate node is findable in the
+@ We've seen that every superlegitimate node is findable in the
 proper unique table. Conversely, we want to check that everything
 is those tables is superlegitimate, and found.
 

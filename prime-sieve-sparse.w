@@ -1,12 +1,12 @@
 \datethis
-@*Intro. This program constructs segments of the ``sieve of Erasthosthenes,''
+@*Intro. This program constructs segments of the ``sieve of Eratosthenes,''
 and outputs the largest prime gaps that it finds. More precisely, it
 works with sets of prime numbers between $s_i$ and $s_{i+1}=s_i+\delta$,
 represented as an array of bits, and it examines these arrays for
 $t$ consecutive intervals beginning with $s_i$ for $i=0$, 1, \dots~$t-1$.
 Thus it scans all primes between $s_0$ and $s_t$.
 
-Let $p_k$ be the $k$th prime number. The sieve of Eratotosthenes determines
+Let $p_k$ be the $k$th prime number. The sieve of Eratosthenes determines
 all primes $\le N$ by starting with the set $\{2,3,\ldots,N\}$ and striking
 out the nonprimes: After we know $p_1$ through $p_{k-1}$, the next remaining
 element is $p_k$, and we strike out the numbers $p_k^2$, $p_k(p_k+1)$,

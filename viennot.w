@@ -10,7 +10,7 @@ and nested strings with height~$h$, where $2^w-1\le h<2^{w+1}-1$.
 What is a Kepler tower? Good question. It is a new kind of combinatorial
 object, invented by Xavier Viennot in February 2005. For example,
 $$\epsfbox{kepler.2}$$
-depicts a Kepler tower with 3 walls conaining 22 bricks.
+depicts a Kepler tower with 3 walls containing 22 bricks.
 This illustration is two-dimensional, but of course a tower has three
 dimensions; we are viewing the tower from above. Every wall of a Kepler
 tower consists of one or more rings, where

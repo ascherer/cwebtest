@@ -2,7 +2,7 @@
 
 @*Intro. This program is designed to compose multiplication-skeleton puzzles
 of a type pioneered by Junya Take. For example, consider his puzzle for
-the lettter \.O, in {\sl Journal of Recreational Mathematics\/ \bf38} (2014),
+the letter \.O, in {\sl Journal of Recreational Mathematics\/ \bf38} (2014),
 132:
 $$\vcenter{\halign{\hfil\tt#\cr
 .......\cr

@@ -689,7 +689,7 @@ various orders, I~almost convinced myself that I'd be able
 to blithely ignore the ordering---I could apparently
 undo the covering of column $a$ then $b$ by uncovering $a$ first.
 However, that argument is fallacious: When $a$ is uncovered, it
-can resuscite elements in column~$b$ that would mess up the
+can resuscitate elements in column~$b$ that would mess up the
 uncovering of~$b$. The choreography is delicate indeed.
 
 (Incidentally, the |cover| and |uncover| routines both went to the right.

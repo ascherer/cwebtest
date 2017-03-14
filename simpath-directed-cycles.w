@@ -207,7 +207,7 @@ is impossible; 1 means the winning state, when a simple path has been
 completed. The other states are 2 or more.
 
 The output format on |stdout| simply shows the identifying numbers of a state
-and its two succesors, in hexadecimal.
+and its two successors, in hexadecimal.
 
 @d trunc(addr) ((addr)&(memsize-1))
 
