@@ -33,7 +33,7 @@ for FILE in sham.w obdd.w.gz reflect.w.gz reflect.ch.gz hull.w hulls.w hullt.w \
 	back-mxn-words-new.w back-mxn-words-mxn.w back-pdi.w \
 	commafree-eastman.w commafree-eastman-new.w sat-commafree.w \
 	back-commafree4.w back-skeleton-shortest.w back-dissect.w \
-	ulam-gibbs.w ulam-gibbs.1 dlx1.w dlx2.w dlx2-polyom.ch \
+	ulam-gibbs.w ulam-gibbs.1 dlx1.w dlx2.w dlx-pre.w dlx2-polyom.ch \
 	dlx2-wordsearch.ch dlx3.w
 do
 	echo "cURLing $FILE"
