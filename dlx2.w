@@ -768,6 +768,7 @@ if ((vbose&show_details) &&
   if (spacing && (count mod spacing==0)) {
     printf(""O"lld:\n",count);
     for (k=0;k<=level;k++) print_row(choice[k],stdout);
+    fflush(stdout);
   }
   if (count>=maxcount) goto done;
   goto recover;
