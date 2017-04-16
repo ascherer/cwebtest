@@ -98,6 +98,43 @@ The preprocessor will delete row \.{A B X:0 Y:0}, because that row
 can't be used without making column \.C uncoverable.
 Then column \.C can be eliminated, and row \.{C Y:1}.
 
+@ These examples show that the simplified output may be drastically
+different from the original. It will have the same number of solutions;
+but by looking only at the simplified rows in those solutions,
+you may have no idea how to actually resolve the original
+problem! (Unless you work backward from
+the simplifications that were actually performed.)
+
+The preprocessor for my {\mc SAT} solvers had a counterpart called
+`{\mc ERP}', which converted solutions of the preprocessed problems
+into solutions of the original problems. {\mc DLX-PRE} doesn't
+have that. But if you use the |show_orig_nos| option below,
+for example by saying `\.{v9}' when running {\mc DLX-PRE}, you
+can figure out which rows of the original are solutions. The sets
+of rows that solve the simplified problem are the sets of rows
+that solve the original problem; the numbers given as comments
+by |show_orig_nos| provide the mapping between solutions.
+
+For example, the simplified output from the first problem,
+using `\.{v9}', is:
+$$\vcenter{\halign{\tt#\cr
+ A B C \char"7C\cr
+ A\cr
+\char"7C\ (from 4)\cr
+ B\cr
+\char"7C\ (from 5)\cr
+ C\cr
+\char"7C\ (from 1)\cr
+}}$$
+And from the second problem it is similar, but not quite as simple:
+$$\vcenter{\halign{\tt#\cr
+ A B \char"7C\ X Y\cr
+ A X:1 Y:1\cr
+\char"7C\ (from 2)\cr
+ B X:1\cr
+\char"7C\ (from 3)\cr
+}}$$
+
 @ Most of the code below, like the description above, has been cribbed
 from {\mc DLX2}, with minor changes.
 
@@ -145,7 +182,7 @@ main (int argc, char *argv[]) {
 finish:@+@<Output the reduced problem@>;
 done:@+if (vbose&show_tots)
     @<Report the column totals@>;
-  if (vbose&show_basics) {
+all_done:@+if (vbose&show_basics) {
     fprintf(stderr,
        "Removed "O"d row"O"s and "O"d column"O"s, after "O"llu+"O"llu mems.\n",
              rows_out,rows_out==1?"":"s",
@@ -436,8 +473,11 @@ else o,cl[last_col].next=cl[last_col].prev=last_col;
 o,nd[last_col].up=nd[last_col].down=last_col;
 last_col++;
 
-@ I'm putting the the row number into the spacer that follows it, as a
-possible debugging aid. But the program doesn't currently use that information.
+@ In {\mc DLX1} and its descendants, I put the row number into the spacer
+that follows it, but only because I thought it might be a
+possible debugging aid. Now, in {\mc DLX-PRE}, I'm glad I did,
+because we need this number when the user wants to relate the simplified
+output to the original unsimplified rows.
 
 @<Input the rows@>=
 while (1) {
@@ -547,6 +587,11 @@ This algorithm takes ``polynomial time,'' but I don't claim that it is fast.
 I~want to get a straightforward algorithm in place before trying to
 make it more complicated.
 
+On the other hand, I've tried to use the most efficient and scalable
+methods that I could think of, consistent with that goal of relative
+simplicity. There's no point in having a preprocessor unless it works
+fast enough to speed up the total time of preprocessing plus processing.
+
 @ The basic operation is ``hiding a column.'' This means causing all of
 the rows in its list to be invisible from outside the column, except
 for the rows that color this column; they are
@@ -619,6 +664,8 @@ void unhide(int c) {
 @ Here then is the main loop for each round of preprocessing.
 
 @<Reduce the problem@>=
+for (c=1;c<second;c++) if (o,nd[c].len==0)
+  @<Terminate with unfeasible column |c|@>;
 for (rnd=1;rnd<=rounds;rnd++) {
   if (vbose&show_choices)
     fprintf(stderr,"Beginning round "O"d:\n",rnd);
@@ -632,6 +679,20 @@ int rnd; /* the current round */
 int stack; /* top of stack of columns that are hard to cover */
 int change; /* have we removed anything on the current round? */
 int zeros; /* the number of zeros found by |hide| */
+
+@ We might find a primary column that appears in no rows. In such
+a case {\it all\/} of the rows can be deleted, and all of the
+other columns!
+
+@<Terminate with unfeasible column |c|@>=
+{
+  if (vbose&show_details)
+    fprintf(stderr,"Primary column "O".8s is in no rows!\n",cl[c].name);
+  rows_out=rows;
+  cols_out=last_col-1;
+  printf(""O".8s\n",cl[c].name); /* this is the only line of output */
+  goto all_done;
+}
 
 @ In order to avoid testing a row repeatedly, we usually
 try to remove it only when |c| is its first element as stored in memory.
@@ -675,12 +736,16 @@ try to remove it only when |c| is its first element as stored in memory.
                            cl[p].name,cl[stack].name);
     cols_out++;
   }
-  for (o,r=nd[c].down;r>=last_col;r=rrr) {
+  for (change=2,o,r=nd[c].down;r>=last_col;r=rrr) {
     o,rrr=nd[r].down;
     @<Delete or shorten row |r|@>;
   }
+  if (change!=1) {
+    c=stack; /* all of |c|'s rows have been deleted */
+    @<Terminate with unfeasible column |c|@>;
+  }
   o,nd[c].up=nd[c].down=c;
-  o,nd[c].len=0, cols_out++,change=1; /* now column |c| is gone */
+  o,nd[c].len=0, cols_out++; /* now column |c| is gone */
 }  
 
 @ We're in the driver's seat here:
@@ -711,6 +776,7 @@ Otherwise we delete it.
 
 @ @<Shorten and retain row |r|@>=
 {
+  change=1;
   if (vbose&show_details) {
     fprintf(stderr," shortening");
     t=dprow(r,stderr),
