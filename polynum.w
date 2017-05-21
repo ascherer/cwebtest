@@ -1,6 +1,5 @@
 \datethis
-\ifpdftex \input supp-pdf \else \input epsf \fi
-
+\input epsf
 \def\caret/{\smash{\lower4pt\hbox to0pt{\hss$\scriptscriptstyle\land$\hss}}}
 \def\qcaret/{`\thinspace\caret/\thinspace'} % quoted caret
 @s delete unknown
@@ -26,7 +25,7 @@ and top to bottom, deciding whether or not that cell is occupied, and
 combining results for all boundary configurations that are equivalent
 as far as future decisions are concerned. For example, we might have a
 polyomino that starts out like this:
-$$\ifpdftex\convertMPtoPDF{polyomino.2}{1}{1}\else\epsfbox{polyomino.2}\fi$$
+$$\epsfbox{polyomino.2}$$
 (This partial polyomino obviously has more than 54 cells already, but large
 examples will help clarify the concepts that are needed in the program below.)
 

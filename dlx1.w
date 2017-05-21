@@ -456,7 +456,7 @@ else o,cl[last_col].next=cl[last_col].prev=last_col;
 o,nd[last_col].up=nd[last_col].down=last_col;
 last_col++;
 
-@ I'm putting the the row number into the spacer that follows it, as a
+@ I'm putting the row number into the spacer that follows it, as a
 possible debugging aid. But the program doesn't currently use that information.
 
 @<Input the rows@>=
@@ -734,6 +734,7 @@ if ((vbose&show_details) &&
   if (spacing && (count mod spacing==0)) {
     printf(""O"lld:\n",count);
     for (k=0;k<=level;k++) print_row(choice[k],stdout);
+    fflush(stdout);
   }
   if (count>=maxcount) goto done;
   goto recover;

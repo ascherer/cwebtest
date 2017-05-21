@@ -59,7 +59,7 @@ or vice versa; since $f_2$ is contained in $f_3$,
 distinction between $e_j$ and $x_j$: The former is an element,
 or the family consisting of a single one-element set; the latter
 is the family consisting of all sets containing element~$e_j$.)
-A subsequent command `\.{f1=.}' will undefine~$f_1$.
+A subsequent command `\.{f1=.}' will undefine~$f_1$.]
 
 The first command in this example
 specifies that \.{x4} will be the largest \.x variable.

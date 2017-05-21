@@ -107,7 +107,7 @@ To enable everything, you can say `\.{v-1}'.
 @d show_compression_stats 2 /* reports details of |is_ulam| encoding */
 @d show_histograms 4 /* reports Ulams and misses mod $\lambda$ */
 @d show_gap_stats 8 /* gives histogram and examples of every gap */
-@d show_record_gaps 16 /* reports every gap that exceeded all predecessors */
+@d show_record_gaps 16 /* reports every gap that exceeded all precedessors */
 @d show_record_outliers 32 /* reports outliers that exceeded earlier ones */
 @d show_outlier_details 64 /* reports insertion or deletion of all outliers */
 @d show_record_cutoffs 128 /* reports residue cutoffs for near outliers */
@@ -1146,7 +1146,7 @@ Pretty pictures, comin' right up.
     }
   }
   fprintf(mp_file,"endfig;\n\nbye.\n");
-  fclose(mp_file);
+  close(mp_file);
   fprintf(stderr,"METAPOST code written to file "O"s.\n",mp_name);
 }
 

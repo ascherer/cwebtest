@@ -88,8 +88,8 @@ respectively, except at the boundaries.
 
 @ So here's the overall outline of the program.
 
-@d maxx 20 /* maximum number of lines in the pattern supplied by |stdin| */
-@d maxy 20 /* maximum number of columns per line in |stdin| */
+@d maxx 50 /* maximum number of lines in the pattern supplied by |stdin| */
+@d maxy 50 /* maximum number of columns per line in |stdin| */
 
 @c
 #include <stdio.h>
@@ -98,7 +98,7 @@ char p[maxx+2][maxy+2]; /* is cell $(x,y)$ potentially alive? */
 char have_b[maxx+2][maxy+2]; /* did we already generate $b(x,y)$? */
 char have_d[maxx+2][maxy+2]; /* did we already generate $d(x,y)$? */
 char have_e[maxx+2][maxy+4]; /* did we already generate $e(x,y)$? */
-char have_f[maxx+4][maxy+2]; /* did we already generate $f(x-2,y)$? */
+char have_f[maxx+4][maxy+2]; /* did we already generate $f(x,y)$? */
 int tt; /* time as given on the command line */
 int xmax,ymax; /* the number of rows and columns in the input pattern */
 int xmin=maxx,ymin=maxy; /* limits in the other direction */
@@ -225,6 +225,9 @@ $x$ is always odd, and that $y\bmod4<2$.
 
 Therefore we remember if we've seen $(x,y)$ before.
 
+Slight trick: If |yy| is not in range, we avoid generating the
+clause $\bar d_k$ twice.
+
 @d newlit(x,y,c,k) clause[clauseptr++]=((c)<<28)+((k)<<25)+((x)<<12)+(y)
 @d newcomplit(x,y,c,k) 
    clause[clauseptr++]=sign+((c)<<28)+((k)<<25)+((x)<<12)+(y)
@@ -238,7 +241,8 @@ void d(int x,int y) {
     applit(x1,yy,1,0),applit(x2,yy,1,0),newlit(x,y,4,2),outclause();
     applit(x1,yy,0,0),applit(x2,yy,0,0),newcomplit(x,y,4,1),outclause();
     applit(x1,yy,0,0),newcomplit(x,y,4,2),outclause();
-    applit(x2,yy,0,0),newcomplit(x,y,4,2),outclause();
+    if (yy>=ymin && yy<=ymax)
+      applit(x2,yy,0,0),newcomplit(x,y,4,2),outclause();
     have_d[x][y]=tt+1;
   }
 }
@@ -251,7 +255,8 @@ void e(int x,int y) {
     applit(x1,yy,1,0),applit(x2,yy,1,0),newlit(x,y,5,2),outclause();
     applit(x1,yy,0,0),applit(x2,yy,0,0),newcomplit(x,y,5,1),outclause();
     applit(x1,yy,0,0),newcomplit(x,y,5,2),outclause();
-    applit(x2,yy,0,0),newcomplit(x,y,5,2),outclause();
+    if (yy>=ymin && yy<=ymax)
+      applit(x2,yy,0,0),newcomplit(x,y,5,2),outclause();
     have_e[x][y]=tt+1;
   }
 }
@@ -268,7 +273,8 @@ void f(int x,int y) {
     applit(xx,y1,1,0),applit(xx,y2,1,0),newlit(x,y,6,2),outclause();
     applit(xx,y1,0,0),applit(xx,y2,0,0),newcomplit(x,y,6,1),outclause();
     applit(xx,y1,0,0),newcomplit(x,y,6,2),outclause();
-    applit(xx,y2,0,0),newcomplit(x,y,6,2),outclause();
+    if (xx>=xmin && xx<=xmax)
+      applit(xx,y2,0,0),newcomplit(x,y,6,2),outclause();
     have_f[x][y]=tt+1;
   }
 }
@@ -306,7 +312,7 @@ void b(int x,int y) {
       outclause();
       if (j) newlit(xx,y1,4,3-j); /* $d_{3-j}$ */
       if (k) newlit(xx,y2,5,3-k); /* $e_{3-k}$ */
-      newcomplit(x,y,2,5-j-k); /* $b_{5-j-k}$ */
+      newcomplit(x,y,2,5-j-k); /* $\bar b_{5-j-k}$ */
       outclause();      
     }
     have_b[x][y]=tt+1;
@@ -316,23 +322,41 @@ void b(int x,int y) {
 @ The (unshared) |c| subroutine handles the other four neighbors,
 by working with |f| and |g| instead of |d| and~|e|.
 
+If |y=0|, the overlap rules set |y1=-1|, which can be problematic.
+I've decided to avoid this case by omitting |f| when it is
+guaranteed to be zero.
+
 @<Sub...@>=
 void c(int x,int y) {
   register j,k,x1,y1;
   if (x&1) x1=x+2,y1=(y-1)|1;
   else x1=x,y1=y&-2;
-  f(x1,y1);
   g(x,y);
-  for (j=0;j<3;j++) for (k=0;k<3;k++) if (j+k) {
-    if (j) newcomplit(x1,y1,6,j); /* $\bar f_j$ */
-    if (k) newcomplit(x,y,7,k); /* $\bar g_k$ */
-    newlit(x,y,3,j+k); /* $c_{j+k}$ */
-    outclause();
-    if (j) newlit(x1,y1,6,3-j); /* $\bar f_{3-j}$ */
-    if (k) newlit(x,y,7,3-k); /* $\bar g_{3-k}$ */
-    newcomplit(x,y,3,5-j-k); /* $c_{5-j-k}$ */
-    outclause();
+  if (x1-1<xmin || x1-1>xmax || y1+1<ymin || y1>ymax)
+    @<Set |c| equal to |g|@>@;
+  else {
+    f(x1,y1);
+    for (j=0;j<3;j++) for (k=0;k<3;k++) if (j+k) {
+      if (j) newcomplit(x1,y1,6,j); /* $\bar f_j$ */
+      if (k) newcomplit(x,y,7,k); /* $\bar g_k$ */
+      newlit(x,y,3,j+k); /* $c_{j+k}$ */
+      outclause();
+      if (j) newlit(x1,y1,6,3-j); /* $f_{3-j}$ */
+      if (k) newlit(x,y,7,3-k); /* $g_{3-k}$ */
+      newcomplit(x,y,3,5-j-k); /* $\bar c_{5-j-k}$ */
+      outclause();
+    }
   }
+}
+
+@ @<Set |c| equal to |g|@>=
+{
+  for (k=1;k<3;k++) {
+    newcomplit(x,y,7,k),newlit(x,y,3,k),outclause(); /* $\bar g_k\lor c_k$ */
+    newlit(x,y,7,k),newcomplit(x,y,3,k),outclause(); /* $g_k\lor\bar c_k$ */
+  }
+  newcomplit(x,y,3,3),outclause(); /* $\bar c_3$ */
+  newcomplit(x,y,3,4),outclause(); /* $\bar c_4$ */
 }
 
 @ Totals over all eight neighbors are then deduced by the |a|
