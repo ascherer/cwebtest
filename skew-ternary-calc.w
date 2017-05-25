@@ -1005,7 +1005,7 @@ $$\def\\#1{$\vcenter{\medskip\epsfbox{skew-ternary-calc.3#1}\medskip}$}
 9&(r_0a_2)(a_0b_2)(b_0c_2)(c_0r_2)(r_3c_3b_3a_3)(r_1a_1b_1c_1)\cr
 }}$$
 
-@*Planar maps, conform\`ement \`a Jacquard et Schaeffer.
+@*Planar maps, conform\'ement \`a Jacquard et Schaeffer.
 We return now to our main theme of skew ternary trees.
 
 At the very beginning I mentioned that Del Lungo et al found an
