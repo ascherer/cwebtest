@@ -2,6 +2,7 @@
   if (spacing && (count mod spacing==0)) {
     printf(""O"lld:\n",count);
     for (k=0;k<=level;k++) print_row(choice[k],stdout);
+    fflush(stdout);
   }
 @y [this was hacked from dlx1-polycube.ch in the obvious way]
   if (spacing && (count mod spacing==0)) {

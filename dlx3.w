@@ -1067,6 +1067,7 @@ if ((vbose&show_details) &&
       else print_row(pp,stdout,first_tweak[k],scor[k]);
     }
     if (p) @<Print the free rows@>;
+    fflush(stdout);
   }
   if (count>=maxcount) goto done;
   goto backdown;
