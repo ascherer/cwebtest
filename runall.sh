@@ -39,7 +39,7 @@ do
 
 	# Process all associated CWEB change files ...
 	[ $changes -ne 0 ] || continue
-	for c in $bi-*.ch
+	for c in $bi*.ch
 	do
 		[ -f $c ] || continue # ... if any
 		bc=`basename $c .ch`
