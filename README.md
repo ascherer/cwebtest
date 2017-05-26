@@ -15,8 +15,8 @@ the purpose of this project is quality ensurance for variants of cweb.
   is almost the same as the original, minus tons of compiler warnings.
   the former special branch **cweb-ansi** is deprecated and should no longer
   be used. instead, use the `cwebbin.spec` file and run
-  `debbuild -ba --with-anѕi SPECS/cwebbin.spec` or
-  `rpmbuild -ba --with-anѕi SPECS/cwebbin.spec` depending on your (GNU/Linux)
+  `debbuild -ba --with-ansi SPECS/cwebbin.spec` or
+  `rpmbuild -ba --with-ansi SPECS/cwebbin.spec` depending on your (GNU/Linux)
   system. either command will run `make -f Makefile.unix boot cautiously all`
   after modifying the `Makefile` so that only the minimal `ansi` changefiles
   are applied to the sources. (you can apply these modifications to `Makefile`
