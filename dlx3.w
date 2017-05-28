@@ -507,7 +507,7 @@ o,nd[last_col].up=nd[last_col].down=last_col;
  /* |nd[last_col].len=0| */
 last_col++;
 
-@ I'm putting the the row number into the spacer that follows it, as a
+@ I'm putting the row number into the spacer that follows it, as a
 possible debugging aid. But the program doesn't currently use that information.
 
 @<Input the rows@>=
@@ -783,7 +783,7 @@ void cover(int c,int deact) {
 processing its rows from bottom to top, since covering was done
 from top to bottom. But while writing this
 program I realized that, amazingly, no harm is done if the
-rows are processed in any order whatsoever. So I'll go downward again,
+rows are processed again in the same order. So I'll go downward again,
 just to prove the point. Whether we go up or down, the pointers
 execute an exquisitely choreo\-graphed dance that returns them almost
 magically to their former state.

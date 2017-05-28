@@ -42,7 +42,7 @@ int cutoff=max_nodes; /* nodes after this point have essentially disappeared */
 processing its rows from bottom to top, since covering was done
 from top to bottom. But while writing this
 program I realized that, amazingly, no harm is done if the
-rows are processed in any order whatsoever. So I'll go downward again,
+rows are processed again in the same order. So I'll go downward again,
 just to prove the point. Whether we go up or down, the pointers
 execute an exquisitely choreo\-graphed dance that returns them almost
 magically to their former state.

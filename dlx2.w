@@ -99,12 +99,13 @@ main (int argc, char *argv[]) {
     @<Report the column totals@>;
   imems=mems, mems=0;
   @<Solve the problem@>;
-done:@+if (vbose&show_tots)
+done:@+if (sanity_checking) sanity();
+  if (vbose&show_tots)
     @<Report the column totals@>;
   if (vbose&show_profile) @<Print the profile@>;
   if (vbose&show_basics) {
-    fprintf(stderr,"Altogether "O"llu solution"O"s, "O"llu+"O"llu mems,",
-                                count,count==1?"":"s",imems,mems);
+    fprintf(stderr,"Altogether "O"llu solution"O"s, "O"llu+"O"llu-"O"llu mems,",
+                                count,count==1?"":"s",imems,mems,lmems);
     bytes=last_col*sizeof(column)+last_node*sizeof(node)+maxl*sizeof(int);
     fprintf(stderr," "O"llu updates, "O"llu cleansings,",
                                 updates,cleansings);
@@ -168,7 +169,7 @@ int maxl=0; /* maximum level actually reached */
 char buf[bufsize]; /* input buffer */
 ullng count; /* solutions found so far */
 ullng rows; /* rows seen so far */
-ullng imems,mems; /* mem counts */
+ullng imems,mems,lmems; /* mem counts */
 ullng updates; /* update counts */
 ullng cleansings; /* cleansing counts */
 ullng bytes; /* memory used by main data structures */
@@ -422,7 +423,7 @@ else o,cl[last_col].next=cl[last_col].prev=last_col;
 o,nd[last_col].up=nd[last_col].down=last_col;
 last_col++;
 
-@ I'm putting the the row number into the spacer that follows it, as a
+@ I'm putting the row number into the spacer that follows it, as a
 possible debugging aid. But the program doesn't currently use that information.
 
 @<Input the rows@>=
@@ -598,6 +599,10 @@ purified. (Such nodes have |color<0|. Note that |color| and |col| are
 stored in the same octabyte; hence we pay only one mem to look at
 them both.)
 
+We could save even more time by not updating the |len| fields of secondary
+columns. Instead of suppressing that calculation, this program calculates
+how much would be saved.
+
 @<Sub...@>=
 void cover(int c) {
   register int cc,l,r,rr,nn,uu,dd,t;
@@ -617,6 +622,7 @@ void cover(int c) {
         updates++;
         o,t=nd[cc].len-1;
         o,nd[cc].len=t;
+        if (cc>=second) lmems+=2;
       }
       nn++;
     }
@@ -626,7 +632,7 @@ void cover(int c) {
 processing its rows from bottom to top, since covering was done
 from top to bottom. But while writing this
 program I realized that, amazingly, no harm is done if the
-rows are processed in any order whatsoever. So I'll go downward again,
+rows are processed again in the same order. So I'll go downward again,
 just to prove the point. Whether we go up or down, the pointers
 execute an exquisitely choreo\-graphed dance that returns them almost
 magically to their former state.
@@ -646,6 +652,7 @@ void uncover(int c) {
         oo,nd[uu].down=nd[dd].up=nn;
         o,t=nd[cc].len+1;
         o,nd[cc].len=t;
+        if (cc>=second) lmems+=2;
       }
       nn++;
     }
@@ -702,6 +709,7 @@ void purify(int p) {
           updates++;
           o,t=nd[cc].len-1;
           o,nd[cc].len=t;
+          if (cc>=second) lmems+=2;
         }
         nn++;
       }
@@ -729,6 +737,7 @@ void unpurify(int p) {
           oo,nd[uu].down=nd[dd].up=nn;
           o,t=nd[cc].len+1;
           o,nd[cc].len=t;
+          if (cc>=second) lmems+=2;
         }
         nn--;
       }

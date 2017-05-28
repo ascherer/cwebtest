@@ -9,7 +9,7 @@
     }
   }
 @y
-      else printf(" -> %d(%s,%d) #%d\n",u->num,u->name,a->len,m);
+      else printf(" -> %ld(%s,%ld) #%d\n",u->num,u->name,a->len,m);
     }
   }
   arcto[m++]=dummy;
