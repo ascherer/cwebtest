@@ -22,6 +22,7 @@ then
 fi
 
 git checkout -b "runall-$path-V$version"
+[ $? = 0 ] || exit 1
 
 # Process all CWEB main sources
 for i in *.w
