@@ -21,8 +21,10 @@ then
 	exit 1
 fi
 
-git checkout -b "runall-$path-V$version"
-[ $? = 0 ] || exit 1
+testbranch="runall-$path-V$version"
+[ $changes -ne 0 ] && testbranch="$testbranch-changes"
+git checkout -b $testbranch
+[ $? -eq 0 ] || exit 1
 
 # Process all CWEB main sources
 for i in *.w
