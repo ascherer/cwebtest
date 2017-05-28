@@ -29,8 +29,11 @@ do
 	# CTANGLE
 	bi=`basename $i .w`
 	$path/ctangle $i
-	git add $bi.c
-	git commit -m "ctangle [$version] $i."
+	if [ -f $bi.c ]
+	then
+		git add $bi.c
+		git commit -m "ctangle [$version] $i."
+	fi
 
 	# CWEAVE
 	$path/cweave $i
