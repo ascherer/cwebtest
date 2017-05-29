@@ -62,3 +62,7 @@ this will create a new branch with this commandline as its name
 by applying **ctangle** and **cweave** on **all** `.w` sources
 (ca. 250 commits at the time of writing). to see the
 differences just compare the heads of such branches.
+
+if you care about modified versions of some of the example programs, you can
+add the `-c` option to the `./runall.sh` commandline, which applies (most of)
+the changefiles available and adds `-changes` to the created test branch name.
