@@ -3,11 +3,13 @@
 path= # Path to CWEB, e.g., /usr/bin
 version= # Version of CWEB, e.g., 3.64b-22p
 changes=0 # Apply associated change files (if any)
+hulld=0 # Apply 'hulld' change files to all main 'hull' variants
 
-while getopts cp:v: opt
+while getopts chp:v: opt
 do
 	case $opt in
 		c) changes=1 ;;
+		h) hulld=1 ;;
 		p) path=$OPTARG ;;
 		v) version=$OPTARG ;;
 		?) exit 1 ;;
@@ -61,5 +63,26 @@ do
 		git commit -m "cweave [$version] $i $c."
 	done
 done
+
+# Apply 'hulld' changefiles to all main 'hull' variants
+if [ $changes -ne 0 ] && [ $hulld -ne 0 ]
+then
+	for i in s t tr
+	do
+		for c in hulld-*.ch
+		do
+			# CTANGLE
+			bc=`basename $c .ch`
+			ctangle hull$i $bc $bc-$i
+			git add $bc-$i.c
+			git commit -m "ctangle [$version] hull$i $c."
+
+			# CWEAVE
+			$path/cweave hull$i $bc $bc-$i
+			git add $bc-$i.idx $bc-$i.scn $bc-$i.tex
+			git commit -m "cweave [$version] hull$i $c."
+		done
+	done
+fi
 
 git checkout master
