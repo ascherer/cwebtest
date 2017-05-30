@@ -31,6 +31,9 @@ git checkout -b $testbranch || exit 1 # Avoid 'master' desaster
 # Process all CWEB main sources
 for i in *.w
 do
+	# Ignore SGB @include file
+	[ $i != "gb_types.w" ] || continue
+
 	# CTANGLE
 	bi=`basename $i .w`
 	$path/ctangle $i
