@@ -73,7 +73,7 @@
 @*Index.
 @y
 @ @<Glob...@>=
-char box[64][64]; /* allow space for margins in all three coordinates */
+char box[64][64]; /* allow space for margins in both coordinates */
 int xmax,ymax;
 int xmin=64,ymin=64;
 
