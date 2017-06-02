@@ -772,8 +772,8 @@ this number is 8383.
       mult=2; break;
     }@+else if (newpat[j]>backpat[j]) goto bypass;
   @<Record an initial transition to |newpat| with degree |mult|@>;
- bypass:@;
-}  
+ bypass: ;
+}
 
 @ @<Glob...@>=
 int len; /* the pattern length */
@@ -980,8 +980,8 @@ close_it();
 int slices; /* total number of slices */  
 int arcs; /* total number of arcs (double precision) */
 
-@ Note, added two weeks later: This program, though interesting, is
-obsolete. See the much better {\mc POLYNUM}, which runs hundreds of
-times faster when $n=30$ and faster yet for larger values of $n$.
+@ Note added two weeks later: This program, though interesting,
+is obsolete. Please see {\mc POLYNUM}, which runs hundreds of
+times faster when $n=30$ and faster yet for larger values of~$n$.
 
 @*Index.
