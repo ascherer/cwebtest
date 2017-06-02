@@ -56,12 +56,12 @@ del=(u<<kr)+c, c=(u>>(31-kr))>>1;
 @y
 del=(u<<kr)+c, c=(u>>(63-kr))>>1;
 @z
-@x
+x
 if (kk&0xffff0000) kr=16,u=kk>>16;@+else kr=0,u=kk;
-@y
+y
 if (kk&0xffffffff00000000) kr=32,u=kk>>32;@+else kr=0,u=kk;
 if (u&0xffff0000) kr+=16,u>>=16;
-@z
+z
 @x
   printf("gap %d occurred %d time%s, last was %d\n",
 @y
