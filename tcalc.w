@@ -459,7 +459,7 @@ node *normalize(p) /* change |p| to normal form without changing the value */
   node *p;
 {
   register node *q,*qq;
-  if (!p) return;
+  if (!p) return NULL;
   q=qq=left(p); q=normalize(q);
   if (q!=qq) change(&p->l,q);
   q=qq=right(p); q=normalize(q);

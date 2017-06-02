@@ -70,7 +70,6 @@ the mate of |red[k]| instead of to |red[k]| itself.
 Vertex *black[mm*nn*2], *red[mm*nn*2];
 int parity[mm*nn*2];
 int edges; /* total number of edges */
-int verbose; /* set nonzero when debugging */
 int sols, pseudo_sols; /* counts the solutions and cases of two half-cycles */
 
 @ @<Local variables@>=
