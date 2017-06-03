@@ -51,6 +51,9 @@ are encouraged to work with the sources and improve or extend them. however,
 don knuth requests that such modified versions of cweb "don't screw up
 [_these example programmes_] any more than they would screw up today!"
 
+and these programs are "really OLD indeed. [...] they should be read but not
+executed!"
+
 # how to use this project
 
 start with `git clone https://github.com/ascherer/cwebtest`. the
@@ -65,4 +68,5 @@ differences just compare the heads of such branches.
 
 if you care about modified versions of some of the example programs, you can
 add the `-c` option to the `./runall.sh` commandline, which applies (most of)
-the changefiles available and adds `-changes` to the created test branch name.
+the changefiles available and adds `-changes` to the created test branch name,
+and the `-h` option to apply the cross-product of "hull" examples/changes.
