@@ -51,7 +51,7 @@ are encouraged to work with the sources and improve or extend them. however,
 don knuth requests that such modified versions of cweb "don't screw up
 [_these example programmes_] any more than they would screw up today!"
 
-and these programs are "really OLD indeed. [...] they should be read but not
+and some of these example programs are "really OLD indeed. [...] they should be read but not
 executed!"
 
 # how to use this project
