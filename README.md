@@ -58,7 +58,9 @@ executed!"
 
 start with `git clone https://github.com/ascherer/cwebtest`. the
 default branch **master** is used to set up the environment by extracting the
-full set of knuthian example programmes.
+full set of knuthian example programmes. if you want to cross-check with
+stanford, use the local `./downloadable-programs.sh --get` and `gzip -d` on
+all gzipped master sources.
 
 now invoke `./runall.sh -p <PATH TO YOUR CWEB> -v <VERSION OF YOUR CWEB>`.
 this will create a new branch with this commandline as its name
