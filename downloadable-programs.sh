@@ -23,7 +23,8 @@ for FILE in sham.w obdd.w.gz reflect.w.gz reflect.ch.gz hull.w hulls.w hullt.w \
 	maxcliques.w ulam.w ulam-longlong.ch hwb-fast.w yplay.w bdd12.w \
 	bdd14.w bddl-rgrowth.w bdd15.w simpath.w simpath-reduce.w \
 	simpath-example.tgz simpath-cycles.ch simpath-ham.ch simpath-ham-any.ch \
-	simpath-directed-cycles.w euler-trail.w celtic-paths.w dragon-calc.w \
+	simpath-directed-cycles.w euler-trail.w celtic-paths.w celtica.mf \
+	celtica13.mf celticb.mf celticb13.mf celtic-picture.1 dragon-calc.w \
 	squaregraph.w squaregraph-rand.w treeprobs.w graph-sig-v0.w \
 	skew-ternary-calc.w random-ternary.w random-ternary-quads.ch \
 	skew-ternary-calc-raw.ch dimacs-to-sat.w sat-to-dimacs.w \
