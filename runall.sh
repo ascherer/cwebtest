@@ -19,7 +19,7 @@ done
 # Check for a useful path
 if [ ! -e "$path/ctangle" ]
 then
-	echo "Can't find CWEB at path '$path'."
+	>&2 echo "Can't find CWEB at path '$path'."
 	exit 1
 fi
 
@@ -40,13 +40,13 @@ do
 	if [ -f $bi.c ]
 	then
 		git add $bi.c
-		git commit -m "ctangle [$version] $i."
+		>&2 git commit -m "ctangle [$version] $i."
 	fi
 
 	# CWEAVE
 	$path/cweave $i
 	git add $bi.idx $bi.scn $bi.tex
-	git commit -m "cweave [$version] $i."
+	>&2 git commit -m "cweave [$version] $i."
 
 	# Process all associated CWEB change files ...
 	[ $changes -ne 0 ] || continue
@@ -58,12 +58,12 @@ do
 		# CTANGLE
 		$path/ctangle $i $c $bc
 		git add $bc.c
-		git commit -m "ctangle [$version] $i $c."
+		>&2 git commit -m "ctangle [$version] $i $c."
 
 		# CWEAVE
 		$path/cweave $i $c $bc
 		git add $bc.idx $bc.scn $bc.tex
-		git commit -m "cweave [$version] $i $c."
+		>&2 git commit -m "cweave [$version] $i $c."
 	done
 done
 
@@ -76,14 +76,14 @@ then
 		do
 			# CTANGLE
 			bc=`basename $c .ch`
-			ctangle hull$i $bc $bc-$i
+			$path/ctangle hull$i $bc $bc-$i
 			git add $bc-$i.c
-			git commit -m "ctangle [$version] hull$i $c."
+			>&2 git commit -m "ctangle [$version] hull$i $c."
 
 			# CWEAVE
 			$path/cweave hull$i $bc $bc-$i
 			git add $bc-$i.idx $bc-$i.scn $bc-$i.tex
-			git commit -m "cweave [$version] hull$i $c."
+			>&2 git commit -m "cweave [$version] hull$i $c."
 		done
 	done
 fi
