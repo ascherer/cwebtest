@@ -3,13 +3,11 @@
 path= # Path to CWEB, e.g., /usr/bin
 version= # Version of CWEB, e.g., 3.64b-22p
 changes=0 # Apply associated change files (if any)
-hulld=0 # Apply 'hulld' change files to all main 'hull' variants
 
 while getopts chp:v: opt
 do
 	case $opt in
 		c) changes=1 ;;
-		h) hulld=1 ;;
 		p) path=$OPTARG ;;
 		v) version=$OPTARG ;;
 		?) exit 1 ;;
@@ -67,8 +65,8 @@ do
 	done
 done
 
-# Apply 'hulld' changefiles to all main 'hull' variants
-if [ $changes -ne 0 ] && [ $hulld -ne 0 ]
+# Apply 'special' changefiles that do not quite fit into the standard scheme
+if [ $changes -ne 0 ]
 then
 	for i in s t tr
 	do
@@ -86,6 +84,14 @@ then
 			>&2 git commit -m "cweave [$version] hull$i $c."
 		done
 	done
+
+	$path/ctangle horn-count krom-count krom-count
+	git add krom-count.c
+	>&2 git commit -m "ctangle [$version] horn-count krom-count."
+
+	$path/cweave horn-count krom-count krom-count
+	git add krom-count.idx krom-count.scn krom-count.tex
+	>&2 git commit -m "cweave [$version] horn-count krom-count."
 fi
 
 git checkout master

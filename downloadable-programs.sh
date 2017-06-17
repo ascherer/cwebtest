@@ -14,9 +14,9 @@ for FILE in sham.w obdd.w.gz reflect.w.gz reflect.ch.gz hull.w hulls.w hullt.w \
 	polyslave-restart.ch advent.w.gz rost.w ran-prim.w strongchain.w \
 	koda-ruskey.w li-ruskey.w spiders.w topswops.w topswops-fwd.w \
 	co-debruijn.w posets0.w posets.w erection.w unavoidable.w \
-	unavoidable2.w grayspan.w spspan.w grayspspan.w spgraph.w \
-	sand.w zeilberger.w francon.w viennot.w linked-trees.w vacillate.w \
-	embed.w lp.w horn-count.w 15puzzle-korf0.w 15puzzle-korf1.w \
+	unavoidable2.w grayspan.w spspan.w grayspspan.w spgraph.w sand.w \
+	zeilberger.w francon.w viennot.w linked-trees.w vacillate.w embed.w \
+	lp.w horn-count.w krom-count.ch 15puzzle-korf0.w 15puzzle-korf1.w \
 	achain0.w achain1.w achain2.w achain3.w achain4.w achain-all.w \
 	achain-decode.w hyperbolic.w fchains4x.w fchains4x-dontcares.ch \
 	tictactoe.tgz prime-sieve.w prime-sieve-sparse.w prime-sieve-boot.ch \
