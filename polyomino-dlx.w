@@ -214,7 +214,7 @@ typedef struct {
 @ Elements of the linked lists appear in structures of type |node|.
 
 All of the lists will be rather short. So I make no effort to devise
-methods that are asympotically efficient as things get infinitely large.
+methods that are asymptotically efficient as things get infinitely large.
 My main goal is to have a program that's simple and correct.
 (And I hope that it will also be easy and fun to read, when I need to
 refer to it or modify it.)
