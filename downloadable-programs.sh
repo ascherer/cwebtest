@@ -3,7 +3,7 @@
 GET=${1:--no-get}
 
 # Generic download function
-get_file () # [--get] path/to/file
+get_file () # --[no-]get path/to/file
 {
 	FILE=`basename $2`
 	REMOTE=`dirname $2`
@@ -20,9 +20,6 @@ get_file () # [--get] path/to/file
 		curl --head $REMOTE/$FILE
 	fi
 }
-
-# Tarball _not_ in 'programs/' directory
-get_file $GET https://cs.stanford.edu/~uno/words.tgz
 
 # Process extended list of files in 'programs/' directory
 for FILE in `cat downloadable-programs.lst`
