@@ -3,14 +3,14 @@
 GET=${1:--no-get}
 
 # Generic download function
-get_file () # --[no-]get path/to/file
+get_file () # path/to/file
 {
-	FILE=`basename $2`
-	REMOTE=`dirname $2`
+	FILE=`basename $1`
+	REMOTE=`dirname $1`
 
 	echo "cURLing $REMOTE/$FILE"
 
-	if [ "$1" = "--get" ]
+	if [ "$GET" = "--get" ]
 	then
 		if [ -f $FILE ]
 		then curl --remote-time $REMOTE/$FILE -z $FILE -o $FILE
@@ -24,5 +24,5 @@ get_file () # --[no-]get path/to/file
 # Process extended list of files in 'programs/' directory
 for FILE in `cat downloadable-programs.lst`
 do
-	get_file $GET http://www-cs-faculty.stanford.edu/~uno/programs/$FILE
+	get_file http://www-cs-faculty.stanford.edu/~uno/programs/$FILE
 done
