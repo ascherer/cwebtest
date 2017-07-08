@@ -74,8 +74,8 @@ have nonnegative rank.
 For example, the skew ternary tree shown here has 6 nodes and 7 pairs of
 buds. Ranks are shown in red.
 Notice that there's one bud of rank $-1$ for every node of rank~0.
-$$\vcenter{\epsfbox{skew-ternary-calc.1}}\qquad\qquad
-  \vcenter{\epsfbox{skew-ternary-calc.3}}$$
+$$\vcenter{\hbox{\epsfbox{skew-ternary-calc.1}}}\qquad\qquad
+  \vcenter{\hbox{\epsfbox{skew-ternary-calc.3}}}$$
 
 @ Fact: {\sl Every family of $2n+2$ cyclically equivalent ternary trees
 includes exactly four skew ternary trees.}
@@ -124,10 +124,10 @@ $$\vcenter{\halign{#\hfil\cr
 \epsfxsize=.5\hsize \epsfbox{skew-ternary-calc.8}\cr}}$$
 The corresponding skew ternary trees,
 which we might as well show without their buds, are
-$$T=\vcenter{\epsfbox{skew-ternary-calc.10}}\;;\qquad
-T^+=\vcenter{\epsfbox{skew-ternary-calc.11}}\;;\qquad
-T^{++}=\vcenter{\epsfbox{skew-ternary-calc.12}}\;;\qquad
-T^{+++}=\vcenter{\epsfbox{skew-ternary-calc.13}}\;.$$
+$$T=\vcenter{\hbox{\epsfbox{skew-ternary-calc.10}}}\;;\qquad
+T^+=\vcenter{\hbox{\epsfbox{skew-ternary-calc.11}}}\;;\qquad
+T^{++}=\vcenter{\hbox{\epsfbox{skew-ternary-calc.12}}}\;;\qquad
+T^{+++}=\vcenter{\hbox{\epsfbox{skew-ternary-calc.13}}}\;.$$
 Notice the notation used here, based on a well-defined operator
 $T\mapsto T^+$ that takes one skew ternary tree to another.
 Since $T^{++++}=T$, we also abbreviate $T^{+++}$ as $T^-$;
@@ -536,7 +536,7 @@ One advantage of a representation like $(**)$ is the fact that it nicely
 represents also the {\it dual\/} graph, in which vertices become faces, faces
 become vertices, and edges ``rotate'' by $90^\circ$. For example, the dual
 of $(*)$ is the planar graph
-$$\vcenter{\epsfbox{skew-ternary-calc.22}}\,.\eqno({*{*}*})$$
+$$\vcenter{\hbox{\epsfbox{skew-ternary-calc.22}}}\,.\eqno({*{*}*})$$
 
 @ Notice that each of the edges $\{a,b,c,d,e,f\}$ in $(*)$ appears as
 a vertex in~$(**)$. Every such vertex has degree~4, and it connects
@@ -558,9 +558,9 @@ the other, smoothly and without trickery. In particular, we could
 redraw $(*)$ in three equivalent ways by choosing any of the other
 faces to be exterior:
 $$\def\epsfsize#1#2{.8#1}
-\vcenter{\epsfbox{skew-ternary-calc.23}}\qquad
-  \vcenter{\epsfbox{skew-ternary-calc.24}}\qquad
-  \vcenter{\epsfbox{skew-ternary-calc.25}}$$
+\vcenter{\hbox{\epsfbox{skew-ternary-calc.23}}}\qquad
+  \vcenter{\hbox{\epsfbox{skew-ternary-calc.24}}}\qquad
+  \vcenter{\hbox{\epsfbox{skew-ternary-calc.25}}}$$
 Each of these graphs corresponds precisely
 to the vertices, edges, faces, and pips of~$(**)$;
 and so are three variants of~$(*{*})$! Butleft-right reflection
@@ -957,7 +957,7 @@ an \RNBPM/ if we choose any edge~$u$ as a designated root edge,
 and if we consider the pip $u_3$ to be
 on its exterior face. But that example is too simple to reveal
 the general situation; so let's consider something a bit more complex:
-$$\vcenter{\epsfbox{skew-ternary-calc.40}}\eqno(\dag)$$
+$$\vcenter{\hbox{\epsfbox{skew-ternary-calc.40}}}\eqno(\dag)$$
 Here $m=4$ and the exterior face has $p=7$ other edges; its cycle is therefore
 $(r_3d^2_3d^1_3c^3_3c^2_3c^1_3b^1_3a^1_3)$. Furthermore the
 interior face touching~$r$ is
@@ -991,7 +991,7 @@ are the appropriate splicings.
 
 @ Here, for handy reference, are the smallest \RNBPM/s and their
 canonical permutations:
-$$\def\\#1{$\vcenter{\medskip\epsfbox{skew-ternary-calc.3#1}\medskip}$}
+$$\def\\#1{$\vcenter{\medskip\hbox{\epsfbox{skew-ternary-calc.3#1}}\medskip}$}
 \vcenter{\halign{\hfil\\#\hfil&\qquad$#$\hfil\cr
 0&(r_0)(r_2)(r_3r_1)\cr
 1&(r_0a_2)(a_0r_2)(r_3a_3)(a_1r_1)\cr
@@ -1023,11 +1023,11 @@ somehow related, so I decided to implement both of them in this program.
 
 According to their construction, an \RNBPM/ such as $(\dag)$ is
 represented by a skew ternary tree of the form
-$$\vcenter{\epsfbox{skew-ternary-calc.41}}\quad\lower15pt\hbox{,}$$
+$$\vcenter{\hbox{\epsfbox{skew-ternary-calc.41}}}\quad\lower15pt\hbox{,}$$
 where $A'$, $B'$, $C'$, and $D'$ represent the doubly rooted \RNBPM/s
 of the $m=4$ blocks that arise when edge~$r$ is removed.
 Thus the chart corresponding to their representation will have the form
-$$\vcenter{\epsfbox{skew-ternary-calc.42}}\quad\raise10pt\hbox{,}$$
+$$\vcenter{\hbox{\epsfbox{skew-ternary-calc.42}}}\quad\raise10pt\hbox{,}$$
 where $A^*$, $B^*$, $C^*$, and $D^*$ represent the subtrees $A'$, $B'$,
 $C'$, and $D'$ in some fashion.
 
@@ -1249,7 +1249,7 @@ as in~$(\dag)$, the DDP correspondence relies on an interesting
 just two others, $S$ and $T$, where $S$ is doubly rooted but
 $T$ is just singly rooted. The following picture illustrates
 this operation:
-$$\vcenter{\epsfbox{skew-ternary-calc.50}}\eqno(\ddag)$$
+$$\vcenter{\hbox{\epsfbox{skew-ternary-calc.50}}}\eqno(\ddag)$$
 Here $S$ has three edges $a^1$, $a^2$, $a^3$ on its exterior
 face, besides its root edge; and edge $a^2$ is the second root
 (distinguishable by the fact that the first root edge has no name).
@@ -1293,8 +1293,8 @@ this attaches $S$ to~$T$.
 Step (ii) then corresponds to splicing with $(c_2x)$, where
 $x=c_2\alpha$ is the first pip counterclockwise from $c$ in
 the cycle for $u=w$. This leaves edge $c$ ``dangling'':
-$$\hbox{\rm(i)}\quad\vcenter{\epsfbox{skew-ternary-calc.51}}\;;\qquad
-  \hbox{\rm(ii)}\quad\vcenter{\epsfbox{skew-ternary-calc.52}}$$
+$$\hbox{\rm(i)}\quad\vcenter{\hbox{\epsfbox{skew-ternary-calc.51}}}\;;\qquad
+  \hbox{\rm(ii)}\quad\vcenter{\hbox{\epsfbox{skew-ternary-calc.52}}}$$
 Finally, a splice with $(c_2a^1_2)$ produces $S\join c T$.
 
 @ The canonical permutation representations are now different, because
@@ -1302,11 +1302,11 @@ edge labels are assigned in a different order.
 Here, again for handy reference, is the new list for all cases
 with at most three nonroot edges---showing also the skew ternary
 trees that we are about to construct for them:
-$$\def\\#1{$\vcenter{\medskip\epsfbox{skew-ternary-calc.9#1}\medskip}$}
+$$\def\\#1{$\vcenter{\medskip\hbox{\epsfbox{skew-ternary-calc.9#1}}\medskip}$}
 \def\tree#1{\vcenter{\def\epsfsize##1##2{.8##1}%
-      \epsfbox{skew-ternary-calc.10#1}}}
+      \hbox{\epsfbox{skew-ternary-calc.10#1}}}}
 \def\btree#1{\vcenter{\def\epsfsize##1##2{.8##1}%
-      \epsfbox{skew-ternary-calc.20#1}}}
+      \hbox{\epsfbox{skew-ternary-calc.20#1}}}}
 \vcenter{\halign{\hfil\\#\hfil&\qquad$#$\hfil&\qquad$#$\cr
 0&(r_0)(r_2)(r_3r_1)&\tree0\cr
 1&(r_0a_2)(a_0r_2)(r_3a_3)(a_1r_1)&\tree1=\tree0\join A\tree0\cr
