@@ -1,5 +1,7 @@
 \datethis
 \input epsf
+\let\oldepsfbox=\epsfbox
+\def\epsfbox#1{\hbox{\oldepsfbox{#1}}}
 
 \def\adj{\mathrel{\!\mathrel-\mkern-8mu\mathrel-\mkern-8mu\mathrel-\!}}
    % adjacent vertices
