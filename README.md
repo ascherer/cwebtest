@@ -2,7 +2,7 @@
 
 the purpose of this project is quality ensurance for variants of cweb.
 
-* [original cweb](http://www-cs-faculty.stanford.edu/~uno/cweb.html) is the
+* [original cweb](http://www-cs-faculty.stanford.edu/~knuth/cweb.html) is the
   canonical version of this software system. on unix extract the 'latest'
   source tarball and invoke `make`. or use [cweb on
   github](https://github.com/ascherer/cweb).
@@ -30,9 +30,9 @@ the purpose of this project is quality ensurance for variants of cweb.
 ## major applications
 
 cweb is a major representative of the [literate
-programming](http://www-cs-faculty.stanford.edu/~uno/lp.html) paradigm. its
+programming](http://www-cs-faculty.stanford.edu/~knuth/lp.html) paradigm. its
 creator, [donald ervin
-knuth](http://www-cs-faculty.stanford.edu/~uno/index.html), used it mainly for
+knuth](http://www-cs-faculty.stanford.edu/~knuth/index.html), used it mainly for
 two large sets of well-documented software systems:
 
 * [stanford graphbase](http://www-cs-staff.stanford.edu/~knuth/sgb.html)
@@ -42,9 +42,9 @@ two large sets of well-documented software systems:
 
 in addition, don knuth uses cweb for many more smaller programs that are
 used as exemplary implementations of algorithms, mostly from
-[TAOCP](http://www-cs-faculty.stanford.edu/%7Euno/taocp.html).
+[TAOCP](http://www-cs-faculty.stanford.edu/~knuth/taocp.html).
 
-* [tons of cweb code](http://www-cs-faculty.stanford.edu/~uno/programs.html)
+* [tons of cweb code](http://www-cs-faculty.stanford.edu/~knuth/programs.html)
 
 cweb itself is 'frozen' (unless catastrophic bugs are found), but developers
 are encouraged to work with the sources and improve or extend them. however,

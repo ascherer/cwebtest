@@ -24,5 +24,5 @@ get_file () # path/to/file
 # Process extended list of files in 'programs/' directory
 for FILE in `cat downloadable-programs.lst`
 do
-	get_file http://www-cs-faculty.stanford.edu/~uno/programs/$FILE
+	get_file http://www-cs-faculty.stanford.edu/~knuth/programs/$FILE
 done
