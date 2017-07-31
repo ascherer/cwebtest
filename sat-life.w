@@ -98,7 +98,7 @@ char p[maxx+2][maxy+2]; /* is cell $(x,y)$ potentially alive? */
 char have_b[maxx+2][maxy+2]; /* did we already generate $b(x,y)$? */
 char have_d[maxx+2][maxy+2]; /* did we already generate $d(x,y)$? */
 char have_e[maxx+2][maxy+4]; /* did we already generate $e(x,y)$? */
-char have_f[maxx+4][maxy+2]; /* did we already generate $f(x,y)$? */
+char have_f[maxx+4][maxy+2]; /* did we already generate $f(x-2,y)$? */
 int tt; /* time as given on the command line */
 int xmax,ymax; /* the number of rows and columns in the input pattern */
 int xmin=maxx,ymin=maxy; /* limits in the other direction */
