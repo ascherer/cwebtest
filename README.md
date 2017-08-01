@@ -18,9 +18,9 @@ the purpose of this project is quality ensurance for variants of cweb.
   `debbuild -ba --with-ansi SPECS/cwebbin.spec` or
   `rpmbuild -ba --with-ansi SPECS/cwebbin.spec` depending on your (GNU/Linux)
   system. either command will run `make -f Makefile.unix boot cautiously all`
-  after modifying the `Makefile` so that only the minimal `ansi` changefiles
-  are applied to the sources. (you can apply these modifications to `Makefile`
-  manually with the `sed` command in `cwebbin.spec`.)
+  after modifying `Makefile.unix` so that only the minimal `ansi` changefiles
+  are applied to the sources. (you can apply these modifications to
+  `Makefile.unix` manually with the `sed` command in `cwebbin.spec`.)
 * [hypertex version](https://github.com/ascherer/cwebbin/tree/hyper-sync-tex)
   is the latest extension of cweb/cwebbin. it extends **cweave** with the
   **r** option; switched 'on' with **+r**, cweave adds back-references to the
@@ -38,7 +38,7 @@ two large sets of well-documented software systems:
 * [stanford graphbase](http://www-cs-staff.stanford.edu/~knuth/sgb.html)
 * [mmix](http://www-cs-faculty.stanford.edu/~knuth/mmix.html)
 
-## individual example programmes
+## individual example programs
 
 in addition, don knuth uses cweb for many more smaller programs that are
 used as exemplary implementations of algorithms, mostly from
@@ -49,26 +49,24 @@ used as exemplary implementations of algorithms, mostly from
 cweb itself is 'frozen' (unless catastrophic bugs are found), but developers
 are encouraged to work with the sources and improve or extend them. however,
 don knuth requests that such modified versions of cweb "don't screw up
-[_these example programmes_] any more than they would screw up today!"
+[_these example programs_] any more than they would screw up today!"
 
-and some of these example programs are "really OLD indeed. [...] they should be read but not
-executed!"
+and some of these example programs are "really OLD indeed. [...] they should be
+read but not executed!"
 
 # how to use this project
 
-start with `git clone https://github.com/ascherer/cwebtest`. the
-default branch **master** is used to set up the environment by extracting the
-full set of knuthian example programmes. if you want to cross-check with
-stanford, use the local `./downloadable-programs.sh --get` and `gzip -d` on
-all gzipped master sources.
+start with `git clone https://github.com/ascherer/cwebtest`. the default branch
+**master** is used to set up the environment by extracting the full set of
+knuthian example programs. if you want to cross-check with stanford, use the
+local `./downloadable-programs.sh --get` and `gzip -d` on all gzipped master
+sources.
 
 now invoke `./runall.sh -p <PATH TO YOUR CWEB> -v <VERSION OF YOUR CWEB>`.
-this will create a new branch with this commandline as its name
-by applying **ctangle** and **cweave** on **all** `.w` sources
-(ca. 250 commits at the time of writing). to see the
-differences just compare the heads of such branches.
+this will create a new branch with this commandline as its name by applying
+**ctangle** and **cweave** on **all** `.w` sources (ca. 250 commits at the time
+of writing). to see the differences just compare the heads of such branches.
 
 if you care about modified versions of some of the example programs, you can
 add the `-c` option to the `./runall.sh` commandline, which applies (most of)
-the changefiles available and adds `-changes` to the created test branch name,
-and the `-h` option to apply the cross-product of "hull" examples/changes.
+the changefiles available and adds `-changes` to the created test branch name.
