@@ -1,5 +1,7 @@
 \datethis
 \input epsf
+\let\possiblyflakyepsfbox=\epsfbox
+\def\epsfbox#1{\hbox{\possiblyflakyepsfbox{#1}}}
 \def\caret/{\smash{\lower4pt\hbox to0pt{\hss$\scriptscriptstyle\land$\hss}}}
 \def\qcaret/{`\thinspace\caret/\thinspace'} % quoted caret
 @s delete unknown

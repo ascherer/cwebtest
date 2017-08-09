@@ -1,6 +1,8 @@
 \datethis
 @s class unknown
 \input epsf
+\let\possiblyflakyepsfbox=\epsfbox
+\def\epsfbox#1{\hbox{\possiblyflakyepsfbox{#1}}}
 \def\lab#1:#2/{$\.{#1}_{#2}$}
 
 @*Introduction. The purpose of this program is to enumerate polyominoes

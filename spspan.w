@@ -1,5 +1,7 @@
 \datethis
 \input epsf
+\let\possiblyflakyepsfbox=\epsfbox
+\def\epsfbox#1{\hbox{\possiblyflakyepsfbox{#1}}}
 \def\adj{\mathrel{\!\mathrel-\mkern-8mu\mathrel-\mkern-8mu\mathrel-\!}}
    % adjacent vertices
 @* Introduction. This program generates all spanning trees of a given

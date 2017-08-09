@@ -2,6 +2,8 @@
 \font\logo=logo10
 \def\MP{{\logo METAPOST}}
 \input epsf
+\let\possiblyflakyepsfbox=\epsfbox
+\def\epsfbox#1{\hbox{\possiblyflakyepsfbox{#1}}}
 
 @f mod TeX
 \let\mod=\bmod

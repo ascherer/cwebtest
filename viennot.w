@@ -2,6 +2,8 @@
 \datethis
 \def\title{VIENNOT}
 \input epsf
+\let\possiblyflakyepsfbox=\epsfbox
+\def\epsfbox#1{\hbox{\possiblyflakyepsfbox{#1}}}
 
 @*Introduction. This short program implements a Viennot-inspired
 bijection between Kepler towers with $w$~walls
