@@ -1,12 +1,12 @@
-@x in search for best_col
+@x in search for best_itm, give pref to items whose name begins with #
     if (t<=score) {
       if (t<score || s<best_s || (s==best_s && nd[k].len>best_l))
-        score=t,best_col=k,best_s=s,best_l=nd[k].len,p=1;
+        score=t,best_itm=k,best_s=s,best_l=nd[k].len,p=1;
       else if (s==best_s && nd[k].len==best_l) {
 @y
     if (score==infty || t<=1 || (t<=score && cl[k].name[0]=='#')) {
-      if (t<score || s<best_s || (s==best_s && nd[k].len>best_l))
-        score=t,best_col=k,best_s=s,best_l=nd[k].len,p=1;
+      if (t<score || s<best_s || (score && s==best_s && nd[k].len>best_l))
+        score=t,best_itm=k,best_s=s,best_l=nd[k].len,p=1;
       else if (score && s==best_s && nd[k].len==best_l) {
 @z
 @x
@@ -14,11 +14,11 @@
     printf(""O"lld:\n",count);
     for (k=0;k<level;k++) {
       pp=choice[k];
-      cc=pp<last_col? pp: nd[pp].col;
-      if (!first_tweak[k]) print_row(pp,stdout,nd[cc].down,scor[k]);
-      else print_row(pp,stdout,first_tweak[k],scor[k]);
+      cc=pp<last_itm? pp: nd[pp].itm;
+      if (!first_tweak[k]) print_option(pp,stdout,nd[cc].down,scor[k]);
+      else print_option(pp,stdout,first_tweak[k],scor[k]);
     }
-    if (p) @<Print the free rows@>;
+    if (p) @<Print the free options@>;
     fflush(stdout);
   }
 @y
@@ -26,7 +26,7 @@
     register cc,d,l=0,s,t,x,y,xy;
     for (k=0;k<level;k++) {
       for (r=choice[k]+1;;) {
-        cc=nd[r].col;
+        cc=nd[r].itm;
         if (cc<=0) {
           r=nd[r].up;@+continue;
         }
