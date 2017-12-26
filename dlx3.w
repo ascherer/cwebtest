@@ -61,20 +61,6 @@ as this one, but it was less general than
 Later I came gradually to
 realize that the ideas have many, many other applications.]
 
-@ The introduction of lower bounds adds a new twist. Suppose, for example,
-all lower bounds $a_j$ are zero, while all upper bounds $b_j$ exceed or
-equal the number of options using that item. Then the item doesn't
-impose any constraint whatsoever, and all $2^m$ subsets of the $m$~options
-are solutions to the problem.
-
-We can't expect a user to be so foolish as to present us with such a case.
-But we might well end up with a subproblem of that form; and then
-there seems to be no point in listing all of the solutions.
-
-Thus we distinguish ``core solutions'' from ``total solutions,'' where
-the number of total solutions is the sum of $2^k$ over all core solutions
-that have $k$ free options.
-
 @ After this program finds all solutions, it normally prints their total
 number on |stderr|, together with statistics about how many
 nodes were in the search tree, and how many ``updates'' and
@@ -182,9 +168,7 @@ int show_choices_gap=1000000; /* below level |maxl-show_choices_gap|,
 int show_levels_max=1000000; /* above this level, state reports stop */
 int maxl=0; /* maximum level actually reached */
 char buf[bufsize]; /* input buffer */
-ullng count; /* core solutions found so far */
-double totcount; /* total solutions found so far */
-int noncore; /* does |totcount| exceed |count|? */
+ullng count; /* solutions found so far */
 ullng options; /* options seen so far */
 ullng imems,mems; /* mem counts */
 ullng updates; /* update counts */
@@ -220,13 +204,10 @@ if (k) {
 }
 if (randomizing) gb_init_rand(random_seed);
 
-@ The program doesn't compute or report |totcount| unless necessary.
-
-@<Give statistics about the run@>=
+@ @<Give statistics about the run@>=
 {
   fprintf(stderr,"Altogether "O"llu solution"O"s",
                               count,count==1?"":"s");
-  if (noncore) fprintf(stderr," ("O".12g total)",totcount);
   fprintf(stderr,", "O"llu+"O"llu mems,",imems,mems);
   fprintf(stderr," "O"llu updates, "O"llu cleansings,",
                               updates,cleansings);
@@ -352,7 +333,8 @@ to a given head location.
 @<Sub...@>=
 void print_option(int p,FILE *stream,int head,int score) {
   register int k,q;
-  if (p==nd[head].itm) fprintf(stream," null "O".8s",cl[p].name);
+  if ((p<last_itm && p==head) || (head>=last_itm && p==nd[head].itm))
+    fprintf(stream," null "O".8s",cl[p].name);
   else {
     if (p<last_itm || p>=last_node || nd[p].itm<=0) {
       fprintf(stderr,"Illegal option "O"d!\n",p);
@@ -369,7 +351,7 @@ void print_option(int p,FILE *stream,int head,int score) {
     }
   }
   for (q=head,k=1;q!=p;k++) {
-    if (q==nd[p].itm) {
+    if (p>=last_itm && q==nd[p].itm) {
       fprintf(stream," (?)\n");@+return; /* option not in its item list! */
     }@+else q=nd[q].down;
   }
@@ -628,7 +610,7 @@ The basic operation is ``covering an item.'' This means removing it
 from the list of items needing to be covered, and ``hiding'' its
 options: removing nodes from other lists whenever they belong to an option of
 a node in this item's list. We cover the chosen item when it has
-|bound=1| and |slack=0|.
+|bound=1|.
 
 There's also an auxiliary operation called ``tweaking an item,'' used when
 covering is inappropriate. In that case we simply hide the topmost option
@@ -1010,11 +992,6 @@ item first is $(1,3,6,6\cdot3,6\cdot6,6\cdot10)$. But if we choose
 the larger item first it is $(1,3,6,10,10\cdot3,10\cdot6)$, which is
 smaller in the middle levels.
 
-Another special case also deserves mention: An item is completely
-unconstrained when |s=b>=l|. Such items are {\it never\/} selected
-as ``best''; if all items have this property, we've found a core
-solution, as mentioned above.
-
 @d infty max_nodes /* the ``score'' of a completely unconstrained item */
 
 @<Set |best_itm| to  the best item for branching...@>=
@@ -1031,15 +1008,13 @@ for (o,k=cl[root].next;k!=root;o,k=cl[k].next) {
                                  nd[k].len+s-cl[k].bound+1);
     else fprintf(stderr," "O".8s("O"d)",cl[k].name,nd[k].len);
   }
-  if ((o,nd[k].len>cl[k].bound) || (s<cl[k].bound)) {
-    t=nd[k].len+s-cl[k].bound+1;
-    if (t<=score) {
-      if (t<score || s<best_s || (s==best_s && nd[k].len>best_l))
-        score=t,best_itm=k,best_s=s,best_l=nd[k].len,p=1;
-      else if (s==best_s && nd[k].len==best_l) {
-        p++; /* this many items achieve the min */
-        if (randomizing && (mems+=4,!gb_unif_rand(p))) best_itm=k;
-      }
+  t=nd[k].len+s-cl[k].bound+1;
+  if (t<=score) {
+    if (t<score || s<best_s || (s==best_s && nd[k].len>best_l))
+      score=t,best_itm=k,best_s=s,best_l=nd[k].len,p=1;
+    else if (s==best_s && nd[k].len==best_l) {
+      p++; /* this many items achieve the min */
+      if (randomizing && (mems+=4,!gb_unif_rand(p))) best_itm=k;
     }
   }
 }
@@ -1047,20 +1022,12 @@ if ((vbose&show_details) &&
     level<show_choices_max && level>=maxl-show_choices_gap) {
   if (score<infty)
     fprintf(stderr," branching on "O".8s("O"d)\n",cl[best_itm].name,score);
-  else fprintf(stderr," core solution\n");
+  else fprintf(stderr," solution\n");
 }
 
 @ @<Record a solution and |goto backdown|@>=
 {
   count++;
-  @<Set |p| to the number of options remaining@>;
-  if (p && !noncore) noncore=1,totcount=count-1;
-  if (noncore) {
-    register double f=1.0;
-    while (p>60) f*=1LL<<60,p-=60;
-    f*=1LL<<p;
-    totcount+=f;
-  }
   if (spacing && (count mod spacing==0)) {
     printf(""O"lld:\n",count);
     for (k=0;k<level;k++) {
@@ -1069,29 +1036,10 @@ if ((vbose&show_details) &&
       if (!first_tweak[k]) print_option(pp,stdout,nd[cc].down,scor[k]);
       else print_option(pp,stdout,first_tweak[k],scor[k]);
     }
-    if (p) @<Print the free options@>;
     fflush(stdout);
   }
   if (count>=maxcount) goto done;
   goto backdown;
-}
-
-@ @<Set |p| to the number of options remaining@>=
-for (o,p=0,cc=cl[root].next;cc!=root;o,cc=cl[cc].next) {
-  o,p+=nd[cc].len;
-  cover(cc,0);
-}
-for (cc=cl[root].prev;cc!=root;o,cc=cl[cc].prev) uncover(cc,0);
-
-@ @<Print the free options@>=
-{
-  printf(" and "O"d free option"O"s:\n",p,p==1?"":"s");
-  for (cc=cl[root].next;cc!=root;cc=cl[cc].next) {
-    for (r=nd[cc].down;r!=cc;r=nd[r].down)
-      print_option(r,stdout,nd[cc].down,nd[cc].len);
-    cover(cc,0);
-  }
-  for (cc=cl[root].prev;cc!=root; cc=cl[cc].prev) uncover(cc,0);
 }
 
 @ @<Sub...@>=
@@ -1108,8 +1056,8 @@ void print_state(void) {
       break;
     }
   }
-  fprintf(stderr," "O"lld "O"ssols, "O"lld mems, and max level "O"d so far.\n",
-                              count,noncore?"core ":"",mems,maxl);
+  fprintf(stderr," "O"lld sols, "O"lld mems, and max level "O"d so far.\n",
+                              count,mems,maxl);
 }
       
 @ During a long run, it's helpful to have some way to measure progress.
