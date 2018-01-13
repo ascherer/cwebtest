@@ -13,16 +13,16 @@ get_file () # path/to/file
 	if [ "$GET" = "--get" ]
 	then
 		if [ -f $FILE ]
-		then curl --remote-time $REMOTE/$FILE -z $FILE -o $FILE
-		else curl --remote-time $REMOTE/$FILE -o $FILE
+		then curl -k --remote-time $REMOTE/$FILE -z $FILE -o $FILE
+		else curl -k --remote-time $REMOTE/$FILE -o $FILE
 		fi
 	else
-		curl --head $REMOTE/$FILE
+		curl -k --head $REMOTE/$FILE
 	fi
 }
 
 # Process extended list of files in 'programs/' directory
 for FILE in `cat downloadable-programs.lst`
 do
-	get_file http://www-cs-faculty.stanford.edu/~knuth/programs/$FILE
+	get_file https://www-cs-faculty.stanford.edu/~knuth/programs/$FILE
 done
