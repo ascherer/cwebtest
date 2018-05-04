@@ -1,13 +1,13 @@
 @x in search for best_itm, give pref to items whose name begins with #
-    if (t<=score) {
-      if (t<score || s<best_s || (s==best_s && nd[k].len>best_l))
-        score=t,best_itm=k,best_s=s,best_l=nd[k].len,p=1;
-      else if (s==best_s && nd[k].len==best_l) {
+  if (t<=score) {
+    if (t<score || s<best_s || (s==best_s && nd[k].len>best_l))
+      score=t,best_itm=k,best_s=s,best_l=nd[k].len,p=1;
+    else if (s==best_s && nd[k].len==best_l) {
 @y
-    if (score==infty || t<=1 || (t<=score && cl[k].name[0]=='#')) {
-      if (t<score || s<best_s || (score && s==best_s && nd[k].len>best_l))
-        score=t,best_itm=k,best_s=s,best_l=nd[k].len,p=1;
-      else if (score && s==best_s && nd[k].len==best_l) {
+  if (score==infty || t<=1 || (t<=score && cl[k].name[0]=='#')) {
+    if (t<score || s<best_s || (score && s==best_s && nd[k].len>best_l))
+      score=t,best_itm=k,best_s=s,best_l=nd[k].len,p=1;
+    else if (score && s==best_s && nd[k].len==best_l) {
 @z
 @x
   if (spacing && (count mod spacing==0)) {
@@ -18,7 +18,6 @@
       if (!first_tweak[k]) print_option(pp,stdout,nd[cc].down,scor[k]);
       else print_option(pp,stdout,first_tweak[k],scor[k]);
     }
-    if (p) @<Print the free options@>;
     fflush(stdout);
   }
 @y

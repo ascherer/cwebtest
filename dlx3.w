@@ -113,6 +113,7 @@ done:@+if (vbose&show_tots)
     @<Report the item totals@>;
   if (vbose&show_profile) @<Print the profile@>;
   if (vbose&show_basics) @<Give statistics about the run@>;
+  @<Close the files@>;
 }
 
 @ You can control the amount of output, as well as certain properties
@@ -148,6 +149,9 @@ stop after this many solutions have been found;
 \item{$\bullet$}
 `\.T$\langle\,$integer$\,\rangle$' sets |timeout| (which causes abrupt
 termination if |mems>timeout| at the beginning of a level).
+\item{$\bullet$}
+`\.S$\langle\,$filename$\,\rangle$' to output a ``shape file'' that encodes
+the search tree.
 
 @d show_basics 1 /* |vbose| code for basic stats; this is the default */
 @d show_choices 2 /* |vbose| code for backtrack logging */
@@ -179,6 +183,8 @@ ullng thresh=0; /* report when |mems| exceeds this, if |delta!=0| */
 ullng delta=0; /* report every |delta| or so mems */
 ullng maxcount=0xffffffffffffffff; /* stop after finding this many solutions */
 ullng timeout=0x1fffffffffffffff; /* give up after this many mems */
+FILE *shape_file; /* file for optional output of search tree shape */
+char *shape_name; /* its name */
 
 @ If an option appears more than once on the command line, the first
 appearance takes precedence.
@@ -194,11 +200,16 @@ case 'C': k|=(sscanf(argv[j]+1,""O"d",&show_levels_max)-1);@+break;
 case 'l': k|=(sscanf(argv[j]+1,""O"d",&show_choices_gap)-1);@+break;
 case 't': k|=(sscanf(argv[j]+1,""O"lld",&maxcount)-1);@+break;
 case 'T': k|=(sscanf(argv[j]+1,""O"lld",&timeout)-1);@+break;
+case 'S': shape_name=argv[j]+1, shape_file=fopen(shape_name,"w");
+  if (!shape_file)
+    fprintf(stderr,"Sorry, I can't open file `"O"s' for writing!\n",
+      shape_name);
+  break;
 default: k=1; /* unrecognized command-line option */
 }
 if (k) {
-  fprintf(stderr, "Usage: "O"s [v<n>] [m<n>] [s<n>] [d<n>]"
-      " [c<n>] [C<n>] [l<n>] [t<n>] [T<n>] < foo.dlx\n",
+  fprintf(stderr, "Usage: "O"s [v<n>] [m<n>] [s<n>] [d<n>]"@|
+      " [c<n>] [C<n>] [l<n>] [t<n>] [T<n>] [S<bar>] < foo.dlx\n",
                             argv[0]);
   exit(-1);
 }
@@ -215,6 +226,9 @@ if (randomizing) gb_init_rand(random_seed);
   fprintf(stderr," "O"llu bytes, "O"llu nodes.\n",
                               bytes,nodes);
 }
+
+@ @ @<Close the files@>=
+if (shape_file) fclose(shape_file);
 
 @*Data structures.
 Each item of the input matrix is represented by an \&{item} struct,
@@ -627,7 +641,7 @@ if (sanity_checking) sanity();
 @<Set |best_itm| to the best item for branching, and let |score| be
   its branching degree@>;
 if (score<=0) goto backdown; /* not enough options left in this item */
-if (score==infty) @<Record a solution and |goto backdown|@>;
+if (score==infty) @<Visit a solution and |goto backdown|@>;
 scor[level]=score,first_tweak[level]=0;
   /* for diagnostics only, so no mems charged */
 oo,cur_node=choice[level]=nd[best_itm].down;
@@ -647,7 +661,7 @@ backdown:@+if (level==0) goto done;
 level--;
 oo,cur_node=choice[level],best_itm=nd[cur_node].itm,score=scor[level];
 if (cur_node<last_itm) @<Reactivate |best_itm| and |goto backup|@>;
- @<Uncover or partially uncover all other items of |cur_node|'s option@>;
+@<Uncover or partially uncover all other items of |cur_node|'s option@>;
 oo,cur_node=choice[level]=nd[cur_node].down;@+goto advance;
 
 @ @<Glob...@>=
@@ -1023,6 +1037,18 @@ if ((vbose&show_details) &&
   if (score<infty)
     fprintf(stderr," branching on "O".8s("O"d)\n",cl[best_itm].name,score);
   else fprintf(stderr," solution\n");
+}
+if (shape_file && score<infty) {
+  fprintf(shape_file,""O"d "O".8s\n",score>=0?score:0,cl[best_itm].name);
+  fflush(shape_file);
+}
+
+@ @<Visit a solution and |goto backdown|@>=
+{
+  if (shape_file) {
+    fprintf(shape_file,"sol\n");@+fflush(shape_file);
+  }
+  @<Record a solution and |goto backdown|@>;
 }
 
 @ @<Record a solution and |goto backdown|@>=

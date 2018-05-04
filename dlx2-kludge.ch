@@ -17,12 +17,12 @@ After this program finds all the desired solutions,
 it normally prints their total
 @z
 @x here's where the kludge happens
-recover: @<Uncover all other columns of |cur_node|@>;
+recover: @<Uncover all other items of |cur_node|@>;
 @y
-recover: @<Uncover all other columns of |cur_node|@>;
+recover: @<Uncover all other items of |cur_node|@>;
 if (level==0) {
-  for (p=cur_node-1;o,nd[p].col>0;p--) ;
-  oo,p=nd[p].down,cc=nd[p].col; /* fetch the last item of the row */
+  for (p=cur_node-1;o,nd[p].itm>0;p--) ;
+  oo,p=nd[p].down,cc=nd[p].itm; /* fetch the last item of the row */
   if (cc>=second && !nd[p].color)
     cover(cc); /* cover it, if secondary and uncolored */
 }

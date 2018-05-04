@@ -7,7 +7,6 @@
       if (!first_tweak[k]) print_option(pp,stdout,nd[cc].down,scor[k]);
       else print_option(pp,stdout,first_tweak[k],scor[k]);
     }
-    if (p) @<Print the free options@>;
     fflush(stdout);
   }
 @y
