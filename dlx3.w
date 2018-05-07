@@ -227,7 +227,7 @@ if (randomizing) gb_init_rand(random_seed);
                               bytes,nodes);
 }
 
-@ @ @<Close the files@>=
+@ @<Close the files@>=
 if (shape_file) fclose(shape_file);
 
 @*Data structures.
