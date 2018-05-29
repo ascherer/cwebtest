@@ -197,7 +197,7 @@ by specifying options on the command line:
 `\.v$\langle\,$integer$\,\rangle$' enables or disables various kinds of verbose
  output on |stderr|, given by binary codes such as |show_choices|;
 \item{$\bullet$}
-`\.d$\langle\,$integer$\,\rangle$' to sets |delta|, which causes periodic
+`\.d$\langle\,$integer$\,\rangle$' sets |delta|, which causes periodic
 state reports on |stderr| after the algorithm has performed approximately
 |delta| mems since the previous report;
 \item{$\bullet$}

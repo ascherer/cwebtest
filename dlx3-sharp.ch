@@ -1,11 +1,17 @@
+@x
+@d infty max_nodes /* the ``score'' of a completely unconstrained item */
+@y
+@d infty 0x7fffffff /* the ``score'' of a completely unconstrained item */
+@z
 @x in search for best_itm, give pref to items whose name begins with #
   if (t<=score) {
-    if (t<score || s<best_s || (s==best_s && nd[k].len>best_l))
-      score=t,best_itm=k,best_s=s,best_l=nd[k].len,p=1;
-    else if (s==best_s && nd[k].len==best_l) {
-@y NB: sharp items should come FIRST in the list
-  if (score==infty || t<=1 || (t<=score && cl[k].name[0]=='#')) {
-    if (t<score || s<best_s || (score && s==best_s && nd[k].len>best_l))
-      score=t,best_itm=k,best_s=s,best_l=nd[k].len,p=1;
-    else if (score && s==best_s && nd[k].len==best_l) {
+@y
+  if (t<=score && t>1 && (o,cl[k].name[0]!='#')) t+=last_node;
+  if (t<=score) {
+@z
+@x
+if ((vbose&show_details) &&
+@y
+if (score>last_node && score<infty) score-=last_node; /* remove the bias */
+if ((vbose&show_details) &&
 @z

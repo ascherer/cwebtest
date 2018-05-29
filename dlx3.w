@@ -130,7 +130,7 @@ random choices in key places (thus providing some variety, although
 the solutions are by no means uniformly random), and it also
 defines the seed for any random numbers that are used;
 \item{$\bullet$}
-`\.d$\langle\,$integer$\,\rangle$' to sets |delta|, which causes periodic
+`\.d$\langle\,$integer$\,\rangle$' sets |delta|, which causes periodic
 state reports on |stderr| after the algorithm has performed approximately
 |delta| mems since the previous report;
 \item{$\bullet$}
@@ -148,7 +148,7 @@ choices are shown during verbose tracing;
 stop after this many solutions have been found;
 \item{$\bullet$}
 `\.T$\langle\,$integer$\,\rangle$' sets |timeout| (which causes abrupt
-termination if |mems>timeout| at the beginning of a level).
+termination if |mems>timeout| at the beginning of a level);
 \item{$\bullet$}
 `\.S$\langle\,$filename$\,\rangle$' to output a ``shape file'' that encodes
 the search tree.
@@ -1008,7 +1008,7 @@ smaller in the middle levels.
 
 @d infty max_nodes /* the ``score'' of a completely unconstrained item */
 
-@<Set |best_itm| to  the best item for branching...@>=
+@<Set |best_itm| to the best item for branching...@>=
 score=infty;
 if ((vbose&show_details) &&
     level<show_choices_max && level>=maxl-show_choices_gap)
