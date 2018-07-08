@@ -154,7 +154,7 @@ Here is the overall structure:
 
 @d max_level 500 /* at most this many options in a solution */
 @d max_itms 100000 /* at most this many items */
-@d max_nodes 300000000 /* at most this many nonzero elements in the matrix */
+@d max_nodes 10000000 /* at most this many nonzero elements in the matrix */
 @d bufsize (9*max_itms+3) /* a buffer big enough to hold all item names */
 
 @c
@@ -184,9 +184,11 @@ done:@+if (vbose&show_tots)
     @<Report the item totals@>;
 all_done:@+if (vbose&show_basics) {
     fprintf(stderr,
-       "Removed "O"d option"O"s and "O"d item"O"s, after "O"llu+"O"llu mems.\n",
+       "Removed "O"d option"O"s and "O"d item"O"s, after "O"llu+"O"llu mems,",
              options_out,options_out==1?"":"s",
              itms_out,itms_out==1?"":"s",imems,mems);
+    fprintf(stderr," "O"d round"O"s.\n",
+             rnd, rnd==1?"":"s");
   }
 }
 
@@ -615,18 +617,20 @@ their former neighbors, because we do no garbage collection.
 
 @ Hiding is much like {\mc DLX2}'s ``covering'' operation, but it
 has a new twist:
-If the process of hiding item $c$ causes one or more other primary items
-$p$, $p'$, \dots~to become empty, we know that $c$ can be eliminated
+If the process of hiding item $c$ causes at least one primary item~$p$
+to become empty, we know that $c$ can be eliminated
 (as mentioned above). Furthermore we know that we can delete every
-option that contains $c$ but not {\it all\/} of $p$, $p'$, etc.
-After those deletions, items $p$, $p'$, \dots~will
-become identical; therefore we can eliminate all but one of them.
-Therefore the |hide| procedure counts the number of such~$p$,
-and puts them onto a stack for later processing. The stack
-is maintained via the |aux| fields in item headers.
+option that contains $c$ but not~$p$.
+
+Therefore the |hide| procedure puts the value of such~$p$ in a global
+variable, for use by the caller. That global variable is called
+`|stack|' for historical reasons: My first implementation had
+an unnecessarily complex mechanism for dealing with several
+primary items that simultaneously become empty, so I used to
+put them onto a stack.
 
 @<Sub...@>=
-int hide(int c) {
+void hide(int c) {
   register int cc,l,r,rr,nn,uu,dd,t,k=0;
   for (o,rr=nd[c].down;rr>=last_itm;o,rr=nd[rr].down) if (o,!nd[rr].color) {
     for (nn=rr+1;nn!=rr;) {
@@ -639,19 +643,13 @@ int hide(int c) {
       oo,nd[uu].down=dd,nd[dd].up=uu;
       o,t=nd[cc].len-1;
       o,nd[cc].len=t;
-      if (t==0 && cc<second) k++,nd[cc].aux=stack,stack=cc;
+      if (t==0 && cc<second) stack=cc;
       nn++;
     }
   }
-  return k;
 }
 
-@ Unhiding has yet another twist: We may want to remove options and/or
-items after this operation has occurred. So we do {\it not\/} restore
-primary items whose |len| is zero, except for the primary item
-identified by~|stack|.
-
-@<Subroutines@>=
+@ @<Subroutines@>=
 void unhide(int c) {
   register int cc,l,r,rr,nn,uu,dd,t;
   for (o,rr=nd[c].down;rr>=last_itm;o,rr=nd[rr].down) if (o,!nd[rr].color) {
@@ -663,10 +661,8 @@ void unhide(int c) {
         continue;
       }
       o,t=nd[cc].len;
-      if (t || cc>=second || (o,cc==stack)) {
-        oo,nd[uu].down=nd[dd].up=nn;
-        o,nd[cc].len=t+1;
-      }
+      oo,nd[uu].down=nd[dd].up=nn;
+      o,nd[cc].len=t+1;
       nn++;
     }
   }
@@ -677,7 +673,7 @@ void unhide(int c) {
 @<Reduce the problem@>=
 for (cc=1;cc<last_itm;cc++) if (o,nd[cc].len==0)
   @<Take note that |cc| has no options@>;
-for (rnd=1;rnd<=rounds;rnd++) {
+for (rnd=1;rnd<rounds;rnd++) {
   if (vbose&show_choices)
     fprintf(stderr,"Beginning round "O"d:\n",rnd);
   for (change=0,c=1;c<last_itm;c++) if (o,nd[c].len)
@@ -687,9 +683,8 @@ for (rnd=1;rnd<=rounds;rnd++) {
 
 @ @<Glob...@>=
 int rnd; /* the current round */
-int stack; /* top of stack of items that are hard to cover */
+int stack; /* a blocked item; or top of stack of options to delete */
 int change; /* have we removed anything on the current round? */
-int zeros; /* the number of zeros found by |hide| */
 
 @ In order to avoid testing an option repeatedly, we usually
 try to remove it only when |c| is its first element as stored in memory.
@@ -704,13 +699,13 @@ try to remove it only when |c| is its first element as stored in memory.
            mems,rnd,c,itms_out,options_out);
   }
   if (mems>=timeout) goto finish;
-  stack=0,zeros=hide(c);
-  if (zeros) @<Remove |zeros| items, and maybe some options@>@;
+  stack=0,hide(c);
+  if (stack) @<Remove item |c|, and maybe some options@>@;
   else {
     for (o,r=nd[c].down;r>=last_itm;o,r=nd[r].down) {
       for (q=r-1;o,nd[q].down==q-1;q--); /* bypass null spacers */
       if (o,nd[q].itm<=0) /* |r| is the first (surviving) node in its option */
-        @<Mark option |r| for deletion
+        @<Stack option |r| for deletion
                    if it leaves some primary item uncoverable@>;
     }
     unhide(c);
@@ -721,50 +716,35 @@ try to remove it only when |c| is its first element as stored in memory.
   }
 }
 
-@ @<Remove |zeros| items, and maybe some options@>=
+@ @<Remove item |c|, and maybe some options@>=
 {
   unhide(c);
   if (vbose&show_details)
-    fprintf(stderr,"Deleting item "O".8s, which blocks "O".8s\n",
+    fprintf(stderr,"Deleting item "O".8s, forced by "O".8s\n",
               cl[c].name,cl[stack].name);
-  for (o,p=nd[stack].aux;p;o,p=nd[p].aux) {
-    if (vbose&show_details)
-      fprintf(stderr,"Item "O".8s equals item "O".8s\n",
-                           cl[p].name,cl[stack].name);
-    itms_out++;
-  }
-  for (change=2,o,r=nd[c].down;r>=last_itm;r=rrr) {
+  for (o,r=nd[c].down;r>=last_itm;r=rrr) {
     o,rrr=nd[r].down;
     @<Delete or shorten option |r|@>;
   }
-  if (change!=1) {
-    cc=stack; /* all of |cc|'s options have been deleted, not shortened */
-    @<Terminate with unfeasible item |cc|@>;
-  }
   o,nd[c].up=nd[c].down=c;
   o,nd[c].len=0, itms_out++; /* now item |c| is gone */
+  change=1;
 }  
 
 @ We're in the driver's seat here:
-If option |r| includes |stack| and the |zeros-1| items
-that are going away, we keep it, but remove the redundant items.
+If option |r| includes |stack|, we keep it,
+but remove item |c|.
 Otherwise we delete it.
 
 @<Delete or shorten option |r|@>=
 {
-  for (o,t=zeros,q=r+1;q!=r;) {
+  for (q=r+1;q!=r;) {
     o,cc=nd[q].itm;
     if (cc<=0) {
       o,q=nd[q].up;
       continue;
     }
-    if (cc>=second) {
-      q++;@+continue;
-    }
-    if ((o,cc==stack) || (o,!nd[cc].len)) {
-      t--;
-      if (!t) break;
-    }
+    if (cc==stack) break;
     q++;
   }
   if (q!=r) @<Shorten and retain option |r|@>@;
@@ -773,7 +753,6 @@ Otherwise we delete it.
 
 @ @<Shorten and retain option |r|@>=
 {
-  change=1;
   if (vbose&show_details) {
     fprintf(stderr," shortening");
     t=dpoption(r,stderr),
@@ -781,30 +760,9 @@ Otherwise we delete it.
   }
   o,nd[r].up=r+1,nd[r].down=r-1; /* make node |r| into a spacer */
   o,nd[r].itm=0;
-  for (o,t=zeros-1,q=r-1;t;) {
-    o,cc=nd[q].itm;
-    if (cc<=0) {
-      o,q=nd[q].down;
-      continue;
-    }
-    if (cc>=second) {
-      q--;
-      continue;
-    }
-    if (o,!nd[cc].len) {
-      o,nd[q].up=q+1,nd[q].down=q-1;
-      o,nd[q].itm=0;
-      t--;
-    }
-    q--;
-  }
 }
 
-@ Here we must remember that some nodes of option |r| might already be
-hidden, because of the (foolish?) exception to the rules that I made when
-writing |unhide|.
-
-@<Delete option |r|@>=
+@ @<Delete option |r|@>=
 {
   if (vbose&show_details) {
     fprintf(stderr," deleting");
@@ -819,12 +777,10 @@ writing |unhide|.
       continue;
     }
     o,t=nd[cc].len-1;
-    if (t>=0) {
-      if (t==0) @<Take note that |cc| has no options@>;
-      o,nd[cc].len=t;
-      o,uu=nd[q].up,dd=nd[q].down;
-      oo,nd[uu].down=dd,nd[dd].up=uu;
-    }
+    if (t==0) @<Take note that |cc| has no options@>;
+    o,nd[cc].len=t;
+    o,uu=nd[q].up,dd=nd[q].down;
+    oo,nd[uu].down=dd,nd[dd].up=uu;
     q++;
   }
 }
@@ -843,7 +799,7 @@ When |cc| is an item in option |r|, with color |x|, the notion of
 in |cc|'s item list that clashes with option~|r|. Option |rr| clashes with~|r|
 if and only if either |x=0| or |rr|~has |cc| with a color $\ne x$.
 
-@<Mark option |r| for deletion...@>=
+@<Stack option |r| for deletion...@>=
 {
   for (q=r+1;;) {
     o,cc=nd[q].itm;
