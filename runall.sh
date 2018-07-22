@@ -1,16 +1,26 @@
 #!/bin/sh
 
-path= # Path to CWEB, e.g., /usr/bin
-version= # Version of CWEB, e.g., 3.64b-22p
-changes=false # Apply associated change files (if any)
+if OPTS=$(getopt -n runall.sh -o cef:p:v: \
+	--long changes,extras,file:,path:,version: -- "$@")
+then eval set -- "$OPTS"
+else >&2 echo "Failed to parse options."; exit 1; fi
 
-while getopts chp:v: opt
+changes=false # Apply associated change files (if any)
+extras=false # Apply 'extra' change files off-scheme (inludes 'changes')
+files=*.w # List of example sources
+path='/usr/bin' # Path to CWEB
+version='3.64' # Version of CWEB
+
+while true
 do
-	case $opt in
-		c) changes=true ;;
-		p) path=$OPTARG ;;
-		v) version=$OPTARG ;;
-		?) exit 1 ;;
+	case "$1" in
+		-c | --changes ) changes=true; shift ;;
+		-e | --extras ) extras=true; changes=true; shift ;;
+		-f | --file ) files="$2" ; shift 2 ;;
+		-p | --path ) path="$2"; shift 2 ;;
+		-v | --version ) version="$2"; shift 2 ;;
+		-- ) shift; break ;;
+		* ) break ;;
 	esac
 done
 
@@ -27,7 +37,7 @@ $changes && testbranch="$testbranch-changes"
 git checkout -b $testbranch || exit 1 # Avoid 'master' desaster
 
 # Process all CWEB main sources
-for i in *.w
+for i in $files
 do
 	# Ignore SGB @include file
 	[ $i != "gb_types.w" ] || continue
@@ -66,7 +76,7 @@ do
 done
 
 # Apply 'special' changefiles that do not quite fit into the standard scheme
-if $changes
+if $extras
 then
 	for i in s t tr
 	do
