@@ -7,7 +7,7 @@ else >&2 echo "Failed to parse options."; exit 1; fi
 
 changes=false # Apply associated change files (if any)
 extras=false # Apply 'extra' change files off-scheme (inludes 'changes')
-files=*.w # List of example sources
+files=`echo *.w` # List of example sources
 path='/usr/bin' # Path to CWEB
 version='3.64' # Version of CWEB
 
