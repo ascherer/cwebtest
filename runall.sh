@@ -1,7 +1,6 @@
 #!/bin/sh
 
-UNAME=`uname`
-if [ "$UNAME" = "Darwin" ] # MacOS has BSD-getopt
+if [ $(uname -s) = "Darwin" ] # MacOS has BSD-getopt
 then OPTS=$(getopt cef:p:v: $*)
 else OPTS=$( getopt -n runall.sh -o cef:p:v: \
 	--long changes,extras,file:,path:,version: -- "$@")
@@ -13,7 +12,7 @@ else >&2 echo "Failed to parse options."; exit 1; fi
 
 changes=false # Apply associated change files (if any)
 extras=false # Apply 'extra' change files off-scheme (inludes 'changes')
-files=`echo *.w` # List of example sources
+files=$(echo *.w) # List of example sources
 path='/usr/bin' # Path to CWEB
 version='3.64' # Version of CWEB
 
@@ -49,7 +48,7 @@ do
 	[ $i != "gb_types.w" ] || continue
 
 	# CTANGLE
-	bi=`basename $i .w`
+	bi=$(basename $i .w)
 	$path/ctangle $i
 	if [ -f $bi.c ]
 	then
@@ -67,7 +66,7 @@ do
 	for c in $bi*.ch
 	do
 		[ -f $c ] || continue # ... if any
-		bc=`basename $c .ch`
+		bc=$(basename $c .ch)
 
 		# CTANGLE
 		$path/ctangle $i $c $bc
@@ -89,7 +88,7 @@ then
 		for c in hulld-*.ch
 		do
 			# CTANGLE
-			bc=`basename $c .ch`
+			bc=$(basename $c .ch)
 			$path/ctangle hull$i $bc $bc-$i
 			git add $bc-$i.c
 			>&2 git commit -m "ctangle [$version] hull$i $c."

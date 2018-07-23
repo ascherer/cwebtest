@@ -3,8 +3,7 @@
 # Invoke with option '-f <FILE>|--file <FILE>' to handle singular file(s)
 # Invoke with option '-r <URL>|--remote <URL>' to change server address
 
-UNAME=`uname`
-if [ "$UNAME" = "Darwin" ] # MacOS has BSD-getopt
+if [ $(uname -s) = "Darwin" ] # MacOS has BSD-getopt
 then OPTS=$(getopt df:r: $*)
 else OPTS=$(getopt -n downloadable-programs.sh -o df:r: \
 	--long file:,get,remote: -- "$@")
@@ -14,7 +13,7 @@ if [ $? -eq 0 ]
 then eval set -- "$OPTS"
 else echo "Failed to parse options." >&2; exit 1; fi
 
-FILES=`cat downloadable-programs.lst`
+FILES=$(cat downloadable-programs.lst)
 GET=false
 REMOTE='https://www-cs-faculty.stanford.edu/~knuth/programs'
 
@@ -32,8 +31,8 @@ done
 # Generic download function
 get_file () # path/to/file
 {
-	FILE=`basename $1`
-	DIR=`dirname $1`
+	FILE=$(basename $1)
+	DIR=$(dirname $1)
 
 	echo "cURLing $DIR/$FILE"
 
