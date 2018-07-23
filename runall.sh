@@ -1,7 +1,13 @@
 #!/bin/sh
 
-if OPTS=$(getopt -n runall.sh -o cef:p:v: \
+UNAME=`uname`
+if [ "$UNAME" = "Darwin" ] # MacOS has BSD-getopt
+then OPTS=$(getopt cef:p:v: $*)
+else OPTS=$( getopt -n runall.sh -o cef:p:v: \
 	--long changes,extras,file:,path:,version: -- "$@")
+fi
+
+if [ $? -eq 0 ]
 then eval set -- "$OPTS"
 else >&2 echo "Failed to parse options."; exit 1; fi
 
