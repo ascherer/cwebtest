@@ -58,7 +58,7 @@ cell $(j,k)$ is covered, for $0\le j<m$ and $0\le k<n$.
 And there are primary columns
 \.{x$a$} and \.{y$c$} for the at-least-once conditions.
 
-I also include primary columns \.{x$ab$} and \.{y$cd}$;
+I also include primary columns \.{x$ab$} and \.{y$cd$};
 these are unrestricted, so they don't affect the number of
 solutions. They are, however, useful for compressing
 the output because they name the subrectangles of a solution.
