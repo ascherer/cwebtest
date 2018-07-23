@@ -1,9 +1,9 @@
 #!/bin/sh
 
-if [ $(uname -s) = "Darwin" ] # MacOS has BSD-getopt
-then OPTS=$(getopt cef:p:v: $*)
-else OPTS=$(getopt -n runall.sh -o cef:p:v: \
+if [ $(uname -s) = "Linux" ]
+then OPTS=$(getopt -n runall.sh -o cef:p:v: \
 	--long changes,extras,file:,path:,version: -- "$@")
+else OPTS=$(getopt cef:p:v: $*) # MacOS has BSD-getopt
 fi
 
 if [ $? -eq 0 ]

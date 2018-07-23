@@ -3,10 +3,10 @@
 # Invoke with option '-f <FILE>|--file <FILE>' to handle singular file(s)
 # Invoke with option '-r <URL>|--remote <URL>' to change server address
 
-if [ $(uname -s) = "Darwin" ] # MacOS has BSD-getopt
-then OPTS=$(getopt df:r: $*)
-else OPTS=$(getopt -n downloadable-programs.sh -o df:r: \
+if [ $(uname -s) = "Linux" ]
+then OPTS=$(getopt -n downloadable-programs.sh -o df:r: \
 	--long file:,get,remote: -- "$@")
+else OPTS=$(getopt df:r: $*) # MacOS has BSD-getopt
 fi
 
 if [ $? -eq 0 ]
