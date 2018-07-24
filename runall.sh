@@ -55,15 +55,12 @@ do
 	# CTANGLE
 	bi=$(basename $i .w)
 	$path/ctangle $i
-	if [ -f $bi.c ]
-	then
-		git add $bi.c
-		>&2 git commit -m "ctangle [$version] $i."
-	fi
+	git add $bi.c && \
+	>&2 git commit -m "ctangle [$version] $i."
 
 	# CWEAVE
 	$path/cweave $i
-	git add $bi.idx $bi.scn $bi.tex
+	git add $bi.idx $bi.scn $bi.tex && \
 	>&2 git commit -m "cweave [$version] $i."
 
 	# Process all associated CWEB change files ...
@@ -75,12 +72,12 @@ do
 
 		# CTANGLE
 		$path/ctangle $i $c $bc
-		git add $bc.c
+		git add $bc.c && \
 		>&2 git commit -m "ctangle [$version] $i $c."
 
 		# CWEAVE
 		$path/cweave $i $c $bc
-		git add $bc.idx $bc.scn $bc.tex
+		git add $bc.idx $bc.scn $bc.tex && \
 		>&2 git commit -m "cweave [$version] $i $c."
 	done
 done
@@ -95,22 +92,22 @@ then
 			# CTANGLE
 			bc=$(basename $c .ch)
 			$path/ctangle hull$i $bc $bc-$i
-			git add $bc-$i.c
+			git add $bc-$i.c && \
 			>&2 git commit -m "ctangle [$version] hull$i $c."
 
 			# CWEAVE
 			$path/cweave hull$i $bc $bc-$i
-			git add $bc-$i.idx $bc-$i.scn $bc-$i.tex
+			git add $bc-$i.idx $bc-$i.scn $bc-$i.tex && \
 			>&2 git commit -m "cweave [$version] hull$i $c."
 		done
 	done
 
 	$path/ctangle horn-count krom-count krom-count
-	git add krom-count.c
+	git add krom-count.c && \
 	>&2 git commit -m "ctangle [$version] horn-count krom-count."
 
 	$path/cweave horn-count krom-count krom-count
-	git add krom-count.idx krom-count.scn krom-count.tex
+	git add krom-count.idx krom-count.scn krom-count.tex && \
 	>&2 git commit -m "cweave [$version] horn-count krom-count."
 fi
 
