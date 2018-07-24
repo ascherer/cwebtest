@@ -1,22 +1,25 @@
 #!/bin/sh
 
-getopt -T >/dev/null
+SHRTOPTS=cef:p:v:
+LONGOPTS=changes,extras,file:,path:,version:
 
-if [ $? -eq 4 ] # Check for Linux-getopt with extensions
-then OPTS=$(getopt -n runall.sh -o cef:p:v: \
-	--long changes,extras,file:,path:,version: -- "$@")
-else OPTS=$(getopt cef:p:v: $*)
-fi
-
-if [ $? -eq 0 ] # Check return code from getopt
-then eval set -- "$OPTS"
-else >&2 echo "Failed to parse options."; exit 1; fi
-
+# Set default values
 changes=false # Apply associated change files (if any)
 extras=false # Apply 'extra' change files off-scheme (inludes 'changes')
 files=$(echo *.w) # List of example sources
 path='/usr/bin' # Path to CWEB
 version='3.64' # Version of CWEB
+
+getopt -T >/dev/null
+
+if [ $? -eq 4 ] # Check for Linux-getopt with extensions
+then OPTS=$(getopt -n runall -o $SHRTOPTS -l $LONGOPTS -- "$@")
+else OPTS=$(getopt $SHRTOPTS $*)
+fi
+
+if [ $? -eq 0 ] # Check return code from getopt
+then eval set -- "$OPTS"
+else >&2 echo "Failed to parse options."; exit 1; fi
 
 while true
 do

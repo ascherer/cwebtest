@@ -3,21 +3,24 @@
 # Invoke with option '-f <FILE>|--file <FILE>' to handle singular file(s)
 # Invoke with option '-r <URL>|--remote <URL>' to change server address
 
+SHRTOPTS=df:r:
+LONGOPTS=file:,get,remote:
+
+# Set default values
+FILES=$(cat downloadable-programs.lst)
+GET=false
+REMOTE='https://www-cs-faculty.stanford.edu/~knuth/programs'
+
 getopt -T >/dev/null
 
 if [ $? -eq 4 ] # Check for Linux-getopt with extensions
-then OPTS=$(getopt -n downloadable-programs.sh -o df:r: \
-	--long file:,get,remote: -- "$@")
-else OPTS=$(getopt df:r: $*)
+then OPTS=$(getopt -n downloadable-programs -o $SHRTOPTS -l $LONGOPTS -- "$@")
+else OPTS=$(getopt $SHRTOPTS $*)
 fi
 
 if [ $? -eq 0 ] # Check return code from getopt
 then eval set -- "$OPTS"
 else echo "Failed to parse options." >&2; exit 1; fi
-
-FILES=$(cat downloadable-programs.lst)
-GET=false
-REMOTE='https://www-cs-faculty.stanford.edu/~knuth/programs'
 
 while true
 do
