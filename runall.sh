@@ -1,12 +1,14 @@
 #!/bin/sh
 
-if [ $(uname -s) = "Linux" ]
+getopt -T >/dev/null
+
+if [ $? -eq 4 ] # Check for Linux-getopt with extensions
 then OPTS=$(getopt -n runall.sh -o cef:p:v: \
 	--long changes,extras,file:,path:,version: -- "$@")
-else OPTS=$(getopt cef:p:v: $*) # MacOS has BSD-getopt
+else OPTS=$(getopt cef:p:v: $*)
 fi
 
-if [ $? -eq 0 ]
+if [ $? -eq 0 ] # Check return code from getopt
 then eval set -- "$OPTS"
 else >&2 echo "Failed to parse options."; exit 1; fi
 

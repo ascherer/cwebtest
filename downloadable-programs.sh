@@ -3,13 +3,15 @@
 # Invoke with option '-f <FILE>|--file <FILE>' to handle singular file(s)
 # Invoke with option '-r <URL>|--remote <URL>' to change server address
 
-if [ $(uname -s) = "Linux" ]
+getopt -T >/dev/null
+
+if [ $? -eq 4 ] # Check for Linux-getopt with extensions
 then OPTS=$(getopt -n downloadable-programs.sh -o df:r: \
 	--long file:,get,remote: -- "$@")
-else OPTS=$(getopt df:r: $*) # MacOS has BSD-getopt
+else OPTS=$(getopt df:r: $*)
 fi
 
-if [ $? -eq 0 ]
+if [ $? -eq 0 ] # Check return code from getopt
 then eval set -- "$OPTS"
 else echo "Failed to parse options." >&2; exit 1; fi
 
