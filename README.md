@@ -70,3 +70,10 @@ of writing). to see the differences just compare the heads of such branches.
 if you care about modified versions of some of the example programs, you can
 add the `-c` option to the `./runall.sh` commandline, which applies (most of)
 the changefiles available and adds `-changes` to the created test branch name.
+there is an accompanying option `-e` that applies some "extra" change files
+(and activates `-c` as well).
+
+if you want to run tests with a subset of one (on systems with "classic"
+`getopt`) or more (on systems with enhanced linux-`getopt`) cweb source files,
+you can use option `-f` with a single file name or a stringified list of
+several file names.
