@@ -1,9 +1,10 @@
 #!/bin/sh
 
-SHRTOPTS=cef:p:v:
-LONGOPTS=changes,extras,file:,path:,version:
+SHRTOPTS=b:cef:p:v:
+LONGOPTS=branch:,changes,extras,file:,path:,version:
 
 # Set default values
+branch="" # Executive override for 'testbranch' below
 changes=false # Apply associated change files (if any)
 extras=false # Apply 'extra' change files off-scheme (inludes 'changes')
 files=$(echo *.w) # List of example sources
@@ -19,11 +20,15 @@ fi
 
 if [ $? -eq 0 ] # Check return code from getopt
 then eval set -- "$OPTS"
-else >&2 echo "Failed to parse options."; exit 1; fi
+else
+       >&2 echo "Failed to parse options."
+       exit 1
+fi
 
 while true
 do
 	case "$1" in
+		-b | --branch ) branch="$2"; shift 2 ;;
 		-c | --changes ) changes=true; shift ;;
 		-e | --extras ) extras=true; changes=true; shift ;;
 		-f | --file ) files="$2" ; shift 2 ;;
@@ -43,6 +48,7 @@ fi
 
 # Take changes into account
 testbranch="runall-$path-V$version"
+[ "$branch" != "" ] && testbranch=$branch # Executive override
 $changes && testbranch="$testbranch-changes"
 git checkout -b $testbranch || exit 1 # Avoid 'master' desaster
 
@@ -50,7 +56,7 @@ git checkout -b $testbranch || exit 1 # Avoid 'master' desaster
 for i in $files
 do
 	# Ignore SGB @include file
-	[ $i != "gb_types.w" ] || continue
+	[ "$i" != "gb_types.w" ] || continue
 
 	# CTANGLE
 	bi=$(basename $i .w)
