@@ -4,7 +4,7 @@ SHRTOPTS=b:cef:p:v:
 LONGOPTS=branch:,changes,extras,file:,path:,version:
 
 # Set default values
-branch="" # Executive override for 'testbranch' below
+branch= # Executive override for 'testbranch' below
 changes=false # Apply associated change files (if any)
 extras=false # Apply 'extra' change files off-scheme (inludes 'changes')
 files=$(echo *.w) # List of example sources
@@ -48,7 +48,7 @@ fi
 
 # Take changes into account
 testbranch="runall-$path-V$version"
-[ -n "$branch" ] && testbranch=$branch # Executive override
+[ $branch ] && testbranch=$branch # Executive override
 $changes && testbranch="$testbranch-changes"
 git checkout -b $testbranch || exit 1 # Avoid 'master' desaster
 
