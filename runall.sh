@@ -48,7 +48,7 @@ fi
 
 # Take changes into account
 testbranch="runall-$path-V$version"
-[ "$branch" != "" ] && testbranch=$branch # Executive override
+[ -n "$branch" ] && testbranch=$branch # Executive override
 $changes && testbranch="$testbranch-changes"
 git checkout -b $testbranch || exit 1 # Avoid 'master' desaster
 
