@@ -1,0 +1,28 @@
+@$tip {GB\_\,GRAPH}10 \&{Vertex} ${}{*}{}$@>
+@$next {GB\_\,GRAPH}10 \&{Arc} ${}{*}{}$@>
+@$arcs {GB\_\,GRAPH}9 \&{Arc} ${}{*}{}$@>
+@$name {GB\_\,GRAPH}9 \&{char} ${}{*}{}$@>
+@$n {GB\_\,GRAPH}13 \&{long}@>
+@$vertices {GB\_\,GRAPH}20 \&{Vertex} ${}{*}{}$@>
+@$I {GB\_\,GRAPH}8 \&{long}@>
+@$m {GB\_\,GRAPH}13 \&{long}@>
+@$V {GB\_\,GRAPH}8 \&{Vertex} ${}{*}{}$@>
+@$A {GB\_\,GRAPH}8 \&{Arc} ${}{*}{}$@>
+@$w {GB\_\,GRAPH}9 \&{util}@>
+
+@$util {GB\_\,GRAPH}8 =\&{union}@>
+@$Vertex {GB\_\,GRAPH}9 =\&{struct}@>
+@$Arc {GB\_\,GRAPH}10 =\&{struct}@>
+@$gb_typed_alloc {GB\_\,GRAPH}11 =macro (\,)@>
+@$Graph {GB\_\,GRAPH}20 =\&{struct}@>
+@$n_1 {GB\_\,GRAPH}22 =macro@>
+@$arcs_per_block {GB\_\,GRAPH}29 =\T{102}@>
+@$gb_new_graph {GB\_\,GRAPH}31 =macro@>
+@$gb_new_arc {GB\_\,GRAPH}31 =macro@>
+@$gb_new_edge {GB\_\,GRAPH}31 =macro@>
+@$siz_t {GB\_\,GRAPH}34 =\&{unsigned} \&{long}@>
+@$string_block_size {GB\_\,GRAPH}35 =\T{1016}@>
+@$hash_link {GB\_\,GRAPH}43 =macro@>
+@$hash_head {GB\_\,GRAPH}43 =macro@>
+@$HASH_MULT {GB\_\,GRAPH}45 =\T{314159}@>
+@$HASH_PRIME {GB\_\,GRAPH}45 =\T{516595003}@>
