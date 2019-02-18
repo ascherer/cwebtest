@@ -1,13 +1,15 @@
 #!/bin/sh
+# Invoke with option '-t|--debug' to check the 'curl' invocations
 # Invoke with option '-d|--get' to actually download files
 # Invoke with option '-f <FILE>|--file <FILE>' to handle singular file(s)
 # Invoke with option '-r <URL>|--remote <URL>' to change server address
 
-SHRTOPTS=df:r:
-LONGOPTS=file:,get,remote:
+SHRTOPTS=df:r:t
+LONGOPTS=debug,file:,get,remote:
 
 # Set default values
 FILES=$(cat downloadable-programs.lst)
+DEBUG=false
 GET=false
 REMOTE='https://www-cs-faculty.stanford.edu/~knuth/programs'
 
@@ -28,6 +30,7 @@ do
 		-d | --get ) GET=true; shift ;;
 		-f | --file ) FILES="$2"; shift 2 ;;
 		-r | --remote ) REMOTE="$2"; shift 2 ;;
+		-t | --debug ) DEBUG=true; shift ;;
 		-- ) shift; break ;;
 		* ) break ;;
 	esac
@@ -39,16 +42,23 @@ get_file () # path/to/file
 	FILE=$(basename $1)
 	DIR=$(dirname $1)
 
-	echo "cURLing $DIR/$FILE"
+	$DEBUG || echo "cURLing $DIR/$FILE"
 
 	if $GET
 	then
 		if [ -f $FILE ]
-		then curl -k -R $DIR/$FILE -z $FILE -o $FILE
-		else curl -k -R $DIR/$FILE -o $FILE
+		then CURL="curl -k -R $DIR/$FILE -z $FILE -o $FILE"
+		else CURL="curl -k -R $DIR/$FILE -o $FILE"
 		fi
 	else
-		curl -k -I $DIR/$FILE
+		CURL="curl -k -I $DIR/$FILE"
+	fi
+
+	if $DEBUG
+	then
+		echo $CURL
+	else
+		$CURL
 	fi
 }
 
