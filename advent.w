@@ -4390,11 +4390,11 @@ It is possible (but unusual) to earn exactly 1 point.
 k=score();
 printf("You scored %d point%s out of a possible %d, using %d turn%s.\n",
    k,k==1? "": "s",max_score,turns,turns==1? "": "s");
-for (j=0;class_score[j]<=k;j++);
+for (j=0;class_score[j]<k;j++);
 printf("%s\nTo achieve the next higher rating",class_message[j]);
 if (j<highest_class)
-  printf(", you need %d more point%s.\n",class_score[j]-k,
-                 class_score[j]==k+1? "": "s");
+  printf(", you need %d more point%s.\n",class_score[j]+1-k,
+                 class_score[j]==k? "": "s");
 else printf(" would be a neat trick!\nCongratulations!!\n");
 
 @ @<Glob...@>=
