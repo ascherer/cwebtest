@@ -60,12 +60,12 @@ do
 
 	# CTANGLE
 	bi=$(basename $i .w)
-	$path/ctangle $i
+	$path/ctangle +bph $i
 	git add $bi.c && \
 	>&2 git commit -m "ctangle [$version] $i."
 
 	# CWEAVE
-	$path/cweave $i
+	$path/cweave +bph $i
 	git add $bi.idx $bi.scn $bi.tex && \
 	>&2 git commit -m "cweave [$version] $i."
 
@@ -77,12 +77,12 @@ do
 		bc=$(basename $c .ch)
 
 		# CTANGLE
-		$path/ctangle $i $c $bc
+		$path/ctangle +bph $i $c $bc
 		git add $bc.c && \
 		>&2 git commit -m "ctangle [$version] $i $c."
 
 		# CWEAVE
-		$path/cweave $i $c $bc
+		$path/cweave +bph $i $c $bc
 		git add $bc.idx $bc.scn $bc.tex && \
 		>&2 git commit -m "cweave [$version] $i $c."
 	done
@@ -97,22 +97,22 @@ then
 		do
 			# CTANGLE
 			bc=$(basename $c .ch)
-			$path/ctangle hull$i $bc $bc-$i
+			$path/ctangle +bph hull$i $bc $bc-$i
 			git add $bc-$i.c && \
 			>&2 git commit -m "ctangle [$version] hull$i $c."
 
 			# CWEAVE
-			$path/cweave hull$i $bc $bc-$i
+			$path/cweave +bph hull$i $bc $bc-$i
 			git add $bc-$i.idx $bc-$i.scn $bc-$i.tex && \
 			>&2 git commit -m "cweave [$version] hull$i $c."
 		done
 	done
 
-	$path/ctangle horn-count krom-count krom-count
+	$path/ctangle +bph horn-count krom-count krom-count
 	git add krom-count.c && \
 	>&2 git commit -m "ctangle [$version] horn-count krom-count."
 
-	$path/cweave horn-count krom-count krom-count
+	$path/cweave +bph horn-count krom-count krom-count
 	git add krom-count.idx krom-count.scn krom-count.tex && \
 	>&2 git commit -m "cweave [$version] horn-count krom-count."
 fi
