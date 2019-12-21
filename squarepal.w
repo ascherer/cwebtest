@@ -28,13 +28,9 @@ I didn't pass up some ``obvious'' ways to avoid redundant computations.
 #include <stdio.h>
 #include <stdlib.h>
 int n; /* the length of palindromes sought */
-unsigned long long reflect[0x10000]; /* table of reflected shorts */
 unsigned long long y[maxn/2],r[maxn/2]; /* table of partial square roots */
 unsigned long long q[maxn/4],qq[maxn/4]; /* table of partial modular sqrts */
 unsigned long long pretrial[2],trial[3],acc[6]; /* multiplication workspace */
-void debug(char* msg) {
-  fprintf(stderr,"%s!\n",msg);
-}
 main(int argc,char* argv[]) {
   register unsigned long long prod,sqrtxl,a,bit;
   register int j,k,t,p,jj,kk;
@@ -56,10 +52,6 @@ if (n<15 || n>maxn) {
                                    maxn);
   exit(-2);
 }
-
-@ @<Make the tables@>=
-for (k=1;k<0x10000;k++)
-  reflect[k]=(reflect[k>>1]>>1)+(k&1?0x8000:0);
 
 @ Here's the theory: Let $a_1a_2\ldots a_t$ be a binary string, and suppose
 $$x\;=\;2^{n-1}+2^{n-4}a_1+2^{n-5}a_2+\cdots+2^{n-3-t}a_t+\cdots+
