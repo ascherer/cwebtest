@@ -179,7 +179,11 @@ ulam-gibbs.w
 ulam-gibbs.1
 dlx1.w
 polyomino-dlx.w
+polyiamond-dlx.w
 polycube-dlx.w
+sudoku-dlx.w
+sudoku-general-dlx.w
+dlx1-sudoku.ch
 dlx2.w
 dlx-pre.w
 dlx2-polyom.ch
@@ -196,10 +200,10 @@ dlx3-motley.ch
 redrect-dlx.w
 motley-dlx.w
 queendom-dlx.w
-infty-queens.w
 dlx5.w
 dlx6.w
 dlx6-noMRV.ch
+infty-queens.w
 graceful-count.w
 graceful-count-small.ch
 squarepal.w
