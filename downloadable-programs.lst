@@ -207,3 +207,8 @@ infty-queens.w
 graceful-count.w
 graceful-count-small.ch
 squarepal.w
+histoscape-count.w
+histoscape-unrank.w
+whirlpool-count.w
+whirlpool2n-encode.w
+whirlpool2n-decode.w
