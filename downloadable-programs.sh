@@ -1,11 +1,19 @@
 #!/bin/sh
-# Invoke with option '-t|--debug' to check the 'curl' invocations
-# Invoke with option '-d|--get' to actually download files
-# Invoke with option '-f <FILE>|--file <FILE>' to handle singular file(s)
-# Invoke with option '-r <URL>|--remote <URL>' to change server address
 
-SHRTOPTS=df:r:t
-LONGOPTS=debug,file:,get,remote:
+PROG=$(basename $0)
+
+usage ()
+{
+cat <<HELP
+Invoke with option '-t|--debug' to check the 'curl' invocations
+Invoke with option '-d|--get' to actually download files
+Invoke with option '-f <FILE>|--file <FILE>' to handle singular file(s)
+Invoke with option '-r <URL>|--remote <URL>' to change server address
+HELP
+}
+
+SHRTOPTS=df:hr:t
+LONGOPTS=debug,file:,get,help,remote:
 
 # Set default values
 FILES=$(cat downloadable-programs.lst)
@@ -16,7 +24,7 @@ REMOTE='https://www-cs-faculty.stanford.edu/~knuth/programs'
 getopt -T >/dev/null
 
 if [ $? -eq 4 ] # Check for Linux-getopt with extensions
-then OPTS=$(getopt -n downloadable-programs -o $SHRTOPTS -l $LONGOPTS -- "$@")
+then OPTS=$(getopt -n $PROG -o $SHRTOPTS -l $LONGOPTS -- "$@")
 else OPTS=$(getopt $SHRTOPTS $*)
 fi
 
@@ -29,6 +37,7 @@ do
 	case "$1" in
 		-d | --get ) GET=true; shift ;;
 		-f | --file ) FILES="$2"; shift 2 ;;
+		-h | --help ) usage; exit 0 ;;
 		-r | --remote ) REMOTE="$2"; shift 2 ;;
 		-t | --debug ) DEBUG=true; shift ;;
 		-- ) shift; break ;;
@@ -67,3 +76,5 @@ for FILE in $FILES
 do
 	get_file "$REMOTE/$FILE"
 done
+
+exit 0
