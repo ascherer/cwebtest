@@ -175,9 +175,11 @@ sat-commafree.w
 back-commafree4.w
 back-skeleton.w
 back-dissect.w
+back-graceful-kmp3.w
 ulam-gibbs.w
 ulam-gibbs.1
 dlx1.w
+queens-dlx.w
 polyomino-dlx.w
 polyiamond-dlx.w
 polycube-dlx.w
@@ -204,6 +206,8 @@ queendom-dlx.w
 dlx5.w
 dlx6.w
 dlx6-noMRV.ch
+ssxc.w
+ssxcc.w
 infty-queens.w
 graceful-count.w
 graceful-count-small.ch
@@ -213,6 +217,3 @@ histoscape-unrank.w
 whirlpool-count.w
 whirlpool2n-encode.w
 whirlpool2n-decode.w
-ssxc.w
-ssxcc.w
-back-graceful-kmp3.w
