@@ -251,7 +251,7 @@ void print_move(int mv) {
   else if (mv<0x10000)
     fprintf(stderr,""O"d"O"d="O"d",(mv>>8)&0xf,(mv>>12)&0xf,mv&0xff);
   else fprintf(stderr,""O"d"O"d="O"d,"O"d"O"d="O"d",
-      (mv>>8)&0xf,(mv>>12)&0xf,mv&0xff,(mv>>24)&0xf,(mv>>28)&0xf,(mv>>16)&0xf);
+      (mv>>8)&0xf,(mv>>12)&0xf,mv&0xff,(mv>>24)&0xf,(mv>>28)&0xf,(mv>>16)&0xff);
 }
 @#
 void print_moves(int level) {
