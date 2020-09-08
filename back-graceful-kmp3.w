@@ -311,7 +311,7 @@ for (trouble=0;mv;mv>>=16) {
     if (v>=0) oo,trouble+=placed[abs(val-v)],placed[abs(val-v)]=1;
   }
   for (i=0;i<rank;i++) if (i!=row) {
-    0,v=board(i,col);
+    o,v=board(i,col);
     if (v>=0) oo,trouble+=placed[abs(val-v)],placed[abs(val-v)]=1;
   }
   if (row==rank) rank++;
@@ -336,7 +336,7 @@ for (;mv;mv>>=16) {
     if (v>=0) o,placed[abs(val-v)]=0;
   }
   for (i=0;i<rank;i++) if (i!=row) {
-    0,v=board(i,col);
+    o,v=board(i,col);
     if (v>=0) o,placed[abs(val-v)]=0;
   }
 }
