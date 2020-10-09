@@ -131,7 +131,7 @@ defines the seed for any random numbers that are used;
 \item{$\bullet$}
 `\.d$\langle\,$integer$\,\rangle$' sets |delta|, which causes periodic
 state reports on |stderr| after the algorithm has performed approximately
-|delta| mems since the previous report;
+|delta| mems since the previous report (default 10000000000);
 \item{$\bullet$}
 `\.c$\langle\,$positive integer$\,\rangle$' limits the levels on which
 choices are shown during verbose tracing;
@@ -178,8 +178,8 @@ ullng updates; /* update counts */
 ullng cleansings; /* cleansing counts */
 ullng bytes; /* memory used by main data structures */
 ullng nodes; /* total number of branch nodes initiated */
-ullng thresh=0; /* report when |mems| exceeds this, if |delta!=0| */
-ullng delta=0; /* report every |delta| or so mems */
+ullng thresh=10000000000; /* report when |mems| exceeds this, if |delta!=0| */
+ullng delta=10000000000; /* report every |delta| or so mems */
 ullng maxcount=0xffffffffffffffff; /* stop after finding this many solutions */
 ullng timeout=0x1fffffffffffffff; /* give up after this many mems */
 FILE *shape_file; /* file for optional output of search tree shape */
@@ -373,7 +373,7 @@ void sanity(void) {
     if (p==root) break;
     @<Check item |p|@>;
   }
-}    
+}
 
 @ @<Check item |p|@>=
 for (qq=p,pp=nd[qq].down,k=0;;qq=pp,pp=nd[pp].down,k++) {
@@ -460,7 +460,7 @@ while (1) {
     else if (k>=second) {
       if ((o,isspace(buf[p+j+1])) || (o,!isspace(buf[p+j+2])))
         panic("Color must be a single character");
-      o,nd[last_node].color=buf[p+j+1];
+      o,nd[last_node].color=(unsigned char)buf[p+j+1];
       p+=2;
     }@+else panic("Primary item must be uncolored");
     for (p+=j+1;o,isspace(buf[p]);p++) ;
@@ -510,11 +510,11 @@ nd[k].aux=last_node; /* no mem charge for |aux| after |len| */
 if (!randomizing) {
   o,r=nd[k].up; /* the ``bottom'' node of the item list */
   ooo,nd[r].down=nd[k].up=last_node,nd[last_node].up=r,nd[last_node].down=k;
-}@+else {  
+}@+else {
   mems+=4,t=gb_unif_rand(t); /* choose a random number of nodes to skip past */
   for (o,r=k;t;o,r=nd[r].down,t--) ;
   ooo,q=nd[r].up,nd[q].down=nd[r].up=last_node;
-  o,nd[last_node].up=q,nd[last_node].down=r;  
+  o,nd[last_node].up=q,nd[last_node].down=r;
 }
 
 @ @<Remove |last_node| from its item list@>=
@@ -697,7 +697,7 @@ for (pp=cur_node-1;pp!=cur_node;) {
     pp--;
   }
 }
-      
+
 @ When we choose an option that specifies colors in one or more items,
 we ``purify'' those items by removing all incompatible options.
 All options that want the chosen color in a purified item are temporarily
@@ -710,6 +710,7 @@ void purify(int p) {
   nd[cc].color=x; /* no mem charged, because this is for |print_option| only */
   cleansings++;
   for (o,rr=nd[cc].down;rr>=last_itm;o,rr=nd[rr].down) {
+    if (rr==p) fprintf(stderr,"confusion!\n");
     if (o,nd[rr].color!=x) {
       for (nn=rr+1;nn!=rr;) {
         if (o,nd[nn].color>=0) {
@@ -726,7 +727,7 @@ void purify(int p) {
         }
         nn++;
       }
-    }@+else if (rr!=p) cleansings++,o,nd[rr].color=-1;
+    }@+else cleansings++,o,nd[rr].color=-1;
   }
 }
 
@@ -737,9 +738,10 @@ analogous to |uncover|.
 void unpurify(int p) {
   register int cc,rr,nn,uu,dd,t,x;
   o,cc=nd[p].itm,x=nd[p].color; /* there's no need to clear |nd[cc].color| */
-  for (o,rr=nd[cc].up;rr>=last_itm;o,rr=nd[rr].up) {  
+  for (o,rr=nd[cc].up;rr>=last_itm;o,rr=nd[rr].up) {
+    if (rr==p) fprintf(stderr,"confusion!\n");
     if (o,nd[rr].color<0) o,nd[rr].color=x;
-    else if (rr!=p) {
+    else {
       for (nn=rr-1;nn!=rr;) {
         if (o,nd[nn].color>=0) {
           o,uu=nd[nn].up,dd=nd[nn].down;
@@ -768,7 +770,7 @@ t=max_nodes;
 if ((vbose&show_details) &&
     level<show_choices_max && level>=maxl-show_choices_gap)
   fprintf(stderr,"Level "O"d:",level);
-for (o,k=cl[root].next;k!=root;o,k=cl[k].next) {
+for (o,k=cl[root].next;t&&k!=root;o,k=cl[k].next) {
   if ((vbose&show_details) &&
       level<show_choices_max && level>=maxl-show_choices_gap)
     fprintf(stderr," "O".8s("O"d)",cl[k].name,nd[k].len);
@@ -831,7 +833,7 @@ void print_state(void) {
   fprintf(stderr," "O"lld solutions, "O"lld mems, and max level "O"d so far.\n",
                               count,mems,maxl);
 }
-      
+
 @ During a long run, it's helpful to have some way to measure progress.
 The following routine prints a string that indicates roughly where we
 are in the search tree. The string consists of character pairs, separated
@@ -871,7 +873,7 @@ void print_progress(void) {
   }
   fprintf(stderr," "O".5f\n",f+0.5/fd);
 }
-  
+
 @ @<Print the profile@>=
 {
   fprintf(stderr,"Profile:\n");
