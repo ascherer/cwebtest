@@ -23,7 +23,7 @@ case, because the algorithm needs very little memory.
 
 Please excuse me for writing this in a rush.
 
-@d m 11 /* the size of the cliques; must be at least 2 and at most 12 */
+@d m 6 /* the size of the cliques; must be at least 2 and at most 12 */
 @d q ((m*(3*m+1))/2) /* number of edges */
 @d o mems++ /* count one mem */
 @d oo mems+=2 /* count two mems */
@@ -40,6 +40,7 @@ Please excuse me for writing this in a rush.
 unsigned long long mems; /* memory accesses */
 unsigned long long thresh=delta; /* time for next progress report */
 unsigned long long nodes; /* nodes in the search tree */
+unsigned long long nulls; /* nodes that need no new vertex placement */
 unsigned long long leaves; /* nodes that have no descendants */
 int count; /* number of solutions found so far */
 int brd[3*m]; /* one-dimensional array accessed via the |board| macro */
@@ -50,16 +51,20 @@ int colknown[3]; /* how many vertices of each clique are labeled? */
 int move[q][1024]; /* feasible moves at each level */
 int deg[q]; /* number of choices at each level; used in printouts only */
 int x[q]; /* indexes of moves made at each level */
+int maxl; /* maximum level reached */
 int vbose=0; /* can set this nonzero when debugging */
 @<Subroutines@>@;
 main () {
   register int a,b,i,j,k,l,t,v,aa,bb,ii,row,col,ccol,val,mv,trouble;
-  fprintf(stderr,"** Graceful labelings of K"O"d times P3 **\n",m);
+  fprintf(stderr,"--- Graceful labelings of K"O"d times P3 ---\n",m);
   @<Initialize the data structures@>;
   @<Backtrack through all solutions@>;
-  fprintf(stderr,
-   "Altogether "O"d solution"O"s, "O"lld mems, "O"lld nodes, "O"lld leaves.\n",
-               count,count==1?"":"s", mems, nodes, leaves);
+  fprintf(stderr,"Altogether "O"d solution"O"s,",
+               count,count==1?"":"s");
+  fprintf(stderr," "O"lld mems, "O"lld-"O"lld nodes, "O"lld leaves;",
+               mems, nodes, nulls, leaves);
+  fprintf(stderr," max level "O"d.\n",maxl);
+  if (sanity_checking) fprintf(stderr,"sanity_checking was on!\n");
 }
 
 @ The current status of the vertices labeled so far appears in
@@ -178,7 +183,10 @@ enter: nodes++;
   }
   if (sanity_checking) sanity();
   if (l<=1) @<Make special moves near the root@>;
-  if (l==q) @<Report a solution and |goto backup|@>;
+  if (l>=maxl) {
+    maxl=l;
+    if (l==q) @<Report a solution and |goto backup|@>;
+  }
   if (o,placed[q-l]) @<Record the null move and |goto ready|@>;
   for (t=a=0,b=q-l;b<=q;a++,b++)
     @<Record all possible $(a,b)$ moves in the array |move[l]|@>;
@@ -193,7 +201,10 @@ advance:@+if (vbose) {
   o,x[l]=--t;
   o,mv=move[l][t];
   @<Make |mv|@>;
-  if (trouble) goto unmake;
+  if (trouble) {
+    if (vbose) fprintf(stderr," -- was bad\n");
+    goto unmake;
+  }
   l++;
   goto enter;
 backup:@+if (--l>=0) {
@@ -240,7 +251,7 @@ Hence an all-zero move means ``do nothing.''
 
 @<Record the null move and |goto ready|@>=
 {
-  o,move[l][0]=0,t=1;
+  o,move[l][0]=0,t=1,nulls++;
   goto ready;
 }
 
