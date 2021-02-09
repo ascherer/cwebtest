@@ -65,7 +65,7 @@ unsigned int tag[maxn],ttag[maxn]; /* intermediate hash values on vertices */
 int deg[maxn]; /* degree of each vertex */
 int nbr[maxn][maxn]; /* edges at each vertex */
 int vert[maxn]; /* vertices found breadth-first */
-int start[maxn]={0,1}; /* boundaries between levels in |vert| */
+int start[maxn+2]={0,1}; /* boundaries between levels in |vert| */
 main(int argc,char*argv[]) {
   register int i,j,k,l,n,p,q,v,w,vvv;
   register unsigned int h,t;
