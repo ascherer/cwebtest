@@ -56,11 +56,11 @@ get_file () # path/to/file
 	if $GET
 	then
 		if [ -f $FILE ]
-		then CURL="curl -k -R $DIR/$FILE -z $FILE -o $FILE"
-		else CURL="curl -k -R $DIR/$FILE -o $FILE"
+		then CURL="curl -# -k -R $DIR/$FILE -z $FILE -o $FILE"
+		else CURL="curl -# -k -R $DIR/$FILE -o $FILE"
 		fi
 	else
-		CURL="curl -k -I $DIR/$FILE"
+		CURL="curl -# -k -I $DIR/$FILE"
 	fi
 
 	if $DEBUG
