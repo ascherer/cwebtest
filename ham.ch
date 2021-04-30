@@ -8,6 +8,7 @@
 @x l.21
 main(int argc,char *argv[])
 @y
+@#@;
 int main(int argc,char *argv[])
 @z
 
@@ -29,11 +30,23 @@ int main(int argc,char *argv[])
   for (v=g->vertices;v<g->vertices+g->n;v++) printf(" %ld",v->deg);
 @z
 
+@x l.50
+@ @<Process the command line, inputting the graph@>=
+@y
+@r @ @<Process the command line, inputting the graph@>=
+@z
+
 @x l.85
 I may learn my lesson.
 @y
 I may learn my lesson.
 @-k@>
+@z
+
+@x l.92
+x->taken=1;@+t->vert=x;
+@y
+x->taken=1;@+t->vert=x;@+
 @z
 
 @x l.97
