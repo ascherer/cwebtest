@@ -218,3 +218,10 @@ whirlpool-count.w
 whirlpool2n-encode.w
 whirlpool2n-decode.w
 graph-hash.w
+hopcroft-karp.w
+matula.w
+matula.S
+matula.T matula.ST
+matula-big.ch
+matula-big-planted.ch
+matula-exhaustive.ch
