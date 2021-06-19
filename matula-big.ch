@@ -186,7 +186,7 @@ for (n=1;o,argv[2][n];n++) {
 @<Allocate the arcs@>;
 fprintf(stderr,
   "OK, I've got %d nodes for S and %d nodes for T, max degree %d.\n",
-                   m,n,d-1);
+                   m,n,maxdeg);
 @y
 @ Here's a subroutine that reads a rectree file and puts the associated tree
 into the |tnode| array.
@@ -428,7 +428,7 @@ n=read_rectree(argv[2]);
 @<Allocate the arcs@>;
 fprintf(stderr,
   "OK, I've got %d nodes for S and %d nodes for T, max degree %d.\n",
-                   m,n,d-1);
+                   m,n,maxdeg);
 @z
 @x
 if (m==0) goto yes_sol; /* every boy matches every girl */

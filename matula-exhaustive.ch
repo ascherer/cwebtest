@@ -147,6 +147,8 @@ $|np|[k]=p_t$ when $k$ represents $c_1\ldots c_t$. For example,
 the parent pointers that correspond to 012110121010 are 012110454070.
 
 @<Glob...@>=
+void make_sstring(int k); void make_tstring(int k);
+char sstring[maxn+1]=".",tstring[maxn+1]=".";
 int up[maxtrees]; /* parent in trie */
 int down[maxtrees]; /* leftmost child in trie */
 int c[maxtrees]; /* $c_t$ coordinate in trie */
@@ -285,7 +287,7 @@ for (n=1;o,argv[2][n];n++) {
 @<Allocate the arcs@>;
 fprintf(stderr,
   "OK, I've got %d nodes for S and %d nodes for T, max degree %d.\n",
-                   m,n,d-1);
+                   m,n,maxdeg);
 @y
 @ @<Build a trie for locating all |m|-vertex free trees@>=
 maketrie(m);
@@ -508,11 +510,23 @@ for (k=n-1,j=nstepx;k>(n>>1);k--) oooo,pn[k]=np[j]+(n>>1),upn[k]=j=up[j];
 
 @z
 @x
+if (m==0) goto yes_sol; /* every boy matches every girl */
+@y
+if (m==0) goto yes_sol; /* every boy matches every girl */
+if (m*n>record) {
+  record=m*n;
+  make_sstring(mserial);
+  make_tstring(nserial);
+  fprintf(stderr," ...matching %d boys to %d girls (%s,%s)\n",
+                               m,n,sstring,tstring);
+}
+@z
+@x
 @*Index.
 @y
 @ @<Record the solution@>=
 emems=mems-startmems;
-if (z>0) oo,msols[mserial]++,nsols[nserial]++;
+if (z>0) oo,msols[mserial]++,nsols[nserial]++,totsols++;
 @<Update the runtime stats@>;
 
 @ We maintain the mean and variance and max of |emems|, the number of
@@ -534,12 +548,16 @@ unsigned long long startmems;
 int emems,ememsmax,shardest,thardest;
 double ememsmean,ememsvar,samp;
 int msols[maxtrees],nsols[maxtrees];
+unsigned long long totsols;
+int record;
 
 @ @d errorbar(x) ((x)? sqrt((x)/(samp*(samp-1.0))): 0.0)
 
 @<Sign off@>=
 printf("I examined %d %d-trees and %d %d-trees (total %g cases).\n",
                mserial,m,nserial,n,samp);
+printf("There were %lld cases with S embeddable in T.\n",
+                totsols);
 printf("Observed running time in mems was %g +- %g;\n",
                ememsmean,errorbar(ememsvar));
 make_sstring(shardest),make_tstring(thardest);
@@ -567,7 +585,6 @@ printf("Altogether %lld+%lld mems for this computation.\n",
            imems,mems);
 
 @ @<Sub...@>=
-char sstring[maxn+1]=".",tstring[maxn+1]=".";
 void make_sstring(int k) {
   register j,t,i,d;
   if (mstart+k<mstop) {

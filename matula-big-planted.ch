@@ -480,7 +480,7 @@ n=read_rectree(argv[1]);
 @<Allocate the arcs@>;
 fprintf(stderr,
   "OK, I've got %d nodes for S and %d nodes for T, max degree %d.\n",
-                   m,n,d-1);
+                   m,n,maxdeg);
 @z
 @x
 if (m==0) goto yes_sol; /* every boy matches every girl */

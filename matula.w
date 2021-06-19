@@ -1,4 +1,4 @@
-m\def\dts{\mathinner{\ldotp\ldotp}}
+\def\dts{\mathinner{\ldotp\ldotp}}
 \input epsf
 @s node int
 
@@ -164,17 +164,17 @@ for (n=1;o,argv[2][n];n++) {
 @<Allocate the arcs@>;
 fprintf(stderr,
   "OK, I've got %d nodes for S and %d nodes for T, max degree %d.\n",
-                   m,n,d-1);
+                   m,n,maxdeg);
 
 @ The target tree $T$ has $2(n-1)$ arcs, from each nonroot node to
 its parent and vice versa. The arcs from $u$ to~$v$ are assigned
 consecutive integers, from 0 to~$2n-3$, in lexicographic order
-of (deg($u$), $u$, $v$). (Well, the second and third components
+of (deg($v$), $v$, $u$). (Well, the second and third components
 might not be in numerical order; but all $d$~arcs from a vertex of
 degree~$d$ are consecutive, beginning with the arc to the parent.)
 
 In order to assign these numbers, we keep lists of all nodes having
-a given degree, using the |arc| fields temporarilty to link them together.
+a given degree, using the |arc| fields temporarily to link them together.
 
 @<Sub...@>=
 void fixdeg(int p) {
@@ -200,7 +200,7 @@ for (d=1,e=0;e<2*n-2;d++) {
     oo,q=tnode[p].arc,tnode[p].arc=e;
   }
 }
-for (emax=e;d<m;d++) o,thresh[d]=emax;
+for (maxdeg=d-1,emax=e;d<m;d++) o,thresh[d]=emax;
 @<Allocate the dual arcs@>;
 
 @ The arc from $u$ to $v$ has a dual, namely the arc from $v$ to $u$.
@@ -217,6 +217,7 @@ for (p=0;p<n;p++) {
 
 @ @<Glob...@>=
 int head[maxn]; /* heads of lists by degree */
+int maxdeg; /* maximum degree seen */
 int thresh[maxn]; /* where the arcs from large degree nodes start */
 int vert[maxn+maxn]; /* the source vertex of each arc */
 int uert[maxn+maxn]; /* the target vertex of each arc */
@@ -253,8 +254,8 @@ of~|p| with a distinct child $u_j$ of~|v|, in such a way that
 |sol|$[p_i][q_j]$ is nonzero. Aha, yes: It's a bipartite matching problem!
 And there are good algorithms for bipartite matching!
 
-More generally, consider the subproblem in which $u_j$ a
-parent of~$v$ in~$T$, while $u_0$, \dots, $u_{j-1}$, $u_{j+1}$, \dots, $u_s$
+More generally, consider the subproblem in which $u_j$ is a
+parent of~$v$ in~$T$, while $u_0$, \dots, $u_{j-1}$, $u_{j+1}$, \dots,~$u_s$
 are children. Matula discovered that these subproblems are
 essentially the same, for all $j$ between $0$ and~$s$.
 It's a beautiful way to save a factor of~$n$ by combining similar subproblems.
