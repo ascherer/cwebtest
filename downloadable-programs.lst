@@ -221,7 +221,9 @@ graph-hash.w
 hopcroft-karp.w
 matula.w
 matula.S
-matula.T matula.ST
+matula.T
+matula.ST
 matula-big.ch
 matula-big-planted.ch
 matula-exhaustive.ch
+tchoukaillon-arrays.w
