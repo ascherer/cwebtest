@@ -227,3 +227,13 @@ matula-big.ch
 matula-big-planted.ch
 matula-exhaustive.ch
 tchoukaillon-arrays.w
+offline-tree-insertion.w
+floorplan-to-twintree.w
+twintree-to-baxter.w
+baxter-to-floorplan.w
+queenon-partition.w
+queenon-partition.mp
+partial-latin-gad.w
+partial-latin-gad-swap.ch
+random-dfs-a.w
+random-dfs-b.w
