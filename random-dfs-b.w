@@ -7,9 +7,9 @@ are independently generated as follows: ``With probability~$p$, generate
 a new arc $u\dadj v$, where $v$ is uniformly random, and repeat this process.
 Otherwise stop.''
 
-By depth-first search I mean Algorithm 7.4.1D. That algorithm converts a given
+By depth-first search I mean Algorithm 7.4.1.1D. That algorithm converts a given
 digraph into what Tarjan called a ``jungle,'' consisting of an oriented forest
-plus nontree arcs called backs, forward arcs, and cross arcs.
+plus nontree arcs called back ars, forward arcs, and cross arcs.
 My goal is to understand the distribution of those different
 flavors of arcs.
 
@@ -61,36 +61,39 @@ printf("Depth-first search model B, probability %d/%d, seed %d.\n",
                 pnum,pden,seed);
 
 @ @<Do a depth-first search@>=
-d1:@+roots=backs=forwards=crosses=0;
+d1:@+roots=backs=forwards=loops=crosses=maxlev=arcs=0;
   for (w=0;w<n;w++) par[w]=post[w]=0;
   p=q=0;
 d2:@+while (w) {
     v=w=w-1;
     if (par[v]) continue;
-d3:@+par[v]=n+1,pre[v]=++p,roots++;
+d3:@+par[v]=n+1,level[v]=0,pre[v]=++p,roots++;
 d4:@+if (gb_unif_rand(pden)>=pnum) {
     post[v]=++q,v=par[v]-1;
     goto d8;
   }
-d5:@+u=gb_unif_rand(n);
+d5:@+arcs++,u=gb_unif_rand(n);
 d6:@+if (par[u]) { /* nontree arc */
     if (pre[u]>pre[v]) forwards++;
+    else if (pre[u]==pre[v]) loops++;
     else if (!post[u]) backs++;
     else crosses++;
     goto d4;
   }
-d7:@+par[u]=v+1,v=u,pre[v]=++p;
+d7:@+par[u]=v+1,level[u]=level[v]+1,v=u,pre[v]=++p;
+    if (level[u]>maxlev) maxlev=level[u];
     goto d4;
 d8:@+if (v!=n) goto d4;
   }
 
 @ @<Local var...@>=
-register int a,u,v,w,p,q,roots,backs,forwards,crosses;
+register int a,u,v,w,p,q,roots,backs,forwards,loops,crosses,maxlev,arcs;
 
 @ @<Global variables@>=
 int par[maxm]; /* parent pointers plus 1, or 0 */
 int pre[maxm]; /* preorder index */
 int post[maxm]; /* postorder index, or 0 */
+int level[maxm]; /* tree distance from the root */
 
 @* Statistics. I'm keeping the usual sample mean and sample variance,
 using the general purpose routines that I've had on hand for more
@@ -127,20 +130,26 @@ void print_stat(q)
 }
 
 @ @<Glob...@>=
-stat rootstat,backstat,forwardstat,crossstat;
+stat arcstat,rootstat,backstat,forwardstat,loopstat,crossstat,maxlevstat;
 
 @ @<Update the statistics@>=
+record_stat(&arcstat,arcs);
 record_stat(&rootstat,roots);
 record_stat(&backstat,backs);
 record_stat(&forwardstat,forwards);
+record_stat(&loopstat,loops);
 record_stat(&crossstat,crosses);
+record_stat(&maxlevstat,maxlev);
 
 @ @<Print the statistics@>=
 printf("During %d repetitions with %d vertices I found\n",
                          reps,n);
+print_stat(&arcstat); printf(" arcs;\n");
 print_stat(&rootstat); printf(" roots;\n");
 print_stat(&backstat); printf(" back arcs;\n");
-print_stat(&forwardstat); printf(" forward arcs;\n");
+print_stat(&forwardstat); printf(" nonloop forward arcs;\n");
+print_stat(&loopstat); printf(" loops;\n"); 
 print_stat(&crossstat); printf(" cross arcs.\n");
+print_stat(&maxlevstat); printf(" was the maximum level.\n");
 
 @*Index.

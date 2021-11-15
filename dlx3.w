@@ -904,7 +904,7 @@ subroutine is called, node |n| is the topmost for its item.
 Tweaking is important because the item remains active and on a par
 with all other active items.
 
-In the special case the the item was chosen for branching with
+In the special case that the item was chosen for branching with
 |bound=1| and |slack>=1|, we've already covered the item;
 hence we shouldn't block its rows again.
 
