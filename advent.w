@@ -2458,7 +2458,7 @@ void listen()@+{
       if (isspace(*p)) break; *q=tolower(*p);
     }
     *q='\0'; /* end of |word1| */
-    for (p++; isspace(*p); p++) ;
+    for (; isspace(*p); p++) ;
     if (*p==0) {
       *word2='\0';@+ return;
     }
@@ -2466,7 +2466,7 @@ void listen()@+{
       if (isspace(*p)) break; *q=tolower(*p);
     }
     *q='\0'; /* end of |word2| */
-    for (p++; isspace(*p); p++) ;
+    for (; isspace(*p); p++) ;
     if (*p==0) return;
     printf(" Please stick to 1- and 2-word commands.\n");
   }
