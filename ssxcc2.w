@@ -2,25 +2,43 @@
 \let\Xmod=\bmod % this is CWEB magic for using "mod" instead of "%"
 
 \datethis
-@*Intro. This program is an ``exact cover solver'' that I'm writing
+@*Intro. This program is an ``{\mc XCC} solver'' that I'm writing
 as an experiment in the use of so-called sparse-set data structures
 instead of the dancing links structures I've played with for thirty years.
 I plan to write it as if I live on a planet where the sparse-set
 ideas are well known, but doubly linked links are almost unheard-of.
-As I begin, I have no idea what the tradeoffs will be.
+As I begin, I know that the similar program {\mc SSXCC1} works fine.
 
 I shall accept the {\mc DLX} input format used in the previous solvers,
 without change, so that a fair comparison can be made.
-(See the program {\mc DLX1} for definitions. Much of the code from
+(See the program {\mc DLX2} for definitions. Much of the code from
 that program is used to parse the input for this one.)
+
+My original attempt, {\mc SSXC0}, kept the basic structure of {\mc DLX1}
+and changed only the data structure link conventions. The present
+version incorporates new ideas from Christine Solnon's
+program {\mc XCC-WITH-DANCING-CELLS}, which she wrote in October 2020.
+In particular, she proposed saving all the active set sizes on a stack;
+program {\mc SSXCC0} recomputed them by undoing the forward calculations
+in reverse.
+
+Here I extend {\mc SSXCC1} by incorporating also the weighting scheme
+by which she improved the {\mc MRV} heuristic. Motivated by the paper
+of Boussemart, Hemery, Lecoutre, and Sais in {\sl Proc.\ 16 European
+Conference on Artificial Intelligence} (2004), 146--150, she increases
+the weight of a primary item when its current set of options becomes null.
+Items are chosen for branching based on the size of their set divided by their
+current weight.
 
 @ After this program finds all solutions, it normally prints their total
 number on |stderr|, together with statistics about how many
 nodes were in the search tree, and how many ``updates'' were made.
 The running time in ``mems'' is also reported, together with the approximate
-number of bytes needed for data storage. One ``mem'' essentially means a
-memory access to a 64-bit word.
-(These totals don't include the time or space needed to parse the
+number of bytes needed for data storage.
+(An ``update'' is the removal of an option from its item list,
+or the removal of a satisfied color constraint from its option.
+One ``mem'' essentially means a memory access to a 64-bit word.
+The reported totals don't include the time or space needed to parse the
 input or to format the output.)
 
 Here is the overall structure:
@@ -31,9 +49,10 @@ Here is the overall structure:
 @d O "%" /* used for percent signs in format strings */
 @d mod % /* used for percent signs denoting remainder in \CEE/ */
 
-@d max_level 500 /* at most this many options in a solution */
+@d max_level 5000 /* at most this many options in a solution */
 @d max_cols 100000 /* at most this many items */
-@d max_nodes 25000000 /* at most this many nonzero elements in the matrix */
+@d max_nodes 10000000 /* at most this many nonzero elements in the matrix */
+@d savesize 10000000 /* at most this many entries on |savestack| */
 @d bufsize (9*max_cols+3) /* a buffer big enough to hold all item names */
 
 @c
@@ -47,29 +66,28 @@ typedef unsigned long long ullng; /* ditto */
 @<Global variables@>;
 @<Subroutines@>;
 main (int argc, char *argv[]) {
-  register int cc,i,j,k,p,pp,q,r,s,t,cur_choice,cur_node,best_itm;
+  register int c,cc,i,j,k,p,pp,q,r,s,t,cur_choice,cur_node,best_itm;
   @<Process the command line@>;
-  @<Input the item names@>;
-  @<Input the options@>;
+  @<Input the item names@>;@+@<Input the options@>;
   if (vbose&show_basics)
     @<Report the successful completion of the input phase@>;
   if (vbose&show_tots)
     @<Report the item totals@>;
   imems=mems, mems=0;
-  @<Solve the problem@>;
-done:@+if (vbose&show_tots)
-    @<Report the item totals@>;
-  if (vbose&show_profile) @<Print the profile@>;
+  if (baditem) @<Report an uncoverable item@>@;@+else @<Solve the problem@>;
+done:@+if (vbose&show_profile) @<Print the profile@>;
+  if (vbose&show_final_weights) print_weights();
   if (vbose&show_max_deg)
     fprintf(stderr,"The maximum branching degree was "O"d.\n",maxdeg);
   if (vbose&show_basics) {
     fprintf(stderr,"Altogether "O"llu solution"O"s, "O"llu+"O"llu mems,",
                                 count,count==1?"":"s",imems,mems);
     bytes=(itemlength+setlength)*sizeof(int)+last_node*sizeof(node)
-        +maxl*sizeof(int);
+        +2*maxl*sizeof(int)+maxsaveptr*sizeof(twoints);
     fprintf(stderr," "O"llu updates, "O"llu bytes, "O"llu nodes.\n",
                                 updates,bytes,nodes);
   }
+  if (sanity_checking) fprintf(stderr,"sanity_checking was on!\n");
   @<Close the files@>;
 }
 
@@ -102,15 +120,22 @@ stop after this many solutions have been found;
 `\.T$\langle\,$integer$\,\rangle$' sets |timeout| (which causes abrupt
 termination if |mems>timeout| at the beginning of a level);
 \item{$\bullet$}
+`\.w$\langle\,$float$\,\rangle$' is the initial increment |dw| added to
+an item's weight (default 1.0);
+\item{$\bullet$}
+`\.W$\langle\,$float$\,\rangle$' is the factor by which |dw| changes
+dynamically (default 1.0);
+\item{$\bullet$}
 `\.S$\langle\,$filename$\,\rangle$' to output a ``shape file'' that encodes
 the search tree.
 
 @d show_basics 1 /* |vbose| code for basic stats; this is the default */
 @d show_choices 2 /* |vbose| code for backtrack logging */
 @d show_details 4 /* |vbose| code for further commentary */
+@d show_final_weights 64 /* |vbose| code to display weights at the end */
 @d show_profile 128 /* |vbose| code to show the search tree profile */
 @d show_full_state 256 /* |vbose| code for complete state reports */
-@d show_tots 512 /* |vbose| code for reporting item totals at start and end */
+@d show_tots 512 /* |vbose| code for reporting item totals at start */
 @d show_warnings 1024 /* |vbose| code for reporting options without primaries */
 @d show_max_deg 2048 /* |vbose| code for reporting maximum branching degree */
 
@@ -121,7 +146,8 @@ int show_choices_max=1000000; /* above this level, |show_choices| is ignored */
 int show_choices_gap=1000000; /* below level |maxl-show_choices_gap|,
     |show_details| is ignored */
 int show_levels_max=1000000; /* above this level, state reports stop */
-int maxl=0; /* maximum level actually reached */
+int maxl; /* maximum level actually reached */
+int maxsaveptr; /* maximum size of |savestack| */
 char buf[bufsize]; /* input buffer */
 ullng count; /* solutions found so far */
 ullng options; /* options seen so far */
@@ -133,6 +159,7 @@ ullng thresh=10000000000; /* report when |mems| exceeds this, if |delta!=0| */
 ullng delta=10000000000; /* report every |delta| or so mems */
 ullng maxcount=0xffffffffffffffff; /* stop after finding this many solutions */
 ullng timeout=0x1fffffffffffffff; /* give up after this many mems */
+float w0=1.0,dw=1.0,dwfactor=1.0; /* initial weight, increment, and growth */
 FILE *shape_file; /* file for optional output of search tree shape */
 char *shape_name; /* its name */
 int maxdeg; /* the largest branching degree seen so far */
@@ -150,6 +177,8 @@ case 'C': k|=(sscanf(argv[j]+1,""O"d",&show_levels_max)-1);@+break;
 case 'l': k|=(sscanf(argv[j]+1,""O"d",&show_choices_gap)-1);@+break;
 case 't': k|=(sscanf(argv[j]+1,""O"lld",&maxcount)-1);@+break;
 case 'T': k|=(sscanf(argv[j]+1,""O"lld",&timeout)-1);@+break;
+case 'w': k|=(sscanf(argv[j]+1,""O"f",&dw)-1);@+break;
+case 'W': k|=(sscanf(argv[j]+1,""O"f",&dwfactor)-1);@+break;
 case 'S': shape_name=argv[j]+1, shape_file=fopen(shape_name,"w");
   if (!shape_file)
     fprintf(stderr,"Sorry, I can't open file `"O"s' for writing!\n",
@@ -159,7 +188,7 @@ default: k=1; /* unrecognized command-line option */
 }
 if (k) {
   fprintf(stderr, "Usage: "O"s [v<n>] [m<n>] [s<n>] [d<n>]"
-       " [c<n>] [C<n>] [l<n>] [t<n>] [T<n>] [S<bar>] < foo.dlx\n",
+       " [c<n>] [C<n>] [l<n>] [t<n>] [T<n>] [w<f>] [W<f>] [S<bar>] < foo.dlx\n",
                             argv[0]);
   exit(-1);
 }
@@ -183,7 +212,7 @@ $p$ and $q$, each of which is a permutation of~$\{0,1,\ldots,n-1\}$,
 together with an integer $s$ in the range $0\le s\le n$. In fact, $p$ is
 the {\it inverse\/} of~$q$; and $s$ is the number of elements of~$S$.
 The current value of the set $S$ is then simply
-$\{x_{p_0},\ldots,x_{p_{s-1}}\}$. (Notice that every $s$-element can be
+$\{x_{p_0},\ldots,x_{p_{s-1}}\}$. (Notice that every $s$-element subset can be
 represented in $s!\,(n-s)!$ ways.)
 
 It's easy to test if $x_k\in S$, because that's true if and only if $q_k<s$.
@@ -223,15 +252,20 @@ relation |pos(x)=k|, where |pos(x)| is an abbreviation for
 sparse-set data structure for the set of all currently active items;
 and |pos| plays the role of~$q$.
 
+A primary item $x$ also has a |wt| field, |set[x-5]|, initially~1.
+The weight is increased by |dw| whenever we backtrack because |x|
+cannot be covered.
+
 Suppose the |k|th item |x| currently appears in |s| options. Those options
 are indices into |nd|, which is an array of ``nodes.'' Each node
-has two fields, |itm| and |loc|. If |x<=q<x+s|, let |y=set[q]|.
+has three fields: |itm|, |loc|, and |clr|. If |x<=q<x+s|, let |y=set[q]|.
 This is essentially a pointer to a node, and we have
 |nd[y].itm=x|, |nd[y].loc=q|. In other words,
 the sequential list of |s| elements that begins at
 |x=item[k]| in the |set| array is the sparse-set representation of the
 currently active options that contain the |k|th item.
-The |itm| fields remain constant,
+The |clr| field contains |x|'s color for this option.
+The |itm| and |clr| fields remain constant,
 once we've initialized everything, but the |loc| fields will change.
 
 The given options are stored sequentially in the |nd| array, with one node
@@ -253,31 +287,43 @@ the simple sparse-set scheme that we started with.)
 The |set| array contains also the item names.
 
 We count one mem for a simultaneous access to the |itm| and |loc| fields
-of a node.
+of a node. Each node actually has a ``spare'' fourth field, |spr|, inserted
+solely to enforce alignment to 16-byte boundaries.
+(Some modification of this program might perhaps have a use for |spr|?)
 
-@d size(x) set[(x)-1] /* number of active options of the |k|th item, |x| */
-@d pos(x) set[(x)-2] /* where that item is found in the |item| array */
-@d lname(x) set[(x)-4] /* the first four bytes of |x|'s name */
-@d rname(x) set[(x)-3] /* (the last four bytes of |x|'s name */
+@d size(x) set[(x)-1].i /* number of active options of the |k|th item, |x| */
+@d pos(x) set[(x)-2].i /* where that item is found in the |item| array */
+@d lname(x) set[(x)-4].i /* the first four bytes of |x|'s name */
+@d rname(x) set[(x)-3].i /* the last four bytes of |x|'s name */
+@d wt(x) set[(x)-5].f
 
 @<Type...@>=
 typedef struct node_struct {
   int itm; /* the item |x| corresponding to this node */
   int loc; /* where this node resides in |x|'s active set */
+  int clr; /* color associated with item |x| in this option, if any */
+  int spr; /* a spare field inserted only to maintain 16-byte alignment */
 } node;
+typedef union {
+  int i; /* an integer (32 bits) */
+  float f; /* a floating point value (fits in 4 bytes) */
+} tetrabyte;
 
 @ @<Glob...@>=
 node nd[max_nodes]; /* the master list of nodes */
 int last_node; /* the first node in |nd| that's not yet used */
 int item[max_cols]; /* the master list of items */
 int second=max_cols; /* boundary between primary and secondary items */
-int last_itm; /* the first item in |cl| that's not yet used */
-int set[max_nodes+4*max_cols]; /* the sets of active options for active items */
+int last_itm; /* items seen so far during input, plus 1 */
+tetrabyte set[max_nodes+5*max_cols]; /* active options for active items */
 int itemlength; /* number of elements used in |item| */
 int setlength; /* number of elements used in |set| */
 int active; /* current number of active items */
+int oactive; /* value of active before swapping out current-choice items */
+int baditem; /* an item with no options, plus 1 */
+int osecond; /* setting of |second| just after initial input */
 
-@ We're going to store string data (an item name) in the midst of
+@ We're going to store string data (an item's name) in the midst of
 the integer array |set|. So we've got to do some type coercion using
 low-level \CEE/-ness.
 
@@ -286,7 +332,7 @@ typedef struct {
   int l,r;
 } twoints;
 typedef union {
-  char str[8]; /* eight one-byte characters */
+  unsigned char str[8]; /* eight one-byte characters */
   twoints lr; /* two four-byte integers */
 } stringbuf;
 stringbuf namebuf;
@@ -311,6 +357,8 @@ void print_option(int p,FILE *stream) {
   }
   for (q=p;;) {
     print_item_name(x,stream);
+    if (nd[q].clr)
+      fprintf(stream,":"O"c",nd[q].clr);
     q++;
     x=nd[q].itm;
     if (x<0) q+=x,x=nd[q].itm;
@@ -336,11 +384,15 @@ void print_itm(int c) {
   }
   fprintf(stderr,"Item");
   print_item_name(c,stderr);
-  if (pos(c)<second) fprintf(stderr," ("O"d of "O"d), length "O"d:\n",
-         pos(c)+1,active,size(c));
+  if (c<second)
+    fprintf(stderr," ("O"d of "O"d), length "O"d, weight "O"f:\n",
+         pos(c)+1,active,size(c),wt(c));
+  else if (pos(c)>=active)
+    fprintf(stderr," (secondary "O"d, purified), length "O"d:\n",
+         pos(c)+1,size(c));
   else fprintf(stderr," (secondary "O"d), length "O"d:\n",
          pos(c)+1,size(c));
-  for (p=c;p<c+size(c);p++) prow(set[p]);
+  for (p=c;p<c+size(c);p++) prow(set[p].i);
 }
 
 @ Speaking of debugging, here's a routine to check if redundant parts of our
@@ -350,7 +402,7 @@ data structure have gone awry.
 
 @<Sub...@>=
 void sanity(void) {
-  register int k,x,i,l,r;
+  register int k,x,i,l,r,q,qq;
   for (k=0;k<itemlength;k++) {
     x=item[k];
     if (pos(x)!=k) {
@@ -364,12 +416,24 @@ void sanity(void) {
     if (l<=0) {
       if (nd[i+r+1].itm!=-r)
         fprintf(stderr,"Bad spacer in nodes "O"d, "O"d!\n",i,i+r+1);
+      qq=0;
     }@+else {
       if (l>r) fprintf(stderr,"itm>loc in node "O"d!\n",i);
-      else if (set[r]!=i) {
-        fprintf(stderr,"Bad loc field for option "O"d of item",r-l+1);
-        print_item_name(l,stderr);
-        fprintf(stderr," in node "O"d!\n",i);
+      else {
+        if (set[r].i!=i) {
+          fprintf(stderr,"Bad loc field for option "O"d of item",r-l+1);
+          print_item_name(l,stderr);
+          fprintf(stderr," in node "O"d!\n",i);
+        }
+        if (pos(l)<active) {
+          if (r<l+size(l)) q=+1;@+else q=-1; /* in or out? */
+          if (q*qq<0) {
+            fprintf(stderr,"Flipped status at option "O"d of item",r-l+1);
+            print_item_name(l,stderr);
+            fprintf(stderr," in node "O"d!\n",i);
+          }
+          qq=q;         
+        }
       }
     }
   }
@@ -411,7 +475,6 @@ for (;o,buf[p];) {
     for (p++;o,isspace(buf[p]);p++) ;
   }
 }
-if (second==max_cols) second=last_itm;
 
 @ @<Check for duplicate item name@>=
 for (k=last_itm-1;k;k--) {
@@ -420,7 +483,11 @@ for (k=last_itm-1;k;k--) {
 }
 if (k) panic("Duplicate item name");
 
-@ @<Input the options@>=
+@ I'm putting the option number into the |spr| field of the
+spacer that follows it, as a
+possible debugging aid. But the program doesn't currently use that information.
+
+@<Input the options@>=
 while (1) {
   if (!fgets(buf,bufsize,stdin)) break;
   if (o,buf[p=strlen(buf)-1]!='\n') panic("Option line too long");
@@ -429,10 +496,19 @@ while (1) {
   i=last_node; /* remember the spacer at the left of this option */
   for (pp=0;buf[p];) {
     o,namebuf.lr.l=namebuf.lr.r=0;
-    for (j=0;j<8 && (o,!isspace(buf[p+j]));j++)
+    for (j=0;j<8 && (o,!isspace(buf[p+j])) && buf[p+j]!=':';j++)
       o,namebuf.str[j]=buf[p+j];
-    if (j==8 && !isspace(buf[p+j])) panic("Item name too long");
+    if (!j) panic("Empty item name");
+    if (j==8 && !isspace(buf[p+j]) && buf[p+j]!=':')
+          panic("Item name too long");
     @<Create a node for the item named in |buf[p]|@>;
+    if (buf[p+j]!=':') o,nd[last_node].clr=0;
+    else if (k>=second) {
+      if ((o,isspace(buf[p+j+1])) || (o,!isspace(buf[p+j+2])))
+        panic("Color must be a single character");
+      o,nd[last_node].clr=(unsigned char)buf[p+j+1];
+      p+=2;
+    }@+else panic("Primary item must be uncolored");
     for (p+=j+1;o,isspace(buf[p]);p++) ;
   }
   if (!pp) {
@@ -448,11 +524,12 @@ while (1) {
     if (last_node==max_nodes) panic("Too many nodes");
     options++;
     o,nd[last_node].itm=i+1-last_node;
+    nd[last_node].spr=options; /* option number, for debugging only */
   }
 }
 @<Initialize |item|@>;
 @<Expand |set|@>;
-@<Adjust |nb|@>;
+@<Adjust |nd|@>;
 
 @ We temporarily use |pos| to recognize duplicate items in an option.
 
@@ -475,11 +552,12 @@ o,k=nd[last_node].itm<<2;
 oo,size(k)--,pos(k)=i-1;
 
 @ @<Initialize |item|@>=
-itemlength=last_itm-1;
-for (k=0,j=4;k<itemlength;k++)
-  oo,item[k]=j,j+=4+size((k+1)<<2);
+active=itemlength=last_itm-1;
+for (k=0,j=5;k<itemlength;k++)
+  oo,item[k]=j,j+=(k<second-2)+4+size((k+1)<<2);
 setlength=j-4;
-active=second=second-1;
+if (second==max_cols) osecond=active,second=j;
+else osecond=second-1;
 
 @ Going from high to low, we now move the item names and sizes
 to their final positions (leaving room for the pointers into |nb|).
@@ -487,34 +565,46 @@ to their final positions (leaving room for the pointers into |nb|).
 @<Expand |set|@>=
 for (;k;k--) {
   o,j=item[k-1];
+  if (k==second) second=j; /* |second| is now an index into |set| */
   oo,size(j)=size(k<<2);
+  if (size(j)==0 && k<osecond) baditem=k;
   o,pos(j)=k-1;
   oo,rname(j)=rname(k<<2),lname(j)=lname(k<<2);
+  if (k<=osecond) o,wt(j)=w0;
 }
 
-@ @<Adjust |nb|@>=
+@ @<Adjust |nd|@>=
 for (k=1;k<last_node;k++) {
   if (o,nd[k].itm<0) continue; /* skip over a spacer */
   o,j=item[nd[k].itm-1];
   i=j+nd[k].loc; /* no mem charged because we just read |nd[k].itm| */
   o,nd[k].itm=j,nd[k].loc=i;
-  o,set[i]=k;
+  o,set[i].i=k;
 }
 
-@ The ``number of entries'' includes spacers (because {\mc DLX1}
+@ @<Report an uncoverable item@>=
+{
+  if (vbose&show_choices) {
+    fprintf(stderr,"Item");
+    print_item_name(item[baditem-1],stderr);
+    fprintf(stderr," has no options!\n");
+  }
+}
+
+@ The ``number of entries'' includes spacers (because {\mc DLX2}
 includes spacers in its reports). If you want to know the
 sum of the option lengths, just subtract the number of options.
 
 @<Report the successful completion of the input phase@>=
 fprintf(stderr,
   "("O"lld options, "O"d+"O"d items, "O"d entries successfully read)\n",
-                       options,second,last_itm-second-1,last_node);
+                       options,osecond,itemlength-osecond,last_node);
 
-@ The item lengths after input should agree with the item lengths
-after this program has finished. I print them (on request), in order to
-provide some reassurance that the algorithm isn't badly screwed up.
-
-[Caution: They will probably appear in a different order than before!]
+@ The item lengths after input are shown (on request).
+But there's little use trying to show them after the process is done,
+since they are restored somewhat blindly.
+(Failures of the linked-list implementation in {\mc DLX2} could sometimes be
+detected by showing the final lengths; but that reasoning no longer applies.)
 
 @<Report the item totals@>=
 {
@@ -532,55 +622,70 @@ choose always an item that appears to be hardest to cover, namely the
 item with smallest set, from all items that still need to be covered.
 And we explore all possibilities via depth-first search.
 
-The neat part of this algorithm is the way the lists are maintained.
+The neat part of this algorithm is the way the sets are maintained.
 Depth-first search means last-in-first-out maintenance of data structures;
-and it turns out that we need no auxiliary tables to undelete elements from
-lists when backing up. The sparse-set representations remember
-enough of what was done so that we can undo it later.
+and the sparse-set representations make it particularly easy to undo
+what we've done at less-deep levels.
 
 The basic operation is ``covering an item.'' This means removing it
 from the set of items needing to be covered, and ``hiding'' its
 options: removing them from the sets of the other items they contain.
 
 @<Solve the problem@>=
-level=0;
+{
+  level=0;
 forward: nodes++;
-if (vbose&show_profile) profile[level]++;
-if (sanity_checking) sanity();
-@<Do special things if enough |mems| have accumulated@>;
-@<Set |best_itm| to the best item for branching@>;
-if (t==0) goto donewithlevel;
-cover(best_itm);
-cur_choice=best_itm;
-oo,cur_node=choice[level]=set[best_itm];
-goto tryit;
-advance:@+if (o,cur_choice>=best_itm+size(best_itm)) goto backup;
-oo,cur_node=choice[level]=set[cur_choice];
-tryit:@+if ((vbose&show_choices) && level<show_choices_max) {
-  fprintf(stderr,"L"O"d:",level);
-  print_option(cur_node,stderr);
-}
-@<Cover all other items of |cur_node|@>;
-if (active==0) @<Visit a solution and |goto recover|@>;
-if (++level>maxl) {
-  if (level>=max_level) {
-    fprintf(stderr,"Too many levels!\n");
-    exit(-4);
+  if (vbose&show_profile) profile[level]++;
+  if (sanity_checking) sanity();
+  @<Do special things if enough |mems| have accumulated@>;
+  @<Set |best_itm| to the best item for branching@>;
+  if (t==max_nodes) @<Visit a solution and |goto backup|@>;
+  cur_choice=best_itm; 
+  if (t==0) { /* |t=size(best_itm)| */
+    tough_itm=best_itm;
+    goto abort;
   }
-  maxl=level;
+  @<Swap |best_itm| out of the active list@>;
+  oactive=active,hide(best_itm,0,0); /* hide its options */
+  @<Save the currently active sizes@>;
+advance: oo,cur_node=choice[level]=set[cur_choice].i;
+tryit:@+if ((vbose&show_choices) && level<show_choices_max) {
+    fprintf(stderr,"L"O"d:",level);
+    print_option(cur_node,stderr);
+  }
+  @<Swap out all other items of |cur_node|@>;
+  @<Hide the other options of those items, or |goto abort|@>;
+  if (++level>maxl) {
+    if (level>=max_level) {
+      fprintf(stderr,"Too many levels!\n");
+      exit(-4);
+    }
+    maxl=level;
+  }
+  goto forward;
+backup:@+if (level==0) goto done;
+  level--;
+  o,cur_node=choice[level];
+  o,best_itm=nd[cur_node].itm,cur_choice=nd[cur_node].loc;
+  goto reconsider;
+abort:@+@<Increase the weight of |tough_itm|@>;
+reconsider:@+if (o,cur_choice+1>=best_itm+size(best_itm)) goto backup;
+  @<Restore the currently active sizes@>;
+  cur_choice++;@+goto advance;
 }
-goto forward;
-backup: uncover(best_itm);
-donewithlevel:@+if (level==0) goto done;
-level--;
-oo,cur_node=choice[level],best_itm=nd[cur_node].itm,cur_choice=nd[cur_node].loc;
-recover: @<Uncover all other items of |cur_node|@>;
-cur_choice++;@+goto advance;
 
-@ @<Glob...@>=
+@ We save the sizes of active items on |savestack|, whose entries
+have two fields |itm| and |siz|. This stack makes it easy to undo
+all deletions, by simply restoring the former sizes.
+
+@<Glob...@>=
 int level; /* number of choices in current partial solution */
 int choice[max_level]; /* the node chosen on each level */
+int saved[max_level+1]; /* size of |savestack| on each level */
 ullng profile[max_level]; /* number of search tree nodes on each level */
+twoints savestack[savesize];
+int saveptr; /* current size of |savestack| */
+int tough_itm; /* an item that led to a conflict */
 
 @ @<Do special things if enough |mems| have accumulated@>=
 if (delta && (mems>=thresh)) {
@@ -592,150 +697,234 @@ if (mems>=timeout) {
   fprintf(stderr,"TIMEOUT!\n");@+goto done;
 }
 
-@ When an option is hidden, it leaves all lists except the list of the
-item that is being covered. Thus a node is never removed from a list
-twice.
+@ @<Swap |best_itm| out of the active list@>=
+p=active-1,active=p;
+o,pp=pos(best_itm);
+o,cc=item[p];
+oo,item[p]=best_itm,item[pp]=cc;
+oo,pos(cc)=pp,pos(best_itm)=p;
+updates++;
+
+@ Note that a colored secondary item might have already been purified,
+in which case it has already been swapped out. We don't want to
+tamper with any of the inactive items.
+
+@<Swap out all other items of |cur_node|@>=
+p=oactive=active;
+for (q=cur_node+1;q!=cur_node;) {
+  o,c=nd[q].itm;
+  if (c<0) q+=c;
+  else {
+    o,pp=pos(c);
+    if (pp<p) {
+      o,cc=item[--p];
+      oo,item[p]=c,item[pp]=cc;
+      oo,pos(cc)=pp,pos(c)=p;
+      updates++;
+    }
+    q++;
+  }
+}
+active=p;
+
+@ A secondary item was purified at lower levels if and only if
+its position is |>=oactive|.
+
+@<Hide the other options of those items...@>=
+for (q=cur_node+1;q!=cur_node;) {
+  o,cc=nd[q].itm;
+  if (cc<0) q+=cc;
+  else {
+    if (cc<second) {
+      if (hide(cc,0,1)==0) goto abort;
+    }@+else { /* do nothing if |cc| already purified */
+      o,pp=pos(cc);
+      if (pp<oactive && (o,hide(cc,nd[q].clr,1)==0)) goto abort;
+    }
+    q++;
+  }
+}
+
+@ The |hide| routine hides all of the incompatible options remaining in the
+set of a given item. If |check| is nonzero, it
+returns zero if that would cause a primary item to be uncoverable.
+
+If the |color| parameter is zero, all options are incompatible.
+Otherwise, however, the given is secondary, and we retain options
+for which that item has a |color| match.
+
+When an option is hidden, it leaves all sets except the set of that
+given item. And the given item is inactive.
+Thus a node is never removed from a set twice.
 
 @<Sub...@>=
-void cover(int c) {
-  register int k,a,cc,s,rr,ss,nn,tt,uu,vv,nnp;
-  o,k=pos(c);
-  if (k<second) { /* update the active list, if |c| is primary */
-    a=active-1,active=a;
-    o,cc=item[a];
-    oo,item[a]=c,item[k]=cc;
-    oo,pos(cc)=k,pos(c)=a;
-    updates++;
+int hide(int c,int color,int check) {
+  register int cc,s,rr,ss,nn,tt,uu,vv,nnp;
+  for (o,rr=c,s=c+size(c);rr<s;rr++) {
+    o,tt=set[rr].i;
+    if (!color || (o,nd[tt].clr!=color))
+      @<Remove option |tt| from the other sets it's in@>;
   }
-  for (o,rr=c,s=c+size(c);rr<s;rr++)
-    @<Remove the option |set[rr]| from the other sets it's in@>;
+  return 1;
 }
 
-@ @<Remove the option |set[rr]| from the other sets it's in@>=
+@ @<Remove option |tt| from the other sets it's in@>=
 {
-  for (o,tt=set[rr],nn=tt+1;nn!=tt;) {
+  for (nn=tt+1;nn!=tt;) {
     o,uu=nd[nn].itm,vv=nd[nn].loc;
     if (uu<0) {@+nn+=uu;@+continue;@+}
-    o,ss=size(uu)-1;
-    o,nnp=set[uu+ss];
-    o,size(uu)=ss;
-    oo,set[uu+ss]=nn,set[vv]=nnp;
-    oo,nd[nn].loc=uu+ss,nd[nnp].loc=vv;
-    nn++;
-    updates++;
-  }
-}
-
-@ To undo the |cover| operation, we need only increase the set size,
-because the previously deleted element is in position to be seamlessly
-reinstated. (Inactive elements are never moved.)
-We need not swap that element back to its former position.
-
-@<Subroutines@>=
-void uncover(int c) {
-  register int k,cc,s,rr,ss,nn,tt,uu;
-  for (o,rr=c,s=c+size(c);rr<s;rr++)
-    @<Unremove the option |set[rr]| from the other sets it was in@>;
-  o,k=pos(c);
-  if (k<second) active++;
-}
-
-@ @<Unremove the option |set[rr]| from the other sets it was in@>=
-{
-  for (o,tt=set[rr],nn=tt+1;nn!=tt;) {
-    o,uu=nd[nn].itm;
-    if (uu<0) {@+nn+=uu;@+continue;@+}
-    o,ss=size(uu)+1;
-    o,size(uu)=ss;
+    if (o,pos(uu)<oactive) {
+      o,ss=size(uu)-1;
+      if (ss==0 && check && uu<second && (o,pos(uu)<active)) {
+        if ((vbose&show_choices) && level<show_choices_max) {
+          fprintf(stderr," can't cover");
+          print_item_name(uu,stderr);
+          fprintf(stderr,"\n");
+        }    
+        tough_itm=uu;
+        return 0;
+      }
+      o,nnp=set[uu+ss].i;
+      o,size(uu)=ss;
+      oo,set[uu+ss].i=nn,set[vv].i=nnp;
+      oo,nd[nn].loc=uu+ss,nd[nnp].loc=vv;
+      updates++;
+    }
     nn++;
   }
 }
 
-@ @<Cover all other items of |cur_node|@>=
-for (pp=cur_node+1;pp!=cur_node;) {
-  o,cc=nd[pp].itm;
-  if (cc<0) pp+=cc;
-  else cover(cc),pp++;
+@ If a weight becomes dangerously large, we rescale all the weights.
+
+@d dangerous 1e32f
+@d wmin 1e-30f
+
+@<Increase the weight of |tough_itm|@>=
+oo,wt(tough_itm)+=dw;
+dw*=dwfactor;
+if (wt(tough_itm)>=dangerous) {
+  register int k;
+  register float t;
+  for (k=0;k<itemlength;k++) if (o,item[k]<second) {
+    o,t=wt(item[k])*1e-20f;
+    o,wt(item[k])=(t<wmin?wmin:t);
+  }
+  dw*=1e-20f;
+  if (dw<wmin) dw=wmin;
+  w0*=1e-20f;
+  if (w0<wmin) w0=wmin;
 }
 
-@ Covering and uncovering both traverse options to the right.
-That's okay---although it takes a bit of thought to verify that all
-sets are restored correctly. (An item that has lost $k$ options
-from its set will regain those $k$ options, but not necessarily
-in the same order.)
-
-But we do need to go left here, {\it not\/} right.
-
-@<Uncover all other items of |cur_node|@>=
-for (pp=cur_node-1;pp!=cur_node;) {
-  o,cc=nd[pp].itm;
-  if (cc<=0) pp+=nd[pp].loc;
-  else uncover(cc),pp--;
+@ @<Sub...@>=
+void print_weights(void) {
+  register int k;
+  for (k=0;k<itemlength;k++) if (item[k]<second && wt(item[k])!=w0) {
+    print_item_name(item[k],stderr);
+    fprintf(stderr," wt "O"f\n",wt(item[k]));
+  }
 }
 
 @ The ``best item'' is considered to be an item that minimizes the
-number of remaining choices. If there are several candidates, we
-choose the leftmost.
+number of remaining choices, divided by the item's weight.
+If there are several candidates, we choose the leftmost.
+
+When an item has at most one option left, however, we consider it
+to be forced, and we stop looking for other possibilities.
+
+Sometimes an item has no remaining options. This couldn't happen
+in {\mc SSXCC1}; but the present program might choose to branch on
+a heavyweight item whose options strictly include all of the remaining
+options of a lightweight item. (The heavyweight's options are removed
+when the |check| parameter to~|hide| is~0.)
 
 (This program explores the search space in a different order
-from {\mc DLX1}, because the ordering of items in the active list
+from {\mc DLX2}, because the ordering of items in the active list
 is no longer fixed. Thus ties are broken in a different way.)
 
+@d infty 2e32f /* twice |dangerous| */
+
 @<Set |best_itm| to the best item for branching@>=
-t=max_nodes;
-if ((vbose&show_details) &&
-    level<show_choices_max && level>=maxl-show_choices_gap)
-  fprintf(stderr,"Level "O"d:",level);
-for (k=0;t&&(k<active);k++) {
-  oo,s=size(item[k]);
+{
+  register float score,tscore,w;
+  register int force;
+  score=infty,force=0;
+  if ((vbose&show_details) &&
+      level<show_choices_max && level>=maxl-show_choices_gap)
+    fprintf(stderr,"Level "O"d:",level);
+  for (k=0;!force && k<active;k++) if (o,item[k]<second) {
+    oo,s=size(item[k]),w=wt(item[k]);
+    if ((vbose&show_details) &&
+        level<show_choices_max && level>=maxl-show_choices_gap) {
+      print_item_name(item[k],stderr);@+
+      fprintf(stderr,"("O"d,"O".2f)",s,w);
+    }
+    if (s<=1) force=1,t=s,best_itm=item[k];
+    else {
+      tscore=s/w;
+      if (tscore>=infty) tscore=dangerous;
+      if (tscore<score) best_itm=item[k],score=tscore;
+    }
+  }
+  if (!force) t=(score==infty? max_nodes: size(best_itm));
   if ((vbose&show_details) &&
       level<show_choices_max && level>=maxl-show_choices_gap) {
-    print_item_name(item[k],stderr);
-    fprintf(stderr,"("O"d)",s);
-  }
-  if (s<t) best_itm=item[k],t=s;
-}
-if ((vbose&show_details) &&
-    level<show_choices_max && level>=maxl-show_choices_gap) {
-  fprintf(stderr," branching on");
-  print_item_name(best_itm,stderr);
-  fprintf(stderr,"("O"d)\n",t);
-}
-if (t>maxdeg) maxdeg=t;
-if (shape_file) {
-  fprintf(shape_file,""O"d",t);
-  print_item_name(best_itm,shape_file);
-  fprintf(shape_file,"\n");
-  fflush(shape_file);
-}
-
-@ @<Visit a solution and |goto recover|@>=
-{
-  nodes++; /* a solution is a special node, see 7.2.2--(4) */
-  if (level+1>maxl) {
-    if (level+1>=max_level) {
-      fprintf(stderr,"Too many levels!\n");
-      exit(-5);
+    if (t==max_nodes) fprintf(stderr," solution\n");
+    else {
+      fprintf(stderr," branching on");
+      print_item_name(best_itm,stderr);@+
+      if (t<=1) fprintf(stderr,"(forced)\n");
+      else fprintf(stderr,"("O"d), score "O".4f\n",t,score);
     }
-    maxl=level+1;
   }
-  if (vbose&show_profile) profile[level+1]++;
+  if (t>maxdeg && t<max_nodes) maxdeg=t;
   if (shape_file) {
-    fprintf(shape_file,"sol\n");@+fflush(shape_file);
+    if (t==max_nodes) fprintf(shape_file,"sol\n");
+    else {
+      fprintf(shape_file,""O"d",t);
+      print_item_name(best_itm,shape_file);@+
+      fprintf(shape_file,"\n");
+    }
+    fflush(shape_file);
   }
-  @<Record solution and |goto recover|@>;
 }
 
-@ @<Record solution and |goto recover|@>=
+@ @<Visit a solution and |goto backup|@>=
 {
   count++;
   if (spacing && (count mod spacing==0)) {
     printf(""O"lld:\n",count);
-    for (k=0;k<=level;k++) print_option(choice[k],stdout);
+    for (k=0;k<level;k++) print_option(choice[k],stdout);
     fflush(stdout);
   }
   if (count>=maxcount) goto done;
-  goto recover;
+  goto backup;
+}
+
+@ @<Save the currently active sizes@>=
+if (saveptr+active>maxsaveptr) {
+  if (saveptr+active>=savesize) {
+    fprintf(stderr,"Stack overflow (savesize="O"d)!\n",savesize);
+    exit(-5);
+  }
+  maxsaveptr=saveptr+active;
+}
+for (p=0;p<active;p++)
+  ooo,savestack[saveptr+p].l=item[p],savestack[saveptr+p].r=size(item[p]);
+o,saved[level+1]=saveptr=saveptr+active;
+
+@ @<Restore the currently active sizes@>=
+o,saveptr=saved[level+1];
+o,active=saveptr-saved[level];
+for (p=-active;p<0;p++)
+  oo,size(savestack[saveptr+p].l)=savestack[saveptr+p].r;
+
+@ @<Sub...@>=
+void print_savestack(int start,int stop) {
+  register k;
+  for (k=start;k<=stop;k++) {
+    print_item_name(savestack[k].l,stderr);
+    fprintf(stderr,"("O"d), "O"d\n",savestack[k].l,savestack[k].r);
+  }
 }
 
 @ @<Sub...@>=

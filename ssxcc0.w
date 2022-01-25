@@ -191,7 +191,7 @@ $p$ and $q$, each of which is a permutation of~$\{0,1,\ldots,n-1\}$,
 together with an integer $s$ in the range $0\le s\le n$. In fact, $p$ is
 the {\it inverse\/} of~$q$; and $s$ is the number of elements of~$S$.
 The current value of the set $S$ is then simply
-$\{x_{p_0},\ldots,x_{p_{s-1}}\}$. (Notice that every $s$-element can be
+$\{x_{p_0},\ldots,x_{p_{s-1}}\}$. (Notice that every $s$-element subset can be
 represented in $s!\,(n-s)!$ ways.)
 
 It's easy to test if $x_k\in S$, because that's true if and only if $q_k<s$.
@@ -263,14 +263,14 @@ the simple sparse-set scheme that we started with.)
 The |set| array contains also the item names, as well as ``purified colors.''
 
 We count one mem for a simultaneous access to the |itm| and |loc| fields
-of a node. Each actually has a ``spare'' fourth field, |spr|, inserted
+of a node. Each node actually has a ``spare'' fourth field, |spr|, inserted
 solely to enforce alignment to 16-byte boundaries.
 (Some modification of this program might perhaps have a use for |spr|?)
 
 @d size(x) set[(x)-1] /* number of active options of the |k|th item, |x| */
 @d pos(x) set[(x)-2] /* where that item is found in the |item| array */
 @d lname(x) set[(x)-4] /* the first four bytes of |x|'s name */
-@d rname(x) set[(x)-3] /* (the last four bytes of |x|'s name */
+@d rname(x) set[(x)-3] /* the last four bytes of |x|'s name */
 @d color(x) set[(x)-5] /* the color of |x|, if purified (secondary |x| only) */
 
 @<Type...@>=
@@ -286,7 +286,7 @@ node nd[max_nodes]; /* the master list of nodes */
 int last_node; /* the first node in |nd| that's not yet used */
 int item[max_cols]; /* the master list of items */
 int second=max_cols; /* boundary between primary and secondary items */
-int last_itm; /* the first item in |cl| that's not yet used */
+int last_itm; /* items seen so far during input, plus 1 */
 int set[max_nodes+4*max_cols]; /* the sets of active options for active items */
 int itemlength; /* number of elements used in |item| */
 int setlength; /* number of elements used in |set| */
