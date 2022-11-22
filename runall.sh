@@ -1,7 +1,7 @@
 #!/bin/sh
 
-SHRTOPTS=b:cef:p:v:
-LONGOPTS=branch:,changes,extras,file:,path:,version:
+SHRTOPTS=b:cef:p:t:v:
+LONGOPTS=branch:,changes,extras,file:,path:,tex:,version:
 
 # Set default values
 branch= # Executive override for 'testbranch' below
@@ -9,6 +9,7 @@ changes=false # Apply associated change files (if any)
 extras=false # Apply 'extra' change files off-scheme (inludes 'changes')
 files=$(echo *.w) # List of example sources
 path='/usr/bin' # Path to CWEB
+tex= # TeX engine
 version='3.64' # Version of CWEB
 
 getopt -T >/dev/null
@@ -33,6 +34,7 @@ do
 		-e | --extras ) extras=true; changes=true; shift ;;
 		-f | --file ) files="$2" ; shift 2 ;;
 		-p | --path ) path="$2"; shift 2 ;;
+		-t | --tex ) tex="$2"; shift 2 ;;
 		-v | --version ) version="$2"; shift 2 ;;
 		-- ) shift; break ;;
 		* ) break ;;
@@ -44,6 +46,15 @@ if [ ! -e "$path/ctangle" ]
 then
 	>&2 echo "Can't find CWEB at path '$path'."
 	exit 1
+fi
+
+# If we're runnig TeX, we'll need some Metapost graphics
+if [ -n "$tex" ]
+then
+	for f in *.mp
+	do
+		mpost $f
+	done
 fi
 
 # Take changes into account
@@ -68,6 +79,7 @@ do
 	$path/cweave +bph $i
 	git add $bi.idx $bi.scn $bi.tex && \
 	>&2 git commit -m "cweave [$version] $i."
+	[ -n "$tex" ] && $tex $bi
 
 	# Process all associated CWEB change files ...
 	$changes || continue
@@ -85,6 +97,7 @@ do
 		$path/cweave +bph $i $c $bc
 		git add $bc.idx $bc.scn $bc.tex && \
 		>&2 git commit -m "cweave [$version] $i $c."
+		[ -n "$tex" ] && $tex $bi
 	done
 done
 
@@ -105,6 +118,7 @@ then
 			$path/cweave +bph hull$i $bc $bc-$i
 			git add $bc-$i.idx $bc-$i.scn $bc-$i.tex && \
 			>&2 git commit -m "cweave [$version] hull$i $c."
+			[ -n "$tex" ] && $tex hull$i
 		done
 	done
 
@@ -115,6 +129,7 @@ then
 	$path/cweave +bph horn-count krom-count krom-count
 	git add krom-count.idx krom-count.scn krom-count.tex && \
 	>&2 git commit -m "cweave [$version] horn-count krom-count."
+	[ -n "$tex" ] && $tex krom-count
 fi
 
 git checkout master
