@@ -48,7 +48,7 @@ then
 	exit 1
 fi
 
-# If we're runnig TeX, we'll need some Metapost graphics
+# If we're running TeX, we'll need some Metapost graphics
 if [ -n "$tex" ]
 then
 	for f in *.mp
@@ -97,7 +97,7 @@ do
 		$path/cweave +bph $i $c $bc
 		git add $bc.idx $bc.scn $bc.tex && \
 		>&2 git commit -m "cweave [$version] $i $c."
-		[ -n "$tex" ] && $tex $bi
+		[ -n "$tex" ] && $tex $bc
 	done
 done
 
@@ -118,7 +118,7 @@ then
 			$path/cweave +bph hull$i $bc $bc-$i
 			git add $bc-$i.idx $bc-$i.scn $bc-$i.tex && \
 			>&2 git commit -m "cweave [$version] hull$i $c."
-			[ -n "$tex" ] && $tex hull$i
+			[ -n "$tex" ] && $tex $bc-$i
 		done
 	done
 
