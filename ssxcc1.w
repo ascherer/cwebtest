@@ -4,7 +4,7 @@
 \datethis
 @*Intro. This program is an ``{\mc XCC} solver'' that I'm writing
 as an experiment in the use of so-called sparse-set data structures
-instead of the dancing links structures I've played with for thirty years.
+instead of the dancing links structures that I've played with for thirty years.
 I plan to write it as if I live on a planet where the sparse-set
 ideas are well known, but doubly linked links are almost unheard-of.
 As I begin, I know that the similar program {\mc SSXC1} works fine.
@@ -20,7 +20,7 @@ version incorporates new ideas from Christine Solnon's
 program {\mc XCC-WITH-DANCING-CELLS}, which she wrote in October 2020.
 In particular, she proposed saving all the active set sizes on a stack;
 program {\mc SSXCC0} recomputed them by undoing the forward calculations
-in reverse.
+in reverse. She also showed how to unify ``purification'' with ``covering.''
 
 @ After this program finds all solutions, it normally prints their total
 number on |stderr|, together with statistics about how many
@@ -170,7 +170,7 @@ case 'S': shape_name=argv[j]+1, shape_file=fopen(shape_name,"w");
 default: k=1; /* unrecognized command-line option */
 }
 if (k) {
-  fprintf(stderr, "Usage: "O"s [v<n>] [m<n>] [s<n>] [d<n>]"
+  fprintf(stderr, "Usage: "O"s [v<n>] [m<n>] [d<n>]"
        " [c<n>] [C<n>] [l<n>] [t<n>] [T<n>] [S<bar>] < foo.dlx\n",
                             argv[0]);
   exit(-1);
@@ -243,7 +243,7 @@ This is essentially a pointer to a node, and we have
 the sequential list of |s| elements that begins at
 |x=item[k]| in the |set| array is the sparse-set representation of the
 currently active options that contain the |k|th item.
-The |clr| field contains |x|'s color for this option.
+The |clr| field |nd[y].clr| contains |x|'s color for this option.
 The |itm| and |clr| fields remain constant,
 once we've initialized everything, but the |loc| fields will change.
 
@@ -360,7 +360,7 @@ void print_itm(int c) {
   print_item_name(c,stderr);
   if (c<second) fprintf(stderr," ("O"d of "O"d), length "O"d:\n",
          pos(c)+1,active,size(c));
-  else if (c>=active)
+  else if (pos(c)>=active)
     fprintf(stderr," (secondary "O"d, purified), length "O"d:\n",
          pos(c)+1,size(c));
   else fprintf(stderr," (secondary "O"d), length "O"d:\n",
@@ -540,7 +540,7 @@ for (;k;k--) {
   o,j=item[k-1];
   if (k==second) second=j; /* |second| is now an index into |set| */
   oo,size(j)=size(k<<2);
-  if (size(j)==0 && k<osecond) baditem=k;
+  if (size(j)==0 && k<=osecond) baditem=k;
   o,pos(j)=k-1;
   oo,rname(j)=rname(k<<2),lname(j)=lname(k<<2);
 }
@@ -590,8 +590,8 @@ detected by showing the final lengths; but that reasoning no longer applies.)
 
 @*The dancing.
 Our strategy for generating all exact covers will be to repeatedly
-choose always an item that appears to be hardest to cover, namely the
-item with smallest set, from all items that still need to be covered.
+choose an item that appears to be hardest to cover, namely an item whose set
+is currently smallest, among all items that still need to be covered.
 And we explore all possibilities via depth-first search.
 
 The neat part of this algorithm is the way the sets are maintained.
@@ -599,14 +599,14 @@ Depth-first search means last-in-first-out maintenance of data structures;
 and the sparse-set representations make it particularly easy to undo
 what we've done at less-deep levels.
 
-The basic operation is ``covering an item.'' This means removing it
+The basic operation is ``covering an item.'' That means removing it
 from the set of items needing to be covered, and ``hiding'' its
 options: removing them from the sets of the other items they contain.
 
 @<Solve the problem@>=
 {
   level=0;
-  forward: nodes++;
+forward: nodes++;
   if (vbose&show_profile) profile[level]++;
   if (sanity_checking) sanity();
   @<Do special things if enough |mems| have accumulated@>;
@@ -616,8 +616,8 @@ options: removing them from the sets of the other items they contain.
   oactive=active,hide(best_itm,0,0); /* hide its options */
   cur_choice=best_itm;
   @<Save the currently active sizes@>;
-  advance: oo,cur_node=choice[level]=set[cur_choice];
-  tryit:@+if ((vbose&show_choices) && level<show_choices_max) {
+advance: oo,cur_node=choice[level]=set[cur_choice];
+tryit:@+if ((vbose&show_choices) && level<show_choices_max) {
     fprintf(stderr,"L"O"d:",level);
     print_option(cur_node,stderr);
   }
@@ -631,17 +631,17 @@ options: removing them from the sets of the other items they contain.
     maxl=level;
   }
   goto forward;
-  backup:@+if (level==0) goto done;
+backup:@+if (level==0) goto done;
   level--;
   oo,cur_node=choice[level],best_itm=nd[cur_node].itm,cur_choice=nd[cur_node].loc;
-  abort:@+if (o,cur_choice+1>=best_itm+size(best_itm)) goto backup;
+abort:@+if (o,cur_choice+1>=best_itm+size(best_itm)) goto backup;
   @<Restore the currently active sizes@>;
   cur_choice++;@+goto advance;
 }
 
 @ We save the sizes of active items on |savestack|, whose entries
-have two fields |itm| and |siz|. This stack makes it easy to undo
-all deletions, by simply restoring the former sizes.
+have two fields |l| and |r|, for an item and its size. This stack
+makes it easy to undo all deletions, by simply restoring the former sizes.
 
 @<Glob...@>=
 int level; /* number of choices in current partial solution */
@@ -714,7 +714,7 @@ set of a given item. If |check| is nonzero, it
 returns zero if that would cause a primary item to be uncoverable.
 
 If the |color| parameter is zero, all options are incompatible.
-Otherwise, however, the given is secondary, and we retain options
+Otherwise, however, the given item is secondary, and we retain options
 for which that item has a |color| match.
 
 When an option is hidden, it leaves all sets except the set of that
@@ -874,7 +874,7 @@ of a single node, this estimate is~.5; otherwise, if the first choice
 is `$k$ of~$d$', the estimate is $(k-1)/d$ plus $1/d$ times the
 recursively evaluated estimate for the $k$th subtree. (This estimate
 might obviously be very misleading, in some cases, but at least it
-grows monotonically.)
+tends to grow monotonically.)
 
 @<Sub...@>=
 void print_progress(void) {

@@ -4,7 +4,7 @@
 \datethis
 @*Intro. This program is an ``{\mc XCC} solver'' that I'm writing
 as an experiment in the use of so-called sparse-set data structures
-instead of the dancing links structures I've played with for thirty years.
+instead of the dancing links structures that I've played with for thirty years.
 I plan to write it as if I live on a planet where the sparse-set
 ideas are well known, but doubly linked links are almost unheard-of.
 As I begin, I know that the similar program {\mc SSXCC1} works fine.
@@ -76,7 +76,10 @@ main (int argc, char *argv[]) {
   imems=mems, mems=0;
   if (baditem) @<Report an uncoverable item@>@;@+else @<Solve the problem@>;
 done:@+if (vbose&show_profile) @<Print the profile@>;
-  if (vbose&show_final_weights) print_weights();
+  if (vbose&show_final_weights) {
+    fprintf(stderr,"Final weights:\n");
+    print_weights();
+  }
   if (vbose&show_max_deg)
     fprintf(stderr,"The maximum branching degree was "O"d.\n",maxdeg);
   if (vbose&show_basics) {
@@ -132,6 +135,7 @@ the search tree.
 @d show_basics 1 /* |vbose| code for basic stats; this is the default */
 @d show_choices 2 /* |vbose| code for backtrack logging */
 @d show_details 4 /* |vbose| code for further commentary */
+@d show_weight_bumps 32 /* |vbose| code to show new weights */
 @d show_final_weights 64 /* |vbose| code to display weights at the end */
 @d show_profile 128 /* |vbose| code to show the search tree profile */
 @d show_full_state 256 /* |vbose| code for complete state reports */
@@ -187,7 +191,7 @@ case 'S': shape_name=argv[j]+1, shape_file=fopen(shape_name,"w");
 default: k=1; /* unrecognized command-line option */
 }
 if (k) {
-  fprintf(stderr, "Usage: "O"s [v<n>] [m<n>] [s<n>] [d<n>]"
+  fprintf(stderr, "Usage: "O"s [v<n>] [m<n>] [d<n>]"
        " [c<n>] [C<n>] [l<n>] [t<n>] [T<n>] [w<f>] [W<f>] [S<bar>] < foo.dlx\n",
                             argv[0]);
   exit(-1);
@@ -264,7 +268,7 @@ This is essentially a pointer to a node, and we have
 the sequential list of |s| elements that begins at
 |x=item[k]| in the |set| array is the sparse-set representation of the
 currently active options that contain the |k|th item.
-The |clr| field contains |x|'s color for this option.
+The |clr| field |nd[y].clr| contains |x|'s color for this option.
 The |itm| and |clr| fields remain constant,
 once we've initialized everything, but the |loc| fields will change.
 
@@ -377,7 +381,7 @@ void prow(int p) {
 @<Sub...@>=
 void print_itm(int c) {
   register int p;
-  if (c<4 || c>=setlength ||
+  if (c<=4 || c>=setlength ||
          pos(c)<0 || pos(c)>=itemlength || item[pos(c)]!=c) {
     fprintf(stderr,"Illegal item "O"d!\n",c);
     return;
@@ -385,7 +389,7 @@ void print_itm(int c) {
   fprintf(stderr,"Item");
   print_item_name(c,stderr);
   if (c<second)
-    fprintf(stderr," ("O"d of "O"d), length "O"d, weight "O"f:\n",
+    fprintf(stderr," ("O"d of "O"d), length "O"d, weight "O".1f:\n",
          pos(c)+1,active,size(c),wt(c));
   else if (pos(c)>=active)
     fprintf(stderr," (secondary "O"d, purified), length "O"d:\n",
@@ -567,7 +571,7 @@ for (;k;k--) {
   o,j=item[k-1];
   if (k==second) second=j; /* |second| is now an index into |set| */
   oo,size(j)=size(k<<2);
-  if (size(j)==0 && k<osecond) baditem=k;
+  if (size(j)==0 && k<=osecond) baditem=k;
   o,pos(j)=k-1;
   oo,rname(j)=rname(k<<2),lname(j)=lname(k<<2);
   if (k<=osecond) o,wt(j)=w0;
@@ -618,8 +622,8 @@ detected by showing the final lengths; but that reasoning no longer applies.)
 
 @*The dancing.
 Our strategy for generating all exact covers will be to repeatedly
-choose always an item that appears to be hardest to cover, namely the
-item with smallest set, from all items that still need to be covered.
+choose an item that appears to be hardest to cover, namely an item whose set
+is currently smallest, among all items that still need to be covered.
 And we explore all possibilities via depth-first search.
 
 The neat part of this algorithm is the way the sets are maintained.
@@ -627,7 +631,7 @@ Depth-first search means last-in-first-out maintenance of data structures;
 and the sparse-set representations make it particularly easy to undo
 what we've done at less-deep levels.
 
-The basic operation is ``covering an item.'' This means removing it
+The basic operation is ``covering an item.'' That means removing it
 from the set of items needing to be covered, and ``hiding'' its
 options: removing them from the sets of the other items they contain.
 
@@ -750,7 +754,7 @@ set of a given item. If |check| is nonzero, it
 returns zero if that would cause a primary item to be uncoverable.
 
 If the |color| parameter is zero, all options are incompatible.
-Otherwise, however, the given is secondary, and we retain options
+Otherwise, however, the given item is secondary, and we retain options
 for which that item has a |color| match.
 
 When an option is hidden, it leaves all sets except the set of that
@@ -777,9 +781,11 @@ int hide(int c,int color,int check) {
       o,ss=size(uu)-1;
       if (ss==0 && check && uu<second && (o,pos(uu)<active)) {
         if ((vbose&show_choices) && level<show_choices_max) {
-          fprintf(stderr," can't cover");
-          print_item_name(uu,stderr);
-          fprintf(stderr,"\n");
+          if (!(vbose&show_weight_bumps)) {
+            fprintf(stderr," can't cover");
+            print_item_name(uu,stderr);
+            fprintf(stderr,"\n");
+          }
         }    
         tough_itm=uu;
         return 0;
@@ -801,6 +807,10 @@ int hide(int c,int color,int check) {
 
 @<Increase the weight of |tough_itm|@>=
 oo,wt(tough_itm)+=dw;
+if (vbose&show_weight_bumps) {
+  print_item_name(tough_itm,stderr);
+  fprintf(stderr," wt "O".1f\n",wt(tough_itm));
+}
 dw*=dwfactor;
 if (wt(tough_itm)>=dangerous) {
   register int k;
@@ -820,7 +830,7 @@ void print_weights(void) {
   register int k;
   for (k=0;k<itemlength;k++) if (item[k]<second && wt(item[k])!=w0) {
     print_item_name(item[k],stderr);
-    fprintf(stderr," wt "O"f\n",wt(item[k]));
+    fprintf(stderr," wt "O".1f\n",wt(item[k]));
   }
 }
 
@@ -829,7 +839,7 @@ number of remaining choices, divided by the item's weight.
 If there are several candidates, we choose the leftmost.
 
 When an item has at most one option left, however, we consider it
-to be forced, and we stop looking for other possibilities.
+to be forced.
 
 Sometimes an item has no remaining options. This couldn't happen
 in {\mc SSXCC1}; but the present program might choose to branch on
@@ -847,19 +857,20 @@ is no longer fixed. Thus ties are broken in a different way.)
 {
   register float score,tscore,w;
   register int force;
-  score=infty,force=0;
+  score=infty,force=0,t=max_nodes;
   if ((vbose&show_details) &&
       level<show_choices_max && level>=maxl-show_choices_gap)
     fprintf(stderr,"Level "O"d:",level);
-  for (k=0;!force && k<active;k++) if (o,item[k]<second) {
+  for (k=0;k<active;k++) if (o,item[k]<second) {
     oo,s=size(item[k]),w=wt(item[k]);
     if ((vbose&show_details) &&
         level<show_choices_max && level>=maxl-show_choices_gap) {
       print_item_name(item[k],stderr);@+
-      fprintf(stderr,"("O"d,"O".2f)",s,w);
+      fprintf(stderr,"("O"d,"O".1f)",s,w);
     }
-    if (s<=1) force=1,t=s,best_itm=item[k];
-    else {
+    if (s<=1) {
+      if (s<t) force=1,t=s,best_itm=item[k];
+    }@+else if (!force) {
       tscore=s/w;
       if (tscore>=infty) tscore=dangerous;
       if (tscore<score) best_itm=item[k],score=tscore;
@@ -960,7 +971,7 @@ of a single node, this estimate is~.5; otherwise, if the first choice
 is `$k$ of~$d$', the estimate is $(k-1)/d$ plus $1/d$ times the
 recursively evaluated estimate for the $k$th subtree. (This estimate
 might obviously be very misleading, in some cases, but at least it
-grows monotonically.)
+tends to grow monotonically.)
 
 @<Sub...@>=
 void print_progress(void) {
