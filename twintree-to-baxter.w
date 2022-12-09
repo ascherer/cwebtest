@@ -1,12 +1,11 @@
 @*Intro. This (hastily written) program computes the Baxter permutation
-that corresponds to a given twin tree.
- See exercises MPR--135 and 7.2.2.1--372 (as revised in
-the third and subsequent printings of {\sl The Art of Computer Programming},
-Volume~4, Fascicle~5) for an introduction to the relevant concepts and
+that corresponds to a given twintree.
+See exercises MPR--135 and 7.2.2.1--372 in Volume~4B of {\sl The Art of
+Computer Programming\/} for an introduction to the relevant concepts and
 terminology.
 
 According to exercise 7.2.2.1--372,
- a twin tree is a data structure characterized
+ a twintree is a data structure characterized
 by the following interesting properties: (i)~There are $n$ nodes, each of
 which has four fields called $l_0$, $r_0$, $l_1$, $r_1$. (ii)~The $l_0$ and
 $r_0$ fields are the left and right links of a binary tree~$T_0$ that's rooted
@@ -21,7 +20,7 @@ $r_0[k]$ and $r_1[k]$ are either null or greater than~$k$.
 
 Condition (v) might seem surprising at first, possibly even weird.
 But it's not hard to see that
-a twin tree structure can indeed be obtained from any permutation
+a twintree structure can indeed be obtained from any permutation
 $P=p_1p_2\ldots p_n$ of $\{1,2,\ldots,n\}$, as follows:
 Create $T_0$ by using the classic binary tree
 insertion procedure, Algorithm 6.2.2T, to insert $p_1$, then $p_2$,
@@ -37,8 +36,8 @@ Then $r_0[k]$ is null if and only if $k+1$ comes before~$k$ in $P$,
 if and only if $k$ comes after~$k+1$ in~$P^R$, if and only if
 $k+1$ comes after~$k$ in~$P^R$.]
 
-This program shows in fact that {\it every\/} twin tree arises from
-some permutation in that way: Given the specification of a twin tree,
+This program shows in fact that {\it every\/} twintree arises from
+some permutation in that way: Given the specification of a twintree,
 it outputs a permutation $P$ that produces those twins.
 
 Furthermore, the output permutation $P$ will satisfy special conditions.
@@ -67,16 +66,16 @@ $n=4$ do not qualify. (They are the ``pi-mutation'' 3142 and its
 reverse, 2413.)
 
 On the other hand
-we've seen that every permutation does lead to a twin tree. Therefore
-we must be able to get the same twin tree from two different permutations.
+we've seen that every permutation does lead to a twintree. Therefore
+we must be able to get the same twintree from two different permutations.
 For example, both 3142 and 3412 give the same result when inserted into
 binary trees, and so do their reverses.
 
 {\sl This program outputs only
 Baxter permutations.} So it will output 3412 when presented with the
-twin tree defined by 3142.
+twintree defined by 3142.
 
-Historical notes: Twin trees were introduced by Serge Dulucq and
+Historical notes: Twintrees were introduced by Serge Dulucq and
 Olivier Guibert [{\sl Discrete Math.\ \bf157} (1996), 91--106] in
 connection with the proof of a conjecture about Young tableaux.
 Baxter permutations have a more complex history; they're named after
@@ -93,7 +92,7 @@ $$k\quad l_0[k]\quad r_0[k]\quad l_1[k]\quad r_1[k]$$
 for $1\le k\le n$, in any order.
 Null links are represented by zero.
 For example, here's one of the ways
-to input the twin tree defined by 3142:
+to input the twintree defined by 3142:
 $$\vcenter{\halign{\tt#\hfil\cr
   3 2\cr
   3 1 4 0 0\cr
@@ -109,8 +108,8 @@ the input could have been obtained. In the example, that output
 would be `\.{3 4 1 2}'.
 
 We'll prove below that the answer is unique---or equivalently, that
-distinct Baxter permutations give distinct twin trees.
-So we've got a one-to-one correspondence between twin trees and Baxter
+distinct Baxter permutations give distinct twintrees.
+So we've got a one-to-one correspondence between twintrees and Baxter
 permutations.
 
 @d maxn 1024
@@ -126,8 +125,8 @@ permutations.
 @<Subroutines@>;
 void main(void) {
   register int i,j,k,l,m,n;
-  @<Input the twin tree@>;
-  @<Check the twin tree@>;
+  @<Input the twintree@>;
+  @<Check the twintree@>;
   @<Output the Baxter permutation@>;
 }
 
@@ -138,13 +137,13 @@ $l_0[k]=0$ if and only if $l_1[k]>0$, for $1<k\le n$.
 Furthermore we always have $l_0[0]=l_1[0]=r_0[n]=r_1[n]=0$.
 We might as well check those conditions when we read the input.
 
-(If we're interested in saving space, a twin tree data structure
+(If we're interested in saving space, a twintree data structure
 could be compacted by using just one memory cell to store both
 $l_0[k]$ and $l_1[k]$, and another to store both $r_0[k]$ and $r_1[k]$,
 with a single bit to tell us which is null. That's cute, but it would make
 each access a bit slower.)
 
-@<Input the twin tree@>=
+@<Input the twintree@>=
 if (fscanf(stdin,"%d %d",
            &t0,&t1)!=2) pan("I can't read the root numbers");
 for (l=maxn,m=n=0; fscanf(stdin,"%d",
@@ -182,7 +181,7 @@ as it may seem at first! We've got to make sure that bad input
 doesn't get us into an infinite loop, which might happen for example if
 $l[k]=j$ and $r[j]=k$.
 
-@<Check the twin tree@>=
+@<Check the twintree@>=
 checkinorder0(t0,1,n);
 checkinorder1(t1,1,n);
 
@@ -219,11 +218,11 @@ void checkinorder1(int root,int lb,int ub) {
 
 @*Handy facts about Baxter permutations.
 As above, let $P$ be the permutation $p_1p_2\ldots p_n$, and let
-$T_0$ and $T_1$ be the twin trees that result by inserting the
+$T_0$ and $T_1$ be the twintrees that result by inserting the
 elements of $P$ and its reflection $P^R=p_n\ldots p_2p_1$ into an initially
 empty binary tree.
 
-Then the twin trees obtained from $P^R$ are obviously $T_1$ and $T_0$.
+Then the twintrees obtained from $P^R$ are obviously $T_1$ and $T_0$.
 We can express that condition algebraically by writing
 $$T_\theta(P^R)=T_{\bar\theta}(P).$$ 
 
@@ -235,7 +234,7 @@ is condition~$(**)$ for $P^R$, and vice versa.
 (n{+}1{-}p_1)(n{+}1{-}p_2)\ldots(n{+}1{-}p_n)$, obtained by
 swapping $1\leftrightarrow n$, $2\leftrightarrow n-1$, etc.
 
-The twin trees corresponding to $P^C$ are clearly obtained by
+The twintrees corresponding to $P^C$ are clearly obtained by
 reversing the roles of left and right---reflecting each tree.
 That is, when $l[k]=j$ in~$T$, we have $r[\bar k]=\bar\jmath$ in the
 reflected tree~$T^R$; similarly, $r[k]=j$ in~$T$ implies
@@ -278,8 +277,8 @@ but no more. Sometimes only four of these eight are distinct,
 as when $P=P^-$ or $P^R=P^C$. In fact, sometimes only two of them
 are distinct; we have $P^R=P^C=P-$ in cases like $P=3142$ or 41352.
 
-But inversion doesn't affect twin trees in any simple way. Indeed,
-we can't determine the twin trees for~$P^-$ from the twin trees for~$P$:
+But inversion doesn't affect twintrees in any simple way. Indeed,
+we can't determine the twintrees for~$P^-$ from the twintrees for~$P$:
 Both 3142 and 3412 yield the same twins, but 3412 is its own inverse.
 
 @ A Baxter permutation remains Baxter if we remove its largest element.
@@ -329,7 +328,7 @@ by an RLmax, because $(**)$ was true.
 In either case, failure occurs if and only if we haven't allowed
 that position.
 
-@ A Baxter permutation remains Baxter if we move its final element $p_n$
+@ A Baxter permutation remains Baxter if we remove its final element $p_n$
 and subtract~1 from each $p_k$ for which $k<n$ and $p_k>p_n$.
 Indeed, this operation is equivalent to deleting~$n$ from
 the inverse permutation!
@@ -351,11 +350,11 @@ we reach either 3142 or 2413.
 Instead of renumbering, after the deletion of $n$ or $p_n$ or $1$ or $p_1$
 from a Baxter permutation, we can simply consider the remaining sequence
 to be a permutation of the numbers that are left; and we can form a
-twin tree with them, ignoring the tree links from nodes that have
+twintree with them, ignoring the tree links from nodes that have
 been removed. 
 
 For example, we can regard `2763' as a permutation of the elements
-$\{2,3,6,7\}$. Tree $T_0$ of its twin tree structure has root~2 and
+$\{2,3,6,7\}$. Tree $T_0$ of its twintree structure has root~2 and
 links
 $$\thinmuskip=7mu
 l_0[2]=0,r_0[2]=7;\
@@ -372,24 +371,24 @@ All other links are irrelevant.
 The inorder of both trees is the natural order of the elements that
 remain, namely 2367.
 
-Call this a ``generalized twin tree,'' for a ``generalized permutation.''
+Call this a ``generalized twintree,'' for a ``generalized permutation.''
 If $k$ is an element of a generalized permutation, the notation
 `$k+1$' stands not for the sum of $k$ and~1 but rather for the
 element that immediately follows~$k$, namely $k$'s inorder successor.
 In our example, $3+1=6$ and $6-1=3$.
 
 @ Recall that our task is to
-discover a Baxter permutation that yields a given twin tree.
+discover a Baxter permutation that yields a given twintree.
 We might as well extend that task, by assuming that's we've been
-given a {\it generalized\/} twin tree, for which we want to
+given a {\it generalized\/} twintree, for which we want to
 discover a {\it generalized\/} Baxter permutation.
 
-Suppose we've been given a generalized twin tree with $n$ nodes. The solution is
+Suppose we've been given a generalized twintree with $n$ nodes. The solution is
 obvious when $n=1$, so we may assume that $n>1$.
 
 The first step is also obvious: We know $p_1$, because it's the root of~$T_0$.
-So our strategy will be to delete $p_1$ from the generalized twin tree,
-then figure out what generalized twin tree should produce the
+So our strategy will be to delete $p_1$ from the generalized twintree,
+then figure out what generalized twintree should produce the
 other elements $p_2$, \dots,~$p_n$ of the generalized permutation.
 
 Let $p=p_1$.

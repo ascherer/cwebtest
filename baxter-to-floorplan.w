@@ -1,8 +1,7 @@
 @*Intro. This (hastily written) program computes a floorplan that
 corresponds to a given Baxter permutation.
- See exercises MPR--135 and 7.2.2.1--372 (as revised in
-the third and subsequent printings of {\sl The Art of Computer Programming},
-Volume~4, Fascicle~5) for an introduction to the relevant concepts and
+See exercises MPR--135 and 7.2.2.1--372 in Volume~4B of {\sl The Art of
+Computer Programming\/} for an introduction to the relevant concepts and
 terminology.
 
 The input permutation is supposed to satisfy special conditions.
@@ -28,8 +27,8 @@ Floorplans have an interesting ``four-way'' order, under which
 any two distinct rooms $j$ and $k$ are in exactly one of four relationships to
 each other: Either $j$ is left of $k$ (written $j\Rightarrow k$), or
 $j$ is above $k$ (written $j\Downarrow k$), or
-$j$ is right of $k$ (written $j\Leftarrow j$), or
-$j$ is below $k$ (written $j\Uparrow j$). The diagonal order is the
+$j$ is right of $k$ (written $j\Leftarrow k$), or
+$j$ is below $k$ (written $j\Uparrow k<$). The diagonal order is the
 linear order ``above or left''; the antidiagonal order is the
 linear order ``below or left''. 
 
@@ -73,7 +72,7 @@ eight standard ``isometric'' transformations that can be made to floorplans.
 @ The input permutation appears in |stdin|, as the sequence of
 numbers $p_1$ $p_2$ \dots~$p_n$ (separated by whitespace).
 The output floorplan will be a specification that conforms to the
-input conventions of the companion program {\mc FLOOR-TO-TWINTREE},
+input conventions of the companion program {\mc FLOORPLAN-TO-TWINTREE},
 with the rooms in ascending order.
 
 @d maxn 1024
@@ -110,23 +109,22 @@ for (k=1;k<=n;k++) if (q[k]==0) panic("missing element",k);
 int inx; /* data input with |fscanf| */
 int p[maxn+1],q[maxn+1];
 
-@ The following test might take quadratic time, because I tried to make it as
+@ The following check might take quadratic time, because I tried to make it as
 simple as possible.
 
-But if you want to test the Baxter property in linear time, there's a
-tricky way to do it: (1)~Omit this test. (2)~Pipe the output of this
-program to {\mc FLOORPLAN-TO-TWINTREE-TTFORM}; the rooms will be in
-an order that makes that program efficient. (3)~Pipe the
-output of {\it that\/} program to {\mc TWINTREE-TO-BAXTER}.
+If you want to test the Baxter property in linear time, there's a
+tricky way to do it: (1)~Feed the permutation~$P$ to {\mc OFFLINE-TREE-INSERTION}.
+(2)~Also feed its reflection, $P^R$, to {\mc OFFLINE-TREE-INSERTION}.
+(3)~Edit those two outputs to make a twintree
+and feed that twintree to {\mc TWINTREE-TO-BAXTER}.
 (4)~Compare that result to~$P$. If $P$ is Baxter, you'll get it back again.
-
-Even better is to use the efficient method of a much simpler
-program, {\mc OFFLINE-TREE-INSERTION},
-to make the twin tree directly from the given permutation; then
-do steps (3) and~(4). [An almost equivalent method was in fact
-published by Johnson M. Hart,
+[An almost equivalent method was in fact published by Johnson M. Hart,
 {\sl International Journal of Computer and Information Sciences\/ \bf9}
 (1980), 307--321, and it's instructive to compare the two approaches.]
+
+[If you omit this check, you'll get a floorplan whose anti-diagonal permutation
+is~$P$. But if $P$ isn't Baxter, the {\it diagonal\/} permutation of that
+floorplan won't be 1~2~\dots~$n$.]
 
 @<Check for Baxterhood@>=
 for (k=2;k<n-1;k++) {
@@ -195,7 +193,7 @@ int minptr,maxptr; /* the current stack sizes */
 
 @ @<Output the floorplan@>=
 for (k=1;k<=n;k++)
-  printf("%d h%d h%d v%d v%d\n",
-            k,top[k],bot[k],lft[k],rt[k]);
+  printf("%d y%d y%d x%d x%d\n",
+            k,n-top[k],n-bot[k],n-lft[k],n-rt[k]);
 
 @*Index.

@@ -1,7 +1,7 @@
-@*Intro. This (hastily written) program computes the twin tree that corresponds
-to a given floorplan specification. See exercise 7.2.2.1--372 (as revised in
-the third and subsequent printings of {\sl The Art of Computer Programming},
-Volume~4, Fascicle~5) for an introduction to the relevant concepts and
+@*Intro. This (hastily written) program computes the twintree that corresponds
+to a given floorplan specification.
+See exercises MPR--135 and 7.2.2.1--372 in Volume~4B of {\sl The Art of
+Computer Programming\/} for an introduction to the relevant concepts and
 terminology.
 
 Each room of the floorplan is specified on |stdin| by a line that
@@ -23,7 +23,7 @@ J h2 h6 v4 v5\cr
 Each name should have at most seven characters (visible ASCII).
 The rooms can be listed in any order.
 
-The output consists of the corresponding twin trees $T_0$ and $T_1$.
+The output consists of the corresponding twintrees $T_0$ and $T_1$.
 (Each root is identified, followed by
 the node names and left/right child links,
 in symmetric order. A null link is rendered `\.{/\\}'.)
@@ -49,8 +49,8 @@ void main() {
   register int i,j,k,l,m,n,q,nameloc,nametyp,rooms,hbounds,vbounds,todo;
   @<Input the floorplan@>;
   @<Find the junctions@>;
-  @<Create the twin tree@>;
-  @<Output the twin tree@>;
+  @<Create the twintree@>;
+  @<Output the twintree@>;
 }
 
 @*The input phase. We begin with the easy stuff.
@@ -286,7 +286,7 @@ if (l<rooms) {
 @ Interesting subtleties arise here:
 We need to launch the vertical bound at the
 extreme left, if |j| is the horizontal bound at the very bottom.
-(This actually happens if and only if when |jptr=1|, because that horizontal
+(This actually happens if and only if |jptr=1|, because that horizontal
 bound was placed on the stack first when we began.)
 
 That vertical bound will, similarly, launch the horizontal bound at
@@ -383,7 +383,7 @@ int tl[maxrooms], tr[maxrooms], bl[maxrooms], br[maxrooms];
 int tlc; /* the top-left corner junction */
 
 @*The cool phase.
-Now we're ready to construct the twin tree, using a reformulation of
+Now we're ready to construct the twintree, using a reformulation of
 the remarkably simple method discovered by
 Bo~Yao, Hongyu~Chen, Chung-Kuan Cheng,
 and Ronald Graham in {\sl ACM Transactions on Design Automation
@@ -392,7 +392,7 @@ of Electronic Systems\/ \bf8} (2003), 55--80.
 From this construction we see that many of the arrays above are
 superfluous, and we needn't have bothered to compute them!
 
-@<Create the twin tree@>=
+@<Create the twintree@>=
 null=rooms;
 for (k=0;k<rooms;k++) {
   j=tl[k];
@@ -427,7 +427,7 @@ void inorder1(int root) {
   if (r1[root]!=null) inorder1(r1[root]);
 }
 
-@ @<Output the twin tree@>=
+@ @<Output the twintree@>=
 room[rooms]=nameptr;
 strcpy(name[nameptr],"/\\");
 printf("T0 (rooted at %s)\n",
