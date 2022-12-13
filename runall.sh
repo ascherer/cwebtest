@@ -93,10 +93,21 @@ do
 		git add $bc.c && \
 		>&2 git commit -m "ctangle [$version] $i $c."
 
-		# CWEAVE
-		$path/cweave +bph $i $c $bc
-		git add $bc.idx $bc.scn $bc.tex && \
-		>&2 git commit -m "cweave [$version] $i $c."
+		if [ ham = $bc ]
+		then
+			# CTWILL
+			$path/ctwill +bph $i $c $bc
+			$path/ctwill +bph $i $c $bc
+			[ -n "$tex" ] && $tex $bc
+			ctwill-refsort < $bc.ref > $bc.sref
+			git add $bc.idx $bc.ref $bc.sref $bc.tex && \
+			>&2 git commit -m "ctwill [$version] $i $c."
+		else
+			# CWEAVE
+			$path/cweave +bph $i $c $bc
+			git add $bc.idx $bc.scn $bc.tex && \
+			>&2 git commit -m "cweave [$version] $i $c."
+		fi
 		[ -n "$tex" ] && $tex $bc
 	done
 done
