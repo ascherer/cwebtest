@@ -212,7 +212,11 @@ ssxc1.w
 ssxcc0.w
 ssxcc1.w
 ssxcc2.w
+ssxcc3.ch
 ssxccdom.w
+xccdc1.w
+xccdc2.w
+xccdc3.ch
 infty-queens.w
 graceful-count.w
 graceful-count-small.ch

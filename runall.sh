@@ -130,6 +130,24 @@ then
 	git add krom-count.idx krom-count.scn krom-count.tex && \
 	>&2 git commit -m "cweave [$version] horn-count krom-count."
 	[ -n "$tex" ] && $tex krom-count
+
+	$path/ctangle +bph ssxcc2 ssxcc3 ssxcc3
+	git add ssxcc3.c && \
+	>&2 git commit -m "ctangle [$version] ssxcc2 ssxcc3."
+
+	$path/cweave +bph ssxcc2 ssxcc3 ssxcc3
+	git add ssxcc3.idx ssxcc3.scn ssxcc3.tex && \
+	>&2 git commit -m "cweave [$version] ssxcc2 ssxcc3."
+	[ -n "$tex" ] && $tex ssxcc3
+
+	$path/ctangle +bph xccdc2 xccdc3 xccdc3
+	git add xccdc3.c && \
+	>&2 git commit -m "ctangle [$version] xccdc2 xccdc3."
+
+	$path/cweave +bph xccdc2 xccdc3 xccdc3
+	git add xccdc3.idx xccdc3.scn xccdc3.tex && \
+	>&2 git commit -m "cweave [$version] xccdc2 xccdc3."
+	[ -n "$tex" ] && $tex xccdc3
 fi
 
 git checkout master
