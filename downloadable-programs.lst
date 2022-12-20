@@ -187,7 +187,7 @@ polycube-dlx.w
 sudoku-dlx.w
 sudoku-general-dlx.w
 dlx1-sudoku.ch
-filomino-dlx.w
+fillomino-dlx.w
 dlx2.w
 dlx-pre.w
 dlx2-polyom.ch

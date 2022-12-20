@@ -1,5 +1,5 @@
 \datethis
-@*Intro. Given the specification of a filomino puzzle in |stdin|,
+@*Intro. Given the specification of a fillomino puzzle in |stdin|,
 this program outputs {\mc DLX} data for the problem of finding
 all solutions.
 
@@ -46,7 +46,7 @@ main() {
 }
 
 @ @<Read the input...@>=
-printf("| filomino-dlx:\n");
+printf("| fillomino-dlx:\n");
 for (i=n=t=0;i<=maxn;i++) {
   if (!fgets(buf,bufsize,stdin)) break;
   printf("| %s",
