@@ -3,7 +3,7 @@ t=max_nodes;
 if ((vbose&show_details) &&
     level<show_choices_max && level>=maxl-show_choices_gap)
   fprintf(stderr,"Level "O"d:",level);
-for (o,k=cl[root].next;k!=root;o,k=cl[k].next) {
+for (o,k=cl[root].next;t&&k!=root;o,k=cl[k].next) {
   if ((vbose&show_details) &&
       level<show_choices_max && level>=maxl-show_choices_gap)
     fprintf(stderr," "O".8s("O"d)",cl[k].name,nd[k].len);
@@ -14,7 +14,7 @@ t=0x7fffffff;
 if ((vbose&show_details) &&
     level<show_choices_max && level>=maxl-show_choices_gap)
   fprintf(stderr,"Level "O"d:",level);
-for (o,k=cl[root].next;k!=root;o,k=cl[k].next) {
+for (o,k=cl[root].next;t&&k!=root;o,k=cl[k].next) {
   register int lam;
   if ((vbose&show_details) &&
       level<show_choices_max && level>=maxl-show_choices_gap)
