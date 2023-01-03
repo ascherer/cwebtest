@@ -257,7 +257,7 @@ for (l--;aa[l]==0;l--) {
   if (l==0) goto done;
   t=vv[l];
   for (q=1;q<=4;q++)
-    if (brd[t+dir[q]]==0) tag[t+dir[q]]--; /* untag the neighbors of |vv[l| */
+    if (brd[t+dir[q]]==0) tag[t+dir[q]]--; /* untag the neighbors of |vv[l]| */
   tag[t]=0;
 }
 
