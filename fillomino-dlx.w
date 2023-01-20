@@ -15,9 +15,16 @@ specified. (For example, the program will make no attempt to
 fit pentominoes into the blank cells, if all of the specified
 digits are less than~\.5.)
 
+N.B.: The assumption in the previous paragraph can be a serious
+deviation from the standard rules for fillomino. Use the
+change file {\mc FILLOMINO-DLX-LIMITS} if you want fine control
+over which labels~$d$ are considered to be allowed in solutions.
+
 The main interest in this program is its method for finding all
-feasible $d$-ominoes that cover a given entry~$d$: They must not
-be adjacent to a $d$ that's not included.
+feasible $d$-ominoes $P$ that cover a given cell, when that cell
+has lexicogrally smallest coordinates in that $d$-omino;
+$P$ is infeasible if it includes a non-$d$ label, or if
+it's adjacent to a $d$ in a cell $\notin P$.
 The algorithm used here is an instructive generalization of
 Algorithm~R in exercise 7.2.2--75 of {\sl The Art of Computer
 Programming}.
@@ -40,13 +47,13 @@ int dmax; /* the maximum digit seen */
 @<Subroutines@>;
 main() {
   register int a,d,i,j,k,l,m,n,p,q,s,t,u,v,di,dj,icoord,jcoord;
+  printf("| fillomino-dlx:\n");
   @<Read the input into |board|@>;
   @<Print the item-name line@>;
   for (d=1;d<=dmax;d++) @<Print all the options for $d$-ominoes@>;
 }
 
 @ @<Read the input...@>=
-printf("| fillomino-dlx:\n");
 for (i=n=t=0;i<=maxn;i++) {
   if (!fgets(buf,bufsize,stdin)) break;
   printf("| %s",
@@ -59,7 +66,14 @@ for (i=n=t=0;i<=maxn;i++) {
     else if (buf[k]>='a' && buf[k]<='f')
       board(i,j)=buf[k]-'a'+10,t++;
     else panic("illegal entry");
-    if (board(i,j)>dmax) dmax=board(i,j);
+    if (board(i,j)>dmax) {
+      if (board(i,j)>=maxd) {
+        fprintf(stderr,"Sorry, all digits in the spec must be less than %d!\n",
+                           maxd);
+        exit(-5);
+      }
+      dmax=board(i,j);
+    }
   }
   if (j>n) n=j; /* short rows are extended with `\..'s */
 }
@@ -74,20 +88,23 @@ mm=m,nn=n;
 @ There are primary items $ij$ for $0\le i<m$ and $0\le j<n$.
 They represent the cells to be filled.
 
-There are secondary items \.{h$dij$} for each boundary edge of a
+There are secondary items \.{v$ijd$} for each vertical boundary edge of a
 $d$-omino between $(i,j-1)$ and $(i,j)$, for $0\le i<m$ and
-$1\le j< n$. Similarly, secondary items \.{v$dij$} for
-$1\le i<m$ and $0\le j<n$ are for boundaries between
-$(i-1,j)$ and $(i,j)$ in the vertical dimension.
+$1\le j< n$. Similarly, secondary items \.{h$ijd$} for
+$1\le i<m$ and $0\le j<n$ are for horizontal boundary edges between
+$(i-1,j)$ and $(i,j)$. These are needed only for edges between
+blank cells.
 
 @<Print the item-name line@>=
 for (i=0;i<m;i++) for (j=0;j<n;j++) printf("%x%x ",
                 i,j);
 printf("|");
-for (i=0;i<m;i++) for (j=1;j<n;j++) for (d=1;d<=dmax;d++) printf(" h%x%x%x",
-                d,i,j);
-for (i=1;i<m;i++) for (j=0;j<n;j++) for (d=1;d<=dmax;d++) printf(" v%x%x%x",
-                d,i,j);
+for (i=0;i<m;i++) for (j=1;j<n;j++) if (!board(i,j) && !board(i,j-1))
+    for (d=1;d<=dmax;d++) printf(" v%x%x%x",
+                i,j,d);
+for (i=1;i<m;i++) for (j=0;j<n;j++) if (!board(i,j) && !board(i-1,j))
+    for (d=1;d<=dmax;d++) printf(" h%x%x%x",
+                i,j,d);
 printf("\n");
 
 @ @<Print all the options for $d$-ominoes@>=
@@ -187,17 +204,17 @@ for (stack[0]=u,s=1;s;) {
   }
   for (p=0;p<d;p++) {
     unpack(vv[p]);
-    for (q=1;q<=4;q++)
+    if (!board(icoord,jcoord)) for (q=1;q<=4;q++)
       if (stamp[vv[p]+dir[q]]!=curstamp) { /* boundary edge detected */
         switch (q) {
-case 1:@+if (icoord) printf(" v%x%x%x",
-            d,icoord,jcoord);@+break;
-case 2:@+if (jcoord) printf(" h%x%x%x",
-            d,icoord,jcoord);@+break;
-case 3:@+if (jcoord<n-1) printf(" h%x%x%x",
-            d,icoord,jcoord+1);@+break;
-case 4:@+if (icoord<m-1) printf(" v%x%x%x",
-            d,icoord+1,jcoord);@+break;
+case 1:@+if (icoord && !board(icoord-1,jcoord)) printf(" h%x%x%x",
+            icoord,jcoord,d);@+break;
+case 2:@+if (jcoord && !board(icoord,jcoord-1)) printf(" v%x%x%x",
+            icoord,jcoord,d);@+break;
+case 3:@+if (jcoord<n-1 && !board(icoord,jcoord+1)) printf(" v%x%x%x",
+            icoord,jcoord+1,d);@+break;
+case 4:@+if (icoord<m-1 && !board(icoord+1,jcoord)) printf(" h%x%x%x",
+            icoord+1,jcoord,d);@+break;
       }
     }
   }
@@ -235,7 +252,6 @@ goto r2;
 @ @<If |u| was already...@>=
 {
   if (u<vv[0]) goto r3; /* it's earlier than |(di,dj)| */
-  if (brd[u]) goto r3; /* not a blank cell */
   for (q=1;q<=4;q++) if (brd[u+dir[q]]==d) goto r3;
 }
 
