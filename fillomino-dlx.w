@@ -123,7 +123,7 @@ Since I'm not operating with a general graph, the \.{ARCS} and \.{NEXT}
 aspects of Algorithm~R are replaced with a simple scheme: Codes 1, 2, 3, 4
 are used respectively for north, west, east, and south.
 In other words, the operation `$a\gets\.{ARCS($v$)}$' is changed to
-to `$a\gets1'$; `$a\gets\.{NEXT($a$)}$' is changed to `$a\gets a+1$';
+to `$a\gets1$'; `$a\gets\.{NEXT($a$)}$' is changed to `$a\gets a+1$';
 `$a=\Lambda$?' becomes `$a=5$?'. The vertex \.{TIP($a$)} is the
 cell north, west, east, or south of~$v$, depending on~$a$.
 
