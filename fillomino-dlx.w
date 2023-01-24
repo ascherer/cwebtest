@@ -22,7 +22,7 @@ over which labels~$d$ are considered to be allowed in solutions.
 
 The main interest in this program is its method for finding all
 feasible $d$-ominoes $P$ that cover a given cell, when that cell
-has lexicogrally smallest coordinates in that $d$-omino;
+has lexicographically smallest coordinates in that $d$-omino;
 $P$ is infeasible if it includes a non-$d$ label, or if
 it's adjacent to a $d$ in a cell $\notin P$.
 The algorithm used here is an instructive generalization of
@@ -123,13 +123,13 @@ Since I'm not operating with a general graph, the \.{ARCS} and \.{NEXT}
 aspects of Algorithm~R are replaced with a simple scheme: Codes 1, 2, 3, 4
 are used respectively for north, west, east, and south.
 In other words, the operation `$a\gets\.{ARCS($v$)}$' is changed to
-to `$a\gets1$'; `$a\gets\.{NEXT($a$)}$' is changed to `$a\gets a+1$';
+`$a\gets1$'; `$a\gets\.{NEXT($a$)}$' is changed to `$a\gets a+1$';
 `$a=\Lambda$?' becomes `$a=5$?'. The vertex \.{TIP($a$)} is the
 cell north, west, east, or south of~$v$, depending on~$a$.
 
 A forced move at level $l$ is indicated by $a_l=0$.
 
-If cell $(di,dj)$ is not already filled, we fill it with a $d$-mino
+If cell $(di,dj)$ is not already filled, we fill it with a $d$-omino
 that uses only unfilled cells and doesn't come next to a $d$-cell.
 
 @<Print the options for $d$-ominoes...@>=
