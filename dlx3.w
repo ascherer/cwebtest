@@ -67,7 +67,7 @@ nodes were in the search tree, and how many ``updates'' and
 ``cleansings'' were made.
 The running time in ``mems'' is also reported, together with the approximate
 number of bytes needed for data storage.
-(An ``update'' is the removal of an option from its item.
+(An ``update'' is the removal of an option from its item list.
 A ``cleansing'' is the removal of a satisfied color constraint from its option.
 One ``mem'' essentially means a memory access to a 64-bit word.
 The reported totals don't include the time or space needed to parse the
@@ -132,7 +132,7 @@ defines the seed for any random numbers that are used;
 \item{$\bullet$}
 `\.d$\langle\,$integer$\,\rangle$' sets |delta|, which causes periodic
 state reports on |stderr| after the algorithm has performed approximately
-|delta| mems since the previous report;
+|delta| mems since the previous report (default 10000000000);
 \item{$\bullet$}
 `\.c$\langle\,$positive integer$\,\rangle$' limits the levels on which
 choices are shown during verbose tracing;
@@ -179,8 +179,8 @@ ullng updates; /* update counts */
 ullng cleansings; /* cleansing counts */
 ullng bytes; /* memory used by main data structures */
 ullng nodes; /* total number of branch nodes initiated */
-ullng thresh=0; /* report when |mems| exceeds this, if |delta!=0| */
-ullng delta=0; /* report every |delta| or so mems */
+ullng thresh=10000000000; /* report when |mems| exceeds this, if |delta!=0| */
+ullng delta=10000000000; /* report every |delta| or so mems */
 ullng maxcount=0xffffffffffffffff; /* stop after finding this many solutions */
 ullng timeout=0x1fffffffffffffff; /* give up after this many mems */
 FILE *shape_file; /* file for optional output of search tree shape */
@@ -304,7 +304,7 @@ As computation proceeds, |bound| might change but |slack| will not.
 
 An item can be removed from the active list of ``unfinished items'' when its
 |bound| field is reduced to zero. A removed item is said to be ``covered'';
-all of its remaining options are then hiddened from further participation.
+all of its remaining options are then hidden from further participation.
 Furthermore, we will remove an item when we find that it has no unhidden
 options; that situation can arise if |bound<=slack|.
 
@@ -526,7 +526,7 @@ while (1) {
     else if (k>=second) {
       if ((o,isspace(buf[p+j+1])) || (o,!isspace(buf[p+j+2])))
         panic("Color must be a single character");
-      o,nd[last_node].color=buf[p+j+1];
+      o,nd[last_node].color=(unsigned char)buf[p+j+1];
       p+=2;
     }@+else panic("Primary item must be uncolored");
     for (p+=j+1;o,isspace(buf[p]);p++) ;
@@ -906,7 +906,7 @@ with all other active items.
 
 In the special case that the item was chosen for branching with
 |bound=1| and |slack>=1|, we've already covered the item;
-hence we shouldn't block its rows again.
+hence we shouldn't block its options again.
 
 @<Sub...@>=
 void tweak(int n,int block) {
@@ -1104,7 +1104,7 @@ of a single node, this estimate is~.5; otherwise, if the first choice
 is `$k$ of~$d$', the estimate is $(k-1)/d$ plus $1/d$ times the
 recursively evaluated estimate for the $k$th subtree. (This estimate
 might obviously be very misleading, in some cases, but at least it
-grows monotonically.)
+tends to grow monotonically.)
 
 @<Sub...@>=
 void print_progress(void) {
