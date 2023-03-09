@@ -218,7 +218,7 @@ ruin the integrity of the output).
 @d show_warnings 1024 /* |vbose| code for reporting options without primaries */
 
 @<Glob...@>=
-int vbose=show_basics; /* level of verbosity */
+int vbose=show_basics+show_warnings; /* level of verbosity */
 char buf[bufsize]; /* input buffer */
 ullng options; /* options seen so far */
 ullng imems,mems; /* mem counts */
@@ -331,7 +331,7 @@ that its |name| is empty.
 
 @d root 0 /* |cl[root]| is the gateway to the unsettled items */
 
-@ an option is identified not by name but by the names of the items it contains.
+@ An option is identified not by name but by the names of the items it contains.
 Here is a routine that prints an option, given a pointer to any of its
 nodes. It also prints the position of the option in its item.
 
@@ -511,7 +511,7 @@ while (1) {
     else if (k>=second) {
       if ((o,isspace(buf[p+j+1])) || (o,!isspace(buf[p+j+2])))
         panic("Color must be a single character");
-      o,nd[last_node].color=buf[p+j+1];
+      o,nd[last_node].color=(unsigned char)buf[p+j+1];
       p+=2;
     }@+else panic("Primary item must be uncolored");
     for (p+=j+1;o,isspace(buf[p]);p++) ;
@@ -689,6 +689,12 @@ int change; /* have we removed anything on the current round? */
 @ In order to avoid testing an option repeatedly, we usually
 try to remove it only when |c| is its first element as stored in memory.
 
+Note (after correcting a bug, 02 January 2023): If |c| is secondary and has
+a nonzero color in option~|r|, we should {\it not\/} try to remove~|r|,
+because |r| has not been hidden by the |hide| routine. Thus we might miss
+some potential deletions. Users can avoid this by putting all of the colored
+secondary items last in every option.
+
 @<Try to reduce options in item |c|'s list@>=
 {
   if (sanity_checking) sanity();
@@ -704,7 +710,7 @@ try to remove it only when |c| is its first element as stored in memory.
   else {
     for (o,r=nd[c].down;r>=last_itm;o,r=nd[r].down) {
       for (q=r-1;o,nd[q].down==q-1;q--); /* bypass null spacers */
-      if (o,nd[q].itm<=0) /* |r| is the first (surviving) node in its option */
+      if (o,nd[q].itm<=0 && (o,!nd[r].color)) /* |r| is the first (surviving, uncolored) node in its option */
         @<Stack option |r| for deletion
                    if it leaves some primary item uncoverable@>;
     }
@@ -785,8 +791,8 @@ Otherwise we delete it.
   }
 }
 
-@ At this point we've hidden item |c|. Now we will hide also the
-other items in option~|r|; we'll delete |r| if this leaves some
+@ At this point we've hidden item |c| and option |r|. Now we'll hide also the
+other items in that option; and we'll delete |r| if this leaves some
 other primary item uncoverable. (As soon as such an item is encountered,
 we put it in |pp| and immediately back up.)
 

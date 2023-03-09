@@ -109,8 +109,10 @@ done:@+if (sanity_checking) sanity();
     bytes=last_itm*sizeof(item)+last_node*sizeof(node)+maxl*sizeof(int);
     fprintf(stderr," "O"llu updates, "O"llu cleansings,",
                                 updates,cleansings);
-    fprintf(stderr," "O"llu bytes, "O"llu nodes.\n",
+    fprintf(stderr," "O"llu bytes, "O"llu nodes,",
                                 bytes,nodes);
+    fprintf(stderr," ccost "O"lld%%.\n",
+                  (200*cmems+mems-lmems)/(2*(mems-lmems)));
   }
   @<Close the files@>;
 }
@@ -173,7 +175,7 @@ int maxl=0; /* maximum level actually reached */
 char buf[bufsize]; /* input buffer */
 ullng count; /* solutions found so far */
 ullng options; /* options seen so far */
-ullng imems,mems,lmems; /* mem counts */
+ullng imems,mems,lmems,cmems,tmems; /* mem counts */
 ullng updates; /* update counts */
 ullng cleansings; /* cleansing counts */
 ullng bytes; /* memory used by main data structures */
@@ -766,7 +768,7 @@ choose the leftmost --- unless we're randomizing, in which case we
 select one of them at random.
 
 @<Set |best_itm| to the best item for branching@>=
-t=max_nodes;
+t=max_nodes,tmems=mems;
 if ((vbose&show_details) &&
     level<show_choices_max && level>=maxl-show_choices_gap)
   fprintf(stderr,"Level "O"d:",level);
@@ -789,6 +791,7 @@ if (shape_file) {
   fprintf(shape_file,""O"d "O".8s\n",t,cl[best_itm].name);
   fflush(shape_file);
 }
+cmems+=mems-tmems;
 
 @ @<Visit a solution and |goto recover|@>=
 {
@@ -852,7 +855,7 @@ of a single node, this estimate is~.5; otherwise, if the first choice
 is `$k$ of~$d$', the estimate is $(k-1)/d$ plus $1/d$ times the
 recursively evaluated estimate for the $k$th subtree. (This estimate
 might obviously be very misleading, in some cases, but at least it
-grows monotonically.)
+tends to grow monotonically.)
 
 @<Sub...@>=
 void print_progress(void) {

@@ -174,7 +174,7 @@ int maxl=0; /* maximum level actually reached */
 char buf[bufsize]; /* input buffer */
 ullng count; /* solutions found so far */
 ullng options; /* options seen so far */
-ullng imems,mems; /* mem counts */
+ullng imems,mems,cmems,tmems; /* mem counts */
 ullng updates; /* update counts */
 ullng cleansings; /* cleansing counts */
 ullng bytes; /* memory used by main data structures */
@@ -223,8 +223,10 @@ if (randomizing) gb_init_rand(random_seed);
   fprintf(stderr," "O"llu updates, "O"llu cleansings,",
                               updates,cleansings);
   bytes=last_itm*sizeof(item)+last_node*sizeof(node)+maxl*sizeof(int);
-  fprintf(stderr," "O"llu bytes, "O"llu nodes.\n",
+  fprintf(stderr," "O"llu bytes, "O"llu nodes,",
                               bytes,nodes);
+  fprintf(stderr," ccost "O"lld%%.\n",
+                  (200*cmems+mems)/(2*mems));
 }
 
 @ @<Close the files@>=
@@ -1009,7 +1011,7 @@ smaller in the middle levels.
 @d infty max_nodes /* the ``score'' of a completely unconstrained item */
 
 @<Set |best_itm| to the best item for branching...@>=
-score=infty;
+score=infty,tmems=mems;
 if ((vbose&show_details) &&
     level<show_choices_max && level>=maxl-show_choices_gap)
   fprintf(stderr,"Level "O"d:",level);
@@ -1042,6 +1044,7 @@ if (shape_file && score<infty) {
   fprintf(shape_file,""O"d "O".8s\n",score>=0?score:0,cl[best_itm].name);
   fflush(shape_file);
 }
+cmems+=mems-tmems;
 
 @ @<Visit a solution and |goto backdown|@>=
 {

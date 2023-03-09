@@ -25,7 +25,7 @@ for more than 15 years, and after extending it in dozens of ways
 for a wide variety of combinatorial problems, I'm finally ready to replace it
 with a more carefully crafted piece of code.
 
-My intention is to make this program match Algorithm 7.2.2.1D, so that
+My intention is to make this program match Algorithm 7.2.2.1X, so that
 I~can use it to make the quantitative experiments that will ultimately
 be reported in Volume~4B.
 
@@ -100,7 +100,7 @@ Here is the overall structure:
 @d O "%" /* used for percent signs in format strings */
 @d mod % /* used for percent signs denoting remainder in \CEE/ */
 
-@d max_level 500 /* at most this many options in a solution */
+@d max_level 10000 /* at most this many options in a solution */
 @d max_cols 100000 /* at most this many items */
 @d max_nodes 25000000 /* at most this many nonzero elements in the matrix */
 @d bufsize (9*max_cols+3) /* a buffer big enough to hold all item names */
@@ -136,8 +136,10 @@ done:@+if (vbose&show_tots)
     fprintf(stderr,"Altogether "O"llu solution"O"s, "O"llu+"O"llu mems,",
                                 count,count==1?"":"s",imems,mems);
     bytes=last_itm*sizeof(item)+last_node*sizeof(node)+maxl*sizeof(int);
-    fprintf(stderr," "O"llu updates, "O"llu bytes, "O"llu nodes.\n",
+    fprintf(stderr," "O"llu updates, "O"llu bytes, "O"llu nodes,",
                                 updates,bytes,nodes);
+    fprintf(stderr," ccost "O"lld%%.\n",
+                  (200*cmems+mems)/(2*mems));
   }
   @<Close the files@>;
 }
@@ -158,7 +160,7 @@ defines the seed for any random numbers that are used;
 \item{$\bullet$}
 `\.d$\langle\,$integer$\,\rangle$' sets |delta|, which causes periodic
 state reports on |stderr| after the algorithm has performed approximately
-|delta| mems since the previous report;
+|delta| mems since the previous report (default 10000000000);
 \item{$\bullet$}
 `\.c$\langle\,$positive integer$\,\rangle$' limits the levels on which
 choices are shown during verbose tracing;
@@ -201,12 +203,12 @@ int maxl=0; /* maximum level actually reached */
 char buf[bufsize]; /* input buffer */
 ullng count; /* solutions found so far */
 ullng options; /* options seen so far */
-ullng imems,mems; /* mem counts */
+ullng imems,mems,cmems,tmems; /* mem counts */
 ullng updates; /* update counts */
 ullng bytes; /* memory used by main data structures */
 ullng nodes; /* total number of branch nodes initiated */
-ullng thresh=0; /* report when |mems| exceeds this, if |delta!=0| */
-ullng delta=0; /* report every |delta| or so mems */
+ullng thresh=10000000000; /* report when |mems| exceeds this, if |delta!=0| */
+ullng delta=10000000000; /* report every |delta| or so mems */
 ullng maxcount=0xffffffffffffffff; /* stop after finding this many solutions */
 ullng timeout=0x1fffffffffffffff; /* give up after this many mems */
 FILE *shape_file; /* file for optional output of search tree shape */
@@ -411,7 +413,7 @@ void sanity(void) {
     if (p==root) break;
     @<Check item |p|@>;
   }
-}    
+}
 
 @ @<Check item |p|@>=
 for (qq=p,pp=nd[qq].down,k=0;;qq=pp,pp=nd[pp].down,k++) {
@@ -539,11 +541,11 @@ nd[k].aux=last_node; /* no mem charge for |aux| after |len| */
 if (!randomizing) {
   o,r=nd[k].up; /* the ``bottom'' node of the item list */
   ooo,nd[r].down=nd[k].up=last_node,nd[last_node].up=r,nd[last_node].down=k;
-}@+else {  
+}@+else {
   mems+=4,t=gb_unif_rand(t); /* choose a random number of nodes to skip past */
   for (o,r=k;t;o,r=nd[r].down,t--) ;
   ooo,q=nd[r].up,nd[q].down=nd[r].up=last_node;
-  o,nd[last_node].up=q,nd[last_node].down=r;  
+  o,nd[last_node].up=q,nd[last_node].down=r;
 }
 
 @ @<Remove |last_node| from its item list@>=
@@ -721,18 +723,18 @@ for (pp=cur_node-1;pp!=cur_node;) {
   if (cc<=0) o,pp=nd[pp].down;
   else uncover(cc),pp--;
 }
-      
+
 @ The ``best item'' is considered to be an item that minimizes the
 number of remaining choices. If there are several candidates, we
 choose the leftmost --- unless we're randomizing, in which case we
 select one of them at random.
 
 @<Set |best_itm| to the best item for branching@>=
-t=max_nodes;
+tmems=mems,t=max_nodes;
 if ((vbose&show_details) &&
     level<show_choices_max && level>=maxl-show_choices_gap)
   fprintf(stderr,"Level "O"d:",level);
-for (o,k=cl[root].next;k!=root;o,k=cl[k].next) {
+for (o,k=cl[root].next;t&&k!=root;o,k=cl[k].next) {
   if ((vbose&show_details) &&
       level<show_choices_max && level>=maxl-show_choices_gap)
     fprintf(stderr," "O".8s("O"d)",cl[k].name,nd[k].len);
@@ -752,6 +754,7 @@ if (shape_file) {
   fprintf(shape_file,""O"d "O".8s\n",t,cl[best_itm].name);
   fflush(shape_file);
 }
+cmems+=mems-tmems;
 
 @ @<Visit a solution and |goto recover|@>=
 {
@@ -796,7 +799,7 @@ void print_state(void) {
   fprintf(stderr," "O"lld solutions, "O"lld mems, and max level "O"d so far.\n",
                               count,mems,maxl);
 }
-      
+
 @ During a long run, it's helpful to have some way to measure progress.
 The following routine prints a string that indicates roughly where we
 are in the search tree. The string consists of character pairs, separated
@@ -815,7 +818,7 @@ of a single node, this estimate is~.5; otherwise, if the first choice
 is `$k$ of~$d$', the estimate is $(k-1)/d$ plus $1/d$ times the
 recursively evaluated estimate for the $k$th subtree. (This estimate
 might obviously be very misleading, in some cases, but at least it
-grows monotonically.)
+tends to grow monotonically.)
 
 @<Sub...@>=
 void print_progress(void) {
@@ -836,7 +839,7 @@ void print_progress(void) {
   }
   fprintf(stderr," "O".5f\n",f+0.5/fd);
 }
-  
+
 @ @<Print the profile@>=
 {
   fprintf(stderr,"Profile:\n");

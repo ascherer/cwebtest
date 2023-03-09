@@ -1,5 +1,5 @@
 @x in search for best_itm, give pref to items whose name begins with #
-t=max_nodes;
+t=max_nodes,tmems=mems;
 if ((vbose&show_details) &&
     level<show_choices_max && level>=maxl-show_choices_gap)
   fprintf(stderr,"Level "O"d:",level);
@@ -10,7 +10,7 @@ for (o,k=cl[root].next;t&&k!=root;o,k=cl[k].next) {
   if (o,nd[k].len<=t) {
     if (nd[k].len<t) best_itm=k,t=nd[k].len,p=1;
 @y
-t=0x7fffffff;
+t=0x7fffffff,tmems=mems;
 if ((vbose&show_details) &&
     level<show_choices_max && level>=maxl-show_choices_gap)
   fprintf(stderr,"Level "O"d:",level);
