@@ -1,7 +1,22 @@
 #!/bin/sh
 
-SHRTOPTS=b:cef:p:t:v:
-LONGOPTS=branch:,changes,extras,file:,path:,tex:,version:
+PROG=$(basename $0)
+
+usage ()
+{
+cat <<HELP
+Invoke with option '-b|--branch' to override the 'testbranch'
+Invoke with option '-c|--changes' to apply associated change files (if any)
+Invoke with option '-e|--extras' to apply 'extra' change files
+Invoke with option '-f|--files' to set the list of example sources
+Invoke with option '-p|--path' to set the path to CWEB executables
+Invoke with option '-t|--tex' to set the TeX engine
+Invoke with option '-v|--version' to set the CWEB version
+HELP
+}
+
+SHRTOPTS=b:cef:hp:t:v:
+LONGOPTS=branch:,changes,extras,file:,help,path:,tex:,version:
 
 # Set default values
 branch= # Executive override for 'testbranch' below
@@ -33,6 +48,7 @@ do
 		-c | --changes ) changes=true; shift ;;
 		-e | --extras ) extras=true; changes=true; shift ;;
 		-f | --file ) files="$2" ; shift 2 ;;
+		-h | --help ) usage; exit 0 ;;
 		-p | --path ) path="$2"; shift 2 ;;
 		-t | --tex ) tex="$2"; shift 2 ;;
 		-v | --version ) version="$2"; shift 2 ;;
