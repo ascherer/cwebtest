@@ -101,7 +101,7 @@ for (m=n=0;fscanf(stdin,"%d",
   p[n+1]=inx;
 }
 if (m>n) panic("too few elements",m-n);
-if (m>n) panic("too many elements",n-m);
+if (m<n) panic("too many elements",n-m);
 for (k=1;k<=n;k++) q[p[k]]=k; /* compute the inverse */
 for (k=1;k<=n;k++) if (q[k]==0) panic("missing element",k);
 
