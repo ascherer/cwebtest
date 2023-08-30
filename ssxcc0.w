@@ -4,25 +4,31 @@
 \datethis
 @*Intro. This program is an ``{\mc XCC} solver'' that I'm writing
 as an experiment in the use of so-called sparse-set data structures
-instead of the dancing links structures I've played with for thirty years.
+instead of the dancing links structures that I've played with for thirty years.
 I plan to write it as if I live on a planet where the sparse-set
 ideas are well known, but doubly linked links are almost unheard-of.
-As I begin, I know that the similar program {\mc SSXC} (which solves
-the special case of ordinary exact cover problems) works fine.
+As I begin, I know that the similar program {\mc SSXC1} works fine.
 
 I shall accept the {\mc DLX} input format used in the previous solvers,
 without change, so that a fair comparison can be made.
 (See the program {\mc DLX2} for definitions. Much of the code from
 that program is used to parse the input for this one.)
 
+My original attempt, {\mc SSXC0}, kept the basic structure of {\mc DLX1}
+and changed only the data structure link conventions. The present
+version incorporates new ideas from Christine Solnon's
+program {\mc XCC-WITH-DANCING-CELLS}, which she wrote in October 2020.
+In particular, she proposed saving all the active set sizes on a stack;
+program {\mc SSXC0} recomputed them by undoing the forward calculations
+in reverse. She also showed how to unify ``purification'' with ``covering.''
+
 @ After this program finds all solutions, it normally prints their total
 number on |stderr|, together with statistics about how many
-nodes were in the search tree, and how many ``updates'' and
-``cleansings'' were made.
+nodes were in the search tree, and how many ``updates'' were made.
 The running time in ``mems'' is also reported, together with the approximate
 number of bytes needed for data storage.
-(An ``update'' is the removal of an option from its item list.
-A ``cleansing'' is the removal of a satisfied color constraint from its option.
+(An ``update'' is the removal of an option from its item list,
+or the removal of a satisfied color constraint from its option.
 One ``mem'' essentially means a memory access to a 64-bit word.
 The reported totals don't include the time or space needed to parse the
 input or to format the output.)
@@ -38,6 +44,7 @@ Here is the overall structure:
 @d max_level 5000 /* at most this many options in a solution */
 @d max_cols 100000 /* at most this many items */
 @d max_nodes 10000000 /* at most this many nonzero elements in the matrix */
+@d savesize 10000000 /* at most this many entries on |savestack| */
 @d bufsize (9*max_cols+3) /* a buffer big enough to hold all item names */
 
 @c
@@ -45,13 +52,14 @@ Here is the overall structure:
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "gb_flip.h"
 typedef unsigned int uint; /* a convenient abbreviation */
 typedef unsigned long long ullng; /* ditto */
 @<Type definitions@>;
 @<Global variables@>;
 @<Subroutines@>;
 main (int argc, char *argv[]) {
-  register int cc,i,j,k,p,pp,q,r,s,t,cur_choice,cur_node,best_itm;
+  register int c,cc,i,j,k,p,pp,q,r,s,t,cur_choice,cur_node,best_itm;
   @<Process the command line@>;
   @<Input the item names@>;
   @<Input the options@>;
@@ -60,23 +68,25 @@ main (int argc, char *argv[]) {
   if (vbose&show_tots)
     @<Report the item totals@>;
   imems=mems, mems=0;
-  @<Solve the problem@>;
-done:@+if (sanity_checking) sanity();
-  if (vbose&show_tots)
-    @<Report the item totals@>;
-  if (vbose&show_profile) @<Print the profile@>;
+  if (baditem) @<Report an uncoverable item@>@;
+  else {
+    if (randomizing) @<Randomize the |item| list@>;
+    @<Solve the problem@>;
+  }
+done:@+if (vbose&show_profile) @<Print the profile@>;
   if (vbose&show_max_deg)
     fprintf(stderr,"The maximum branching degree was "O"d.\n",maxdeg);
   if (vbose&show_basics) {
     fprintf(stderr,"Altogether "O"llu solution"O"s, "O"llu+"O"llu mems,",
                                 count,count==1?"":"s",imems,mems);
     bytes=(itemlength+setlength)*sizeof(int)+last_node*sizeof(node)
-        +maxl*sizeof(int);
-    fprintf(stderr," "O"llu updates, "O"llu cleansings,",
-                                updates,cleansings);
-    fprintf(stderr," "O"llu bytes, "O"llu nodes.\n",
-                                bytes,nodes);
+        +2*maxl*sizeof(int)+maxsaveptr*sizeof(twoints);
+    fprintf(stderr," "O"llu updates, "O"llu bytes, "O"llu nodes,",
+                                updates,bytes,nodes);
+    fprintf(stderr," ccost "O"lld%%.\n",
+                  mems? (200*cmems+mems)/(2*mems):0);
   }
+  if (sanity_checking) fprintf(stderr,"sanity_checking was on!\n");
   @<Close the files@>;
 }
 
@@ -88,6 +98,10 @@ of the algorithm, by specifying options on the command line:
 \item{$\bullet$}
 `\.m$\langle\,$integer$\,\rangle$' causes every $m$th solution
 to be output (the default is \.{m0}, which merely counts them);
+\item{$\bullet$}
+`\.s$\langle\,$integer$\,\rangle$' causes the algorithm to randomize
+the initial list of items (thus providing some variety, although
+the solutions are by no means uniformly random);
 \item{$\bullet$}
 `\.d$\langle\,$integer$\,\rangle$' sets |delta|, which causes periodic
 state reports on |stderr| after the algorithm has performed approximately
@@ -117,24 +131,26 @@ the search tree.
 @d show_details 4 /* |vbose| code for further commentary */
 @d show_profile 128 /* |vbose| code to show the search tree profile */
 @d show_full_state 256 /* |vbose| code for complete state reports */
-@d show_tots 512 /* |vbose| code for reporting item totals at start and end */
+@d show_tots 512 /* |vbose| code for reporting item totals at start */
 @d show_warnings 1024 /* |vbose| code for reporting options without primaries */
 @d show_max_deg 2048 /* |vbose| code for reporting maximum branching degree */
 
 @<Glob...@>=
+int random_seed=0; /* seed for the random words of |gb_rand| */
+int randomizing; /* has `\.s' been specified? */
 int vbose=show_basics+show_warnings; /* level of verbosity */
 int spacing; /* solution $k$ is output if $k$ is a multiple of |spacing| */
 int show_choices_max=1000000; /* above this level, |show_choices| is ignored */
 int show_choices_gap=1000000; /* below level |maxl-show_choices_gap|,
     |show_details| is ignored */
 int show_levels_max=1000000; /* above this level, state reports stop */
-int maxl=0; /* maximum level actually reached */
+int maxl; /* maximum level actually reached */
+int maxsaveptr; /* maximum size of |savestack| */
 char buf[bufsize]; /* input buffer */
 ullng count; /* solutions found so far */
 ullng options; /* options seen so far */
-ullng imems,mems; /* mem counts */
+ullng imems,mems,tmems,cmems; /* mem counts */
 ullng updates; /* update counts */
-ullng cleansings; /* cleansing counts */
 ullng bytes; /* memory used by main data structures */
 ullng nodes; /* total number of branch nodes initiated */
 ullng thresh=10000000000; /* report when |mems| exceeds this, if |delta!=0| */
@@ -152,6 +168,7 @@ appearance takes precedence.
 for (j=argc-1,k=0;j;j--) switch (argv[j][0]) {
 case 'v': k|=(sscanf(argv[j]+1,""O"d",&vbose)-1);@+break;
 case 'm': k|=(sscanf(argv[j]+1,""O"d",&spacing)-1);@+break;
+case 's': k|=(sscanf(argv[j]+1,""O"d",&random_seed)-1),randomizing=1;@+break;
 case 'd': k|=(sscanf(argv[j]+1,""O"lld",&delta)-1),thresh=delta;@+break;
 case 'c': k|=(sscanf(argv[j]+1,""O"d",&show_choices_max)-1);@+break;
 case 'C': k|=(sscanf(argv[j]+1,""O"d",&show_levels_max)-1);@+break;
@@ -171,6 +188,7 @@ if (k) {
                             argv[0]);
   exit(-1);
 }
+if (randomizing) gb_init_rand(random_seed);
 
 @ @<Close the files@>=
 if (shape_file) fclose(shape_file);
@@ -205,7 +223,8 @@ Briggs and Torczon were interested in applications where $s$ begins at
 zero and tends to remain small. In such cases, $p$ and $q$ need not
 be permutations: The values of $p_s$, $p_{s+1}$, \dots, $p_{n-1}$ can
 be garbage, and the values of $q_k$ need be defined only when $x_k\in S$.
-(Such situations correspond to Aho, Hopcroft, and Ullman, who started
+(Such situations correspond to the treatment by Aho, Hopcroft, and Ullman,
+who started
 with an array full of garbage and used a sparse-set structure to remember
 the set of nongarbage cells.) Our applications are different: Each set
 begins equal to its intended universe, and gradually shrinks. In such
@@ -215,7 +234,7 @@ aren't inserting an element that's already present (nor deleting an element
 that isn't).
 
 Many variations are possible. For example, $p$ could be a permutation
-of $\{x_0,x_1,\ldots,x_{n-1}\}$ instead of permutation of
+of $\{x_0,x_1,\ldots,x_{n-1}\}$ instead of a permutation of
 $\{0,1,\ldots,n-1\}$. The arrays that play the role of $q$
 in the following routines don't have indices that are consecutive;
 they live inside of other structures.
@@ -239,10 +258,9 @@ This is essentially a pointer to a node, and we have
 the sequential list of |s| elements that begins at
 |x=item[k]| in the |set| array is the sparse-set representation of the
 currently active options that contain the |k|th item.
-The |clr| field contains |x|'s color for this option, or |-1| if
-|x| has been purified to be compatible with this option.
-The |itm| fields remain constant,
-once we've initialized everything, but the |loc| and |clr| fields will change.
+The |clr| field |nd[y].clr| contains |x|'s color for this option.
+The |itm| and |clr| fields remain constant,
+once we've initialized everything, but the |loc| fields will change.
 
 The given options are stored sequentially in the |nd| array, with one node
 per item, separated by ``spacer'' nodes. If |y| is the spacer node
@@ -260,7 +278,7 @@ $$\hbox{|pos(item[k])=k|;\quad
 (These are the analogs of the invariant relations |p[q[k]]=q[p[k]]=k| in
 the simple sparse-set scheme that we started with.)
 
-The |set| array contains also the item names, as well as ``purified colors.''
+The |set| array contains also the item names.
 
 We count one mem for a simultaneous access to the |itm| and |loc| fields
 of a node. Each node actually has a ``spare'' fourth field, |spr|, inserted
@@ -271,7 +289,6 @@ solely to enforce alignment to 16-byte boundaries.
 @d pos(x) set[(x)-2] /* where that item is found in the |item| array */
 @d lname(x) set[(x)-4] /* the first four bytes of |x|'s name */
 @d rname(x) set[(x)-3] /* the last four bytes of |x|'s name */
-@d color(x) set[(x)-5] /* the color of |x|, if purified (secondary |x| only) */
 
 @<Type...@>=
 typedef struct node_struct {
@@ -291,8 +308,11 @@ int set[max_nodes+4*max_cols]; /* the sets of active options for active items */
 int itemlength; /* number of elements used in |item| */
 int setlength; /* number of elements used in |set| */
 int active; /* current number of active items */
+int oactive; /* value of active before swapping out current-choice items */
+int baditem; /* an item with no options, plus 1 */
+int osecond; /* setting of |second| just after initial input */
 
-@ We're going to store string data (an item name) in the midst of
+@ We're going to store string data (an item's name) in the midst of
 the integer array |set|. So we've got to do some type coercion using
 low-level \CEE/-ness.
 
@@ -301,7 +321,7 @@ typedef struct {
   int l,r;
 } twoints;
 typedef union {
-  char str[8]; /* eight one-byte characters */
+  unsigned char str[8]; /* eight one-byte characters */
   twoints lr; /* two four-byte integers */
 } stringbuf;
 stringbuf namebuf;
@@ -327,7 +347,7 @@ void print_option(int p,FILE *stream) {
   for (q=p;;) {
     print_item_name(x,stream);
     if (nd[q].clr)
-      fprintf(stream,":"O"c",nd[q].clr>0? nd[q].clr: color(x));
+      fprintf(stream,":"O"c",nd[q].clr);
     q++;
     x=nd[q].itm;
     if (x<0) q+=x,x=nd[q].itm;
@@ -353,10 +373,11 @@ void print_itm(int c) {
   }
   fprintf(stderr,"Item");
   print_item_name(c,stderr);
-  if (pos(c)<second) fprintf(stderr," ("O"d of "O"d), length "O"d:\n",
+  if (c<second) fprintf(stderr," ("O"d of "O"d), length "O"d:\n",
          pos(c)+1,active,size(c));
-  else if (color(c)) fprintf(stderr," (secondary "O"d:"O"c), length "O"d:\n",
-         pos(c)+1,color(c),size(c));
+  else if (pos(c)>=active)
+    fprintf(stderr," (secondary "O"d, purified), length "O"d:\n",
+         pos(c)+1,size(c));
   else fprintf(stderr," (secondary "O"d), length "O"d:\n",
          pos(c)+1,size(c));
   for (p=c;p<c+size(c);p++) prow(set[p]);
@@ -369,7 +390,7 @@ data structure have gone awry.
 
 @<Sub...@>=
 void sanity(void) {
-  register int k,x,i,l,r;
+  register int k,x,i,l,r,q,qq;
   for (k=0;k<itemlength;k++) {
     x=item[k];
     if (pos(x)!=k) {
@@ -383,12 +404,24 @@ void sanity(void) {
     if (l<=0) {
       if (nd[i+r+1].itm!=-r)
         fprintf(stderr,"Bad spacer in nodes "O"d, "O"d!\n",i,i+r+1);
+      qq=0;
     }@+else {
       if (l>r) fprintf(stderr,"itm>loc in node "O"d!\n",i);
-      else if (set[r]!=i) {
-        fprintf(stderr,"Bad loc field for option "O"d of item",r-l+1);
-        print_item_name(l,stderr);
-        fprintf(stderr," in node "O"d!\n",i);
+      else {
+        if (set[r]!=i) {
+          fprintf(stderr,"Bad loc field for option "O"d of item",r-l+1);
+          print_item_name(l,stderr);
+          fprintf(stderr," in node "O"d!\n",i);
+        }
+        if (pos(l)<active) {
+          if (r<l+size(l)) q=+1;@+else q=-1; /* in or out? */
+          if (q*qq<0) {
+            fprintf(stderr,"Flipped status at option "O"d of item",r-l+1);
+            print_item_name(l,stderr);
+            fprintf(stderr," in node "O"d!\n",i);
+          }
+          qq=q;         
+        }
       }
     }
   }
@@ -430,7 +463,6 @@ for (;o,buf[p];) {
     for (p++;o,isspace(buf[p]);p++) ;
   }
 }
-if (second==max_cols) second=last_itm;
 
 @ @<Check for duplicate item name@>=
 for (k=last_itm-1;k;k--) {
@@ -485,7 +517,7 @@ while (1) {
 }
 @<Initialize |item|@>;
 @<Expand |set|@>;
-@<Adjust |nb|@>;
+@<Adjust |nd|@>;
 
 @ We temporarily use |pos| to recognize duplicate items in an option.
 
@@ -507,16 +539,13 @@ o,size(k)=t+1, pos(k)=last_node;
 o,k=nd[last_node].itm<<2;
 oo,size(k)--,pos(k)=i-1;
 
-@ Each primary item occupies four special positions in |set|
-(namely for |lname|, |rname|, |pos|, and |size|).
-Each secondary item occupies five (because it also has |color|).
-
-@<Initialize |item|@>=
-itemlength=last_itm-1;
-active=second=second-1;
+@ @<Initialize |item|@>=
+active=itemlength=last_itm-1;
 for (k=0,j=4;k<itemlength;k++)
-  oo,item[k]=j,j+=4+size((k+1)<<2)+(k+1>=second);
-setlength=j-4-(k>=second);
+  oo,item[k]=j,j+=4+size((k+1)<<2);
+setlength=j-4;
+if (second==max_cols) osecond=active,second=j;
+else osecond=second-1;
 
 @ Going from high to low, we now move the item names and sizes
 to their final positions (leaving room for the pointers into |nb|).
@@ -524,19 +553,29 @@ to their final positions (leaving room for the pointers into |nb|).
 @<Expand |set|@>=
 for (;k;k--) {
   o,j=item[k-1];
+  if (k==second) second=j; /* |second| is now an index into |set| */
   oo,size(j)=size(k<<2);
+  if (size(j)==0 && k<=osecond) baditem=k;
   o,pos(j)=k-1;
   oo,rname(j)=rname(k<<2),lname(j)=lname(k<<2);
-  if (k>=second) o,color(j)=0;
 }
 
-@ @<Adjust |nb|@>=
+@ @<Adjust |nd|@>=
 for (k=1;k<last_node;k++) {
   if (o,nd[k].itm<0) continue; /* skip over a spacer */
   o,j=item[nd[k].itm-1];
   i=j+nd[k].loc; /* no mem charged because we just read |nd[k].itm| */
   o,nd[k].itm=j,nd[k].loc=i;
   o,set[i]=k;
+}
+
+@ @<Report an uncoverable item@>=
+{
+  if (vbose&show_choices) {
+    fprintf(stderr,"Item");
+    print_item_name(item[baditem-1],stderr);
+    fprintf(stderr," has no options!\n");
+  }
 }
 
 @ The ``number of entries'' includes spacers (because {\mc DLX2}
@@ -546,13 +585,13 @@ sum of the option lengths, just subtract the number of options.
 @<Report the successful completion of the input phase@>=
 fprintf(stderr,
   "("O"lld options, "O"d+"O"d items, "O"d entries successfully read)\n",
-                       options,second,last_itm-second-1,last_node);
+                       options,osecond,itemlength-osecond,last_node);
 
-@ The item lengths after input should agree with the item lengths
-after this program has finished. I print them (on request), in order to
-provide some reassurance that the algorithm isn't badly screwed up.
-
-[Caution: They will probably appear in a different order than before!]
+@ The item lengths after input are shown (on request).
+But there's little use trying to show them after the process is done,
+since they are restored somewhat blindly.
+(Failures of the linked-list implementation in {\mc DLX2} could sometimes be
+detected by showing the final lengths; but that reasoning no longer applies.)
 
 @<Report the item totals@>=
 {
@@ -564,61 +603,76 @@ provide some reassurance that the algorithm isn't badly screwed up.
   fprintf(stderr,"\n");
 }
 
+@ @<Randomize the |item| list@>=
+for (k=active;k>1;) {
+  mems+=4,j=gb_unif_rand(k);
+  k--;
+  oo,oo,t=item[j],item[j]=item[k],item[k]=t;
+  oo,pos(t)=k,pos(item[j])=j;
+}
+
 @*The dancing.
 Our strategy for generating all exact covers will be to repeatedly
-choose always an item that appears to be hardest to cover, namely the
-item with smallest set, from all items that still need to be covered.
+choose an item that appears to be hardest to cover, namely an item whose set
+is currently smallest, among all items that still need to be covered.
 And we explore all possibilities via depth-first search.
 
-The neat part of this algorithm is the way the lists are maintained.
+The neat part of this algorithm is the way the sets are maintained.
 Depth-first search means last-in-first-out maintenance of data structures;
-and it turns out that we need no auxiliary tables to undelete elements from
-lists when backing up. The sparse-set representations remember
-enough of what was done so that we can undo it later.
+and the sparse-set representations make it particularly easy to undo
+what we've done at deeper levels.
 
-The basic operation is ``covering an item.'' This means removing it
+The basic operation is ``covering an item.'' That means removing it
 from the set of items needing to be covered, and ``hiding'' its
 options: removing them from the sets of the other items they contain.
 
 @<Solve the problem@>=
-level=0;
+{
+  level=0;
 forward: nodes++;
-if (vbose&show_profile) profile[level]++;
-if (sanity_checking) sanity();
-@<Do special things if enough |mems| have accumulated@>;
-@<Set |best_itm| to the best item for branching@>;
-if (t==0) goto donewithlevel;
-cover(best_itm);
-cur_choice=best_itm;
-oo,cur_node=choice[level]=set[best_itm];
-goto tryit;
-advance:@+if (o,cur_choice>=best_itm+size(best_itm)) goto backup;
-oo,cur_node=choice[level]=set[cur_choice];
+  if (vbose&show_profile) profile[level]++;
+  if (sanity_checking) sanity();
+  @<Do special things if enough |mems| have accumulated@>;
+  @<Set |best_itm| to the best item for branching@>;
+  if (t==max_nodes) @<Visit a solution and |goto backup|@>;
+  @<Swap |best_itm| out of the active list@>;
+  oactive=active,hide(best_itm,0,0); /* hide its options */
+  cur_choice=best_itm;
+  @<Save the currently active sizes@>;
+advance: oo,cur_node=choice[level]=set[cur_choice];
 tryit:@+if ((vbose&show_choices) && level<show_choices_max) {
-  fprintf(stderr,"L"O"d:",level);
-  print_option(cur_node,stderr);
-}
-@<Cover all other items of |cur_node|@>;
-if (active==0) @<Visit a solution and |goto recover|@>;
-if (++level>maxl) {
-  if (level>=max_level) {
-    fprintf(stderr,"Too many levels!\n");
-    exit(-4);
+    fprintf(stderr,"L"O"d:",level);
+    print_option(cur_node,stderr);
   }
-  maxl=level;
+  @<Swap out all other items of |cur_node|@>;
+  @<Hide the other options of those items, or |goto abort|@>;
+  if (++level>maxl) {
+    if (level>=max_level) {
+      fprintf(stderr,"Too many levels!\n");
+      exit(-4);
+    }
+    maxl=level;
+  }
+  goto forward;
+backup:@+if (level==0) goto done;
+  level--;
+  oo,cur_node=choice[level],best_itm=nd[cur_node].itm,cur_choice=nd[cur_node].loc;
+abort:@+if (o,cur_choice+1>=best_itm+size(best_itm)) goto backup;
+  @<Restore the currently active sizes@>;
+  cur_choice++;@+goto advance;
 }
-goto forward;
-backup: uncover(best_itm);
-donewithlevel:@+if (level==0) goto done;
-level--;
-oo,cur_node=choice[level],best_itm=nd[cur_node].itm,cur_choice=nd[cur_node].loc;
-recover: @<Uncover all other items of |cur_node|@>;
-cur_choice++;@+goto advance;
 
-@ @<Glob...@>=
+@ We save the sizes of active items on |savestack|, whose entries
+have two fields |l| and |r|, for an item and its size. This stack
+makes it easy to undo all deletions, by simply restoring the former sizes.
+
+@<Glob...@>=
 int level; /* number of choices in current partial solution */
 int choice[max_level]; /* the node chosen on each level */
+int saved[max_level+1]; /* size of |savestack| on each level */
 ullng profile[max_level]; /* number of search tree nodes on each level */
+twoints savestack[savesize];
+int saveptr; /* current size of |savestack| */
 
 @ @<Do special things if enough |mems| have accumulated@>=
 if (delta && (mems>=thresh)) {
@@ -630,143 +684,99 @@ if (mems>=timeout) {
   fprintf(stderr,"TIMEOUT!\n");@+goto done;
 }
 
-@ When an option is hidden, it leaves all lists except the list of the
-item that is being covered. Thus a node is never removed from a list
-twice.
+@ @<Swap |best_itm| out of the active list@>=
+p=active-1,active=p;
+o,pp=pos(best_itm);
+o,cc=item[p];
+oo,item[p]=best_itm,item[pp]=cc;
+oo,pos(cc)=pp,pos(best_itm)=p;
+updates++;
 
-@<Sub...@>=
-void cover(int c) {
-  register int k,a,cc,s,rr,ss,nn,tt,uu,vv,nnp;
-  o,k=pos(c);
-  if (k<second) { /* update the active list, if |c| is primary */
-    a=active-1,active=a;
-    o,cc=item[a];
-    oo,item[a]=c,item[k]=cc;
-    oo,pos(cc)=k,pos(c)=a;
-    updates++;
+@ Note that a colored secondary item might have already been purified,
+in which case it has already been swapped out. We don't want to
+tamper with any of the inactive items.
+
+@<Swap out all other items of |cur_node|@>=
+p=oactive=active;
+for (q=cur_node+1;q!=cur_node;) {
+  o,c=nd[q].itm;
+  if (c<0) q+=c;
+  else {
+    o,pp=pos(c);
+    if (pp<p) {
+      o,cc=item[--p];
+      oo,item[p]=c,item[pp]=cc;
+      oo,pos(cc)=pp,pos(c)=p;
+      updates++;
+    }
+    q++;
   }
-  for (o,rr=c,s=c+size(c);rr<s;rr++) {
-    o,tt=set[rr];
-    @<Remove the option |tt| from the other sets it's in@>;
+}
+active=p;
+
+@ A secondary item was purified at lower levels if and only if
+its position is |>=oactive|.
+
+@<Hide the other options of those items...@>=
+for (q=cur_node+1;q!=cur_node;) {
+  o,cc=nd[q].itm;
+  if (cc<0) q+=cc;
+  else {
+    if (cc<second) {
+      if (hide(cc,0,1)==0) goto abort;
+    }@+else { /* do nothing if |cc| already purified */
+      o,pp=pos(cc);
+      if (pp<oactive && (o,hide(cc,nd[q].clr,1)==0)) goto abort;
+    }
+    q++;
   }
 }
 
-@ @<Remove the option |tt| from the other sets it's in@>=
+@ The |hide| routine hides all of the incompatible options remaining in the
+set of a given item. If |check| is nonzero, it
+returns zero if that would cause a primary item to be uncoverable.
+
+If the |color| parameter is zero, all options are incompatible.
+Otherwise, however, the given item is secondary, and we retain options
+for which that item has a |color| match.
+
+When an option is hidden, it leaves all sets except the set of that
+given item. And the given item is inactive.
+Thus a node is never removed from a set twice.
+
+@<Sub...@>=
+int hide(int c,int color,int check) {
+  register int cc,s,rr,ss,nn,tt,uu,vv,nnp;
+  for (o,rr=c,s=c+size(c);rr<s;rr++) {
+    o,tt=set[rr];
+    if (!color || (o,nd[tt].clr!=color))
+      @<Remove option |tt| from the other sets it's in@>;
+  }
+  return 1;
+}
+
+@ @<Remove option |tt| from the other sets it's in@>=
 {
-  for (nn=tt+1;nn!=tt;) if (o,nd[nn].clr>=0) {
+  for (nn=tt+1;nn!=tt;) {
     o,uu=nd[nn].itm,vv=nd[nn].loc;
     if (uu<0) {@+nn+=uu;@+continue;@+}
-    o,ss=size(uu)-1;
-    o,nnp=set[uu+ss];
-    o,size(uu)=ss;
-    oo,set[uu+ss]=nn,set[vv]=nnp;
-    oo,nd[nn].loc=uu+ss,nd[nnp].loc=vv;
+    if (o,pos(uu)<oactive) {
+      o,ss=size(uu)-1;
+      if (ss==0 && check && uu<second && pos(uu)<active) {
+        if ((vbose&show_choices) && level<show_choices_max) {
+          fprintf(stderr," can't cover");
+          print_item_name(uu,stderr);
+          fprintf(stderr,"\n");
+        }    
+        return 0;
+      }
+      o,nnp=set[uu+ss];
+      o,size(uu)=ss;
+      oo,set[uu+ss]=nn,set[vv]=nnp;
+      oo,nd[nn].loc=uu+ss,nd[nnp].loc=vv;
+      updates++;
+    }
     nn++;
-    updates++;
-  }@+else nn++;
-}
-
-@ To undo the |cover| operation, we need only increase the set size,
-because the previously deleted element is in position to be seamlessly
-reinstated. (Inactive elements are never moved.)
-We need not swap that element back to its former position.
-
-@<Subroutines@>=
-void uncover(int c) {
-  register int k,cc,s,rr,ss,nn,tt,uu;
-  for (o,rr=c,s=c+size(c);rr<s;rr++) {
-    o,tt=set[rr];
-    @<Unremove the option |tt| from the other sets it was in@>;
-  }
-  o,k=pos(c);
-  if (k<second) active++;
-}
-
-@ @<Unremove the option |tt| from the other sets it was in@>=
-{
-  for (nn=tt+1;nn!=tt;) if (o,nd[nn].clr>=0) {
-    o,uu=nd[nn].itm;
-    if (uu<0) {@+nn+=uu;@+continue;@+}
-    o,ss=size(uu)+1;
-    o,size(uu)=ss;
-    nn++;
-  }@+else nn++;
-}
-
-@ @<Cover all other items of |cur_node|@>=
-for (pp=cur_node+1;pp!=cur_node;) {
-  o,cc=nd[pp].itm;
-  if (cc<0) pp+=cc;
-  else {
-    if (o,nd[pp].clr==0) cover(cc);
-    else if (nd[pp].clr>0) purify(pp);
-    pp++;
-  }
-}
-
-@ Covering and uncovering both traverse options to the right.
-That's okay---although it takes a bit of thought to verify that all
-sets are restored correctly. (An item that has lost $k$ options
-from its set will regain those $k$ options, but not necessarily
-in the same order.)
-
-But we do need to go left here, {\it not\/} right.
-
-@<Uncover all other items of |cur_node|@>=
-for (pp=cur_node-1;pp!=cur_node;) {
-  o,cc=nd[pp].itm;
-  if (cc<=0) pp+=nd[pp].loc;
-  else {
-    if (o,nd[pp].clr==0) uncover(cc);
-    else if (nd[pp].clr>0) unpurify(pp);
-    pp--;
-  }
-}
-
-@ When we choose an option that specifies colors in one or more items,
-we ``purify'' those items by removing all incompatible options.
-All options that want the chosen color in a purified item are temporarily
-given the color code~|-1| so that they won't be purified again.
-
-(At first I thought it would be a good idea to rearrange the set entries,
-putting first the correctly colored options. There's an appealing way
-to do that with a minimum number of swaps. However, I soon realized that there's
-no real reason to change the order. The size of this set doesn't change;
-and we won't be considering it again until it's unpurified.)
-
-When |purify| is called, |nd[p]| is part of an option that has been
-deleted from all sets. The secondary item |nd[p].itm| is being
-purified to have color |nd[p].clr|.
-
-@<Sub...@>=
-void purify(int p) {
-  register int c,x,tt,rr,s,ss,nn,uu,vv,nnp;
-  o,c=nd[p].itm;
-  o,x=nd[p].clr;
-  color(c)=x; /* no mem charged, because this is needed only in printout */
-  cleansings++;
-  for (o,rr=c,s=c+size(c);rr<s;rr++) {
-    o,tt=set[rr];
-    if (o,nd[tt].clr!=x)
-      @<Remove the option |tt| from the other sets it's in@>@;
-    else o,cleansings++,nd[tt].clr=-1;
-  }
-}
-
-@ Just as |purify| is analogous to |cover|, the inverse process is
-analogous to |uncover|.
-
-@<Sub...@>=
-void unpurify(int p) {
-  register int c,x,tt,rr,s,ss,nn,uu;
-  o,c=nd[p].itm;
-  o,x=nd[p].clr;
-  color(c)=0; /* no mem charged, because this is needed only in printout */
-  for (o,rr=c,s=c+size(c);rr<s;rr++) { /* going to the right is okay again */
-    o,tt=set[rr];
-    if (o,nd[tt].clr>=0)
-      @<Unremove the option |tt| from the other sets it was in@>@;
-    else o,nd[tt].clr=x;
   }
 }
 
@@ -774,65 +784,92 @@ void unpurify(int p) {
 number of remaining choices. If there are several candidates, we
 choose the leftmost.
 
-(This program explores the search space in a different order
+Notice that a secondary item is active if and only if it has not
+been purified (that is, if and only if it hasn't yet appeared in
+a chosen option).
+
+(This program explores the search space in a slightly different order
 from {\mc DLX2}, because the ordering of items in the active list
-is no longer fixed. Thus ties are broken in a different way.)
+is no longer fixed. Thus ties are broken in a different way when $s=1$.)
 
 @<Set |best_itm| to the best item for branching@>=
-t=max_nodes;
+t=max_nodes,tmems=mems;
 if ((vbose&show_details) &&
     level<show_choices_max && level>=maxl-show_choices_gap)
   fprintf(stderr,"Level "O"d:",level);
-for (k=0;t&&(k<active);k++) {
-  oo,s=size(item[k]);
+for (k=0;t>1 && k<active;k++) if (o,item[k]<second) {
+  o,s=size(item[k]);
   if ((vbose&show_details) &&
       level<show_choices_max && level>=maxl-show_choices_gap) {
     print_item_name(item[k],stderr);
     fprintf(stderr,"("O"d)",s);
   }
-  if (s<t) best_itm=item[k],t=s;
+  if (s<=t) {
+    if (s<t) {
+      if (s==0) fprintf(stderr,"I'm confused.\n"); /* |hide| missed this */
+      best_itm=item[k],t=s;
+    }
+    else if (item[k]<best_itm) best_itm=item[k]; /* suggested by P. Weigel */
+  }
 }
 if ((vbose&show_details) &&
     level<show_choices_max && level>=maxl-show_choices_gap) {
-  fprintf(stderr," branching on");
-  print_item_name(best_itm,stderr);
-  fprintf(stderr,"("O"d)\n",t);
+  if (t==max_nodes) fprintf(stderr," solution\n");
+  else {
+    fprintf(stderr," branching on");
+    print_item_name(best_itm,stderr);
+    fprintf(stderr,"("O"d)\n",t);
+  }
 }
-if (t>maxdeg) maxdeg=t;
+if (t>maxdeg && t<max_nodes) maxdeg=t;
 if (shape_file) {
-  fprintf(shape_file,""O"d",t);
-  print_item_name(best_itm,shape_file);
-  fprintf(shape_file,"\n");
+  if (t==max_nodes) fprintf(shape_file,"sol\n");
+  else {
+    fprintf(shape_file,""O"d",t);
+    print_item_name(best_itm,shape_file);
+    fprintf(shape_file,"\n");
+  }
   fflush(shape_file);
 }
+cmems+=mems-tmems;
 
-@ @<Visit a solution and |goto recover|@>=
-{
-  nodes++; /* a solution is a special node, see 7.2.2--(4) */
-  if (level+1>maxl) {
-    if (level+1>=max_level) {
-      fprintf(stderr,"Too many levels!\n");
-      exit(-5);
-    }
-    maxl=level+1;
-  }
-  if (vbose&show_profile) profile[level+1]++;
-  if (shape_file) {
-    fprintf(shape_file,"sol\n");@+fflush(shape_file);
-  }
-  @<Record solution and |goto recover|@>;
-}
-
-@ @<Record solution and |goto recover|@>=
+@ @<Visit a solution and |goto backup|@>=
 {
   count++;
   if (spacing && (count mod spacing==0)) {
     printf(""O"lld:\n",count);
-    for (k=0;k<=level;k++) print_option(choice[k],stdout);
+    for (k=0;k<level;k++) print_option(choice[k],stdout);
     fflush(stdout);
   }
   if (count>=maxcount) goto done;
-  goto recover;
+  goto backup;
+}
+
+@ @<Save the currently active sizes@>=
+if (saveptr+active>maxsaveptr) {
+  if (saveptr+active>=savesize) {
+    fprintf(stderr,"Stack overflow (savesize="O"d)!\n",savesize);
+    exit(-5);
+  }
+  maxsaveptr=saveptr+active;
+}
+for (p=0;p<active;p++)
+  ooo,savestack[saveptr+p].l=item[p],savestack[saveptr+p].r=size(item[p]);
+o,saved[level+1]=saveptr=saveptr+active;
+
+@ @<Restore the currently active sizes@>=
+o,saveptr=saved[level+1];
+o,active=saveptr-saved[level];
+for (p=-active;p<0;p++)
+  oo,size(savestack[saveptr+p].l)=savestack[saveptr+p].r;
+
+@ @<Sub...@>=
+void print_savestack(int start,int stop) {
+  register k;
+  for (k=start;k<=stop;k++) {
+    print_item_name(savestack[k].l,stderr);
+    fprintf(stderr,"("O"d), "O"d\n",savestack[k].l,savestack[k].r);
+  }
 }
 
 @ @<Sub...@>=
@@ -868,23 +905,20 @@ of a single node, this estimate is~.5; otherwise, if the first choice
 is `$k$ of~$d$', the estimate is $(k-1)/d$ plus $1/d$ times the
 recursively evaluated estimate for the $k$th subtree. (This estimate
 might obviously be very misleading, in some cases, but at least it
-grows monotonically.)
+tends to grow monotonically.)
 
 @<Sub...@>=
 void print_progress(void) {
-  register int l,k,d,c,p;
+  register int l,k,d,c,p,ds=0;
   register double f,fd;
   fprintf(stderr," after "O"lld mems: "O"lld sols,",mems,count);
   for (f=0.0,fd=1.0,l=0;l<level;l++) {
     c=nd[choice[l]].itm,d=size(c),k=nd[choice[l]].loc-c+1;
     fd*=d,f+=(k-1)/fd; /* choice |l| is |k| of |d| */
-    fprintf(stderr," "O"c"O"c",
+    if (l<show_levels_max) fprintf(stderr," "O"c"O"c",
       k<10? '0'+k: k<36? 'a'+k-10: k<62? 'A'+k-36: '*',
       d<10? '0'+d: d<36? 'a'+d-10: d<62? 'A'+d-36: '*');
-    if (l>=show_levels_max) {
-      fprintf(stderr,"...");
-      break;
-    }
+    else if (!ds) ds=1,fprintf(stderr,"...");
   }
   fprintf(stderr," "O".5f\n",f+0.5/fd);
 }
