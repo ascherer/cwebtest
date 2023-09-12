@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PROG=$(basename $0)
+PROG=$(basename "$0")
 
 usage ()
 {
@@ -24,8 +24,8 @@ REMOTE='https://www-cs-faculty.stanford.edu/~knuth/programs'
 getopt -T >/dev/null
 
 if [ $? -eq 4 ] # Check for Linux-getopt with extensions
-then OPTS=$(getopt -n $PROG -o $SHRTOPTS -l $LONGOPTS -- "$@")
-else OPTS=$(getopt $SHRTOPTS $*)
+then OPTS=$(getopt -n "$PROG" -o $SHRTOPTS -l $LONGOPTS -- "$@")
+else OPTS=$(getopt $SHRTOPTS "$@")
 fi
 
 if [ $? -eq 0 ] # Check return code from getopt
@@ -48,14 +48,14 @@ done
 # Generic download function
 get_file () # path/to/file
 {
-	FILE=$(basename $1)
-	DIR=$(dirname $1)
+	FILE=$(basename "$1")
+	DIR=$(dirname "$1")
 
 	$DEBUG || echo "cURLing $DIR/$FILE"
 
 	if $GET
 	then
-		if [ -f $FILE ]
+		if [ -f "$FILE" ]
 		then CURL="curl -k -R $DIR/$FILE -z $FILE -o $FILE"
 		else CURL="curl -k -R $DIR/$FILE -o $FILE"
 		fi
@@ -65,7 +65,7 @@ get_file () # path/to/file
 
 	if $DEBUG
 	then
-		echo $CURL
+		echo "$CURL"
 	else
 		$CURL
 	fi
