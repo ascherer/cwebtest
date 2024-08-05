@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 PROG=$(basename "$0")
 
@@ -21,12 +21,9 @@ DEBUG=false
 GET=false
 REMOTE='https://www-cs-faculty.stanford.edu/~knuth/programs'
 
-getopt -T >/dev/null
-
-if [ $? -eq 4 ] # Check for Linux-getopt with extensions
-then OPTS=$(getopt -n "$PROG" -o $SHRTOPTS -l $LONGOPTS -- "$@")
-else OPTS=$(getopt $SHRTOPTS "$@")
-fi
+getopt -T && # Check for Linux-getopt with extensions
+	OPTS=$(getopt $SHRTOPTS "$@") ||
+	OPTS=$(getopt -n "$PROG" -o $SHRTOPTS -l $LONGOPTS -- "$@")
 
 if [ $? -eq 0 ] # Check return code from getopt
 then eval set -- "$OPTS"
