@@ -27,9 +27,12 @@ path='/usr/bin' # Path to CWEB
 tex= # TeX engine
 version='3.64' # Version of CWEB
 
-getopt -T && # Check for Linux-getopt with extensions
-	OPTS=$(getopt $SHRTOPTS $*) ||
-	OPTS=$(getopt -n runall -o $SHRTOPTS -l $LONGOPTS -- "$@")
+getopt -T >/dev/null && true
+
+if [ $? -eq 4 ] # Check for Linux-getopt with extensions
+then OPTS=$(getopt -n runall -o $SHRTOPTS -l $LONGOPTS -- "$@")
+else OPTS=$(getopt $SHRTOPTS $*)
+fi
 
 if [ $? -eq 0 ] # Check return code from getopt
 then eval set -- "$OPTS"
