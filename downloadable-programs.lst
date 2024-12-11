@@ -265,3 +265,7 @@ perfect-partition-square.w
 indicator-dlx.w
 xcc-benchmarks.tgz
 mcc-benchmarks.tgz
+tarjan-strong.w
+tarjan-strong-and-weak.w
+makegraph.w
+makedigraph.w
