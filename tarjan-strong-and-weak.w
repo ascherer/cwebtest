@@ -289,7 +289,7 @@ for (w=settled;;ox,w=w->link) {
 
 @ @<Say farewell@>=
 fprintf(stderr,
-   "Altogether "O"d strong component"O"s and "O"d weak components;",
+   "Altogether "O"d strong component"O"s and "O"d weak component"O"s;",
                      comps,comps==1?"":"s",wcomps,wcomps==1?"":"s");
 fprintf(stderr," "O"llu+"O"llu mems.\n",
     mems,xmems);
