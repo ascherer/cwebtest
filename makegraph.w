@@ -21,7 +21,7 @@ char buf[bufsize+1];
 char names[maxn][maxl+2];
 char nbuf[maxl+1];
 char filenamebuf[ID_FIELD_SIZE+8]="/tmp/makegraph.gb";
-main(int argc, char*argv[]) {
+int main(int argc, char*argv[]) {
   register int j,k,m,n;
   Graph *g;
   Vertex *u,*v;
@@ -76,8 +76,8 @@ printf(" and %d edges...\n",m);
 
 @ @<Output the graph@>=
 if (argc>1) {
-  sprintf(g->id,"%.*s",ID_FIELD_SIZE,argv[1]);
-  sprintf(filenamebuf,"/tmp/%.*s.gb",ID_FIELD_SIZE,argv[1]);
+  sprintf(g->id,"%.*s",ID_FIELD_SIZE-1,argv[1]);
+  sprintf(filenamebuf,"/tmp/%.*s.gb",ID_FIELD_SIZE-1,argv[1]);
 }
 save_graph(g,filenamebuf); 
 printf(" and file %s holds the result.\n",filenamebuf);

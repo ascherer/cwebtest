@@ -21,7 +21,7 @@ char buf[bufsize+1];
 char names[maxn][maxl+1];
 char nbuf[maxl+1];
 char filenamebuf[ID_FIELD_SIZE+8]="/tmp/makegraph.gb";
-main(int argc, char*argv[]) {
+int main(int argc, char*argv[]) {
   register int j,k,m,n,d;
   Graph *g;
   Vertex *u,*v;
@@ -52,7 +52,7 @@ hash_setup(g);
 printf("I've created a graph with %d vertices...\n",n);
 
 @ @<Input the edges@>=  
-while (1) {
+for (m=0;;m++) {
   if (!fgets(buf,bufsize,stdin)) break;
   for (k=0;buf[k]==' ';k++) ;
   for (j=0;buf[k]!=' ' && j<maxl;j++,k++) nbuf[j]=buf[k];
@@ -73,14 +73,13 @@ while (1) {
   for (;buf[k]==' ';k++) ;
   for (d=0;buf[k]>='0' && buf[k]<='9';k++) d=10*d+buf[k]-'0';
   gb_new_arc(u,v,d);
-  m++;
-}  
+}
 printf(" and %d arcs...\n",m);
 
 @ @<Output the graph@>=
 if (argc>1) {
-  sprintf(g->id,"%.*s",ID_FIELD_SIZE,argv[1]);
-  sprintf(filenamebuf,"/tmp/%.*s.gb",ID_FIELD_SIZE,argv[1]);
+  sprintf(g->id,"%.*s",ID_FIELD_SIZE-1,argv[1]);
+  sprintf(filenamebuf,"/tmp/%.*s.gb",ID_FIELD_SIZE-1,argv[1]);
 }
 save_graph(g,filenamebuf); 
 printf(" and file %s holds the result.\n",filenamebuf);
