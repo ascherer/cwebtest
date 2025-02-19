@@ -333,7 +333,7 @@ visible=2*nn;
 |u| is visible, and that |v| is currently a neighbor of |u|,
 namely that |adj[u][v]<deg(u)|.
 
-In a production version of this program, the |remove| subroutine
+In a production version of this program, the |remove_arc| subroutine
 can be declared \&{inline}. Thus we don't charge any extra mems
 for invoking it.
 
@@ -759,9 +759,6 @@ A similar remark applies to other pairs of fields.
   for (o,u=act[head].rlink;u!=head;o,u=act[u].rlink) actstack[actptr++]=u;
   o,nd[level].a=actptr;
 }
-
-@ @<Demote |v| from inner to outer@>=
-fprintf(stderr,"now I want to demote "O"s"O"c from inner to outer...\n",name(v));
 
 @ @<Undo the changes made at the current level...@>=
 o,d=nd[level].d,eptr=nd[level].m;

@@ -294,7 +294,7 @@ visible=nn;
 |u| is visible, and that |v| is currently a neighbor of |u|,
 namely that |adj[u][v]<deg(u)|.
 
-In a production version of this program, the |remove| subroutine
+In a production version of this program, the |remove_arc| subroutine
 can be declared \&{inline}. Thus we don't charge any extra mems
 for invoking it.
 
@@ -676,7 +676,7 @@ all edges of a Hamiltonian cycle have already been chosen.
 (Consider, for example, the case where the input graph is the cyclic
 graph $C_4$, with edges $0\adj1\adj2\adj3\adj0$. Then |trigger[0]=0|
 will choose edges $1\adj0$ and $0\adj3$. And |trigger[1]=1|
-do nothing, because 1 is no longer bare. Then |trigger[2]=2| will
+will do nothing, because 1 is no longer bare. Then |trigger[2]=2| will
 choose edges $1\adj2$ and $2\adj3$, as desired, in spite of the
 fact that 1 and~3 are mates.
 The subsequent |trigger[3]=3| will again do nothing.)
@@ -753,9 +753,6 @@ A similar remark applies to other pairs of fields.
   for (o,u=act[head].rlink;u!=head;o,u=act[u].rlink) actstack[actptr++]=u;
   o,nd[level].a=actptr;
 }
-
-@ @<Demote |v| from inner to outer@>=
-fprintf(stderr,"now I want to demote "O"s from inner to outer...\n",name(v));
 
 @ @<Undo the changes made at the current level...@>=
 o,d=nd[level].d,eptr=nd[level].m;
