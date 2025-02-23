@@ -480,9 +480,9 @@ Thus |nd| is a stack that helps to control this algorithm.
 @<Type...@>=
 typedef struct node_struct {
   int v; /* the active vertex |curv| on which we're branching */
+  int m; /* the number of edges chosen so far */
   int i; /* the index |curi| of |curv|'s current neighbor |curu| */
   int d; /* the total number |deg(curv)| of possibilities for |curi| */
-  int m; /* the number of edges chosen so far */
   int s; /* the number of visible vertices */
   int t; /* base position in the trigger list (see below) */
   int a; /* base position in the active stack (see below) */
@@ -559,11 +559,15 @@ try_move:@<Choose the edge from |curv| to |nbr[curv][curi]|@>;
 goto advance;
 backup:@+if (--level<0) goto done;
 if (vbose&show_details) fprintf(stderr,"Back to level "O"d\n",level);
-try_again:@<Undo the changes made at the current level, increasing |curi|@>;
-if (level) {
-  if (sanity_checking) sanity();
-  if (curi<d) goto try_move;
-  goto backup;
+try_again:@<Restore |d| and |curi|, increasing |curi|@>;
+if (curi>=d) {
+  if (level) goto backup;
+}@+else {
+  @<Undo the other changes made at the current level@>;
+  if (level) {
+    if (sanity_checking) sanity();
+    goto try_move;
+  }
 }
 @<Advance at root level@>;
 
@@ -736,14 +740,14 @@ if (curt<0) { /* |curu| is bare */
 @*Backtracking. As we explore the search tree, we often want to go back and
 investigate the branches not yet taken.
 
-Only one mem is needed to access both |nd[level].v| and |nd[level].i|
+Only one mem is needed to access both |nd[level].v| and |nd[level].m|
 simultaneously, because those 32-bit \&{int}s occupy the same 64-bit word.
 A similar remark applies to other pairs of fields.
 
 @<Record the current status, for backtracking later@>=
 {
-  o,nd[level].v=curv,nd[level].i=curi;
-  o,nd[level].d=d,nd[level].m=eptr;
+  o,nd[level].v=curv,nd[level].m=eptr;
+  o,nd[level].d=d,nd[level].i=curi;
   o,nd[level].s=visible,nd[level].t=trigptr;
   saveptr=level*nn;
   for (k=0;k<visible;k++) {
@@ -754,8 +758,14 @@ A similar remark applies to other pairs of fields.
   o,nd[level].a=actptr;
 }
 
-@ @<Undo the changes made at the current level...@>=
-o,d=nd[level].d,eptr=nd[level].m;
+@ Here, as suggested by Peter Weigel, we restore only the two most
+crucial state variables --- because they might tell us that we needn't
+bother to restore any more.
+
+@<Restore |d| and |curi|, ...@>=
+oo,d=nd[level].d, curi=++nd[level].i;
+
+@ @<Undo the other changes made at the current level@>=
 for (o,actptr=nd[level].a,v=head,k=(level?o,nd[level-1].a:0);k<actptr;k++) {
   o,u=actstack[k];
   oo,act[v].rlink=u,act[u].llink=v;
@@ -768,7 +778,7 @@ for (k=0;k<visible;k++) {
   o,u=vis[k];
   oo,vrt[u]=savestack[saveptr+u];
 }
-oo,curv=nd[level].v,curi=++nd[level].i;
+o,curv=nd[level].v,eptr=nd[level].m;
 
 @*Reaping the rewards. Once all vertices have been connected up,
 no more decisions need to be made. In most such cases, we'll have found a
@@ -788,7 +798,7 @@ At this point, exactly two vertices should be active.
     nd[level].i=0,nd[level].d=1;
     nd[level].m=eptr;
     if (vbose&show_raw_sols) {
-      printf("\n%llu:\n",count);@+print_state(stdout);
+      printf("\n"O"llu:\n",count);@+print_state(stdout);
     }@+else @<Unscramble and print the current solution@>;
     fflush(stdout);
   }
@@ -842,7 +852,7 @@ neighbors.
     if (path[k]==0) break;
   }
   for (k=0;k<=nn;k++) printf(""O"s ",name(path[k]));
-  printf("#%llu\n",count);
+  printf("#"O"llu\n",count);
 }
 
 @ @<Glob...@>=
@@ -889,7 +899,7 @@ and in such a case the trigger list will provide a way to finish
 the final round.
 
 @<Advance at root level@>=
-if (curv<0) goto done;
+if (curi>=d) goto done; /* in that case |nd[0].v=-1| */
 o,curu=mate(curv); /* the previous edge |curv| to |curu| is now gone */
 o,act[head].llink=act[head].rlink=head,actptr=0; /* nothing is active */
 oo,mate(curu)=mate(curv)=-1,visible=nn; /* everything is bare */
