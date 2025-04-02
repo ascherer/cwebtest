@@ -562,12 +562,12 @@ if (vbose&show_details) fprintf(stderr,"Back to level "O"d\n",level);
 try_again:@<Restore |d| and |curi|, increasing |curi|@>;
 if (curi>=d) {
   if (level) goto backup;
-}@+else {
-  @<Undo the other changes made at the current level@>;
-  if (level) {
-    if (sanity_checking) sanity();
-    goto try_move;
-  }
+  goto done;
+}
+@<Undo the other changes made at the current level@>;
+if (level) {
+  if (sanity_checking) sanity();
+  goto try_move;
 }
 @<Advance at root level@>;
 
@@ -746,15 +746,17 @@ A similar remark applies to other pairs of fields.
 
 @<Record the current status, for backtracking later@>=
 {
-  o,nd[level].v=curv,nd[level].m=eptr;
   o,nd[level].d=d,nd[level].i=curi;
   o,nd[level].s=visible,nd[level].t=trigptr;
-  saveptr=level*nn;
-  for (k=0;k<visible;k++) {
-    o,u=vis[k];
-    oo,savestack[saveptr+u]=vrt[u];
+  if (d>1) {
+    o,nd[level].v=curv,nd[level].m=eptr;
+    saveptr=level*nn;
+    for (k=0;k<visible;k++) {
+      o,u=vis[k];
+      oo,savestack[saveptr+u]=vrt[u];
+    }
+    for (o,u=act[head].rlink;u!=head;o,u=act[u].rlink) actstack[actptr++]=u;
   }
-  for (o,u=act[head].rlink;u!=head;o,u=act[u].rlink) actstack[actptr++]=u;
   o,nd[level].a=actptr;
 }
 
@@ -817,7 +819,8 @@ void print_state(FILE *stream)
     }
     if (l) {
       if (j<nn) fprintf(stream," "O"3d: "O"s--"O"s ("O"d of "O"d)\n",
-                   l,name(e[j].u),name(e[j].v),nd[l].i+1,nd[l].d);
+                   l,name(e[j].u),name(e[j].v),
+                   nd[l].d==1? 1: nd[l].i+1,nd[l].d);
     }@+else @<Print the state line for the root level@>;
   }
 }
@@ -899,7 +902,6 @@ and in such a case the trigger list will provide a way to finish
 the final round.
 
 @<Advance at root level@>=
-if (curi>=d) goto done; /* in that case |nd[0].v=-1| */
 o,curu=mate(curv); /* the previous edge |curv| to |curu| is now gone */
 o,act[head].llink=act[head].rlink=head,actptr=0; /* nothing is active */
 oo,mate(curu)=mate(curv)=-1,visible=nn; /* everything is bare */
@@ -960,7 +962,8 @@ void print_progress(void) {
   register double f,fd;
   fprintf(stderr," after "O"lld mems: "O"lld sols,",mems,count);
   for (f=0.0,fd=1.0,l=0;l<level;l++) {
-    k=nd[l].i+1,d=nd[l].d;
+    d=nd[l].d;
+    k=(d==1? 1: nd[l].i+1);
     fd*=d,f+=(k-1)/fd; /* choice |l| is |k| of |d| */
     fprintf(stderr," "O"c"O"c",
       k<10? '0'+k: k<36? 'a'+k-10: k<62? 'A'+k-36: '*',

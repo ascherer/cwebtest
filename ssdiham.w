@@ -416,8 +416,8 @@ for (mind=infty,u=0;u<2*nn;u++) {
     confusion("asymmetry");
 }
 if (mind<1) {
-  printf("There are no Hamiltonian cycles, because "O"s"O"c has degree "O"d!\n",
-        name(curv),mind);
+  printf("There are no Hamiltonian cycles, because "O"s has %sdegree 0!\n",
+        basename(curv>>1),curv&1?"in":"out");
   exit(0);
 }
 fprintf(stderr,"OK, I've got a digraph with "O"d vertices, "O"ld arcs,\n",
@@ -547,7 +547,7 @@ The |savestack| grows by exactly |2*nn| entries at each level.
 @<Glob...@>=
 int level; /* the depth of branching */
 node nd[maxn]; /* nodes between current level and the search tree root */
-int trigger[maxn*2*maxn]; /* vertices whose degree became 2 while bare */
+int trigger[maxn*2*maxn]; /* vertices whose degree became 1 while bare */
 int trigptr; /* the number of vertices in the |trigger| lists */
 vert savestack[maxn*2*maxn]; /* data for the visible vertices at each level */
 int saveptr; /* number of entries on |savestack| */
@@ -613,12 +613,12 @@ if (vbose&show_details) fprintf(stderr,"Back to level "O"d\n",level);
 try_again:@<Restore |d| and |curi|, increasing |curi|@>;
 if (curi>=d) {
   if (level) goto backup;
-}@+else {
-  @<Undo the other changes made at the current level@>;
-  if (level) {
-    if (sanity_checking) sanity();
-    goto try_move;
-  }
+  goto done;
+}
+@<Undo the other changes made at the current level@>;
+if (level) {
+  if (sanity_checking) sanity();
+  goto try_move;
 }
 @<Advance at root level@>;
 
@@ -668,7 +668,7 @@ for (o,j=(level?nd[level-1].t:0);j<trigptr;j++) {
 simply has two vertices $\{0,1\}$
 and two arcs: $0\dadj 1\dadj 0$. Then the graph by which we represent it
 has four vertices $\{0^-,0^+,1^-,1^+\}$
-and two edges: $0^-\adj1^+$, $1^1\adj0^+$.
+and two edges: $0^-\adj1^+$, $1^-\adj0^+$.
 All four vertices have degree~1; so they go immediately
 onto the trigger list. The first promotion, $|trigger|[0]=0^-$,
 will generate the forced edge $0^-\adj1^+$. It will also cause
@@ -752,15 +752,17 @@ A similar remark applies to other pairs of fields.
 
 @<Record the current status, for backtracking later@>=
 {
-  o,nd[level].v=curv,nd[level].i=curi;
   o,nd[level].d=d,nd[level].m=eptr;
   o,nd[level].s=visible,nd[level].t=trigptr;
-  saveptr=level*2*nn;
-  for (k=0;k<visible;k++) {
-    o,u=vis[k];
-    oo,savestack[saveptr+u]=vrt[u];
+  if (d>1) {
+    o,nd[level].v=curv,nd[level].i=curi;
+    saveptr=level*2*nn;
+    for (k=0;k<visible;k++) {
+      o,u=vis[k];
+      oo,savestack[saveptr+u]=vrt[u];
+    }
+    for (o,u=act[head].rlink;u!=head;o,u=act[u].rlink) actstack[actptr++]=u;
   }
-  for (o,u=act[head].rlink;u!=head;o,u=act[u].rlink) actstack[actptr++]=u;
   o,nd[level].a=actptr;
 }
 
@@ -788,17 +790,19 @@ o,curv=nd[level].v,eptr=nd[level].m;
 
 @*Reaping the rewards. Once all vertices have been connected up,
 no more decisions need to be made. In most such cases, we'll have found a
-valid Hamiltonian cycle, although its last link usually still needs
+valid Hamiltonian cycle, although its last link still needs
 to be filled in.
 
 At this point, exactly two vertices should be active.
 
-@ @<Check for solution and |goto backup|@>=
+(We cannot have |eptr==nn|, because this program never says `|eptr++|'
+when |eptr| is equal to |nn-1|.)
+
+@<Check for solution and |goto backup|@>=
 {
-  if (eptr<nn) {
-    @<If the two |outer| vertices aren't adjacent, |goto backup|@>;
-    e[eptr].u=act[head].llink,e[eptr++].v=act[head].rlink;@+vprint();
-  }
+  if (eptr==nn) confusion("eptr");
+  @<If the two |outer| vertices aren't adjacent, |goto backup|@>;
+  e[eptr].u=act[head].llink,e[eptr++].v=act[head].rlink;@+vprint();
   count++;
   if (spacing && count mod spacing==0) {
     nd[level].i=0,nd[level].d=1;
@@ -823,7 +827,8 @@ void print_state(FILE *stream)
     }
     if (l) {
       if (j<nn) fprintf(stream," "O"3d: "O"s"O"c--"O"s"O"c ("O"d of "O"d)\n",
-                   l,name(e[j].u),name(e[j].v),nd[l].i+1,nd[l].d);
+                   l,name(e[j].u),name(e[j].v),
+                   nd[l].d==1? 1: nd[l].i+1,nd[l].d);
     }@+else @<Print the state line for the root level@>;
   }
 }
@@ -903,7 +908,6 @@ and in such a case the trigger list will provide a way to finish
 the final round.
 
 @<Advance at root level@>=
-if (curi>=d) goto done; /* in that case |nd[0].v=-1| */
 o,curu=e[0].v; /* the previous edge |curv| to |curu| should disappear */
 remove_arc(curv,curu);@+remove_arc(curu,curv);
 if (deg(curu)==1) trigger[0]=curu,trigptr=1;@+else trigptr=0;
@@ -963,7 +967,8 @@ void print_progress(void) {
   register double f,fd;
   fprintf(stderr," after "O"lld mems: "O"lld sols,",mems,count);
   for (f=0.0,fd=1.0,l=0;l<level;l++) {
-    k=nd[l].i+1,d=nd[l].d;
+    d=nd[l].d;
+    k=(d==1? 1: nd[l].i+1);
     fd*=d,f+=(k-1)/fd; /* choice |l| is |k| of |d| */
     fprintf(stderr," "O"c"O"c",
       k<10? '0'+k: k<36? 'a'+k-10: k<62? 'A'+k-36: '*',
