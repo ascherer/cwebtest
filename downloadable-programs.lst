@@ -203,9 +203,13 @@ dlx3-sharp.ch
 dlx3-sharp-wordcross.ch
 dlx3-redrect.ch
 dlx3-motley.ch
+dlx3-loop.ch
 redrect-dlx.w
 motley-dlx.w
 queendom-dlx.w
+superslitherlink-dlx.w
+superslitherlink-general-dlx.w
+superslitherlink-dlx.mp
 dlx5.w
 dlx6.w
 dlx6-noMRV.ch
