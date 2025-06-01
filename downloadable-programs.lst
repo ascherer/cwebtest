@@ -56,6 +56,8 @@ hamdance.w
 ham.w
 ssham.w
 ssdiham.w
+back-warnsdorf.w
+ham-euler.w
 polynum.w
 polyslave.w
 polynum-restart.ch
@@ -90,6 +92,8 @@ francon.w
 viennot.w
 tcb.tex
 kepler.mp
+back-kepler-towers.w
+propp.w
 linked-trees.w
 vacillate.w
 embed.w
@@ -130,6 +134,7 @@ simpath-cycles.ch
 simpath-ham.ch
 simpath-ham-any.ch
 simpath-directed-cycles.w
+bdd-zdd-utils.tgz
 euler-trail.w
 celtic-paths.w
 celtica.mf
@@ -172,6 +177,8 @@ back-mxn-words-mxn.w
 ../words.tgz
 ../wordlists.tgz
 back-pdi.w
+back-pi-day.w
+walk-random.w
 commafree-eastman.w
 commafree-eastman-new.w
 sat-commafree.w
@@ -179,6 +186,8 @@ back-commafree4.w
 back-skeleton.w
 back-dissect.w
 back-graceful-kmp3.w
+back-graceful.w
+back-graceful-rooted-randomrestarts.w
 ulam-gibbs.w
 ulam-gibbs.1
 dlx1.w
@@ -190,6 +199,15 @@ sudoku-dlx.w
 sudoku-general-dlx.w
 dlx1-sudoku.ch
 fillomino-dlx.w
+de-bruijn-dlx.w
+ian-dlx.w
+macmahon-triangles-dlx.w
+masyu-dlx.w
+pi-day-dlx.w
+slitherlink-dlx.w
+torto-dlx.w
+windmill-dominoes-dlx.w
+word-rect-dlx.w
 dlx2.w
 dlx-pre.w
 dlx2-polyom.ch
@@ -220,6 +238,13 @@ ssxcc1.w
 ssxcc2.w
 ssxcc3.ch
 ssxccdom.w
+ssxcc.w
+ssxcc-binary.w
+ssxcc-wtd.ch
+ssxcc-frb.ch
+ssmcc.w
+ssmcc-wtd.ch
+ssmcc-frb.ch
 xccdc1.w
 xccdc2.w
 xccdc3.ch
@@ -255,13 +280,6 @@ partial-latin-gad.w
 partial-latin-gad-swap.ch
 random-dfs-a.w
 random-dfs-b.w
-ssxcc.w
-ssxcc-binary.w
-ssxcc-wtd.ch
-ssxcc-frb.ch
-ssmcc.w
-ssmcc-wtd.ch
-ssmcc-frb.ch
 rank-parade1.w
 rank-parade2.w
 unrank-parade1.w

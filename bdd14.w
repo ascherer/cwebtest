@@ -3024,7 +3024,7 @@ void sift(var *v) {
   register int pass,bestscore,origscore,swaps;
   var *u=v;
   double worstratio,saferatio;
-  unsigned long long oldmems=mems, oldrmems=rmems, oldzmems=zmems;
+  unsigned long long oldmems=mems, oldzmems=zmems;
   bestscore=origscore=totalnodes;
   worstratio=saferatio=1.0;
   swaps=pass=0; /* first we go up or down; then we go down or up */

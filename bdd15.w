@@ -461,9 +461,8 @@ to initialize the ones that the user asks for.
 
 @<Sub...@>=
 void createvars(int v) {
-  register node *p,*q,*r;
-  register var *hv=&varhead[v];
-  register int j,k;
+  register node *p,*r;
+  register int k;
   if (!totvars) @<Create all the variables $(x_0,\ldots,x_v)$@>;
 }    
 
@@ -515,9 +514,7 @@ routines are often good enough for building up the desired ZDD base.)
 
 @<Sub...@>=
 node* projection(int v) {
-  register node *p,*q,*r;
   register var *hv=&varhead[v];
-  register int j,k;
   if (!hv->proj) {
     hv->proj=addr_(symfunc(node_(hv->elt),varhead,1));
     if (verbose&2) printf(" %x=x%d\n",id(hv->proj),v);
@@ -1549,7 +1546,7 @@ to a function. (Wow!)
 
 @<Sub...@>=
 node* and_rec(node*f, node*g) {
-  var *v,*vf,*vg;
+  var *vf,*vg;
   node *r,*r0,*r1;
   oo,vf=thevar(f),vg=thevar(g);
   while (vf!=vg) {
@@ -2079,7 +2076,7 @@ other ways. (This algorithm is due to Shin-ichi Minato, 1994.)
 @<Sub...@>=
 node* quot_rec(node*f, node*g) {
   node *r,*r0,*r1,*f0,*f1;
-  var *vf,*vg;
+  var *vg;
   if (g<=topsink) {
     if (g==topsink) return oo,f->xref++,f; /* $f/\{\emptyset\}=f$ */
     return oo,tautology->xref++,tautology; /* $f/0=1$ */
@@ -2270,7 +2267,7 @@ return r;
 
 @<Sub...@>=
 node *and_and_rec(node *f, node *g, node *h) {
-  var *v,*vf,*vg,*vh;
+  var *vf,*vg,*vh;
   node *r,*r0,*r1;
   ooo,vf=thevar(f),vg=thevar(g),vh=thevar(h);
 restart:@+while (vf!=vg) {
@@ -3157,7 +3154,7 @@ void sift(var *v) {
   register int pass,bestscore,origscore,swaps;
   var *u=v;
   double worstratio,saferatio;
-  unsigned long long oldmems=mems, oldrmems=rmems, oldzmems=zmems;
+  unsigned long long oldmems=mems, oldzmems=zmems;
   bestscore=origscore=totalnodes;
   worstratio=saferatio=1.0;
   swaps=pass=0; /* first we go up or down; then we go down or up */
@@ -3292,8 +3289,7 @@ entirely cleared.
 @<Sub...@>=
 void collect_garbage(int level) {
   register int k;
-  var *v;  
-  node *p;
+  var *v;
   last_ditch=0; /* see below */
   if (!level) cache_purge();
   else {
@@ -3345,7 +3341,7 @@ int outcount; /* the number of files output so far */
 @ @<Sub...@>=
 void math_print(node *p) {
   var *v;
-  int k,s;
+  int k;
   node *q,*r;
   if (!p) return;
   outcount++;
@@ -3358,7 +3354,7 @@ void math_print(node *p) {
   fprintf(outfile,"g0=0\ng1=1\n");
   if (p>topsink) {
     mark(p);
-    for (s=0,v=topofvars-1;v>=varhead;v--)
+    for (v=topofvars-1;v>=varhead;v--)
       @<Generate Mathematica outputs for variable |v|@>;
     unmark(p);
   }
