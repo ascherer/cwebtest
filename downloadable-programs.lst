@@ -239,6 +239,7 @@ ssxcc2.w
 ssxcc3.ch
 ssxccdom.w
 ssxcc.w
+ssxcc-wtd0.ch
 ssxcc-binary.w
 ssxcc-wtd.ch
 ssxcc-frb.ch
@@ -248,6 +249,8 @@ ssmcc-frb.ch
 xccdc1.w
 xccdc2.w
 xccdc3.ch
+xccdc.w
+xccdc-wtd.ch
 infty-queens.w
 graceful-count.w
 graceful-count-small.ch
