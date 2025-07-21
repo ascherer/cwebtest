@@ -43,7 +43,7 @@ Graph *g; /* the given graph */
 @<Subroutines@>@;
 int main(int argc,char *argv[])
 {
-  register int i,j,k,d,t,u,v,w;
+  register int i,j,k,d,t,u,v,w,mm;
   @<Process the command line, inputting the graph@>;
   @<Prepare the graph for backtracking@>;
   imems=mems, mems=0;
@@ -79,6 +79,9 @@ stop after this many solutions have been found;
 \item{$\bullet$}
 `\.T$\langle\,$integer$\,\rangle$' sets |timeout| (which causes abrupt
 termination if |mems>timeout| at the beginning of a level);
+\item{$\bullet$}
+`\.n$\langle\,$integer$\,\rangle$' ignores all but the first |n| vertices
+of the input graph (default |maxn|);
 
 @d show_basics 1 /* |vbose| code for basic stats; this is the default */
 @d show_choices 2 /* |vbose| code for backtrack logging */
@@ -102,7 +105,8 @@ ullng timeout=0x1fffffffffffffff; /* give up after this many mems */
 ullng nodes; /* total size of search tree */
 ullng profile[maxn]; /* number of nodes at each level of the search tree */
 int nn; /* number of vertices in the given graph */
-int mind; /* smallest degree in the given graph */
+int nmax=maxn; /* cutoff for the largest vertex number */
+int mind,maxd; /* smallest and largest degree in the given graph */
 
 @ If an option appears more than once on the command line, the first
 appearance takes precedence.
@@ -115,6 +119,7 @@ case 's': k|=(sscanf(argv[j]+1,""O"d",&random_seed)-1),randomizing=1;@+break;
 case 'd': k|=(sscanf(argv[j]+1,""O"lld",&delta)-1),thresh=delta;@+break;
 case 't': k|=(sscanf(argv[j]+1,""O"lld",&maxcount)-1);@+break;
 case 'T': k|=(sscanf(argv[j]+1,""O"lld",&timeout)-1);@+break;
+case 'n': k|=(sscanf(argv[j]+1,""O"d",&nmax)-1);@+break;
 default: k=1; /* unrecognized command-line option */
 }
 if (argc<2) k=1;
@@ -125,6 +130,7 @@ if (k==0) {
     k=1;
   }@+else {
     nn=g->n;
+    if (nn>nmax) nn=nmax;
     if (nn>maxn) {
       fprintf(stderr,"Sorry, graph "O"s has too many vertices ("O"d>"O"d)!\n",
                               argv[1],nn,maxn);
@@ -134,7 +140,7 @@ if (k==0) {
 }
 if (k) {
   fprintf(stderr,
-     "Usage: "O"s foo.gb [v<n>] [m<n>] [s<n>] [d<n>] [t<n>] [T<n>]\n",
+     "Usage: "O"s foo.gb [v<n>] [m<n>] [s<n>] [d<n>] [t<n>] [T<n>] [n<n>]\n",
         argv[0]);
   exit(-1);
 }
@@ -369,8 +375,9 @@ if (randomizing) {
   for (j=0;j<nn;j++) iperm[perm[j]]=j;
 }@+else@+for (j=0;j<nn;j++) perm[j]=iperm[j]=j;
 @<Set up the |nbr| and |adj| arrays@>;
-for (mind=infty,u=0;u<nn;u++) {
+for (mind=infty,maxd=u=0;u<nn;u++) {
   if (o,deg(u)<mind) mind=deg(u),curv=u;
+  if (o,deg(u)>maxd) maxd=deg(u);
   if (deg(u)==2) o,trigger[trigptr++]=u;
   for (v=0;v<nn;v++) if (u!=v) {
     if (adj[u][v]!=infty && adj[v][u]==infty) {
@@ -385,9 +392,9 @@ if (mind<2) {
         name(curv),mind);
   exit(0);
 }
-fprintf(stderr,"OK, I've got a graph with "O"d vertices, "O"ld edges,\n",
-                                nn,(g->m)/2);
-fprintf(stderr," and minimum degree "O"d.\n",mind);
+fprintf(stderr,"OK, I've got a graph with "O"d vertices, "O"d edges,\n",
+                                nn,mm/2);
+fprintf(stderr," minimum degree "O"d, and maximum degree "O"d.\n",mind,maxd);
 
 @ @<Glob...@>=
 int perm[maxn]; /* vertex mapping between this program and the input graph */
@@ -395,13 +402,14 @@ int iperm[maxn]; /* the inverse mapping */
 
 @ @<Set up the |nbr| and |adj| arrays@>=
 for (i=0;i<nn;i++) for (o,j=0;j<nn;j++) o,adj[i][j]=infty;
-for (v=0;v<nn;v++) {
+for (mm=v=0;v<nn;v++) {
   register int up,vp;
   register Arc *a;
   rmems++,vp=perm[v];
   oo; /* mems to fetch |nbr[vp]| and |adj[vp]|, needed in the following loop */
-  for (d=0,o,a=(g->vertices+v)->arcs;a;o,a=a->next,d++) {
+  for (d=0,o,a=(g->vertices+v)->arcs;a;o,a=a->next) {
     o,u=a->tip-g->vertices;
+    if (u>=nmax) continue;
     if (u==v) {
       fprintf(stderr,"graph "O"s has a self loop "O"s--"O"s!\n",
              argv[1],(g->vertices+v)->name,(g->vertices+u)->name);
@@ -413,7 +421,7 @@ for (v=0;v<nn;v++) {
              argv[1],(g->vertices+v)->name,(g->vertices+u)->name);
       exit(-4);
     }
-    oo,nbr[vp][d]=up,adj[vp][up]=d;
+    oo,nbr[vp][d]=up,adj[vp][up]=d++,mm++;
   }
   o,mate(vp)=-1,deg(vp)=degree[vp]=d;
   if (randomizing) { /* permute the list of neighbors */
@@ -560,10 +568,7 @@ goto advance;
 backup:@+if (--level<0) goto done;
 if (vbose&show_details) fprintf(stderr,"Back to level "O"d\n",level);
 try_again:@<Restore |d| and |curi|, increasing |curi|@>;
-if (curi>=d) {
-  if (level) goto backup;
-  goto done;
-}
+if (curi>=d) goto backup;
 @<Undo the other changes made at the current level@>;
 if (level) {
   if (sanity_checking) sanity();
