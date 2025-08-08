@@ -55,7 +55,10 @@ gdance-cutoff.ch
 hamdance.w
 ham.w
 ssham.w
+ssham-winding-prep.ch
+winding.1
 ssdiham.w
+ssbidiham.w
 back-warnsdorf.w
 ham-euler.w
 polynum.w
@@ -216,6 +219,7 @@ dlx2-sharp.ch
 dlx2-cutoff.ch
 dlx2-kludge.ch
 dlx2-cutoff-kludge.ch
+dlx2-loop.ch
 dlx3.w
 dlx3-sharp.ch
 dlx3-sharp-wordcross.ch
@@ -240,6 +244,7 @@ ssxcc3.ch
 ssxccdom.w
 ssxcc.w
 ssxcc-wtd0.ch
+ssxcc-frb0.ch
 ssxcc-binary.w
 ssxcc-wtd.ch
 ssxcc-frb.ch
@@ -251,6 +256,7 @@ xccdc2.w
 xccdc3.ch
 xccdc.w
 xccdc-wtd.ch
+xccdc-frb.ch
 infty-queens.w
 graceful-count.w
 graceful-count-small.ch
