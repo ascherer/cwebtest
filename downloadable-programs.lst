@@ -302,3 +302,4 @@ tarjan-strong.w
 tarjan-strong-and-weak.w
 makegraph.w
 makedigraph.w
+makeboard.w
