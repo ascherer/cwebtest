@@ -2772,7 +2772,7 @@ low activity, we prefer to forget the one that has had more
 time to become active.)
 
 We use the fact that nonnegative |float| numbers can be compared
-as if they were integers. Thus we interpret |active(c)| as
+as if they were integers. Thus we interpret |activ(c)| as
 a `|lit|' instead of as a `|flt|'.
 
 @<Put |jj| entries of range |j| into the clause heap@>=

@@ -11,6 +11,11 @@ figure out the $z$th solution. But I don't want to store all
 of that information. So I regenerate the auxiliary matrix $(m-1)(n-1)$
 times, taking back the updates one by one. (Eventually this gets easier.)
 
+{\it Note, September 2025:}\enspace I have corrected a serious error
+in the original version of this program (May 2020), which mistakenly
+said that $\bigl({a\atop c}{b\atop d}\bigr)$ is bad when $a>b>c>d$.
+I thank Heiko Thei{\ss}en for pointing out my unfortunate mistake.
+
 @d maxn 10
 @d maxt 16
 @d o mems++
@@ -31,7 +36,7 @@ int inx[maxn+1]; /* indices being looped over */
 int tpow[maxn+2]; /* powers of |t| */
 int pos[maxn+1]; /* what solution position corresponds to each index */
 int sol[maxn*maxn]; /* the partial solution known so far */
-main(int argc,char*argv[]) {
+int main(int argc,char*argv[]) {
   register int a,b,c,d,i,j,k,p,q,r,pp,p0;
   @<Process the command line@>;
   @<Compute the |bad| table@>;
@@ -76,7 +81,7 @@ if (!count) {
 @ @<Compute the |bad| table@>=
 for (a=0;a<t;a++) for (b=0;b<=a;b++) for (c=0;c<=b;c++) for (d=0;d<=a;d++) {
   if (d>b) goto nogood;
-  if (a>b && c>d) goto nogood;
+  if (a>b && b==c && c>d) goto nogood; /* `|b==c|' added, September 2025 */
   if (a>b && b==d && d>c) goto nogood;
   continue;
 nogood: bad[a][b][c][d]=1;

@@ -9,6 +9,11 @@ a_{i,j-1}&a_{i,j}\cr}$$
 for $1\le i<m$ and $1\le j<n$
 are not ``bad,'' where badness is an arbitrary relation.)
 
+{\it Note, September 2025:}\enspace I have corrected a serious error
+in the original version of this program (May 2020), which mistakenly
+said that $\bigl({a\atop c}{b\atop d}\bigr)$ is bad when $a>b>c>d$.
+I thank Heiko Thei{\ss}en for pointing out my unfortunate mistake.
+
 The enumeration is by dynamic programming, using an auxiliary
 matrix of $t^{n+1}$ 64-bit counts. (If necessary, I'll use
 double precision floating point, but this version uses unsigned integers.)
@@ -32,7 +37,7 @@ unsigned long long newcount[maxt]; /* counts that will replace old ones */
 unsigned long long mems; /* memory references to octabytes */
 int inx[maxn+1]; /* indices being looped over */
 int tpow[maxn+2]; /* powers of |t| */
-main(int argc,char*argv[]) {
+int main(int argc,char*argv[]) {
   register int a,b,c,d,i,j,k,p,q,r,pp;
   @<Process the command line@>;
   @<Compute the |bad| table@>;
@@ -70,7 +75,7 @@ if (!count) {
 @ @<Compute the |bad| table@>=
 for (a=0;a<t;a++) for (b=0;b<=a;b++) for (c=0;c<=b;c++) for (d=0;d<=a;d++) {
   if (d>b) goto nogood;
-  if (a>b && c>d) goto nogood;
+  if (a>b && b==c && c>d) goto nogood; /* `|b==c|' added, September 2025 */
   if (a>b && b==d && d>c) goto nogood;
   continue;
 nogood: bad[a][b][c][d]=1;
