@@ -22,7 +22,8 @@ char names[maxn][maxl+1];
 char nbuf[maxl+1];
 char filenamebuf[ID_FIELD_SIZE+8]="/tmp/makegraph.gb";
 int main(int argc, char*argv[]) {
-  register int j,k,m,n,d;
+  register int j,k,m,n,s;
+  register long d;
   Graph *g;
   Vertex *u,*v;
   @<Input the vertices@>;
@@ -71,8 +72,9 @@ for (m=0;;m++) {
     exit(-4);
   }
   for (;buf[k]==' ';k++) ;
+  if (buf[k]=='-') s=-1,k++;@+else s=+1;
   for (d=0;buf[k]>='0' && buf[k]<='9';k++) d=10*d+buf[k]-'0';
-  gb_new_arc(u,v,d);
+  gb_new_arc(u,v,s*d);
 }
 printf(" and %d arcs...\n",m);
 
