@@ -37,8 +37,8 @@ fi
 if [ $? -eq 0 ] # Check return code from getopt
 then eval set -- "$OPTS"
 else
-       >&2 echo "Failed to parse options."
-       exit 1
+	>&2 echo "Failed to parse options."
+	exit 1
 fi
 
 while true
@@ -178,3 +178,5 @@ then
 fi
 
 git checkout master
+
+# vim: set noexpandtab:
