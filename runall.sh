@@ -179,4 +179,6 @@ fi
 
 git checkout master
 
+exit 0
+
 # vim: set noexpandtab:
