@@ -513,7 +513,7 @@ int actptr; /* number of entries on |actstack| */
 
 @ If a bare vertex |v| has degree~2 in the current graph, every Hamiltonian
 cycle must contain the two edges that touch~|v|. We put |v| into a list
-called |trigger|, because we want it to force those edges to be chosen
+called |trigger|, because we want to force those edges to be chosen
 as soon as we have a chance to do so.
 
 @ We call |removex| instead of |remove_arc| when |u| might be bare, because
@@ -770,7 +770,9 @@ crucial state variables --- because they might tell us that we needn't
 bother to restore any more.
 
 @<Restore |d| and |curi|, ...@>=
-oo,d=nd[level].d, curi=++nd[level].i;
+o,d=nd[level].d;
+curi=nd[level].i+1;
+if (curi<d) o,nd[level].i=curi;
 
 @ @<Undo the other changes made at the current level@>=
 for (o,actptr=nd[level].a,v=head,k=(level?o,nd[level-1].a:0);k<actptr;k++) {

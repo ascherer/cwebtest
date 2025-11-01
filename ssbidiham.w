@@ -602,7 +602,7 @@ int actptr; /* number of entries on |actstack| */
 
 @ If a bare vertex |v| has degree~1 in the current graph, every Hamiltonian
 cycle must contain the edge that touches it. We put |v| into a list
-called |trigger|, because we want it to force that edge to be chosen
+called |trigger|, because we want to force that edge to be chosen
 as soon as we have a chance to do so.
 
 @ We call |removex| instead of |remove_arc| when |u| might be bare, because
@@ -657,10 +657,7 @@ goto advance;
 backup:@+if (--level<0) goto done;
 if (vbose&show_details) fprintf(stderr,"Back to level "O"d\n",level);
 try_again:@<Restore |d| and |curi|, increasing |curi|@>;
-if (curi>=d) {
-  if (level) goto backup;
-  goto done;
-}
+if (curi>=d) goto backup;
 @<Undo the other changes made at the current level@>;
 if (level) {
   if (sanity_checking) sanity();
@@ -817,7 +814,9 @@ crucial state variables --- because they might tell us that we needn't
 bother to restore any more.
 
 @<Restore |d| and |curi|, ...@>=
-oo,d=nd[level].d, curi=++nd[level].i;
+o,d=nd[level].d;
+curi=nd[level].i+1;
+if (curi<d) o,nd[level].i=curi;
 
 @ @<Undo the other changes made at the current level@>=
 for (o,actptr=nd[level].a,v=head,k=(level?o,nd[level-1].a:0);k<actptr;k++) {
