@@ -34,7 +34,7 @@ the \.{Makefile} that you use when compiling this.
 #include "gb_graph.h"
 #include "gb_save.h"
 @<Global variables@>;
-main (int argc,char*argv[]) {
+void main (int argc,char*argv[]) {
   register int i,j,k,l,m,n,p,q,r,t,bad,vv,ll,carry,forced;
   register unsigned long long ebits,rebits,vbits,del;
   Graph *g;
@@ -159,7 +159,7 @@ for (k=0;k<n;k++) {
 }
 for (q=0;q<=m;q++) labunlab[q]=-1;
 for (k=0;k<n;k++) vertunlab[k]=deg[k];
-ebits=rebits=0,vbits=(1LL<<(m+1))-1;
+ebits=rebits=0,vbits=(-1ULL)>>(63-m);
 
 @*Backtracking.
 The main computation is based on Walker's backtrack method, Algorithm~7.2.2W.
