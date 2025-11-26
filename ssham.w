@@ -749,12 +749,17 @@ Only one mem is needed to access both |nd[level].v| and |nd[level].m|
 simultaneously, because those 32-bit \&{int}s occupy the same 64-bit word.
 A similar remark applies to other pairs of fields.
 
+(Note re mem-counting: When $d=1$, we need to save the |m| field only
+because the |print_state| looks at it. Therefore the mem-cost of saving it
+is increased only when $d>1$.)
+
 @<Record the current status, for backtracking later@>=
 {
   o,nd[level].d=d,nd[level].i=curi;
   o,nd[level].s=visible,nd[level].t=trigptr;
+  nd[level].v=curv,nd[level].m=eptr;
   if (d>1) {
-    o,nd[level].v=curv,nd[level].m=eptr;
+    o; /* the cost of saving |nd[level].m|, see above */
     saveptr=level*nn;
     for (k=0;k<visible;k++) {
       o,u=vis[k];
