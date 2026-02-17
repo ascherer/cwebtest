@@ -61,6 +61,8 @@ ssdiham.w
 ssbidiham.w
 dynaham.w
 dynahamp.w
+dynadiham.w
+dynabidiham.w
 canonize-bidigraph.w
 back-warnsdorf.w
 ham-euler.w
@@ -284,6 +286,7 @@ matula-exhaustive.ch
 tchoukaillon-arrays.w
 offline-tree-insertion.w
 floorplan-to-twintree.w
+floorplan-to-twintree-ttform.ch
 twintree-to-baxter.w
 baxter-to-floorplan.w
 queenon-partition.w
