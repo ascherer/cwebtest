@@ -101,7 +101,7 @@ typedef unsigned long long ullng; /* ditto */
 @<Global variables@>;
 @<Debugging fallbacks@>;
 @<Subroutines@>;
-main (int argc, char *argv[]) {
+int main (int argc, char *argv[]) {
   register int h,hp,i,j,jj,k,kk,l,ll,lll,p,q,r,s;
   register int c,cc,endc,la,t,u,v,w,x,y;
   register double au,av;
@@ -2077,14 +2077,15 @@ lll=bar(l); /* |lll| will complete the learned clause */
 if (verbose&show_gory_details)
   fprintf(stderr," "O"s"O".8s\n",litname(lll));
 
-@ @<Initialize a nonbinary conflict@>=
+@ A subtle point, actually unknown to the author for many years,
+is that during a full run the first literal |mem[c].lit| might be
+old, not new! (In that case at least two of the other literals {\it are\/} new).
+
+@<Initialize a nonbinary conflict@>=
 {
-  o,l=bar(mem[c].lit);
-  o,tl=vmem[thevar(l)].tloc;
-  o,vmem[thevar(l)].stamp=curstamp;
-  @<Bump |l|'s activity@>;
-  if (c>=first_learned) @<Bump |c|'s activity@>;
-  for (o,s=size(c),k=c+s-1;k>c;k--) {
+  tl=0, xnew=-1;
+  if (c>=first_learned && c<max_learned) @<Bump |c|'s activity@>;
+  for (o,s=size(c),k=c+s-1;k>=c;k--) {
     o,l=bar(mem[k].lit);
     j=vmem[thevar(l)].tloc; /* |mem| will be charged when fetching |value| */
     if (j>tl) tl=j;
@@ -2183,20 +2184,17 @@ else if (c) { /* |l=mem[c].lit| */
 @ @<Stamp |l| as part of the conflict clause milieu@>=
 {
   o,jj=vmem[thevar(l)].value&-2;
-  if (!jj) confusion("permanently false lit");
+  o,vmem[thevar(l)].stamp=curstamp;
+  @<Bump |l|'s activity@>;
+  if (jj>=llevel) xnew++;
   else {
-    o,vmem[thevar(l)].stamp=curstamp;
-    @<Bump |l|'s activity@>;
-    if (jj>=llevel) xnew++;
-    else {
-      if (jj>jumplev) jumplev=jj;
-      o,learn[oldptr++]=bar(l);
-      if (verbose&show_gory_details)
-        fprintf(stderr," "O"s"O".8s{"O"d}",
+    if (jj>jumplev) jumplev=jj;
+    o,learn[oldptr++]=bar(l);
+    if (verbose&show_gory_details)
+      fprintf(stderr," "O"s"O".8s{"O"d}",
                  litname(bar(l)),vmem[thevar(l)].value>>1);
-      if (o,levstamp[jj]<curstamp) o,levstamp[jj]=curstamp,clevels++;
-      else if (levstamp[jj]==curstamp) o,levstamp[jj]=curstamp+1;
-    }
+    if (o,levstamp[jj]<curstamp) o,levstamp[jj]=curstamp,clevels++;
+    else if (levstamp[jj]==curstamp) o,levstamp[jj]=curstamp+1;
   }
 }
 
@@ -2241,10 +2239,14 @@ conflict clause.
 independently by Hamadi, Jabbour, and Sa{\"\i}s in Europe,
 both in 2009!]
 
-The current conflict has been obtained by resolving |c| with another clause,
+The current conflict has been obtained by resolving another clause with |c|,
 and by removing literals that are false at level~0. We've also removed
 such literals from~|c|. Therefore we know that the current conflict clause
 equals |c| minus its first literal (which is true and was resolved away).
+
+The current conflict clause contains at least two new literals, because
+|xnew>0|. Therefore one of its new literals will be in |mem[k]| for
+some |k>c+1|.
 
 Clause |c| is the reason for |l|, and it becomes the reason for a
 false literal that would have produced an earlier conflict.
@@ -2277,6 +2279,7 @@ later be called |bar(lll)|.
     if (r==llevel) break;
     o,lll=mem[k-1].lit;
   }
+  if (k==c+1) confusion("on-the-fly subsumption");
   if (lll!=ll) o,mem[k].lit=ll;
   oo,mem[c+s].lit=l+sign_bit,mem[c].lit=lll;
   ooo,link0(c)=lmem[lll].watch, lmem[lll].watch=c;
