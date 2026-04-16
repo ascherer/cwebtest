@@ -22,7 +22,7 @@ Otherwise it might get into a loop.
 as I prepare to finish Section 7.2.2.4 of TAOCP, I've polished it and
 instrumented it with mem counts, etc. 
 I couldn't help noticing that, in hindsight, this program doesn't
-realy use the now-standard idea of ``dancing links'' when it manipulates
+really use the now-standard idea of ``dancing links'' when it manipulates
 |llink| and |rlink|; a more complex kind of choreography is involved.
 As in my other programs, one ``mem'' essentially means a
 memory access to a 64-bit word.

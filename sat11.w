@@ -268,7 +268,7 @@ if (k || hbits<0 || hbits>30 || buf_size<=0 || memk_max<2 || memk_max>31 ||
        mincutoff<=0 || max_prelook_arcs<=0 || dl_max_iter<=0) {
   fprintf(stderr,
      "Usage: "O"s [v<n>] [c<n>] [h<n>] [b<n>] [s<n>] [d<n>] [m<n>]",argv[0]);
-  fprintf(stderr," [H<n>] [a<f>] [t<f>] [l<n>] [p<n>] [q<n] [z<n>]");
+  fprintf(stderr," [H<n>] [a<f>] [t<f>] [l<n>] [p<n>] [q<n>] [z<n>]");
   fprintf(stderr," [i<n>] [r<f>] [x<foo>] [V<foo>] [T<n>] < foo.sat\n");
   exit(-1);
 }
@@ -1499,7 +1499,7 @@ while (fptr<eptr) {
 }
 rptr=eptr; /* accept all the propagations */    
 
-@ The forced literals act as ``seeds'' for another bread-first search.
+@ The forced literals act as ``seeds'' for another breadth-first search.
 
 If the input had unary clauses, the computation actually begins here,
 so that the implications of those clauses are perceived early.
@@ -1974,7 +1974,7 @@ one of that node's ancestors. If $x$ has already become a participant, the
 string specified by |vmem[x].pfx| and |vmem[x].len| will be a
 prefix of the current string.
 
-In this step we update the |pfx| and |lev| fields of variables that
+In this step we update the |pfx| and |len| fields of variables that
 are participating in the current activity. Notice that this
 information does not need to be changed when backtracking.
 

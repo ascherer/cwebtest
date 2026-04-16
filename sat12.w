@@ -613,7 +613,7 @@ octabytes. Every literal of every clause appears in a cell, with six
 32-bit fields to identify the literal and clause together with local
 |left/right| links for that clause and local |up/down| links for that literal.
 
-The first two cells, |mem[0]| are |mem[1]|, are reserved for special
+The first two cells, |mem[0]| and |mem[1]|, are reserved for special
 purposes.
 
 The next cells, |mem[2]| through |mem[2n+1]| if there are $n$ variables
@@ -624,7 +624,7 @@ this field contains the literal's hash code.
 The next cells, |mem[2n+2]| through |mem[2n+m+1]| if there are $m$ clauses
 initially, are heads of the clause lists, identifiable by their location.
 Such cells have a 64-bit signature field instead of |up/down| links;
-this field is the bitwise {\mc OR} of the hash codes of the clauses's
+this field is the bitwise {\mc OR} of the hash codes of the clausea's
 literals.
 
 All remaining cells, from |mem[2n+m+2]| through |mem[mem_max-1]|,
@@ -686,7 +686,7 @@ to be eliminated quietly.
 Sometimes a variable is eliminated via resolution,
 without going onto the to-do stack. In such cases its |status| is |elim_res|.
 
-Each variable also has an |stable| field, which is nonzero if the
+Each variable also has a |stable| field, which is nonzero if the
 variable has not been involved in recent transformations.
 
 We add a 16-bit |spare| field, and a 32-bit filler field,
@@ -1931,7 +1931,7 @@ round if and only if |littime(l)=time|.
 So we run through all such literals, adding 4 to |newsize(c)| for
 each clause they're in, also {\mc OR}ing 2 into |newsize(c)| for
 each clause that their complement is in. The resulting |newsize| values
-will help us to decide a reasonably high speed whether an existing
+will help us to decide at reasonably high speed whether an existing
 clause can be exploited.
 
 @<Do a round of subsumption...@>=

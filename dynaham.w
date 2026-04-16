@@ -247,10 +247,10 @@ $-1\le a_l<|deg|$ for $0\le l<q$. There is a node in the trie
 for each prefix $a_0\ldots a_{l-1}$ of the key, for $0\le l<q$.
 The root node, at level $l=0$, represents the empty prefix.
 
-Earlier versions of this program simply represented each node as a
+Earlier versions of this program simply represented each node as
 an array of approximately ten pointers, each of which was either zero or the
 index of the child node or leaf. That idea worked, and many experiments
-were successully completed. But in retrospect we can now see that most
+were successfully completed. But in retrospect we can now see that most
 of those pointers were actually zero. For example, it turns out that
 when all but the last code of the key are known, there are at most
 two choices for the final code $a_{q-1}$; consequently at most two of the
