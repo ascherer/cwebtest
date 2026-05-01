@@ -2345,6 +2345,8 @@ One can prove inductively that, at label |test|, we have
 @<If $\bar l$ is redundant, |goto redundant|@>=
 if (stackptr) confusion("stack");
 test: ll=l;
+if ((o,vmem[thevar(l)].value&-2)==0) goto is_red;
+  /* a literal at level 0 is always redundant */
 o,c=lmem[l].reason;
 if (c==0) goto clear_stack; /* decision literal is never redundant */
 if (c<0) { /* binary reason */
