@@ -1,7 +1,5 @@
 \datethis
 \input epsf
-\let\possiblyflakyepsfbox=\epsfbox
-\def\epsfbox#1{\hbox{\possiblyflakyepsfbox{#1}}}
 \def\dts{\mathinner{\ldotp\ldotp}}
 \let\from=\gets
 \def\bit#1{\\{bit}[#1]}
@@ -17,10 +15,15 @@ encouraged to persevere nonetheless.
 An overview of the relevant theory appears in a paper called ``Deconstructing
 coroutines,'' by D.~E. Knuth and F.~Ruskey, but this program tries to be
 self-contained. Earlier versions of the ideas were embedded in now-obsolete
-programs called {\mc KODA-RUSKEY} and {\mc LI-RUSKEY}, written in June, 2001.
+programs called {\mc KODA-RUSKEY} and {\mc LI-RUSKEY}, written in June 2001.
+My original version of this code, written in December 2001, had a serious
+error, which is corrected on the present version (June~2026).
 
 @c
 #include <stdio.h>
+#include <stdlib.h>
+#undef abort
+@h
 @<Global variables@>@;
 @<Subroutines@>@;
 int main (int argc,char*argv[])
@@ -198,7 +201,7 @@ k&|sign|[k]&|scope|[k]&|par|[k]&|rchild|[k]&|lsib|[k]&U_k&V_k&
   
 @ We don't want to compute the sets $U_1$, \dots, $U_n$ explicitly,
 because the total number of elements $\vert U_1\vert+\cdots+\vert U_n\vert$
-can be $\Omega(n^2)$ in cases like $\..^{n/2}(\.{.+})^{n/2}\.+^{n/2-1}$.
+can be $\Omega(n^2)$ in cases like $\..^{n/2}(\.{.-})^{n/2}\.-^{n/2-1}$.
 But luckily for us, there is a nice way to represent all of those sets
 implicitly, computing the representation in linear time.
 
@@ -218,12 +221,21 @@ vertex~$k$, namely the index of the largest element of $U_k$, the set $U_k$
 will consist of |umax[k]|, |prev[umax[k]]|, |prev[prev[umax[k]]]|, etc.,
 proceeding until reaching an element less than~$k$.
 
-One pass through the forest in preorder suffices to compute the |prev| values.
-A second pass in reverse postorder suffices to compute each |umax|,
-because postorder traverses nodes in order of their scopes.
-
 A similar idea works, of course, for $V_1$, \dots, $V_n$, using
 {\it negative\/} progenitors.
+
+If vertex |k| is positive, |umax[k]| will be zero if and only if
+$U_k=\emptyset$, if and only if all of $k$'s proper descendants are negative.
+If vertex |k| is negative, |vmax[k]| will be zero if and only if
+$V_k=\emptyset$, if and only if all of $k$'s proper descendants are positive.
+
+One pass through the forest in preorder suffices to compute the |prev| values,
+as well as the values of |umax[k]| for positive vertices~$k$ and |vmax[k]| for
+negative vertices~$k$.
+A second pass in reverse postorder suffices to compute the remaining
+entries of the |umax| and |vmax| tables,
+because reverse postorder is the same as preorder on the
+left-right {\it reflected\/} forest.
 
 @<Initialize the data structures@>=
 for (j=1;j<=n;j++) {
@@ -237,13 +249,13 @@ for (j=1;j<=n;j++) {
     prev[j]=vmax[npro[k]], vmax[npro[k]]=j;
   }
 }
-@<Fill in all |umax| and |vmax| links, traversing in reverse postorder@>;
+@<Fill in the remaining |umax| and |vmax| links, traversing in reverse postorder@>;
 
 @ Tree traversal is great fun, when it works.
 
-@<Fill in all |umax| and |vmax| links, traversing in reverse postorder@>=
+@<Fill in the remaining...@>=
 lsib[0]=-1; /* sentinel */
-ptr[0]=vmax[0];
+ptr[0]=vmax[0]; /* this pointer will run through $V_0$ */
 umax[0]=rchild[0];
 for (j=rchild[0];;) {
   if (sign[j]==0) {
@@ -353,31 +365,6 @@ for (j=n;j>0;j--) {
 }
 ueven[0]=maxn;
 
-@ Another thing we'll need to know is |umaxbit[k]|, the value of
-|bit[umax[k]]| when |bit[k]| changes from 0 to~1. And of course
-the dual value |vmaxbit[k]| will be equally important.
-
-@<Init...@>=
-for (k=n;k>0;k--) {
-  l=par[k];
-  if (k==umax[l]) umaxbit[l]=1;
-  else {
-    j=umax[k];
-    if (j && umax[l]==j) {
-      if (ueven[k]<j) umaxbit[l]=umaxbit[k]; /* $\delta_{jk}$ is even */
-      else umaxbit[l]=1^umaxbit[k];
-    }
-  }
-  if (k==vmax[l]) vmaxbit[l]=0;
-  else {
-    j=vmax[k];
-    if (j && vmax[l]==j) {
-      if (veven[k]<j) vmaxbit[l]=vmaxbit[k]; /* $\delta_{jk}$ is even */
-      else vmaxbit[l]=1^vmaxbit[k];
-    }
-  }
-}
-
 @ For the record, our example spider has the following additional
 characteristics (including some that we'll introduce later):
 $$\vbox{\halign{$\hfil#\hfil$\enspace&
@@ -389,37 +376,61 @@ $$\vbox{\halign{$\hfil#\hfil$\enspace&
                 $\hfil#\hfil$\enspace&
                 $\hfil#\hfil$\enspace&
                 $\hfil#\hfil$\enspace&
+                $\hfil#\hfil$\enspace&
+                $\hfil#\hfil$\enspace&
                 $\hfil#\hfil$\cr
-k&|bstart|[k]&|umin|[k]&|ueven|[k]&|umaxbit|[k]&|umaxscope|[k]&
- |vmin|[k]&|veven|[k]&|vmaxbit|[k]&|vmaxscope|[k]\cr
+ &&&&&&|first|\ \ &|last|\ \ &|mid|\ \ &|mid|\ \ &|umax|\ \ &|vmax|\ \ \cr
+k&|bstart|[k]&|umin|[k]&|ueven|[k]&|vmin|[k]&|veven|[k]&|deep|[k]&|deep|[k]&
+|deep0|[k]&|deep1|[k]&|scope|[k]&
+|scope|[k]\cr
 \noalign{\vskip2pt}
-0& &1&\infty& & &4&4\cr
-1&1&2&2&0&9&4&4&0&9\cr
-2&2&3&5&1&5&4&4&1&4\cr
-3&3&\infty&\infty&0&3&4&4&0&4\cr
-4&4&\infty&\infty&0&4&\infty&\infty&0&4\cr
-5&5&\infty&\infty&0&5&\infty&\infty&0&5\cr
-6&6&\infty&\infty&0&6&7&7&0&7\cr
-7&7&\infty&\infty&0&7&\infty&\infty&0&7\cr
-8&8&9&9&1&9&\infty&\infty&0&8\cr
-9&9&\infty&\infty&0&9&\infty&\infty&0&9\cr
+0& &1&\infty&4&4\cr
+1&1&2&2&4&4&                    9&9&9&9&9&9\cr
+2&2&3&5&4&4&                    5&4&5&4&5&4\cr
+3&3&\infty&\infty&4&4&          0&4&0&4&3&4\cr
+4&4&\infty&\infty&\infty&\infty&0&0&0&0&4&4\cr
+5&5&\infty&\infty&\infty&\infty&0&0&0&0&5&5\cr
+6&6&\infty&\infty&7&7&          0&7&0&7&6&7\cr
+7&7&\infty&\infty&\infty&\infty&0&0&0&0&7&7\cr
+8&8&9&9&\infty&\infty&          9&0&9&0&9&8\cr
+9&9&\infty&\infty&\infty&\infty&0&0&0&0&9&9\cr
 }}$$
 
 @<Glob...@>=
 int umin[maxn], vmin[maxn]; /* the smallest guys in $U_k$, $V_k$ */
 int ueven[maxn], veven[maxn]; /* the smallest even guys in $U_k$, $V_k$ */
-int umaxbit[maxn], vmaxbit[maxn]; /* significant transition bits */
 int bit[maxn]; /* the current labeling */
 
 @ A somewhat subtle point arises here, and it provides an important
 simplification: Suppose $j$ is a negative child of~$k$,
-and $|ueven|[k]\ge j$. Then the initial bits of spider~$j$ in the sequence
-for spider~$k$ are the same as the transition bits of spider~$j$.
-The reason is that $\delta_{ij}+\delta_{ik}$ is even for all
-$i\in U_j$.
+and $|ueven|[k]<j$. Then the initial bits of spider~$j$ within the sequence
+for spider~$k$ are the same as the initial bits of spider~$j$.
+On the other hand, if $|ueven|[k]\ge j$, those initial bits within spider~$k$
+are the same as the {\it transition\/} bits of spider~$j$!
 
-Using this principle, we can write recursive procedures so that |setfirst(0)|
-computes the very first setting the bit table, in $O(n)$ steps.
+Why is that true? Well, since $j$ is negative, the transition bits $j$ thru
+|scope[j]| in spider $k$ are the initial bits of spider~$j$, by definition.
+Some of those bits are forced to be zero. For example, we have |bit[k]>=bit[j]|;
+hence the transition bit~$j$, which satisfies this condition for both
+values of~|bit[k]|, must be zero. The same holds for any negative
+children of~$j$. The transition bits {\it not\/} forced zero, if any,
+correspond to subspiders~$j'$ that belong to~$U_j$, which is
+$U_k\cap[j\dts|scope|[j]]$.
+
+If |ueven[k]<j|, the sequence of labels for every such~$j'$ is traversed
+an even number of times, between the beginning sequence of spider~$k$ and
+its transition step, in alternating directions. Hence each label has returned
+to its starting value.
+
+But if |ueven[k]>=j|, subspider $j'$ is traversed an even number of
+times if and only if $\delta_{j'k}$ is even. And $\delta_{j'k}$ is even if and only
+if $\delta_{j'j}$ is even, because the factors of $\delta_{j'j}$ that don't
+occur in the product $\delta_{j'k}$ are odd. Hence the transition values
+of spider~$j$ have been retained.
+
+Using that simplification, we can write recursive procedures so that |setfirst(0)|
+computes the very first setting of the bit table of the given
+forest, in $O(n)$ steps.
 (This bound on the running time comes from the fact that each procedure sets
 the bits of a subspider using a number of steps bounded by a constant times the
 number of bits being set. Formally, if $T_n\le
@@ -434,8 +445,14 @@ $|bit|[1]\ldots|bit|[9]=000001100$.
 Recursion is lots of fun too. Why do I sometimes prefer traversal?
 
 @<Subroutines@>=
-void setlast(register int k); /* see below */
-void setmid(register int k,int b); /* ditto */
+void setfirst(register int k);
+  /* set |bit[k]| thru |bit[scope[k]]| to spider $k$'s first labeling */
+void setlast(register int k);
+  /* set |bit[k]| thru |bit[scope[k]]| to spider $k$'s last labeling */
+void setmid(register int k,int b);
+  /* after setting |bit[k]=b|, set |bit[k+1]| thru |bit[scope[k]]|
+     to spider $k$'s transition labeling */
+@ @<Sub...@>=
 void setfirst(register int k)
 {
   register int j;
@@ -455,7 +472,7 @@ void setlast(register int k)
     if (sign[j]==1) {
       if (veven[k]>=j) setlast(j); /* $\delta_{jk}$ is odd */
       else setfirst(j);
-    }@+else if (veven[k]>=j) setmid(j,1); /* by the subtle point */
+    }@+else if (veven[k]>=j) setmid(j,1); /* by the dual of the subtle point */
     else setlast(j); /* $\delta_{ik}$ is even for all $i\in V_j$ */
 }
 void setmid(register int k, int b)
@@ -531,7 +548,8 @@ $$\vbox{\halign{$#\hfil$&
 \qquad\vdots&8\cr
 \p1_1\quad \p4_1\quad \p7_1\quad \p8_0\quad 9_1&9\cr
 \p1_1\quad \p4_1\quad \p7_1\quad \p8_0\quad \p9_0\cr}}$$
-And finally the whole list is asleep; all 60 labelings have been generated.
+We've finally reached a situation where
+the whole list is asleep; all 60 labelings have been generated.
 
 @ Using the active list protocol, the average amount of work per bit change is
 only $O(1)$ when amortized over the entire computation, even if we do a
@@ -575,32 +593,29 @@ We can wake up all elements to $k$'s right by setting
 heart of the computation.
 
 A positive child $j$ of $k$ is called ``simple'' if $V_j$ is empty; a
-negative child is called simple if $U_j$ is empty. Same-sign siblings always
+negative child is called simple if $U_j$ is empty. In other words,
+a node is simple if and only if all of its descendants (including itself)
+have the same sign. Same-sign siblings always
 enter or leave the active list as a unit. Therefore if $j$ and $j'$ have the
 same sign and if $j=|lsib|[j']$ is simple,  we will have $|right|[j]=j'$ and
 $|left|[j']=j$ whenever they are inserted or deleted. These links can be
 established as part of the initialization. On the other hand when $j$
 cannot be combined with its right neighbor, we compute |bstart[j]|, the
-leftmost sibling that forms a block with~$j$. (Possibly |bstart[j]=j|.)
+leftmost sibling of~$j$ that forms a block with~$j$. (Possibly |bstart[j]=j|.)
 
 The following preprocessing steps establish the initial values of |bstart|,
 |left|, and |right|. They also compute two further quantities that sometimes
-turn out to be indispensable: |umaxscope[k]| is the largest node that is
-forced to be in the active list at a transition point
-when |bit[k]=0|, and |vmaxscope[k]| is
-the corresponding quantity when |bit[k]=1|.
+turn out to be indispensable: |umaxscope[k]| is the largest node of spider~$k$
+that is present in the active list at a transition point
+when |bit[k]| becomes~0, and |vmaxscope[k]| is
+the corresponding quantity when |bit[k]| becomes~1.
 
 @<Init...@>=
 for (k=n;k;k--) {
   j=lsib[k];
   if (j) left[k]=j, right[j]=k;
   else @<Compute the |bstart| links for |k|'s family@>;
-  j=umax[k];
-  if (!j) umaxscope[k]=k;
-  else umaxscope[k]=(umaxbit[k]==1? (vmax[j]? vmax[j]: j): umaxscope[j]);
-  j=vmax[k];
-  if (!j) vmaxscope[k]=k;
-  else vmaxscope[k]=(vmaxbit[k]==0? (umax[j]? umax[j]: j): vmaxscope[j]);
+  @<Compute |umaxscope[k]| and |vmaxscope[k]|@>;
 }
 
 @ @<Compute the |bstart| links for |k|'s family@>=
@@ -610,17 +625,76 @@ for (j=l=k;j;j=right[j]) {
   bstart[j]=l, l=right[j];
 }
 
+@ It will turn out that we need |umaxscope[k]| and |vmaxscope[k]| only
+when |rchild[k]| is ``simple,'' as defined above. But it's interesting
+to compute the values in all cases; maybe they'll turn out to be
+useful in variations of this program.
+
+The reasoning that led to |setfirst|, |setlast|, and |setmid| is the
+key to the tricky computations needed for |umaxscope| and |vmaxscope|.
+Here's a recap, which summarizes how everything fits together nicely:
+
+Let $\alpha_{ik}$, $\tau_{ik}$, and $\omega_{ik}$ be the respective values of
+bit~$i$ in the first labeling, the transition labeling, and the final
+labeling of spider~$k$. In particular, we have $\alpha_{kk}=0$; $\tau_{kk}$ is
+undefined (because 0 changes to~1); and $\omega_{kk}=1$. When $k<i\le
+|scope|[k]$, there's a unique spider~$j$ (a child of~$k$) for which
+$j\le i\le|scope|[j]$. And the following formulas define everything,
+when $i$, $j$, and $k$ are given:
+$$\eqalign{\llap{if $j$ is positive,}\cr
+\tau_{ik}&=\omega_{ij};\cr
+\alpha_{ik}&=\cases{\omega_{ij},&if $|ueven|[k]<j$;\cr
+                    \alpha_{ij},&if $|ueven|[k]\ge j$;\cr}\cr
+\omega_{ik}&=\cases{\omega_{ij},&if $|veven|[k]<j$;\cr
+                    \tau_{ij},  &if $|veven|[k]\ge j$, or 1 if $i=j$.\cr}\cr
+\noalign{\vskip4pt}
+\llap{if $j$ is negative,}\cr
+\tau_{ik}&=\alpha_{ij};\cr
+\omega_{ik}&=\cases{\alpha_{ij},&if $|veven|[k]<j$;\cr
+                    \omega_{ij},&if $|veven|[k]\ge j$;\cr}\cr
+\alpha_{ik}&=\cases{\alpha_{ij},&if $|ueven|[k]<j$;\cr
+                    \tau_{ij},  &if $|ueven|[k]\ge j$, or 0 if $i=j$.\cr}\cr
+}$$
+
+@ The code here is due to Soojin Nam, who kindly pointed out in 2026
+that my original recurrences were fatally flawed.
+[See \.{https://github.com/sjnam/spider/tree/main/bugreport}.]
+
+@<Compute |umaxscope[k]| and |vmaxscope[k]|@>=
+{
+  register int df=0,dl=0,d0=0,d1=0; /* running maxima */
+  for (j=rchild[k];j;j=lsib[j]) {
+    register int c,d;
+    if (sign[j]==0) c=j,d=(ueven[k]>=j? firstdeep[j]: lastdeep[j]);
+    else c=0,d=(ueven[k]>=j? middeep0[j]: firstdeep[j]);
+    if (c>df) df=c; @+ if (d>df) df=d;
+    if (sign[j]==1) c=j,d=(veven[k]>=j? lastdeep[j]: firstdeep[j]);
+    else c=0,d=(veven[k]>=j? middeep1[j]: lastdeep[j]);
+    if (c>dl) dl=c; @+ if (d>dl) dl=d;
+    if (sign[j]==0) c=j,d=lastdeep[j]; @+ else c=0,d=firstdeep[j];
+    if (c>d0) d0=c; @+ if (d>d0) d0=d;
+    if (sign[j]==0) c=0,d=lastdeep[j]; @+ else c=j,d=firstdeep[j];
+    if (c>d1) d1=c; @+ if (d>d1) d1=d;
+  }
+  firstdeep[k]=df, lastdeep[k]=dl, middeep0[k]=d0, middeep1[k]=d1;
+  umaxscope[k]=(d0? d0: k), vmaxscope[k]=(d1? d1: k);
+}
+
 @ @<Glob...@>=
 int left[maxn], right[maxn]; /* neighbors in the active list */
-int bstart[maxn]; /* start of a block */
+int bstart[maxn]; /* start of the block that ends here */
 int umaxscope[maxn], vmaxscope[maxn]; /* extreme nodes when |bit[k]| changes */
+int firstdeep[maxn], lastdeep[maxn]; /* deepest active descendant, first/last */
+int middeep0[maxn], middeep1[maxn]; /* deepest active descendant, transitions */
 int flag[maxn]; /* nonzero when an insertion or deletion is needed */
 int focus[maxn]; /* pointers that encode wakefulness */
 
 @ When |bit[k]| changes from 0 to 1, we want to delete $k$'s positive blocks of
 children from the active list and insert the negative ones. The rightmost
 block is addressed by |rchild[k]|, and we get to the others by following
-|bstart| and |lsib| links. Our algorithm is supposed to be loopless, so we
+|bstart| and |lsib| links.
+
+Our algorithm is supposed to be loopless, so we
 can't do all this updating at once. Therefore we do only the rightmost step,
 and we plant a warning in the data structure so that subsequent steps
 will be performed before the missing information is needed. All nodes are
@@ -669,7 +743,7 @@ action list is initialized.
   return;
 }
 
-@ A block being deleted might be preceded by a simple block of the
+@ A block being deleted might be immediately preceded by a simple block of the
 other sign that wants to be inserted. In that case we insert the latter
 in place of the former.
 
@@ -772,11 +846,11 @@ j=left[k], focus[k]=focus[j], focus[j]=j;
     if (sign[j]==0) { /* we want to delete |j=umax[k]| */
       l=vmin[j];
       if (l<maxn) fixup(-j,l);
-      else fixup(-j,right[j]); /* $j$ ends a simple block */
+      else fixup(-j,right[j]); /* $j$ is simple */
     }@+else { /* we want to insert |j=vmax[k]| */
       l=umin[j];
       if (l<maxn) fixup(j,l);
-      else fixup(j,right[umaxscope[k]]); /* $j$ ends a simple block */
+      else fixup(j,right[umaxscope[k]]); /* $j$ is simple */
     }
   }
 }
@@ -788,11 +862,11 @@ j=left[k], focus[k]=focus[j], focus[j]=j;
     if (sign[j]==1) { /* we want to delete |j=vmax[k]| */
       l=umin[j];
       if (l<maxn) fixup(-j,l);
-      else fixup(-j,right[j]); /* $j$ ends a simple block */
+      else fixup(-j,right[j]); /* $j$ is simple */
     }@+else { /* we want to insert |j=umax[k]| */
       l=vmin[j];
       if (l<maxn) fixup(j,l);
-      else fixup(j,right[vmaxscope[k]]); /* $j$ ends a simple block */
+      else fixup(j,right[vmaxscope[k]]); /* $j$ is simple */
     }
   }
 }
@@ -844,10 +918,12 @@ exceptional level of absolute verbosity.
       k, sign[k]? '-': '+', scope[k], par[k], rchild[k], lsib[k]);
     printf(" ppro=%d, npro=%d, prev=%d, bstart=%d\n",
       ppro[k], npro[k], prev[k], bstart[k]);
-    printf(" umin=%d, ueven=%d, umax=%d, umaxbit=%d, umaxscope=%d\n",
-      umin[k], ueven[k], umax[k], umaxbit[k], umaxscope[k]);
-    printf(" vmin=%d, veven=%d, vmax=%d, vmaxbit=%d, vmaxscope=%d\n",
-      vmin[k], veven[k], vmax[k], vmaxbit[k], vmaxscope[k]);
+    printf(" umin=%d, ueven=%d, umax=%d, umaxscope=%d,",
+      umin[k], ueven[k], umax[k], umaxscope[k]);
+    printf(" vmin=%d, veven=%d, vmax=%d, vmaxscope=%d\n",
+      vmin[k], veven[k], vmax[k], vmaxscope[k]);
+    printf(" firstdeep=%d, lastdeep=%d, middeep0=%d, middeep1=%d\n",
+      firstdeep[k], lastdeep[k], middeep0[k], middeep1[k]);
   }
 }
 
