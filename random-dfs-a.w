@@ -8,7 +8,7 @@ uniformly random vertex $v$.
 
 By depth-first search I mean Algorithm 7.4.1.1D. That algorithm converts a given
 digraph into what Tarjan called a ``jungle,'' consisting of an oriented forest
-plus nontree arcs called back arcs, forward arcs, and cross arcs.
+plus nontree arcs called back arcs, forward arcs, cross arcs, and loops.
 My goal is to understand the distribution of those different
 flavors of arcs.
 
@@ -26,7 +26,7 @@ int m,n,reps,seed; /* command-line parameters */
 @<Type definitions@>;
 @<Global variables@>;
 @<Subroutines@>;
-main (int argc,char*argv[]) {
+int main (int argc,char*argv[]) {
   register int i,j,k,r;
   @<Local variables for depth-first search@>;
   @<Process the command line@>;
@@ -64,7 +64,7 @@ First I figure out how many arcs have a given source~$u$, then
 I generate the targets.
 
 @<Generate the random arcs@>=
-for (k=0;k<m;k++) arcs[k]=0;
+for (k=0;k<n;k++) arcs[k]=0;
 for (k=0;k<m;k++) arcs[gb_unif_rand(n)]++;
 for (j=k=0;k<n;j+=i,k++) i=arcs[k],arcs[k]=j;
 if (j!=m) printf("I'm confused!\n");
@@ -161,7 +161,7 @@ printf("During %d repetitions with %d vertices and %d arcs I found\n",
                          reps,n,m);
 print_stat(&rootstat); printf(" roots;\n");
 print_stat(&backstat); printf(" back arcs;\n");
-print_stat(&forwardstat); printf(" nonloop forward arcs;\n");
+print_stat(&forwardstat); printf(" forward arcs;\n");
 print_stat(&loopstat); printf(" loops;\n"); 
 print_stat(&crossstat); printf(" cross arcs.\n");
 print_stat(&maxlevstat); printf(" was the maximum level.\n");

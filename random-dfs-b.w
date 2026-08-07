@@ -9,7 +9,7 @@ Otherwise stop.''
 
 By depth-first search I mean Algorithm 7.4.1.1D. That algorithm converts a given
 digraph into what Tarjan called a ``jungle,'' consisting of an oriented forest
-plus nontree arcs called back ars, forward arcs, and cross arcs.
+plus nontree arcs called back ars, forward arcs, cross arcs, and loops.
 My goal is to understand the distribution of those different
 flavors of arcs.
 
@@ -29,7 +29,7 @@ int pnum,pden,n,reps,seed; /* command-line parameters */
 @<Type definitions@>;
 @<Global variables@>;
 @<Subroutines@>;
-main (int argc,char*argv[]) {
+int main (int argc,char*argv[]) {
   register int i,j,k,r;
   @<Local variables for depth-first search@>;
   @<Process the command line@>;
@@ -147,7 +147,7 @@ printf("During %d repetitions with %d vertices I found\n",
 print_stat(&arcstat); printf(" arcs;\n");
 print_stat(&rootstat); printf(" roots;\n");
 print_stat(&backstat); printf(" back arcs;\n");
-print_stat(&forwardstat); printf(" nonloop forward arcs;\n");
+print_stat(&forwardstat); printf(" forward arcs;\n");
 print_stat(&loopstat); printf(" loops;\n"); 
 print_stat(&crossstat); printf(" cross arcs.\n");
 print_stat(&maxlevstat); printf(" was the maximum level.\n");
