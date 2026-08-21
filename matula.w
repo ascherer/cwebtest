@@ -200,7 +200,8 @@ for (d=1,e=0;e<2*n-2;d++) {
     oo,q=tnode[p].arc,tnode[p].arc=e;
   }
 }
-for (maxdeg=d-1,emax=e;d<m;d++) o,thresh[d]=emax;
+o,maxdeg=d-1,thresh[d++]=e;
+for (emax=e;d<m;d++) o,thresh[d]=emax;
 @<Allocate the dual arcs@>;
 
 @ The arc from $u$ to $v$ has a dual, namely the arc from $v$ to $u$.
@@ -218,7 +219,7 @@ for (p=0;p<n;p++) {
 @ @<Glob...@>=
 int head[maxn]; /* heads of lists by degree */
 int maxdeg; /* maximum degree seen */
-int thresh[maxn]; /* where the arcs from large degree nodes start */
+int thresh[maxn+1]; /* where the arcs from large degree nodes start */
 int vert[maxn+maxn]; /* the source vertex of each arc */
 int uert[maxn+maxn]; /* the target vertex of each arc */
 int dual[maxn+maxn]; /* the dual of each arc */

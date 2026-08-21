@@ -161,10 +161,12 @@ t7:@+o,u=v->par;
   if (v->link!=NULL) printf(" inner "O"s->"O"s\n",v->name,v->link->name);
   @<Adjust |u->low| with respect to its tree child |v|@>;
   o,v->link=sink,sink=v;
+  lowv=u->low;
   goto t9;
 t8:@+@<Produce a new strong component whose leader is |v|@>;
+  o,lowv=u->low;
 t9:@+if (u==sent) goto t2;
-  oo,v=u,a=v->arc,lowv=v->low;
+  o,v=u,a=v->arc;
   goto t4;
 done:@+@<Print links between components@>;
 
