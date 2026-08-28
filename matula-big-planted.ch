@@ -164,7 +164,7 @@ for (n=1;o,argv[2][n];n++) {
 @<Allocate the arcs@>;
 fprintf(stderr,
   "OK, I've got %d nodes for S and %d nodes for T, max degree %d.\n",
-                   m,n,d-1);
+                   m,n,maxdeg);
 @y
 @ Here's a subroutine that reads a rectree file and puts the associated tree
 into the |tnode| array.
@@ -175,7 +175,7 @@ into the |tnode| array.
 FILE *infile;
 char buf[bufsize];
 int read_rectree(char*filename) {
-  register i,j,k,p,q,r,s,typ,stack,n,size,off,rightoff,rep;
+  register int i,j,k,p,q,r,s,typ,stack,n,size,off,rightoff,rep;
   mems+=suboverhead;
   infile=fopen(filename,"r");
   if (!infile) {
@@ -376,8 +376,11 @@ m=n-del;
 for (;del;del--) {
   d=(o,tnode[z].deg==1); /* is the root also a leaf? */
   r=gb_unif_rand(gg+d); /* choose a random leaf */
-  if (r==gg) ooo,z=tnode[z].child; /* delete the root */
-  else {
+  if (r==gg) { /* delete the root */
+    o,q=tnode[z].child;
+    while (o,parent(q)<0) o,q=tnode[q].sib; /* skip deleted nodes */
+    z=q;
+  }@+else {
     o,q=leaf(r);
     oo,p=parent(q),parent(q)=-1;
     oo,tnode[p].deg--;
