@@ -293,7 +293,7 @@ The root node, at level $l=0$, represents the empty prefix.
 Earlier versions of this program simply represented each node as a
 an array of approximately twenty pointers, each of which was either zero or the
 index of the child node or leaf. That idea worked, and many experiments
-were successully completed. But in retrospect we can now see that most
+were successfully completed. But in retrospect we can now see that most
 of those pointers were actually zero. For example, it turns out that
 when all but the last code of the key are known, there are just
 two choices for the final code $a_{q-1}$; consequently all but two of the

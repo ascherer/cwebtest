@@ -9,7 +9,7 @@ Otherwise stop.''
 
 By depth-first search I mean Algorithm 7.4.1.1D. That algorithm converts a given
 digraph into what Tarjan called a ``jungle,'' consisting of an oriented forest
-plus nontree arcs called back ars, forward arcs, cross arcs, and loops.
+plus nontree arcs called back arcs, forward arcs, cross arcs, and loops.
 My goal is to understand the distribution of those different
 flavors of arcs.
 
