@@ -63,6 +63,7 @@ dynaham.w
 dynahamp.w
 dynadiham.w
 dynabidiham.w
+hamsat.w
 canonize-bidigraph.w
 back-warnsdorf.w
 ham-euler.w
@@ -193,6 +194,7 @@ sat-commafree.w
 back-commafree4.w
 back-skeleton.w
 back-dissect.w
+enigmatic-puzzle.w
 back-graceful-kmp3.w
 back-graceful.w
 back-graceful-rooted-randomrestarts.w
