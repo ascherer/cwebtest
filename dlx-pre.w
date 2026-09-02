@@ -118,7 +118,7 @@ by |show_orig_nos| provide the mapping between solutions.
 For example, the simplified output from the first problem,
 using `\.{v9}', is:
 $$\vcenter{\halign{\tt#\cr
- A B C \char"7C\cr
+ A B E\cr
  A\cr
 \char"7C\ (from 4)\cr
  B\cr
