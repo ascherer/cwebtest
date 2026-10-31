@@ -1,6 +1,4 @@
 \input epsf
-\let\possiblyflakyepsfbox=\epsfbox
-\def\epsfbox#1{\hbox{\possiblyflakyepsfbox{#1}}}
 \font\celtica=celtica13 \font\celticb=celticb13
 \datethis
 @*Intro. This quick-and-dirty program prepares \TeX\ files for use with
@@ -112,13 +110,13 @@ reading/checking the input.
 #include <stdio.h>
 #include <stdlib.h>
 char buf[bufsize],entry[8];
-int a[maxm][maxn]; /* the input */
-int b[maxm][maxn]; /* endpoints touched in each tile */
+int a[maxm+1][maxn+1]; /* the input */
+int b[maxm+1][maxn+1]; /* endpoints touched in each tile */
 int codetable[0x7778]; /* mapping from tiles to font positions */
 char bw[maxm][maxn][8]; /* black/white coloring of regions */
 int inout[maxm][maxn][8]; /* inside/outside coloring of regions */
 @<Declare the magic tables@>;
-main() {
+int main() {
   register int i,j,k,ii,jj,kk,m,n,s,t;
   @<Initialize |codetable|@>;
   @<Read the input into |a|, and check it for consistency@>;
@@ -180,7 +178,7 @@ codetable[0x0325]=0254,
 codetable[0x2547]=0260,
 codetable[0x1647]=0264,
 codetable[0x0527]=0270,
-codetable[0x1425]=0274,
+codetable[0x1427]=0274,
 codetable[0x1436]=0300,
 codetable[0x0536]=0304,
 codetable[0x0317]=0310,
@@ -205,6 +203,11 @@ The rows are numbered from 0 to |m-1|, and the columns from 0 to |n-1|.
 @<Read the input into |a|, and check it for consistency@>=
 for (m=0;;m++) {
   if (!fgets(buf,bufsize,stdin)) break;
+  if (m>=maxm) {
+    fprintf(stderr,"Sorry, I'm set up for at most %d rows!\n",
+                                             maxm);
+    exit(-11);
+  }
   for (j=0;;j++) {
     k=5*j;
     if (j==n && m>0) {
@@ -237,6 +240,11 @@ fprintf(stderr,"OK, I've successfully read %d rows and %d columns.\n",m,n);
 @<Check for consistency@>;
 
 @ @<Parse the entry for row |m| and column |j|@>=
+if (j>=maxn) {
+  fprintf(stderr,"Sorry, I'm set up for at most %d columns!\n",
+                                             maxn);
+  exit(-12);
+}
 for (jj=0;jj<4;jj++) entry[jj]=buf[5*j+jj];
 if (entry[0]==' ') {
   if (entry[1]!=' ' || entry[2]!=' ' || entry[3]!=' ') goto badentry;

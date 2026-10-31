@@ -74,7 +74,7 @@ int unresolved; /* this many cases left unresolved */
 unsigned long long mems; /* memory accesses */
 @<Global variables@>;
 @<Subroutines@>;
-main(int argc,char*argv[]) {
+int main(int argc,char*argv[]) {
   register int d,i,ii,imax,j,jj,k,kk,l,lc,lj,n,t,tt,x,pos,maxl,printed;
   @<Process the command line@>;
   @<Input the pattern@>;
@@ -263,7 +263,7 @@ however, the default version of this program sets |slack=0|.
 @d slack 0 /* amount to shift the pattern left in harder problems */
 
 @<Choose |pos|@>=
-for (i=pos=0;i<=m;i++)
+for (i=pos=0;i<n;i++)
   if (oo,off[m+1-n+i]+last[i]>pos) pos=off[m+1-n+i]+last[i];
 pos+=slack-1;
 
@@ -372,6 +372,7 @@ For example, we know that $a=2208068$, $b=357029$,
 $d=4$ leads to a valid puzzle for the \.O~pattern; so does
 $a=302208068$, $b=357029$, $d=4$. The extra prefix `30' doesn't
 introduce any unwanted 4's into the partial products or the total product.
+This version of the program does {\it not\/} look for such extensions.
 
 @ Such considerations lead us to a standard backtracking scheme
 that takes the following overall form, if we follow the recipe of
@@ -379,7 +380,7 @@ Algorithm 7.2.2B:
 
 @<Find all solutions for the current offsets and special digit $d$@>=
 b1: o,maxl=maxdigs-2-off[m-1];
-l=0;
+l=printed=0;
 @<Initialize the data structures@>;
 b2: nodes+=10;
   if (vbose>1) {
@@ -510,13 +511,15 @@ if (o,stamp[l][j]!=nodes+x) { /* have we already updated |ja[l]|? */
   else oo,add(ja[l][j],ja[l-1][j],cnst[x*j],l);
 }
 oo,t=(ja[l][j][0]<=l? 0: ja[l][j][l+1]);
-o,tt=(constr[k][0]<=l? 0: o,constr[k][l+1]);
+o,tt=(constr[k][0]<=l? 0: (o,constr[k][l+1]));
 if ((tt==1 && t==d) || (tt!=1 && t!=d)) goto jok;
 
 @ @<Delete |choice[k][0]| from all constraints $\ne c_k$@>=
 for (o,kk=0,j=choice[k][0];kk<m;kk++) if (oo,id[kk]!=id[k]) {
   oo,i=csize[l+1][kk]-1, ii=where[kk][j];
   if (ii<=i) {
+    if (vbose>2) fprintf(stderr," so b%d can't be %d\n",
+                                 kk,j);
     if (i==0) goto b4;
     o,csize[l+1][kk]=i;
     if (i==1) o,stack[stackptr++]=kk;
@@ -547,6 +550,8 @@ for (k=m-1;k>=0;k--)
   @<If constraint $c_k$ isn't totally satisfied, |goto nope|@>;
 @<If constraint $c_m$ isn't totally satisfied, |goto nope|@>;
 @<Print a solution@>;
+while (o,a[l-1]==0) l--;
+goto b5;
 nope:
 
 @ @<If constraint $c_k$ isn't totally satisfied, |goto nope|@>=

@@ -124,7 +124,7 @@ typedef struct chunk_struct {
 @ @<Glob...@>=
 char *buf; /* buffer for reading the lines (clauses) of |stdin| */
 tmp_var **hash; /* heads of the hash lists */
-uint hash_bits[93][8]; /* random bits for universal hash function */
+uint hash_bits[94][8]; /* random bits for universal hash function */
 vchunk *cur_vchunk; /* the vchunk currently being filled */
 tmp_var *cur_tmp_var; /* current place to create new |tmp_var| entries */
 tmp_var *bad_tmp_var; /* the |cur_tmp_var| when we need a new |vchunk| */
@@ -275,7 +275,7 @@ clause_done: cells+=k;
 precomputed tables of random bits.
 
 @<Initialize everything@>=
-for (j=92;j;j--) for (k=0;k<8;k++)
+for (j=92;j;j--) for (k=0;k<8;k++) /* 92 (not 93) for backwards compatibility */
   hash_bits[j][k]=gb_next_rand();
 
 @ @<Put the variable name beginning at |buf[j]| in |cur_tmp_var->name|...@>=

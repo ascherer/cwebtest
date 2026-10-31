@@ -79,7 +79,7 @@ if (k || hbits<0 || hbits>30 || buf_size<=0 || memk_max<2 || memk_max>31 ||
        mincutoff<=0 || max_prelook_arcs<=0 || dl_max_iter<=0) {
   fprintf(stderr,
      "Usage: "O"s [v<n>] [c<n>] [h<n>] [b<n>] [s<n>] [d<n>] [m<n>]",argv[0]);
-  fprintf(stderr," [H<n>] [a<f>] [t<f>] [l<n>] [p<n>] [q<n] [z<n>]");
+  fprintf(stderr," [H<n>] [a<f>] [t<f>] [l<n>] [p<n>] [q<n>] [z<n>]");
   fprintf(stderr," [i<n>] [r<f>] [x<foo>] [V<foo>] [T<n>] < foo.sat\n");
 @y
 if (k || hbits<0 || hbits>30 || buf_size<=0 || memk_max<2 || memk_max>31 ||
@@ -354,7 +354,7 @@ if (!cinx) {
   exit(-10);
 }
 bytes+=(bclauses+1)*sizeof(tdata);
-cmem=(uint*)malloc(bcells*sizeof(uint));
+cmem=(uint*)malloc((bcells+2)*sizeof(uint));
 if (!cmem) {
   fprintf(stderr,"Oops, I can't allocate the cmem array!\n");
   exit(-10);
@@ -1293,12 +1293,12 @@ float *clause_weight; /* weights given to each length, for $k\ge2$ */
 that would defeat the logic by which autarkies are recognized.
 
 @<Allocate special arrays@>=
-clause_weight=(float*)malloc(max_clause*sizeof(float));
+clause_weight=(float*)malloc((max_clause<3?3:max_clause)*sizeof(float));
 if (!clause_weight) {
   fprintf(stderr,"Oops, I can't allocate the clause_weight array!\n");
   exit(-10);
 }
-bytes+=max_clause*sizeof(float);
+bytes+=(max_clause<3?3:max_clause)*sizeof(float);
 clause_weight[2]=1.0;
 for (k=3;k<max_clause;k++) o,clause_weight[k]=clause_weight[k-1]*gamm+0.01;
 

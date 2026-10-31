@@ -210,7 +210,7 @@ doublecharbwb(oct"130",3,0,7,5);
 doublecharbwb(oct"134",1,7,5,2);
 doublecharwbw(oct"140",4,7,1,3);
 doublecharbwb(oct"144",1,6,5,3);
-doublecharwbw(oct"150",5,0,1,3);
+doublecharwbw(oct"150",5,0,1,4);
 doublecharbwb(oct"154",2,7,6,3);
 doublecharbwb(oct"160",3,0,7,4);
 doublecharbwb(oct"164",1,6,5,2);

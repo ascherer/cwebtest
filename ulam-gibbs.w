@@ -2,8 +2,6 @@
 \font\logo=logo10
 \def\MP{{\logo METAPOST}}
 \input epsf
-\let\possiblyflakyepsfbox=\epsfbox
-\def\epsfbox#1{\hbox{\possiblyflakyepsfbox{#1}}}
 
 @f mod TeX
 \let\mod=\bmod
@@ -135,7 +133,7 @@ typedef unsigned long long ullng; /* ditto */
 @<Type definitions@>@;
 @<Global variables@>@;
 @<Subroutines@>@;
-main (int argc,char*argv[]) {
+int main (int argc,char*argv[]) {
   register int i,j,k,r,rp,t,x,y,hits,count;
   register ullng n,u,up;
   @<Process the command line@>;
@@ -166,7 +164,7 @@ ullng maxn; /* desired number of Ulams to compute */
 int vbose=show_usage_stats; /* level of verbosity */
 uint lamp=120500181; /* numerator of $\lambda$ */
 uint lamq=49315733; /* denominator of $\lambda$ */
-ullng spacing; /* spacing between outputs; 0 means give only the last */
+ullng spacing=1000000; /* spacing between outputs; 0 means give only the last */
 ullng misses; /* we've seen these many Ulam misses */
 int biggestgap=1; /* the largest gap seen so far */
 int maxgap=2000; /* the largest gap for which we keep histogram data */
@@ -254,7 +252,7 @@ Steinerberger found empirically
 in 2015 that $\rho_n$ lies between 1/4 and 3/4 for all known values
 of $U_n$, except for four cases:
 $U_2=2$, $\rho_2\approx.82$;
-$U_3=3$, $\rho_2\approx.23$;
+$U_3=3$, $\rho_3\approx.23$;
 $U_{15}=47$, $\rho_{15}\approx.23$;
 $U_{20}=69$, $\rho_{20}\approx.24$.
 The reasons for this are unclear, but the facts speak for themselves.
@@ -378,7 +376,7 @@ $$\displaylines{\quad
   210, 211, 217, 218, 220, 221, 222, 225, 227, 230,
   233, 234, 235, 237, 241, 242, 243, 244, 246, 246,
 \hfill\cr\hfill
-  248  248, 249, 252, 252, 258, 261, 262, 265, 271,
+  248, 248, 249, 252, 252, 258, 261, 262, 265, 271,
   277, 278, 279, 282, 289, 293, 296, 298, 299, 301,
 \hfill\cr\hfill
   302, 303, 306, 308, 308, 309, 311, 316, 318, 324,
@@ -843,7 +841,7 @@ else @<If |u| is a high near-outlier, record it@>;
   if (r>=highest_outlier) {
     highest_outlier=r;
     if (vbose&show_record_outliers)
-      fprintf(stderr," (record high outlier r="O"d, u="O"lld\n",r,u);
+      fprintf(stderr," (record high outlier r="O"d, u="O"lld)\n",r,u);
   }
   insert(hi_out,u,bar(r));
 }
@@ -947,7 +945,7 @@ stat lo_out_stats,hi_out_stats;
 int ulamness; /* is |u| an Ulam number? */
 
 @ @<Allocate...@>=
-gapcount=(ullng*)malloc((maxgap+2)*sizeof(ullng));
+gapcount=(ullng*)calloc(maxgap+2,sizeof(ullng));
 if (!gapcount) alloc_quit("gapcount",maxgap);
 bytes+=(maxgap+2)*sizeof(ullng);
 
@@ -969,13 +967,15 @@ If a unique solution to $u=u'+u''$ is found, |anchorx| will be
 the node corresponding to $u'$.
 
 @<Decide the question via outlier testing@>=
-@<Try to decide by anchoring in |lo_out|@>;
-@<Try to decide by anchoring in |hi_out|@>;
-if (hits) {
-  if (nmem[anchorx].r>lamp/3 && (vbose&show_inlier_anchors))
-    fprintf(stderr," (inlier anchor U"O"lld="O"lld+"O"lld)\n",
-            n,nmem[anchorx].u,u-nmem[anchorx].u);
-  goto ulam_yes;
+{
+  @<Try to decide by anchoring in |lo_out|@>;
+  @<Try to decide by anchoring in |hi_out|@>;
+  if (hits) {
+    if (nmem[anchorx].r>lamp/3 && (vbose&show_inlier_anchors))
+      fprintf(stderr," (inlier anchor U"O"lld="O"lld+"O"lld)\n",
+              n,nmem[anchorx].u,u-nmem[anchorx].u);
+    goto ulam_yes;
+  }
 }
 
 @ If $u=u'+u''$ and $r=r'+r''$, we can assume that
@@ -1119,7 +1119,7 @@ Pretty pictures, comin' right up.
 
 @<Output the \MP\ file@>=
 {
-  fprintf(mp_file,""O""O" created by gibbs-ulam "O"lld\n",maxn);
+  fprintf(mp_file,""O""O" created by ulam-gibbs "O"lld\n",maxn);
   @<Output the boilerplate@>;
   factor=(double)(binsize*binsize)/((double)9*maxn);
   fprintf(mp_file,"\nbeginfig(1) init; "O""O" distribution of Ulam numbers\n");

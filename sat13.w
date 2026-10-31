@@ -418,7 +418,7 @@ typedef struct chunk_struct {
 @ @<Glob...@>=
 char *buf; /* buffer for reading the lines (clauses) of |stdin| */
 tmp_var **hash; /* heads of the hash lists */
-uint hash_bits[93][8]; /* random bits for universal hash function */
+uint hash_bits[94][8]; /* random bits for universal hash function */
 vchunk *cur_vchunk; /* the vchunk currently being filled */
 tmp_var *cur_tmp_var; /* current place to create new |tmp_var| entries */
 tmp_var *bad_tmp_var; /* the |cur_tmp_var| when we need a new |vchunk| */
@@ -573,7 +573,7 @@ else if (k==2) binaries++;
 precomputed tables of random bits.
 
 @<Initialize everything@>=
-for (j=92;j;j--) for (k=0;k<8;k++)
+for (j=92;j;j--) for (k=0;k<8;k++) /* 92 (not 93) for backwards compatibility */
   hash_bits[j][k]=gb_next_rand();
 
 @ @<Put the variable name beginning at |buf[j]| in |cur_tmp_var->name|...@>=
@@ -1353,7 +1353,7 @@ utilized; this at least gives the user some clue about how big \.m should be.
   }
   max_cells_used=proto_memsize-learned_supplement+2;
   first_learned=max_learned=min_learned+learned_supplement;
-  memsize=1<<memk_max;
+  memsize=1U<<memk_max;
   if (max_cells_used>memsize) {
     fprintf(stderr,
        "Immediate memory overflow (memsize="O"u<"O"u), please increase m!\n",
@@ -1490,12 +1490,12 @@ bytes+=vars*sizeof(char);
 freed while we're reformatting the clause and variable data.
 
 @<Allocate the auxiliary arrays@>=
-leveldat=(int*)malloc(vars*2*sizeof(int));
+leveldat=(int*)malloc((vars*2+3)*sizeof(int));
 if (!leveldat) {
   fprintf(stderr,"Oops, I can't allocate the leveldat array!\n");
   exit(-16);
 }
-bytes+=vars*2*sizeof(int);
+bytes+=(vars*2+3)*sizeof(int);
 
 @*Forcing. This program spends most of its time adding literals
 to the current trail when they are forced to be true because of
@@ -1942,6 +1942,7 @@ obsolete.)
   for (v=0;q<vars;q++) {
     while (o,vmem[++v].tloc==0) ; /* bypass variables already seen */
     vmem[v].hloc=q;
+    o,vmem[v].activity=0.0;
     if (true_prob_thresh && (mems+=4,gb_next_rand()<true_prob_thresh))
       vmem[v].oldval=0;
     else vmem[v].oldval=1;
@@ -2619,15 +2620,16 @@ $\min\bigl(\lfloor16(p+\alpha q)\rfloor,255\bigr)$. (All ranges of 16 or more
 are therefore considered to be equally bad.) Knowing the distribution of these
 scaled ranges then makes it easy to select the smallest ones.
 
-@d buckets 256 /* number of distinct range levels after scaling */
+@d buckets 256 /* number of distinct range levels after scaling; should be even */
 @d badlevel 16.0 /* ranges greater than this are essentially infinite */
 
 @<Allocate the auxiliary arrays@>=
-rangedist=(int*)malloc(buckets*sizeof(int));
+rangedist=(int*)malloc((buckets+1)*sizeof(int));
 if (!rangedist) {
   fprintf(stderr,"Oops, I can't allocate the rangedist array!\n");
   exit(-16);
 }
+rangedist[buckets]=0; /* see below */
 bytes+=buckets*sizeof(int);
 for (k=0;k+k<buckets;k++) o,rangedist[k+k]=rangedist[k+k+1]=0;
 
@@ -2718,7 +2720,12 @@ prev_learned=0;
 @<Recompute all the watch lists@>;
 recycle_point=0;
 
-@ @<Compress the database@>=
+@ It no learned clause has received a scaled range (because every such
+clause is either the reason for a literal on the trail or satisfied at
+level~0), |minrange| is still equal to |buckets|, and |maxrange| is still 0.
+That's why we permanently set |rangedist[buckets]=0| above.
+
+@<Compress the database@>=
 for (o,j=minrange,s=asserts+rangedist[j];s<budget&&j<maxrange;)
   o,s+=rangedist[++j];
 if (s>budget) @<Remove |t=s-budget| clauses at the threshold@>;
@@ -2751,15 +2758,21 @@ actually worthwhile. Armin Biere has told me that a small but significant
 number of problems do have a fairly large number of clauses at
 the median range, so I'm following his recommendation.
 
+I thank Soojin Nam for catching a subtle bug in my original program:
+He observed that the variable |jj| in the code here might be
+negative or zero in unusual cases.
+
 @<Remove |t=s-budget| clauses at the threshold@>=
 {
   register ullng accum;
   t=s-budget;
   jj=rangedist[j]-t;
   if (jj>clause_heap_size) jj=clause_heap_size;
-  @<Put |jj| entries of range |j| into the clause heap@>;
-  @<Establish heap order in the clause heap@>;
-  @<Increase the range of |t| clauses from |j| to |j+1|@>;
+  if (jj>0) {
+    @<Put |jj| entries of range |j| into the clause heap@>;
+    @<Establish heap order in the clause heap@>;
+    @<Increase the range of |t| clauses from |j| to |j+1|@>;
+  }@+else j--; /* if |jj<=0|, reject every clause of range |j| */
 }
 
 @ @<Allocate the auxiliary arrays@>=
@@ -3027,7 +3040,8 @@ if (verbose&show_details) {
   for (k=0;k<eptr;k++)
       fprintf(stderr,""O"s"O".8s is given\n",litname(trail[k]));
 }
-for (k=0;k<vars;k++) o,leveldat[k+k]=-1,leveldat[k+k+1]=0;
+for (k=0;k<=vars;k++) o,leveldat[k+k]=-1,leveldat[k+k+1]=0;
+o,leveldat[k+k]=-1;
 
 @ @<Schedule the next restart@>=
 if ((restart_u&-restart_u)==restart_v)

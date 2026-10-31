@@ -12,6 +12,12 @@ wherever possible (and basically throwing efficiency out the door).
 solutions! And this program needs less than half an hour to find them all,
 despite the inefficiencies.]
 
+[Footnote added 26 October 2026: I should have spent more time debugging!
+Soojin Nam noticed that my original code overflowed the register capacity,
+because it worked with 32-bit integers although 42 bits are needed.
+The corrected code finds an astonishing 16,492,083 solutions, if we
+allow it to run for a few days.]
+
 I break the problem into ${13\choose6}=1716$ subproblems, where each
 subproblem chooses the partitions for the first six columns; the last
 column is always assigned to partition 1111111. The rows are, of course,
@@ -29,9 +35,9 @@ column partitions for unoccupied cells are specified by
 arrays |rparts[l]| and |cparts[l]|. A partition is a hexadecimal integer
 $(p_1\ldots p_7)_{16}$ with $p_1\ge\cdots\ge p_7\ge0$.
 
-@d modulus 100 /* print only solutions whose number is a multiple of this */
+@d modulus 1000 /* print only solutions whose number is a multiple of this */
 @d lobits(k) ((1u<<(k))-1) /* this works for $k<32$ */
-@d gosper(b) {@+ register x=b,y;
+@d gosper(b) {@+ register long long x=b,y;
                 x=b&-b,y=b+x;
                 b=y+(((y^b)/x)>>2);@+}
 
@@ -57,7 +63,7 @@ int rparts[8][8],cparts[8][8];
 char a[8][8]; /* the current placements */
 unsigned long long count;
 @<Subroutines@>;
-void main(void) {
+int main(void) {
   register int b,i,j,k,bits;
   cparts[7][6]=parts[13];
   for (bits=lobits(6);bits<1<<13;) {
@@ -81,7 +87,8 @@ of the digit~|l|. (If |l>0|, it calls |verify(l)|, which calls |place(l-1)|.)
 @<Subroutines@>=
 void verify(int l); /* defined later */
 void place(int l) {
-  register int b,i,j,k,m,p,max,abits,bbits,thisrow,thiscol=-1;
+  register int i,j,k,m,p,max,abits,thisrow,thiscol=-1;
+  register long long b,bbits;
   if (l==0) @<Print a solution and |return|@>;
   for (max=i=0;i<7;i++)
     if (rparts[l][i]>max) max=rparts[l][i],thisrow=i;
@@ -99,7 +106,7 @@ void place(int l) {
       if (abits&b) a[thisrow][j]=l;
       b<<=1;
     }
-    for (bbits=lobits(7-p);bbits<1<<(7*l-m);) {
+    for (bbits=lobits(7-p);bbits<1LL<<(7*l-m);) {
       for (b=1,i=0;i<7;i++) if (i!=thisrow) {
         for (j=0;j<7;j++) if (!a[i][j]) {
           if (bbits&b) a[i][j]=l;
@@ -127,7 +134,7 @@ void place(int l) {
       if (abits&b) a[i][thiscol]=l;
       b<<=1;
     }
-    for (bbits=lobits(7-p);bbits<1<<(7*l-m);) {
+    for (bbits=lobits(7-p);bbits<1LL<<(7*l-m);) {
       for (b=1,j=0;j<7;j++) if (j!=thiscol) {
         for (i=0;i<7;i++) if (!a[i][j]) {
           if (bbits&b) a[i][j]=l;
@@ -148,7 +155,7 @@ void place(int l) {
 
 @ @<Sub...@>=
 void verify(int l) {
-  register i,j,k,m,q;
+  register int i,j,k,m,q;
   for (i=0;i<7;i++) { /* we will check row |i| for inconsistency */
     for (j=k=0;j<7;j++) if (a[i][j]==l) k++; /* |k| occurrences of |l| */
     m=rparts[l][i];
