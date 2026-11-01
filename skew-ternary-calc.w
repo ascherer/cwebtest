@@ -27,6 +27,10 @@ fascinating patterns that are present, etc. I'm hoping that some
 reader will be motivated to write such an ``app,'' because it will 
 certainly be a fabulously instructive toy.
 
+[Update, 31 October 2026: Soojin Nam has just created such an app!
+You can play with it even if you cannot read the Korean commentary.
+See \.{https://sjnam.github.io/skew-ternary/}.]
+
 I will at least try to define and explain the basics in this document.
 A ternary tree is either
 empty, or it consists of a root node and three ternary trees
@@ -54,7 +58,7 @@ a family of $2n+2$ extended ternary trees that are
 ``cyclically equivalent,'' as illustrated below.
 There's one such tree for each bud,
 obtained by placing that bud at the top and letting everything else
-``hang down'' from it in.
+``hang down'' from it.
 Each of these trees has a different
 root bud, but not necessarily a different root, because
 different buds can lead to distinct trees with the same root node.
@@ -139,7 +143,7 @@ and $T^{++}$ can also be called $T^{--}$.
 ``conjugates'' $T^+$, $T^{++}$, and $T^{+++}=T^-$, given a
 skew ternary tree~$T$. That tree is specified on the command line,
 as a sequence of four-character arguments \.{abcd}: The first character,
-\.a, names a node; the next three characters name that node's children,
+\.a, names a node; the next three characters names that node's children,
 using `\.-' for an empty child. For example, the tree $T$ above could
 be specified by the six command-line arguments
 $$\.{A-BD} \qquad
@@ -565,7 +569,7 @@ $$\def\epsfsize#1#2{.8#1}
   \vcenter{\epsfbox{skew-ternary-calc.25}}$$
 Each of these graphs corresponds precisely
 to the vertices, edges, faces, and pips of~$(**)$;
-and so are three variants of~$(*{*})$! Butleft-right reflection
+and so are three variants of~$(*{*})$! But left-right reflection
 would give a different graph in this case, because $(*)$ has no symmetry.
 
 @ Suppose there are $m$ edges. Diagram $(**)$ can also be regarded as a
@@ -577,7 +581,7 @@ vertices (1), (2), (3), (4) and faces (I), (II), (III), (IV);
 for instance, `$(a_0b_0f_2)$' describes the cycle
 $a_0\dadj b_0\dadj f_2\dadj a_0$ for vertex~4 in~$(**)$.
 
-Guibas and Stolfi noted that the
+Guibas and Stolfi noted that then
 permutations $\alpha$ obtained from planar maps in this way
 have a very important property called the backup axiom:
 {\sl If $\alpha$ takes $u_{i+1}\mapsto v_j$},
@@ -720,7 +724,7 @@ $a_0$ and $b_0$ in the vertex ring for~4 in $(**)$. So we can start
 by splicing $\alpha_0$ and $\beta_0$ together; that means
 $u_i=a_0$ and~$v_j=b_0$. The splice rule
 now tells us that $\sigma=(a_0b_0)(a_3b_3)$, because $\alpha_0\beta_0$ takes
-$a_1\mapsto a_3$ and $\beta_1\mapsto b_3$. Thus we obtain
+$a_1\mapsto a_3$ and $b_1\mapsto b_3$. Thus we obtain
 $$\alpha_1=\alpha_0\beta_0\sigma_1=\alpha_0\beta_0(a_0b_0)(a_3b_3)=
 (a_0b_0)(a_2)(b_2)(a_1b_3b_1a_3).$$
 This permutation represents a path of length 2, consisting of edges $a$ and $b$
@@ -749,12 +753,12 @@ $$\eqalign{
   (c_0)(c_2d_2)(d_0)(c_1c_3d_1d_3);\cr
 \gamma_2&=\gamma_1\varepsilon_0\sigma_4=
   (c_0)(c_2d_2)(d_0e_2)(e_0)(c_1c_3d_1e_1e_3d_3);\cr
-\gamma_3&=\gamma_2\varphi\sigma_5=
+\gamma_3&=\gamma_2\sigma_5=
   (c_0e_0)(c_2d_2)(d_0e_2)(c_1e_3d_3)(c_3d_1e_1).\cr
 }$$
 
 Now we can hook $f$ to vertex $(c_0e_0)$, using $\sigma_6=(c_0f_0)(e_3f_3)$:
-$$\gamma_4=\gamma_3\sigma_6=(c_0e_0f_0)(c_2d_2)(d_0e_2)(f_2)
+$$\gamma_4=\gamma_3\varphi_0\sigma_6=(c_0e_0f_0)(c_2d_2)(d_0e_2)(f_2)
 (c_1f_3f_1e_3d_3)(c_3d_1e_1).$$
 
 The two remaining components can be joined together, merging
@@ -1066,7 +1070,7 @@ $$\vcenter{\halign{#\hfil\cr
 \epsfxsize=.5\hsize \epsfbox{skew-ternary-calc.82}\cr\noalign{\smallskip}
 \epsfxsize=.5\hsize \epsfbox{skew-ternary-calc.84}\cr}}$$
 One way to form this is to start at the bud in question and continue
-creating the chart cyclically until that bud occurs again. The
+creating the chart cyclically until that bud occurs again. Then
 we delete both appearances, and replace it by matching arcs
 from an assumed parent node \.T to the new subtree root and back.
 (It follows that a subtree $T'$ of $n$ nodes has a chart $T^*$ of length $4n+1$,
@@ -1086,7 +1090,7 @@ And the number of nodes of even rank is the number of
 nonroot vertices.
 
 @ Our principal goal is to take a given skew ternary tree and to
-construct the corresponding \RNBPM/, but computing the quad-tree
+construct the corresponding \RNBPM/, by computing the quad-tree
 permutation of that planar map. The tree will be given in
 chart form. I won't be stingy with memory, so I'll keep a stack
 of the various charts that arise during the recursion.
@@ -1352,7 +1356,7 @@ on skew ternary trees at the beginning of this program;
 corresponds to $S$'s second root by a new node $c$ whose right
 child is $\widehat T^+$.
 
-To invert this rule, notice that we can recover $S$, $T$, and~c
+To invert this rule, notice that we can recover $S$, $T$, and~$c$
 from the resulting skew ternary tree, because $c$ is the last
 node of rank~0 (in preorder); then if $c$'s right subtree is
 $R$, we have $R=\widehat T^+$, hence $\widehat T=R^-$; and $\widehat S$ is
@@ -1509,7 +1513,7 @@ at large random instances.
 More precisely, if we call the four pip permutations
 $\alpha_0$, $\alpha_1$, $\alpha_2$, and $\alpha_3$, when the DDP
 correspondence has been applied to four conjugate skew ternary trees,
-I found that $\alpha_k$ was equal to $\alpha_0\hat\rho^k$ in every
+I found that $\alpha_k$ was equal to $\hat\rho^k\alpha_0\hat\rho^{-k}$ in every
 case that I computed. Here $\hat\rho$ is the permutation
 $(r_1r_3)\rho(r_1r_3)$; it's like $\rho$ except that it {\it decreases\/}
 subscripts of $r$ while increasing the subscripts of all the other
@@ -1531,8 +1535,8 @@ chosen exactly the right person to ask, namely Gilles Schaeffer.
 He told me that, after writing the paper with Jacquard that was
 cited above, he continued to do research about
 connections between trees and planar maps. The result was his
-Ph.D. dissertation, {\sl Conjugation d'arbres et cartes combinatoires
-al\'eatores\/} (l'Universit\'e Bordeaux~I, 1998); and when I downloaded
+Ph.D. dissertation, {\sl Conjugaison d'arbres et cartes combinatoires
+al\'eatoires\/} (l'Universit\'e Bordeaux~I, 1998); and when I downloaded
 that thesis I found it to be an amazingly rich
 compendium of deep new results, covering many topics in addition
 to \RNBPM/s (most of which he chose not to publish elsewhere).
