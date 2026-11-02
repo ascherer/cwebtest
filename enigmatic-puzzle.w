@@ -41,7 +41,7 @@ the ciphertext is \.{WMGQRYVGT...ZQAEGI}.
 @<Type definitions@>;
 @<Global variables@>;
 @<Subroutines@>;
-main (int argc,char*argv[]) {
+int main (int argc,char*argv[]) {
   register int c,i,j,k,kk,m,mc,mk,mp,n,s,u,v;
   register unsigned long long bb;
   register node *p,*q;
@@ -780,7 +780,7 @@ void outmedium(int carry) {
   register int bigcarry;
   outnobig(carry);
   for (bigcarry=carry+1;bigcarry<ciphersize; bigcarry+=26) 
-    if (bigcarry<=prefix || bigcarry>prefix+plainsize) outbig(bigcarry);
+    if (bigcarry<=prefix || bigcarry>=prefix+plainsize) outbig(bigcarry);
 }
 
 @ In the remaining case, we want to set up for every case that does

@@ -2720,7 +2720,7 @@ prev_learned=0;
 @<Recompute all the watch lists@>;
 recycle_point=0;
 
-@ It no learned clause has received a scaled range (because every such
+@ If no learned clause has received a scaled range (because every such
 clause is either the reason for a literal on the trail or satisfied at
 level~0), |minrange| is still equal to |buckets|, and |maxrange| is still 0.
 That's why we permanently set |rangedist[buckets]=0| above.
